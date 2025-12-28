@@ -151,7 +151,7 @@ typedef struct __attribute__((packed)) swadgePassPacket
         uint32_t points;
     } atrium;
 
-     struct
+    struct
     {
         uint16_t highScore;
     } megaPulseEx;

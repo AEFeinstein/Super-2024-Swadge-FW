@@ -1228,8 +1228,8 @@ void mg_bossRushLogic(mgEntity_t* self)
                 boss->y -= 4 << SUBPIXEL_RESOLUTION;
             }
         }
-        //Plays post fight once flare gryffyn has gone off screen ONLY if the player hasn't touched the mixtape yet.
-        else if(self->soundManager->currentBgmIndex != MG_BGM_LEVEL_CLEAR_JINGLE)
+        // Plays post fight once flare gryffyn has gone off screen ONLY if the player hasn't touched the mixtape yet.
+        else if (self->soundManager->currentBgmIndex != MG_BGM_LEVEL_CLEAR_JINGLE)
         {
             mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
             midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
@@ -1302,7 +1302,7 @@ void animatePlayer(mgEntity_t* self)
 
     if (!self->gravityEnabled)
     {
-        //self->spriteIndex = MG_SP_PLAYER_CLIMB;
+        // self->spriteIndex = MG_SP_PLAYER_CLIMB;
         if (self->yspeed < 0 && self->gameData->frameCount % 10 == 0)
         {
             self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
@@ -6329,6 +6329,7 @@ void startOutroCutscene(mgEntity_t* self)
 {
     mg_deactivateAllEntitiesOfType(self->entityManager, ENTITY_WAVE_BALL); // so the player doesn't get hurt right after
                                                                            // the winning cutscene.
+    self->entityManager->playerEntity->shotsFired = 0;
     if (self->gameData->level != 7)
     {
         // just don't pause the countdown on level 7 because then you can't try out the newly acquired Shoop Da Woop.

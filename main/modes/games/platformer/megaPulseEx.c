@@ -43,7 +43,7 @@
 //==============================================================================
 #define BIG_SCORE    4000000UL
 #define BIGGER_SCORE 10000000UL
-#define FAST_TIME    900 // 15 minutes
+#define FAST_TIME    1200 // 20 minutes
 
 const char platformerName[] = "Mega Pulse EX";
 
@@ -53,8 +53,8 @@ static const paletteColor_t redColors[4]    = {c501, c540, c550, c540};
 static const paletteColor_t yellowColors[4] = {c550, c331, c550, c555};
 static const paletteColor_t greenColors[4]  = {c555, c051, c030, c051};
 static const paletteColor_t cyanColors[4]   = {c055, c455, c055, c033};
-static const paletteColor_t purpleColors[4] = {c213, c535, c555, c535};
-static const paletteColor_t rgbColors[4]    = {c500, c050, c005, c050};
+// static const paletteColor_t purpleColors[4] = {c213, c535, c555, c535};
+// static const paletteColor_t rgbColors[4]    = {c500, c050, c005, c050};
 
 static const int16_t cheatCode[11]
     = {PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START};
@@ -280,7 +280,7 @@ const trophyData_t platformerTrophies[] = {{
                                            },
                                            {
                                                .title       = "Not just fast, magFAST!",
-                                               .description = "1CC'd in 15 gameplay minutes!",
+                                               .description = "1CC'd in 20 gameplay minutes!",
                                                .image       = GOLD_TROPHY_WSG,
                                                .type        = TROPHY_TYPE_TRIGGER,
                                                .difficulty  = TROPHY_DIFF_EXTREME,
@@ -705,7 +705,7 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == mgMenuHighScores)
         {
             changeStateShowHighScores(platformer);
-            platformer->gameData.btnState = 0;
+            platformer->gameData.btnState     = 0;
             platformer->gameData.prevBtnState = 0;
             deinitMenu(platformer->menu);
         }
@@ -1214,6 +1214,7 @@ void drawPlatformerTitleScreen(font_t* font, mgGameData_t* gameData)
 
         case 2:
         {
+            /*
             if (platformer->unlockables.gameCleared)
             {
                 drawText(font, redColors[(gameData->frameCount >> 3) % 4], "Beat the game!", 48, 80);
@@ -1244,7 +1245,7 @@ void drawPlatformerTitleScreen(font_t* font, mgGameData_t* gameData)
                 && platformer->unlockables.fastTime)
             {
                 drawText(font, rgbColors[(gameData->frameCount >> 3) % 4], "100% 100% 100%", 48, 160);
-            }
+            }*/
 
             drawText(font, c555, "Press B to Return", 48, 192);
             break;
@@ -1812,12 +1813,8 @@ void savePlatformerHighScores(platformer_t* self)
 
 void initializePlatformerUnlockables(platformer_t* self)
 {
-    self->unlockables.levelsCleared    = 0;
-    self->unlockables.gameCleared      = false;
-    self->unlockables.oneCreditCleared = false;
-    self->unlockables.bigScore         = false;
-    self->unlockables.fastTime         = false;
-    self->unlockables.biggerScore      = false;
+    self->unlockables.levelsCleared = 0;
+    self->unlockables.inGameTimer   = 0;
 }
 
 void loadPlatformerUnlockables(platformer_t* self)
@@ -1835,7 +1832,8 @@ void loadPlatformerUnlockables(platformer_t* self)
 
 void savePlatformerUnlockables(platformer_t* self)
 {
-    size_t size = sizeof(platformerUnlockables_t);
+    self->unlockables.inGameTimer = self->gameData.inGameTimer;
+    size_t size                   = sizeof(platformerUnlockables_t);
     writeNvsBlob(KEY_UNLOCKS, &(self->unlockables), size);
 }
 
