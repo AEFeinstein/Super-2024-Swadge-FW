@@ -51,10 +51,7 @@ typedef struct
     list_t faceList;
 
     vec_t pointerCoords; // x and y are int32 allowing us to turn 2billies into 280 X_pixels
-    bool pointingRight;
-    bool pointingLeft;
-    bool pointingUp;
-    bool pointingDown;
+    int16_t evt_state;
 
     bool ZenMode;
     bool ShowMenu;
@@ -367,10 +364,7 @@ static void findingEnterMode(void)
     finder->stage         = 0;
     finder->score         = 0;
     finder->timer         = StartTime;
-    finder->pointingDown  = false;
-    finder->pointingUp    = false;
-    finder->pointingLeft  = false;
-    finder->pointingRight = false;
+    finder->evt_state     = 0;
     finder->pointerCoords = (vec_t){
         .x = 0,
         .y = 0,
@@ -417,30 +411,11 @@ static void findingMainLoop(int64_t elapsedUs)
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
+        finder->evt_state = evt.state;
         if (evt.down && !finder->ShowMenu)
         {
             switch (evt.button)
             {
-                case PB_LEFT:
-                {
-                    finder->pointingLeft = true;
-                    break;
-                }
-                case PB_UP:
-                {
-                    finder->pointingUp = true;
-                    break;
-                }
-                case PB_RIGHT:
-                {
-                    finder->pointingRight = true;
-                    break;
-                }
-                case PB_DOWN:
-                {
-                    finder->pointingDown = true;
-                    break;
-                }
                 case PB_A:
                 {
                     if (finder->millisInstructing > 0)
@@ -547,8 +522,8 @@ static void findingMainLoop(int64_t elapsedUs)
                     }
                     else
                     {
-                        // finder->timer = 0; //uncomment me for final release
-                        finder->timer += 10000000;
+                        finder->millisInstructing = 0; //uncomment me for final release
+                        //finder->timer += 10000000;
                     }
                 }
                 default:
@@ -560,37 +535,6 @@ static void findingMainLoop(int64_t elapsedUs)
         else if (evt.down && finder->ShowMenu)
         {
             finder->mainMenu = menuButton(finder->mainMenu, evt);
-        }
-        else
-        {
-            // stop moving the pointer
-            switch (evt.button)
-            {
-                case PB_LEFT:
-                {
-                    finder->pointingLeft = false;
-                    break;
-                }
-                case PB_UP:
-                {
-                    finder->pointingUp = false;
-                    break;
-                }
-                case PB_RIGHT:
-                {
-                    finder->pointingRight = false;
-                    break;
-                }
-                case PB_DOWN:
-                {
-                    finder->pointingDown = false;
-                    break;
-                }
-                default:
-                {
-                    break;
-                }
-            }
         }
     } // End button checking
 
@@ -676,7 +620,7 @@ static void findingMainLoop(int64_t elapsedUs)
         }
 
         // Move the pointer
-        if (finder->pointingUp)
+        if (finder->evt_state & PB_UP)
         {
             finder->pointerCoords.y -= elapsedUs;
             if (finder->pointerCoords.y < 0)
@@ -684,7 +628,7 @@ static void findingMainLoop(int64_t elapsedUs)
                 finder->pointerCoords.y = 239 * MillisPerPixel; // Wrap around to not quite the bottom pixel
             }
         }
-        if (finder->pointingDown)
+        if (finder->evt_state & PB_DOWN)
         {
             finder->pointerCoords.y += elapsedUs;
             if (finder->pointerCoords.y > 240 * MillisPerPixel)
@@ -692,7 +636,7 @@ static void findingMainLoop(int64_t elapsedUs)
                 finder->pointerCoords.y = MillisPerPixel; // Wrap around to not quite the top pixel
             }
         }
-        if (finder->pointingLeft)
+        if (finder->evt_state & PB_LEFT)
         {
             finder->pointerCoords.x -= elapsedUs;
             if (finder->pointerCoords.x < 0)
@@ -700,7 +644,7 @@ static void findingMainLoop(int64_t elapsedUs)
                 finder->pointerCoords.x = 279 * MillisPerPixel; // Wrap around to not quite the rightmost pixel
             }
         }
-        if (finder->pointingRight)
+        if (finder->evt_state & PB_RIGHT)
         {
             finder->pointerCoords.x += elapsedUs;
             if (finder->pointerCoords.x > 280 * MillisPerPixel)
