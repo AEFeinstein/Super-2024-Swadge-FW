@@ -401,7 +401,7 @@ void platformerEnterMode(void)
 
     list_t swadgePasses = {0};
     // It's okay to get already-used passes, since the high score table only saves one per SP user.
-    getSwadgePasses(&swadgePasses, &platformer, true);
+    getSwadgePasses(&swadgePasses, platformer, true);
     saveHighScoresFromSwadgePass(&platformer->highScores, KEY_SCORES, swadgePasses, megaPulseGetSwadgePassHighScore);
     freeSwadgePasses(&swadgePasses);
 
@@ -620,7 +620,7 @@ void platformerExitMode(void)
     mg_freeSoundManager(&(platformer->soundManager));
     mg_freeEntityManager(&(platformer->entityManager));
     deinitCutscene(platformer->gameData.cutscene);
-    freeHighScoreSonas(&platformer->highScores, &platformer->sonas);
+    freeHighScoreSonas(&platformer->highScores, platformer->sonas);
     heap_caps_free(platformer);
 }
 
