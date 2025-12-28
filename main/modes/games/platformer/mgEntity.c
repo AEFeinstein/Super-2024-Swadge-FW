@@ -1301,7 +1301,7 @@ void animatePlayer(mgEntity_t* self)
 
     if (!self->gravityEnabled)
     {
-        self->spriteIndex = MG_SP_PLAYER_CLIMB;
+        //self->spriteIndex = MG_SP_PLAYER_CLIMB;
         if (self->yspeed < 0 && self->gameData->frameCount % 10 == 0)
         {
             self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
@@ -2145,15 +2145,15 @@ bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx,
             mg_scorePoints(self->gameData, 50);
             break;
         }
-        case MG_TILE_LADDER:
-        {
-            if (self->gravityEnabled)
-            {
-                self->gravityEnabled = false;
-                self->xspeed         = 0;
-            }
-            break;
-        }
+        // case MG_TILE_LADDER:
+        // {
+        //     if (self->gravityEnabled)
+        //     {
+        //         self->gravityEnabled = false;
+        //         self->xspeed         = 0;
+        //     }
+        //     break;
+        // }
         // Spike or Lava Tiles
         case MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2 ... MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5:
         {
