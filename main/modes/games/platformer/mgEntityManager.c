@@ -78,6 +78,11 @@ void mg_deactivateAllEntities(mgEntityManager_t* entityManager, bool excludePlay
         if (excludePlayer && currentEntity == entityManager->playerEntity)
         {
             currentEntity->active = true;
+
+            if(currentEntity->shotsFired > 0)
+            {
+                currentEntity->shotsFired = 0;
+            }
         }
     }
 }
