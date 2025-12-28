@@ -1655,6 +1655,11 @@ void updateLevelClear(platformer_t* self)
 
                 self->unlockables.levelsCleared |= (1 << self->gameData.level);
 
+                if (!self->gameData.debugMode)
+                {
+                    savePlatformerUnlockables(self);
+                }
+
                 if (self->unlockables.levelsCleared == 0b1111111111110)
                 {
                     // Beat the game!
@@ -1663,11 +1668,6 @@ void updateLevelClear(platformer_t* self)
                 }
 
                 changeStateLevelSelect(self);
-            }
-
-            if (!self->gameData.debugMode)
-            {
-                savePlatformerUnlockables(self);
             }
         }
     }

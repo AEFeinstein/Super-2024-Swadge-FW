@@ -1228,7 +1228,8 @@ void mg_bossRushLogic(mgEntity_t* self)
                 boss->y -= 4 << SUBPIXEL_RESOLUTION;
             }
         }
-        else
+        //Plays post fight once flare gryffyn has gone off screen ONLY if the player hasn't touched the mixtape yet.
+        else if(self->soundManager->currentBgmIndex != MG_BGM_LEVEL_CLEAR_JINGLE)
         {
             mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
             midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
