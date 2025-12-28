@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="70" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="453">
  <editorsettings>
-  <export target="Gauntlet.bin" format="Mega Pulse EX"/>
+  <export target="../../assets/platformer/levels/Gauntlet.raw" format="Mega Pulse EX"/>
  </editorsettings>
  <tileset firstgid="1" source="kinetic-donut-tileset.tsx"/>
  <tileset firstgid="199" source="mg-entity-tileset.tsx"/>
