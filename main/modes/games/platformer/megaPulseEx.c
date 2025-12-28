@@ -1930,66 +1930,66 @@ void updateNameEntry(platformer_t* self)
 {
     // fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
-    self->gameData.frameCount++;
+    // self->gameData.frameCount++;
 
-    if (self->gameData.btnState & PB_LEFT && !(self->gameData.prevBtnState & PB_LEFT))
-    {
-        self->menuSelection--;
+    // if (self->gameData.btnState & PB_LEFT && !(self->gameData.prevBtnState & PB_LEFT))
+    // {
+    //     self->menuSelection--;
 
-        if (self->menuSelection < 32)
-        {
-            self->menuSelection = 90;
-        }
+    //     if (self->menuSelection < 32)
+    //     {
+    //         self->menuSelection = 90;
+    //     }
 
-        self->gameData.initials[self->menuState] = self->menuSelection;
-        soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
-    }
-    else if (self->gameData.btnState & PB_RIGHT && !(self->gameData.prevBtnState & PB_RIGHT))
-    {
-        self->menuSelection++;
+    //     self->gameData.initials[self->menuState] = self->menuSelection;
+    //     soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
+    // }
+    // else if (self->gameData.btnState & PB_RIGHT && !(self->gameData.prevBtnState & PB_RIGHT))
+    // {
+    //     self->menuSelection++;
 
-        if (self->menuSelection > 90)
-        {
-            self->menuSelection = 32;
-        }
+    //     if (self->menuSelection > 90)
+    //     {
+    //         self->menuSelection = 32;
+    //     }
 
-        self->gameData.initials[self->menuState] = self->menuSelection;
-        soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
-    }
-    else if (self->gameData.btnState & PB_B && !(self->gameData.prevBtnState & PB_B))
-    {
-        if (self->menuState > 0)
-        {
-            self->menuState--;
-            self->menuSelection = self->gameData.initials[self->menuState];
-            soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
-        }
-        else
-        {
-            soundPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
-        }
-    }
-    else if (self->gameData.btnState & PB_A && !(self->gameData.prevBtnState & PB_A))
-    {
-        self->menuState++;
+    //     self->gameData.initials[self->menuState] = self->menuSelection;
+    //     soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
+    // }
+    // else if (self->gameData.btnState & PB_B && !(self->gameData.prevBtnState & PB_B))
+    // {
+    //     if (self->menuState > 0)
+    //     {
+    //         self->menuState--;
+    //         self->menuSelection = self->gameData.initials[self->menuState];
+    //         soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
+    //     }
+    //     else
+    //     {
+    //         soundPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
+    //     }
+    // }
+    // else if (self->gameData.btnState & PB_A && !(self->gameData.prevBtnState & PB_A))
+    // {
+    //     self->menuState++;
 
-        if (self->menuState > 2)
-        {
-            insertScoreIntoHighScores(&(self->highScores), self->gameData.score, self->gameData.initials,
-                                      self->gameData.rank);
-            savePlatformerHighScores(self);
-            changeStateShowHighScores(self);
-            soundPlaySfx(&(self->soundManager.sndPowerUp), BZR_STEREO);
-        }
-        else
-        {
-            self->menuSelection = self->gameData.initials[self->menuState];
-            soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
-        }
-    }
+    //     if (self->menuState > 2)
+    //     {
+    //         insertScoreIntoHighScores(&(self->highScores), self->gameData.score, self->gameData.initials,
+    //                                   self->gameData.rank);
+    //         savePlatformerHighScores(self);
+    //         changeStateShowHighScores(self);
+    //         soundPlaySfx(&(self->soundManager.sndPowerUp), BZR_STEREO);
+    //     }
+    //     else
+    //     {
+    //         self->menuSelection = self->gameData.initials[self->menuState];
+    //         soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
+    //     }
+    // }
 
-    drawNameEntry(&(self->font), &(self->gameData), self->menuState);
-    mg_updateLedsShowHighScores(&(self->gameData));
+    // drawNameEntry(&(self->font), &(self->gameData), self->menuState);
+    // mg_updateLedsShowHighScores(&(self->gameData));
 }
 
 void drawNameEntry(font_t* font, mgGameData_t* gameData, uint8_t currentInitial)
@@ -2011,7 +2011,7 @@ void drawNameEntry(font_t* font, mgGameData_t* gameData, uint8_t currentInitial)
 
 void changeStateShowHighScores(platformer_t* self)
 {
-    initHighScoreSonas(&self->highScores, &self->sonas);
+    initHighScoreSonas(&self->highScores, self->sonas);
 
     self->gameData.frameCount = 0;
     self->update              = &updateShowHighScores;
@@ -2034,7 +2034,7 @@ void updateShowHighScores(platformer_t* self)
     }
 
     drawShowHighScores(&(self->font), self->menuState);
-    drawPlatformerHighScores(&(self->font), &(self->highScores), &(self->sonas), &(self->gameData));
+    drawPlatformerHighScores(&(self->font), &(self->highScores), self->sonas, &(self->gameData));
 
     mg_updateLedsShowHighScores(&(self->gameData));
 }
