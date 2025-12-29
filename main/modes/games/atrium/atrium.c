@@ -40,7 +40,7 @@
 static const cnfsFileIdx_t sonaBodies[] = {
     BODY_1_WSG, BODY_2_WSG, DAISY_WSG, FALLOUT_WSG, HANDSOME_WSG, KIRBY_WSG, LINK_WSG,   MARIO_WSG, PACMAN_WSG,
     PEACH_WSG,  RAYMAN_WSG, SANIC_WSG, SORA_WSG,    STAFF_WSG,    STEVE_WSG, STEVEN_WSG, WALDO_WSG, ZELDA_WSG,
-
+    BASS_0_WSG, BASS_1_WSG,  BASS_2_WSG,  
 };
 
 static const cnfsFileIdx_t uiImages[] = {
@@ -101,13 +101,13 @@ static const char* const fact2[] = {
 };
 
 static const char* const preambles[] = {
-    "Fave Sandwich: ",
+    "My Sandwich: ",
     "I am a: ",
     "Fave place: ",
 };
 
 static const char* const editPromptText[] = {
-    "Choose Card", "Choose Identity", "Choose Location", "Pick Sandwich", "Save Profile", "Saved!",
+    "Choose Card", "Pick Sandwich", "Choose Identity", "Choose Location", "Save Profile", "Saved!",
 };
 
 // Trophy Case
@@ -145,7 +145,7 @@ const trophyData_t atriumTrophies[] = {
 
     {
         .title       = "Join the Big Yellows",
-        .description = "Yellow Team is the best team",
+        .description = "Big Ego. Bigger Score",
         .image       = TEAMYELLOW_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
@@ -521,6 +521,7 @@ static void atriumEnterMode(void)
         atr->created = 0;
         int team     = rand() % 3;
         writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, TEAMKEY, team);
+        atr->loadedProfs = false;
         atr->state = ATR_EDIT_PROFILE; // go to profile edit if no profile yet
     }
     else
@@ -774,6 +775,7 @@ static void editProfile(buttonEvt_t* evt, uint64_t elapsedUs)
     if (atr->loadedProfs == false)
     {
         atr->loadedProfile = loadProfileFromNVS();
+        generateSwadgesonaImage(&atr->loadedProfile.swsn,true);
         atr->loadedProfs   = true;
     }
 
@@ -979,10 +981,14 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
         
     
         
-        ESP_LOGD(ATR_TAG, "Selected arrow: %" PRId8, atr->selectedArrow);
+        ESP_LOGI(ATR_TAG, "Selected arrow: %" PRId8, atr->selectedArrow);
         drawLobbyArrows(atr->selectedArrow);
         loadProfiles(SONA_PER, atr->page);
         drawSonas(atr->page, elapsedUs);
+        drawWsgSimpleHalf(&atr->uiElements[2], 10, 10);
+        drawWsgSimpleHalf(&atr->uiElements[4], 10, 30);
+        drawText(&atr->fonts[0], c000, "Select", 30, 11);
+        drawText(&atr->fonts[0], c000, "Back", 30, 31);
     }
 }
 
@@ -1211,6 +1217,7 @@ static void drawCard(userProfile_t profile, bool local, uint64_t elapsedUs)
 
     drawWsgSimple(&atr->backgroundImages[0], 0, 0);
     drawWsgSimple(&atr->cards[profile.cardSelect], 7, 7 + 12); // draw the card
+    generateSwadgesonaImage(&profile.swsn, true);
     drawWsgSimple(&profile.swsn.image, SONALOC_X, SONALOC_Y);  // draw the sona image
 
     nameData_t username;
@@ -1265,19 +1272,19 @@ void drawEditSelection(buttonEvt_t* evt, int yloc)
         case 1:
         {
             drawWsg(&atr->uiElements[17], 90 - CARDTEXTPAD, 55, false, false, 270); // fact0
-            drawText(&atr->fonts[0], c000, editPromptText[1], text_xloc+1, text_yloc);
+            drawText(&atr->fonts[0], c000, editPromptText[1], text_xloc+7, text_yloc);
             break;
         }
         case 2:
         {
             drawWsg(&atr->uiElements[17], 90 - CARDTEXTPAD, 68, false, false, 270); // fact1
-            drawText(&atr->fonts[0], c000, editPromptText[2], text_xloc-1, text_yloc);
+            drawText(&atr->fonts[0], c000, editPromptText[2], text_xloc+1, text_yloc);
             break;
         }
         case 3:
         {
             drawWsg(&atr->uiElements[17], 90 - CARDTEXTPAD, 81, false, false, 270); // fact2
-            drawText(&atr->fonts[0], c000, editPromptText[3], text_xloc+7, text_yloc);
+            drawText(&atr->fonts[0], c000, editPromptText[3], text_xloc-1, text_yloc);
             break;
         }
         case 4:
@@ -1502,9 +1509,8 @@ userProfile_t loadProfileFromNVS(void)
 
         team = esp_random() % 3; // assign random team 0,1,2
         ESP_LOGI(ATR_TAG, "team rng is %" PRId8, team);
-
+        loadSPSona(&loadedProfile.swsn.core); // load the sona image from swadgepass data
         loadedProfile.team = team;
-       
         ESP_LOGI(ATR_TAG, "assigned team is %" PRId8, loadedProfile.team);
 
         packProfileData(&loadedProfile);
@@ -1536,7 +1542,7 @@ userProfile_t loadProfileFromNVS(void)
 
     ESP_LOGI(ATR_TAG, "Generating swadgesona image");
 
-    generateSwadgesonaImage(&loadedProfile.swsn, false);
+    generateSwadgesonaImage(&loadedProfile.swsn, true);
 
     ESP_LOGI(ATR_TAG,
              "Profile loaded from NVS: packedProfile=%" PRId32 ", numPasses=%" PRId8 ", points=%" PRId32
@@ -1659,22 +1665,8 @@ void unpackProfileData(userProfile_t* profile)
 }
 
 static void atrSetLeds(int team, uint64_t elapsedUs)
-{//TODO: test this on a pulse swadge
-    atr->animTimer += elapsedUs;
-    if (atr->animTimer >= ANIM_TIMER_MS*20 && atr->ledChase <=  CONFIG_NUM_LEDS)
-    {
-        atr->animTimer = 0;
-        atr->ledChase++;
-        atrClearLeds();
-    }
-    if (atr->ledChase > CONFIG_NUM_LEDS)
-    {
-        atr->ledChase = 0;
-        atrClearLeds();
-    }
-    ESP_LOGI(ATR_TAG, "Setting LEDs for team %" PRId8 " with ledChase %" PRId8 "", team, atr->ledChase);
-
-    switch(team){
+{
+  switch(team){
         case 0: // red
             for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
             {
@@ -1716,8 +1708,8 @@ static void atrSetLeds(int team, uint64_t elapsedUs)
             }
             break;
     }
-    //LED chase
-    setLeds(atr->leds, atr->ledChase);
+    
+    setLeds(atr->leds, CONFIG_NUM_LEDS);
     
     
 }
