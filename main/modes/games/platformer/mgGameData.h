@@ -50,6 +50,7 @@ typedef struct
     int16_t comboTimer;
     uint32_t comboScore;
 
+    uint8_t enemiesKilled;
     bool extraLifeCollected;
     uint8_t levelDeaths;
     uint8_t initialHp;
