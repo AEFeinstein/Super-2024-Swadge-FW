@@ -99,7 +99,6 @@ typedef enum
     MG_BGM_BOSS_SMASH_GORILLA,
     MG_BGM_BOSS_TRASH_MAN,
 
-    MG_BGM_BIGMA,
     MG_BGM_BOSS_BIGMA,
     MG_BGM_LEVEL_CLEAR_JINGLE,
     MG_BGM_POST_FIGHT,
@@ -112,6 +111,8 @@ typedef enum
     MG_BGM_THE_GAUNTLET,
     MG_BGM_THE_FINAL_MEGAJAM,
     MG_BGM_LOOKS_LIKE_WE_MADE_IT,
+    MG_BGM_SAWTOOTHS_THEME,
+    MG_BGM_CLIMAX,
 } mg_bgmEnum_t;
 
 typedef enum
@@ -229,6 +230,23 @@ typedef enum
     MG_SP_PLAYER_DOUBLE_JUMP_3,
     MG_SP_PLAYER_DOUBLE_JUMP_4,
     MG_SP_PLAYER_DOUBLE_JUMP_5,
+    MG_SP_EXTRA_LIFE_0,
+    MG_SP_EXTRA_LIFE_1,
+    MG_SP_EXTRA_LIFE_2,
+    MG_SP_EXTRA_LIFE_3,
+    MG_SP_EXTRA_LIFE_4,
+    MG_SP_EXTRA_LIFE_5,
+    MG_SP_EXTRA_LIFE_6,
+    MG_SP_EXTRA_LIFE_7,
+    MG_SP_PLAYER_DEATH_0,
+    MG_SP_PLAYER_DEATH_1,
+    MG_SP_PLAYER_DEATH_2,
+    MG_SP_PLAYER_DEATH_3,
+    MG_SP_PLAYER_DEATH_4,
+    MG_SP_PLAYER_DEATH_5,
+    MG_SP_PLAYER_DEATH_6,
+    MG_SP_PLAYER_DEATH_7,
+    MG_SP_PLAYER_DEATH_8,
 } mg_spriteDef_t;
 
 typedef enum
@@ -779,6 +797,23 @@ typedef enum
     MG_WSG_PLAYER_DOUBLE_JUMP_3,
     MG_WSG_PLAYER_DOUBLE_JUMP_4,
     MG_WSG_PLAYER_DOUBLE_JUMP_5,
+    MG_WSG_EXTRA_LIFE_0,
+    MG_WSG_EXTRA_LIFE_1,
+    MG_WSG_EXTRA_LIFE_2,
+    MG_WSG_EXTRA_LIFE_3,
+    MG_WSG_EXTRA_LIFE_4,
+    MG_WSG_EXTRA_LIFE_5,
+    MG_WSG_EXTRA_LIFE_6,
+    MG_WSG_EXTRA_LIFE_7,
+    MG_WSG_PLAYER_DEATH_0,
+    MG_WSG_PLAYER_DEATH_1,
+    MG_WSG_PLAYER_DEATH_2,
+    MG_WSG_PLAYER_DEATH_3,
+    MG_WSG_PLAYER_DEATH_4,
+    MG_WSG_PLAYER_DEATH_5,
+    MG_WSG_PLAYER_DEATH_6,
+    MG_WSG_PLAYER_DEATH_7,
+    MG_WSG_PLAYER_DEATH_8,
 } mg_wsgIndex_t;
 
 typedef enum
@@ -1165,8 +1200,10 @@ extern const trophyData_t platformerTrophies[];
 extern void goToReadyScreen(void);
 extern void startCreditMusic(void);
 extern void startPostFightMusic(void);
+extern void queueTrophy(void);
 extern void startHankMusic(void);
 extern void startTrashManMusic(void);
+extern void getTrashManTrophy(void);
 extern void initBossFight(void);
 extern void startMegajamMusic(void);
 extern void stopMusic(void);

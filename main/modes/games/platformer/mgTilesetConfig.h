@@ -46,6 +46,7 @@ extern const mgSprite_t mg_flareGryffynBossSpriteMetadataSet[];
 extern const mgSprite_t mg_deadeyeChirpziBossSpriteMetadataSet[];
 extern const mgSprite_t mg_trashManBossSpriteMetadataSet[];
 extern const mgSprite_t mg_bigmaBossSpriteMetadataSet[];
+extern const mgSprite_t mg_hankBossSpriteMetadataSet[];
 extern const uint16_t mg_severYatagaTileset[];
 extern const uint16_t mg_trashManTileset[];
 extern const uint16_t mg_grindPangolinTileset[];

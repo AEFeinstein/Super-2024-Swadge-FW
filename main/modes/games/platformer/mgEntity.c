@@ -59,11 +59,20 @@ const mg_spriteDef_t severYatagaFlyingFrames[] = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG
 
 const mg_spriteDef_t drainBatAnimFrames[] = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG_SP_BOSS_2, MG_SP_BOSS_3, MG_SP_BOSS_4};
 
+#define DRAIN_BAT_PRE_TELEPORT_FRAMES 60
+
+// Wave ball animation update interval (in game frames). Larger = slower
+#define ANIM_TICK 8
+
 const mg_spriteDef_t flareGryffynGuitarSpinFrames[] = {MG_SP_BOSS_2, MG_SP_BOSS_3, MG_SP_BOSS_4, MG_SP_BOSS_5};
 
 const mg_spriteDef_t smashGorillaStompFrames[] = {MG_SP_BOSS_1, MG_SP_BOSS_3};
 
 const mg_spriteDef_t smashGorillaChargeFrames[] = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG_SP_BOSS_2, MG_SP_BOSS_3};
+
+const mg_spriteDef_t charginSchmuckAnimFrames[] = {MG_SP_CHARGIN_SCHMUCK_RUN1, MG_SP_CHARGIN_SCHMUCK_RUN2};
+
+const mg_spriteDef_t spikyMcGeeAnimFrames[] = {MG_SP_SPIKY_MCGEE, MG_SP_SPIKY_MCGEE_2};
 
 //==============================================================================
 // Functions Prototypes
@@ -120,12 +129,6 @@ void mg_initializeEntity(mgEntity_t* self, mgEntityManager_t* entityManager, mgT
 
 void mg_updatePlayer(mgEntity_t* self)
 {
-    if (self->gameData->level == 1 && !self->gameData->kineticSkipped && self->x > 59770 && self->x < 60000
-        && self->y < 15400 && self->gameData->abilities & (1U << MG_CAN_OF_SALSA_ABILITY))
-    {
-        self->gameData->kineticSkipped = true;
-        bossIntroCutscene(self->gameData);
-    }
     switch (self->state)
     {
         case MG_PL_ST_NORMAL:
@@ -1155,8 +1158,10 @@ void mg_bossRushLogic(mgEntity_t* self)
     uint8_t nextBoss  = 0;
     uint8_t nextLevel = 0;
 
-    isABoss = self->spriteFlipVertical && self->entityManager->wsgManager->sprites[self->spriteIndex].wsg->w > 30
-              && self->entityManager->wsgManager->sprites[self->spriteIndex].wsg->h > 30;
+    isABoss = (self->spriteIndex == MG_SP_BOSS_0 || self->spriteIndex == MG_SP_BOSS_1
+               || self->spriteIndex == MG_SP_BOSS_2 || self->spriteIndex == MG_SP_BOSS_3
+               || self->spriteIndex == MG_SP_BOSS_4 || self->spriteIndex == MG_SP_BOSS_5
+               || self->spriteIndex == MG_SP_BOSS_6 || self->spriteIndex == MG_SP_BOSS_7);
 
     if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_KINETIC_DONUT)
     {
@@ -1207,9 +1212,6 @@ void mg_bossRushLogic(mgEntity_t* self)
         if (nextBoss > 0)
         {
             mg_loadWsgSet(self->entityManager->wsgManager, leveldef[nextLevel].defaultWsgSetIndex);
-            mg_setBgm(self->soundManager, leveldef[nextLevel].bossBgmIndex);
-            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
-            soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
             mgEntity_t* boss = mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX,
                                                self->entityManager->bossSpawnY);
             boss->state      = 0;
@@ -1226,7 +1228,8 @@ void mg_bossRushLogic(mgEntity_t* self)
                 boss->y -= 4 << SUBPIXEL_RESOLUTION;
             }
         }
-        else
+        // Plays post fight once flare gryffyn has gone off screen ONLY if the player hasn't touched the mixtape yet.
+        else if (self->soundManager->currentBgmIndex != MG_BGM_LEVEL_CLEAR_JINGLE)
         {
             mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
             midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
@@ -1299,7 +1302,7 @@ void animatePlayer(mgEntity_t* self)
 
     if (!self->gravityEnabled)
     {
-        self->spriteIndex = MG_SP_PLAYER_CLIMB;
+        // self->spriteIndex = MG_SP_PLAYER_CLIMB;
         if (self->yspeed < 0 && self->gameData->frameCount % 10 == 0)
         {
             self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
@@ -1475,9 +1478,9 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_BOSS_FLARE_GRYFFYN:
         case ENTITY_BOSS_KINETIC_DONUT:
         case ENTITY_BOSS_SMASH_GORILLA:
-        // case ENTITY_BOSS_DRAIN_BAT: //this one can teleport inside you AND shoot you. let's cut the player some
-        // slack.
+        case ENTITY_BOSS_DRAIN_BAT:
         case ENTITY_BOSS_BIGMA:
+        case ENTITY_BOSS_HANK_WADDLE:
         {
             if (self->state == MG_PL_ST_MIC_DROP)
             {
@@ -1554,15 +1557,16 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 self->falling   = true;
             }
             else */
-            if (self->invincibilityFrames <= 0)
+            if (self->invincibilityFrames <= 0 && !(other->type == ENTITY_BOSS_DRAIN_BAT && other->state == 10))
             {
-                if (!self->gameData->cheatMode)
+                if (!self->gameData->cheatMode) // Drain bat's pre-teleport state doesn't hurt Pulse
                 {
                     // pulse takes damage (doubled if no plot armor)
                     self->hp -= 5 + (5 * !(self->gameData->abilities & (1U << MG_PLOT_ARMOR_ABILITY)));
                 }
 
                 self->gameData->comboTimer = 0;
+                self->gameData->combo      = 0;
 
                 if (self->shotsFired < 0)
                 {
@@ -1571,15 +1575,18 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
 
                 if (!self->gameData->debugMode && self->hp <= 0)
                 {
-                    self->updateFunction        = &updateEntityDead;
+                    self->updateFunction        = &updatePlayerDead;
                     self->type                  = ENTITY_DEAD;
                     self->xspeed                = 0;
-                    self->yspeed                = -60;
+                    self->yspeed                = -5;
+                    self->spriteIndex           = MG_SP_PLAYER_DEATH_0;
                     self->state                 = MG_PL_ST_HURT;
                     self->stateTimer            = 20;
                     self->gameData->changeState = MG_ST_DEAD;
-                    self->gravityEnabled        = true;
-                    self->falling               = true;
+                    self->gravityEnabled
+                        = false; // All entities get deactivated anyway going to the ready screen. So this is ok.
+                    self->falling        = true;
+                    self->animationTimer = 1;
                 }
                 else
                 {
@@ -1623,9 +1630,16 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             {
                 self->hp = 60;
             }
-            mg_scorePoints(self->gameData, 1000);
+            mg_scorePoints(self->gameData, 0);
             soundPlaySfx(&(self->soundManager->sndPowerUp), BZR_LEFT);
             // mg_updateLedsHpMeter(self->entityManager, self->gameData);
+            mg_destroyEntity(other, false);
+            break;
+        }
+        case ENTITY_EXTRA_LIFE:
+        {
+            self->gameData->lives++;
+            soundPlaySfx(&(self->soundManager->sndPowerUp), BZR_LEFT);
             mg_destroyEntity(other, false);
             break;
         }
@@ -1766,14 +1780,16 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
 
                 if (!self->gameData->debugMode && self->hp <= 0)
                 {
-                    self->updateFunction        = &updateEntityDead;
-                    self->type                  = ENTITY_DEAD;
-                    self->xspeed                = 0;
-                    self->yspeed                = -60;
-                    self->spriteIndex           = MG_SP_PLAYER_HURT;
-                    self->gameData->changeState = MG_ST_DEAD;
-                    self->gravityEnabled        = true;
-                    self->falling               = true;
+                    self->updateFunction = &updatePlayerDead;
+                    self->type           = ENTITY_DEAD;
+                    self->xspeed         = 0;
+                    self->yspeed         = -5;
+                    self->spriteIndex    = MG_SP_PLAYER_DEATH_0;
+                    self->gameData->changeState
+                        = MG_ST_DEAD; // All entities get deactivated anyway going to the ready screen. So this is ok.
+                    self->gravityEnabled = false;
+                    self->falling        = true;
+                    self->animationTimer = 1;
                 }
                 else
                 {
@@ -1788,6 +1804,10 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         }
         case ENTITY_MIXTAPE:
         {
+            if (!self->gameData->canGrabMixtape)
+            {
+                break;
+            }
             soundStop(true);
             mg_setBgm(self->soundManager, MG_BGM_LEVEL_CLEAR_JINGLE);
             midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
@@ -1862,7 +1882,8 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 break;
             }
 
-            if (self->type == ENTITY_BOSS_GRIND_PANGOLIN && (self->state == 1 || self->state == 2 || self->state == 4))
+            if (self->type == ENTITY_BOSS_GRIND_PANGOLIN && (self->state == 1 || self->state == 2 || self->state == 4)
+                && other->state != 2) // allows a fully charged shot to pierce.
             {
                 other->xspeed = -other->xspeed;
                 other->yspeed = -64;
@@ -2125,15 +2146,15 @@ bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx,
             mg_scorePoints(self->gameData, 50);
             break;
         }
-        case MG_TILE_LADDER:
-        {
-            if (self->gravityEnabled)
-            {
-                self->gravityEnabled = false;
-                self->xspeed         = 0;
-            }
-            break;
-        }
+        // case MG_TILE_LADDER:
+        // {
+        //     if (self->gravityEnabled)
+        //     {
+        //         self->gravityEnabled = false;
+        //         self->xspeed         = 0;
+        //     }
+        //     break;
+        // }
         // Spike or Lava Tiles
         case MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2 ... MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5:
         {
@@ -2467,6 +2488,16 @@ void updateEntityDead(mgEntity_t* self)
     despawnWhenOffscreen(self);
 }
 
+void updatePlayerDead(mgEntity_t* self)
+{
+    updateEntityDead(self);
+    if (self->spriteIndex < MG_SP_PLAYER_DEATH_8 && self->gameData->frameCount % ANIM_TICK == 0)
+    {
+        self->animationTimer++;
+        self->spriteIndex = MG_SP_PLAYER_DEATH_0 + self->animationTimer;
+    }
+}
+
 void updatePowerUp(mgEntity_t* self)
 {
     /*if (self->gameData->frameCount % 10 == 0)
@@ -2475,6 +2506,17 @@ void updatePowerUp(mgEntity_t* self)
             = ((self->entityManager->playerEntity->hp < 2) ? MG_SP_GAMING_1 : MG_SP_MUSIC_1) + ((self->spriteIndex + 1)
     % 3);
     }*/
+
+    mg_moveEntityWithTileCollisions(self);
+    applyGravity(self);
+    despawnWhenOffscreen(self);
+}
+
+void updateExtraLife(mgEntity_t* self)
+{
+    self->animationTimer++;
+
+    self->spriteIndex = MG_SP_EXTRA_LIFE_0 + ((self->animationTimer / 8) % 8);
 
     mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
@@ -2939,6 +2981,7 @@ void updateWasp(mgEntity_t* self)
             break;
     }
 
+    self->spriteFlipHorizontal = (self->xspeed > 0) ? false : true;
     mg_updateInvincibilityFrames(self);
     despawnWhenOffscreen(self);
     mg_moveEntityWithTileCollisions(self);
@@ -3009,6 +3052,7 @@ void updateWaspL2(mgEntity_t* self)
             break;
     }
 
+    self->spriteFlipHorizontal = (self->xspeed > 0) ? false : true;
     despawnWhenOffscreen(self);
     mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
@@ -3078,6 +3122,7 @@ void updateWaspL3(mgEntity_t* self)
             break;
     }
 
+    self->spriteFlipHorizontal = (self->xspeed > 0) ? false : true;
     mg_updateInvincibilityFrames(self);
     despawnWhenOffscreen(self);
     mg_moveEntityWithTileCollisions(self);
@@ -3153,6 +3198,18 @@ bool waspTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint
 
 void killEnemy(mgEntity_t* target)
 {
+    bool isABoss = (target->type == ENTITY_BOSS_BIGMA || target->type == ENTITY_BOSS_KINETIC_DONUT
+                    || target->type == ENTITY_BOSS_GRIND_PANGOLIN || target->type == ENTITY_BOSS_SEVER_YATAGA
+                    || target->type == ENTITY_BOSS_TRASH_MAN || target->type == ENTITY_BOSS_SMASH_GORILLA
+                    || target->type == ENTITY_BOSS_DEADEYE_CHIRPZI || target->type == ENTITY_BOSS_DRAIN_BAT
+                    || target->type == ENTITY_BOSS_FLARE_GRYFFYN || target->type == ENTITY_BOSS_HANK_WADDLE);
+
+    if (target->type == ENTITY_BOSS_TRASH_MAN && target->gameData->level == 4)
+    {
+        // He gets launched to space from the cutscene.
+        target->yspeed = -target->yMaxSpeed;
+    }
+
     target->homeTileX          = 0;
     target->homeTileY          = 0;
     target->gravityEnabled     = true;
@@ -3165,9 +3222,9 @@ void killEnemy(mgEntity_t* target)
         target->spawnData                = NULL;
     }
 
-    // eh... that pretty much means it's a boss
-    if (target->entityManager->wsgManager->sprites[target->spriteIndex].wsg->w > 30
-        && target->entityManager->wsgManager->sprites[target->spriteIndex].wsg->h > 30)
+    target->gameData->enemiesKilled++;
+
+    if (isABoss)
     {
         if (target->gameData->level == 11)
         {
@@ -3179,9 +3236,25 @@ void killEnemy(mgEntity_t* target)
             }
         }
     }
-    else if ((esp_random() % 100) > 90)
+    else if (target->scoreValue > 0 && (!(target->gameData->enemiesKilled % 16))
+             && (!target->gameData->extraLifeCollected)) // Every 16th enemy killed
+    {
+        createExtraLife(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
+        target->gameData->extraLifeCollected = true; // Prevent farming lives in areas with infinite enemy spawn, if you
+                                                     // don't collect the life right away
+    }
+    else if (target->scoreValue > 0 && (!(target->gameData->enemiesKilled % 8))) // Every 8th enemy killed
     {
         createPowerUp(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
+    }
+
+    /* If the killer is not the target itself (i.e. the boss wasn't currently running its own update),
+     * run their update immediately so kills from other entities (player Mic Drop / Sure You Can) get one
+     * extra frame of behavior. This avoids double-running when the boss is killed during its
+     * own update (e.g. by a wave ball that the boss collides with). */
+    if (target->entityManager->currentUpdating != target)
+    {
+        target->updateFunction(target);
     }
 
     target->updateFunction = &updateEntityDead;
@@ -3298,9 +3371,9 @@ void updateWaveBall(mgEntity_t* self)
 {
     self->spriteRotateAngle = getAtan2(self->yspeed, self->xspeed);
 
-    self->animationTimer++;
-    if (self->gameData->frameCount % 2 == 0)
+    if (self->gameData->frameCount % ANIM_TICK == 0)
     {
+        self->animationTimer++;
         switch (self->state)
         {
             case 0:
@@ -3409,13 +3482,15 @@ void killPlayer(mgEntity_t* self)
     self->hp = 0;
     mg_updateLedsHpMeter(self->entityManager, self->gameData);
 
-    self->updateFunction        = &updateEntityDead;
+    self->updateFunction        = &updatePlayerDead;
     self->type                  = ENTITY_DEAD;
     self->xspeed                = 0;
-    self->yspeed                = -60;
+    self->yspeed                = -5;
     self->spriteIndex           = MG_SP_PLAYER_HURT;
     self->gameData->changeState = MG_ST_DEAD;
     self->falling               = true;
+    self->gravityEnabled        = false;
+    self->animationTimer        = 1;
 }
 
 void mg_defaultEntityDrawHandler(mgEntity_t* self)
@@ -3490,13 +3565,200 @@ void mg_updateTurret(mgEntity_t* self)
 
                 if (self->entityManager->playerEntity != NULL)
                 {
-                    self->jumpPower = getAtan2(self->entityManager->playerEntity->y - self->y,
+                    self->jumpPower = getAtan2(self->y - self->entityManager->playerEntity->y,
                                                self->entityManager->playerEntity->x - self->x);
                 }
 
                 self->jumpPower = clampAngleTo8way(self->jumpPower);
 
-                self->state = 1;
+                switch (self->spriteRotateAngle)
+                {
+                    case 0:
+                    default:
+                        switch (self->jumpPower)
+                        {
+                            case 0:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = false;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 45:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = false;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 90:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_VERTICAL;
+                                // self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 135:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = true;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 180:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = true;
+                                self->state                = 1;
+                                break;
+                            }
+                            default:
+                            {
+                                self->state      = 0;
+                                self->stateTimer = 0;
+                                break;
+                            }
+                        }
+                        break;
+                    case 90:
+                        switch (self->jumpPower)
+                        {
+                            case 90:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = false;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 135:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = false;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 180:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_VERTICAL;
+                                // self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 225:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = true;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 270:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = true;
+                                self->state                = 1;
+                                break;
+                            }
+                            default:
+                            {
+                                self->state      = 0;
+                                self->stateTimer = 0;
+                                break;
+                            }
+                        }
+                        break;
+                    case 180:
+                        switch (self->jumpPower)
+                        {
+                            case 180:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = false;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 225:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = false;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 270:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_VERTICAL;
+                                // self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 315:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = true;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 0:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = true;
+                                self->state                = 1;
+                                break;
+                            }
+                            default:
+                            {
+                                self->state      = 0;
+                                self->stateTimer = 0;
+                                break;
+                            }
+                        }
+                        break;
+                    case 270:
+                        switch (self->jumpPower)
+                        {
+                            case 270:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = false;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 315:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = false;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 0:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_VERTICAL;
+                                // self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 45:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = true;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 90:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = true;
+                                self->state                = 1;
+                                break;
+                            }
+                            default:
+                            {
+                                self->state      = 0;
+                                self->stateTimer = 0;
+                                break;
+                            }
+                        }
+                        break;
+                }
             }
             break;
         case 1 ... 3:
@@ -3512,7 +3774,7 @@ void mg_updateTurret(mgEntity_t* self)
                     int16_t cos = getCos1024(self->jumpPower);
 
                     createdEntity->xspeed = (64 * cos) / 1024;
-                    createdEntity->yspeed = (64 * sin) / 1024;
+                    createdEntity->yspeed = (64 * -sin) / 1024;
 
                     createdEntity->linkedEntity = self;
                     self->state++;
@@ -3593,6 +3855,8 @@ void mg_updateCharginSchmuck(mgEntity_t* self)
         case 1:
 
             self->stateTimer++;
+
+            self->spriteIndex = charginSchmuckAnimFrames[(self->stateTimer >> 2) & 0b1];
 
             if (!(self->stateTimer % 10))
             {
@@ -4734,16 +4998,26 @@ void mg_updateBossDrainBat(mgEntity_t* self)
                 {
                     case 0:
                     default:
-                        self->x     = TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48 + (esp_random() % 184));
-                        self->y     = self->entityManager->playerEntity->y - 128;
-                        self->state = 1;
+                        /* Jump target chosen; show warp (black hole) first so player can react, then
+                         * switch to real state 1. */
+                        self->x        = TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48 + (esp_random() % 184));
+                        self->y        = self->entityManager->playerEntity->y - 128;
+                        self->special1 = 1;  /* store next real state */
+                        self->state    = 10; /* PRE-TELEPORT */
+                        self->invincibilityFrames = DRAIN_BAT_PRE_TELEPORT_FRAMES;
+                        self->stateTimer          = 0;
+                        self->spriteIndex         = MG_SP_WARP_1;
                         break;
                     case 1:
-                        self->x     = (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
-                                          ? TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48)
-                                          : TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 232);
-                        self->y     = (TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetY + 48));
-                        self->state = 2;
+                        self->x                   = (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
+                                                        ? TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48)
+                                                        : TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 232);
+                        self->y                   = (TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetY + 48));
+                        self->special1            = 2;  /* store next real state */
+                        self->state               = 10; /* PRE-TELEPORT */
+                        self->invincibilityFrames = DRAIN_BAT_PRE_TELEPORT_FRAMES;
+                        self->stateTimer          = 0;
+                        self->spriteIndex         = MG_SP_WARP_1;
                         break;
                 }
             }
@@ -4859,6 +5133,26 @@ void mg_updateBossDrainBat(mgEntity_t* self)
             {
                 self->stateTimer = 0;
                 self->state      = 0;
+            }
+            break;
+
+        case 10:
+            /* Pre-teleport: draw warp/black-hole sprite for a few frames before appearing. */
+            self->stateTimer++;
+            if (self->stateTimer < DRAIN_BAT_PRE_TELEPORT_FRAMES)
+            {
+                /* Animate warp using warp frames */
+                self->spriteIndex = MG_SP_WARP_1 + ((self->stateTimer >> 2) % 3);
+                self->visible     = true;
+            }
+            else
+            {
+                /* Appear now and switch to the previously intended state */
+                uint8_t nextState = (uint8_t)(self->special1);
+                self->state       = nextState;
+                self->stateTimer  = 0;
+                /* Ensure Drain Bat idle animation is set */
+                self->spriteIndex = drainBatAnimFrames[(self->stateTimer >> 3) % 5];
             }
             break;
     }
@@ -5102,7 +5396,10 @@ void mg_updateBossKineticDonut(mgEntity_t* self)
         mg_deactivateAllEntities(self->entityManager, true);
         self->active       = true;
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
-        startOutroCutscene(self);
+        if (!self->gameData->kineticSkipped)
+        {
+            startOutroCutscene(self);
+        }
     }
     despawnWhenOffscreen(self);
 }
@@ -5821,9 +6118,12 @@ void mg_updateBossBigma(mgEntity_t* self)
 
     mg_detectEntityCollisions(self);
 
-    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
+    if (self->type == ENTITY_DEAD && self->gameData->level != 11)
     {
-        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        mg_deactivateAllEntities(self->entityManager, true);
+
+        self->linkedEntity = createMixtape(self->entityManager, self->entityManager->bossSpawnX - 100,
+                                           self->entityManager->bossSpawnY - 20);
         startOutroCutscene(self);
     }
     // despawnWhenOffscreen(self);
@@ -6014,6 +6314,11 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
 
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
+        self->spriteIndex = MG_SP_BOSS_6; // hank is dead frame
+        mg_setBgm(self->soundManager, MG_BGM_CLIMAX);
+        midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+        soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+        globalMidiPlayerGet(MIDI_BGM)->loop = false; // Climax should end in silence.
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
     }
@@ -6024,17 +6329,27 @@ void startOutroCutscene(mgEntity_t* self)
 {
     mg_deactivateAllEntitiesOfType(self->entityManager, ENTITY_WAVE_BALL); // so the player doesn't get hurt right after
                                                                            // the winning cutscene.
+    self->entityManager->playerEntity->shotsFired = 0;
     if (self->gameData->level != 7)
     {
         // just don't pause the countdown on level 7 because then you can't try out the newly acquired Shoop Da Woop.
         self->gameData->pauseCountdown = true;
     }
     // Cutscene after the boss fight
-    if (self->gameData->level == 9) // I really liked this song earlier in development for sunny's reveal.
+    if (self->gameData->level == 9) // custom song from Joe for sawtooth reveal.
     {
-        mg_setBgm(self->soundManager, MG_BGM_BOSS_DRAIN_BAT);
+        mg_setBgm(self->soundManager, MG_BGM_SAWTOOTHS_THEME);
         midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
         soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
     }
     bossOutroCutscene(self->gameData);
+}
+
+void mg_updateSpikyMcGee(mgEntity_t* self)
+{
+    self->stateTimer++;
+
+    self->spriteIndex = spikyMcGeeAnimFrames[(self->stateTimer >> 4) & 0b1];
+
+    despawnWhenOffscreen(self);
 }

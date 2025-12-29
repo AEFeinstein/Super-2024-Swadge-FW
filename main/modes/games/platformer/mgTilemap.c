@@ -397,6 +397,12 @@ void mg_hashSpawnEntity(mgEntityManager_t* entityManager, mgEntitySpawnData_t* e
                 actualYOffset         = -10;
                 break;
             }
+            case 10:
+            {
+                entitySpawnData->type = ENTITY_BOSS_BIGMA;
+                actualYOffset         = -20;
+                break;
+            }
             default:
             {
                 break;
