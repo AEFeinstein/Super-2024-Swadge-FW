@@ -51,10 +51,7 @@ typedef struct
     list_t faceList;
 
     vec_t pointerCoords; // x and y are int32 allowing us to turn 2billies into 280 X_pixels
-    bool pointingRight;
-    bool pointingLeft;
-    bool pointingUp;
-    bool pointingDown;
+    int16_t evt_state;
 
     bool ZenMode;
     bool ShowMenu;
@@ -85,14 +82,6 @@ static const int32_t MillisPerPixel    = 5000; // How many milliseconds of "movi
 static const int32_t DanceDurationMult = 200;
 static const int32_t PenaltyMillis     = 3000000; // Milliseconds penalized from the timer on a wrong click
 const trophyData_t findingFacesModeTrophies[] = {
-    {
-        .title       = "MANHUNT!",
-        .description = "Opened Mascot Madness for the first time.",
-        .image       = MMX_TROPHY_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1, // For trigger type, set to one
-    },
     {
         .title       = "Minute to Win It!",
         .description = "Have more than 60 seconds banked in time attack.",
@@ -359,7 +348,6 @@ bool finderMainMenuCb(const char* label, bool selected, uint32_t value)
 }
 static void findingEnterMode(void)
 {
-    trophyUpdate(&findingFacesModeTrophies[0], 1, true);
     finder                = heap_caps_calloc(1, sizeof(finder_t), MALLOC_CAP_8BIT);
     finder->ibm           = getSysFont();
     finder->text          = c153;
@@ -367,10 +355,7 @@ static void findingEnterMode(void)
     finder->stage         = 0;
     finder->score         = 0;
     finder->timer         = StartTime;
-    finder->pointingDown  = false;
-    finder->pointingUp    = false;
-    finder->pointingLeft  = false;
-    finder->pointingRight = false;
+    finder->evt_state     = 0;
     finder->pointerCoords = (vec_t){
         .x = 0,
         .y = 0,
@@ -417,30 +402,11 @@ static void findingMainLoop(int64_t elapsedUs)
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
+        finder->evt_state = evt.state;
         if (evt.down && !finder->ShowMenu)
         {
             switch (evt.button)
             {
-                case PB_LEFT:
-                {
-                    finder->pointingLeft = true;
-                    break;
-                }
-                case PB_UP:
-                {
-                    finder->pointingUp = true;
-                    break;
-                }
-                case PB_RIGHT:
-                {
-                    finder->pointingRight = true;
-                    break;
-                }
-                case PB_DOWN:
-                {
-                    finder->pointingDown = true;
-                    break;
-                }
                 case PB_A:
                 {
                     if (finder->millisInstructing > 0)
@@ -475,27 +441,27 @@ static void findingMainLoop(int64_t elapsedUs)
                                 // Time attack score trophies: 1500, 3000, 6000, 12000 score
                                 if (finder->timer > 60000000)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[1], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[0], 1, true);
                                 }
                                 if (finder->timer > 120000000)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[2], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[1], 1, true);
                                 }
                                 if (finder->score >= 1500)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[3], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[2], 1, true);
                                 }
                                 if (finder->score >= 3000)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[4], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[3], 1, true);
                                 }
                                 if (finder->score >= 6000)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[5], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[4], 1, true);
                                 }
                                 if (finder->score >= 12000)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[6], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[5], 1, true);
                                 }
                             }
                             else
@@ -505,15 +471,15 @@ static void findingMainLoop(int64_t elapsedUs)
                                 // Zen mode trophies: 50, 69, 100 rounds
                                 if (finder->score >= 50)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[7], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[6], 1, true);
                                 }
                                 if (finder->score >= 69)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[8], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[7], 1, true);
                                 }
                                 if (finder->score >= 100)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[9], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[8], 1, true);
                                 }
                             }
                             finder->millisInstructing = TimePerInstruction;
@@ -547,8 +513,8 @@ static void findingMainLoop(int64_t elapsedUs)
                     }
                     else
                     {
-                        // finder->timer = 0; //uncomment me for final release
-                        finder->timer += 10000000;
+                        finder->millisInstructing = 0; // uncomment me for final release
+                        // finder->timer += 10000000;
                     }
                 }
                 default:
@@ -560,37 +526,6 @@ static void findingMainLoop(int64_t elapsedUs)
         else if (evt.down && finder->ShowMenu)
         {
             finder->mainMenu = menuButton(finder->mainMenu, evt);
-        }
-        else
-        {
-            // stop moving the pointer
-            switch (evt.button)
-            {
-                case PB_LEFT:
-                {
-                    finder->pointingLeft = false;
-                    break;
-                }
-                case PB_UP:
-                {
-                    finder->pointingUp = false;
-                    break;
-                }
-                case PB_RIGHT:
-                {
-                    finder->pointingRight = false;
-                    break;
-                }
-                case PB_DOWN:
-                {
-                    finder->pointingDown = false;
-                    break;
-                }
-                default:
-                {
-                    break;
-                }
-            }
         }
     } // End button checking
 
@@ -676,7 +611,7 @@ static void findingMainLoop(int64_t elapsedUs)
         }
 
         // Move the pointer
-        if (finder->pointingUp)
+        if (finder->evt_state & PB_UP)
         {
             finder->pointerCoords.y -= elapsedUs;
             if (finder->pointerCoords.y < 0)
@@ -684,7 +619,7 @@ static void findingMainLoop(int64_t elapsedUs)
                 finder->pointerCoords.y = 239 * MillisPerPixel; // Wrap around to not quite the bottom pixel
             }
         }
-        if (finder->pointingDown)
+        if (finder->evt_state & PB_DOWN)
         {
             finder->pointerCoords.y += elapsedUs;
             if (finder->pointerCoords.y > 240 * MillisPerPixel)
@@ -692,7 +627,7 @@ static void findingMainLoop(int64_t elapsedUs)
                 finder->pointerCoords.y = MillisPerPixel; // Wrap around to not quite the top pixel
             }
         }
-        if (finder->pointingLeft)
+        if (finder->evt_state & PB_LEFT)
         {
             finder->pointerCoords.x -= elapsedUs;
             if (finder->pointerCoords.x < 0)
@@ -700,7 +635,7 @@ static void findingMainLoop(int64_t elapsedUs)
                 finder->pointerCoords.x = 279 * MillisPerPixel; // Wrap around to not quite the rightmost pixel
             }
         }
-        if (finder->pointingRight)
+        if (finder->evt_state & PB_RIGHT)
         {
             finder->pointerCoords.x += elapsedUs;
             if (finder->pointerCoords.x > 280 * MillisPerPixel)

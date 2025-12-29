@@ -172,15 +172,15 @@ const trophyData_t mainMenuTrophies[] = {
         .maxVal      = 1,
         .identifier  = &tunernomeMode,
     },
-    {
-        .title       = "The smallest player",
-        .description = "Opened MIDI Player for the first time",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-        .identifier  = &synthMode,
-    },
+    // {
+    //     .title       = "The smallest player",
+    //     .description = "Opened MIDI Player for the first time",
+    //     .image       = NO_IMAGE_SET,
+    //     .type        = TROPHY_TYPE_TRIGGER,
+    //     .difficulty  = TROPHY_DIFF_EASY,
+    //     .maxVal      = 1,
+    //     .identifier  = &synthMode,
+    // },
     {
         .title       = "The song of my people",
         .description = "Opened Swadgetamatone for the first time",
@@ -234,6 +234,15 @@ const trophyData_t mainMenuTrophies[] = {
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
         .identifier  = &gamepadMode,
+    },
+    {
+        .title       = "MANHUNT!",
+        .description = "Opened Mascot Madness for the first time.",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+        .identifier  = &findingFacesMode,
     },
 };
 
