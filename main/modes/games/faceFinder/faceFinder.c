@@ -513,8 +513,8 @@ static void findingMainLoop(int64_t elapsedUs)
                     }
                     else
                     {
-                        finder->millisInstructing = 0; //uncomment me for final release
-                        //finder->timer += 10000000;
+                        finder->millisInstructing = 0; // uncomment me for final release
+                        // finder->timer += 10000000;
                     }
                 }
                 default:
