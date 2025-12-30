@@ -184,24 +184,36 @@ void mg_updateLedsShowHighScores(mgGameData_t* gameData)
         {
             if (((gameData->frameCount >> 4) % CONFIG_NUM_LEDS) == i)
             {
-                gameData->leds[i].r = 0xF0;
-                gameData->leds[i].g = 0xF0;
-                gameData->leds[i].b = 0x00;
+                gameData->leds[i].r = 0xFF;
+                gameData->leds[i].g = 0xFF;
+                gameData->leds[i].b = 0xFF;
             }
 
-            if (gameData->leds[i].r > 0)
+            if (gameData->leds[i].r > 0x10)
             {
-                gameData->leds[i].r -= 0x05;
+                gameData->leds[i].r -= 0x10;
+            }
+            else
+            {
+                gameData->leds[i].r -= 0;
             }
 
-            if (gameData->leds[i].g > 0)
+            if (gameData->leds[i].g > 0x20)
             {
-                gameData->leds[i].g -= 0x10;
+                gameData->leds[i].g -= 0x20;
+            }
+            else
+            {
+                gameData->leds[i].g -= 0;
             }
 
-            if (gameData->leds[i].b > 0)
+            if (gameData->leds[i].b > 0x80)
             {
-                gameData->leds[i].b = 0x00;
+                gameData->leds[i].b -= 0x80;
+            }
+            else
+            {
+                gameData->leds[i].b = 0;
             }
         }
     }
