@@ -260,6 +260,23 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(PULSE_DOUBLE_JUMP_3_WSG, &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_3], false);
     loadWsg(PULSE_DOUBLE_JUMP_4_WSG, &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_4], false);
     loadWsg(PULSE_DOUBLE_JUMP_5_WSG, &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_5], false);
+    loadWsg(SPRITE_050_WSG, &self->wsgs[MG_WSG_EXTRA_LIFE_0], false);
+    loadWsg(SPRITE_051_WSG, &self->wsgs[MG_WSG_EXTRA_LIFE_1], false);
+    loadWsg(SPRITE_052_WSG, &self->wsgs[MG_WSG_EXTRA_LIFE_2], false);
+    loadWsg(SPRITE_053_WSG, &self->wsgs[MG_WSG_EXTRA_LIFE_3], false);
+    loadWsg(SPRITE_054_WSG, &self->wsgs[MG_WSG_EXTRA_LIFE_4], false);
+    loadWsg(SPRITE_055_WSG, &self->wsgs[MG_WSG_EXTRA_LIFE_5], false);
+    loadWsg(SPRITE_056_WSG, &self->wsgs[MG_WSG_EXTRA_LIFE_6], false);
+    loadWsg(SPRITE_057_WSG, &self->wsgs[MG_WSG_EXTRA_LIFE_7], false);
+    loadWsg(PULSE_DEATH_0_WSG, &self->wsgs[MG_WSG_PLAYER_DEATH_0], false);
+    loadWsg(PULSE_DEATH_1_WSG, &self->wsgs[MG_WSG_PLAYER_DEATH_1], false);
+    loadWsg(PULSE_DEATH_2_WSG, &self->wsgs[MG_WSG_PLAYER_DEATH_2], false);
+    loadWsg(PULSE_DEATH_3_WSG, &self->wsgs[MG_WSG_PLAYER_DEATH_3], false);
+    loadWsg(PULSE_DEATH_4_WSG, &self->wsgs[MG_WSG_PLAYER_DEATH_4], false);
+    loadWsg(PULSE_DEATH_5_WSG, &self->wsgs[MG_WSG_PLAYER_DEATH_5], false);
+    loadWsg(PULSE_DEATH_6_WSG, &self->wsgs[MG_WSG_PLAYER_DEATH_6], false);
+    loadWsg(PULSE_DEATH_7_WSG, &self->wsgs[MG_WSG_PLAYER_DEATH_7], false);
+    loadWsg(PULSE_DEATH_8_WSG, &self->wsgs[MG_WSG_PLAYER_DEATH_8], false);
 }
 
 void mg_initializeSprites(mgWsgManager_t* self)
@@ -550,15 +567,15 @@ void mg_initializeSprites(mgWsgManager_t* self)
 
     self->sprites[MG_SP_TURRET_HORIZONTAL].wsg    = &self->wsgs[MG_WSG_TURRET_HORIZONTAL];
     self->sprites[MG_SP_TURRET_HORIZONTAL].origin = &origin_15_15;
-    self->sprites[MG_SP_TURRET_HORIZONTAL].hitBox = &box_24_24;
+    self->sprites[MG_SP_TURRET_HORIZONTAL].hitBox = &box_turret;
 
     self->sprites[MG_SP_TURRET_45DEG].wsg    = &self->wsgs[MG_WSG_TURRET_45DEG];
     self->sprites[MG_SP_TURRET_45DEG].origin = &origin_15_15;
-    self->sprites[MG_SP_TURRET_45DEG].hitBox = &box_24_24;
+    self->sprites[MG_SP_TURRET_45DEG].hitBox = &box_turret;
 
     self->sprites[MG_SP_TURRET_VERTICAL].wsg    = &self->wsgs[MG_WSG_TURRET_VERTICAL];
     self->sprites[MG_SP_TURRET_VERTICAL].origin = &origin_15_15;
-    self->sprites[MG_SP_TURRET_VERTICAL].hitBox = &box_24_24;
+    self->sprites[MG_SP_TURRET_VERTICAL].hitBox = &box_turret;
 
     self->sprites[MG_SP_LEMON_SHOT].wsg    = &self->wsgs[MG_WSG_LEMON_SHOT];
     self->sprites[MG_SP_LEMON_SHOT].origin = &origin_8_8;
@@ -687,6 +704,74 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_5].wsg    = &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_5];
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_5].origin = &origin_16_16;
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_5].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_EXTRA_LIFE_0].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_0];
+    self->sprites[MG_SP_EXTRA_LIFE_0].origin = &origin_8_8;
+    self->sprites[MG_SP_EXTRA_LIFE_0].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_EXTRA_LIFE_1].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_1];
+    self->sprites[MG_SP_EXTRA_LIFE_1].origin = &origin_8_8;
+    self->sprites[MG_SP_EXTRA_LIFE_1].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_EXTRA_LIFE_2].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_2];
+    self->sprites[MG_SP_EXTRA_LIFE_2].origin = &origin_8_8;
+    self->sprites[MG_SP_EXTRA_LIFE_2].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_EXTRA_LIFE_3].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_3];
+    self->sprites[MG_SP_EXTRA_LIFE_3].origin = &origin_8_8;
+    self->sprites[MG_SP_EXTRA_LIFE_3].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_EXTRA_LIFE_4].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_4];
+    self->sprites[MG_SP_EXTRA_LIFE_4].origin = &origin_8_8;
+    self->sprites[MG_SP_EXTRA_LIFE_4].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_EXTRA_LIFE_5].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_5];
+    self->sprites[MG_SP_EXTRA_LIFE_5].origin = &origin_8_8;
+    self->sprites[MG_SP_EXTRA_LIFE_5].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_EXTRA_LIFE_6].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_6];
+    self->sprites[MG_SP_EXTRA_LIFE_6].origin = &origin_8_8;
+    self->sprites[MG_SP_EXTRA_LIFE_6].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_EXTRA_LIFE_7].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_7];
+    self->sprites[MG_SP_EXTRA_LIFE_7].origin = &origin_8_8;
+    self->sprites[MG_SP_EXTRA_LIFE_7].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_PLAYER_DEATH_0].wsg    = &self->wsgs[MG_WSG_PLAYER_DEATH_0];
+    self->sprites[MG_SP_PLAYER_DEATH_0].origin = &origin_16_16;
+    self->sprites[MG_SP_PLAYER_DEATH_0].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_DEATH_1].wsg    = &self->wsgs[MG_WSG_PLAYER_DEATH_1];
+    self->sprites[MG_SP_PLAYER_DEATH_1].origin = &origin_16_16;
+    self->sprites[MG_SP_PLAYER_DEATH_1].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_DEATH_2].wsg    = &self->wsgs[MG_WSG_PLAYER_DEATH_2];
+    self->sprites[MG_SP_PLAYER_DEATH_2].origin = &origin_16_16;
+    self->sprites[MG_SP_PLAYER_DEATH_2].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_DEATH_3].wsg    = &self->wsgs[MG_WSG_PLAYER_DEATH_3];
+    self->sprites[MG_SP_PLAYER_DEATH_3].origin = &origin_16_16;
+    self->sprites[MG_SP_PLAYER_DEATH_3].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_DEATH_4].wsg    = &self->wsgs[MG_WSG_PLAYER_DEATH_4];
+    self->sprites[MG_SP_PLAYER_DEATH_4].origin = &origin_16_16;
+    self->sprites[MG_SP_PLAYER_DEATH_4].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_DEATH_5].wsg    = &self->wsgs[MG_WSG_PLAYER_DEATH_5];
+    self->sprites[MG_SP_PLAYER_DEATH_5].origin = &origin_16_16;
+    self->sprites[MG_SP_PLAYER_DEATH_5].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_DEATH_6].wsg    = &self->wsgs[MG_WSG_PLAYER_DEATH_6];
+    self->sprites[MG_SP_PLAYER_DEATH_6].origin = &origin_16_16;
+    self->sprites[MG_SP_PLAYER_DEATH_6].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_DEATH_7].wsg    = &self->wsgs[MG_WSG_PLAYER_DEATH_7];
+    self->sprites[MG_SP_PLAYER_DEATH_7].origin = &origin_16_16;
+    self->sprites[MG_SP_PLAYER_DEATH_7].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_DEATH_8].wsg    = &self->wsgs[MG_WSG_PLAYER_DEATH_8];
+    self->sprites[MG_SP_PLAYER_DEATH_8].origin = &origin_16_16;
+    self->sprites[MG_SP_PLAYER_DEATH_8].hitBox = &box_16_32;
 }
 
 void mg_initializeTiles(mgWsgManager_t* self)
@@ -1155,8 +1240,8 @@ void mg_loadWsgSet(mgWsgManager_t* self, mgWsgSetIndex_t index)
                 }
 
                 self->sprites[MG_SP_BOSS_0 + i].wsg    = &self->wsgs[wsgIndex];
-                self->sprites[MG_SP_BOSS_0 + i].origin = mg_bigmaBossSpriteMetadataSet[i].origin;
-                self->sprites[MG_SP_BOSS_0 + i].hitBox = mg_bigmaBossSpriteMetadataSet[i].hitBox;
+                self->sprites[MG_SP_BOSS_0 + i].origin = mg_hankBossSpriteMetadataSet[i].origin;
+                self->sprites[MG_SP_BOSS_0 + i].hitBox = mg_hankBossSpriteMetadataSet[i].hitBox;
             }
             break;
     }

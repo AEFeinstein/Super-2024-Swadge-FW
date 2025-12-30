@@ -557,7 +557,7 @@ void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, i
             int r = sourceBoxRows[n];
             int c = sourceBoxCols[n];
 
-            ESP_LOGI("Swadgedoku", "Box[r=%d][c=%d] == sourceBox (%" PRIu16 ")", r, c, sourceBox);
+            ESP_LOGD("Swadgedoku", "Box[r=%d][c=%d] == sourceBox (%" PRIu16 ")", r, c, sourceBox);
             notes[r * game->size + c] = (rowNotes[r] & colNotes[c] & sourceBoxNote);
             if (!game->grid[r * game->size + c] && !notes[r * game->size + c])
             {
@@ -567,14 +567,9 @@ void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, i
     }
 }
 
-void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
+void sudokuGetIndividualNotes(uint16_t* rowNotes, uint16_t* colNotes, uint16_t* boxNotes, const sudokuGrid_t* game,
+                              int flags)
 {
-    // Summaries of the possibilities for each row, box, and column
-    // We will construct these from
-    uint16_t rowNotes[game->size];
-    uint16_t colNotes[game->size];
-    uint16_t boxNotes[game->base];
-
     // This means 'all values are possible in this row/cell'
     const uint16_t allNotes = (1 << game->base) - 1;
 
@@ -611,6 +606,20 @@ void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
             }
         }
     }
+}
+
+void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
+{
+    // Means all digits are possible
+    const uint16_t allNotes = (1 << game->base) - 1;
+
+    // Summaries of the possibilities for each row, box, and column
+    // We will construct these from
+    uint16_t rowNotes[game->size];
+    uint16_t colNotes[game->size];
+    uint16_t boxNotes[game->base];
+
+    sudokuGetIndividualNotes(rowNotes, colNotes, boxNotes, game, flags);
 
     for (int row = 0; row < game->size; row++)
     {
@@ -646,7 +655,7 @@ void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
  * @param settings Global sudoku settings to control which annotations are set and how
  */
 void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, const sudokuGrid_t* game,
-                    const sudokuSettings_t* settings)
+                    const sudokuSettings_t* settings, const sudokuGrid_t* solution)
 {
     // 1. Remove all the existing annotations placed by us
     node_t* next = NULL;
@@ -840,6 +849,10 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
                 // row, column, or box. Now we just highlight _all_ those cells!
                 uint16_t bits = (1 << (digit - 1));
                 if ((rowErrs[r] & bits) || (colErrs[c] & bits) || (box < SUDOKU_MAX_BASE && (boxErrs[box] & bits)))
+                {
+                    overlay->gridOpts[n] |= OVERLAY_ERROR;
+                }
+                else if (solution && settings->markMistakes && game->grid[n] != solution->grid[n])
                 {
                     overlay->gridOpts[n] |= OVERLAY_ERROR;
                 }

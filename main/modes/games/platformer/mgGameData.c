@@ -38,6 +38,8 @@ void mg_initializeGameData(mgGameData_t* gameData, mgSoundManager_t* soundManage
     gameData->inGameTimer          = 0;
     gameData->soundManager         = soundManager;
     gameData->bgColors             = bgGradientCyan;
+    gameData->trophyEarned         = -1;
+    gameData->enemiesKilled        = 0;
 }
 
 void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
@@ -63,6 +65,7 @@ void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
     gameData->inGameTimer          = 0;
     gameData->bgColors             = bgGradientCyan;
     gameData->customLevel          = false;
+    gameData->enemiesKilled        = 0;
     int32_t outVal                 = 0;
     readNvs32(MG_cheatModeNVSKey, &outVal);
     gameData->cheatMode = outVal;
@@ -111,14 +114,28 @@ void mg_updateLedsHpMeter(mgEntityManager_t* entityManager, mgGameData_t* gameDa
 
 void mg_scorePoints(mgGameData_t* gameData, uint16_t points)
 {
+    if (gameData->levelDeaths > 2)
+    {
+        gameData->score += points;
+        gameData->combo      = 0;
+        gameData->comboTimer = 240;
+        return;
+    }
+
     gameData->combo++;
 
     uint32_t comboPoints = points * gameData->combo;
 
+    // Experimental
+    // if(gameData->comboTimer > 0)
+    // {
+    //     gameData->combo++;
+    // }
+
     gameData->score += comboPoints;
     gameData->comboScore = comboPoints;
 
-    gameData->comboTimer = (gameData->levelDeaths < 3) ? 240 : 1;
+    gameData->comboTimer = 240;
 }
 
 void addCoins(mgGameData_t* gameData, uint8_t coins)
@@ -143,7 +160,7 @@ void updateComboTimer(mgGameData_t* gameData)
     if (gameData->comboTimer < 0)
     {
         gameData->comboTimer = 0;
-        gameData->combo      = 0;
+        // gameData->combo      = 0;
     }
 }
 
@@ -167,24 +184,36 @@ void mg_updateLedsShowHighScores(mgGameData_t* gameData)
         {
             if (((gameData->frameCount >> 4) % CONFIG_NUM_LEDS) == i)
             {
-                gameData->leds[i].r = 0xF0;
-                gameData->leds[i].g = 0xF0;
-                gameData->leds[i].b = 0x00;
+                gameData->leds[i].r = 0xFF;
+                gameData->leds[i].g = 0xFF;
+                gameData->leds[i].b = 0xFF;
             }
 
-            if (gameData->leds[i].r > 0)
+            if (gameData->leds[i].r > 0x10)
             {
-                gameData->leds[i].r -= 0x05;
+                gameData->leds[i].r -= 0x10;
+            }
+            else
+            {
+                gameData->leds[i].r -= 0;
             }
 
-            if (gameData->leds[i].g > 0)
+            if (gameData->leds[i].g > 0x20)
             {
-                gameData->leds[i].g -= 0x10;
+                gameData->leds[i].g -= 0x20;
+            }
+            else
+            {
+                gameData->leds[i].g -= 0;
             }
 
-            if (gameData->leds[i].b > 0)
+            if (gameData->leds[i].b > 0x80)
             {
-                gameData->leds[i].b = 0x00;
+                gameData->leds[i].b -= 0x80;
+            }
+            else
+            {
+                gameData->leds[i].b = 0;
             }
         }
     }
@@ -287,11 +316,11 @@ void mg_updateLedsShoopDaWoopStatus(mgEntityManager_t* entityManager)
         }
         else if (entityManager->playerEntity->shotsFired <= -31)
         {
-            gameData->leds[i] = (led_t){.r = 0, .g = 204, .b = 153};
+            gameData->leds[i] = (led_t){.r = 0, .g = 153, .b = 102};
         }
         else
         {
-            gameData->leds[i] = (led_t){.r = 0, .g = 153, .b = 204};
+            gameData->leds[i] = (led_t){.r = 0, .g = 53, .b = 102};
         }
     }
     setLeds(gameData->leds, CONFIG_NUM_LEDS);

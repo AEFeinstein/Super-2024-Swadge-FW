@@ -34,6 +34,7 @@ struct mgEntityManager_t
     mgEntity_t* viewEntity;
     mgEntity_t* playerEntity;
     mgEntity_t* bossEntity;
+    mgEntity_t* currentUpdating;
 
     uint16_t bossSpawnX; // Need to store to spawn more bosses in the boss rush.
     uint16_t bossSpawnY; // Need to store to spawn more bosses in the boss rush.
@@ -64,6 +65,7 @@ mgEntity_t* createScrollLockDown(mgEntityManager_t* entityManager, uint16_t x, u
 mgEntity_t* createScrollUnlock(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createHitBlock(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createPowerUp(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createExtraLife(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createWarp(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createDustBunny(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createWasp(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
@@ -104,7 +106,7 @@ mgEntity_t* createBouncepad(mgEntityManager_t* entityManager, uint16_t x, uint16
 mgEntity_t* createBouncepadDiagonal(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createLifeRefillSmall(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createLifeRefillLarge(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
-mgEntity_t* createBossSeverYagata(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createBossSeverYataga(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createBossSmashGorilla(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createBossGrindPangolin(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createBossDrainBat(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);

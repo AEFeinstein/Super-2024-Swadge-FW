@@ -71,7 +71,7 @@ typedef enum
     ENTITY_BOUNCE_PAD_DIAGONAL,
     ENTITY_LIFE_REFILL_SMALL,
     ENTITY_LIFE_REFILL_LARGE,
-    ENTITY_BOSS_SEVER_YAGATA,
+    ENTITY_BOSS_SEVER_YATAGA,
     ENTITY_MIXTAPE,
     ENTITY_BOSS_DOOR,
     ENTITY_SHRUBBLE_LV4,
@@ -83,7 +83,8 @@ typedef enum
     ENTITY_BOSS_FLARE_GRYFFYN,
     ENTITY_BOSS_DEADEYE_CHIRPZI,
     ENTITY_BOSS_BIGMA,
-    ENTITY_BOSS_HANK_WADDLE
+    ENTITY_BOSS_HANK_WADDLE,
+    ENTITY_EXTRA_LIFE,
 } mgEntityIndex_t;
 
 typedef enum
@@ -246,8 +247,10 @@ void updateScrollLockDown(mgEntity_t* self);
 void updateScrollUnlock(mgEntity_t* self);
 
 void updateEntityDead(mgEntity_t* self);
+void updatePlayerDead(mgEntity_t* self);
 
 void updatePowerUp(mgEntity_t* self);
+void updateExtraLife(mgEntity_t* self);
 void update1up(mgEntity_t* self);
 void updateWarp(mgEntity_t* self);
 
@@ -285,6 +288,7 @@ void waveBallOverlapTileHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, ui
 void powerUpCollisionHandler(mgEntity_t* self, mgEntity_t* other);
 void killPlayer(mgEntity_t* self);
 void mg_defaultEntityDrawHandler(mgEntity_t* self);
+void mg_smashGorillaProjectileDrawHandler(mgEntity_t* self);
 void mg_hankDrawHandler(mgEntity_t* self);
 
 void mg_playerDrawHandler(mgEntity_t* self);
@@ -303,7 +307,7 @@ void mg_updateBossDoor(mgEntity_t* self);
 
 void mg_bossDoorCollisionHandler(mgEntity_t* self, mgEntity_t* other);
 
-void mg_updateBossSeverYagata(mgEntity_t* self);
+void mg_updateBossSeverYataga(mgEntity_t* self);
 
 void mg_updateBossSmashGorilla(mgEntity_t* self);
 
@@ -328,5 +332,7 @@ void mg_updateShrubbleLv4(mgEntity_t* self);
 void crawlerSetMoveState(mgEntity_t* self, uint8_t state);
 
 uint8_t mg_crawlerGettInitialMoveState(int16_t angle, bool counterclockwise);
+
+void mg_updateSpikyMcGee(mgEntity_t* self);
 
 #endif

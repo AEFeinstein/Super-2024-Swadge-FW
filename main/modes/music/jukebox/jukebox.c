@@ -212,12 +212,60 @@ static const jukeboxSong_t bgm_megaPulse[] = {
         .fIdx = BGM_INTRO_STAGE_MID,
     },
     {
-        .name = "PRE FIGHT",
-        .fIdx = BGM_PRE_FIGHT_MID,
+        .name = "BOSS BIGMA",
+        .fIdx = BGM_BOSS_BIGMA_MID,
     },
     {
         .name = "POST FIGHT",
         .fIdx = BGM_POST_FIGHT_MID,
+    },
+    {
+        .name = "Level Clear JINGLE",
+        .fIdx = BGM_LEVEL_CLEAR_JINGLE_MID,
+    },
+    {
+        .name = "STAGE SELECT",
+        .fIdx = BGM_STAGE_SELECT_MID,
+    },
+    {
+        .name = "KINETIC DONUT",
+        .fIdx = BGM_KINETIC_DONUT_MID,
+    },
+    {
+        .name = "BOSS KINETIC DONUT",
+        .fIdx = BGM_BOSS_KINETIC_DONUT_MID,
+    },
+    {
+        .name = "GRIND PANGOLIN",
+        .fIdx = BGM_GRIND_PANGOLIN_MID,
+    },
+    {
+        .name = "BOSS GRIND PANGOLIN",
+        .fIdx = BGM_BOSS_GRIND_PANGOLIN_MID,
+    },
+    {
+        .name = "SEVER YATAGA",
+        .fIdx = BGM_SEVER_YATAGA_MID,
+    },
+    {
+        .name = "BOSS SEVER YATAGA",
+        .fIdx = BGM_BOSS_SEVER_YATAGA_MID,
+    },
+    {
+        .name = "RIP BARONESS",
+        .fIdx = BGM_RIP_BARONESS_MID,
+    },
+    {
+        .name = "BOSS TRASH MAN",
+        .fIdx = BGM_BOSS_TRASH_MAN_MID,
+    },
+    {
+        .name = "SMASH GORILLA",
+        .fIdx = BGM_SMASH_GORILLA_MID,
+    },
+    {
+        .name = "BOSS SMASH GORILLA",
+        .fIdx = BGM_BOSS_SMASH_GORILLA_MID,
     },
     {
         .name = "DEADEYE CHIRPZI",
@@ -240,64 +288,44 @@ static const jukeboxSong_t bgm_megaPulse[] = {
         .fIdx = BGM_FLARE_GRYFFYN_MID,
     },
     {
+        .name = "SAWTOOTH'S THEME",
+        .fIdx = BGM_SAWTOOTHS_THEME_MID,
+    },
+    {
         .name = "BOSS FLARE GRIFFIN",
         .fIdx = BGM_BOSS_FLARE_GRIFFIN_MID,
     },
     {
-        .name = "GRIND PANGOLIN",
-        .fIdx = BGM_GRIND_PANGOLIN_MID,
+        .name = "THE GAUNTLET",
+        .fIdx = BGM_THE_GAUNTLET_MID,
     },
     {
-        .name = "BOSS GRIND PANGOLIN",
-        .fIdx = BGM_BOSS_GRIND_PANGOLIN_MID,
+        .name = "THE FINAL MEGAJAM",
+        .fIdx = BGM_THE_FINAL_MEGAJAM_MID,
     },
     {
-        .name = "KINETIC DONUT",
-        .fIdx = BGM_KINETIC_DONUT_MID,
-    },
-    {
-        .name = "BOSS KINETIC DONUT",
-        .fIdx = BGM_BOSS_KINETIC_DONUT_MID,
-    },
-    {
-        .name = "SEVER YAGATA",
-        .fIdx = BGM_SEVER_YAGATA_MID,
-    },
-    {
-        .name = "BOSS SEVER YAGATA",
-        .fIdx = BGM_BOSS_SEVER_YAGATA_MID,
-    },
-    {
-        .name = "SMASH GORILLA",
-        .fIdx = BGM_SMASH_GORILLA_MID,
-    },
-    {
-        .name = "BOSS SMASH GORILLA",
-        .fIdx = BGM_BOSS_SMASH_GORILLA_MID,
-    },
-    {
-        .name = "BOSS TRASH MAN",
-        .fIdx = BGM_BOSS_TRASH_MAN_MID,
-    },
-    {
-        .name = "BIGMA",
-        .fIdx = BGM_BIGMA_MID,
-    },
-    {
-        .name = "BOSS BIGMA",
-        .fIdx = BGM_BOSS_BIGMA_MID,
+        .name = "PRE FIGHT",
+        .fIdx = BGM_PRE_FIGHT_MID,
     },
     {
         .name = "BOSS HANK WADDLE",
         .fIdx = BGM_BOSS_HANK_WADDLE_MID,
     },
     {
-        .name = "RIP BARONESS",
-        .fIdx = BGM_RIP_BARONESS_MID,
+        .name = "CLIMAX",
+        .fIdx = BGM_CLIMAX_MID,
     },
     {
-        .name = "STAGE SELECT",
-        .fIdx = BGM_STAGE_SELECT_MID,
+        .name = "MAXIMUM HYPE CREDITS",
+        .fIdx = MAXIMUM_HYPE_CREDITS_MID,
+    },
+    {
+        .name = "OVO LIVES!",
+        .fIdx = BGM_OVO_LIVES_MID,
+    },
+    {
+        .name = "LOOKS LIKE WE MADE IT",
+        .fIdx = BGM_LOOKS_LIKE_WE_MADE_IT_MID,
     },
     {
         .name = "NAME ENTRY",
@@ -538,8 +566,8 @@ static const jukeboxSong_t bgm_findingFaces[] = {
         .name = "Menu",
     },
     {
-        .fIdx = LULLABY_IN_NUMBERS_MID,
-        .name = "Lullaby in Numbers",
+        .fIdx = FINDER_BGM_ZEN_MID,
+        .name = "Zen Mode Theme",
     },
     {
         .fIdx = FINDER_BGM_SLOW_MID,
@@ -567,14 +595,6 @@ static const jukeboxSong_t sfx_findingFaces[] = {
     {
         .fIdx = FINDER_WRONG_MID,
         .name = "Wrong",
-    },
-    {
-        .fIdx = FINDER_WRONGER_MID,
-        .name = "Wronger",
-    },
-    {
-        .fIdx = FINDER_DIE_MID,
-        .name = "Die",
     },
 };
 

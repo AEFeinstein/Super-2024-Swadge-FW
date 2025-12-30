@@ -69,14 +69,22 @@ typedef enum
     OVERLAY_CHECK = 1024,
     /// @brief Overlays the computed notes onto the square
     OVERLAY_NOTES = 2048,
+    /// @brief Prevents the digit or notes from being drawn
+    OVERLAY_SKIP = 4096,
+    /// @brief Mask for all overlay options
+    OVERLAY_ALL = 0xFFFF,
 } sudokuOverlayOpt_t;
 
 typedef enum
 {
     /// @brief This shape is a cursor and shouldn't be removed
-    ST_CURSOR,
+    ST_CURSOR = 1,
     /// @brief This is a temporary annotation added by sudokuAnnotate()
-    ST_ANNOTATE,
+    ST_ANNOTATE = 2,
+    /// @brief This is a temporary annotation added for a hint
+    ST_HINT = 4,
+    /// @brief Mask for all shape tags
+    ST_ALL = 0xFF,
 } sudokuShapeTag_t;
 
 typedef enum
@@ -86,6 +94,8 @@ typedef enum
     OVERLAY_LINE,
     OVERLAY_ARROW,
     OVERLAY_TEXT,
+    OVERLAY_DIGIT,
+    OVERLAY_NOTES_SHAPE,
 } sudokuOverlayShapeType_t;
 
 typedef enum
@@ -94,6 +104,7 @@ typedef enum
     SSB_AUTO_ANNOTATE           = 2,
     SSB_HIGHLIGHT_POSSIBILITIES = 4,
     SSB_HIGHLIGHT_ONLY_OPTIONS  = 8,
+    SSB_MARK_MISTAKES           = 16,
 } sudokuSettingBit_t;
 
 //==============================================================================
@@ -119,6 +130,18 @@ typedef struct
             const char* val;
             bool center;
         } text;
+
+        struct
+        {
+            vec_t pos;
+            uint8_t digit;
+        } digit;
+
+        struct
+        {
+            vec_t pos;
+            uint16_t notes;
+        } notes;
     };
 } sudokuOverlayShape_t;
 
@@ -201,6 +224,9 @@ typedef struct
 
     /// @brief Highlights places where the selected digit is the only possibility
     bool highlightOnlyOptions;
+
+    /// @brief Automatically highlights places where a mistake has been made
+    bool markMistakes;
 } sudokuSettings_t;
 
 //==============================================================================

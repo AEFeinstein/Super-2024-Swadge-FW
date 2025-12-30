@@ -319,7 +319,7 @@ const mgSprite_t mg_smashGorillaBossSpriteMetadataSet[] = {
     {
         .wsg    = NULL,
         .origin = &origin_smash_gorilla,
-        .hitBox = &box_smash_gorilla,
+        .hitBox = NULL,
     },
     {
         .wsg    = NULL,
@@ -653,28 +653,23 @@ const mgSprite_t mg_hankBossSpriteMetadataSet[] = {
     },
     {
         .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
+        .origin = &origin_hank,
+        .hitBox = &box_hank,
     },
     {
         .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
+        .origin = &origin_hank,
+        .hitBox = &box_hank,
     },
     {
         .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
+        .origin = &origin_hank,
+        .hitBox = &box_hank,
     },
     {
         .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
-    },
-    {
-        .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
+        .origin = &origin_hank,
+        .hitBox = &box_hank,
     },
     {
         .wsg    = NULL,
@@ -1230,7 +1225,7 @@ const uint16_t mg_drainBatTileset[] = {
     DRAIN_BAT_003_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F3, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F3,
     DRAIN_BAT_004_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F4, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F4,
     DRAIN_BAT_005_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5,
-    DRAIN_BAT_000_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6,
+    SPRITE_023_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6,//Added black hole sprite to pre-empt the player to move
     // clang-format on
 };
 

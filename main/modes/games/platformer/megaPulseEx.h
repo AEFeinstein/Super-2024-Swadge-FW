@@ -28,11 +28,7 @@ typedef struct
 typedef struct
 {
     uint16_t levelsCleared;
-    bool gameCleared;
-    bool oneCreditCleared;
-    bool bigScore;
-    bool fastTime;
-    bool biggerScore;
+    uint32_t inGameTimer;
 } platformerUnlockables_t;
 
 //==============================================================================

@@ -59,6 +59,21 @@ const mg_spriteDef_t severYatagaFlyingFrames[] = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG
 
 const mg_spriteDef_t drainBatAnimFrames[] = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG_SP_BOSS_2, MG_SP_BOSS_3, MG_SP_BOSS_4};
 
+#define DRAIN_BAT_PRE_TELEPORT_FRAMES 60
+
+// Wave ball animation update interval (in game frames). Larger = slower
+#define ANIM_TICK 8
+
+const mg_spriteDef_t flareGryffynGuitarSpinFrames[] = {MG_SP_BOSS_2, MG_SP_BOSS_3, MG_SP_BOSS_4, MG_SP_BOSS_5};
+
+const mg_spriteDef_t smashGorillaStompFrames[] = {MG_SP_BOSS_1, MG_SP_BOSS_3};
+
+const mg_spriteDef_t smashGorillaChargeFrames[] = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG_SP_BOSS_2, MG_SP_BOSS_3};
+
+const mg_spriteDef_t charginSchmuckAnimFrames[] = {MG_SP_CHARGIN_SCHMUCK_RUN1, MG_SP_CHARGIN_SCHMUCK_RUN2};
+
+const mg_spriteDef_t spikyMcGeeAnimFrames[] = {MG_SP_SPIKY_MCGEE, MG_SP_SPIKY_MCGEE_2};
+
 //==============================================================================
 // Functions Prototypes
 //==============================================================================
@@ -1143,8 +1158,10 @@ void mg_bossRushLogic(mgEntity_t* self)
     uint8_t nextBoss  = 0;
     uint8_t nextLevel = 0;
 
-    isABoss = self->spriteFlipVertical && self->entityManager->wsgManager->sprites[self->spriteIndex].wsg->w > 30
-              && self->entityManager->wsgManager->sprites[self->spriteIndex].wsg->h > 30;
+    isABoss = (self->spriteIndex == MG_SP_BOSS_0 || self->spriteIndex == MG_SP_BOSS_1
+               || self->spriteIndex == MG_SP_BOSS_2 || self->spriteIndex == MG_SP_BOSS_3
+               || self->spriteIndex == MG_SP_BOSS_4 || self->spriteIndex == MG_SP_BOSS_5
+               || self->spriteIndex == MG_SP_BOSS_6 || self->spriteIndex == MG_SP_BOSS_7);
 
     if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_KINETIC_DONUT)
     {
@@ -1153,7 +1170,7 @@ void mg_bossRushLogic(mgEntity_t* self)
     }
     else if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_GRIND_PANGOLIN)
     {
-        nextBoss  = ENTITY_BOSS_SEVER_YAGATA;
+        nextBoss  = ENTITY_BOSS_SEVER_YATAGA;
         nextLevel = 3;
     }
     else if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_SEVER_YATAGA)
@@ -1184,19 +1201,17 @@ void mg_bossRushLogic(mgEntity_t* self)
     else if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_FLARE_GRYFFYN)
     {
         nextBoss  = 0;
-        nextLevel = 0;
+        nextLevel = 12;
     }
 
     if (isABoss)
     {
         // mg_loadMapFromFile((self->entityManager->tilemap), leveldef[11].filename,
         //                 self->entityManager);
+        self->gameData->bgColors = leveldef[nextLevel].bgColors;
         if (nextBoss > 0)
         {
             mg_loadWsgSet(self->entityManager->wsgManager, leveldef[nextLevel].defaultWsgSetIndex);
-            self->gameData->bgColors = leveldef[nextLevel].bgColors;
-            mg_setBgm(self->soundManager, leveldef[nextLevel].bossBgmIndex);
-            soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
             mgEntity_t* boss = mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX,
                                                self->entityManager->bossSpawnY);
             boss->state      = 0;
@@ -1204,7 +1219,7 @@ void mg_bossRushLogic(mgEntity_t* self)
             {
                 boss->y -= 100 << SUBPIXEL_RESOLUTION;
             }
-            else if (nextBoss == ENTITY_BOSS_SMASH_GORILLA || nextBoss == ENTITY_BOSS_SEVER_YAGATA)
+            else if (nextBoss == ENTITY_BOSS_SMASH_GORILLA || nextBoss == ENTITY_BOSS_SEVER_YATAGA)
             {
                 boss->y -= 10 << SUBPIXEL_RESOLUTION;
             }
@@ -1213,9 +1228,11 @@ void mg_bossRushLogic(mgEntity_t* self)
                 boss->y -= 4 << SUBPIXEL_RESOLUTION;
             }
         }
-        else
+        // Plays post fight once flare gryffyn has gone off screen ONLY if the player hasn't touched the mixtape yet.
+        else if (self->soundManager->currentBgmIndex != MG_BGM_LEVEL_CLEAR_JINGLE)
         {
             mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
+            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
             soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
         }
     }
@@ -1285,7 +1302,7 @@ void animatePlayer(mgEntity_t* self)
 
     if (!self->gravityEnabled)
     {
-        self->spriteIndex = MG_SP_PLAYER_CLIMB;
+        // self->spriteIndex = MG_SP_PLAYER_CLIMB;
         if (self->yspeed < 0 && self->gameData->frameCount % 10 == 0)
         {
             self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
@@ -1454,9 +1471,16 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_BOUNCIN_SCHMUCK:
         case ENTITY_SPIKY_MCGEE:
         case ENTITY_TURRET:
-        case ENTITY_BOSS_SEVER_YAGATA:
+        case ENTITY_BOSS_SEVER_YATAGA:
         case ENTITY_BOSS_TRASH_MAN:
         case ENTITY_BOSS_GRIND_PANGOLIN:
+        case ENTITY_BOSS_DEADEYE_CHIRPZI:
+        case ENTITY_BOSS_FLARE_GRYFFYN:
+        case ENTITY_BOSS_KINETIC_DONUT:
+        case ENTITY_BOSS_SMASH_GORILLA:
+        case ENTITY_BOSS_DRAIN_BAT:
+        case ENTITY_BOSS_BIGMA:
+        case ENTITY_BOSS_HANK_WADDLE:
         {
             if (self->state == MG_PL_ST_MIC_DROP)
             {
@@ -1465,6 +1489,11 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 self->spriteRotateAngle = 0;
                 // self->spriteFlipVertical  = false;
                 self->invincibilityFrames = 5;
+
+                if (other->type == ENTITY_BOSS_HANK_WADDLE && (other->state == 0 || other->state == 7))
+                {
+                    break;
+                }
 
                 if (other->invincibilityFrames)
                 {
@@ -1488,6 +1517,11 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             else if (self->state == MG_PL_ST_UPPERCUT)
             {
                 self->invincibilityFrames = 5;
+
+                if (other->type == ENTITY_BOSS_HANK_WADDLE && (other->state == 0 || other->state == 7))
+                {
+                    break;
+                }
 
                 if (other->invincibilityFrames)
                 {
@@ -1533,15 +1567,16 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 self->falling   = true;
             }
             else */
-            if (self->invincibilityFrames <= 0)
+            if (self->invincibilityFrames <= 0 && !(other->type == ENTITY_BOSS_DRAIN_BAT && other->state == 10))
             {
-                if (!self->gameData->cheatMode)
+                if (!self->gameData->cheatMode) // Drain bat's pre-teleport state doesn't hurt Pulse
                 {
                     // pulse takes damage (doubled if no plot armor)
                     self->hp -= 5 + (5 * !(self->gameData->abilities & (1U << MG_PLOT_ARMOR_ABILITY)));
                 }
 
                 self->gameData->comboTimer = 0;
+                self->gameData->combo      = 0;
 
                 if (self->shotsFired < 0)
                 {
@@ -1550,15 +1585,18 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
 
                 if (!self->gameData->debugMode && self->hp <= 0)
                 {
-                    self->updateFunction        = &updateEntityDead;
+                    self->updateFunction        = &updatePlayerDead;
                     self->type                  = ENTITY_DEAD;
                     self->xspeed                = 0;
-                    self->yspeed                = -60;
+                    self->yspeed                = -5;
+                    self->spriteIndex           = MG_SP_PLAYER_DEATH_0;
                     self->state                 = MG_PL_ST_HURT;
                     self->stateTimer            = 20;
                     self->gameData->changeState = MG_ST_DEAD;
-                    self->gravityEnabled        = true;
-                    self->falling               = true;
+                    self->gravityEnabled
+                        = false; // All entities get deactivated anyway going to the ready screen. So this is ok.
+                    self->falling        = true;
+                    self->animationTimer = 1;
                 }
                 else
                 {
@@ -1602,9 +1640,16 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             {
                 self->hp = 60;
             }
-            mg_scorePoints(self->gameData, 1000);
+            mg_scorePoints(self->gameData, 0);
             soundPlaySfx(&(self->soundManager->sndPowerUp), BZR_LEFT);
             // mg_updateLedsHpMeter(self->entityManager, self->gameData);
+            mg_destroyEntity(other, false);
+            break;
+        }
+        case ENTITY_EXTRA_LIFE:
+        {
+            self->gameData->lives++;
+            soundPlaySfx(&(self->soundManager->sndPowerUp), BZR_LEFT);
             mg_destroyEntity(other, false);
             break;
         }
@@ -1745,14 +1790,16 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
 
                 if (!self->gameData->debugMode && self->hp <= 0)
                 {
-                    self->updateFunction        = &updateEntityDead;
-                    self->type                  = ENTITY_DEAD;
-                    self->xspeed                = 0;
-                    self->yspeed                = -60;
-                    self->spriteIndex           = MG_SP_PLAYER_HURT;
-                    self->gameData->changeState = MG_ST_DEAD;
-                    self->gravityEnabled        = true;
-                    self->falling               = true;
+                    self->updateFunction = &updatePlayerDead;
+                    self->type           = ENTITY_DEAD;
+                    self->xspeed         = 0;
+                    self->yspeed         = -5;
+                    self->spriteIndex    = MG_SP_PLAYER_DEATH_0;
+                    self->gameData->changeState
+                        = MG_ST_DEAD; // All entities get deactivated anyway going to the ready screen. So this is ok.
+                    self->gravityEnabled = false;
+                    self->falling        = true;
+                    self->animationTimer = 1;
                 }
                 else
                 {
@@ -1767,8 +1814,13 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         }
         case ENTITY_MIXTAPE:
         {
+            if (!self->gameData->canGrabMixtape)
+            {
+                break;
+            }
             soundStop(true);
             mg_setBgm(self->soundManager, MG_BGM_LEVEL_CLEAR_JINGLE);
+            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
             soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
             globalMidiPlayerGet(MIDI_BGM)->loop = false;
             self->visible                       = true;
@@ -1840,7 +1892,18 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 break;
             }
 
-            if (self->type == ENTITY_BOSS_GRIND_PANGOLIN && (self->state == 1 || self->state == 2 || self->state == 4))
+            if (self->type == ENTITY_BOSS_GRIND_PANGOLIN && (self->state == 1 || self->state == 2 || self->state == 4)
+                && other->state != 2) // allows a fully charged shot to pierce.
+            {
+                other->xspeed = -other->xspeed;
+                other->yspeed = -64;
+                other->linkedEntity->shotsFired--;
+                other->linkedEntity = self;
+                soundPlaySfx(&self->soundManager->sndTally, MIDI_SFX);
+                break;
+            }
+
+            if (self->type == ENTITY_BOSS_FLARE_GRYFFYN && (self->state == 2 || self->state == 3))
             {
                 other->xspeed = -other->xspeed;
                 other->yspeed = -64;
@@ -2093,15 +2156,15 @@ bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx,
             mg_scorePoints(self->gameData, 50);
             break;
         }
-        case MG_TILE_LADDER:
-        {
-            if (self->gravityEnabled)
-            {
-                self->gravityEnabled = false;
-                self->xspeed         = 0;
-            }
-            break;
-        }
+        // case MG_TILE_LADDER:
+        // {
+        //     if (self->gravityEnabled)
+        //     {
+        //         self->gravityEnabled = false;
+        //         self->xspeed         = 0;
+        //     }
+        //     break;
+        // }
         // Spike or Lava Tiles
         case MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2 ... MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5:
         {
@@ -2388,8 +2451,12 @@ void updateScrollLockRight(mgEntity_t* self)
     if (self->entityManager->bossEntity != NULL)
     {
         // Cutscene before the boss fight
-        mg_setBgm(self->soundManager, MG_BGM_PRE_FIGHT);
-        soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+        if (self->gameData->level != 11) // keep the megajam music rolling in the rush stage intro talk.
+        {
+            mg_setBgm(self->soundManager, MG_BGM_PRE_FIGHT);
+            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+            soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+        }
         bossIntroCutscene(self->gameData);
     }
     else if (self->gameData->level == 5)
@@ -2431,6 +2498,16 @@ void updateEntityDead(mgEntity_t* self)
     despawnWhenOffscreen(self);
 }
 
+void updatePlayerDead(mgEntity_t* self)
+{
+    updateEntityDead(self);
+    if (self->spriteIndex < MG_SP_PLAYER_DEATH_8 && self->gameData->frameCount % ANIM_TICK == 0)
+    {
+        self->animationTimer++;
+        self->spriteIndex = MG_SP_PLAYER_DEATH_0 + self->animationTimer;
+    }
+}
+
 void updatePowerUp(mgEntity_t* self)
 {
     /*if (self->gameData->frameCount % 10 == 0)
@@ -2439,6 +2516,17 @@ void updatePowerUp(mgEntity_t* self)
             = ((self->entityManager->playerEntity->hp < 2) ? MG_SP_GAMING_1 : MG_SP_MUSIC_1) + ((self->spriteIndex + 1)
     % 3);
     }*/
+
+    mg_moveEntityWithTileCollisions(self);
+    applyGravity(self);
+    despawnWhenOffscreen(self);
+}
+
+void updateExtraLife(mgEntity_t* self)
+{
+    self->animationTimer++;
+
+    self->spriteIndex = MG_SP_EXTRA_LIFE_0 + ((self->animationTimer / 8) % 8);
 
     mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
@@ -2903,6 +2991,7 @@ void updateWasp(mgEntity_t* self)
             break;
     }
 
+    self->spriteFlipHorizontal = (self->xspeed > 0) ? false : true;
     mg_updateInvincibilityFrames(self);
     despawnWhenOffscreen(self);
     mg_moveEntityWithTileCollisions(self);
@@ -2973,6 +3062,7 @@ void updateWaspL2(mgEntity_t* self)
             break;
     }
 
+    self->spriteFlipHorizontal = (self->xspeed > 0) ? false : true;
     despawnWhenOffscreen(self);
     mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
@@ -3042,6 +3132,7 @@ void updateWaspL3(mgEntity_t* self)
             break;
     }
 
+    self->spriteFlipHorizontal = (self->xspeed > 0) ? false : true;
     mg_updateInvincibilityFrames(self);
     despawnWhenOffscreen(self);
     mg_moveEntityWithTileCollisions(self);
@@ -3117,6 +3208,18 @@ bool waspTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint
 
 void killEnemy(mgEntity_t* target)
 {
+    bool isABoss = (target->type == ENTITY_BOSS_BIGMA || target->type == ENTITY_BOSS_KINETIC_DONUT
+                    || target->type == ENTITY_BOSS_GRIND_PANGOLIN || target->type == ENTITY_BOSS_SEVER_YATAGA
+                    || target->type == ENTITY_BOSS_TRASH_MAN || target->type == ENTITY_BOSS_SMASH_GORILLA
+                    || target->type == ENTITY_BOSS_DEADEYE_CHIRPZI || target->type == ENTITY_BOSS_DRAIN_BAT
+                    || target->type == ENTITY_BOSS_FLARE_GRYFFYN || target->type == ENTITY_BOSS_HANK_WADDLE);
+
+    if (target->type == ENTITY_BOSS_TRASH_MAN && target->gameData->level == 4)
+    {
+        // He gets launched to space from the cutscene.
+        target->yspeed = -target->yMaxSpeed;
+    }
+
     target->homeTileX          = 0;
     target->homeTileY          = 0;
     target->gravityEnabled     = true;
@@ -3129,19 +3232,39 @@ void killEnemy(mgEntity_t* target)
         target->spawnData                = NULL;
     }
 
-    // eh... that pretty much means it's a boss
-    if (target->entityManager->wsgManager->sprites[target->spriteIndex].wsg->w > 30
-        && target->entityManager->wsgManager->sprites[target->spriteIndex].wsg->h > 30)
+    target->gameData->enemiesKilled++;
+
+    if (isABoss)
     {
         if (target->gameData->level == 11)
         {
             // give some freaking help on boss rush, geeze
-            createPowerUp(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
+            // 50% chance
+            if ((esp_random() % 100) < 50)
+            {
+                createPowerUp(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
+            }
         }
     }
-    else if ((esp_random() % 100) > 90)
+    else if (target->scoreValue > 0 && (!(target->gameData->enemiesKilled % 16))
+             && (!target->gameData->extraLifeCollected)) // Every 16th enemy killed
+    {
+        createExtraLife(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
+        target->gameData->extraLifeCollected = true; // Prevent farming lives in areas with infinite enemy spawn, if you
+                                                     // don't collect the life right away
+    }
+    else if (target->scoreValue > 0 && (!(target->gameData->enemiesKilled % 8))) // Every 8th enemy killed
     {
         createPowerUp(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
+    }
+
+    /* If the killer is not the target itself (i.e. the boss wasn't currently running its own update),
+     * run their update immediately so kills from other entities (player Mic Drop / Sure You Can) get one
+     * extra frame of behavior. This avoids double-running when the boss is killed during its
+     * own update (e.g. by a wave ball that the boss collides with). */
+    if (target->entityManager->currentUpdating != target)
+    {
+        target->updateFunction(target);
     }
 
     target->updateFunction = &updateEntityDead;
@@ -3258,9 +3381,9 @@ void updateWaveBall(mgEntity_t* self)
 {
     self->spriteRotateAngle = getAtan2(self->yspeed, self->xspeed);
 
-    self->animationTimer++;
-    if (self->gameData->frameCount % 2 == 0)
+    if (self->gameData->frameCount % ANIM_TICK == 0)
     {
+        self->animationTimer++;
         switch (self->state)
         {
             case 0:
@@ -3369,13 +3492,15 @@ void killPlayer(mgEntity_t* self)
     self->hp = 0;
     mg_updateLedsHpMeter(self->entityManager, self->gameData);
 
-    self->updateFunction        = &updateEntityDead;
+    self->updateFunction        = &updatePlayerDead;
     self->type                  = ENTITY_DEAD;
     self->xspeed                = 0;
-    self->yspeed                = -60;
+    self->yspeed                = -5;
     self->spriteIndex           = MG_SP_PLAYER_HURT;
     self->gameData->changeState = MG_ST_DEAD;
     self->falling               = true;
+    self->gravityEnabled        = false;
+    self->animationTimer        = 1;
 }
 
 void mg_defaultEntityDrawHandler(mgEntity_t* self)
@@ -3386,6 +3511,16 @@ void mg_defaultEntityDrawHandler(mgEntity_t* self)
             (self->y >> SUBPIXEL_RESOLUTION) - self->entityManager->tilemap->mapOffsetY
                 - self->entityManager->wsgManager->sprites[self->spriteIndex].origin->y,
             self->spriteFlipHorizontal, self->spriteFlipVertical, self->spriteRotateAngle);
+}
+
+void mg_smashGorillaProjectileDrawHandler(mgEntity_t* self)
+{
+    drawWsg(self->entityManager->wsgManager->sprites[MG_SP_BOSS_5].wsg,
+            (self->x >> SUBPIXEL_RESOLUTION) - self->entityManager->wsgManager->sprites[self->spriteIndex].origin->x
+                - self->entityManager->tilemap->mapOffsetX,
+            (self->y >> SUBPIXEL_RESOLUTION) - self->entityManager->tilemap->mapOffsetY
+                - self->entityManager->wsgManager->sprites[self->spriteIndex].origin->y,
+            self->spriteFlipHorizontal, self->spriteFlipVertical, ((self->x >> 3) % 360));
 }
 
 void mg_hankDrawHandler(mgEntity_t* self)
@@ -3440,13 +3575,200 @@ void mg_updateTurret(mgEntity_t* self)
 
                 if (self->entityManager->playerEntity != NULL)
                 {
-                    self->jumpPower = getAtan2(self->entityManager->playerEntity->y - self->y,
+                    self->jumpPower = getAtan2(self->y - self->entityManager->playerEntity->y,
                                                self->entityManager->playerEntity->x - self->x);
                 }
 
                 self->jumpPower = clampAngleTo8way(self->jumpPower);
 
-                self->state = 1;
+                switch (self->spriteRotateAngle)
+                {
+                    case 0:
+                    default:
+                        switch (self->jumpPower)
+                        {
+                            case 0:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = false;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 45:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = false;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 90:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_VERTICAL;
+                                // self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 135:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = true;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 180:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = true;
+                                self->state                = 1;
+                                break;
+                            }
+                            default:
+                            {
+                                self->state      = 0;
+                                self->stateTimer = 0;
+                                break;
+                            }
+                        }
+                        break;
+                    case 90:
+                        switch (self->jumpPower)
+                        {
+                            case 90:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = false;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 135:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = false;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 180:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_VERTICAL;
+                                // self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 225:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = true;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 270:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = true;
+                                self->state                = 1;
+                                break;
+                            }
+                            default:
+                            {
+                                self->state      = 0;
+                                self->stateTimer = 0;
+                                break;
+                            }
+                        }
+                        break;
+                    case 180:
+                        switch (self->jumpPower)
+                        {
+                            case 180:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = false;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 225:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = false;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 270:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_VERTICAL;
+                                // self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 315:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = true;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 0:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = true;
+                                self->state                = 1;
+                                break;
+                            }
+                            default:
+                            {
+                                self->state      = 0;
+                                self->stateTimer = 0;
+                                break;
+                            }
+                        }
+                        break;
+                    case 270:
+                        switch (self->jumpPower)
+                        {
+                            case 270:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = false;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 315:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = false;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 0:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_VERTICAL;
+                                // self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 45:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = true;
+                                self->state                = 1;
+                                break;
+                            }
+                            case 90:
+                            {
+                                self->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = true;
+                                self->state                = 1;
+                                break;
+                            }
+                            default:
+                            {
+                                self->state      = 0;
+                                self->stateTimer = 0;
+                                break;
+                            }
+                        }
+                        break;
+                }
             }
             break;
         case 1 ... 3:
@@ -3462,7 +3784,7 @@ void mg_updateTurret(mgEntity_t* self)
                     int16_t cos = getCos1024(self->jumpPower);
 
                     createdEntity->xspeed = (64 * cos) / 1024;
-                    createdEntity->yspeed = (64 * sin) / 1024;
+                    createdEntity->yspeed = (64 * -sin) / 1024;
 
                     createdEntity->linkedEntity = self;
                     self->state++;
@@ -3543,6 +3865,8 @@ void mg_updateCharginSchmuck(mgEntity_t* self)
         case 1:
 
             self->stateTimer++;
+
+            self->spriteIndex = charginSchmuckAnimFrames[(self->stateTimer >> 2) & 0b1];
 
             if (!(self->stateTimer % 10))
             {
@@ -4014,7 +4338,7 @@ uint8_t mg_crawlerGettInitialMoveState(int16_t angle, bool clockwise)
     }
 }
 
-void mg_updateBossSeverYagata(mgEntity_t* self)
+void mg_updateBossSeverYataga(mgEntity_t* self)
 {
     switch (self->state)
     {
@@ -4184,8 +4508,7 @@ void mg_updateBossSeverYagata(mgEntity_t* self)
     {
         if (self->gameData->level != 11)
         {
-            self->gameData->pauseCountdown = true;
-            self->spriteIndex              = MG_SP_BOSS_6;
+            self->spriteIndex  = MG_SP_BOSS_6;
             self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
             startOutroCutscene(self);
         }
@@ -4204,6 +4527,9 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
         default:
             // Idle
             self->stateTimer++;
+
+            self->spriteIndex = MG_SP_BOSS_0;
+
             if (self->stateTimer > 60)
             {
                 self->stateTimer = 0;
@@ -4212,7 +4538,8 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
                     case 0:
                     default:
                         // To "Traverse - charge across"
-                        self->state = 1;
+                        self->state               = 1;
+                        self->invincibilityFrames = 60;
 
                         if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
                         {
@@ -4232,7 +4559,15 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
             }
             break;
         case 1:
+            self->stateTimer++;
             //"Traverse - charge across"
+            if (self->stateTimer < 60)
+            {
+                self->spriteIndex = smashGorillaChargeFrames[(self->stateTimer >> 1) % 4];
+                break;
+            }
+
+            self->spriteIndex = smashGorillaChargeFrames[(self->stateTimer >> 2) % 4];
 
             // Move to other side of screen
             if (self->spriteFlipHorizontal)
@@ -4259,8 +4594,8 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
             }
 
             // failsafe
-            self->stateTimer++;
-            if (self->stateTimer > 180)
+
+            if (self->stateTimer > 300)
             {
                 self->stateTimer = 0;
                 // To "Attack - Large ground projectiles"
@@ -4272,17 +4607,20 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
             //"Attack - Large ground projectiles"
             self->stateTimer++;
 
-            if (!(self->stateTimer % 20))
+            self->spriteIndex          = smashGorillaStompFrames[(self->stateTimer >> 2) % 2];
+            self->spriteFlipHorizontal = (self->entityManager->playerEntity->x > self->x) ? false : true;
+
+            if (!(self->stateTimer % 30))
             {
                 // Launch projectiles toward player
                 mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
-                                                            TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+                                                            TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y) + 24);
                 if (createdEntity != NULL && self->entityManager->playerEntity != NULL)
                 {
-                    createdEntity->xspeed = (self->entityManager->playerEntity->x > self->x) ? 64 : -64;
+                    createdEntity->xspeed = (self->entityManager->playerEntity->x > self->x) ? 32 : -32;
                     createdEntity->yspeed = 0;
 
-                    // TODO: make sprite larger, change into rocks?
+                    createdEntity->drawHandler = &mg_smashGorillaProjectileDrawHandler;
 
                     createdEntity->linkedEntity = self;
                     soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
@@ -4301,7 +4639,8 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
                         break;
                     case 1:
                         // To "Traverse - Dig and disappear"
-                        self->state = 3;
+                        self->state               = 3;
+                        self->invincibilityFrames = 60;
                         break;
                 }
             }
@@ -4310,10 +4649,12 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
             //"Traverse - Dig and disappear"
             self->stateTimer++;
 
+            self->spriteIndex = smashGorillaStompFrames[(self->stateTimer) % 2];
+
             if (self->stateTimer > 60)
             {
-                self->visible    = false;
-                self->stateTimer = 0;
+                self->spriteIndex = MG_SP_BOSS_4;
+                self->stateTimer  = 0;
                 // To "Traverse - Dig in from random location, track player"
                 self->state = 4;
                 break;
@@ -4323,25 +4664,94 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
             //"Traverse - Dig in from random location, track player"
             self->stateTimer++;
 
-            if (self->entityManager->playerEntity == NULL || self->stateTimer > 600)
+            if (self->stateTimer > 600)
             {
-                self->visible    = true;
-                self->stateTimer = 0;
-
+                self->visible     = true;
+                self->stateTimer  = 0;
+                self->spriteIndex = MG_SP_BOSS_2;
+                self->yspeed      = -127;
+                self->falling     = true;
                 // To "Attack - Emerge, Launch rocks"
                 self->state = 5;
                 break;
             }
-
-            if (!(self->stateTimer % 20))
+            else if (self->stateTimer > 510)
             {
-                if (self->x < self->entityManager->playerEntity->x)
+                self->xspeed               = 0;
+                self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
+            }
+            else if (self->stateTimer < 510)
+            {
+                if (!(self->stateTimer % 2))
                 {
-                    self->xspeed = 64;
+                    self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
                 }
-                else
+
+                if (!(self->stateTimer % 30))
                 {
-                    self->xspeed = -64;
+                    if (self->x < self->entityManager->playerEntity->x)
+                    {
+                        self->xspeed = 64;
+                    }
+                    else
+                    {
+                        self->xspeed = -64;
+                    }
+                }
+            }
+
+            if (self->stateTimer == 570)
+            {
+                mgEntity_t* createdEntity;
+
+                for (uint8_t i = 0; i < 3; i++)
+                {
+                    createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                    TO_PIXEL_COORDS(self->y) + 24);
+                    if (createdEntity != NULL && self->entityManager->playerEntity != NULL)
+                    {
+                        int16_t angle = 120 - (i * 30);
+                        int16_t sin   = getSin1024(angle);
+                        int16_t cos   = getCos1024(angle);
+
+                        createdEntity->xspeed         = (127 * cos) / 1024;
+                        createdEntity->yspeed         = (127 * -sin) / 1024;
+                        createdEntity->gravityEnabled = true;
+                        createdEntity->falling        = true;
+
+                        createdEntity->drawHandler = &mg_smashGorillaProjectileDrawHandler;
+
+                        createdEntity->linkedEntity = self;
+                        soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                    }
+                }
+            }
+            else if (self->stateTimer == 540)
+            {
+                self->xspeed = 0;
+
+                mgEntity_t* createdEntity;
+
+                for (uint8_t i = 0; i < 2; i++)
+                {
+                    createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                    TO_PIXEL_COORDS(self->y) + 24);
+                    if (createdEntity != NULL && self->entityManager->playerEntity != NULL)
+                    {
+                        int16_t angle = 120 - (i * 60);
+                        int16_t sin   = getSin1024(angle);
+                        int16_t cos   = getCos1024(angle);
+
+                        createdEntity->xspeed         = (80 * cos) / 1024;
+                        createdEntity->yspeed         = (80 * -sin) / 1024;
+                        createdEntity->gravityEnabled = true;
+                        createdEntity->falling        = true;
+
+                        createdEntity->drawHandler = &mg_smashGorillaProjectileDrawHandler;
+
+                        createdEntity->linkedEntity = self;
+                        soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                    }
                 }
             }
 
@@ -4349,32 +4759,37 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
         case 5:
             //"Attack - Emerge, launch rocks"
             self->stateTimer++;
-            self->yspeed = -64;
 
-            if (!(self->stateTimer % 8))
+            if (self->stateTimer == 1)
             {
-                mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
-                                                            TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
-                if (createdEntity != NULL && self->entityManager->playerEntity != NULL)
+                mgEntity_t* createdEntity;
+
+                for (uint8_t i = 0; i < 4; i++)
                 {
-                    int16_t angle = -60 + (esp_random() % 120);
-                    int16_t sin   = getSin1024(angle);
-                    int16_t cos   = getCos1024(angle);
+                    createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                    TO_PIXEL_COORDS(self->y));
+                    if (createdEntity != NULL && self->entityManager->playerEntity != NULL)
+                    {
+                        int16_t angle = 120 - (i * 20);
+                        int16_t sin   = getSin1024(angle);
+                        int16_t cos   = getCos1024(angle);
 
-                    createdEntity->xspeed         = (80 * cos) / 1024;
-                    createdEntity->yspeed         = (80 * sin) / 1024;
-                    createdEntity->gravityEnabled = true;
+                        createdEntity->xspeed         = (144 * cos) / 1024;
+                        createdEntity->yspeed         = (144 * -sin) / 1024;
+                        createdEntity->gravityEnabled = true;
+                        createdEntity->falling        = true;
 
-                    // TODO: make sprite larger, change into rocks?
+                        createdEntity->drawHandler = &mg_smashGorillaProjectileDrawHandler;
 
-                    createdEntity->linkedEntity = self;
-                    soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                        createdEntity->linkedEntity = self;
+                        soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                    }
                 }
             }
 
-            if (self->stateTimer > 30 && !self->falling)
+            if (self->stateTimer > 300 || !self->falling)
             {
-                self->stateTimer = 0;
+                self->stateTimer = 30;
                 // To Idle
                 self->state = 0;
                 break;
@@ -4593,16 +5008,26 @@ void mg_updateBossDrainBat(mgEntity_t* self)
                 {
                     case 0:
                     default:
-                        self->x     = TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48 + (esp_random() % 184));
-                        self->y     = self->entityManager->playerEntity->y - 128;
-                        self->state = 1;
+                        /* Jump target chosen; show warp (black hole) first so player can react, then
+                         * switch to real state 1. */
+                        self->x        = TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48 + (esp_random() % 184));
+                        self->y        = self->entityManager->playerEntity->y - 128;
+                        self->special1 = 1;  /* store next real state */
+                        self->state    = 10; /* PRE-TELEPORT */
+                        self->invincibilityFrames = DRAIN_BAT_PRE_TELEPORT_FRAMES;
+                        self->stateTimer          = 0;
+                        self->spriteIndex         = MG_SP_WARP_1;
                         break;
                     case 1:
-                        self->x     = (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
-                                          ? TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48)
-                                          : TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 232);
-                        self->y     = (TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetY + 48));
-                        self->state = 2;
+                        self->x                   = (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
+                                                        ? TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48)
+                                                        : TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 232);
+                        self->y                   = (TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetY + 48));
+                        self->special1            = 2;  /* store next real state */
+                        self->state               = 10; /* PRE-TELEPORT */
+                        self->invincibilityFrames = DRAIN_BAT_PRE_TELEPORT_FRAMES;
+                        self->stateTimer          = 0;
+                        self->spriteIndex         = MG_SP_WARP_1;
                         break;
                 }
             }
@@ -4718,6 +5143,26 @@ void mg_updateBossDrainBat(mgEntity_t* self)
             {
                 self->stateTimer = 0;
                 self->state      = 0;
+            }
+            break;
+
+        case 10:
+            /* Pre-teleport: draw warp/black-hole sprite for a few frames before appearing. */
+            self->stateTimer++;
+            if (self->stateTimer < DRAIN_BAT_PRE_TELEPORT_FRAMES)
+            {
+                /* Animate warp using warp frames */
+                self->spriteIndex = MG_SP_WARP_1 + ((self->stateTimer >> 2) % 3);
+                self->visible     = true;
+            }
+            else
+            {
+                /* Appear now and switch to the previously intended state */
+                uint8_t nextState = (uint8_t)(self->special1);
+                self->state       = nextState;
+                self->stateTimer  = 0;
+                /* Ensure Drain Bat idle animation is set */
+                self->spriteIndex = drainBatAnimFrames[(self->stateTimer >> 3) % 5];
             }
             break;
     }
@@ -4961,7 +5406,10 @@ void mg_updateBossKineticDonut(mgEntity_t* self)
         mg_deactivateAllEntities(self->entityManager, true);
         self->active       = true;
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
-        startOutroCutscene(self);
+        if (!self->gameData->kineticSkipped)
+        {
+            startOutroCutscene(self);
+        }
     }
     despawnWhenOffscreen(self);
 }
@@ -5045,131 +5493,148 @@ void mg_updateBossFlareGryffyn(mgEntity_t* self)
             return;
         case 0:
         default:
-            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
-            {
-                self->yspeed -= 4;
-            }
-
-            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
-            {
-                self->xspeed = 64;
-            }
-
-            if (self->stateTimer == 120)
-            {
-                self->jumpPower = 1;
-            }
-
             self->stateTimer++;
-            if (self->stateTimer > 180)
+            if (self->stateTimer > 29)
             {
                 self->stateTimer = 0;
-                switch (esp_random() % 3)
-                {
-                    case 0:
-                        self->state = 1;
-                        break;
-                    case 1:
-                        self->state = 2;
-                        break;
-                    case 2:
-                        self->state = 3;
-                        break;
-                }
+                self->state      = 1;
             }
             break;
         case 1:
-            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
-            {
-                self->yspeed -= 4;
-            }
-
-            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
-            {
-                self->xspeed = -64;
-            }
-
-            if (self->stateTimer == 120)
-            {
-                self->jumpPower = 1;
-            }
-
             self->stateTimer++;
-            if (self->stateTimer > 180)
+
+            self->spriteIndex          = flareGryffynGuitarSpinFrames[(self->stateTimer >> 2) % 4];
+            self->spriteFlipHorizontal = (self->entityManager->playerEntity->x > self->x) ? false : true;
+
+            if (!(self->stateTimer % 30))
             {
-                self->stateTimer = 0;
-                switch (esp_random() % 3)
+                mgEntity_t* createdEntity;
+
+                switch (self->jumpPower)
                 {
                     case 0:
-                        self->state = 0;
+                    default:
+                        createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                        TO_PIXEL_COORDS(self->y));
+                        if (createdEntity != NULL)
+                        {
+                            createdEntity->xspeed       = (self->entityManager->playerEntity->x > self->x) ? 80 : -80;
+                            createdEntity->linkedEntity = self;
+                            // soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                        }
+                        createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                        TO_PIXEL_COORDS(self->y) + 16);
+                        if (createdEntity != NULL)
+                        {
+                            createdEntity->xspeed       = (self->entityManager->playerEntity->x > self->x) ? 80 : -80;
+                            createdEntity->linkedEntity = self;
+                            // soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                        }
+                        createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                        TO_PIXEL_COORDS(self->y) + 32);
+                        if (createdEntity != NULL)
+                        {
+                            createdEntity->xspeed       = (self->entityManager->playerEntity->x > self->x) ? 80 : -80;
+                            createdEntity->linkedEntity = self;
+                            // soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                        }
+
+                        self->jumpPower = 1;
+
                         break;
                     case 1:
-                        self->state = 2;
-                        break;
-                    case 2:
-                        self->state = 3;
+                        createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                        TO_PIXEL_COORDS(self->y) - 16);
+                        if (createdEntity != NULL)
+                        {
+                            createdEntity->xspeed       = (self->entityManager->playerEntity->x > self->x) ? 80 : -80;
+                            createdEntity->linkedEntity = self;
+                            // soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                        }
+                        createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                        TO_PIXEL_COORDS(self->y) - 32);
+                        if (createdEntity != NULL)
+                        {
+                            createdEntity->xspeed       = (self->entityManager->playerEntity->x > self->x) ? 80 : -80;
+                            createdEntity->linkedEntity = self;
+                            // soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                        }
+                        createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                        TO_PIXEL_COORDS(self->y) - 48);
+                        if (createdEntity != NULL)
+                        {
+                            createdEntity->xspeed       = (self->entityManager->playerEntity->x > self->x) ? 80 : -80;
+                            createdEntity->linkedEntity = self;
+                            // soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                        }
+
+                        self->jumpPower = 0;
                         break;
                 }
+            }
+
+            if (self->stateTimer > 328)
+            {
+                self->stateTimer  = 0;
+                self->state       = (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120) ? 2 : 3;
+                self->spriteIndex = MG_SP_BOSS_0;
+
+                self->jumpPower = (esp_random() % 2);
             }
 
             break;
         case 2:
-
-            if (self->stateTimer < 60)
-            {
-                if (self->x < self->entityManager->playerEntity->x)
-                {
-                    self->xspeed = 32;
-                }
-                else
-                {
-                    self->xspeed = -32;
-                }
-            }
-
-            if (!self->falling || self->y > self->entityManager->playerEntity->y)
-            {
-                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
-                self->stateTimer = 0;
-            }
-
             self->stateTimer++;
+            self->spriteIndex          = flareGryffynGuitarSpinFrames[(self->stateTimer) % 4];
+            self->spriteFlipHorizontal = true;
+
+            // Traverse from left side to right
+            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 48)
+            {
+                self->xspeed = -64;
+            }
+            else
+            {
+                self->stateTimer  = 0;
+                self->state       = 0;
+                self->spriteIndex = MG_SP_BOSS_0;
+            }
+
+            // failsafe
+            if (self->stateTimer > 300)
+            {
+                self->stateTimer  = 0;
+                self->state       = 0;
+                self->spriteIndex = MG_SP_BOSS_0;
+            }
 
             break;
         case 3:
             self->stateTimer++;
+            self->spriteIndex          = flareGryffynGuitarSpinFrames[(self->stateTimer) % 4];
+            self->spriteFlipHorizontal = false;
 
-            if (!(self->stateTimer % 60))
+            // Traverse from right side to left
+            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 232)
             {
-                self->jumpPower = 1;
+                self->xspeed = 64;
+            }
+            else
+            {
+                self->stateTimer  = 0;
+                self->state       = 0;
+                self->spriteIndex = MG_SP_BOSS_0;
             }
 
-            if (self->stateTimer > 239)
+            // failsafe
+            if (self->stateTimer > 300)
             {
-                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
-                self->stateTimer = 0;
+                self->stateTimer  = 0;
+                self->state       = 0;
+                self->spriteIndex = MG_SP_BOSS_0;
             }
+
             break;
-    }
-
-    if (self->jumpPower > 0)
-    {
-        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
-                                                    TO_PIXEL_COORDS(self->y));
-        if (createdEntity != NULL)
-        {
-            int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->y,
-                                     self->entityManager->playerEntity->x - self->x);
-            int16_t sin   = getSin1024(angle);
-            int16_t cos   = getCos1024(angle);
-
-            createdEntity->xspeed = (80 * cos) / 1024;
-            createdEntity->yspeed = (80 * sin) / 1024;
-
-            createdEntity->linkedEntity = self;
-            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
-            self->jumpPower = 0;
-        }
     }
 
     mg_updateInvincibilityFrames(self);
@@ -5195,141 +5660,269 @@ void mg_updateBossDeadeyeChirpzi(mgEntity_t* self)
             return;
         case 0:
         default:
-            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
-            {
-                self->yspeed -= 4;
-            }
+            applyDamping(self);
+            self->spriteFlipVertical = false;
 
-            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
+            if (self->stateTimer > 15)
             {
-                self->xspeed = 64;
-            }
-
-            if (self->stateTimer == 120)
-            {
-                self->jumpPower = 1;
+                self->spriteFlipHorizontal = (self->entityManager->playerEntity->x > self->x) ? false : true;
             }
 
             self->stateTimer++;
-            if (self->stateTimer > 180)
+            if (self->stateTimer > 30)
             {
                 self->stateTimer = 0;
-                switch (esp_random() % 3)
-                {
-                    case 0:
-                        self->state = 1;
-                        break;
-                    case 1:
-                        self->state = 2;
-                        break;
-                    case 2:
-                        self->state = 3;
-                        break;
-                }
+                self->state      = 1;
             }
             break;
         case 1:
-            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
-            {
-                self->yspeed -= 4;
-            }
-
-            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
-            {
-                self->xspeed = -64;
-            }
-
-            if (self->stateTimer == 120)
-            {
-                self->jumpPower = 1;
-            }
+            applyDamping(self);
 
             self->stateTimer++;
-            if (self->stateTimer > 180)
+
+            if (self->stateTimer < 6)
             {
-                self->stateTimer = 0;
-                switch (esp_random() % 3)
-                {
-                    case 0:
-                        self->state = 0;
-                        break;
-                    case 1:
-                        self->state = 2;
-                        break;
-                    case 2:
-                        self->state = 3;
-                        break;
-                }
+                self->spriteFlipHorizontal = (self->entityManager->playerEntity->x > self->x) ? false : true;
             }
 
+            if (self->stateTimer == 2)
+            {
+                self->spriteIndex = MG_SP_BOSS_1;
+            }
+            else if (self->stateTimer == 10)
+            {
+                self->spriteIndex = MG_SP_BOSS_2;
+
+                mgEntity_t* createdEntity = mg_createEntity(
+                    self->entityManager, ENTITY_WAVE_BALL,
+                    TO_PIXEL_COORDS(self->x) + ((self->spriteFlipHorizontal) ? -20 : 20), TO_PIXEL_COORDS(self->y) - 8);
+                if (createdEntity != NULL)
+                {
+                    int16_t angle = getAtan2(self->entityManager->playerEntity->y - createdEntity->y,
+                                             self->entityManager->playerEntity->x - createdEntity->x);
+                    int16_t sin   = getSin1024(angle);
+                    int16_t cos   = getCos1024(angle);
+
+                    createdEntity->xspeed = (80 * cos) / 1024;
+                    createdEntity->yspeed = (80 * sin) / 1024;
+
+                    createdEntity->linkedEntity = self;
+                    soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                }
+            }
+            else if (self->stateTimer == 12)
+            {
+                self->spriteIndex = MG_SP_BOSS_1;
+            }
+            else if (self->stateTimer == 24)
+            {
+                self->spriteIndex = MG_SP_BOSS_0;
+            }
+
+            if (self->stateTimer > 30)
+            {
+                if (esp_random() % 2)
+                {
+                    self->state = (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120) ? 2 : 3;
+                }
+                self->stateTimer  = 0;
+                self->spriteIndex = MG_SP_BOSS_0;
+            }
             break;
         case 2:
+            self->stateTimer++;
+            self->spriteFlipHorizontal = true;
 
-            if (self->stateTimer < 60)
+            // Traverse from left side to right
+            if ((TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 48))
             {
-                if (self->x < self->entityManager->playerEntity->x)
+                if (!self->falling)
                 {
-                    self->xspeed = 32;
+                    self->spriteIndex = MG_SP_BOSS_0;
+
+                    if (!(esp_random() % 3))
+                    {
+                        self->stateTimer = 0;
+                        self->state      = 1;
+                        break;
+                    }
+                    else
+                    {
+                        self->xspeed  = -24;
+                        self->yspeed  = -128;
+                        self->falling = true;
+                    }
                 }
                 else
                 {
-                    self->xspeed = -32;
+                    if (abs(self->yspeed) > 100)
+                    {
+                        self->spriteIndex          = MG_SP_BOSS_3;
+                        self->spriteFlipHorizontal = (self->xspeed > 0) ? false : true;
+                        self->spriteFlipVertical   = false;
+                    }
+                    else
+                    {
+                        self->spriteIndex = MG_SP_BOSS_4;
+
+                        if (!(self->stateTimer % 2))
+                        {
+                            if (!self->spriteFlipHorizontal)
+                            {
+                                self->spriteFlipHorizontal = true;
+                            }
+                            else if (!self->spriteFlipVertical)
+                            {
+                                self->spriteFlipVertical = true;
+                            }
+                            else if (self->spriteFlipHorizontal && self->spriteFlipVertical)
+                            {
+                                self->spriteFlipVertical = false;
+                            }
+                            else
+                            {
+                                self->spriteFlipHorizontal = false;
+                            }
+                        }
+                    }
                 }
             }
-
-            if (!self->falling || self->y > self->entityManager->playerEntity->y)
+            else
             {
-                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
-                self->stateTimer = 0;
+                self->stateTimer  = 0;
+                self->state       = 0;
+                self->spriteIndex = MG_SP_BOSS_0;
             }
 
-            self->stateTimer++;
+            // if(!(self->stateTimer % 30))
+            // {
+            //     if (self->linkedEntity != NULL)
+            //     {
+            //          int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->linkedEntity->y,
+            //                                 self->entityManager->playerEntity->x - self->linkedEntity->x);
+            //         int16_t sin   = getSin1024(angle);
+            //         int16_t cos   = getCos1024(angle);
+
+            //         self->linkedEntity->xspeed = (32 * cos) / 1024;
+            //         self->linkedEntity->yspeed = (32 * sin) / 1024;
+            //         soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+            //     }
+            // }
+
+            // failsafe
+            if (self->stateTimer > 360)
+            {
+                self->stateTimer         = 0;
+                self->state              = 0;
+                self->spriteFlipVertical = 0;
+                self->spriteIndex        = MG_SP_BOSS_0;
+            }
 
             break;
         case 3:
             self->stateTimer++;
+            // self->spriteIndex = flareGryffynGuitarSpinFrames[(self->stateTimer) % 4];
+            self->spriteFlipHorizontal = false;
 
-            if (!(self->stateTimer % 60))
+            // Traverse from right side to left
+            if ((TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 232))
             {
-                self->jumpPower = 1;
+                if (!self->falling)
+                {
+                    self->spriteIndex = MG_SP_BOSS_0;
+
+                    if (!(esp_random() % 3))
+                    {
+                        self->stateTimer = 0;
+                        self->state      = 1;
+                        break;
+                    }
+                    else
+                    {
+                        self->xspeed  = 24;
+                        self->yspeed  = -128;
+                        self->falling = true;
+                    }
+                }
+                else
+                {
+                    if (abs(self->yspeed) > 100)
+                    {
+                        self->spriteIndex          = MG_SP_BOSS_3;
+                        self->spriteFlipHorizontal = (self->xspeed > 0) ? false : true;
+                        self->spriteFlipVertical   = false;
+                    }
+                    else
+                    {
+                        self->spriteIndex = MG_SP_BOSS_4;
+
+                        if (!(self->stateTimer % 2))
+                        {
+                            if (!self->spriteFlipHorizontal)
+                            {
+                                self->spriteFlipHorizontal = true;
+                            }
+                            else if (!self->spriteFlipVertical)
+                            {
+                                self->spriteFlipVertical = true;
+                            }
+                            else if (self->spriteFlipHorizontal && self->spriteFlipVertical)
+                            {
+                                self->spriteFlipVertical = false;
+                            }
+                            else
+                            {
+                                self->spriteFlipHorizontal = false;
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                self->stateTimer         = 0;
+                self->state              = 0;
+                self->spriteFlipVertical = 0;
+                self->spriteIndex        = MG_SP_BOSS_0;
             }
 
-            if (self->stateTimer > 239)
+            // if(!(self->stateTimer % 30))
+            // {
+            //     if (self->linkedEntity != NULL)
+            //     {
+            //          int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->linkedEntity->y,
+            //                                 self->entityManager->playerEntity->x - self->linkedEntity->x);
+            //         int16_t sin   = getSin1024(angle);
+            //         int16_t cos   = getCos1024(angle);
+
+            //         self->linkedEntity->xspeed = (32 * cos) / 1024;
+            //         self->linkedEntity->yspeed = (32 * sin) / 1024;
+            //         soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+            //     }
+            // }
+
+            // failsafe
+            if (self->stateTimer > 360)
             {
-                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
-                self->stateTimer = 0;
+                self->stateTimer  = 0;
+                self->state       = 0;
+                self->spriteIndex = MG_SP_BOSS_0;
             }
+
             break;
-    }
-
-    if (self->jumpPower > 0)
-    {
-        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
-                                                    TO_PIXEL_COORDS(self->y));
-        if (createdEntity != NULL)
-        {
-            int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->y,
-                                     self->entityManager->playerEntity->x - self->x);
-            int16_t sin   = getSin1024(angle);
-            int16_t cos   = getCos1024(angle);
-
-            createdEntity->xspeed = (80 * cos) / 1024;
-            createdEntity->yspeed = (80 * sin) / 1024;
-
-            createdEntity->linkedEntity = self;
-            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
-            self->jumpPower = 0;
-        }
     }
 
     mg_updateInvincibilityFrames(self);
     mg_moveEntityWithTileCollisions3(self);
-    applyDamping(self);
+    // applyDamping(self);
     applyGravity(self);
     mg_detectEntityCollisions(self);
 
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
+        self->spriteIndex = MG_SP_BOSS_5;
+        mg_deactivateAllEntities(self->entityManager, true);
+        self->active       = true;
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
     }
@@ -5344,145 +5937,206 @@ void mg_updateBossBigma(mgEntity_t* self)
             return;
         case 0:
         default:
-            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
-            {
-                self->yspeed -= 4;
-            }
-
-            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
-            {
-                self->xspeed = 64;
-            }
-
-            if (self->stateTimer == 120)
-            {
-                self->jumpPower = 1;
-            }
-
             self->stateTimer++;
-            if (self->stateTimer > 180)
+
+            if (self->stateTimer > 30)
             {
                 self->stateTimer = 0;
-                switch (esp_random() % 3)
-                {
-                    case 0:
-                        self->state = 1;
-                        break;
-                    case 1:
-                        self->state = 2;
-                        break;
-                    case 2:
-                        self->state = 3;
-                        break;
-                }
-            }
-            break;
-        case 1:
-            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
-            {
-                self->yspeed -= 4;
+                self->state      = 1;
             }
 
-            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
-            {
-                self->xspeed = -64;
-            }
-
-            if (self->stateTimer == 120)
-            {
-                self->jumpPower = 1;
-            }
-
-            self->stateTimer++;
-            if (self->stateTimer > 180)
-            {
-                self->stateTimer = 0;
-                switch (esp_random() % 3)
-                {
-                    case 0:
-                        self->state = 0;
-                        break;
-                    case 1:
-                        self->state = 2;
-                        break;
-                    case 2:
-                        self->state = 3;
-                        break;
-                }
-            }
-
+            mg_moveEntityWithTileCollisions3(self);
+            applyDamping(self);
+            applyGravity(self);
             break;
         case 2:
-
-            if (self->stateTimer < 60)
-            {
-                if (self->x < self->entityManager->playerEntity->x)
-                {
-                    self->xspeed = 32;
-                }
-                else
-                {
-                    self->xspeed = -32;
-                }
-            }
-
-            if (!self->falling || self->y > self->entityManager->playerEntity->y)
-            {
-                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
-                self->stateTimer = 0;
-            }
-
             self->stateTimer++;
+
+            if (!(self->stateTimer % 20))
+            {
+                uint16_t
+                    newBulletX; //= ((esp_random() % 2)) ? self->tilemap->mapOffsetX+8 : self->tilemap->mapOffsetX+272;
+                uint16_t
+                    newBulletY; //= ((esp_random() % 2)) ? self->tilemap->mapOffsetY+8 : self->tilemap->mapOffsetX+232;
+
+                switch (self->jumpPower)
+                {
+                    case 0:
+                    default:
+                        // newBulletX = self->tilemap->mapOffsetX+8 + (esp_random() % 272);
+                        // newBulletY = self->tilemap->mapOffsetY+8;
+
+                        newBulletX = (self->entityManager->playerEntity->x > self->x) ? self->tilemap->mapOffsetX + 272
+                                                                                      : self->tilemap->mapOffsetX + 8;
+                        newBulletY = self->tilemap->mapOffsetY + 80 + (esp_random() % 32);
+
+                        if ((newBulletY > self->y - 32) && (newBulletY < self->y + 32))
+                        {
+                            newBulletY = TO_PIXEL_COORDS(self->entityManager->playerEntity->y);
+                        }
+
+                        self->jumpPower = 1;
+                        break;
+                    case 1:
+                        newBulletX = (self->entityManager->playerEntity->x > self->x) ? self->tilemap->mapOffsetX + 272
+                                                                                      : self->tilemap->mapOffsetX + 8;
+                        newBulletY = self->tilemap->mapOffsetY + 152 + (esp_random() % 64);
+                        if ((newBulletY > self->y - 32) && (newBulletY < self->y + 32))
+                        {
+                            newBulletY = TO_PIXEL_COORDS(self->entityManager->playerEntity->y);
+                        }
+                        self->jumpPower = 0;
+                        break;
+
+                        /*case 2:
+                            newBulletX = self->tilemap->mapOffsetX+272;
+                            newBulletY = self->tilemap->mapOffsetY+8 + (esp_random() % 224);
+                            break;*/
+                        /*case 3:
+                            newBulletX = self->tilemap->mapOffsetX+8 + (esp_random() % 272);
+                            newBulletY = self->tilemap->mapOffsetY+232;
+                            break;*/ //Bottom of the screen doesn't give player time to dodge.
+                }
+
+                mgEntity_t* createdEntity
+                    = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, newBulletX, newBulletY);
+                if (createdEntity != NULL)
+                {
+                    int16_t angle = getAtan2(self->y - createdEntity->y, self->x - createdEntity->x);
+                    int16_t sin   = getSin1024(angle);
+                    int16_t cos   = getCos1024(angle);
+
+                    createdEntity->xspeed = (24 * cos) / 1024;
+                    createdEntity->yspeed = (24 * sin) / 1024;
+
+                    createdEntity->linkedEntity = self;
+                    self->linkedEntity          = createdEntity;
+                    soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                }
+            }
+
+            if (self->stateTimer > 220)
+            {
+                self->stateTimer = 0;
+                self->state      = 1;
+            }
+            else if (self->stateTimer == 200)
+            {
+                self->spriteIndex = MG_SP_BOSS_4;
+            }
+            else if (self->stateTimer == 160)
+            {
+                self->invincibilityFrames = 80;
+            }
+
+            mg_moveEntityWithTileCollisions3(self);
+            applyDamping(self);
+            applyGravity(self);
+            break;
+        case 1:
+            self->yspeed  = -64;
+            self->falling = true;
+            self->y += self->yspeed;
+            self->spriteIndex = MG_SP_BOSS_5;
+
+            if (TO_PIXEL_COORDS(self->y) < self->tilemap->mapOffsetY)
+            {
+                self->stateTimer = 0;
+                self->state      = 3;
+                self->y          = self->entityManager->playerEntity->y;
+                // self->x = (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120) ? self->tilemap->mapOffsetX +
+                // 240 : self->tilemap->mapOffsetX;
+                self->spriteIndex         = MG_SP_BOSS_1;
+                self->invincibilityFrames = 127;
+            }
 
             break;
         case 3:
             self->stateTimer++;
 
-            if (!(self->stateTimer % 60))
+            self->spriteFlipHorizontal = (self->entityManager->playerEntity->x > self->x) ? false : true;
+
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 240)
             {
-                self->jumpPower = 1;
+                self->yspeed = -48;
             }
 
-            if (self->stateTimer > 239)
+            if (self->stateTimer < 170)
             {
-                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
-                self->stateTimer = 0;
+                if (!(self->stateTimer % 24))
+                {
+                    self->yspeed = (self->entityManager->playerEntity->y > self->y) ? 48 : -48;
+                }
             }
+            else
+            {
+                self->yspeed      = 0;
+                self->spriteIndex = MG_SP_BOSS_2;
+            }
+
+            self->y += self->yspeed;
+
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer  = 0;
+                self->spriteIndex = MG_SP_BOSS_3;
+                // self->xspeed = (self->entityManager->playerEntity->x > self->x) ? 80 : -80;
+                self->state = (self->entityManager->playerEntity->x > self->x) ? 5 : 4;
+            }
+
             break;
-    }
+        case 4:
+            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX)
+            {
+                self->x                    = TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48);
+                self->y                    = TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetY + 64);
+                self->stateTimer           = 0;
+                self->state                = 6;
+                self->spriteIndex          = MG_SP_BOSS_1;
+                self->invincibilityFrames  = 120;
+                self->spriteFlipHorizontal = (self->entityManager->playerEntity->x > self->x) ? false : true;
+            }
 
-    if (self->jumpPower > 0)
-    {
-        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
-                                                    TO_PIXEL_COORDS(self->y));
-        if (createdEntity != NULL)
-        {
-            int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->y,
-                                     self->entityManager->playerEntity->x - self->x);
-            int16_t sin   = getSin1024(angle);
-            int16_t cos   = getCos1024(angle);
+            self->x -= 80;
+            break;
+        case 5:
+            if (TO_PIXEL_COORDS(self->x) > (self->tilemap->mapOffsetX + 240))
+            {
+                self->x                    = TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 232);
+                self->y                    = TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetY + 64);
+                self->stateTimer           = 0;
+                self->state                = 6;
+                self->spriteIndex          = MG_SP_BOSS_1;
+                self->invincibilityFrames  = 120;
+                self->spriteFlipHorizontal = (self->entityManager->playerEntity->x > self->x) ? false : true;
+            }
 
-            createdEntity->xspeed = (80 * cos) / 1024;
-            createdEntity->yspeed = (80 * sin) / 1024;
-
-            createdEntity->linkedEntity = self;
-            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
-            self->jumpPower = 0;
-        }
+            self->x += 80;
+            break;
+        case 6:
+            self->spriteFlipHorizontal = (self->entityManager->playerEntity->x > self->x) ? false : true;
+            self->stateTimer++;
+            if (self->stateTimer > 60)
+            {
+                self->stateTimer  = 0;
+                self->state       = 2;
+                self->spriteIndex = MG_SP_BOSS_0;
+            }
     }
 
     mg_updateInvincibilityFrames(self);
-    mg_moveEntityWithTileCollisions3(self);
-    applyDamping(self);
-    applyGravity(self);
+
     mg_detectEntityCollisions(self);
 
-    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
+    if (self->type == ENTITY_DEAD && self->gameData->level != 11)
     {
-        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        mg_deactivateAllEntities(self->entityManager, true);
+
+        self->linkedEntity = createMixtape(self->entityManager, self->entityManager->bossSpawnX - 100,
+                                           self->entityManager->bossSpawnY - 20);
         startOutroCutscene(self);
     }
-    despawnWhenOffscreen(self);
+    // despawnWhenOffscreen(self);
 }
 
 void mg_updateBossHankWaddle(mgEntity_t* self)
@@ -5670,6 +6324,11 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
 
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
+        self->spriteIndex = MG_SP_BOSS_6; // hank is dead frame
+        mg_setBgm(self->soundManager, MG_BGM_CLIMAX);
+        midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+        soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+        globalMidiPlayerGet(MIDI_BGM)->loop = false; // Climax should end in silence.
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
     }
@@ -5680,28 +6339,27 @@ void startOutroCutscene(mgEntity_t* self)
 {
     mg_deactivateAllEntitiesOfType(self->entityManager, ENTITY_WAVE_BALL); // so the player doesn't get hurt right after
                                                                            // the winning cutscene.
-    // Cutscene after the boss fight
-    mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
-    soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
-    bossOutroCutscene(self->gameData);
-    if (!self->gameData->cheatMode)
+    self->entityManager->playerEntity->shotsFired = 0;
+    if (self->gameData->level != 7)
     {
-        uint8_t trophy = self->gameData->level;
-        if (trophy == 5 || trophy == 11)
-        {
-            // it's just the gauntlet. or boss rush.
-            return;
-        }
-        if (trophy == 10)
-        {
-            // The 10th level is the intro level with bigma.
-            trophy = 0;
-        }
-        if (trophy == 12)
-        {
-            // The 12th level is the final hank showdown
-            trophy = 5;
-        }
-        trophyUpdate(&platformerTrophies[trophy], 1, true);
+        // just don't pause the countdown on level 7 because then you can't try out the newly acquired Shoop Da Woop.
+        self->gameData->pauseCountdown = true;
     }
+    // Cutscene after the boss fight
+    if (self->gameData->level == 9) // custom song from Joe for sawtooth reveal.
+    {
+        mg_setBgm(self->soundManager, MG_BGM_SAWTOOTHS_THEME);
+        midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+        soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+    }
+    bossOutroCutscene(self->gameData);
+}
+
+void mg_updateSpikyMcGee(mgEntity_t* self)
+{
+    self->stateTimer++;
+
+    self->spriteIndex = spikyMcGeeAnimFrames[(self->stateTimer >> 4) & 0b1];
+
+    despawnWhenOffscreen(self);
 }
