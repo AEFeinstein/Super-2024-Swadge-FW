@@ -1846,8 +1846,9 @@ void drawPlatformerHighScores(font_t* font, highScores_t* highScores, swadgesona
         snprintf(rowStr, sizeof(rowStr) - 1, "%d%8.6" PRIu32 " %s", i + 1, (uint32_t)highScores->highScores[i].score,
                  sonas[i].name.nameBuffer);
         drawText(font,
-                 (highScores->highScores[i].score != 0 && highScores->highScores[i].swadgesona.packedName == 0) ? yellowColors[(gameData->frameCount >> 4) % 4]
-                                                                        : c555,
+                 (highScores->highScores[i].score != 0 && highScores->highScores[i].swadgesona.packedName == 0)
+                     ? yellowColors[(gameData->frameCount >> 4) % 4]
+                     : c555,
                  rowStr, 32, 80 + i * 24);
         drawWsgSimpleHalf(&(sonas[i].image), 4, 70 + i * 24);
     }
