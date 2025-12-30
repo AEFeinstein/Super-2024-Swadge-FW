@@ -1845,11 +1845,13 @@ void drawPlatformerHighScores(font_t* font, highScores_t* highScores, swadgesona
         char rowStr[64];
         snprintf(rowStr, sizeof(rowStr) - 1, "%d%8.6" PRIu32 " %s", i + 1, (uint32_t)highScores->highScores[i].score,
                  sonas[i].name.nameBuffer);
-        drawText(font, (highScores->highScores[i].swadgesona.packedName == 0) ? yellowColors[(gameData->frameCount >> 4) % 4] : c555, rowStr,
-                 32, 80 + i * 24);
+        drawText(font,
+                 (highScores->highScores[i].swadgesona.packedName == 0) ? yellowColors[(gameData->frameCount >> 4) % 4]
+                                                                        : c555,
+                 rowStr, 32, 80 + i * 24);
         drawWsgSimpleHalf(&(sonas[i].image), 4, 70 + i * 24);
     }
-    
+
     drawText(font, cyanColors[(gameData->frameCount >> 3) % 4], "PRESS 'A' TO RETURN", 70, 208);
 }
 
@@ -2024,8 +2026,9 @@ void updateShowHighScores(platformer_t* self)
     self->gameData.frameCount++;
 
     if (/*(self->gameData.frameCount > 300)
-        ||*/ (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START))
-            || ((self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A))))
+        ||*/
+        (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START))
+         || ((self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A))))
     {
         self->menuState     = 0;
         self->menuSelection = 0;
