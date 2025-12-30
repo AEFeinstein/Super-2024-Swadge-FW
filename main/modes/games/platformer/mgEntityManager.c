@@ -135,7 +135,7 @@ mgEntity_t* mg_findInactiveEntity(mgEntityManager_t* entityManager)
         entityIndex++;
 
         // Extra safeguard to make sure we don't get stuck here
-        if (entityIndex > MAX_ENTITIES)
+        if (entityIndex >= MAX_ENTITIES)
         {
             return NULL;
         }
