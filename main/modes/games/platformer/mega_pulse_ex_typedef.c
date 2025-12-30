@@ -264,10 +264,10 @@ const mg_EntityTileCollider_t entityTileCollider_deadeye_chirpzi
 
 // trash man origin: 38, 33
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_trash_man_bottomEdge
-    = {.collisionPoints = {{.x = -30, .y = 32}, {.x = 0, .y = 32}, {.x = 29, .y = 32}}, .size = 3};
+    = {.collisionPoints = {{.x = -29, .y = 32}, {.x = 0, .y = 32}, {.x = 29, .y = 32}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_trash_man_topEdge
-    = {.collisionPoints = {{.x = -30, .y = -29}, {.x = 0, .y = -29}, {.x = 29, .y = -29}}, .size = 3};
+    = {.collisionPoints = {{.x = -29, .y = -29}, {.x = 0, .y = -29}, {.x = 29, .y = -29}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_trash_man_rightEdge
     = {.collisionPoints = {{.x = 30, .y = 31}, {.x = 30, .y = 0}, {.x = 30, .y = -29}}, .size = 3};

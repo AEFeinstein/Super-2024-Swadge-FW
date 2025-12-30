@@ -239,9 +239,9 @@
   <object id="273" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="2032.98" y="1024.19" rotation="0"/>
   <object id="276" template="templates/Bouncepad.tx" x="2927.72" y="2254.77"/>
   <object id="277" template="templates/Bouncepad (45º).tx" x="3216.77" y="2141.28"/>
-  <object id="279" template="templates/Scroll Lock (Up).tx" x="3482.69" y="2043.67"/>
-  <object id="280" template="templates/Scroll Lock (Right).tx" x="3880.47" y="2153.44"/>
-  <object id="281" template="templates/Scroll Lock (Down).tx" x="3478.04" y="2279.67"/>
+  <object id="279" template="templates/Scroll Lock (Up).tx" x="3480" y="2040"/>
+  <object id="280" template="templates/Scroll Lock (Right).tx" x="3876" y="2152"/>
+  <object id="281" template="templates/Scroll Lock (Down).tx" x="3480" y="2264"/>
   <object id="282" template="templates/Warp Exit (Wall) .tx" x="3228.47" y="2129.44"/>
   <object id="283" template="templates/Checkpoint.tx" x="2544" y="321"/>
   <object id="284" template="templates/Checkpoint.tx" x="3424" y="2145"/>

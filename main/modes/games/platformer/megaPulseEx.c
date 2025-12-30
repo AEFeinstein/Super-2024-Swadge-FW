@@ -1839,16 +1839,21 @@ void savePlatformerUnlockables(platformer_t* self)
 
 void drawPlatformerHighScores(font_t* font, highScores_t* highScores, swadgesona_t* sonas, mgGameData_t* gameData)
 {
-    drawText(font, c555, "RANK   SCORE  NAME", 8, 80);
+    drawText(font, c555, "RANK   SCORE  NAME", 8, 64);
     for (uint8_t i = 0; i < NUM_PLATFORMER_HIGH_SCORES; i++)
     {
         char rowStr[64];
         snprintf(rowStr, sizeof(rowStr) - 1, "%d%8.6" PRIu32 " %s", i + 1, (uint32_t)highScores->highScores[i].score,
                  sonas[i].name.nameBuffer);
-        drawText(font, (gameData->rank == i) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, rowStr,
-                 32, 96 + i * 24);
-        drawWsgSimpleHalf(&(sonas[i].image), 4, 86 + i * 24);
+        drawText(font,
+                 (highScores->highScores[i].score != 0 && highScores->highScores[i].swadgesona.packedName == 0)
+                     ? yellowColors[(gameData->frameCount >> 4) % 4]
+                     : c555,
+                 rowStr, 32, 80 + i * 24);
+        drawWsgSimpleHalf(&(sonas[i].image), 4, 70 + i * 24);
     }
+
+    drawText(font, cyanColors[(gameData->frameCount >> 3) % 4], "PRESS 'A' TO RETURN", 70, 208);
 }
 
 uint8_t getHighScoreRank(platformerHighScores_t* highScores, uint32_t newScore)
@@ -2021,9 +2026,10 @@ void updateShowHighScores(platformer_t* self)
 
     self->gameData.frameCount++;
 
-    if ((self->gameData.frameCount > 300)
-        || (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START))
-            || ((self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A))))
+    if (/*(self->gameData.frameCount > 300)
+        ||*/
+        (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START))
+         || ((self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A))))
     {
         self->menuState     = 0;
         self->menuSelection = 0;
@@ -2477,6 +2483,7 @@ void initBossFight(void)
     if (platformer->entityManager.bossEntity != NULL)
     {
         platformer->entityManager.bossEntity->state = 0;
+        platformer->gameData.countdown += 30;
     }
 
     if (platformer->gameData.level == 5)

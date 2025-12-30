@@ -1490,6 +1490,11 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 // self->spriteFlipVertical  = false;
                 self->invincibilityFrames = 5;
 
+                if (other->type == ENTITY_BOSS_HANK_WADDLE && (other->state == 0 || other->state == 7))
+                {
+                    break;
+                }
+
                 if (other->invincibilityFrames)
                 {
                     break;
@@ -1512,6 +1517,11 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             else if (self->state == MG_PL_ST_UPPERCUT)
             {
                 self->invincibilityFrames = 5;
+
+                if (other->type == ENTITY_BOSS_HANK_WADDLE && (other->state == 0 || other->state == 7))
+                {
+                    break;
+                }
 
                 if (other->invincibilityFrames)
                 {
