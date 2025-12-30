@@ -2479,6 +2479,7 @@ void initBossFight(void)
     if (platformer->entityManager.bossEntity != NULL)
     {
         platformer->entityManager.bossEntity->state = 0;
+        platformer->gameData.countdown += 30;
     }
 
     if (platformer->gameData.level == 5)
