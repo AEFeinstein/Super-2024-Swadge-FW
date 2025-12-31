@@ -511,10 +511,14 @@ static void atriumEnterMode(void)
     atr->numRemoteSwsn = i;
 
     trophyUpdate(&atriumTrophyData.list[4], atr->numRemoteSwsn, true); // update count for 10 passes
-    trophyUpdate(&atriumTrophyData.list[5], atr->numRemoteSwsn, true); // count for 30 passes
-    trophyUpdate(&atriumTrophyData.list[6], atr->numRemoteSwsn, true); // count for 100 passes
-
-    // I don't really need an if statement here so i just deleted it, it was causing more problems than it was solving
+    if (atr->numRemoteSwsn > 10)
+    {
+        trophyUpdate(&atriumTrophyData.list[5], atr->numRemoteSwsn, true); // count for 30 passes
+    }
+    if (atr->numRemoteSwsn > 30)
+    {
+        trophyUpdate(&atriumTrophyData.list[6], atr->numRemoteSwsn, true); // count for 100 passes
+    }
 
     atr->page       = 0;
     atr->totalPages = (atr->numRemoteSwsn / SONA_PER) + ((atr->numRemoteSwsn % SONA_PER) ? 1 : 0);
