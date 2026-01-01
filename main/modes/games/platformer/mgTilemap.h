@@ -85,6 +85,7 @@ void mg_hashSpawnEntity(mgEntityManager_t* entityManager, mgEntitySpawnData_t* e
 uint8_t mg_getTile(mgTilemap_t* tilemap, uint8_t tx, uint8_t ty);
 void mg_setTile(mgTilemap_t* tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId);
 bool mg_isSolid(uint8_t tileId);
+bool mg_isSolid_enemy(uint8_t tileId);
 void mg_unlockScrolling(mgTilemap_t* tilemap);
 bool mg_needsTransparency(uint8_t tileId);
 void mg_freeTilemap(mgTilemap_t* tilemap);

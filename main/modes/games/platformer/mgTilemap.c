@@ -478,6 +478,24 @@ bool mg_isSolid(uint8_t tileId)
     }
 }
 
+bool mg_isSolid_enemy(uint8_t tileId)
+{
+    switch (tileId)
+    {
+        case MG_TILE_EMPTY ... MG_TILE_UNUSED_29:
+            return false;
+            break;
+        case MG_TILE_INVISIBLE_BLOCK ... MG_TILE_SOLID_VISIBLE_INTERACTIVE_9F:
+            return true;
+            break;
+        case MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6: // Crumble block
+            return true;
+            break;
+        default:
+            return false;
+    }
+}
+
 // bool isInteractive(uint8_t tileId)
 // {
 //     return tileId > MG_TILEINVISIBLE_BLOCK && tileId < MG_TILEBG_GOAL_ZONE;

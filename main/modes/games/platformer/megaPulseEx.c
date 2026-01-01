@@ -699,6 +699,7 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
             else
             {
                 platformer->gameData.continuesUsed = true;
+                platformer->gameData.inGameTimer   = platformer->unlockables.inGameTimer;
                 changeStateLevelSelect(platformer);
             }
         }
@@ -910,7 +911,7 @@ void updateGame(platformer_t* self)
         }
         self->gameData.inGameTimer++;
 
-        if (self->gameData.countdown < 10)
+        if (self->gameData.countdown == 10)
         {
             midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
             soundPlayBgm(&(self->soundManager.sndOuttaTime), BZR_STEREO);

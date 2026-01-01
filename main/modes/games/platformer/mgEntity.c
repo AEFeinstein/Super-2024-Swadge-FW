@@ -1129,7 +1129,6 @@ void despawnWhenOffscreen(mgEntity_t* self)
     if (TO_PIXEL_COORDS(self->x) < (self->tilemap->mapOffsetX - DESPAWN_THRESHOLD)
         || TO_PIXEL_COORDS(self->x) > (self->tilemap->mapOffsetX + MG_TILEMAP_DISPLAY_WIDTH_PIXELS + DESPAWN_THRESHOLD))
     {
-        mg_bossRushLogic(self);
         mg_destroyEntity(self, true);
     }
 
@@ -1142,7 +1141,6 @@ void despawnWhenOffscreen(mgEntity_t* self)
         || TO_PIXEL_COORDS(self->y)
                > (self->tilemap->mapOffsetY + MG_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD))
     {
-        mg_bossRushLogic(self);
         mg_destroyEntity(self, true);
     }
 }
@@ -1154,87 +1152,73 @@ void mg_bossRushLogic(mgEntity_t* self)
     {
         return;
     }
-    bool isABoss      = false;
+
     uint8_t nextBoss  = 0;
     uint8_t nextLevel = 0;
 
-    isABoss = (self->spriteIndex == MG_SP_BOSS_0 || self->spriteIndex == MG_SP_BOSS_1
-               || self->spriteIndex == MG_SP_BOSS_2 || self->spriteIndex == MG_SP_BOSS_3
-               || self->spriteIndex == MG_SP_BOSS_4 || self->spriteIndex == MG_SP_BOSS_5
-               || self->spriteIndex == MG_SP_BOSS_6 || self->spriteIndex == MG_SP_BOSS_7);
-
-    if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_KINETIC_DONUT)
+    switch (self->yDamping)
     {
-        nextBoss  = ENTITY_BOSS_GRIND_PANGOLIN;
-        nextLevel = 2;
-    }
-    else if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_GRIND_PANGOLIN)
-    {
-        nextBoss  = ENTITY_BOSS_SEVER_YATAGA;
-        nextLevel = 3;
-    }
-    else if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_SEVER_YATAGA)
-    {
-        nextBoss  = ENTITY_BOSS_TRASH_MAN;
-        nextLevel = 4;
-    }
-    else if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_TRASH_MAN)
-    {
-        nextBoss  = ENTITY_BOSS_SMASH_GORILLA;
-        nextLevel = 6;
-    }
-    else if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_SMASH_GORILLA)
-    {
-        nextBoss  = ENTITY_BOSS_DEADEYE_CHIRPZI;
-        nextLevel = 7;
-    }
-    else if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_DEADEYE_CHIRPZI)
-    {
-        nextBoss  = ENTITY_BOSS_DRAIN_BAT;
-        nextLevel = 8;
-    }
-    else if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_DRAIN_BAT)
-    {
-        nextBoss  = ENTITY_BOSS_FLARE_GRYFFYN;
-        nextLevel = 9;
-    }
-    else if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_FLARE_GRYFFYN)
-    {
-        nextBoss  = 0;
-        nextLevel = 12;
+        case ENTITY_BOSS_KINETIC_DONUT:
+            nextBoss  = ENTITY_BOSS_GRIND_PANGOLIN;
+            nextLevel = 2;
+            break;
+        case ENTITY_BOSS_GRIND_PANGOLIN:
+            nextBoss  = ENTITY_BOSS_SEVER_YATAGA;
+            nextLevel = 3;
+            break;
+        case ENTITY_BOSS_SEVER_YATAGA:
+            nextBoss  = ENTITY_BOSS_TRASH_MAN;
+            nextLevel = 4;
+            break;
+        case ENTITY_BOSS_TRASH_MAN:
+            nextBoss  = ENTITY_BOSS_SMASH_GORILLA;
+            nextLevel = 6;
+            break;
+        case ENTITY_BOSS_SMASH_GORILLA:
+            nextBoss  = ENTITY_BOSS_DEADEYE_CHIRPZI;
+            nextLevel = 7;
+            break;
+        case ENTITY_BOSS_DEADEYE_CHIRPZI:
+            nextBoss  = ENTITY_BOSS_DRAIN_BAT;
+            nextLevel = 8;
+            break;
+        case ENTITY_BOSS_DRAIN_BAT:
+            nextBoss  = ENTITY_BOSS_FLARE_GRYFFYN;
+            nextLevel = 9;
+            break;
+        case ENTITY_BOSS_FLARE_GRYFFYN:
+        default:
+            nextBoss  = 0;
+            nextLevel = 12;
+            break;
     }
 
-    if (isABoss)
+    self->gameData->bgColors = leveldef[nextLevel].bgColors;
+    if (nextBoss > 0)
     {
-        // mg_loadMapFromFile((self->entityManager->tilemap), leveldef[11].filename,
-        //                 self->entityManager);
-        self->gameData->bgColors = leveldef[nextLevel].bgColors;
-        if (nextBoss > 0)
+        mg_loadWsgSet(self->entityManager->wsgManager, leveldef[nextLevel].defaultWsgSetIndex);
+        mgEntity_t* boss = mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX,
+                                           self->entityManager->bossSpawnY);
+        boss->state      = 0;
+        if (nextBoss == ENTITY_BOSS_TRASH_MAN)
         {
-            mg_loadWsgSet(self->entityManager->wsgManager, leveldef[nextLevel].defaultWsgSetIndex);
-            mgEntity_t* boss = mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX,
-                                               self->entityManager->bossSpawnY);
-            boss->state      = 0;
-            if (nextBoss == ENTITY_BOSS_TRASH_MAN)
-            {
-                boss->y -= 100 << SUBPIXEL_RESOLUTION;
-            }
-            else if (nextBoss == ENTITY_BOSS_SMASH_GORILLA || nextBoss == ENTITY_BOSS_SEVER_YATAGA)
-            {
-                boss->y -= 10 << SUBPIXEL_RESOLUTION;
-            }
-            else if (nextBoss == ENTITY_BOSS_GRIND_PANGOLIN)
-            {
-                boss->y -= 4 << SUBPIXEL_RESOLUTION;
-            }
+            boss->y -= 100 << SUBPIXEL_RESOLUTION;
         }
-        // Plays post fight once flare gryffyn has gone off screen ONLY if the player hasn't touched the mixtape yet.
-        else if (self->soundManager->currentBgmIndex != MG_BGM_LEVEL_CLEAR_JINGLE)
+        else if (nextBoss == ENTITY_BOSS_SMASH_GORILLA || nextBoss == ENTITY_BOSS_SEVER_YATAGA)
         {
-            mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
-            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
-            soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+            boss->y -= 10 << SUBPIXEL_RESOLUTION;
         }
+        else if (nextBoss == ENTITY_BOSS_GRIND_PANGOLIN)
+        {
+            boss->y -= 4 << SUBPIXEL_RESOLUTION;
+        }
+    }
+    // Plays post fight once flare gryffyn has gone off screen ONLY if the player hasn't touched the mixtape yet.
+    else if (self->soundManager->currentBgmIndex != MG_BGM_LEVEL_CLEAR_JINGLE)
+    {
+        mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
+        midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+        soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
     }
 }
 
@@ -2264,7 +2248,7 @@ bool mg_enemyTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, 
         }
     }
 
-    if (mg_isSolid(tileId))
+    if (mg_isSolid_enemy(tileId))
     {
         switch (direction)
         {
@@ -2496,6 +2480,30 @@ void updateEntityDead(mgEntity_t* self)
     self->y += self->yspeed;
 
     despawnWhenOffscreen(self);
+}
+
+void updateBossDead(mgEntity_t* self)
+{
+    applyGravity(self);
+    self->x += self->xspeed;
+    self->y += self->yspeed;
+
+    if (TO_PIXEL_COORDS(self->x) < (self->tilemap->mapOffsetX - DESPAWN_THRESHOLD)
+        || TO_PIXEL_COORDS(self->x) > (self->tilemap->mapOffsetX + MG_TILEMAP_DISPLAY_WIDTH_PIXELS + DESPAWN_THRESHOLD))
+    {
+        mg_bossRushLogic(self);
+        mg_destroyEntity(self, false);
+        return;
+    }
+
+    if (TO_PIXEL_COORDS(self->y) < (self->tilemap->mapOffsetY - (DESPAWN_THRESHOLD << 2))
+        || TO_PIXEL_COORDS(self->y)
+               > (self->tilemap->mapOffsetY + MG_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD))
+    {
+        mg_bossRushLogic(self);
+        mg_destroyEntity(self, false);
+        return;
+    }
 }
 
 void updatePlayerDead(mgEntity_t* self)
@@ -3224,6 +3232,7 @@ void killEnemy(mgEntity_t* target)
     target->homeTileY          = 0;
     target->gravityEnabled     = true;
     target->falling            = true;
+    target->yDamping           = target->type; // Preserve what type of entity was killed in yDamping
     target->type               = ENTITY_DEAD;
     target->spriteFlipVertical = true;
     if (target->spawnData != NULL)
@@ -3267,7 +3276,7 @@ void killEnemy(mgEntity_t* target)
         target->updateFunction(target);
     }
 
-    target->updateFunction = &updateEntityDead;
+    target->updateFunction = (isABoss) ? &updateBossDead : &updateEntityDead;
 }
 
 void updateBgCol(mgEntity_t* self)
