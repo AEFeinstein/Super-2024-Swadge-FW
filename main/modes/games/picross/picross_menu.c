@@ -617,10 +617,9 @@ void picrossEnterMode(void)
 
     loadFont(MM_FONT, &(pm->mmFont), false);
 
-    pm->menu                        = initMenu(str_picrossTitle, picrossMainMenuCb);
-    pm->renderer                    = initMenuMegaRenderer(NULL, NULL, NULL);
-    pm->renderer->bgColorIdx        = 0;
-    pm->renderer->conveyorBeltStyle = true;
+    pm->menu                 = initMenu(str_picrossTitle, picrossMainMenuCb);
+    pm->renderer             = initMenuMegaRenderer(NULL, NULL, NULL);
+    pm->renderer->bgColorIdx = 0;
 
     pm->screen = PICROSS_MENU;
 
@@ -827,8 +826,7 @@ void returnToPicrossMenu(void)
     pm->screen = PICROSS_MENU;
     // Reinit MenuMegaRenderer to go back to using default menu colors.
     deinitMenuMegaRenderer(pm->renderer);
-    pm->renderer                    = initMenuMegaRenderer(NULL, NULL, NULL);
-    pm->renderer->conveyorBeltStyle = true;
+    pm->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
 }
 
 /**

@@ -79,9 +79,8 @@ typedef struct
     led_t leds[CONFIG_NUM_LEDS]; ///< An array with the RGB LED state to be output
     bool ledsOn;                 ///< true if LEDs should be set by this renderer, false to leave LEDs alone
 
-    bool drawBody;          ///< true to draw the sci-fi rectangle body background, false to skip it
-    uint16_t bodyHeight;    ///< the height of the middle portion of the body, between top and bottom decorated parts
-    bool conveyorBeltStyle; ///< true to draw a sliding background and sliding lights
+    bool drawBody;       ///< true to draw the sci-fi rectangle body background, false to skip it
+    uint16_t bodyHeight; ///< the height of the middle portion of the body, between top and bottom decorated parts
 } menuMegaRenderer_t;
 
 menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);

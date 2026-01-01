@@ -33,10 +33,6 @@
 static const paletteColor_t defaultBgColors[] = {
     c024, c025, c035, c034, c033, c043, c143, c254, c453, c553,
 };
-// Routes through the helmet M, with three extra numbers slapped on the end so the hotdog won't crash.
-static const uint8_t ledConveyorOrder[] = {
-    1, 0, 2, 3, 5, 4, 6, 7, 8,
-};
 
 //==============================================================================
 // Function Prototypes
@@ -428,10 +424,8 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
         {
             renderer->bgColorIdx = renderer->numBgColors - 1;
         }
-        if (renderer->conveyorBeltStyle)
-        {
-            renderer->yOff += renderer->bgColorIdx;
-        }
+        // scrolls the background
+        renderer->yOff += renderer->bgColorIdx;
     });
 
     // Run a timer to scroll text
@@ -612,24 +606,13 @@ static void setLedsFromBg(menuMegaRenderer_t* renderer)
     // Set all LEDs
     for (int32_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
     {
-        int32_t ledColorIdx = renderer->bgColorIdx;
-        if (renderer->conveyorBeltStyle)
-        {
-            int32_t ledDeg = CLAMP(renderer->bgColorDeg + 2 * idx, 0, 359);
-            ledColorIdx    = ((getSin1024(ledDeg) + 1024) * renderer->numBgColors) / 2048;
-            if (ledColorIdx >= renderer->numBgColors)
-            {
-                ledColorIdx = renderer->numBgColors - 1;
-            }
-        }
-
         // Extract LED color from bg color
-        int32_t rgb = paletteToRGB(renderer->bgColors[ledColorIdx]);
+        int32_t rgb = paletteToRGB(renderer->bgColors[renderer->bgColorIdx]);
         led_t led   = {
               .r = (rgb >> 16) & 0xFF,
               .g = (rgb >> 8) & 0xFF,
               .b = (rgb >> 0) & 0xFF,
         };
-        renderer->leds[ledConveyorOrder[idx]] = led;
+        renderer->leds[idx] = led;
     }
 }
