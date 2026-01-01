@@ -1129,7 +1129,6 @@ void despawnWhenOffscreen(mgEntity_t* self)
     if (TO_PIXEL_COORDS(self->x) < (self->tilemap->mapOffsetX - DESPAWN_THRESHOLD)
         || TO_PIXEL_COORDS(self->x) > (self->tilemap->mapOffsetX + MG_TILEMAP_DISPLAY_WIDTH_PIXELS + DESPAWN_THRESHOLD))
     {
-        mg_bossRushLogic(self);
         mg_destroyEntity(self, true);
     }
 
@@ -1142,7 +1141,6 @@ void despawnWhenOffscreen(mgEntity_t* self)
         || TO_PIXEL_COORDS(self->y)
                > (self->tilemap->mapOffsetY + MG_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD))
     {
-        mg_bossRushLogic(self);
         mg_destroyEntity(self, true);
     }
 }
@@ -1158,7 +1156,7 @@ void mg_bossRushLogic(mgEntity_t* self)
     uint8_t nextBoss  = 0;
     uint8_t nextLevel = 0;
 
-    switch(self->jumpPower)
+    switch(self->yDamping)
     {
         case ENTITY_BOSS_KINETIC_DONUT:
             nextBoss  = ENTITY_BOSS_GRIND_PANGOLIN;
@@ -3235,7 +3233,7 @@ void killEnemy(mgEntity_t* target)
     target->homeTileY          = 0;
     target->gravityEnabled     = true;
     target->falling            = true;
-    target->jumpPower          = target->type; //Preserve what type of entity was killed in jumpPower
+    target->yDamping          = target->type; //Preserve what type of entity was killed in yDamping
     target->type               = ENTITY_DEAD;
     target->spriteFlipVertical = true;
     if (target->spawnData != NULL)
