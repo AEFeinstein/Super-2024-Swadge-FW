@@ -2367,6 +2367,16 @@ void startPostFightMusic(void)
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
 
+void startSawtoothsThemeMusic(void)
+{
+    globalMidiPlayerGet(MIDI_BGM)->paused = false;
+    mg_setBgm(&platformer->soundManager, MG_BGM_SAWTOOTHS_THEME);
+    int16_t songPitches[] = {59, 60, 62, 64, 69, -1, -1, -1};
+    setSongPitches(platformer->gameData.cutscene, songPitches);
+    midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+}
+
 void queueTrophy(void)
 {
     if (!platformer->gameData.cheatMode)

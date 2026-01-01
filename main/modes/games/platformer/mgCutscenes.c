@@ -218,7 +218,7 @@ void stageStartCutscene(mgGameData_t* gameData)
                             "lot like the Gaylord...",
                             false, 0, NULL);
             addCutsceneLine(gameData->cutscene, SystemText,
-                            "The grand atrium is filled with flickering-banners, while pixelated distortion pulses "
+                            "The grand atrium is filled with flickering banners, while pixelated distortion pulses "
                             "through the walls.",
                             false, 0, NULL);
             addCutsceneLine(gameData->cutscene, Sawtooth, "We're too late... the MAGiX virus is already spreading.",
@@ -281,7 +281,7 @@ void stageStartCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, SystemText,
                             "PULSE and SAWTOOTH teleport into DEADEYE CHIRPZI's mindscape...", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, SystemText,
-                            "A blackened metal catwalk and level all above a roiling lava chasm...", false, 0, NULL);
+                            "A blackened metal catwalk sits above a roiling lava chasm...", false, 0, NULL);
             addCutsceneLine(
                 gameData->cutscene, SystemText,
                 "The air shimmers with heat distortion, and distant metal screeches echo like distorted screams.",
@@ -779,15 +779,14 @@ void bossOutroCutscene(mgGameData_t* gameData)
         }
         case 7: // The Foundry of Echoes (Deadeye Chirpzi)
         {
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Urgghh... My head....I haven't blacked out like that since the afterparty in 2024...", true, -1, stopMusic);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Urgghh... My head....I haven't blacked out like that since the afterparty in 2024...", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Zip, you there, bud?", true, -1, NULL);
-            addCutsceneLine(gameData->cutscene, SystemText, "Zip glitches out, sparks shooting outward, and lets out a chirping noise.", false,-1, NULL);
+            addCutsceneLine(gameData->cutscene, SystemText, "Zip glitches out, sparks shooting outward, and lets out a chirping noise.", false,-1, startSawtoothsThemeMusic);
             addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Hey, it's okay. You're safe now. It's over.", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "Is he... talking to you?", true, 0, NULL);
             addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Not exactly. But I get it.", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, SystemText, "Zip pulses again, and then dissolves into digital motes that spiral around Cho. They settle into Cho's rig.", false, -1, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "Is he gone?", true, 0, NULL);
-            //TO DO MAKE DEADEYE ART WITHOUT ZIP, use every where after this.
             addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "Nah. Just back where he started. Echoes don't disappear-they resonate.", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "And now I've got surround sound.", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "Glad he's still with you.", true, 2, NULL);
@@ -865,7 +864,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
         }
         case 9: // Arena Hypernova (Flare Gryffyn and Jolt Lapin and Crash Turtle)
         {
-            addCutsceneLine(gameData->cutscene, FlareGryffyn, "Not bad, not bad. But I've still got one last trick-HYAHHH!", false, -1, NULL);
+            addCutsceneLine(gameData->cutscene, FlareGryffyn, "Not bad, not bad. But I've still got one last trick-HYAHHH!", false, -1, stopMusic);
             addCutsceneLine(gameData->cutscene, SystemText, "A sudden flash, FLARE GRYFFYN takes a hit from behind and collapses.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, SawtoothFlipped, "That oughta shut him up for a while.", false, 2, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "SAWTOOTH! You're OKAY! What happened?!", false, 2, NULL);
@@ -874,7 +873,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, SawtoothFlipped, "...", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "...", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, SawtoothFlipped, "Well... we've come this far. Might as well come clean.", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, Pulse, "...", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, Pulse, "...", false, 0, startSawtoothsThemeMusic);
             addCutsceneLine(gameData->cutscene, SunnyFlipped, "...I was their leader once.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "You're... SUNNY?! Sunny McShreds of the Suncats?!! You've been hiding your identity the whole time?", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, SunnyFlipped, "I... had a falling out with the rest of the team a few years back. We lost touch. Life happened.", false, 0, NULL);
@@ -982,7 +981,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, SawtoothFlipped, "EVERYBODY! We have to get out of here!", false, 3, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "After teleporting to safety, PULSE, SAWTOOTH, BIGMA, and the freed RemiXes watch HANK WADDLE's exploding facility from a distant           .    cliffside.", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "The following day, PULSE and friends return to the wreckage to reflect on their adventure.", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "The following day, PULSE and friends return to the wreckage to reflect on their adventure.", false, 0, stopMusic);
             addCutsceneLine(gameData->cutscene, Pulse, "Sunny... was he right about us?", true, 0, NULL);
             addCutsceneLine(gameData->cutscene, Sunny, "I... don't know.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, Bigma, "Maybe you'll find out someday. But until then...", true, 2, startCreditMusic);

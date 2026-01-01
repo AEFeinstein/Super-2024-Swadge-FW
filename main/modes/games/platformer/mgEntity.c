@@ -6355,11 +6355,9 @@ void startOutroCutscene(mgEntity_t* self)
         self->gameData->pauseCountdown = true;
     }
     // Cutscene after the boss fight
-    if (self->gameData->level == 9) // custom song from Joe for sawtooth reveal.
+    if (self->gameData->level == 7)
     {
-        mg_setBgm(self->soundManager, MG_BGM_SAWTOOTHS_THEME);
-        midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
-        soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+        stopMusic();
     }
     bossOutroCutscene(self->gameData);
 }
