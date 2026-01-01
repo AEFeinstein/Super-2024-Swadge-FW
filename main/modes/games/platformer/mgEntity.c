@@ -1156,7 +1156,7 @@ void mg_bossRushLogic(mgEntity_t* self)
     uint8_t nextBoss  = 0;
     uint8_t nextLevel = 0;
 
-    switch(self->yDamping)
+    switch (self->yDamping)
     {
         case ENTITY_BOSS_KINETIC_DONUT:
             nextBoss  = ENTITY_BOSS_GRIND_PANGOLIN;
@@ -1198,7 +1198,7 @@ void mg_bossRushLogic(mgEntity_t* self)
     {
         mg_loadWsgSet(self->entityManager->wsgManager, leveldef[nextLevel].defaultWsgSetIndex);
         mgEntity_t* boss = mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX,
-                                            self->entityManager->bossSpawnY);
+                                           self->entityManager->bossSpawnY);
         boss->state      = 0;
         if (nextBoss == ENTITY_BOSS_TRASH_MAN)
         {
@@ -2504,7 +2504,6 @@ void updateBossDead(mgEntity_t* self)
         mg_destroyEntity(self, false);
         return;
     }
-
 }
 
 void updatePlayerDead(mgEntity_t* self)
@@ -3233,7 +3232,7 @@ void killEnemy(mgEntity_t* target)
     target->homeTileY          = 0;
     target->gravityEnabled     = true;
     target->falling            = true;
-    target->yDamping          = target->type; //Preserve what type of entity was killed in yDamping
+    target->yDamping           = target->type; // Preserve what type of entity was killed in yDamping
     target->type               = ENTITY_DEAD;
     target->spriteFlipVertical = true;
     if (target->spawnData != NULL)

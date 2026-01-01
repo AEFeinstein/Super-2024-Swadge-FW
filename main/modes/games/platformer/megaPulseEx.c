@@ -699,7 +699,7 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
             else
             {
                 platformer->gameData.continuesUsed = true;
-                platformer->gameData.inGameTimer = platformer->unlockables.inGameTimer;
+                platformer->gameData.inGameTimer   = platformer->unlockables.inGameTimer;
                 changeStateLevelSelect(platformer);
             }
         }
