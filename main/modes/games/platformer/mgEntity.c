@@ -920,7 +920,7 @@ void mg_moveEntityWithTileCollisions3(mgEntity_t* self)
             }
         }
 
-        self->falling = !onGround;
+        self->falling = (self->yspeed < 0) ? true : !onGround;
         if (self->falling)
         {
             self->fallOffTileHandler(self);
@@ -1771,7 +1771,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                     self->hp -= other->scoreValue
                                 + (other->scoreValue * !(self->gameData->abilities & (1U << MG_PLOT_ARMOR_ABILITY)));
                 }
-                mg_updateLedsHpMeter(self->entityManager, self->gameData);
+                
                 self->gameData->comboTimer = 0;
                 self->gameData->combo      = 0;
 
@@ -3189,7 +3189,7 @@ bool waspTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint
         }
     }
 
-    if (mg_isSolid(tileId))
+    if (mg_isSolid_enemy(tileId))
     {
         switch (direction)
         {
