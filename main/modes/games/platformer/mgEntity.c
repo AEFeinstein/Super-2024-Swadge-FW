@@ -1771,6 +1771,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 }
                 mg_updateLedsHpMeter(self->entityManager, self->gameData);
                 self->gameData->comboTimer = 0;
+                self->gameData->combo      = 0;
 
                 if (!self->gameData->debugMode && self->hp <= 0)
                 {
