@@ -266,6 +266,7 @@ void mg_updatePlayer(mgEntity_t* self)
             self->xspeed = mg_sureYouCanVectors[stupidVectorThing].x * (self->spriteFlipHorizontal ? -1 : 1);
             self->yspeed = mg_sureYouCanVectors[stupidVectorThing].y;
             self->stateTimer--;
+            self->canDash   = false;
             if (self->stateTimer <= 0)
             {
                 self->state = MG_PL_ST_NORMAL;
