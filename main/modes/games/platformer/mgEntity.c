@@ -3189,7 +3189,7 @@ bool waspTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint
         }
     }
 
-    if (mg_isSolid(tileId))
+    if (mg_isSolid_enemy(tileId))
     {
         switch (direction)
         {
