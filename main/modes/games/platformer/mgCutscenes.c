@@ -991,7 +991,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, CreditStyle, "Producer, Boss Designer: Dac", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Firmware Leader: Adam Feinstein", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Hardware Leader: Emily Anthony", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, CreditStyle, "Lead Programmer, Gameplay Designer, Enemy Artist, Boss Designer: Jon Vega", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Lead Programmer, Gameplay Designer, Game Engine, Enemy Artist, Boss Designer: Jon Vega", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Music Composer, Lead Script Writer, Level Designer, Gameplay Designer: Joe Newman", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Contact: newmajoe on Discord. Special thanks to Allie, Lucy, and Sadie, also Dwelling of Duels.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Programmer, Quality Assurance, Gameplay Designer, Enemy Artist, Script Writer, Boss Designer: James Albracht", false, 0, NULL);
