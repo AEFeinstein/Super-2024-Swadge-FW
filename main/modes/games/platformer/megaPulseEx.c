@@ -1108,7 +1108,7 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
         DRAW_FPS_COUNTER(platformer->font);
     }
 
-    if (gameData->comboTimer == 0)
+    if (gameData->comboTimer == 0 || gameData->combo == 0)
     {
         return;
     }
