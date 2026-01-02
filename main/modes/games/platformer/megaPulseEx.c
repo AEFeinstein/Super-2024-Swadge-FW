@@ -273,14 +273,14 @@ const trophyData_t platformerTrophies[] = {{
                                            {
                                                .title       = "1 Credit Cleared!",
                                                .description = "Clear in one session without Game Over!",
-                                               .image       = SILVER_TROPHY_WSG,
+                                               .image       = GOLD_TROPHY_WSG,
                                                .type        = TROPHY_TYPE_TRIGGER,
-                                               .difficulty  = TROPHY_DIFF_HARD,
+                                               .difficulty  = TROPHY_DIFF_EXTREME,
                                                .maxVal      = 1,
                                            },
                                            {
                                                .title       = "Not just fast, magFAST!",
-                                               .description = "1CC'd in 20 gameplay minutes!",
+                                               .description = "Cleared in 20 gameplay minutes!",
                                                .image       = GOLD_TROPHY_WSG,
                                                .type        = TROPHY_TYPE_TRIGGER,
                                                .difficulty  = TROPHY_DIFF_EXTREME,
@@ -1729,7 +1729,7 @@ void updateGameClear(platformer_t* self)
             trophyUpdate(&platformerTrophies[13], 1, true);
         }
 
-        if (self->gameData.frameCount == 45 && !self->gameData.continuesUsed && self->gameData.inGameTimer < FAST_TIME)
+        if (self->gameData.frameCount == 45 && self->gameData.inGameTimer < FAST_TIME)
         {
             trophyUpdate(&platformerTrophies[14], 1, true);
         }
@@ -2206,6 +2206,8 @@ void updateLevelSelect(platformer_t* self)
         {
             // Undo all level progress, but keep abilities.
             self->unlockables.levelsCleared = 0;
+            self->unlockables.inGameTimer = 0;
+            self->gameData.inGameTimer = 0;
             savePlatformerUnlockables(self);
 
             writeNvs32(MG_abilitiesNVSKey, platformer->gameData.abilities);
