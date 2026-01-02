@@ -501,12 +501,12 @@ void platformerEnterMode(void)
                          true, true, true);
         setMidiParams(platformer->gameData.cutscene, 17, 83, 1, 250, false);
         // Ember
-        addCutsceneStyle(platformer->gameData.cutscene, c000, EMBER_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Ember", 1, true,
-                         true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c000, EMBER_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Ember", 1,
+                         false, true, true);
         setMidiParams(platformer->gameData.cutscene, 18, 82, 1, 250, false);
         // Percy
-        addCutsceneStyle(platformer->gameData.cutscene, c000, PERCY_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Percy", 1, true,
-                         true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c000, PERCY_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Percy", 1,
+                         false, true, true);
         setMidiParams(platformer->gameData.cutscene, 19, 38, 1, 250, false);
         // Sunny
         addCutsceneStyle(platformer->gameData.cutscene, c541, SUNNY_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sunny", 2,
