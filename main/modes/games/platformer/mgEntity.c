@@ -2411,32 +2411,33 @@ void updateScrollLockRight(mgEntity_t* self)
     uint8_t tx, ty;
 
     self->tilemap->maxMapOffsetX = TO_PIXEL_COORDS(self->x) + 8 - MG_TILEMAP_DISPLAY_WIDTH_PIXELS;
-    self->tilemap->minMapOffsetX = self->tilemap->maxMapOffsetX;
-    self->tilemap->mapOffsetX    = self->tilemap->minMapOffsetX;
-
-    // Close off left wall of boss room
-    for (uint8_t i = 0; i < MG_TILEMAP_DISPLAY_HEIGHT_TILES; i++)
-    {
-        tx = (self->tilemap->mapOffsetX) >> MG_TILESIZE_IN_POWERS_OF_2;
-        ty = ((self->tilemap->mapOffsetY) >> MG_TILESIZE_IN_POWERS_OF_2) + i;
-
-        if (/*tx < 0 ||*/ tx > self->tilemap->mapWidth || /* ty < 0 || */ ty > self->tilemap->mapHeight)
-        {
-            break;
-        }
-
-        uint8_t checkTile = mg_getTile(self->tilemap, tx, ty);
-
-        if (!mg_isSolid(checkTile))
-        {
-            mg_setTile(self->tilemap, tx, ty, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20);
-        }
-    }
-
+   
     // Initiate boss battle.
     // For this to work, the boss must be placed to the left of the scroll lock.
     if (self->entityManager->bossEntity != NULL)
     {
+        self->tilemap->minMapOffsetX = self->tilemap->maxMapOffsetX;
+        self->tilemap->mapOffsetX    = self->tilemap->minMapOffsetX;
+        
+        // Close off left wall of boss room
+        for (uint8_t i = 0; i < MG_TILEMAP_DISPLAY_HEIGHT_TILES; i++)
+        {
+            tx = (self->tilemap->mapOffsetX) >> MG_TILESIZE_IN_POWERS_OF_2;
+            ty = ((self->tilemap->mapOffsetY) >> MG_TILESIZE_IN_POWERS_OF_2) + i;
+
+            if (/*tx < 0 ||*/ tx > self->tilemap->mapWidth || /* ty < 0 || */ ty > self->tilemap->mapHeight)
+            {
+                break;
+            }
+
+            uint8_t checkTile = mg_getTile(self->tilemap, tx, ty);
+
+            if (!mg_isSolid(checkTile))
+            {
+                mg_setTile(self->tilemap, tx, ty, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20);
+            }
+        }   
+        
         // Cutscene before the boss fight
         if (self->gameData->level != 11) // keep the megajam music rolling in the rush stage intro talk.
         {
