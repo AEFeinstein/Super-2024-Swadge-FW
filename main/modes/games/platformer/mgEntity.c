@@ -1757,6 +1757,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 other->xspeed       = -other->xspeed;
                 other->yspeed       = -other->yspeed;
                 other->linkedEntity = self;
+                soundPlaySfx(&self->soundManager->sndTally, MIDI_SFX);
                 break;
             }
 
