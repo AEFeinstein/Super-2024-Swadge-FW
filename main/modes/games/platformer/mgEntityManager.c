@@ -2436,8 +2436,9 @@ mgEntity_t* createBossTrashMan(mgEntityManager_t* entityManager, uint16_t x, uin
     entity->scoreValue           = 2000;
     entity->hp                   = 48;
 
-    entity->type                 = ENTITY_BOSS_TRASH_MAN;
-    entity->spriteIndex          = MG_SP_BOSS_0;
+    entity->type        = ENTITY_BOSS_TRASH_MAN;
+    entity->spriteIndex = MG_SP_PLAYER_DEATH_8; // Need to use this empty sprite for prefight status to not reveal
+                                                // trashman in the cutscene.
     entity->state                = -1;
     entity->stateTimer           = 0;
     entity->updateFunction       = &mg_updateBossTrashMan;
