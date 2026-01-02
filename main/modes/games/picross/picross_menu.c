@@ -617,9 +617,10 @@ void picrossEnterMode(void)
 
     loadFont(MM_FONT, &(pm->mmFont), false);
 
-    pm->menu                 = initMenu(str_picrossTitle, picrossMainMenuCb);
-    pm->renderer             = initMenuMegaRenderer(NULL, NULL, NULL);
-    pm->renderer->bgColorIdx = 0;
+    pm->menu                        = initMenu(str_picrossTitle, picrossMainMenuCb);
+    pm->renderer                    = initMenuMegaRenderer(NULL, NULL, NULL);
+    pm->renderer->bgColorIdx        = 0;
+    pm->renderer->conveyorBeltStyle = true;
 
     pm->screen = PICROSS_MENU;
 

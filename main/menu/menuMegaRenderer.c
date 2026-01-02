@@ -425,7 +425,10 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
             renderer->bgColorIdx = renderer->numBgColors - 1;
         }
         // scrolls the background
-        renderer->yOff += renderer->bgColorIdx;
+        if (renderer->conveyorBeltStyle)
+        {
+            renderer->yOff += renderer->bgColorIdx;
+        }
     });
 
     // Run a timer to scroll text
