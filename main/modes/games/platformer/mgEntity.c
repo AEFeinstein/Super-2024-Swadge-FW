@@ -2455,6 +2455,7 @@ void updateScrollLockRight(mgEntity_t* self)
 void updateScrollLockUp(mgEntity_t* self)
 {
     self->tilemap->minMapOffsetY = TO_PIXEL_COORDS(self->y) - 8;
+    mg_scrollTileMap(self->tilemap, self->tilemap->mapOffsetX, TO_PIXEL_COORDS(self->y) - 8);
     mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
     mg_destroyEntity(self, true);
 }
@@ -2462,6 +2463,7 @@ void updateScrollLockUp(mgEntity_t* self)
 void updateScrollLockDown(mgEntity_t* self)
 {
     self->tilemap->maxMapOffsetY = TO_PIXEL_COORDS(self->y) + 8 - MG_TILEMAP_DISPLAY_HEIGHT_PIXELS;
+    mg_scrollTileMap(self->tilemap, self->tilemap->mapOffsetX, TO_PIXEL_COORDS(self->y) + 8 - MG_TILEMAP_DISPLAY_HEIGHT_PIXELS);
     mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
     mg_destroyEntity(self, true);
 }
