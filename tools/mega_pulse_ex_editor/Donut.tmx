@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="70" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="568">
  <editorsettings>
-  <export target="Super-2024-Swadge-FW-main 2/assets/platformer/levels/Donut.raw" format="Mega Pulse EX"/>
+  <export target="../../assets/platformer/levels/Donut.raw" format="Mega Pulse EX"/>
  </editorsettings>
  <tileset firstgid="1" source="kinetic-donut-tileset.tsx"/>
  <tileset firstgid="199" source="mg-entity-tileset.tsx"/>
@@ -273,8 +273,8 @@
     <property name="linkedEntitySpawn" type="object" value="418"/>
    </properties>
   </object>
-  <object id="415" template="templates/Scroll Lock (Right).tx" x="4020.71" y="968.602"/>
-  <object id="416" template="templates/Scroll Lock (Down).tx" x="3416.71" y="1080.6"/>
+  <object id="415" template="templates/Scroll Lock (Right).tx" x="4020" y="968"/>
+  <object id="416" template="templates/Scroll Lock (Down).tx" x="3576" y="1080"/>
   <object id="417" template="templates/Warp Exit (Wall) .tx" x="3350.5" y="944.033"/>
   <object id="418" template="templates/Warp Exit (Wall) .tx" x="3474.74" y="429.199"/>
   <object id="419" template="templates/Bouncepad.tx" x="2192.61" y="1070.06"/>
@@ -400,7 +400,7 @@
   <object id="553" template="templates/Bouncepad (45º).tx" x="3424.15" y="450.406"/>
   <object id="554" template="templates/Bouncepad (45º).tx" x="3423.39" y="416.73"/>
   <object id="556" template="templates/Scroll Unlock (All Directions).tx" x="2780.5" y="544.543"/>
-  <object id="557" template="templates/Scroll Lock (Up).tx" x="3895.67" y="843.182"/>
+  <object id="557" template="templates/Scroll Lock (Up).tx" x="3720" y="856"/>
   <object id="558" template="templates/Warp Exit (Wall) .tx" x="1497.82" y="911.777"/>
   <object id="559" template="templates/Bouncepad (45º).tx" gid="2147483884" x="3519.72" y="258.106" rotation="0"/>
   <object id="560" template="templates/Bouncepad (45º).tx" gid="2147483884" x="3518.24" y="287.717" rotation="0"/>
