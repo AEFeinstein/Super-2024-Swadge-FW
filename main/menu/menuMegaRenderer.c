@@ -622,7 +622,7 @@ static void setLedsFromBg(menuMegaRenderer_t* renderer)
                 ledColorIdx = renderer->numBgColors - 1;
             }
         }
-        
+
         // Extract LED color from bg color
         int32_t rgb = paletteToRGB(renderer->bgColors[ledColorIdx]);
         led_t led   = {
