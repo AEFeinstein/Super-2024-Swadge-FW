@@ -161,7 +161,7 @@ struct
         .slv         = _55_RAINBOW_SLV_WSG,
         .marqueeFact = "MAGPIE nest, new in 2025, hosts several events to contextualize marginalized groups at "
                        "MAGFest. Not just for LGBTQIA+ communities, but also people of color, parents, disabled folks, "
-                       "women, neurodivergence, and more.",
+                       "women, neurodivergency, and more.",
     },
     {
         .name        = "triangle",
