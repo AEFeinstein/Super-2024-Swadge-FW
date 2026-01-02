@@ -827,7 +827,8 @@ void returnToPicrossMenu(void)
     pm->screen = PICROSS_MENU;
     // Reinit MenuMegaRenderer to go back to using default menu colors.
     deinitMenuMegaRenderer(pm->renderer);
-    pm->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    pm->renderer                    = initMenuMegaRenderer(NULL, NULL, NULL);
+    pm->renderer->conveyorBeltStyle = true;
 }
 
 /**
