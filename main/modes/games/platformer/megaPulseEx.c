@@ -1388,6 +1388,9 @@ void changeStateGame(platformer_t* self)
 
     soundStop(true);
 
+    mg_drawTileMap(&self->tilemap);
+    mg_updateScrollLockEntities(&self->entityManager);
+
     self->update = &updateReadyScreen;
 }
 

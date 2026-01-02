@@ -61,6 +61,28 @@ void mg_updateEntities(mgEntityManager_t* entityManager)
     }
 }
 
+void mg_updateScrollLockEntities(mgEntityManager_t* entityManager)
+{
+    for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+    {
+        if (entityManager->entities[i].active)
+        {
+            switch(entityManager->entities[i].type)
+            {
+                case ENTITY_SCROLL_LOCK_LEFT:
+                case ENTITY_SCROLL_LOCK_DOWN:
+                case ENTITY_SCROLL_LOCK_UP:
+                //case ENTITY_SCROLL_LOCK_RIGHT: //This one is used to trigger bosses, so it's not included here to be safe.
+                    entityManager->entities[i].updateFunction(&(entityManager->entities[i]));
+                    break;
+                default:
+                    break;
+            }
+        
+        }
+    }
+}
+
 void mg_deactivateAllEntities(mgEntityManager_t* entityManager, bool excludePlayer)
 {
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
