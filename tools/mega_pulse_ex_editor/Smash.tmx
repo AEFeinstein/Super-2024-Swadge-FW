@@ -323,9 +323,9 @@
   <object id="458" template="templates/Dust Bunny.tx" x="3981.13" y="3494.43"/>
   <object id="459" template="templates/Dust Bunny.tx" gid="2147483857" x="3905.94" y="3604.48" rotation="0"/>
   <object id="460" template="templates/Dust Bunny.tx" x="3977.03" y="3717.96"/>
-  <object id="462" template="templates/Scroll Lock (Up).tx" x="3016" y="1032"/>
+  <object id="462" template="templates/Scroll Lock (Up).tx" x="3192" y="1032"/>
   <object id="463" template="templates/Scroll Lock (Right).tx" x="3652" y="1144"/>
-  <object id="464" template="templates/Scroll Lock (Down).tx" x="3048" y="1256"/>
+  <object id="464" template="templates/Scroll Lock (Down).tx" x="3128" y="1256"/>
   <object id="465" template="templates/Warp Exit (Wall) .tx" x="3000" y="1120"/>
   <object id="466" template="templates/Warp Entrance (Wall).tx" x="4040" y="3872">
    <properties>

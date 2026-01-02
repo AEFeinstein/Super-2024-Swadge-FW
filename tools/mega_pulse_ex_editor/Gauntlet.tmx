@@ -161,9 +161,9 @@
     <property name="type" type="int" propertytype="Swadge Land Entity Index" value="52"/>
    </properties>
   </object>
-  <object id="439" template="templates/Scroll Lock (Up).tx" x="3466.31" y="54.9739"/>
-  <object id="440" template="templates/Scroll Lock (Right).tx" x="4002.65" y="168.398"/>
-  <object id="441" template="templates/Scroll Lock (Down).tx" x="3462.72" y="278.974"/>
+  <object id="439" template="templates/Scroll Lock (Up).tx" x="3528" y="56"/>
+  <object id="440" template="templates/Scroll Lock (Right).tx" x="4004" y="168"/>
+  <object id="441" template="templates/Scroll Lock (Down).tx" x="3496" y="280"/>
   <object id="442" template="templates/Warp Exit (Wall) .tx" x="3366.65" y="144.398"/>
   <object id="443" template="templates/Checkpoint.tx" x="3486.65" y="161"/>
   <object id="444" template="templates/Turret.tx" gid="2147484000" x="2504.21" y="518.636" rotation="0"/>

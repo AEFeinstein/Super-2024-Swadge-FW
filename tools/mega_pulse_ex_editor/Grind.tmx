@@ -126,9 +126,9 @@
   <object id="399" template="templates/Bouncepad (45º).tx" x="3030.67" y="503.636"/>
   <object id="400" template="templates/Scroll Lock (Up).tx" x="72" y="968"/>
   <object id="404" template="templates/Scroll Lock (Down).tx" x="120" y="1256"/>
-  <object id="409" template="templates/Scroll Lock (Up).tx" x="2744" y="1032"/>
+  <object id="409" template="templates/Scroll Lock (Up).tx" x="2936" y="1032"/>
   <object id="410" template="templates/Scroll Lock (Right).tx" x="3380" y="1144"/>
-  <object id="411" template="templates/Scroll Lock (Down).tx" x="2776" y="1256"/>
+  <object id="411" template="templates/Scroll Lock (Down).tx" x="2888" y="1256"/>
   <object id="413" template="templates/Scroll Lock (Down).tx" x="99.7287" y="678.324"/>
   <object id="414" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="490.139" y="625" rotation="0"/>
   <object id="415" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="531.961" y="561.254" rotation="0"/>

@@ -151,12 +151,12 @@
   <object id="302" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="3363.25" y="1587.13" rotation="0"/>
   <object id="303" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="3570.52" y="1585.54" rotation="0"/>
   <object id="304" template="templates/Scroll Lock (Up).tx" x="64.8298" y="166.303"/>
-  <object id="307" template="templates/Scroll Lock (Up).tx" x="3876.17" y="1466.37"/>
-  <object id="308" template="templates/Scroll Lock (Right).tx" x="4056.59" y="1592.19"/>
+  <object id="307" template="templates/Scroll Lock (Up).tx" x="3688" y="1480"/>
+  <object id="308" template="templates/Scroll Lock (Right).tx" x="4052" y="1592"/>
   <object id="309" template="templates/Scroll Lock (Down).tx" x="2978.37" y="1717.52"/>
   <object id="310" template="templates/Checkpoint.tx" x="3622.96" y="1585.31"/>
   <object id="311" template="templates/Checkpoint.tx" x="1840" y="1393"/>
-  <object id="312" template="templates/Scroll Lock (Down).tx" x="3892.27" y="1718.94"/>
+  <object id="312" template="templates/Scroll Lock (Down).tx" x="3640" y="1704"/>
   <object id="313" template="templates/Drain Bat.tx" x="4016" y="1592"/>
  </objectgroup>
  <objectgroup id="3" name="Annotations">

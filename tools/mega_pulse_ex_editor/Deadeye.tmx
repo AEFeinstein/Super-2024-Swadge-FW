@@ -100,9 +100,9 @@
   <object id="319" template="templates/Megaton Wasp.tx" x="1420.69" y="541.605"/>
   <object id="320" template="templates/Dust Bunny.tx" x="1723.52" y="631.455"/>
   <object id="321" template="templates/Dust Bunny.tx" x="2663.62" y="567.918"/>
-  <object id="328" template="templates/Scroll Lock (Up).tx" x="2824" y="216"/>
+  <object id="328" template="templates/Scroll Lock (Up).tx" x="3000" y="216"/>
   <object id="329" template="templates/Scroll Lock (Right).tx" x="3460" y="328"/>
-  <object id="330" template="templates/Scroll Lock (Down).tx" x="3000" y="440"/>
+  <object id="330" template="templates/Scroll Lock (Down).tx" x="2952" y="440"/>
   <object id="332" template="templates/Shrubble (Lvl. 4).tx" x="418.735" y="536.197"/>
   <object id="333" template="templates/Shrubble (Lvl. 4).tx" x="480" y="824"/>
   <object id="334" template="templates/Spiky McGee.tx" x="237.085" y="707.361"/>
