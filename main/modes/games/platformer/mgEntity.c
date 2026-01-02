@@ -1771,7 +1771,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                     self->hp -= other->scoreValue
                                 + (other->scoreValue * !(self->gameData->abilities & (1U << MG_PLOT_ARMOR_ABILITY)));
                 }
-                mg_updateLedsHpMeter(self->entityManager, self->gameData);
+                
                 self->gameData->comboTimer = 0;
                 self->gameData->combo      = 0;
 
