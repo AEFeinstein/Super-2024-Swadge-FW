@@ -2206,8 +2206,8 @@ void updateLevelSelect(platformer_t* self)
         {
             // Undo all level progress, but keep abilities.
             self->unlockables.levelsCleared = 0;
-            self->unlockables.inGameTimer = 0;
-            self->gameData.inGameTimer = 0;
+            self->unlockables.inGameTimer   = 0;
+            self->gameData.inGameTimer      = 0;
             savePlatformerUnlockables(self);
 
             writeNvs32(MG_abilitiesNVSKey, platformer->gameData.abilities);

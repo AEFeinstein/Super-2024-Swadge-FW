@@ -266,7 +266,7 @@ void mg_updatePlayer(mgEntity_t* self)
             self->xspeed = mg_sureYouCanVectors[stupidVectorThing].x * (self->spriteFlipHorizontal ? -1 : 1);
             self->yspeed = mg_sureYouCanVectors[stupidVectorThing].y;
             self->stateTimer--;
-            self->canDash   = false;
+            self->canDash = false;
             if (self->stateTimer <= 0)
             {
                 self->state = MG_PL_ST_NORMAL;
@@ -1771,7 +1771,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                     self->hp -= other->scoreValue
                                 + (other->scoreValue * !(self->gameData->abilities & (1U << MG_PLOT_ARMOR_ABILITY)));
                 }
-                
+
                 self->gameData->comboTimer = 0;
                 self->gameData->combo      = 0;
 
@@ -2411,14 +2411,14 @@ void updateScrollLockRight(mgEntity_t* self)
     uint8_t tx, ty;
 
     self->tilemap->maxMapOffsetX = TO_PIXEL_COORDS(self->x) + 8 - MG_TILEMAP_DISPLAY_WIDTH_PIXELS;
-   
+
     // Initiate boss battle.
     // For this to work, the boss must be placed to the left of the scroll lock.
     if (self->entityManager->bossEntity != NULL)
     {
         self->tilemap->minMapOffsetX = self->tilemap->maxMapOffsetX;
         self->tilemap->mapOffsetX    = self->tilemap->minMapOffsetX;
-        
+
         // Close off left wall of boss room
         for (uint8_t i = 0; i < MG_TILEMAP_DISPLAY_HEIGHT_TILES; i++)
         {
@@ -2436,8 +2436,8 @@ void updateScrollLockRight(mgEntity_t* self)
             {
                 mg_setTile(self->tilemap, tx, ty, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20);
             }
-        }   
-        
+        }
+
         // Cutscene before the boss fight
         if (self->gameData->level != 11) // keep the megajam music rolling in the rush stage intro talk.
         {
@@ -2467,7 +2467,8 @@ void updateScrollLockUp(mgEntity_t* self)
 void updateScrollLockDown(mgEntity_t* self)
 {
     self->tilemap->maxMapOffsetY = TO_PIXEL_COORDS(self->y) + 8 - MG_TILEMAP_DISPLAY_HEIGHT_PIXELS;
-    mg_scrollTileMap(self->tilemap, self->tilemap->mapOffsetX, TO_PIXEL_COORDS(self->y) + 8 - MG_TILEMAP_DISPLAY_HEIGHT_PIXELS);
+    mg_scrollTileMap(self->tilemap, self->tilemap->mapOffsetX,
+                     TO_PIXEL_COORDS(self->y) + 8 - MG_TILEMAP_DISPLAY_HEIGHT_PIXELS);
     mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
     mg_destroyEntity(self, true);
 }

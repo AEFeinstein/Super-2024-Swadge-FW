@@ -67,18 +67,18 @@ void mg_updateScrollLockEntities(mgEntityManager_t* entityManager)
     {
         if (entityManager->entities[i].active)
         {
-            switch(entityManager->entities[i].type)
+            switch (entityManager->entities[i].type)
             {
                 case ENTITY_SCROLL_LOCK_LEFT:
                 case ENTITY_SCROLL_LOCK_DOWN:
                 case ENTITY_SCROLL_LOCK_UP:
-                //case ENTITY_SCROLL_LOCK_RIGHT: //This one is used to trigger bosses, so it's not included here to be safe.
+                    // case ENTITY_SCROLL_LOCK_RIGHT: //This one is used to trigger bosses, so it's not included here to
+                    // be safe.
                     entityManager->entities[i].updateFunction(&(entityManager->entities[i]));
                     break;
                 default:
                     break;
             }
-        
         }
     }
 }
