@@ -262,7 +262,7 @@
    </properties>
   </object>
   <object id="405" template="templates/Megaton Wasp.tx" x="1660.46" y="916.937"/>
-  <object id="406" template="templates/Turret.tx" gid="2147484000" x="1824.37" y="707.895" rotation="0"/>
+  <object id="406" template="templates/Turret.tx" gid="352" x="1824.37" y="707.895" rotation="0"/>
   <object id="407" template="templates/Dust Bunny (Lvl. 2).tx" x="1720.64" y="840.13"/>
   <object id="408" template="templates/Shrubble.tx" x="1831.5" y="840.13"/>
   <object id="409" template="templates/Shrubble.tx" x="1892.47" y="935.941"/>

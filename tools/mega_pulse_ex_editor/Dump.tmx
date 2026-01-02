@@ -129,7 +129,7 @@
   <object id="158" template="templates/Dust Bunny.tx" x="255.634" y="519.748"/>
   <object id="159" template="templates/Dust Bunny.tx" x="399.806" y="472.498"/>
   <object id="160" template="templates/Dust Bunny.tx" x="1297.55" y="468.864"/>
-  <object id="162" template="templates/Turret.tx" x="1410.23" y="428.883" rotation="269.999"/>
+  <object id="162" template="templates/Turret.tx" x="1412" y="432" rotation="270.0"/>
   <object id="170" template="templates/Megaton Wasp.tx" x="493.446" y="390.449"/>
   <object id="171" template="templates/Megaton Wasp.tx" x="570.225" y="383.895"/>
   <object id="172" template="templates/Dust Bunny.tx" x="1615.17" y="500"/>

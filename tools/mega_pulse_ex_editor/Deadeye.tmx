@@ -96,7 +96,7 @@
   <object id="302" template="templates/Spiky McGee.tx" x="1040.44" y="782.229"/>
   <object id="316" template="templates/Dust Bunny.tx" x="2408.75" y="454.943"/>
   <object id="317" template="templates/Dust Bunny.tx" x="2572.71" y="326.831"/>
-  <object id="318" template="templates/Turret.tx" gid="3221225824" x="2472.25" y="172.934" rotation="0"/>
+  <object id="318" template="templates/Turret.tx" gid="352" x="2472.25" y="172.934" rotation="180"/>
   <object id="319" template="templates/Megaton Wasp.tx" x="1420.69" y="541.605"/>
   <object id="320" template="templates/Dust Bunny.tx" x="1723.52" y="631.455"/>
   <object id="321" template="templates/Dust Bunny.tx" x="2663.62" y="567.918"/>
