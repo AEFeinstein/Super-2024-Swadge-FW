@@ -41,8 +41,8 @@
 //==============================================================================
 // Constants
 //==============================================================================
-#define BIG_SCORE    400000UL
-#define BIGGER_SCORE 1000000UL
+#define BIG_SCORE    500000UL
+#define BIGGER_SCORE 1500000UL
 #define FAST_TIME    1200 // 20 minutes
 
 const char platformerName[] = "Mega Pulse EX";
@@ -256,7 +256,7 @@ const trophyData_t platformerTrophies[] = {{
                                            },
                                            {
                                                .title       = "Mega Player",
-                                               .description = "Scored 400k!",
+                                               .description = "Scored 500k!",
                                                .image       = SILVER_TROPHY_WSG,
                                                .type        = TROPHY_TYPE_TRIGGER,
                                                .difficulty  = TROPHY_DIFF_HARD,
@@ -264,7 +264,7 @@ const trophyData_t platformerTrophies[] = {{
                                            },
                                            {
                                                .title       = "Mega Player EX",
-                                               .description = "Scored 1 million!",
+                                               .description = "Scored 1.5 million!",
                                                .image       = GOLD_TROPHY_WSG,
                                                .type        = TROPHY_TYPE_TRIGGER,
                                                .difficulty  = TROPHY_DIFF_EXTREME,
