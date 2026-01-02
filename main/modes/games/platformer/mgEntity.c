@@ -1940,6 +1940,7 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             }
             else
             {
+                soundPlaySfx(&(self->soundManager->sndLevelClearD), BZR_LEFT);
                 mg_destroyShot(other);
             }
 
