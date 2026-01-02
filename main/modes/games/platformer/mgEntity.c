@@ -920,7 +920,7 @@ void mg_moveEntityWithTileCollisions3(mgEntity_t* self)
             }
         }
 
-        self->falling = !onGround;
+        self->falling = (self->yspeed < 0) ? true : !onGround;
         if (self->falling)
         {
             self->fallOffTileHandler(self);
