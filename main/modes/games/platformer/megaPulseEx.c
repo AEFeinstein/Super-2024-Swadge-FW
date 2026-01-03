@@ -1514,24 +1514,21 @@ void updateGameOver(platformer_t* self)
         // Handle unlockables
         if (!self->gameData.debugMode)
         {
+            if(!self->gameData.cheatMode)
+            {
+                if(self->gameData.score >= BIG_SCORE)
+                {
+                    trophyUpdate(&platformerTrophies[11], 1, true);
+                }
+                if(self->gameData.score >= BIGGER_SCORE)
+                {
+                    trophyUpdate(&platformerTrophies[12], 1, true);
+                }
+            }
             savePlatformerUnlockables(self);
         }
 
         changeStateNameEntry(self);
-    }
-    else if (self->gameData.frameCount == 60)
-    {
-        if (!self->gameData.cheatMode && !self->gameData.debugMode && self->gameData.score >= BIG_SCORE)
-        {
-            trophyUpdate(&platformerTrophies[11], 1, true);
-        }
-    }
-    else if (self->gameData.frameCount == 120)
-    {
-        if (!self->gameData.cheatMode && !self->gameData.debugMode && self->gameData.score >= BIGGER_SCORE)
-        {
-            trophyUpdate(&platformerTrophies[12], 1, true);
-        }
     }
 
     drawGameOver(&(self->font), &(self->gameData));

@@ -1205,13 +1205,21 @@ void mg_bossRushLogic(mgEntity_t* self)
         {
             boss->y -= 100 << SUBPIXEL_RESOLUTION;
         }
-        else if (nextBoss == ENTITY_BOSS_SMASH_GORILLA || nextBoss == ENTITY_BOSS_SEVER_YATAGA)
+        else if (nextBoss == ENTITY_BOSS_SMASH_GORILLA || nextBoss == ENTITY_BOSS_SEVER_YATAGA || nextBoss == ENTITY_BOSS_DRAIN_BAT)
         {
             boss->y -= 10 << SUBPIXEL_RESOLUTION;
+        }
+        else if (nextBoss == ENTITY_BOSS_DEADEYE_CHIRPZI)
+        {
+            boss->y -= 12 << SUBPIXEL_RESOLUTION;
         }
         else if (nextBoss == ENTITY_BOSS_GRIND_PANGOLIN)
         {
             boss->y -= 4 << SUBPIXEL_RESOLUTION;
+        }
+        else if (nextBoss == ENTITY_BOSS_FLARE_GRYFFYN)
+        {
+            boss->y -= 7 << SUBPIXEL_RESOLUTION;
         }
     }
     // Plays post fight once flare gryffyn has gone off screen ONLY if the player hasn't touched the mixtape yet.
