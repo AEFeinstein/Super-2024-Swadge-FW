@@ -643,7 +643,9 @@ static void atriumMainLoop(int64_t elapsedUs)
             while (checkButtonQueueWrapper(&evt))
             {
                 // Don't accept button input while the fake loading screen is shown
-                if (0 == atr->fakeLoad)
+                if (0 == atr->fakeLoad ||
+                    // Or non-B inputs when there are no Swadgepasses
+                    ((0 == atr->numRemoteSwsn) && (evt.button != PB_B)))
                 {
                     continue;
                 }
@@ -716,7 +718,7 @@ static void atriumMainLoop(int64_t elapsedUs)
             if (atr->totalPages == atr->page + 1)
             {
                 maxSelect = atr->remSwsn - 1;
-                ESP_LOGI(ATR_TAG, "maxselect is %d", maxSelect);
+                ESP_LOGD(ATR_TAG, "maxselect is %d", maxSelect);
             }
             else
             {
@@ -995,8 +997,7 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
     else
     {
         // UI
-
-        ESP_LOGI(ATR_TAG, "Selected arrow: %" PRId8, atr->selectedArrow);
+        ESP_LOGD(ATR_TAG, "Selected arrow: %" PRId8, atr->selectedArrow);
         drawLobbyArrows(atr->selectedArrow);
         loadProfiles(SONA_PER, atr->page);
         drawSonas(atr->page, elapsedUs);
@@ -1297,7 +1298,7 @@ static void drawLobbyArrows(int selected)
         arrowEnabled[3] = false;
     }
     selected--;
-    ESP_LOGI(ATR_TAG, "Drawing arrows with selected %d", selected);
+    ESP_LOGD(ATR_TAG, "Drawing arrows with selected %d", selected);
     for (int16_t aIdx = 0; aIdx < ARRAY_SIZE(angles); aIdx++)
     {
         (selected == aIdx)
@@ -1324,8 +1325,7 @@ static void drawCard(userProfile_t profile, bool local, uint64_t elapsedUs)
 
     drawWsgSimple(&atr->backgroundImages[0], 0, 0);
     drawWsgSimple(&atr->cards[profile.cardSelect], 7, 7 + 12); // draw the card
-    generateSwadgesonaImage(&profile.swsn, true);
-    drawWsgSimple(&profile.swsn.image, SONALOC_X, SONALOC_Y); // draw the sona image
+    drawWsgSimple(&profile.swsn.image, SONALOC_X, SONALOC_Y);  // draw the sona image
 
     nameData_t username;
 
