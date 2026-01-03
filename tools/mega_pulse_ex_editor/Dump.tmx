@@ -129,7 +129,7 @@
   <object id="158" template="templates/Dust Bunny.tx" x="255.634" y="519.748"/>
   <object id="159" template="templates/Dust Bunny.tx" x="399.806" y="472.498"/>
   <object id="160" template="templates/Dust Bunny.tx" x="1297.55" y="468.864"/>
-  <object id="162" template="templates/Turret.tx" x="1410.23" y="428.883" rotation="269.999"/>
+  <object id="162" template="templates/Turret.tx" x="1412" y="432" rotation="270"/>
   <object id="170" template="templates/Megaton Wasp.tx" x="493.446" y="390.449"/>
   <object id="171" template="templates/Megaton Wasp.tx" x="570.225" y="383.895"/>
   <object id="172" template="templates/Dust Bunny.tx" x="1615.17" y="500"/>
@@ -138,9 +138,9 @@
   <object id="177" template="templates/Dust Bunny.tx" gid="2147483857" x="3578.79" y="1094.45" rotation="0"/>
   <object id="178" template="templates/Dust Bunny.tx" x="3609.74" y="838.424"/>
   <object id="180" template="templates/Megaton Wasp.tx" x="1466.75" y="279.753"/>
-  <object id="185" template="templates/Scroll Lock (Up).tx" x="1416" y="1304"/>
+  <object id="185" template="templates/Scroll Lock (Up).tx" x="1592" y="1304"/>
   <object id="186" template="templates/Scroll Lock (Right).tx" x="2052" y="1416"/>
-  <object id="187" template="templates/Scroll Lock (Down).tx" x="1448" y="1528"/>
+  <object id="187" template="templates/Scroll Lock (Down).tx" x="1544" y="1528"/>
   <object id="189" template="templates/Warp Exit (Wall) .tx" x="1416" y="1392"/>
   <object id="191" template="templates/Warp Entrance (Wall).tx" x="4064" y="832">
    <properties>

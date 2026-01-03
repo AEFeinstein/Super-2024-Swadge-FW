@@ -229,7 +229,7 @@
   <object id="336" template="templates/Spiky McGee.tx" x="525.495" y="2082.35"/>
   <object id="337" template="templates/Dust Bunny.tx" gid="2147483857" x="843.319" y="1621.59" rotation="0"/>
   <object id="338" template="templates/Turret.tx" gid="352" x="1143.54" y="1245.67" rotation="180"/>
-  <object id="346" template="templates/Scroll Lock (Up).tx" x="1688" y="40"/>
+  <object id="346" template="templates/Scroll Lock (Up).tx" x="1880" y="40"/>
   <object id="347" template="templates/Scroll Lock (Right).tx" x="2324" y="152"/>
   <object id="348" template="templates/Scroll Lock (Down).tx" x="1816.06" y="263.1"/>
   <object id="350" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="901.98" y="2015.38" rotation="0"/>

@@ -115,9 +115,9 @@
 </data>
  </layer>
  <objectgroup id="2" name="entities">
-  <object id="185" template="templates/Scroll Lock (Up).tx" x="1416" y="1304"/>
+  <object id="185" template="templates/Scroll Lock (Up).tx" x="1544" y="1304"/>
   <object id="186" template="templates/Scroll Lock (Right).tx" x="2052" y="1416"/>
-  <object id="187" template="templates/Scroll Lock (Down).tx" x="1448" y="1528"/>
+  <object id="187" template="templates/Scroll Lock (Down).tx" x="1528" y="1528"/>
   <object id="198" template="templates/Checkpoint.tx" x="1536" y="1409"/>
   <object id="200" template="templates/Player.tx" x="1408" y="1409"/>
   <object id="202" template="templates/Kinetic Donut.tx" x="2012" y="1496"/>

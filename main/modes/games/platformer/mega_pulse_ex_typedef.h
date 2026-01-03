@@ -1200,6 +1200,7 @@ extern const trophyData_t platformerTrophies[];
 extern void goToReadyScreen(void);
 extern void startCreditMusic(void);
 extern void startPostFightMusic(void);
+extern void startSawtoothsThemeMusic(void);
 extern void queueTrophy(void);
 extern void startHankMusic(void);
 extern void startTrashManMusic(void);

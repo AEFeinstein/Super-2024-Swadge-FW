@@ -266,6 +266,7 @@ void mg_updatePlayer(mgEntity_t* self)
             self->xspeed = mg_sureYouCanVectors[stupidVectorThing].x * (self->spriteFlipHorizontal ? -1 : 1);
             self->yspeed = mg_sureYouCanVectors[stupidVectorThing].y;
             self->stateTimer--;
+            self->canDash = false;
             if (self->stateTimer <= 0)
             {
                 self->state = MG_PL_ST_NORMAL;
@@ -919,7 +920,7 @@ void mg_moveEntityWithTileCollisions3(mgEntity_t* self)
             }
         }
 
-        self->falling = !onGround;
+        self->falling = (self->yspeed < 0) ? true : !onGround;
         if (self->falling)
         {
             self->fallOffTileHandler(self);
@@ -1204,13 +1205,22 @@ void mg_bossRushLogic(mgEntity_t* self)
         {
             boss->y -= 100 << SUBPIXEL_RESOLUTION;
         }
-        else if (nextBoss == ENTITY_BOSS_SMASH_GORILLA || nextBoss == ENTITY_BOSS_SEVER_YATAGA)
+        else if (nextBoss == ENTITY_BOSS_SMASH_GORILLA || nextBoss == ENTITY_BOSS_SEVER_YATAGA
+                 || nextBoss == ENTITY_BOSS_DRAIN_BAT)
         {
             boss->y -= 10 << SUBPIXEL_RESOLUTION;
+        }
+        else if (nextBoss == ENTITY_BOSS_DEADEYE_CHIRPZI)
+        {
+            boss->y -= 12 << SUBPIXEL_RESOLUTION;
         }
         else if (nextBoss == ENTITY_BOSS_GRIND_PANGOLIN)
         {
             boss->y -= 4 << SUBPIXEL_RESOLUTION;
+        }
+        else if (nextBoss == ENTITY_BOSS_FLARE_GRYFFYN)
+        {
+            boss->y -= 7 << SUBPIXEL_RESOLUTION;
         }
     }
     // Plays post fight once flare gryffyn has gone off screen ONLY if the player hasn't touched the mixtape yet.
@@ -1757,6 +1767,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 other->xspeed       = -other->xspeed;
                 other->yspeed       = -other->yspeed;
                 other->linkedEntity = self;
+                soundPlaySfx(&self->soundManager->sndTally, MIDI_SFX);
                 break;
             }
 
@@ -1769,8 +1780,9 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                     self->hp -= other->scoreValue
                                 + (other->scoreValue * !(self->gameData->abilities & (1U << MG_PLOT_ARMOR_ABILITY)));
                 }
-                mg_updateLedsHpMeter(self->entityManager, self->gameData);
+
                 self->gameData->comboTimer = 0;
+                self->gameData->combo      = 0;
 
                 if (!self->gameData->debugMode && self->hp <= 0)
                 {
@@ -1937,6 +1949,7 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             }
             else
             {
+                soundPlaySfx(&(self->soundManager->sndLevelClearD), BZR_LEFT);
                 mg_destroyShot(other);
             }
 
@@ -2408,32 +2421,33 @@ void updateScrollLockRight(mgEntity_t* self)
     uint8_t tx, ty;
 
     self->tilemap->maxMapOffsetX = TO_PIXEL_COORDS(self->x) + 8 - MG_TILEMAP_DISPLAY_WIDTH_PIXELS;
-    self->tilemap->minMapOffsetX = self->tilemap->maxMapOffsetX;
-    self->tilemap->mapOffsetX    = self->tilemap->minMapOffsetX;
-
-    // Close off left wall of boss room
-    for (uint8_t i = 0; i < MG_TILEMAP_DISPLAY_HEIGHT_TILES; i++)
-    {
-        tx = (self->tilemap->mapOffsetX) >> MG_TILESIZE_IN_POWERS_OF_2;
-        ty = ((self->tilemap->mapOffsetY) >> MG_TILESIZE_IN_POWERS_OF_2) + i;
-
-        if (/*tx < 0 ||*/ tx > self->tilemap->mapWidth || /* ty < 0 || */ ty > self->tilemap->mapHeight)
-        {
-            break;
-        }
-
-        uint8_t checkTile = mg_getTile(self->tilemap, tx, ty);
-
-        if (!mg_isSolid(checkTile))
-        {
-            mg_setTile(self->tilemap, tx, ty, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20);
-        }
-    }
 
     // Initiate boss battle.
     // For this to work, the boss must be placed to the left of the scroll lock.
     if (self->entityManager->bossEntity != NULL)
     {
+        self->tilemap->minMapOffsetX = self->tilemap->maxMapOffsetX;
+        self->tilemap->mapOffsetX    = self->tilemap->minMapOffsetX;
+
+        // Close off left wall of boss room
+        for (uint8_t i = 0; i < MG_TILEMAP_DISPLAY_HEIGHT_TILES; i++)
+        {
+            tx = (self->tilemap->mapOffsetX) >> MG_TILESIZE_IN_POWERS_OF_2;
+            ty = ((self->tilemap->mapOffsetY) >> MG_TILESIZE_IN_POWERS_OF_2) + i;
+
+            if (/*tx < 0 ||*/ tx > self->tilemap->mapWidth || /* ty < 0 || */ ty > self->tilemap->mapHeight)
+            {
+                break;
+            }
+
+            uint8_t checkTile = mg_getTile(self->tilemap, tx, ty);
+
+            if (!mg_isSolid(checkTile))
+            {
+                mg_setTile(self->tilemap, tx, ty, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20);
+            }
+        }
+
         // Cutscene before the boss fight
         if (self->gameData->level != 11) // keep the megajam music rolling in the rush stage intro talk.
         {
@@ -2455,6 +2469,7 @@ void updateScrollLockRight(mgEntity_t* self)
 void updateScrollLockUp(mgEntity_t* self)
 {
     self->tilemap->minMapOffsetY = TO_PIXEL_COORDS(self->y) - 8;
+    mg_scrollTileMap(self->tilemap, self->tilemap->mapOffsetX, TO_PIXEL_COORDS(self->y) - 8);
     mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
     mg_destroyEntity(self, true);
 }
@@ -2462,6 +2477,8 @@ void updateScrollLockUp(mgEntity_t* self)
 void updateScrollLockDown(mgEntity_t* self)
 {
     self->tilemap->maxMapOffsetY = TO_PIXEL_COORDS(self->y) + 8 - MG_TILEMAP_DISPLAY_HEIGHT_PIXELS;
+    mg_scrollTileMap(self->tilemap, self->tilemap->mapOffsetX,
+                     TO_PIXEL_COORDS(self->y) + 8 - MG_TILEMAP_DISPLAY_HEIGHT_PIXELS);
     mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
     mg_destroyEntity(self, true);
 }
@@ -3183,7 +3200,7 @@ bool waspTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint
         }
     }
 
-    if (mg_isSolid(tileId))
+    if (mg_isSolid_enemy(tileId))
     {
         switch (direction)
         {
@@ -6346,6 +6363,10 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
 
 void startOutroCutscene(mgEntity_t* self)
 {
+    if (self->entityManager->playerEntity != NULL && self->entityManager->playerEntity->hp <= 0)
+    {
+        return;
+    }
     mg_deactivateAllEntitiesOfType(self->entityManager, ENTITY_WAVE_BALL); // so the player doesn't get hurt right after
                                                                            // the winning cutscene.
     self->entityManager->playerEntity->shotsFired = 0;
@@ -6355,11 +6376,9 @@ void startOutroCutscene(mgEntity_t* self)
         self->gameData->pauseCountdown = true;
     }
     // Cutscene after the boss fight
-    if (self->gameData->level == 9) // custom song from Joe for sawtooth reveal.
+    if (self->gameData->level == 7)
     {
-        mg_setBgm(self->soundManager, MG_BGM_SAWTOOTHS_THEME);
-        midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
-        soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+        stopMusic();
     }
     bossOutroCutscene(self->gameData);
 }

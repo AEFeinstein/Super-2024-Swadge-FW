@@ -61,6 +61,28 @@ void mg_updateEntities(mgEntityManager_t* entityManager)
     }
 }
 
+void mg_updateScrollLockEntities(mgEntityManager_t* entityManager)
+{
+    for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+    {
+        if (entityManager->entities[i].active)
+        {
+            switch (entityManager->entities[i].type)
+            {
+                case ENTITY_SCROLL_LOCK_LEFT:
+                case ENTITY_SCROLL_LOCK_DOWN:
+                case ENTITY_SCROLL_LOCK_UP:
+                    // case ENTITY_SCROLL_LOCK_RIGHT: //This one is used to trigger bosses, so it's not included here to
+                    // be safe.
+                    entityManager->entities[i].updateFunction(&(entityManager->entities[i]));
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+}
+
 void mg_deactivateAllEntities(mgEntityManager_t* entityManager, bool excludePlayer)
 {
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
@@ -2414,8 +2436,9 @@ mgEntity_t* createBossTrashMan(mgEntityManager_t* entityManager, uint16_t x, uin
     entity->scoreValue           = 2000;
     entity->hp                   = 48;
 
-    entity->type                 = ENTITY_BOSS_TRASH_MAN;
-    entity->spriteIndex          = MG_SP_BOSS_0;
+    entity->type        = ENTITY_BOSS_TRASH_MAN;
+    entity->spriteIndex = MG_SP_PLAYER_DEATH_8; // Need to use this empty sprite for prefight status to not reveal
+                                                // trashman in the cutscene.
     entity->state                = -1;
     entity->stateTimer           = 0;
     entity->updateFunction       = &mg_updateBossTrashMan;

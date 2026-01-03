@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="70" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="568">
  <editorsettings>
-  <export target="Super-2024-Swadge-FW-main 2/assets/platformer/levels/Donut.raw" format="Mega Pulse EX"/>
+  <export target="../../assets/platformer/levels/Donut.raw" format="Mega Pulse EX"/>
  </editorsettings>
  <tileset firstgid="1" source="kinetic-donut-tileset.tsx"/>
  <tileset firstgid="199" source="mg-entity-tileset.tsx"/>
@@ -262,7 +262,7 @@
    </properties>
   </object>
   <object id="405" template="templates/Megaton Wasp.tx" x="1660.46" y="916.937"/>
-  <object id="406" template="templates/Turret.tx" gid="2147484000" x="1824.37" y="707.895" rotation="0"/>
+  <object id="406" template="templates/Turret.tx" gid="352" x="1824.37" y="707.895" rotation="0"/>
   <object id="407" template="templates/Dust Bunny (Lvl. 2).tx" x="1720.64" y="840.13"/>
   <object id="408" template="templates/Shrubble.tx" x="1831.5" y="840.13"/>
   <object id="409" template="templates/Shrubble.tx" x="1892.47" y="935.941"/>
@@ -273,8 +273,8 @@
     <property name="linkedEntitySpawn" type="object" value="418"/>
    </properties>
   </object>
-  <object id="415" template="templates/Scroll Lock (Right).tx" x="4020.71" y="968.602"/>
-  <object id="416" template="templates/Scroll Lock (Down).tx" x="3416.71" y="1080.6"/>
+  <object id="415" template="templates/Scroll Lock (Right).tx" x="4020" y="968"/>
+  <object id="416" template="templates/Scroll Lock (Down).tx" x="3576" y="1080"/>
   <object id="417" template="templates/Warp Exit (Wall) .tx" x="3350.5" y="944.033"/>
   <object id="418" template="templates/Warp Exit (Wall) .tx" x="3474.74" y="429.199"/>
   <object id="419" template="templates/Bouncepad.tx" x="2192.61" y="1070.06"/>
@@ -341,8 +341,8 @@
   <object id="444" template="templates/Warp Exit (Floor).tx" x="3615.84" y="168.352"/>
   <object id="445" template="templates/Warp Exit (Floor).tx" x="3728.51" y="169.896"/>
   <object id="446" template="templates/Warp Exit (Floor).tx" x="3824.22" y="167.581"/>
-  <object id="447" template="templates/Shrubble (Lvl. 4).tx" x="3704.22" y="263"/>
-  <object id="448" template="templates/Shrubble (Lvl. 4).tx" gid="1073742035" x="3720.53" y="456.19" rotation="0"/>
+  <object id="447" template="templates/Shrubble (Lvl. 4).tx" x="3704" y="264"/>
+  <object id="448" template="templates/Shrubble (Lvl. 4).tx" gid="211" x="3720" y="456" rotation="180"/>
   <object id="463" template="templates/Scroll Lock (Up).tx" x="974.656" y="328.118"/>
   <object id="464" template="templates/Scroll Unlock (All Directions).tx" x="95.3643" y="600.31"/>
   <object id="466" template="templates/Scroll Unlock (All Directions).tx" x="327.471" y="730.588"/>
@@ -383,7 +383,7 @@
   <object id="523" template="templates/Bouncepad.tx" gid="1073742061" x="2655.85" y="448.17" rotation="0"/>
   <object id="524" template="templates/Bouncepad.tx" x="2721.98" y="560.908" rotation="90"/>
   <object id="525" template="templates/Bouncepad.tx" x="2720.51" y="529.529" rotation="90"/>
-  <object id="526" template="templates/Scroll Lock (Right).tx" x="3302.27" y="557.627"/>
+  <object id="526" template="templates/Scroll Lock (Right).tx" x="3304" y="556"/>
   <object id="527" template="templates/Scroll Unlock (All Directions).tx" x="3474.59" y="430.72"/>
   <object id="528" template="templates/Bouncepad.tx" x="3936.32" y="272.707" rotation="90"/>
   <object id="529" template="templates/Bouncepad.tx" x="3936.81" y="303.97" rotation="90"/>
@@ -400,7 +400,7 @@
   <object id="553" template="templates/Bouncepad (45º).tx" x="3424.15" y="450.406"/>
   <object id="554" template="templates/Bouncepad (45º).tx" x="3423.39" y="416.73"/>
   <object id="556" template="templates/Scroll Unlock (All Directions).tx" x="2780.5" y="544.543"/>
-  <object id="557" template="templates/Scroll Lock (Up).tx" x="3895.67" y="843.182"/>
+  <object id="557" template="templates/Scroll Lock (Up).tx" x="3720" y="856"/>
   <object id="558" template="templates/Warp Exit (Wall) .tx" x="1497.82" y="911.777"/>
   <object id="559" template="templates/Bouncepad (45º).tx" gid="2147483884" x="3519.72" y="258.106" rotation="0"/>
   <object id="560" template="templates/Bouncepad (45º).tx" gid="2147483884" x="3518.24" y="287.717" rotation="0"/>

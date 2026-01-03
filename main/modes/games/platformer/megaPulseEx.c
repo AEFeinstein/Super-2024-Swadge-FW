@@ -41,8 +41,8 @@
 //==============================================================================
 // Constants
 //==============================================================================
-#define BIG_SCORE    4000000UL
-#define BIGGER_SCORE 10000000UL
+#define BIG_SCORE    500000UL
+#define BIGGER_SCORE 1500000UL
 #define FAST_TIME    1200 // 20 minutes
 
 const char platformerName[] = "Mega Pulse EX";
@@ -256,7 +256,7 @@ const trophyData_t platformerTrophies[] = {{
                                            },
                                            {
                                                .title       = "Mega Player",
-                                               .description = "Scored 4 million!",
+                                               .description = "Scored 500k!",
                                                .image       = SILVER_TROPHY_WSG,
                                                .type        = TROPHY_TYPE_TRIGGER,
                                                .difficulty  = TROPHY_DIFF_HARD,
@@ -264,7 +264,7 @@ const trophyData_t platformerTrophies[] = {{
                                            },
                                            {
                                                .title       = "Mega Player EX",
-                                               .description = "Scored 10 million!",
+                                               .description = "Scored 1.5 million!",
                                                .image       = GOLD_TROPHY_WSG,
                                                .type        = TROPHY_TYPE_TRIGGER,
                                                .difficulty  = TROPHY_DIFF_EXTREME,
@@ -273,14 +273,14 @@ const trophyData_t platformerTrophies[] = {{
                                            {
                                                .title       = "1 Credit Cleared!",
                                                .description = "Clear in one session without Game Over!",
-                                               .image       = SILVER_TROPHY_WSG,
+                                               .image       = GOLD_TROPHY_WSG,
                                                .type        = TROPHY_TYPE_TRIGGER,
-                                               .difficulty  = TROPHY_DIFF_HARD,
+                                               .difficulty  = TROPHY_DIFF_EXTREME,
                                                .maxVal      = 1,
                                            },
                                            {
                                                .title       = "Not just fast, magFAST!",
-                                               .description = "1CC'd in 20 gameplay minutes!",
+                                               .description = "Cleared in 20 gameplay minutes!",
                                                .image       = GOLD_TROPHY_WSG,
                                                .type        = TROPHY_TYPE_TRIGGER,
                                                .difficulty  = TROPHY_DIFF_EXTREME,
@@ -501,12 +501,12 @@ void platformerEnterMode(void)
                          true, true, true);
         setMidiParams(platformer->gameData.cutscene, 17, 83, 1, 250, false);
         // Ember
-        addCutsceneStyle(platformer->gameData.cutscene, c000, EMBER_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Ember", 1, true,
-                         true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c000, EMBER_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Ember", 1,
+                         false, true, true);
         setMidiParams(platformer->gameData.cutscene, 18, 82, 1, 250, false);
         // Percy
-        addCutsceneStyle(platformer->gameData.cutscene, c000, PERCY_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Percy", 1, true,
-                         true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c000, PERCY_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Percy", 1,
+                         false, true, true);
         setMidiParams(platformer->gameData.cutscene, 19, 38, 1, 250, false);
         // Sunny
         addCutsceneStyle(platformer->gameData.cutscene, c541, SUNNY_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sunny", 2,
@@ -1108,7 +1108,7 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
         DRAW_FPS_COUNTER(platformer->font);
     }
 
-    if (gameData->comboTimer == 0)
+    if (gameData->comboTimer == 0 || gameData->combo == 0)
     {
         return;
     }
@@ -1388,6 +1388,9 @@ void changeStateGame(platformer_t* self)
 
     soundStop(true);
 
+    mg_drawTileMap(&self->tilemap);
+    mg_updateScrollLockEntities(&self->entityManager);
+
     self->update = &updateReadyScreen;
 }
 
@@ -1511,24 +1514,21 @@ void updateGameOver(platformer_t* self)
         // Handle unlockables
         if (!self->gameData.debugMode)
         {
+            if (!self->gameData.cheatMode)
+            {
+                if (self->gameData.score >= BIG_SCORE)
+                {
+                    trophyUpdate(&platformerTrophies[11], 1, true);
+                }
+                if (self->gameData.score >= BIGGER_SCORE)
+                {
+                    trophyUpdate(&platformerTrophies[12], 1, true);
+                }
+            }
             savePlatformerUnlockables(self);
         }
 
         changeStateNameEntry(self);
-    }
-    else if (self->gameData.frameCount == 60)
-    {
-        if (!self->gameData.cheatMode && !self->gameData.debugMode && self->gameData.score >= BIG_SCORE)
-        {
-            trophyUpdate(&platformerTrophies[11], 1, true);
-        }
-    }
-    else if (self->gameData.frameCount == 120)
-    {
-        if (!self->gameData.cheatMode && !self->gameData.debugMode && self->gameData.score >= BIGGER_SCORE)
-        {
-            trophyUpdate(&platformerTrophies[12], 1, true);
-        }
     }
 
     drawGameOver(&(self->font), &(self->gameData));
@@ -1726,7 +1726,7 @@ void updateGameClear(platformer_t* self)
             trophyUpdate(&platformerTrophies[13], 1, true);
         }
 
-        if (self->gameData.frameCount == 45 && !self->gameData.continuesUsed && self->gameData.inGameTimer < FAST_TIME)
+        if (self->gameData.frameCount == 45 && self->gameData.inGameTimer < FAST_TIME)
         {
             trophyUpdate(&platformerTrophies[14], 1, true);
         }
@@ -2035,7 +2035,14 @@ void updateShowHighScores(platformer_t* self)
         self->menuState     = 0;
         self->menuSelection = 0;
         soundStop(true);
-        changeStateMainMenu(self);
+        if (self->unlockables.levelsCleared == 0b1111111111110)
+        {
+            changeStateLevelSelect(self);
+        }
+        else
+        {
+            changeStateMainMenu(self);
+        }
     }
 
     drawShowHighScores(&(self->font), self->menuState);
@@ -2203,6 +2210,8 @@ void updateLevelSelect(platformer_t* self)
         {
             // Undo all level progress, but keep abilities.
             self->unlockables.levelsCleared = 0;
+            self->unlockables.inGameTimer   = 0;
+            self->gameData.inGameTimer      = 0;
             savePlatformerUnlockables(self);
 
             writeNvs32(MG_abilitiesNVSKey, platformer->gameData.abilities);
@@ -2362,6 +2371,16 @@ void startPostFightMusic(void)
     globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_POST_FIGHT);
     int16_t songPitches[] = {62, 65, 67, 57, -1, -1, -1, -1};
+    setSongPitches(platformer->gameData.cutscene, songPitches);
+    midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+}
+
+void startSawtoothsThemeMusic(void)
+{
+    globalMidiPlayerGet(MIDI_BGM)->paused = false;
+    mg_setBgm(&platformer->soundManager, MG_BGM_SAWTOOTHS_THEME);
+    int16_t songPitches[] = {59, 60, 62, 64, 69, -1, -1, -1};
     setSongPitches(platformer->gameData.cutscene, songPitches);
     midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);

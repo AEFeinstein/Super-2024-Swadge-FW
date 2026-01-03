@@ -18,7 +18,7 @@ void mg_initializeGameData(mgGameData_t* gameData, mgSoundManager_t* soundManage
     gameData->gameState            = 0;
     gameData->btnState             = 0;
     gameData->score                = 0;
-    gameData->lives                = 3;
+    gameData->lives                = 5;
     gameData->countdown            = 000;
     gameData->level                = 1;
     gameData->frameCount           = 0;
@@ -47,7 +47,7 @@ void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
     gameData->gameState            = 0;
     gameData->btnState             = 0;
     gameData->score                = 0;
-    gameData->lives                = 3;
+    gameData->lives                = 5;
     gameData->countdown            = 000;
     gameData->pauseCountdown       = false;
     gameData->frameCount           = 0;

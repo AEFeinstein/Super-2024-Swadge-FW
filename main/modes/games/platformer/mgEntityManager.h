@@ -48,6 +48,7 @@ struct mgEntityManager_t
 void mg_initializeEntityManager(mgEntityManager_t* entityManager, mgWsgManager_t* wsgManager, mgTilemap_t* tilemap,
                                 mgGameData_t* gameData, mgSoundManager_t* soundManager);
 void mg_updateEntities(mgEntityManager_t* entityManager);
+void mg_updateScrollLockEntities(mgEntityManager_t* entityManager);
 void mg_deactivateAllEntities(mgEntityManager_t* entityManager, bool excludePlayer);
 void mg_deactivateAllEntitiesOfType(mgEntityManager_t* entityManager, uint8_t type);
 void mg_deactivateAllBullets(mgEntityManager_t* entityManager);

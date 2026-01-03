@@ -85,9 +85,9 @@
   <object id="472" template="templates/Shrubble (Lvl. 4).tx" x="2712.48" y="88"/>
   <object id="473" template="templates/Scroll Unlock (All Directions).tx" x="1545.98" y="492.124"/>
   <object id="474" template="templates/Checkpoint.tx" x="3036.6" y="402"/>
-  <object id="476" template="templates/Scroll Lock (Up).tx" x="3079.56" y="295.848"/>
-  <object id="477" template="templates/Scroll Lock (Right).tx" x="3591.51" y="405.593"/>
-  <object id="478" template="templates/Scroll Lock (Down).tx" x="3419.05" y="533.827"/>
+  <object id="476" template="templates/Scroll Lock (Up).tx" x="3112" y="296"/>
+  <object id="477" template="templates/Scroll Lock (Right).tx" x="3588" y="408"/>
+  <object id="478" template="templates/Scroll Lock (Down).tx" x="3048" y="520"/>
   <object id="481" template="templates/Dust Bunny.tx" gid="2147483857" x="1799.75" y="231.341" rotation="0"/>
   <object id="482" template="templates/Dust Bunny.tx" gid="2147483857" x="1911.95" y="231.697" rotation="0"/>
   <object id="483" template="templates/Dust Bunny.tx" gid="2147483857" x="2023.89" y="231.096" rotation="0"/>
