@@ -154,6 +154,7 @@ static void setSongPitchesFromCurrentSong(mgGameData_t* gameData)
         }
         case MG_BGM_INTRO_STAGE:
         case MG_BGM_MAXIMUM_HYPE_CREDITS:
+        case MG_BGM_CLIMAX:
         {
             int16_t songPitches[]
                 = {62, 61, 60, 69, 62, 60, -1, -1}; // have 62 and 60 duplicated for some statistical weighting.
