@@ -2035,7 +2035,14 @@ void updateShowHighScores(platformer_t* self)
         self->menuState     = 0;
         self->menuSelection = 0;
         soundStop(true);
-        changeStateMainMenu(self);
+        if(self->unlockables.levelsCleared == 0b1111111111110)
+        {
+            changeStateLevelSelect(self);
+        }
+        else
+        {
+            changeStateMainMenu(self);
+        }
     }
 
     drawShowHighScores(&(self->font), self->menuState);
