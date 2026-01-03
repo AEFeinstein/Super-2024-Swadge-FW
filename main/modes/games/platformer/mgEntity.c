@@ -6363,6 +6363,10 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
 
 void startOutroCutscene(mgEntity_t* self)
 {
+    if (self->entityManager->playerEntity != NULL && self->entityManager->playerEntity->hp <= 0)
+    {
+        return;
+    }
     mg_deactivateAllEntitiesOfType(self->entityManager, ENTITY_WAVE_BALL); // so the player doesn't get hurt right after
                                                                            // the winning cutscene.
     self->entityManager->playerEntity->shotsFired = 0;
