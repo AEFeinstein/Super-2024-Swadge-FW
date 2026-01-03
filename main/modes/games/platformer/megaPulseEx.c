@@ -1514,13 +1514,13 @@ void updateGameOver(platformer_t* self)
         // Handle unlockables
         if (!self->gameData.debugMode)
         {
-            if(!self->gameData.cheatMode)
+            if (!self->gameData.cheatMode)
             {
-                if(self->gameData.score >= BIG_SCORE)
+                if (self->gameData.score >= BIG_SCORE)
                 {
                     trophyUpdate(&platformerTrophies[11], 1, true);
                 }
-                if(self->gameData.score >= BIGGER_SCORE)
+                if (self->gameData.score >= BIGGER_SCORE)
                 {
                     trophyUpdate(&platformerTrophies[12], 1, true);
                 }
@@ -2035,7 +2035,7 @@ void updateShowHighScores(platformer_t* self)
         self->menuState     = 0;
         self->menuSelection = 0;
         soundStop(true);
-        if(self->unlockables.levelsCleared == 0b1111111111110)
+        if (self->unlockables.levelsCleared == 0b1111111111110)
         {
             changeStateLevelSelect(self);
         }

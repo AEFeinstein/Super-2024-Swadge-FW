@@ -1205,7 +1205,8 @@ void mg_bossRushLogic(mgEntity_t* self)
         {
             boss->y -= 100 << SUBPIXEL_RESOLUTION;
         }
-        else if (nextBoss == ENTITY_BOSS_SMASH_GORILLA || nextBoss == ENTITY_BOSS_SEVER_YATAGA || nextBoss == ENTITY_BOSS_DRAIN_BAT)
+        else if (nextBoss == ENTITY_BOSS_SMASH_GORILLA || nextBoss == ENTITY_BOSS_SEVER_YATAGA
+                 || nextBoss == ENTITY_BOSS_DRAIN_BAT)
         {
             boss->y -= 10 << SUBPIXEL_RESOLUTION;
         }
