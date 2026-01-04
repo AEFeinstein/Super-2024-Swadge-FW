@@ -6157,6 +6157,7 @@ void mg_updateBossBigma(mgEntity_t* self)
     if (self->type == ENTITY_DEAD && self->gameData->level != 11)
     {
         mg_deactivateAllEntities(self->entityManager, true);
+        self->active = true;
 
         self->linkedEntity = createMixtape(self->entityManager, self->entityManager->bossSpawnX - 100,
                                            self->entityManager->bossSpawnY - 20);
