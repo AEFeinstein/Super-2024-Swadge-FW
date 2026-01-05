@@ -13,7 +13,7 @@
 // Define
 //==============================================================================
 
-#define MAX_SWSN_SLOTS 14
+#define MAX_SWSN_SLOTS 25
 #define MAX_STR_LEN    50
 
 // Creator Settings
@@ -77,7 +77,7 @@
 const char sonaModeName[]                 = "Swadgesona Creator";
 const char sonaTrophyNVS[]                = "SonaTrophyNVS";
 static const char sonaMenuName[]          = "Sona Creator";
-static const char sonaSlotUninitialized[] = "Uninitialized";
+static const char sonaSlotUninitialized[] = "Empty Slot";
 static const char cursorNVS[]             = "cursor";
 static const char prompt[]                = "Name this Swadgesona";
 
@@ -377,7 +377,7 @@ const trophyData_t swsnTrophies[] = {
     },
     {
         .title       = "Marcel Duchamp",
-        .description = "Fill 14 swadgesona slots with swadgesonas",
+        .description = "Fill all swadgesona slots with swadgesonas",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_HARD,
@@ -766,7 +766,7 @@ static void swsnLoop(int64_t elapsedUs)
                 writeNamespaceNvsBlob(NVSStrings[0], buffer, &scd->activeSona.core, sizeof(swadgesonaCore_t));
                 snprintf(buffer, sizeof(buffer) - 1, "%s%d%s", NVSStrings[1], scd->slot, NVSStrings[2]);
                 char nicknameBuffer[MAX_NAME_LEN];
-                snprintf(nicknameBuffer, sizeof(nicknameBuffer) - 1, "MAGFester%d", scd->slot);
+                snprintf(nicknameBuffer, sizeof(nicknameBuffer) - 1, "MAGFester%d", scd->slot+1); // Default nickname
                 writeNamespaceNvsBlob(NVSStrings[0], buffer, &nicknameBuffer, MAX_NAME_LEN);
                 textEntryDeinit();
                 scd->state      = SAVED;
@@ -981,7 +981,7 @@ static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal)
             for (int idx = 0; idx < MAX_SWSN_SLOTS; idx++)
             {
                 char buffer[32];
-                snprintf(buffer, sizeof(buffer) - 1, "Slot %d: %s", idx + 1, sonaSlotUninitialized);
+                snprintf(buffer, sizeof(buffer) - 1, "%s", sonaSlotUninitialized);
                 if (strncmp(buffer, label, 17) == 0)
                 {
                     generateRandomSwadgesona(&scd->activeSona);
