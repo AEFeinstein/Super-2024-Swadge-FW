@@ -1006,6 +1006,11 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
         drawWsgSimpleHalf(&atr->uiElements[4], 10, 30);
         drawText(&atr->fonts[0], c000, "Select", 30, 11);
         drawText(&atr->fonts[0], c000, "Back", 30, 31);
+        drawRectFilled(0, 50, 280, 78, c555);
+        
+
+        drawText(&atr->fonts[0], c000, "Hello! This arcade cab doesn't use SwadgePass.", 2, 52);
+        drawText(&atr->fonts[0], c000, "Please enjoy this demo instead.", 40, 64);
     }
 }
 
