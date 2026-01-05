@@ -743,16 +743,17 @@ static void swsnLoop(int64_t elapsedUs)
         }
         case NAMING:
         {
+            bool done = false;
             while (checkButtonQueueWrapper(&evt))
             {
                 if (evt.button & PB_B && evt.down)
                 {
                     scd->state = CREATING;
                 }
-                done = textEntryInput(evt);
+                
                 if (done == 0)
                 {
-                    done = false;
+                    
                     textEntryInit(&tes, scd->nickname, getSysFont());
                     done = true; //setting to true to skip text entry on the cab
                 }
