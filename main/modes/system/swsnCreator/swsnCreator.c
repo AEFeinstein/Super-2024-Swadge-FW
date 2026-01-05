@@ -765,7 +765,9 @@ static void swsnLoop(int64_t elapsedUs)
                 snprintf(buffer, sizeof(buffer) - 1, "%s%" PRId16, NVSStrings[1], scd->slot);
                 writeNamespaceNvsBlob(NVSStrings[0], buffer, &scd->activeSona.core, sizeof(swadgesonaCore_t));
                 snprintf(buffer, sizeof(buffer) - 1, "%s%d%s", NVSStrings[1], scd->slot, NVSStrings[2]);
-                writeNamespaceNvsBlob(NVSStrings[0], buffer, &scd->nickname, MAX_NAME_LEN);
+                char nicknameBuffer[MAX_NAME_LEN];
+                snprintf(nicknameBuffer, sizeof(nicknameBuffer) - 1, "MAGFester%d", scd->slot);
+                writeNamespaceNvsBlob(NVSStrings[0], buffer, &nicknameBuffer, MAX_NAME_LEN);
                 textEntryDeinit();
                 scd->state      = SAVED;
                 scd->hasChanged = false;
