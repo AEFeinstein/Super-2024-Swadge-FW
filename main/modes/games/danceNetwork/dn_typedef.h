@@ -39,7 +39,7 @@ typedef enum __attribute__((packed))
     DN_PIT_ASSET,
     DN_MINI_TILE_ASSET,
     DN_REROLL_ASSET,
-    // DN_NUMBER_ASSET,
+    DN_NUMBER_ASSET,
     DN_ALBUM_EXPLOSION_ASSET,
     DN_MMM_UP_ASSET,
     DN_SWAP_ASSET,
