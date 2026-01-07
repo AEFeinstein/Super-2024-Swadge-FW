@@ -157,7 +157,7 @@ menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOut
                             c111, // bodyBackground
                             c222, // bodyAccentDark
                             c333, // bodyAccentLight
-                            c000, // bodyArrowBg
+                            c444, // bodyArrowBg
 
                             c100, // rowUnselectedBg, rowSelectedShadow
                             c111, // rowUnselectedShadow
