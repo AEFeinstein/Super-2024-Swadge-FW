@@ -211,44 +211,54 @@
     #define RTC_DATA_ATTR
 #endif
 
-// Define hardware-specific GPIOs
-#if defined(CONFIG_HARDWARE_WAVEBIRD) || defined(CONFIG_HARDWARE_GUNSHIP)
-    #define GPIO_SAO_1 GPIO_NUM_17
-    #define GPIO_SAO_2 GPIO_NUM_18
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic push
+#endif
+#ifdef __GNUC__
+    #pragma GCC diagnostic ignored "-Wunused-macros"
+#endif
 
-    #define GPIO_BTN_UP    GPIO_NUM_0
-    #define GPIO_BTN_DOWN  GPIO_NUM_4
-    #define GPIO_BTN_LEFT  GPIO_NUM_2
-    #define GPIO_BTN_RIGHT GPIO_NUM_1
+// Default SAO & button GPIOs
+#define GPIO_SAO_1      GPIO_NUM_17
+#define GPIO_SAO_2      GPIO_NUM_18
+#define GPIO_BTN_UP     GPIO_NUM_0
+#define GPIO_BTN_DOWN   GPIO_NUM_4
+#define GPIO_BTN_LEFT   GPIO_NUM_2
+#define GPIO_BTN_RIGHT  GPIO_NUM_1
+#define GPIO_BTN_A      GPIO_NUM_16
+#define GPIO_BTN_B      GPIO_NUM_15
+#define GPIO_BTN_START  GPIO_NUM_8
+#define GPIO_BTN_SELECT GPIO_NUM_5
 
-#elif defined(CONFIG_HARDWARE_HOTDOG_PRODUCTION)
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic pop
+#endif
+
+// These Swadges redefine SAO
+#if (defined(CONFIG_HARDWARE_HOTDOG_PRODUCTION) || defined(CONFIG_HARDWARE_HOTDOG_PROTO) \
+     || defined(CONFIG_HARDWARE_PULSE) || defined(CONFIG_HARDWARE_SWADGEBOY))
+    #undef GPIO_SAO_1
+    #undef GPIO_SAO_2
     #define GPIO_SAO_1 GPIO_NUM_40
     #define GPIO_SAO_2 GPIO_NUM_42
+#endif
 
-    #define GPIO_BTN_UP    GPIO_NUM_0
-    #define GPIO_BTN_DOWN  GPIO_NUM_4
-    #define GPIO_BTN_LEFT  GPIO_NUM_2
-    #define GPIO_BTN_RIGHT GPIO_NUM_1
-
-#elif defined(CONFIG_HARDWARE_HOTDOG_PROTO)
-    #define GPIO_SAO_1 GPIO_NUM_40
-    #define GPIO_SAO_2 GPIO_NUM_42
-
+// Hot Dog Prototype redefines D-Pad
+#if defined(CONFIG_HARDWARE_HOTDOG_PROTO)
+    #undef GPIO_BTN_UP
+    #undef GPIO_BTN_LEFT
+    #undef GPIO_BTN_RIGHT
     #define GPIO_BTN_UP    GPIO_NUM_1
-    #define GPIO_BTN_DOWN  GPIO_NUM_4
     #define GPIO_BTN_LEFT  GPIO_NUM_0
     #define GPIO_BTN_RIGHT GPIO_NUM_2
+#endif
 
-#elif defined(CONFIG_HARDWARE_PULSE)
-    #define GPIO_SAO_1 GPIO_NUM_42 // Flip SAO GPIOs relative to Hotdog
-    #define GPIO_SAO_2 GPIO_NUM_40
-
-    #define GPIO_BTN_UP    GPIO_NUM_0
-    #define GPIO_BTN_DOWN  GPIO_NUM_4
-    #define GPIO_BTN_LEFT  GPIO_NUM_2
-    #define GPIO_BTN_RIGHT GPIO_NUM_1
-#else
-    #error "Define what hardware is being built for"
+// Swadgeboy redefines A & B
+#if defined(CONFIG_HARDWARE_SWADGEBOY)
+    #undef GPIO_BTN_A
+    #undef GPIO_BTN_B
+    #define GPIO_BTN_A GPIO_NUM_16
+    #define GPIO_BTN_B GPIO_NUM_15
 #endif
 
 //==============================================================================
@@ -381,14 +391,8 @@ void app_main(void)
 
     // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
-        GPIO_BTN_UP,    // Up
-        GPIO_BTN_DOWN,  // Down
-        GPIO_BTN_LEFT,  // Left
-        GPIO_BTN_RIGHT, // Right
-        GPIO_NUM_16,    // A
-        GPIO_NUM_15,    // B
-        GPIO_NUM_8,     // Start
-        GPIO_NUM_5      // Select
+        GPIO_BTN_UP, GPIO_BTN_DOWN, GPIO_BTN_LEFT,  GPIO_BTN_RIGHT,
+        GPIO_BTN_A,  GPIO_BTN_B,    GPIO_BTN_START, GPIO_BTN_SELECT,
     };
     touch_pad_t touchPads[] = {
         TOUCH_PAD_NUM9,  // GPIO_NUM_9
