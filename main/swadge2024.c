@@ -257,8 +257,8 @@
 #if defined(CONFIG_HARDWARE_SWADGEBOY)
     #undef GPIO_BTN_A
     #undef GPIO_BTN_B
-    #define GPIO_BTN_A GPIO_NUM_16
-    #define GPIO_BTN_B GPIO_NUM_15
+    #define GPIO_BTN_A GPIO_NUM_15
+    #define GPIO_BTN_B GPIO_NUM_16
 #endif
 
 //==============================================================================
