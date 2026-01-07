@@ -25,6 +25,10 @@ menu "Swadge Configuration"
 			bool "HARDWARE_PULSE"
 			help
 				Build for the Pulse Swadge (2026)		
+		config HARDWARE_SWADGEBOY
+			bool "HARDWARE_SWADGEBOY"
+			help
+				Build for the Swadgeboy (2026)		
 	endchoice
 	choice DEBUG_OUTPUT_TYPE
 		prompt "Select Debug Output"
