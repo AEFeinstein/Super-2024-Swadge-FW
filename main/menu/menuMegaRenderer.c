@@ -146,6 +146,30 @@ menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOut
     // Reset the palette
     wsgPaletteReset(&renderer->palette);
 
+#if defined(CONFIG_HARDWARE_SWADGEBOY)
+    static const paletteColor_t bgColors[] = {c111, c211, c221, c321, c331, c431};
+    recolorMenuMegaRenderer(renderer,
+                            c555, // textFill
+                            c000, // textOutline
+
+                            c000, // hexaBackground
+
+                            c111, // bodyBackground
+                            c222, // bodyAccentDark
+                            c333, // bodyAccentLight
+                            c000, // bodyArrowBg
+
+                            c100, // rowUnselectedBg, rowSelectedShadow
+                            c111, // rowUnselectedShadow
+
+                            c321, // rowSelectedBg
+                            c541, // rowSelectedAccent
+                            c431, // rowSelectedOutline
+
+                            c000, // rowArrowBg
+                            bgColors, ARRAY_SIZE(bgColors));
+#endif
+
     return renderer;
 }
 
