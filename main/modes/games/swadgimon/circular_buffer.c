@@ -1,20 +1,13 @@
-#include <stdbool.h>
+#include <assert.h>
 #include <stdlib.h>
+#include <string.h>
+#include <esp_heap_caps.h>
 
 #include "circular_buffer.h"
 
 // Reference implementation
 // https://embeddedartistry.com/blog/2017/05/17/creating-a-circular-buffer-in-c-and-c/
 // https://github.com/embeddedartistry/embedded-resources/blob/master/examples/c/circular_buffer/circular_buffer.c
-
-typedef struct
-{
-    void* buffer;               ///< The pointer to the start of the data being stored
-    volatile int head;          ///< The most recent index in use by the buffer
-    volatile int tail;          ///< The oldest index in use by the buffer
-    unsigned int capacity;      ///< The maximum number of elements in the buffer
-    unsigned int elementLength; ///< The number of bytes per element
-} circ_buf_t;
 
 static inline unsigned int circBufAdvanceHeadTailValue(unsigned int value, unsigned int capacity) {
     return (value + 1) % capacity;
@@ -94,7 +87,7 @@ unsigned int circBufElementLength(circ_buf_t* circBuf) {
 void circBufPut(circ_buf_t* circBuf, void* dataIn) {
     assert(circBuf && circBuf->buffer && dataIn);
     
-    memcpy(circBuf[circBuf->head * circBuf->elementLength], dataIn, circBuf->elementLength);
+    memcpy(&circBuf[circBuf->head * circBuf->elementLength], dataIn, circBuf->elementLength);
     circBufAdvanceHead(circBuf);
 }
 
@@ -107,7 +100,7 @@ bool circBufTryPut(circ_buf_t* circBuf, void* dataIn) {
         return false;
     }
     
-    memcpy(circBuf[circBuf->head * circBuf->elementLength], dataIn, circBuf->elementLength);
+    memcpy(&circBuf[circBuf->head * circBuf->elementLength], dataIn, circBuf->elementLength);
     circBufAdvanceHead(circBuf);
     return true;
 }
@@ -120,7 +113,7 @@ bool circBufGet(circ_buf_t* circBuf, void* dataOut) {
         return false;
     }
     
-    memcpy(dataOut, circBuf[circBuf->tail * circBuf->elementLength], circBuf->elementLength);
+    memcpy(dataOut, &circBuf[circBuf->tail * circBuf->elementLength], circBuf->elementLength);
     circBuf->tail = circBufAdvanceHeadTailValue(circBuf->tail, circBuf->capacity);
     
     return true;
@@ -133,8 +126,8 @@ bool circBufPeek(circ_buf_t* circBuf, void* dataOut, unsigned int index) {
         return false;
     }
     
-    unsigned int pos = (circBuf->tail + index) % capacity;
-    memcpy(dataOut, circBuf[pos * circBuf->elementLength], circBuf->elementLength);
+    unsigned int pos = (circBuf->tail + index) % circBuf->capacity;
+    memcpy(dataOut, &circBuf[pos * circBuf->elementLength], circBuf->elementLength);
     
     return true;
 }
