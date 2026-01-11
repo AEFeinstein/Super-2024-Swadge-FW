@@ -1,0 +1,21 @@
+ID,Name,Description,Price,Parameter,Pocket,IsAssignableToSelect
+0,Vinyl Record,"Used to capture a monster. Better than nothing, you guess",,,POCKET_BALLS,0
+1,Casette Tape,Used to capture a monster. Actually works decently,,,POCKET_BALLS,0
+2,CD,"Used to capture a monster. The best thing since sliced bread, in your opinion",,,POCKET_BALLS,0
+3,Memory Crystal,Used to capture a monster without fail. Seems too advanced for your time. Who made it?,,,POCKET_BALLS,0
+4,Band-ade,"A bandage pre-soaked in lemonade. Heals a monster, but at what cost?",,20,POCKET_RESTORATIVES,1
+5,Pink Band-ade,A bandage pre-soaked in pink lemonade. Heals a monster better than a Band-ade does,,60,POCKET_RESTORATIVES,1
+6,Normal Bandage,"A bandage not soaked in anything. Heals monsters the best, but isn't subsidized by the Lemony Cross",,120,POCKET_RESTORATIVES,1
+7,Revive,,,,POCKET_RESTORATIVES,1
+8,Max Revive,,,,POCKET_RESTORATIVES,1
+9,Rock 'n' Roll,"Gets a monster pumped up, curing sleep or frozen status. Single use",,,POCKET_RESTORATIVES,1
+10,Smooth Jazz,"Soothes a monster, curing burn status. Single use",,,POCKET_RESTORATIVES,1
+11,Church Tunes,Cures a monster's poison or paralyze status through the power of faith. Single use,,,POCKET_RESTORATIVES,1
+12,,,,,,
+13,,,,,,
+14,,,,,,
+15,,,,,,
+16,,,,,,
+17,,,,,,
+18,,,,,,
+19,,,,,,
