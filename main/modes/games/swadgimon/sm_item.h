@@ -1,6 +1,8 @@
 #ifndef _SM_ITEM_H_
 #define _SM_ITEM_H_
 
+#include <stdbool.h>
+
 // Bag pocket an item is stored in
 enum {
     POCKET_ITEMS,
@@ -12,12 +14,12 @@ enum {
 
 // Definitions of items
 struct {
-    uint16_t id;
     char* name;
     char* description;
+    pocket_t pocket;
+    uint16_t id;
     uint16_t price;
     uint8_t parameter;
-    pocket_t pocket;
     bool isAssignableToSelect;
     // TODO: function pointers?
 } item_t;

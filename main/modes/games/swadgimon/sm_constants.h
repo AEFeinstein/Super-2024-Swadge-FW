@@ -2,7 +2,44 @@
 #define _SM_CONSTANTS_H_
 
 #define PARTY_SIZE 6
-#define NUM_MONSTER_BOXES 4
-#define NUM_MONSTERS_PER_BOX 30
+#define NUM_MONSTER_BOXES 6
+#define NUM_MONSTERS_PER_BOX_X 6
+#define NUM_MONSTERS_PER_BOX_Y 5
+#define NUM_MONSTERS_IN_DAYCARE 2
+#define NUM_HALL_OF_FAME_ENTRIES 12
+
+#define NUM_MOVES_PER_MONSTER 4
+
+#define MAX_TRAINER_NAME_LEN 15
+// Always need to store at least the player's name and the rival's name
+#define MIN_TRAINER_NAMES 3
+#define TRAINER_NAME_IDX_NONE 0
+#define TRAINER_NAME_IDX_PLAYER 1
+#define TRAINER_NAME_IDX_RIVAL 2
+
+#define MAX_MONSTER_NAME_LEN 15
+#define MIN_MONSTER_NAMES 1
+#define MONSTER_NAME_IDX_NONE 0
+
+#define MAX_IV 31
+#define MAX_EV 252
+
+#define GENDER_RATIO_100M 0
+#define GENDER_RATIO_95M 13
+#define GENDER_RATIO_90M 25
+#define GENDER_RATIO_75M 64
+#define GENDER_RATIO_67M 85
+#define GENDER_RATIO_50M 127
+#define GENDER_RATIO_33M 172
+#define GENDER_RATIO_25M 190
+#define GENDER_RATIO_10M 229
+#define GENDER_RATIO_5M 241
+#define GENDER_RATIO_0M 254
+#define GENDER_RATIO_GENDERLESS 255
+
+// Chance of a monster being shiny is 1 in N
+#define SHINY_DIVISOR 1000
+
+#define STARTING_MONEY 2000
 
 #endif
