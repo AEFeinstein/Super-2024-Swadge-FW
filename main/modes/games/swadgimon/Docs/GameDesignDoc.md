@@ -18,7 +18,7 @@ There are four versions of this game:
 - Minimum Viable Product: The basics of the basics. Functional, but not what we wanted
 - Level 1: Some stretch goals added in. Goal for 2025.
 - Level 2: Expected output for the 2026 swadge
-- Out-Of-Scope: The functions required for 1-1 equavalent with Gen III mechanics Not to be included unless someone has too much spare time.
+- Out-Of-Scope: The functions required for 1-1 equivalent with Gen III mechanics. Not to be included unless someone has too much spare time.
 
 ### MVP
 
@@ -30,8 +30,8 @@ There are four versions of this game:
         - [ ] Hotel
             - [ ] Atrium
             - [ ] Ballrooms
-            - [ ] Resturuants
-        - [ ] Convetion center
+            - [ ] Restaurants
+        - [ ] Convention center
             - [ ] Potomac
             - [ ] Maryland
             - [ ] Prefunction space
@@ -45,7 +45,7 @@ There are four versions of this game:
     - [ ] All core stats
     - [ ] Monsters, types, moves, etc are copied from Gen III to require minimal balancing
     - [ ] Add in EXP increasing items, boost EXP gain, something to reduce the grind
-        - [ ] Or a low level cap. Not idea, but minimal testing
+        - [ ] Or a low level cap. Not ideal, but minimal testing
 - [ ] Audio
     - [ ] Basic buzzes for menuing, actions
     - [ ] Basic buzzes for attacks
@@ -57,7 +57,7 @@ There are four versions of this game:
     - [ ] Turn based battles
     - [ ] Swadgidex
         - [ ] Track seen/caught monsters
-        - [ ] Display wild area fro each monster
+        - [ ] Display wild area for each monster
     - [ ] Later areas have harder wild mons/trainers
     - [ ] Shops (1 per area)
     - [ ] Character customization
@@ -97,7 +97,7 @@ Includes everything in MVP, plus:
             - [ ] Hotel rooms (Multiple floors?)
         - [ ] Riverview
         - [ ] Limited Exterior
-        - [ ] Farawaay land
+        - [ ] Faraway land
             - [ ] Small section of half-underwater Mark Center
     - [ ] 3-4 Gyms
     - [ ] 3-5 Boss trainers
@@ -216,7 +216,7 @@ MAGFest
 
 ## Visuals
 
-Visuals should be in-line with Gen II Pokemon games. See the srceenshots below for some examples of combat, overworld, menues, etc.
+Visuals should be in-line with Gen II Pokemon games. See the screenshots below for some examples of combat, overworld, menues, etc.
 
  A list of requires assest can be found [here](Asset lists\ImageAssets.csv)
 
@@ -351,8 +351,8 @@ Monsters are ther individual creatures caught and used to battle and navigate th
 - Personality value
 - Pokerus Strain
 - Pokerus Immunity timer
-- Non-Volitile status
-- Volitile status (In combat, can be multiple)
+- Non-Volatile status
+- Volatile status (In combat, can be multiple)
 - Transient status (In combat)
 
 #### Personality value
@@ -463,29 +463,29 @@ Natures are decided at creation. They have a positive trait and negative trait. 
 Types determine the STAB bonus, as well as which moves do more or less damage, or even which moves a monster is immune from. Monsters have 1 or 2 types, depending on species.
 
 Overall chart
-| Attacking \ Defending | Normal | Figthing | Flying | Poison | Ground | Rock | Bug | Ghost | Steel | Fire | Water | Grass | Electric | Psychic | Ice | Dragon | Dark |
-| --------------------- | ------ | -------- | ------ | ------ | ------ | ---- | --- | ----- | ----- | ---- | ----- | ----- | -------- | ------- | --- | ------ | ---- |
-| Normal                | 1      | 1        | 1      | 1      | 1      | 0.5  | 1   | 0     | 0.5   | 1    | 1     | 1     | 1        | 1       | 1   | 1      | 1    |
-| Fighting              | 2      | 1        | 0.5    | 0.5    | 1      | 2    | 0.5 | 0     | 2     | 1    | 1     | 1     | 1        | 0.5     | 2   | 1      | 2    |
-| Flying                | 1      | 2        | 1      | 1      | 1      | 0.5  | 2   | 1     | 0.5   | 1    | 1     | 2     | 0.5      | 1       | 1   | 1      | 1    |
-| Poison                | 1      | 1        | 1      | 0.5    | 0.5    | 0.5  | 1   | 0.5   | 0     | 1    | 1     | 2     | 1        | 1       | 1   | 1      | 1    |
-| Ground                | 1      | 1        | 0      | 2      | 1      | 2    | 0.5 | 1     | 2     | 2    | 1     | 0.5   | 2        | 1       | 1   | 1      | 1    |
-| Rock                  | 1      | 0.5      | 2      | 1      | 0.5    | 1    | 2   | 1     | 0.5   | 2    | 1     | 1     | 1        | 1       | 2   | 1      | 1    |
-| Bug                   | 1      | 0.5      | 0.5    | 0.5    | 1      | 1    | 1   | 0.5   | 0.5   | 0.5  | 1     | 2     | 1        | 2       | 1   | 1      | 2    |
-| Ghost                 | 0      | 1        | 1      | 1      | 1      | 1    | 1   | 2     | 0.5   | 1    | 1     | 1     | 1        | 2       | 1   | 1      | 0.5  |
-| Steel                 | 1      | 1        | 1      | 1      | 1      | 2    | 1   | 1     | 0.5   | 0.5  | 0.5   | 1     | 0.5      | 1       | 2   | 1      | 1    |
-| Fire                  | 1      | 1        | 1      | 1      | 1      | 0.5  | 2   | 0     | 2     | 0.5  | 0.5   | 2     | 1        | 1       | 2   | 0.5    | 1    |
-| Water                 | 1      | 1        | 1      | 1      | 2      | 2    | 1   | 0     | 1     | 2    | 0.5   | 0.5   | 1        | 1       | 1   | 0.5    | 1    |
-| Grass                 | 1      | 1        | 0.5    | 0.5    | 2      | 2    | 0.5 | 0     | 0.5   | 0.5  | 2     | 0.5   | 1        | 1       | 1   | 0.5    | 1    |
-| Electric              | 1      | 1        | 2      | 1      | 0      | 1    | 1   | 0     | 1     | 1    | 2     | 0.5   | 0.5      | 1       | 1   | 0.5    | 1    |
-| Psychic               | 1      | 2        | 1      | 2      | 1      | 1    | 1   | 0     | 0.5   | 1    | 1     | 1     | 1        | 0.5     | 1   | 1      | 0    |
-| Ice                   | 1      | 1        | 2      | 1      | 2      | 1    | 1   | 0     | 0.5   | 0.5  | 0.5   | 2     | 1        | 1       | 0.5 | 2      | 1    |
-| Dragon                | 1      | 1        | 1      | 1      | 1      | 1    | 1   | 0     | 0.5   | 1    | 1     | 1     | 1        | 1       | 1   | 2      | 1    |
-| Dark                  | 1      | 0.5      | 1      | 1      | 1      | 1    | 1   | 2     | 0.5   | 1    | 1     | 1     | 1        | 2       | 1   | 1      | 0.5  |
+| v Attacking \ Defending > | Normal | Fighting | Flying | Poison | Ground | Rock | Bug | Ghost | Steel | Fire | Water | Grass | Electric | Psychic | Ice | Dragon | Dark |
+| ------------------------- | ------ | -------- | ------ | ------ | ------ | ---- | --- | ----- | ----- | ---- | ----- | ----- | -------- | ------- | --- | ------ | ---- |
+| Normal                    | 1      | 1        | 1      | 1      | 1      | 0.5  | 1   | 0     | 0.5   | 1    | 1     | 1     | 1        | 1       | 1   | 1      | 1    |
+| Fighting                  | 2      | 1        | 0.5    | 0.5    | 1      | 2    | 0.5 | 0     | 2     | 1    | 1     | 1     | 1        | 0.5     | 2   | 1      | 2    |
+| Flying                    | 1      | 2        | 1      | 1      | 1      | 0.5  | 2   | 1     | 0.5   | 1    | 1     | 2     | 0.5      | 1       | 1   | 1      | 1    |
+| Poison                    | 1      | 1        | 1      | 0.5    | 0.5    | 0.5  | 1   | 0.5   | 0     | 1    | 1     | 2     | 1        | 1       | 1   | 1      | 1    |
+| Ground                    | 1      | 1        | 0      | 2      | 1      | 2    | 0.5 | 1     | 2     | 2    | 1     | 0.5   | 2        | 1       | 1   | 1      | 1    |
+| Rock                      | 1      | 0.5      | 2      | 1      | 0.5    | 1    | 2   | 1     | 0.5   | 2    | 1     | 1     | 1        | 1       | 2   | 1      | 1    |
+| Bug                       | 1      | 0.5      | 0.5    | 0.5    | 1      | 1    | 1   | 0.5   | 0.5   | 0.5  | 1     | 2     | 1        | 2       | 1   | 1      | 2    |
+| Ghost                     | 0      | 1        | 1      | 1      | 1      | 1    | 1   | 2     | 0.5   | 1    | 1     | 1     | 1        | 2       | 1   | 1      | 0.5  |
+| Steel                     | 1      | 1        | 1      | 1      | 1      | 2    | 1   | 1     | 0.5   | 0.5  | 0.5   | 1     | 0.5      | 1       | 2   | 1      | 1    |
+| Fire                      | 1      | 1        | 1      | 1      | 1      | 0.5  | 2   | 0     | 2     | 0.5  | 0.5   | 2     | 1        | 1       | 2   | 0.5    | 1    |
+| Water                     | 1      | 1        | 1      | 1      | 2      | 2    | 1   | 0     | 1     | 2    | 0.5   | 0.5   | 1        | 1       | 1   | 0.5    | 1    |
+| Grass                     | 1      | 1        | 0.5    | 0.5    | 2      | 2    | 0.5 | 0     | 0.5   | 0.5  | 2     | 0.5   | 1        | 1       | 1   | 0.5    | 1    |
+| Electric                  | 1      | 1        | 2      | 1      | 0      | 1    | 1   | 0     | 1     | 1    | 2     | 0.5   | 0.5      | 1       | 1   | 0.5    | 1    |
+| Psychic                   | 1      | 2        | 1      | 2      | 1      | 1    | 1   | 0     | 0.5   | 1    | 1     | 1     | 1        | 0.5     | 1   | 1      | 0    |
+| Ice                       | 1      | 1        | 2      | 1      | 2      | 1    | 1   | 0     | 0.5   | 0.5  | 0.5   | 2     | 1        | 1       | 0.5 | 2      | 1    |
+| Dragon                    | 1      | 1        | 1      | 1      | 1      | 1    | 1   | 0     | 0.5   | 1    | 1     | 1     | 1        | 1       | 1   | 2      | 1    |
+| Dark                      | 1      | 0.5      | 1      | 1      | 1      | 1    | 1   | 2     | 0.5   | 1    | 1     | 1     | 1        | 2       | 1   | 1      | 0.5  |
 
 #### EXP
 
-One a monster falls in battle, EXP is awarded to the other team's monsters that participated in taking it down that have not fainted.
+Once a monster falls in battle, EXP is awarded to the other team's monsters that participated in taking it down that have not fainted.
 
 ##### EXP calculation
 
@@ -500,7 +500,7 @@ EXP awarded is measured by the following formula:
 
 ##### Growth speed
 
-Monsters exist in one of six EXP growth speeds, where n is the level of the monster _currently_.
+Monsters exist in one of six EXP growth speeds, where n is the level the monster is trying to reach, and the equations solve for the total EXP required to go from level 0 to n.
 
 1. Fast (4n^3)/5
 2. Medium fast (n^3)
@@ -527,7 +527,7 @@ n < 15,         n^3(n+1/3)+24/50
 ```
 
 Example! Total EXP need for a Slow monster to reach level 58:  
-(5*57)^3 / 4 =  5,787,281 EXP
+5 * (58^3) / 4 =  243,890 EXP
 
 ##### Pokerus
 
@@ -569,7 +569,7 @@ Assuming the above mechanics are satisfied:
 | 50%        | Different | Different      |
 | 20%        | Different | Same           |
 
-Note: Bulbapedia (Source used for most numbers) does not actually list a value for both species and trainer being different. The way the website is laid out, it appears like it's supposed ot be visually linked with the slot above so that is how it is listed. 
+Note: Bulbapedia (Source used for most numbers) does not actually list a value for both species and trainer being different. The way the website is laid out, it appears like it's supposed to be visually linked with the slot above so that is how it is listed. 
 
 ##### Egg groups
 
@@ -749,23 +749,23 @@ For Accuracy and evasion:
 
 #### Status Effects
 
-Some moves casue status effects, or have a chance to cause a status effect. Non-Volitile statuses don't go away when the monster is switched out, Volitile do, and Transient statuses go away at the end of the turn.
+Some moves casue status effects, or have a chance to cause a status effect. Non-Volatile statuses don't go away when the monster is switched out, Volatile do, and Transient statuses go away at the end of the turn.
 
-Non-Volitile status are mutually exclusive. If one is already in effect, another cannot be gotten. NV status effects have badges assocated with them when viewing the monster.
+Non-Volatile status are mutually exclusive. If one is already in effect, another cannot be gotten. NV status effects have badges assocated with them when viewing the monster.
 
-Non-Volitile
+Non-Volatile
 | Name | Shorthand | Effect |
 | ---- | --------- | ------ |
 | Burn | BRN | Inflicts 1/8th max HP per turn, physical move damage is halved. |
 | Freeze | FRZ | Monster cannot use moves. Thaw chance is 20% per turn |
 | Paralysis | PAR | Reduces Speed stat by 25%, 25% move failure chance. 
-| Poison | PSN | Influcts 1/8th total HP each turn. Outside of battle, takes 1 ddmage every 4 steps. |
+| Poison | PSN | Inflicts 1/8th total HP each turn. Outside of battle, takes 1 damage every 4 steps. |
 | Badly Poison | BPS | starts doing 1/16th max HP, adds 1/16th to damage each turn. Becomes regular poison once battle ends. |
 | Sleep | SLP | Sleep stops a monster from using moves for a random amount of turns, from 1-7. Self inflicted sleep is always 2 turns. |
 
-No status flag for Volitile statuses, and they are not necesassary mutually exclusive. Volitile status can exist alongside a single Non-Volitile status.
+No status flag for Volatile statuses, and they are not necesassary mutually exclusive. Volatile status can exist alongside a single Non-Volatile status.
 
-Volitile
+Volatile
 | Name | Effect |
 | ---- | ------ |
 | Ability Change | Ability temporarily changes into another one |
@@ -773,9 +773,9 @@ Volitile
 | Type Change | Monster's type changes temporarily |
 | Mimic | Move is temporarily replaced by opponent's last used move |
 | Substitute | User loses 1/4 of their HP to make a substitute that will take incoming attacks until it breaks. |
-| Tranformed | Turns monster into target monster |
+| Transformed | Turns monster into target monster |
 | Illusion | Appears as the last monster in the opponent's party. Cosmetic only |
-| Bound | Target cannot switch of flee. 1/16th max HP per turn. Duration is 2-5 turns | 
+| Bound | Target cannot switch or flee. 1/16th max HP per turn. Duration is 2-5 turns | 
 | Curse | Takes damage equal to 1/4 max HP per turn |
 | Nightmare | Only affect sleeping monsters. loses 1/4th max HP per turn |
 | Perish Song | After three turns, monster faints. |
@@ -789,7 +789,7 @@ Volitile
 | Magnetic Levitation | Immune to ground type moves for five turns |
 | Telekinesis | Immune to ground type moves for three turns |
 | Aqua Ring | Restores 1/16th Max HP each turn |
-| Rooting | Restors 1/16th Max HP per turn, but cannot flee or switch out | 
+| Rooting | Restores 1/16th Max HP per turn, but cannot flee or switch out | 
 | Laser Focus | Until the end of next turn, moves will crit |
 | Taking Aim | Accuracy of next damage dealing move is 100% | 
 | Drowsy | Monster will fall asleep next turn |
@@ -805,7 +805,7 @@ Volitile
 | Taunt | Cannot use non-damaging moves for 2-4 turns |
 | Throat Chop | Cannot use sound based moves for 2 turns |
 | Torment | Cannot use the same move twice in a row |
-| Confusion | Will sometimes do a self damging attack |
+| Confusion | Will sometimes do a self damaging attack |
 | Infatuation | Cannot use moves 50% of the time. Will remain infatuated until casting monster is removed from the field |
 | Getting Pumped | Increases crit chance by one stage |
 | Guard Split | Averages user and target's Defense and Sp. Defense |
