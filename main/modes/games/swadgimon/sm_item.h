@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 // Bag pocket an item is stored in
-enum {
+typedef enum {
     POCKET_ITEMS,
     POCKET_KEY_ITEMS,
     POCKET_BALLS,
@@ -13,7 +13,7 @@ enum {
 } pocket_t;
 
 // Definitions of items
-struct {
+typedef struct {
     char* name;
     char* description;
     pocket_t pocket;

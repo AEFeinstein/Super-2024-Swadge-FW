@@ -11,7 +11,7 @@
 #define NUM_MOVES_PER_MONSTER 4
 
 #define MAX_TRAINER_NAME_LEN 15
-// Always need to store at least the player's name and the rival's name
+// Always need to store at least the player's name and the rival's name, and we waste a name's worth of bytes for index 0 to signify no name
 #define MIN_TRAINER_NAMES 3
 #define TRAINER_NAME_IDX_NONE 0
 #define TRAINER_NAME_IDX_PLAYER 1
@@ -20,6 +20,8 @@
 #define MAX_MONSTER_NAME_LEN 15
 #define MIN_MONSTER_NAMES 1
 #define MONSTER_NAME_IDX_NONE 0
+
+#define MAX_LEVEL 100
 
 #define MAX_IV 31
 #define MAX_EV 252
@@ -38,8 +40,10 @@
 #define GENDER_RATIO_GENDERLESS 255
 
 // Chance of a monster being shiny is 1 in N
-#define SHINY_DIVISOR 1000
+#define SHINY_DIVISOR 1024
 
 #define STARTING_MONEY 2000
+
+#define MAX_ERROR_LEN 128
 
 #endif

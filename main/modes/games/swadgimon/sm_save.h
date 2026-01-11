@@ -3,6 +3,7 @@
 
 #include "sm_constants.h"
 #include "sm_monster.h"
+#include "sm_names.h"
 #include "sm_player.h"
 
 #define CURRENT_SAVE_FORMAT 0
@@ -11,33 +12,30 @@
 // Number of digits to use for box IDs in NVS keys. Includes null character
 #define INDEXED_KEY_SUFFIX_LEN 4
 
-static const char sm_namespace_key[] = "sm";
-static const char sm_save_fixed_key[] = "save_fixed";
-static const char sm_save_monster_box_key_prefix[] = "box_";
-static const char sm_save_monster_box_party_key_suffix[] = "party";
-static const char sm_save_monster_box_daycare_key_suffix[] = "daycare";
-static const char sm_save_trainer_names_key[] = "names_trainer";
-static const char sm_save_monster_names_key[] = "names_monster";
-
-struct {
+typedef struct {
     // Do not change the order or size of members in this struct
     uint8_t saveFormat;
     uint8_t numMonsters;
     uint16_t monsterLength;
 } monster_box_header_t;
 
-struct {
-    // Do not change the order or size of members in this struct
-    uint8_t saveFormat;
-    uint8_t nameLength;
-    uint16_t numNames;
-} names_header_t;
+typedef struct {
+    uint32_t trainerId;
+    uint16_t numReferences;
+} trainer_name_header_t;
 
-struct {
+typedef struct {
     uint8_t saveFormat;
     
-    player_t player;
+    bool isFemale;
+    uint16_t trainerId;
+    uint32_t money;
+    int64_t timePlayed;
     
+    monster_instance_party_data_t partyExtraData[PARTY_SIZE];
+} save_data_fixed_t;
+
+typedef struct {
     monster_instance_t party[PARTY_SIZE];
     monster_instance_party_data_t partyExtraData[PARTY_SIZE];
     
@@ -46,7 +44,7 @@ struct {
     monster_instance_t daycare[NUM_MONSTERS_IN_DAYCARE];
     
     dex_species_t dex[NUM_MONSTERS];
-} save_data_fixed_t;
+} save_data_loaded_t;
 
 // TODO: copy function prototypes from .c file
 
