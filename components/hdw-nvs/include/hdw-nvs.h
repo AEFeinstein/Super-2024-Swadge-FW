@@ -3,7 +3,7 @@
  * \section nvs_design Design Philosophy
  *
  * The hdw-nvs component is a convenience wrapper for the IDF's <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.1/esp32s2/api-reference/storage/nvs_flash.html">Non-volatile
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-reference/storage/nvs_flash.html">Non-volatile
  * Storage Library</a>. Non-volatile storage (NVS) library is designed to store key-value pairs in flash.
  *
  * The goal is to make reading and writing integer and blob values easy and simple for Swadge modes.
@@ -49,6 +49,7 @@
 #include <stddef.h>
 
 #include "nvs.h"
+#include "linked_list.h"
 
 //==============================================================================
 // Defines
@@ -80,4 +81,6 @@ bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t* outEntryInfos
 bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nvs_entry_info_t* outEntryInfos,
                                 size_t* numEntryInfos);
 bool nvsNamespaceInUse(const char* namespace);
+void getNvsKeys(const char* namespace, list_t* list);
+
 #endif

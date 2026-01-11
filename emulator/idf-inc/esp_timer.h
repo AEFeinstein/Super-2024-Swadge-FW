@@ -291,14 +291,14 @@ extern "C"
      *
      * where:
      *
-     * name — timer name (if CONFIG_ESP_TIMER_PROFILING is defined), or timer pointer
-     * period — period of timer, in microseconds, or 0 for one-shot timer
+     * name - timer name (if CONFIG_ESP_TIMER_PROFILING is defined), or timer pointer
+     * period - period of timer, in microseconds, or 0 for one-shot timer
      * alarm - time of the next alarm, in microseconds since boot, or 0 if the timer
      *         is not started
      *
      * The following fields are printed if CONFIG_ESP_TIMER_PROFILING is defined:
      *
-     * times_armed — number of times the timer was armed via esp_timer_start_X
+     * times_armed - number of times the timer was armed via esp_timer_start_X
      * times_triggered - number of times the callback was called
      * total_callback_run_time - total time taken by callback to execute, across all calls
      *
@@ -336,3 +336,9 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
+typedef uint32_t TickType_t;
+#define CONFIG_FREERTOS_HZ 100
+#define configTICK_RATE_HZ CONFIG_FREERTOS_HZ
+#define portTICK_PERIOD_MS ( ( TickType_t ) 1000 / configTICK_RATE_HZ )
+void vTaskDelay( const TickType_t xTicksToDelay );

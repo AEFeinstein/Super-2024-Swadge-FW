@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+ <tileset firstgid="1" source="../mg-entity-tileset.tsx"/>
+ <object name="Sever Yataga" type="SwadgeLandEntity" gid="2147483805" width="96" height="71">
+  <properties>
+   <property name="type" type="int" propertytype="Swadge Land Entity Index" value="52"/>
+  </properties>
+ </object>
+</template>

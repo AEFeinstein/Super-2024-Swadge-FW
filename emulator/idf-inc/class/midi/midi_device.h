@@ -57,73 +57,39 @@
 //--------------------------------------------------------------------+
 
 // Check if midi interface is mounted
-static inline bool     tud_midi_n_mounted      (uint8_t itf) { return 0; }
+bool     tud_midi_n_mounted      (uint8_t itf);
 
 // Get the number of bytes available for reading
-static inline uint32_t tud_midi_n_available    (uint8_t itf, uint8_t cable_num) { return 0; }
+uint32_t tud_midi_n_available    (uint8_t itf, uint8_t cable_num);
 
 // Read byte stream              (legacy)
-static inline uint32_t tud_midi_n_stream_read  (uint8_t itf, uint8_t cable_num, void* buffer, uint32_t bufsize) { return 0; }
+uint32_t tud_midi_n_stream_read  (uint8_t itf, uint8_t cable_num, void* buffer, uint32_t bufsize);
 
 // Write byte Stream             (legacy)
-static inline uint32_t tud_midi_n_stream_write (uint8_t itf, uint8_t cable_num, uint8_t const* buffer, uint32_t bufsize) { return 0; }
+uint32_t tud_midi_n_stream_write (uint8_t itf, uint8_t cable_num, uint8_t const* buffer, uint32_t bufsize);
 
 // Read event packet             (4 bytes)
-static inline bool     tud_midi_n_packet_read  (uint8_t itf, uint8_t packet[4]) { return false; }
+bool     tud_midi_n_packet_read  (uint8_t itf, uint8_t packet[4]);
 
 // Write event packet            (4 bytes)
-static inline bool     tud_midi_n_packet_write (uint8_t itf, uint8_t const packet[4]) { return false; }
+bool     tud_midi_n_packet_write (uint8_t itf, uint8_t const packet[4]);
 
 //--------------------------------------------------------------------+
 // Application API (Single Interface)
 //--------------------------------------------------------------------+
-static inline bool     tud_midi_mounted      (void);
-static inline uint32_t tud_midi_available    (void);
+bool     tud_midi_mounted      (void);
+uint32_t tud_midi_available    (void);
 
-static inline uint32_t tud_midi_stream_read  (void* buffer, uint32_t bufsize);
-static inline uint32_t tud_midi_stream_write (uint8_t cable_num, uint8_t const* buffer, uint32_t bufsize);
+uint32_t tud_midi_stream_read  (void* buffer, uint32_t bufsize);
+uint32_t tud_midi_stream_write (uint8_t cable_num, uint8_t const* buffer, uint32_t bufsize);
 
-static inline bool     tud_midi_packet_read  (uint8_t packet[4]);
-static inline bool     tud_midi_packet_write (uint8_t const packet[4]);
+bool     tud_midi_packet_read  (uint8_t packet[4]);
+bool     tud_midi_packet_write (uint8_t const packet[4]);
 
 //--------------------------------------------------------------------+
 // Application Callback API (weak is optional)
 //--------------------------------------------------------------------+
 void tud_midi_rx_cb(uint8_t itf);
-
-//--------------------------------------------------------------------+
-// Inline Functions
-//--------------------------------------------------------------------+
-
-static inline bool tud_midi_mounted (void)
-{
-  return tud_midi_n_mounted(0);
-}
-
-static inline uint32_t tud_midi_available (void)
-{
-  return tud_midi_n_available(0, 0);
-}
-
-static inline uint32_t tud_midi_stream_read (void* buffer, uint32_t bufsize)
-{
-  return tud_midi_n_stream_read(0, 0, buffer, bufsize);
-}
-
-static inline uint32_t tud_midi_stream_write (uint8_t cable_num, uint8_t const* buffer, uint32_t bufsize)
-{
-  return tud_midi_n_stream_write(0, cable_num, buffer, bufsize);
-}
-
-static inline bool tud_midi_packet_read (uint8_t packet[4])
-{
-  return tud_midi_n_packet_read(0, packet);
-}
-
-static inline bool tud_midi_packet_write (uint8_t const packet[4])
-{
-  return tud_midi_n_packet_write(0, packet);
-}
 
 //--------------------------------------------------------------------+
 // Internal Class Driver API

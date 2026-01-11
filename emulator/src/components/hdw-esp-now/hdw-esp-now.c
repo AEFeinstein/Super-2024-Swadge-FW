@@ -21,6 +21,13 @@
 
 #if defined(USING_WINDOWS)
     #include <WinSock2.h>
+
+    #ifdef __LP64__
+        #pragma push_macro("u_long")
+        #undef u_long
+        #define u_long __ms_u_long
+    #endif
+
 #elif defined(USING_LINUX) || defined(USING_MAC)
     #include <sys/socket.h> // for socket(), connect(), sendto(), and recvfrom()
     #include <arpa/inet.h>  // for sockaddr_in and inet_addr()
@@ -35,6 +42,8 @@
 #include "esp_wifi.h"
 #include "esp_log.h"
 #include "emu_main.h"
+
+#include "p2pConnection.h"
 
 //==============================================================================
 // Defines
@@ -150,6 +159,22 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
 }
 
 /**
+ * @brief
+ */
+void powerDownEspNow(void)
+{
+    WARN_UNIMPLEMENTED();
+}
+
+/**
+ * @brief
+ */
+void powerUpEspNow(void)
+{
+    WARN_UNIMPLEMENTED();
+}
+
+/**
  * Start wifi and use it for communication
  */
 esp_err_t espNowUseWireless(void)
@@ -164,9 +189,32 @@ esp_err_t espNowUseWireless(void)
  * @param crossoverPins true to crossover the rx and tx pins, false to use them
  *                      as normal.
  */
-void espNowUseSerial(bool crossoverPins)
+esp_err_t espNowUseSerial(bool crossoverPins)
 {
     // Do nothing
+    return ESP_OK;
+}
+
+/**
+ * @brief
+ *
+ * @return esp_err_t
+ */
+esp_err_t espNowPreLightSleep(void)
+{
+    // Do nothing
+    return ESP_OK;
+}
+
+/**
+ * @brief
+ *
+ * @return esp_err_t
+ */
+esp_err_t espNowPostLightSleep(void)
+{
+    // Do nothing
+    return ESP_OK;
 }
 
 /**
@@ -189,7 +237,7 @@ void checkEspNowRxQueue(void)
         {
             // Make sure the MAC differs from our own
             uint8_t ourMac[6] = {0};
-            esp_wifi_get_mac(WIFI_IF_STA, ourMac);
+            getMacAddrNvs(ourMac);
             if (0 != memcmp(recvMac, ourMac, sizeof(ourMac)))
             {
                 // Set up the receive info
@@ -228,7 +276,7 @@ void espNowSend(const char* data, uint8_t dataLen)
     // Tack on ESP-NOW header and randomized MAC address
     char espNowPacket[dataLen + 24];
     uint8_t mac[6] = {0};
-    esp_wifi_get_mac(WIFI_IF_STA, mac);
+    getMacAddrNvs(mac);
     sprintf(espNowPacket, "ESP_NOW-%02X%02X%02X%02X%02X%02X-", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     int hdrLen = strlen(espNowPacket);
     memcpy(&espNowPacket[hdrLen], data, dataLen);

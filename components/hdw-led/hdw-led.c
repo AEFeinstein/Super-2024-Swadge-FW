@@ -6,6 +6,7 @@
 #include <esp_rom_gpio.h>
 #include <soc/gpio_sig_map.h>
 #include <string.h>
+#include <driver/gpio.h>
 
 #include "led_strip_encoder.h"
 #include "hdw-led.h"
@@ -21,10 +22,12 @@
 // Variables
 //==============================================================================
 
-static rmt_channel_handle_t led_chan        = NULL;
-static rmt_encoder_handle_t led_encoder     = NULL;
-static uint8_t ledBrightness                = 0;
-static led_t localLeds[CONFIG_NUM_LEDS + 1] = {0};
+static rmt_channel_handle_t led_chan           = NULL;
+static rmt_encoder_handle_t led_encoder        = NULL;
+static uint8_t ledBrightness                   = 0;
+static led_t currentLeds[CONFIG_NUM_LEDS]      = {0};
+static led_t prePowerDownLeds[CONFIG_NUM_LEDS] = {0};
+static led_t dimmedLeds[CONFIG_NUM_LEDS]       = {0};
 
 //==============================================================================
 // Functions
@@ -60,6 +63,16 @@ esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt, uint8_t brightness)
 
     if (GPIO_NUM_NC != gpioAlt)
     {
+        /* Initialize the GPIO of mirrored LED pin */
+        gpio_config_t mirror_gpio_config = {
+            .mode         = GPIO_MODE_OUTPUT,
+            .pin_bit_mask = 1ULL << gpioAlt,
+            .pull_up_en   = GPIO_PULLUP_ENABLE,
+            .pull_down_en = GPIO_PULLDOWN_DISABLE,
+            .intr_type    = GPIO_INTR_DISABLE,
+        };
+        ESP_ERROR_CHECK(gpio_config(&mirror_gpio_config));
+
         // Mirror the output to another GPIO
         // Warning, this is a hack!! led_chan is a (rmt_channel_handle_t), which is
         // really a (rmt_channel_t *), and that struct has a private definition in
@@ -82,6 +95,37 @@ esp_err_t deinitLeds(void)
     ESP_ERROR_CHECK(rmt_del_encoder(led_encoder));
     ESP_ERROR_CHECK(rmt_del_channel(led_chan));
     return ESP_OK;
+}
+
+/**
+ * @brief Power down the LEDs
+ */
+void powerDownLed(void)
+{
+    // Save LED state
+    memcpy(prePowerDownLeds, currentLeds, sizeof(currentLeds));
+
+    // Turn LEDs off
+    led_t leds[CONFIG_NUM_LEDS] = {0};
+    setLeds(leds, CONFIG_NUM_LEDS);
+
+    // Flush the transaction to not glitch
+    flushLeds();
+
+    // Disable RMT
+    ESP_ERROR_CHECK(rmt_disable(led_chan));
+}
+
+/**
+ * @brief Power up the LEDs
+ */
+void powerUpLed(void)
+{
+    // Enable RMT
+    ESP_ERROR_CHECK(rmt_enable(led_chan));
+
+    // Restore LEDs
+    setLeds(prePowerDownLeds, CONFIG_NUM_LEDS);
 }
 
 /**
@@ -111,65 +155,34 @@ esp_err_t setLeds(led_t* leds, uint8_t numLeds)
     };
 
     // Make sure to not overflow
-    if (numLeds > CONFIG_NUM_LEDS + 1)
+    if (numLeds > CONFIG_NUM_LEDS)
     {
-        numLeds = CONFIG_NUM_LEDS + 1;
+        numLeds = CONFIG_NUM_LEDS;
     }
+
+    // Save LED values
+    memcpy(currentLeds, leds, sizeof(led_t) * numLeds);
 
     // Fill a local copy of LEDs with brightness applied
     for (uint8_t i = 0; i < numLeds; i++)
     {
-        localLeds[i].r = (leds[i].r >> ledBrightness);
-        localLeds[i].g = (leds[i].g >> ledBrightness);
-        localLeds[i].b = (leds[i].b >> ledBrightness);
-    }
-
-    // If all eight LEDs are being set, but not the 9th
-    if (CONFIG_NUM_LEDS == numLeds)
-    {
-        // Set the 9th LED to the average of the 6th, 7th, and 8th
-        int32_t avgR = 0;
-        int32_t avgG = 0;
-        int32_t avgB = 0;
-        for (int32_t lIdx = 5; lIdx < 8; lIdx++)
-        {
-            avgR += leds[lIdx].r;
-            avgG += leds[lIdx].g;
-            avgB += leds[lIdx].b;
-        }
-        localLeds[CONFIG_NUM_LEDS].r = (avgR / 3) >> ledBrightness;
-        localLeds[CONFIG_NUM_LEDS].g = (avgG / 3) >> ledBrightness;
-        localLeds[CONFIG_NUM_LEDS].b = (avgB / 3) >> ledBrightness;
-
-        // Set the 9th LED too
-        numLeds = CONFIG_NUM_LEDS + 1;
+        dimmedLeds[i].r = (leds[i].r >> ledBrightness);
+        dimmedLeds[i].g = (leds[i].g >> ledBrightness);
+        dimmedLeds[i].b = (leds[i].b >> ledBrightness);
     }
 
     // Write RGB values to LEDs
-    return rmt_transmit(led_chan, led_encoder, (uint8_t*)localLeds, numLeds * sizeof(led_t), &tx_config);
+    return rmt_transmit(led_chan, led_encoder, (uint8_t*)dimmedLeds, numLeds * sizeof(led_t), &tx_config);
 }
 
 /**
- * @brief Write the current LED state into the given array
+ * @brief Return a pointer to the current LED state, always of length `CONFIG_NUM_LEDS`
  *
- * @param[out] leds The LED array to write the state into
- * @param numLeds The maximum number of LEDs to write
- * @return uint8_t The number of LEDs actually written to the array
+ * @return A pointer to the current LED state
  */
-uint8_t getLedState(led_t* leds, uint8_t numLeds)
+const led_t* getLedState(void)
 {
-    if (NULL != leds && numLeds > 0)
-    {
-        if (numLeds > CONFIG_NUM_LEDS + 1)
-        {
-            numLeds = CONFIG_NUM_LEDS + 1;
-        }
-
-        memcpy(leds, localLeds, sizeof(led_t) * numLeds);
-        return numLeds;
-    }
-
-    return 0;
+    return currentLeds;
 }
 
 /**

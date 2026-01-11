@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Swadge Emulator
+GenericName=Swadge Emulator
+Comment=Emulate the MAGFest Swadge
+Exec=$ROOT/bin/swadge_emulator %U
+Terminal=false
+Type=Application
+StartupNotify=true
+MimeType=audio/midi;audio/x-midi;
+Icon=$ROOT/share/icons/SwadgeEmulator/icon.png
+Categories=Game;Emulator;AudioVideo;Audio;Midi;Player;Development;

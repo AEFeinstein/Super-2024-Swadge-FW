@@ -131,7 +131,7 @@
  * }
  * \endcode
  *
- * The ::swadgeMode_t should be declared as \c extern in a header file so that it can be referenced in the main menu
+ * The ::swadgeMode_t should be declared as \c extern in a header file so that it can be referenced in other modes.
  * \code{.c}
  * #ifndef _DEMO_MODE_H_
  * #define _DEMO_MODE_H_
@@ -143,19 +143,18 @@
  * #endif
  * \endcode
  *
- * Add the mode to the menu initializer in mainMenuEnterMode():
+ * Add the   modeIncludeList.h:
  * \code{.c}
  * #include "demoMode.h"
- *
- * addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
  * \endcode
  *
- * Add the mode to the selector logic in mainMenuCb():
+ * Add the mode to the menu initializer and mode list in modeIncludeList.c:
  * \code{.c}
- * else if (label == demoMode.modeName)
- * {
- *     switchToSwadgeMode(&demoMode);
- * }
+ * // add the following to the allSwadgeModes array, make sure to seperate by a comma
+ * &demoMode
+ *
+ * // In modeListSetMenu(). Add to the appropriate section.
+ * addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
  * \endcode
  */
 
@@ -169,12 +168,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
+
+// Useful ESP things
+#include <esp_heap_caps.h>
+#include <esp_log.h>
+#include <esp_random.h>
 
 // Hardware interfaces
 #include "crashwrap.h"
 #include "hdw-imu.h"
 #include "hdw-battmon.h"
 #include "hdw-btn.h"
+#include "hdw-ch32v003.h"
 #include "hdw-dac.h"
 #include "hdw-esp-now.h"
 #include "hdw-led.h"
@@ -193,6 +199,7 @@
 #include "fill.h"
 #include "menu.h"
 #include "menuManiaRenderer.h"
+#include "menuMegaRenderer.h"
 
 // Asset loaders
 #include "cnfs.h"
@@ -214,6 +221,10 @@
 #include "touchUtils.h"
 #include "vectorFl2d.h"
 #include "geometryFl.h"
+#include "imu_utils.h"
+#include "swadgePass.h"
+#include "trophy.h"
+#include "helpPages.h"
 
 // Sound utilities
 #include "soundFuncs.h"
@@ -221,15 +232,18 @@
 #include "midiPlayer.h"
 
 #define EXIT_TIME_US 1000000
-/// @brief the default time between drawn frames, in microseconds
-#define DEFAULT_FRAME_RATE_US 40000
+/// @brief the default time between drawn frames, in microseconds (40FPS)
+#define DEFAULT_FRAME_RATE_US (1000000 / 40)
+
+// Forward declaration
+struct swadgePassPacket;
 
 /**
  * @struct swadgeMode_t
  * @brief A struct of all the function pointers necessary for a swadge mode. If a mode does not need a particular
  * function, for example it doesn't do audio handling, it is safe to set the pointer to NULL. It just won't be called.
  */
-typedef struct
+typedef struct swadgeMode
 {
     /**
      * @brief This swadge mode's name, used in menus. This is not a function pointer.
@@ -303,7 +317,7 @@ typedef struct
      * @param w the width of the rectangle to be updated
      * @param h the height of the rectangle to be updated
      * @param up update number
-     * @param numUp update number denominator
+     * @param upNum update number denominator
      */
     void (*fnBackgroundDrawCallback)(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
@@ -343,16 +357,43 @@ typedef struct
      * globalMidiPlayerFillBuffer() will be used instead to fill sample buffers
      */
     fnDacCallback_t fnDacCb;
+
+    /**
+     * @brief This function is called to fill in a SwadgePass packet with mode-specific data. The Swadge mode should
+     * only fill in it's relevant data and not touch other mode's data.
+     *
+     * @warning This function will be called when the mode is not initialized or running, so it MUST NOT rely on memory
+     * allocated or data loaded in the mode's initializer.
+     *
+     * @param packet The packet to fill in
+     */
+    void (*fnAddToSwadgePassPacket)(struct swadgePassPacket* packet);
+
+    /**
+     * @brief A struct with the settings and data required for trophy behavior. Set to NULL for no trophies
+     */
+    const trophyDataList_t* trophyData;
 } swadgeMode_t;
 
 bool checkButtonQueueWrapper(buttonEvt_t* evt);
 
-void switchToSwadgeMode(swadgeMode_t* mode);
+void switchToSwadgeMode(const swadgeMode_t* mode);
 void softSwitchToPendingSwadge(void);
 
 void deinitSystem(void);
 
 void openQuickSettings(void);
 void setFrameRateUs(uint32_t newFrameRateUs);
+uint32_t getFrameRateUs(void);
+
+void switchToSpeaker(void);
+void switchToMicrophone(void);
+
+void powerDownPeripherals(void);
+void powerUpPeripherals(void);
+
+// Getters
+font_t* getSysFont(void);
+midiFile_t* getSysSound(void);
 
 #endif

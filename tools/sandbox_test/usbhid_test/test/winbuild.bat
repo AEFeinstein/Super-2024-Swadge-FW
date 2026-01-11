@@ -1,0 +1,1 @@
+tcc hidtest.c C:/windows/system32/setupapi.dll

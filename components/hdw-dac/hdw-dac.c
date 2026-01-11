@@ -5,7 +5,6 @@
 #include <inttypes.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
-#include "driver/dac_continuous.h"
 #include "hdw-dac.h"
 
 //==============================================================================
@@ -22,6 +21,9 @@
 /** The handle created for the DAC */
 static dac_continuous_handle_t dac_handle = NULL;
 
+/** Keep track of if the DAC is writing or not */
+static bool dacWriting = false;
+
 /** A queue to move dac_event_data_t from the interrupt to the main loop*/
 static QueueHandle_t dacIsrQueue = NULL;
 
@@ -30,6 +32,9 @@ static fnDacCallback_t dacCb = NULL;
 
 /** A temporary buffer for the application to fill with audio samples before */
 static uint8_t tmpDacBuf[DAC_BUF_SIZE] = {0};
+
+/** The GPIO which controls amplifier shutdown */
+static gpio_num_t shdnGpio;
 
 //==============================================================================
 // Functions
@@ -62,37 +67,52 @@ static bool IRAM_ATTR dac_on_convert_done_callback(dac_continuous_handle_t handl
 /**
  * @brief Initialize the DAC
  *
+ * @param channel The output channel (pin) for the ADC
+ * @param shdn_gpio The GPIO that controls the amplifier's shutdown
  * @param cb A callback function which will be called to request samples from the application
  */
-void initDac(fnDacCallback_t cb)
+void initDac(dac_channel_mask_t channel, gpio_num_t shdn_gpio, fnDacCallback_t cb)
 {
-    /* Save the callback */
-    dacCb = cb;
+    // If the DAC isn't initialized
+    if (!dac_handle)
+    {
+        /* Save the callback */
+        dacCb = cb;
 
-    /* Configure the DAC */
-    dac_continuous_config_t cont_cfg = {
-        .chan_mask = DAC_CHANNEL_MASK_CH0,   // This is GPIO_NUM_17
-        .desc_num  = DMA_DESCRIPTORS,        // The number of DMA descriptors
-        .buf_size  = DAC_BUF_SIZE,           // The size of each MDA buffer
-        .freq_hz   = DAC_SAMPLE_RATE_HZ,     // The frequency of DAC conversion
-        .offset    = 0,                      // DC Offset automatically applied
-        .clk_src   = DAC_DIGI_CLK_SRC_APB,   // DAC_DIGI_CLK_SRC_APB is 77hz->MHz and always available
+        /* Configure the DAC */
+        dac_continuous_config_t cont_cfg = {
+            .chan_mask = channel,            // DAC_CHANNEL_MASK_CH0 is GPIO_NUM_17, DAC_CHANNEL_MASK_CH1 is GPIO_NUM_18
+            .desc_num  = DMA_DESCRIPTORS,    // The number of DMA descriptors
+            .buf_size  = DAC_BUF_SIZE,       // The size of each MDA buffer
+            .freq_hz   = DAC_SAMPLE_RATE_HZ, // The frequency of DAC conversion
+            .offset    = 0,                  // DC Offset automatically applied
+            .clk_src   = DAC_DIGI_CLK_SRC_APB, // DAC_DIGI_CLK_SRC_APB is 77hz->MHz and always available
                                              // DAC_DIGI_CLK_SRC_APLL is 6Hz -> MHz but may be used by other peripherals
-        .chan_mode = DAC_CHANNEL_MODE_SIMUL, // Doesn't matter for single channel output
-    };
+            .chan_mode = DAC_CHANNEL_MODE_SIMUL, // Doesn't matter for single channel output
+        };
 
-    /* Allocate continuous channels */
-    ESP_ERROR_CHECK(dac_continuous_new_channels(&cont_cfg, &dac_handle));
+        /* Allocate continuous channels */
+        ESP_ERROR_CHECK(dac_continuous_new_channels(&cont_cfg, &dac_handle));
 
-    /* Create a queue to transport the interrupt event data */
-    dacIsrQueue = xQueueCreate(DMA_DESCRIPTORS, sizeof(dac_event_data_t));
+        /* Create a queue to transport the interrupt event data */
+        dacIsrQueue = xQueueCreate(DMA_DESCRIPTORS, sizeof(dac_event_data_t));
 
-    /* Register callbacks for conversion events */
-    dac_event_callbacks_t cbs = {
-        .on_convert_done = dac_on_convert_done_callback,
-        .on_stop         = NULL,
-    };
-    ESP_ERROR_CHECK(dac_continuous_register_event_callback(dac_handle, &cbs, dacIsrQueue));
+        /* Register callbacks for conversion events */
+        dac_event_callbacks_t cbs = {
+            .on_convert_done = dac_on_convert_done_callback,
+            .on_stop         = NULL,
+        };
+        ESP_ERROR_CHECK(dac_continuous_register_event_callback(dac_handle, &cbs, dacIsrQueue));
+
+        /* Initialize the GPIO of shutdown pin */
+        shdnGpio                       = shdn_gpio;
+        gpio_config_t shdn_gpio_config = {
+            .mode         = GPIO_MODE_OUTPUT,
+            .pin_bit_mask = 1ULL << shdn_gpio,
+        };
+        ESP_ERROR_CHECK(gpio_config(&shdn_gpio_config));
+        ESP_ERROR_CHECK(gpio_set_level(shdn_gpio, 0));
+    }
 }
 
 /**
@@ -100,15 +120,36 @@ void initDac(fnDacCallback_t cb)
  */
 void deinitDac(void)
 {
-    /* Stop the DAC */
-    dacStop();
+    if (dac_handle)
+    {
+        /* Stop the DAC */
+        dacStop();
 
-    /* Free resources */
-    ESP_ERROR_CHECK(dac_continuous_del_channels(dac_handle));
-    vQueueDelete(dacIsrQueue);
+        /* Free resources */
+        ESP_ERROR_CHECK(dac_continuous_del_channels(dac_handle));
+        dac_handle = NULL;
+        vQueueDelete(dacIsrQueue);
+        dacIsrQueue = NULL;
 
-    /* NULL the callback */
-    dacCb = NULL;
+        /* NULL the callback */
+        dacCb = NULL;
+    }
+}
+
+/**
+ * @brief Power down the DAC (speaker)
+ */
+void powerDownDac(void)
+{
+    setDacShutdown(true);
+}
+
+/**
+ * @brief Power up the DAC (speaker)
+ */
+void powerUpDac(void)
+{
+    setDacShutdown(false);
 }
 
 /**
@@ -116,9 +157,13 @@ void deinitDac(void)
  */
 void dacStart(void)
 {
-    /* Enable and start the continuous channels */
-    ESP_ERROR_CHECK(dac_continuous_enable(dac_handle));
-    ESP_ERROR_CHECK(dac_continuous_start_async_writing(dac_handle));
+    if (dac_handle && !dacWriting)
+    {
+        /* Enable and start the continuous channels */
+        ESP_ERROR_CHECK(dac_continuous_enable(dac_handle));
+        ESP_ERROR_CHECK(dac_continuous_start_async_writing(dac_handle));
+        dacWriting = true;
+    }
 }
 
 /**
@@ -126,9 +171,13 @@ void dacStart(void)
  */
 void dacStop(void)
 {
-    /* Stop and disable the continuous channels */
-    ESP_ERROR_CHECK(dac_continuous_stop_async_writing(dac_handle));
-    ESP_ERROR_CHECK(dac_continuous_disable(dac_handle));
+    if (dac_handle && dacWriting)
+    {
+        /* Stop and disable the continuous channels */
+        ESP_ERROR_CHECK(dac_continuous_stop_async_writing(dac_handle));
+        ESP_ERROR_CHECK(dac_continuous_disable(dac_handle));
+        dacWriting = false;
+    }
 }
 
 /**
@@ -136,7 +185,7 @@ void dacStop(void)
  */
 void dacPoll(void)
 {
-    if (NULL != dacIsrQueue)
+    if (dac_handle && dacIsrQueue && dacWriting)
     {
         /* If there is an event to receive, receive it */
         dac_event_data_t evt_data;
@@ -151,5 +200,24 @@ void dacPoll(void)
                                                 tmpDacBuf, evt_data.buf_size, &loaded_bytes);
             /* assume loaded_bytes == DAC_BUF_SIZE */
         }
+    }
+}
+
+/**
+ * @brief Set the shutdown state of the DAC
+ *
+ * @param shutdown true to shut down the DAC, false to enable it
+ */
+void setDacShutdown(bool shutdown)
+{
+    if (shutdown)
+    {
+        dacStop();
+        ESP_ERROR_CHECK(gpio_set_level(shdnGpio, 1));
+    }
+    else
+    {
+        ESP_ERROR_CHECK(gpio_set_level(shdnGpio, 0));
+        dacStart();
     }
 }

@@ -9,6 +9,7 @@
 #include "esp_random.h"
 #include "emu_args.h"
 #include "macros.h"
+#include "emu_main.h"
 
 #define ONE_G 256
 
@@ -56,6 +57,22 @@ esp_err_t deInitAccelerometer(void)
 {
     accelInit = false;
     return ESP_OK;
+}
+
+/**
+ * @brief
+ */
+void powerDownAccel(void)
+{
+    WARN_UNIMPLEMENTED();
+}
+
+/**
+ * @brief
+ */
+void powerUpAccel(void)
+{
+    WARN_UNIMPLEMENTED();
 }
 
 /**

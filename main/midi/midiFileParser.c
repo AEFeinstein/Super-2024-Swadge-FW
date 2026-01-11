@@ -5,6 +5,8 @@
 #include "midiFileParser.h"
 #include "midiPlayer.h"
 #include "heatshrink_helper.h"
+#include "cnfs.h"
+#include "macros.h"
 
 #include <esp_log.h>
 #include <esp_heap_caps.h>
@@ -57,6 +59,7 @@ typedef struct
 //==============================================================================
 
 static int readVariableLength(const uint8_t* data, uint32_t length, uint32_t* out);
+static int writeVariableLength(uint8_t* out, int max, uint32_t length);
 static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track);
 static bool parseMidiHeader(midiFile_t* file);
 static void readFirstEvents(midiFileReader_t* reader);
@@ -98,6 +101,43 @@ static int readVariableLength(const uint8_t* data, uint32_t length, uint32_t* ou
     *out = val;
 
     return read;
+}
+
+/**
+ * @brief Write a variable length quantity to a byte buffer
+ *
+ * @param out The buffer to write the quantity to
+ * @param max The maximum number of bytes to write
+ * @param length The quanity to write
+ * @return int
+ */
+static int writeVariableLength(uint8_t* out, int max, uint32_t quantity)
+{
+    int written = 0;
+
+    uint32_t reversed = (quantity & 0x7F);
+
+    while (0 != (quantity >>= 7))
+    {
+        reversed <<= 8;
+        reversed |= ((quantity & 0x7F) | 0x80);
+    }
+
+    while (written < max)
+    {
+        out[written++] = reversed & 0x7F;
+
+        if (reversed & 0x80)
+        {
+            reversed >>= 8;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    return written;
 }
 
 #define TRK_REMAIN() (track->track->length - (track->cur - track->track->data))
@@ -193,7 +233,7 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
             track->nextEvent.midi.status = status;
 
             // This message has two data bytes
-            // The rest of the events have 2 data bytes
+            // The rest of the events have 1 data byte
             if (TRK_REMAIN() < 2)
             {
                 ERR();
@@ -342,7 +382,7 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
                     {
                         track->nextEvent.meta.type = END_OF_TRACK;
                         track->done                = true;
-                        ESP_LOGI("MIDIParser", "End of track #%" PRIdPTR, track - reader->states);
+                        ESP_LOGD("MIDIParser", "End of track #%" PRIdPTR, track - reader->states);
                         break;
                     }
 
@@ -454,6 +494,7 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
 
                     case PROPRIETARY:
                     {
+                        track->nextEvent.meta.type = PROPRIETARY;
                         track->nextEvent.meta.data = track->cur;
                         break;
                     }
@@ -476,26 +517,6 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
                 // A sysex event in a MIDI file is different from one in streaming mode (i.e. USB), because there is no
                 // length byte transmitted in streaming mode, so we need to check the manufacturer length there
 
-                // TODO: Move this to the streaming parser
-                /*
-                // We'll need to read at least one more byte
-                //if (!TRK_REMAIN()) { ERR(); }
-                uint16_t manufacturer = *(track->cur++);
-                if (!manufacturer)
-                {
-                    if (TRK_REMAIN() < 2) { ERR(); }
-                    // A manufacturer ID of 0 means the ID is actually in the next 2 bytes
-                    manufacturer = *(track->cur++);
-                    manufacturer <<= 7;
-                    manufacturer |= *(track->cur++);
-                }
-                else
-                {
-                    // Technically 0x00 0x00 0x41 is considered a different manufacturer from the single-byte value 0x41
-                    // So in that case just put a 1 in the 15th bit that's otherwise unused
-                    manufacturer |= (1 << 15);
-                }*/
-
                 uint32_t sysexLength;
                 read = readVariableLength(track->cur, TRK_REMAIN(), &sysexLength);
                 if (!read)
@@ -514,10 +535,38 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
                 track->nextEvent.sysex.data   = track->cur;
                 // If the status is 0xF0, the 0xF0 should be prefixed to the data.
                 track->nextEvent.sysex.prefix = (status == 0xF0) ? 0xF0 : 0x00;
-                // TODO
-                track->nextEvent.sysex.manufacturerId = 0;
 
-                track->cur += sysexLength;
+                // Store the pointer to the end of data so we don't need to do math later
+                const uint8_t* sysexEnd = (track->cur + sysexLength);
+
+                // TODO: Move this to the streaming parser
+                // We'll need to read at least one more byte
+                if (!TRK_REMAIN())
+                {
+                    ERR();
+                }
+                uint16_t manufacturer = *(track->cur++);
+                if (!manufacturer)
+                {
+                    if (TRK_REMAIN() < 2)
+                    {
+                        ERR();
+                    }
+                    // A manufacturer ID of 0 means the ID is actually in the next 2 bytes
+                    manufacturer = *(track->cur++);
+                    manufacturer <<= 7;
+                    manufacturer |= *(track->cur++);
+                }
+                else
+                {
+                    // Technically 0x00 0x00 0x41 is considered a different manufacturer from the single-byte value 0x41
+                    // So in that case just put a 1 in the 15th bit that's otherwise unused
+                    manufacturer |= (1 << 15);
+                }
+
+                track->nextEvent.sysex.manufacturerId = manufacturer;
+
+                track->cur = sysexEnd;
             }
             else
             {
@@ -557,6 +606,7 @@ static bool parseMidiHeader(midiFile_t* file)
     if (file->length < (8 + 6))
     {
         ESP_LOGE("MIDIParser", "Not a MIDI file! Length insufficient for header");
+        return false;
     }
 
     // I mean, offset should be 0
@@ -574,6 +624,9 @@ static bool parseMidiHeader(midiFile_t* file)
 
     offset += 4;
 
+    // Save the start of the header chunk data
+    uint8_t* ptr = file->data + offset;
+
     uint16_t format = (file->data[offset] << 8) | file->data[offset + 1];
     offset += 2;
 
@@ -588,7 +641,7 @@ static bool parseMidiHeader(midiFile_t* file)
     uint16_t trackChunkCount = (file->data[offset] << 8) | file->data[offset + 1];
     offset += 2;
     file->trackCount = trackChunkCount;
-    file->tracks     = calloc(trackChunkCount, sizeof(midiTrack_t));
+    file->tracks     = heap_caps_calloc_tag(trackChunkCount, sizeof(midiTrack_t), MALLOC_CAP_SPIRAM, "tracks");
     if (NULL == file->tracks)
     {
         ESP_LOGE("MIDIParser", "Could not allocate data for MIDI file with %" PRIu16 " tracks", trackChunkCount);
@@ -634,12 +687,11 @@ static bool parseMidiHeader(midiFile_t* file)
         file->timeDivision           = ticksPerQuarterNote;
     }
 
-    // TODO: Actually do something with the timing info
-
     // Skip anything extra that might be in the header
-    if (offset < chunkLen)
+    if (offset < (ptr - file->data) + chunkLen)
     {
-        offset = chunkLen - (sizeof(midiHeader) + 4);
+        ESP_LOGW("MIDIParser", "Improper MIDI file header; length is %" PRIu32 " when it should be 6", chunkLen);
+        offset = (ptr - file->data) + chunkLen;
         if (offset >= file->length)
         {
             ESP_LOGE("MIDIParser", "Header length exceeds data length");
@@ -654,7 +706,7 @@ static bool parseMidiHeader(midiFile_t* file)
     }
 
     // Current offset should be at the next track
-    uint8_t* ptr = file->data + offset;
+    ptr = file->data + offset;
 
     // Regardless, if there are multiple tracks we want to grab pointers to them all
     int i = 0;
@@ -743,13 +795,10 @@ static void readFirstEvents(midiFileReader_t* reader)
     }
 }
 
-bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
+bool loadMidiData(uint8_t* data, size_t size, midiFile_t* file)
 {
-    uint32_t size;
-    uint8_t* data = readHeatshrinkFile(name, &size, spiRam);
     if (data != NULL)
     {
-        ESP_LOGI("MIDIFileParser", "Song %s has %" PRIu32 " bytes", name, size);
         file->data   = data;
         file->length = (uint32_t)size;
         if (parseMidiHeader(file))
@@ -762,11 +811,72 @@ bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
             if (file->tracks != NULL)
             {
                 // TODO should this be handled in the parser?
-                free(file->tracks);
-                file->tracks = NULL;
+                heap_caps_free(file->tracks);
             }
-            free(data);
+
             memset(file, 0, sizeof(midiFile_t));
+        }
+    }
+
+    return false;
+}
+
+bool loadMidiFile(cnfsFileIdx_t fIdx, midiFile_t* file, bool spiRam)
+{
+    uint32_t size;
+    size_t raw_size;
+    uint8_t* data = cnfsReadFile(fIdx, &raw_size, spiRam);
+
+    if (NULL != data)
+    {
+        if (raw_size < sizeof(midiHeader) || memcmp(data, midiHeader, sizeof(midiHeader)))
+        {
+            // This is not a MIDI file! Try to decompress
+            if (heatshrinkDecompress(NULL, &size, data, (uint32_t)raw_size))
+            {
+                // Size was read successfully, allocate the non-compressed buffer
+#ifndef __XTENSA__
+                char tag[32];
+                sprintf(tag, "cnfsIdx %d", fIdx);
+#endif
+                uint8_t* decompressed = heap_caps_malloc_tag(size, spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, tag);
+                if (decompressed && heatshrinkDecompress(decompressed, &size, data, (uint32_t)raw_size))
+                {
+                    // Success, free the raw data
+                    heap_caps_free(data);
+                    data = decompressed;
+                }
+                else
+                {
+                    heap_caps_free(decompressed);
+                    heap_caps_free(data);
+                    return false;
+                }
+            }
+            else
+            {
+                ESP_LOGE("MIDIFileParser", "Song %d could not be decompressed!", fIdx);
+                heap_caps_free(data);
+                return false;
+            }
+        }
+        else
+        {
+            ESP_LOGI("MIDIFileParser", "Song %d is loaded uncompressed", fIdx);
+            size = (uint32_t)raw_size;
+        }
+    }
+
+    if (data != NULL)
+    {
+        ESP_LOGI("MIDIFileParser", "Song %d has %" PRIu32 " bytes", fIdx, size);
+        if (loadMidiData(data, size, file))
+        {
+            return true;
+        }
+        else
+        {
+            heap_caps_free(data);
             return false;
         }
     }
@@ -778,14 +888,20 @@ bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
 
 void unloadMidiFile(midiFile_t* file)
 {
-    free(file->tracks);
-    free(file->data);
+    if (file->tracks)
+    {
+        heap_caps_free(file->tracks);
+    }
+    if (file->data)
+    {
+        heap_caps_free(file->data);
+    }
     memset(file, 0, sizeof(midiFile_t));
 }
 
 bool initMidiParser(midiFileReader_t* reader, const midiFile_t* file)
 {
-    reader->states = calloc(file->trackCount, sizeof(midiTrackState_t));
+    reader->states = heap_caps_calloc(file->trackCount, sizeof(midiTrackState_t), MALLOC_CAP_SPIRAM);
     if (NULL == reader->states)
     {
         return false;
@@ -803,11 +919,11 @@ void midiParserSetFile(midiFileReader_t* reader, const midiFile_t* file)
 {
     if (reader->states != NULL)
     {
-        free(reader->states);
+        heap_caps_free(reader->states);
         reader->states = NULL;
     }
 
-    reader->states     = calloc(file->trackCount, sizeof(midiTrackState_t));
+    reader->states     = heap_caps_calloc(file->trackCount, sizeof(midiTrackState_t), MALLOC_CAP_SPIRAM);
     reader->stateCount = file->trackCount;
 
     // Initialize the reader's internal per-track parsing states
@@ -860,7 +976,7 @@ void deinitMidiParser(midiFileReader_t* reader)
 
     if (states != NULL)
     {
-        free(states);
+        heap_caps_free(states);
     }
 }
 
@@ -880,40 +996,41 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
     {
         midiTrackState_t* info = &reader->states[i];
 
-        if (!info->eventParsed && info->nextEvent.deltaTime != UINT32_MAX)
+        // WE ARE ASSERTING NOW
+        // The events are ALWAYS parsed!
+        // If there is no event parsed, we are done!
+        if (info->done)
         {
-            // Avoid trying and failing to parse a track we've already finished
-            if (info->done)
-            {
-                continue;
-            }
-            info->eventParsed = trackParseNext(reader, info);
+            continue;
+        }
+
+        if (!info->eventParsed)
+        {
+            info->done = true;
+            continue;
         }
 
         // Check if we either already have a parsed event waiting, or are able to parse one now
         // Short-circuiting will make sure we only parse another event when needed and permitted
         // TODO doesn't this basically do the same thing as the block above?
-        if (info->eventParsed || (info->nextEvent.deltaTime != UINT32_MAX && trackParseNext(reader, info)))
+        // info->nextEvent has now been set by trackParseNext()
+        if (!info->nextEvent.deltaTime || (reader && reader->file && reader->file->format == MIDI_FORMAT_2))
         {
-            // info->nextEvent has now been set by trackParseNext()
-            if (!info->nextEvent.deltaTime || reader->file->format == MIDI_FORMAT_2)
-            {
-                // The delta-time is 0! Just return this event immediately
-                *event = info->nextEvent;
+            // The delta-time is 0! Just return this event immediately
+            *event = info->nextEvent;
 
-                // Consume the event!
-                info->eventParsed = false;
+            // Add to the time still, since deltaTime could be non-zero
+            info->time += info->nextEvent.deltaTime;
 
-                // Add to the time still, since deltaTime could be non-zero
-                info->time += info->nextEvent.deltaTime;
-                return true;
-            }
-            else if (info->time + info->nextEvent.deltaTime < minTime)
-            {
-                // This is the most-next event, so set minTime to its time
-                minTime   = info->time + info->nextEvent.deltaTime;
-                nextTrack = info;
-            }
+            // Consume the event!
+            info->eventParsed = trackParseNext(reader, info);
+            return true;
+        }
+        else if (info->time + info->nextEvent.deltaTime < minTime)
+        {
+            // This is the most-next event, so set minTime to its time
+            minTime   = info->time + info->nextEvent.deltaTime;
+            nextTrack = info;
         }
     }
 
@@ -923,36 +1040,40 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
         return false;
     }
 
-    *event                 = nextTrack->nextEvent;
-    nextTrack->eventParsed = false;
+    *event = nextTrack->nextEvent;
     nextTrack->time += event->deltaTime;
+    nextTrack->eventParsed = trackParseNext(reader, nextTrack);
     return true;
 }
 
 void* globalMidiSave(void)
 {
-    // TODO: There are multiple allocs here, so the return value _can't_ safely be free()'d by others
-    midiSaveState_t* saveState = malloc(NUM_GLOBAL_PLAYERS * sizeof(midiSaveState_t));
+    // TODO: There are multiple allocs here, so the return value _can't_ safely be heap_caps_free()'d by others
+    midiSaveState_t* saveState = heap_caps_calloc(NUM_GLOBAL_PLAYERS, sizeof(midiSaveState_t), MALLOC_CAP_SPIRAM);
 
     for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
     {
         midiPlayer_t* player = globalMidiPlayerGet(i);
-        memcpy(&saveState[i].player, player, sizeof(midiPlayer_t));
-
-        if (player->reader.file != NULL)
+        if (NULL != player)
         {
-            saveState[i].trackCount  = player->reader.file->trackCount;
-            saveState[i].trackStates = malloc(saveState[i].trackCount * sizeof(midiTrackState_t));
+            memcpy(&saveState[i].player, player, sizeof(midiPlayer_t));
 
-            // Overwrite the copy with the newly allocated pointer, since the current one may be free'd
-            saveState[i].player.reader.states = saveState[i].trackStates;
-
-            for (int trackIdx = 0; trackIdx < saveState[i].trackCount; trackIdx++)
+            if (player->reader.file != NULL)
             {
-                const midiTrackState_t* stateOrig = &player->reader.states[trackIdx];
-                midiTrackState_t* stateCopy       = &saveState[i].trackStates[trackIdx];
+                saveState[i].trackCount = player->reader.file->trackCount;
+                saveState[i].trackStates
+                    = heap_caps_calloc(saveState[i].trackCount, sizeof(midiTrackState_t), MALLOC_CAP_SPIRAM);
 
-                memcpy(stateCopy, stateOrig, sizeof(midiTrackState_t));
+                // Overwrite the copy with the newly allocated pointer, since the current one may be free'd
+                saveState[i].player.reader.states = saveState[i].trackStates;
+
+                for (int trackIdx = 0; trackIdx < saveState[i].trackCount; trackIdx++)
+                {
+                    const midiTrackState_t* stateOrig = &player->reader.states[trackIdx];
+                    midiTrackState_t* stateCopy       = &saveState[i].trackStates[trackIdx];
+
+                    memcpy(stateCopy, stateOrig, sizeof(midiTrackState_t));
+                }
             }
         }
     }
@@ -967,12 +1088,274 @@ void globalMidiRestore(void* data)
     for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
     {
         midiPlayer_t* player = globalMidiPlayerGet(i);
-        midiPlayerReset(player);
+        if (NULL != player)
+        {
+            midiPlayerReset(player);
 
-        memcpy(player, &saveState[i].player, sizeof(midiPlayer_t));
+            memcpy(player, &saveState[i].player, sizeof(midiPlayer_t));
+        }
     }
 
     // Do not free any of the individual save state data, since it's now just the real data
     // Just free the container
-    free(data);
+    heap_caps_free(data);
+}
+
+int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
+{
+    int written = 0;
+    switch (event->type)
+    {
+        case MIDI_EVENT:
+        {
+            switch (event->midi.status & 0xF0)
+            {
+                // Two-byte statuses
+                case 0x80: // Note OFF
+                case 0x90: // Note ON
+                case 0xA0: // AfterTouch
+                case 0xB0: // Control Change
+                case 0xE0: // Pitch bend
+                {
+                    if (max > 0)
+                    {
+                        out[written++] = event->midi.status;
+                        if (max > 1)
+                        {
+                            out[written++] = event->midi.data[0];
+
+                            if (max > 2)
+                            {
+                                out[written++] = event->midi.data[1];
+                            }
+                        }
+                    }
+                    break;
+                }
+
+                // One-byte statuses
+                case 0xC0: // Program Select
+                case 0xD0: // Channel Pressure
+                {
+                    if (max > 0)
+                    {
+                        out[written++] = event->midi.status;
+
+                        if (max > 1)
+                        {
+                            out[written++] = event->midi.data[0];
+                        }
+                    }
+                    break;
+                }
+
+                default:
+                    // No other valid status bytes
+                    break;
+            }
+            break;
+        }
+
+        case META_EVENT:
+        {
+            if (written < max)
+            {
+                out[written++] = 0xFF;
+            }
+
+            if (written < max)
+            {
+                out[written++] = event->meta.type;
+            }
+
+            written += writeVariableLength(out, max - written, event->meta.length);
+
+            switch ((uint8_t)event->meta.type)
+            {
+                case SEQUENCE_NUMBER:
+                {
+                    if (event->meta.length > 0)
+                    {
+                        if (written < max)
+                        {
+                            out[written++] = (event->meta.sequenceNumber >> 8) & 0xFF;
+                            if (written < max)
+                            {
+                                out[written++] = (event->meta.sequenceNumber & 0xFF);
+                            }
+                        }
+                    }
+                    break;
+                }
+
+                // Text Events
+                case TEXT:
+                case COPYRIGHT:
+                case SEQUENCE_OR_TRACK_NAME:
+                case INSTRUMENT_NAME:
+                case LYRIC:
+                case MARKER:
+                case CUE_POINT:
+                case 0x08:
+                case 0x09:
+                case 0x0A:
+                case 0x0B:
+                case 0x0C:
+                case 0x0D:
+                case 0x0E:
+                case 0x0F:
+                {
+                    const char* strCur = event->meta.text;
+                    while (written < max && strCur < (event->meta.text + event->meta.length))
+                    {
+                        out[written++] = *(const uint8_t*)(strCur++);
+                    }
+                    break;
+                }
+
+                case CHANNEL_PREFIX:
+                case PORT_PREFIX:
+                {
+                    if (written < max)
+                    {
+                        out[written++] = event->meta.prefix;
+                    }
+                    break;
+                }
+
+                case END_OF_TRACK:
+                {
+                    // Nothing to do, this event has no data
+                    break;
+                }
+
+                case TEMPO:
+                {
+                    if (written < max)
+                    {
+                        out[written++] = (event->meta.tempo >> 16) & 0xFF;
+
+                        if (written < max)
+                        {
+                            out[written++] = (event->meta.tempo >> 8) & 0xFF;
+
+                            if (written < max)
+                            {
+                                out[written++] = (event->meta.tempo & 0xFF);
+                            }
+                        }
+                    }
+                    break;
+                }
+
+                case SMPTE_OFFSET:
+                {
+                    if (written < max)
+                    {
+                        out[written++] = event->meta.startTime.hour;
+                        if (written < max)
+                        {
+                            out[written++] = event->meta.startTime.min;
+                            if (written < max)
+                            {
+                                out[written++] = event->meta.startTime.sec;
+                                if (written < max)
+                                {
+                                    out[written++] = event->meta.startTime.frame;
+                                    if (written < max)
+                                    {
+                                        out[written++] = event->meta.startTime.frameHundredths;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
+
+                case TIME_SIGNATURE:
+                {
+                    if (written < max)
+                    {
+                        out[written++] = event->meta.timeSignature.numerator;
+                        if (written < max)
+                        {
+                            out[written++] = event->meta.timeSignature.denominator;
+                            if (written < max)
+                            {
+                                out[written++] = event->meta.timeSignature.midiClocksPerMetronomeTick;
+                                if (written < max)
+                                {
+                                    out[written++] = event->meta.timeSignature.num32ndNotesPerBeat;
+                                }
+                            }
+                        }
+                    }
+
+                    break;
+                }
+
+                case KEY_SIGNATURE:
+                {
+                    if (written < max)
+                    {
+                        if (event->meta.keySignature.flats)
+                        {
+                            out[written++] = (uint8_t)(-event->meta.keySignature.flats);
+                        }
+                        else if (event->meta.keySignature.sharps)
+                        {
+                            out[written++] = event->meta.keySignature.sharps;
+                        }
+                        else
+                        {
+                            out[written++] = 0;
+                        }
+                    }
+                    break;
+                }
+
+                case PROPRIETARY:
+                default:
+                {
+                    const uint8_t* dataCur = event->meta.data;
+                    while (written < max && dataCur < (event->meta.data + event->meta.length))
+                    {
+                        out[written++] = *dataCur++;
+                    }
+                    break;
+                }
+            }
+            break;
+        }
+
+        case SYSEX_EVENT:
+        {
+            if (written < max)
+            {
+                if (event->sysex.prefix)
+                {
+                    out[written++] = event->sysex.prefix;
+                }
+                else
+                {
+                    out[written++] = 0xF0;
+                }
+            }
+
+            const uint8_t* data = event->sysex.data;
+            while (written < max && data < event->sysex.data + event->sysex.length)
+            {
+                out[written++] = *data++;
+            }
+
+            if (written < max)
+            {
+                out[written++] = 0xF7;
+            }
+            break;
+        }
+    }
+
+    return written;
 }

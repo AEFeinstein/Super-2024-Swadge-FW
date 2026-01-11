@@ -262,12 +262,12 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
 #endif
 
     // Enable the backlight
-    setTFTBacklightBrightness(brightness);
     enableTFTBacklight();
+    setTFTBacklightBrightness(brightness);
 
     if (NULL == pixels)
     {
-        pixels = (paletteColor_t*)malloc(sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
+        pixels = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH, MALLOC_CAP_8BIT);
     }
     pFrameBuffer = pixels;
 }
@@ -285,14 +285,32 @@ void deinitTFT(void)
 
     for (int i = 0; i < NUM_S_LINES; i++)
     {
-        free(s_lines[i]);
+        heap_caps_free(s_lines[i]);
     }
-    free(pixels);
+    heap_caps_free(pixels);
+}
+
+/**
+ * @brief Turn off the backlight and put the TFT in sleep mode
+ */
+void powerDownTft(void)
+{
+    // Disable the backlight. This also puts th TFT to sleep
+    disableTFTBacklight();
+}
+
+/**
+ * @brief Wake the TFT and turn on the backlight
+ */
+void powerUpTft(void)
+{
+    // Enable the backlight. This also wakes the TFT
+    enableTFTBacklight();
 }
 
 /**
  * @brief Return the pixel framebuffer, which is (TFT_WIDTH * TFT_HEIGHT) pixels
- * in row order, starting from the top left. This can be used t directly modify
+ * in row order, starting from the top left. This can be used to directly modify
  * individual pixels without calling ::setPxTft()
  *
  * @return The pixel framebuffer

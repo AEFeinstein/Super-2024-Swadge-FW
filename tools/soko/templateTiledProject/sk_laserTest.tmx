@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="9" height="9" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="48">
+ <editorsettings>
+  <export target="sk_laserTest.bin" format="sokoMap"/>
+ </editorsettings>
+ <tileset firstgid="1" source="objLayers.tsx"/>
+ <tileset firstgid="12" name="tilesheet" tilewidth="16" tileheight="16" tilecount="64" columns="8">
+  <image source="tileSprites/tilesheet.png" width="128" height="128"/>
+  <tile id="0" type="wall"/>
+  <tile id="1" type="floor"/>
+  <tile id="2" type="goal"/>
+  <tile id="3" type="nowalkfloor"/>
+ </tileset>
+ <layer id="1" name="tiles" width="9" height="9">
+  <data encoding="csv">
+12,12,12,12,12,12,12,12,12,
+12,13,13,13,13,13,13,13,12,
+12,13,13,13,13,13,13,13,12,
+12,13,13,13,13,13,13,13,12,
+12,13,13,13,13,13,13,13,12,
+12,13,13,13,13,13,13,13,12,
+12,13,13,13,13,13,13,13,12,
+12,13,13,13,13,13,13,13,12,
+12,12,12,12,12,12,12,12,12
+</data>
+ </layer>
+ <objectgroup id="4" name="entities">
+  <object id="38" gid="7" x="16" y="128" width="16" height="16">
+   <properties>
+    <property name="emitDirection" value="RIGHT"/>
+   </properties>
+  </object>
+  <object id="39" gid="10" x="80" y="128" width="16" height="16">
+   <properties>
+    <property name="playerMove" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="40" gid="10" x="48" y="96" width="16" height="16"/>
+  <object id="41" gid="10" x="80" y="96" width="16" height="16"/>
+  <object id="42" gid="10" x="80" y="64" width="16" height="16">
+   <properties>
+    <property name="emitDirection" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="43" gid="10" x="48" y="64" width="16" height="16"/>
+  <object id="44" gid="10" x="16" y="96" width="16" height="16">
+   <properties>
+    <property name="emitDirection" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="45" gid="9" x="16" y="32" width="16" height="16">
+   <properties>
+    <property name="emitDirection" value="DOWN"/>
+   </properties>
+  </object>
+  <object id="46" gid="2" x="48" y="80" width="16" height="16"/>
+  <object id="47" gid="1" x="112" y="80" width="16" height="16">
+   <properties>
+    <property name="gamemode" value="SOKO_LASERBOUNCE"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>

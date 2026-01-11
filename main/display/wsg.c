@@ -11,12 +11,6 @@
 #include "wsg.h"
 
 //==============================================================================
-// Function Prototypes
-//==============================================================================
-
-static void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width, int16_t height);
-
-//==============================================================================
 // Functions
 //==============================================================================
 
@@ -25,12 +19,12 @@ static void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width
  * then reflection over Y axis, then reflection over X axis, then translation
  *
  * @param x The x coordinate of the pixel location to transform
- * @param y The y coordinate of the pixel location to trasform
+ * @param y The y coordinate of the pixel location to transform
  * @param rotateDeg The number of degrees to rotate clockwise, must be 0-359
  * @param width  The width of the image
  * @param height The height of the image
  */
-static void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width, int16_t height)
+void rotatePixel(int32_t* x, int32_t* y, int32_t rotateDeg, int32_t width, int32_t height)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
@@ -56,7 +50,7 @@ static void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width
     if (rotateDeg >= 270)
     {
         // (x, y) -> (y, -x)
-        int16_t tmp = wx;
+        int32_t tmp = wx;
         wx          = wy;
         wy          = 2 * tx - tmp + width - 1;
         rotateDeg -= 270;
@@ -71,7 +65,7 @@ static void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width
     else if (rotateDeg >= 90)
     {
         // (x, y) -> (-y, x)
-        int16_t tmp = wx;
+        int32_t tmp = wx;
         wx          = 2 * ty - wy + height - 1;
         wy          = tmp;
         rotateDeg -= 90;
@@ -108,7 +102,7 @@ static void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width
  * @param flipUD true to flip the image across the X axis
  * @param rotateDeg The number of degrees to rotate clockwise, must be 0-359
  */
-void drawWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool flipUD, int16_t rotateDeg)
+void drawWsg(const wsg_t* wsg, int32_t xOff, int32_t yOff, bool flipLR, bool flipUD, int32_t rotateDeg)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-08, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
@@ -131,8 +125,8 @@ void drawWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool fli
     if (rotateDeg)
     {
         SETUP_FOR_TURBO();
-        uint32_t wsgw = wsg->w;
-        uint32_t wsgh = wsg->h;
+        int32_t wsgw = wsg->w;
+        int32_t wsgh = wsg->h;
         for (int32_t srcY = 0; srcY < wsgh; srcY++)
         {
             int32_t usey = srcY;
@@ -146,30 +140,29 @@ void drawWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool fli
             const paletteColor_t* linein = &wsg->px[usey * wsgw];
 
             // Reflect over Y axis?
-            uint32_t readX    = 0;
-            uint32_t advanceX = 1;
+            int32_t readX    = 0;
+            int32_t advanceX = 1;
             if (flipLR)
             {
                 readX    = wsgw - 1;
                 advanceX = -1;
             }
 
-            int32_t localX = 0;
             for (int32_t srcX = 0; srcX != wsgw; srcX++)
             {
                 // Draw if not transparent
-                uint8_t color = linein[readX];
+                paletteColor_t color = linein[readX];
                 if (cTransparent != color)
                 {
-                    uint16_t tx = localX;
-                    uint16_t ty = srcY;
+                    int32_t tx = srcX;
+                    int32_t ty = srcY;
 
-                    rotatePixel((int16_t*)&tx, (int16_t*)&ty, rotateDeg, wsgw, wsgh);
+                    rotatePixel(&tx, &ty, rotateDeg, wsgw, wsgh);
+
                     tx += xOff;
                     ty += yOff;
                     TURBO_SET_PIXEL_BOUNDS(tx, ty, color);
                 }
-                localX++;
                 readX += advanceX;
             }
         }
@@ -253,7 +246,7 @@ void drawWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool fli
             uint32_t dstY = srcY + yOff;
 
             // It is too complicated to detect both directions and backoff correctly, so we just do this here.
-            // It does slow things down a "tiny" bit.  People in the future could optimze out this check.
+            // It does slow things down a "tiny" bit.  People in the future could optimize out this check.
             if (dstY >= TFT_HEIGHT)
             {
                 continue;
@@ -347,18 +340,15 @@ void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t x
     int dWidth                   = TFT_WIDTH;
     int dHeight                  = TFT_HEIGHT;
     int wWidth                   = wsg->w;
-    int xMax                     = CLAMP(xOff + wWidth * yScale, 0, dWidth);
+    int xMax                     = CLAMP(xOff + wWidth * xScale, 0, dWidth);
     int yMax                     = CLAMP(yOff + wsg->h * yScale, 0, dHeight);
     const paletteColor_t* linein = wsg->px;
 
     int x1;
     int y1;
 
-    int ix = 0;
-    int iy = 0;
-
     // Draw each pixel, scaled
-    for (int y = yOff; y < yMax; y += yScale, iy++)
+    for (int y = yOff, iy = 0; y < yMax && iy < wsg->h; y += yScale, iy++)
     {
         if (y >= TFT_HEIGHT)
         {
@@ -374,8 +364,7 @@ void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t x
             continue;
         }
 
-        ix = 0;
-        for (int x = xOff; x < xMax; x += xScale, ix++)
+        for (int x = xOff, ix = 0; x < xMax && ix < wsg->w; x += xScale, ix++)
         {
             if (x >= TFT_WIDTH)
             {

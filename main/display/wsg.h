@@ -17,20 +17,23 @@
  *
  * \section wsg_usage Usage
  *
- * There are three ways to draw a WSG to the display each with varying complexity and speed
+ * There are five ways to draw a WSG to the display each with varying complexity and speed
  * - drawWsg(): Draw a WSG to the display with transparency, rotation, and flipping over horizontal or vertical axes.
  * This is the slowest option.
  * - drawWsgSimple(): Draw a WSG to the display with transparency. This is the medium speed option and should be used if
  * the WSG is not rotated or flipped.
  * - drawWsgTile(): Draw a WSG to the display without transparency. Any transparent pixels will be an indeterminate
  * color. This is the fastest option, and best for background tiles or images.
+ * - drawWsgSimpleScaled():  Draw a WSG to the display with transparency at a specified scale. Scales are integer
+ * values, so 2x, 3x, 4x... are the valid options.
+ * - drawWsgSimpleHalf(): Draw a WSG to the display with transparency at half the original resolution.
  *
  * \section wsg_example Example
  *
  * \code{.c}
  * // Declare and load an image
  * wsg_t king_donut;
- * loadWsg("kid0.wsg", &king_donut, true);
+ * loadWsg(KID_0_WSG, &king_donut, true);
  *
  * // Draw the image to the display
  * drawWsg(&king_donut, 100, 100, false, false, 0);
@@ -45,6 +48,7 @@
 
 #include <stdint.h>
 #include <palette.h>
+#include <stdbool.h>
 
 /**
  * @brief A sprite using paletteColor_t colors that can be drawn to the display
@@ -56,7 +60,8 @@ typedef struct
     uint16_t h;         ///< The height of the image
 } wsg_t;
 
-void drawWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool flipUD, int16_t rotateDeg);
+void rotatePixel(int32_t* x, int32_t* y, int32_t rotateDeg, int32_t width, int32_t height);
+void drawWsg(const wsg_t* wsg, int32_t xOff, int32_t yOff, bool flipLR, bool flipUD, int32_t rotateDeg);
 void drawWsgSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff);
 void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t xScale, int16_t yScale);
 void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff);

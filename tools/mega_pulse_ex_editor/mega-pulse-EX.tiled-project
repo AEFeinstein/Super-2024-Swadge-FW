@@ -1,0 +1,228 @@
+{
+    "automappingRulesFile": "",
+    "commands": [
+    ],
+    "compatibilityVersion": 1100,
+    "extensionsPath": "extensions",
+    "folders": [
+        "."
+    ],
+    "properties": [
+    ],
+    "propertyTypes": [
+        {
+            "id": 3,
+            "name": "Mega Pulse Level Index",
+            "storageType": "int",
+            "type": "enum",
+            "values": [
+                "Level Select",
+                "Kinetic Donut Stage",
+                "Grind Pangolin Stage",
+                "Sever Yataga Stage",
+                "Trash Man Stage",
+                "Bigma Stage",
+                "Smash Gorilla Stage",
+                "Deadeye Chirpzi Stage",
+                "Drain Bat Stage",
+                "Flare Gryffyn Stage",
+                "Boss Test Room",
+                "Boss Test - Kinetic Donut",
+                "Boss Test - Grind Pangolin",
+                "Boss Test - Sever Yataga",
+                "Boss Test - Trash Man",
+                "Boss Test - Bigma",
+                "Boss Test - Smash Gorilla",
+                "Boss Test - Deadeye Chirpzi",
+                "Boss Test - Drain Bat",
+                "Boss Test - Flare Gryffyn"
+            ],
+            "valuesAsFlags": false
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": false,
+            "id": 2,
+            "members": [
+                {
+                    "name": "baseSpeed_subPixelsPerFrame",
+                    "type": "int",
+                    "value": 8
+                },
+                {
+                    "name": "linkedEntitySpawn",
+                    "type": "object",
+                    "value": 0
+                },
+                {
+                    "name": "moveClockwise",
+                    "type": "bool",
+                    "value": false
+                },
+                {
+                    "name": "type",
+                    "propertyType": "Swadge Land Entity Index",
+                    "type": "int",
+                    "value": 55
+                }
+            ],
+            "name": "MegaPulseEntity_ShrubbleLv4",
+            "type": "class",
+            "useAs": [
+                "property",
+                "object",
+                "project"
+            ]
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": false,
+            "id": 4,
+            "members": [
+                {
+                    "name": "Destination Level Index (ignored if linked to Warp Exit)",
+                    "propertyType": "Mega Pulse Level Index",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "Destination Tile X Coordinate (ignored if linked to Warp Exit)",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "Destination Tile Y Coordinate (ignored if linked to Warp Exit)",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "Destination X Pixel Offset (ignored if linked to Warp Exit)",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "Destination Y Pixel Offset (ignored if linked to Warp Exit)",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "linkedEntitySpawn",
+                    "type": "object",
+                    "value": 0
+                },
+                {
+                    "name": "type",
+                    "propertyType": "Swadge Land Entity Index",
+                    "type": "int",
+                    "value": 37
+                }
+            ],
+            "name": "MegaPulseEntity_WarpEntrance",
+            "type": "class",
+            "useAs": [
+                "property",
+                "object",
+                "project"
+            ]
+        },
+        {
+            "id": 1,
+            "name": "Swadge Land Entity Index",
+            "storageType": "int",
+            "type": "enum",
+            "values": [
+                "ENTITY_PLAYER",
+                "ENTITY_SHRUBBLE",
+                "ENTITY_SCROLL_LOCK_LEFT",
+                "ENTITY_SCROLL_LOCK_RIGHT",
+                "ENTITY_SCROLL_LOCK_UP",
+                "ENTITY_SCROLL_LOCK_DOWN",
+                "ENTITY_SCROLL_UNLOCK",
+                "ENTITY_HIT_BLOCK",
+                "ENTITY_DEAD",
+                "ENTITY_POWERUP",
+                "ENTITY_WARP",
+                "ENTITY_DUST_BUNNY",
+                "ENTITY_WASP",
+                "ENTITY_SHRUBBLE_2",
+                "ENTITY_SHRUBBLE_3",
+                "ENTITY_DUST_BUNNY_2",
+                "ENTITY_DUST_BUNNY_3",
+                "ENTITY_WASP_2",
+                "ENTITY_WASP_3",
+                "ENTITY_BGCOL_BLUE",
+                "ENTITY_BGCOL_YELLOW",
+                "ENTITY_BGCOL_ORANGE",
+                "ENTITY_BGCOL_PURPLE",
+                "ENTITY_BGCOL_DARK_PURPLE",
+                "ENTITY_BGCOL_BLACK",
+                "ENTITY_BGCOL_NEUTRAL_GREEN",
+                "ENTITY_BGCOL_DARK_RED",
+                "ENTITY_BGCOL_DARK_GREEN",
+                "ENTITY_1UP",
+                "ENTITY_WAVE_BALL",
+                "ENTITY_CHECKPOINT",
+                "ENTITY_BGM_STOP",
+                "ENTITY_BGM_CHANGE_1",
+                "ENTITY_BGM_CHANGE_2",
+                "ENTITY_BGM_CHANGE_3",
+                "ENTITY_BGM_CHANGE_4",
+                "ENTITY_BGM_CHANGE_5",
+                "ENTITY_WARP_ENTRANCE_WALL",
+                "ENTITY_WARP_ENTRANCE_FLOOR",
+                "ENTITY_WARP_EXIT_WALL",
+                "ENTITY_WARP_EXIT_FLOOR",
+                "ENTITY_CHARGIN_SCHMUCK",
+                "ENTITY_BOUNCIN_SCHMUCK",
+                "ENTITY_TURRET",
+                "ENTITY_SHELDON_SHIELDY",
+                "ENTITY_SPAWNER_BOT",
+                "ENTITY_SPIKY_MCGEE",
+                "ENTITY_AIR_TURRET",
+                "ENTITY_BOUNCE_PAD",
+                "ENTITY_BOUNCE_PAD_DIAGONAL",
+                "ENTITY_LIFE_REFILL_SMALL",
+                "ENTITY_LIFE_REFILL_LARGE",
+                "ENTITY_BOSS_SEVER_YATAGA",
+                "ENTITY_MIXTAPE",
+                "ENTITY_BOSS_DOOR",
+                "ENTITY_SHRUBBLE_LV4",
+                "ENTITY_BOSS_SMASH_GORILLA",
+                "ENTITY_BOSS_GRIND_PANGOLIN",
+                "ENTITY_BOSS_DRAIN_BAT",
+                "ENTITY_BOSS_KINETIC_DONUT",
+                "ENTITY_BOSS_TRASH_MAN",
+                "ENTITY_BOSS_FLARE_GRYFFYN",
+                "ENTITY_BOSS_DEADEYE_CHIRPZI",
+                "ENTITY_BOSS_BIGMA",
+                "ENTITY_BOSS_HANK_WADDLE"
+            ],
+            "valuesAsFlags": false
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": false,
+            "id": 2,
+            "members": [
+                {
+                    "name": "linkedEntitySpawn",
+                    "type": "object",
+                    "value": 0
+                },
+                {
+                    "name": "type",
+                    "propertyType": "Swadge Land Entity Index",
+                    "type": "int",
+                    "value": 0
+                }
+            ],
+            "name": "SwadgeLandEntity",
+            "type": "class",
+            "useAs": [
+                "property",
+                "object",
+                "project"
+            ]
+        }
+    ]
+}

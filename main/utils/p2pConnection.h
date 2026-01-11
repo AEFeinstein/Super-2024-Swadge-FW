@@ -75,7 +75,7 @@
  * p2pDeinit() should be called when the Swadge mode is done to clean up.
  *
  * The connection won't actually start until p2pStartConnection() is called.
- * Connection statues will be delivered to the Swadge mode through the
+ * Connection statues will be delivered to the Swadge mode through the \ref p2pConCbFn callback.
  *
  * p2pGetPlayOrder() can be called after connection to figure out of this Swadge is player one or two.
  *
@@ -96,30 +96,26 @@
  * -# It's preferred to use #ESP_NOW rather than #ESP_NOW_IMMEDIATE when setting up your Swadge mode. This is because
  * #ESP_NOW uses a queue to pass ESP-NOW packets to the Swadge Mode while #ESP_NOW_IMMEDIATE passes them directly from
  * the system callback function. As the <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.1/esp32s2/api-reference/network/esp_now.html#receiving-esp-now-data">IDF
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-reference/network/esp_now.html#receiving-esp-now-data">IDF
  * documentation states</a>:
  * > The receiving callback function also runs from the Wi-Fi task. So, do not do lengthy operations in the callback
  * > function. Instead, post the necessary data to a queue and handle it from a lower priority task.
  * If #ESP_NOW_IMMEDIATE is used, the receive callback (#p2pMsgRxCbFn) should return as quickly as possible.
- *
  * -# Don't halt the Swadge Mode or take too long in any functions when p2p is active. Remember that p2p is running its
  * own timers, so if the Swadge Mode blocks p2p operation, timers may expire without getting the chance to retry
  * messages. As a good rule of thumb, if you notice visual stutters then something is taking too long.
- *
  * -# You must wait for both sides of the p2p connection to be established before transmitting any data packets. Roles
  * can be checked by calling p2pGetPlayOrder(). The Swadge with the #GOING_SECOND role finishes its handshake first, and
  * if a data packet is sent immediately after the #CON_ESTABLISHED event occurs, then that packet will mess up the
  * connection handshake for the other Swadge. The Swadge with the #GOING_FIRST role finishes its handshake second, and
  * once that #CON_ESTABLISHED event occurs, that Swadge may send a data packet to the other. That's why the role is
  * called #GOING_FIRST!
- *
  * -# Try to not to have multiple Swadges transmit at the same time. Instead, have one send a message and have the other
  * respond. ESP32-S2s only have one antenna, so they cannot transmit and receive at the same time. If they do it's
  * likely that at least one message will fail. Remember that p2pGetPlayOrder() can be used to determine which Swadge
  * should send the first message (#GOING_FIRST) and which should send responses (#GOING_SECOND). It's useful to think
  * through the messages that will be sent between two Swadges and visualize them in a sequence diagram to avoid
  * collisions. PlantUML is a good visualization tool, and is what is used for the diagrams above.
- *
  * -# p2pSendMsg() does not queue messages, so if you try to send multiple messages without first receiving the transmit
  * callback (#p2pMsgTxCbFn), then only the last sent message will be sent successfully. Instead, you should either
  * combine data into a single packet (which is preferred, fewer larger packets tend to be faster) or wait for a
@@ -193,6 +189,7 @@
 #include <stdbool.h>
 
 #include <esp_timer.h>
+#include <esp_now.h>
 
 /// The maximum payload of a p2p packet is 245 bytes
 #define P2P_MAX_DATA_LEN 245
@@ -392,7 +389,8 @@ typedef struct
 
 void p2pInitialize(p2pInfo* p2p, uint8_t modeId, p2pConCbFn conCbFn, p2pMsgRxCbFn msgRxCbFn, int8_t connectionRssi);
 void p2pSetAsymmetric(p2pInfo* p2p, uint8_t incomingModeId);
-void p2pDeinit(p2pInfo* p2p);
+void p2pRestart(p2pInfo* p2p);
+void p2pDeinit(p2pInfo* p2p, bool deleteTimers);
 
 void p2pStartConnection(p2pInfo* p2p);
 
@@ -401,8 +399,11 @@ void p2pSendCb(p2pInfo* p2p, const uint8_t* mac_addr, esp_now_send_status_t stat
 void p2pRecvCb(p2pInfo* p2p, const uint8_t* mac_addr, const uint8_t* data, uint8_t len, int8_t rssi);
 void p2pSetDataInAck(p2pInfo* p2p, const uint8_t* ackData, uint8_t ackDataLen);
 void p2pClearDataInAck(p2pInfo* p2p);
+bool p2pIsTxIdle(p2pInfo* p2p);
 
 playOrder_t p2pGetPlayOrder(p2pInfo* p2p);
 void p2pSetPlayOrder(p2pInfo* p2p, playOrder_t order);
+
+bool getMacAddrNvs(uint8_t* mac);
 
 #endif

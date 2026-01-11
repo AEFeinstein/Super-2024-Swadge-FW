@@ -9,8 +9,6 @@
 #include <inttypes.h>
 #include <esp_heap_caps.h>
 
-#include "heatshrink_helper.h"
-#include "heatshrink_encoder.h"
 #include "cnfs.h"
 #include "hdw-nvs.h"
 #include "fs_wsg.h"
@@ -24,18 +22,18 @@
  * @brief Load a WSG from ROM to RAM. WSGs placed in the assets_image folder
  * before compilation will be automatically flashed to ROM
  *
- * @param name The filename of the WSG to load
+ * @param fIdx The cnfsFileIdx_t the WSG to load
  * @param wsg  A handle to load the WSG to
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
  * than normal RAM
  * @return true if the WSG was loaded successfully,
  *         false if the WSG load failed and should not be used
  */
-bool loadWsg(const char* name, wsg_t* wsg, bool spiRam)
+bool loadWsg(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam)
 {
     // Read and decompress file
     uint32_t decompressedSize = 0;
-    uint8_t* decompressedBuf  = readHeatshrinkFile(name, &decompressedSize, spiRam);
+    uint8_t* decompressedBuf  = readHeatshrinkFile(fIdx, &decompressedSize, spiRam);
 
     if (NULL == decompressedBuf)
     {
@@ -43,27 +41,108 @@ bool loadWsg(const char* name, wsg_t* wsg, bool spiRam)
     }
 
     // Save the decompressed info to the wsg. The first four bytes are dimension
-    wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
-    wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
-    // The rest of the bytes are pixels
-    if (spiRam)
+    uint16_t newW = (decompressedBuf[0] << 8) | decompressedBuf[1];
+    uint16_t newH = (decompressedBuf[2] << 8) | decompressedBuf[3];
+
+    // If there is an existing buffer and it doesn't match, free it
+    if (wsg->px && (wsg->w * wsg->h != newW * newH))
     {
-        wsg->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * wsg->w * wsg->h, MALLOC_CAP_SPIRAM);
+        heap_caps_free(wsg->px);
+        wsg->px = NULL;
     }
-    else
+
+// The rest of the bytes are pixels
+#ifndef __XTENSA__
+    char tag[32];
+    sprintf(tag, "cnfsIdx %d", fIdx);
+#endif
+
+    // If there is no pixel buffer
+    if (!wsg->px)
     {
-        wsg->px = (paletteColor_t*)malloc(sizeof(paletteColor_t) * wsg->w * wsg->h);
+        // Allocate it
+        wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * newW * newH,
+                                                        spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, tag);
     }
 
     if (NULL != wsg->px)
     {
+        // Set the size
+        wsg->w = newW;
+        wsg->h = newH;
+
         memcpy(wsg->px, &decompressedBuf[4], decompressedSize - 4);
-        free(decompressedBuf);
+        heap_caps_free(decompressedBuf);
         return true;
     }
 
     // all done
-    free(decompressedBuf);
+    heap_caps_free(decompressedBuf);
+    return false;
+}
+
+/**
+ * @brief Load a WSG from ROM to RAM. WSGs placed in the assets_image folder
+ * before compilation will be automatically flashed to ROM.
+ * You must provide a decoder and decode space to this function. It's useful
+ * when creating one decoder & space to decode many consecutive WSGs
+ *
+ * @param fIdx The cnfsFileIdx_t the WSG to load
+ * @param wsg  A handle to load the WSG to
+ * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
+ * than normal RAM
+ * @param decompressedBuf Memory to store decoded data. This must be as large as the decoded data
+ * @param hsd A heatshrink decoder
+ * @return true if the WSG was loaded successfully,
+ *         false if the WSG load failed and should not be used
+ */
+bool loadWsgInplace(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam, uint8_t* decompressedBuf, heatshrink_decoder* hsd)
+{
+    // Read and decompress file
+    uint32_t decompressedSize = 0;
+    decompressedBuf           = readHeatshrinkFileInplace(fIdx, &decompressedSize, decompressedBuf, hsd);
+
+    if (NULL == decompressedBuf)
+    {
+        return false;
+    }
+
+    // Save the decompressed info to the wsg. The first four bytes are dimension
+    uint16_t newW = (decompressedBuf[0] << 8) | decompressedBuf[1];
+    uint16_t newH = (decompressedBuf[2] << 8) | decompressedBuf[3];
+
+    // If there is an existing buffer and it doesn't match, free it
+    if (wsg->px && (wsg->w * wsg->h != newW * newH))
+    {
+        heap_caps_free(wsg->px);
+        wsg->px = NULL;
+    }
+
+// The rest of the bytes are pixels
+#ifndef __XTENSA__
+    char tag[32];
+    sprintf(tag, "cnfsIdx %d", fIdx);
+#endif
+
+    // If there is no pixel buffer
+    if (!wsg->px)
+    {
+        // Allocate it
+        wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * newW * newH,
+                                                        spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, tag);
+    }
+
+    if (NULL != wsg->px)
+    {
+        // Set the size
+        wsg->w = newW;
+        wsg->h = newH;
+
+        memcpy(wsg->px, &decompressedBuf[4], decompressedSize - 4);
+        return true;
+    }
+
+    // all done
     return false;
 }
 
@@ -81,33 +160,48 @@ bool loadWsgNvs(const char* namespace, const char* key, wsg_t* wsg, bool spiRam)
     ESP_LOGD("WSG", "decompressedBuf size is %" PRIu32, decompressedSize);
 
     // Save the decompressed info to the wsg. The first four bytes are dimension
-    wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
-    wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
+    uint16_t newW = (decompressedBuf[0] << 8) | decompressedBuf[1];
+    uint16_t newH = (decompressedBuf[2] << 8) | decompressedBuf[3];
 
-    ESP_LOGD("WSG", "full WSG is %" PRIu16 " x %" PRIu16 ", or %d pixels", wsg->w, wsg->h, wsg->w * wsg->h);
+    ESP_LOGD("WSG", "full WSG is %" PRIu16 " x %" PRIu16 ", or %d pixels", newW, newH, newW * newH);
+
+    // If there is an existing buffer and it doesn't match, free it
+    if (wsg->px && (wsg->w * wsg->h != newW * newH))
+    {
+        heap_caps_free(wsg->px);
+        wsg->px = NULL;
+    }
 
     // The rest of the bytes are pixels
-    if (spiRam)
+#ifndef __XTENSA__
+    char tag[32];
+    sprintf(tag, "NVS key: %s", key);
+#endif
+
+    // If there is no pixel buffer
+    if (!wsg->px)
     {
-        wsg->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * wsg->w * wsg->h, MALLOC_CAP_SPIRAM);
-    }
-    else
-    {
-        wsg->px = (paletteColor_t*)malloc(sizeof(paletteColor_t) * wsg->w * wsg->h);
+        // Allocate it
+        wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * newW * newH,
+                                                        spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, key);
     }
 
     if (NULL != wsg->px)
     {
+        // Set the size
+        wsg->w = newW;
+        wsg->h = newH;
+
         ESP_LOGD("WSG", "Copying %" PRIu32 " pixels into WSG now", decompressedSize - 4);
         memcpy(wsg->px, &decompressedBuf[4], decompressedSize - 4);
-        free(decompressedBuf);
+        heap_caps_free(decompressedBuf);
         return true;
     }
 
     ESP_LOGE("WSG", "Allocating pixels failed");
 
     // all done
-    free(decompressedBuf);
+    heap_caps_free(decompressedBuf);
     return false;
 }
 
@@ -123,7 +217,7 @@ bool saveWsgNvs(const char* namespace, const char* key, const wsg_t* wsg)
     uint32_t imageSize = wsgHeaderSize + pixelSize;
 
     // Create an output buffer big enough to hold the uncompressed image
-    uint8_t* output = heap_caps_malloc(imageSize, MALLOC_CAP_SPIRAM);
+    uint8_t* output = heap_caps_malloc_tag(imageSize, MALLOC_CAP_SPIRAM, key);
 
     if (!output)
     {
@@ -155,7 +249,7 @@ bool saveWsgNvs(const char* namespace, const char* key, const wsg_t* wsg)
         result = writeNamespaceNvsBlob(namespace, key, output, outputSize);
     }
 
-    free(output);
+    heap_caps_free(output);
     return result;
 }
 
@@ -166,5 +260,11 @@ bool saveWsgNvs(const char* namespace, const char* key, const wsg_t* wsg)
  */
 void freeWsg(wsg_t* wsg)
 {
-    free(wsg->px);
+    if (wsg->w && wsg->h)
+    {
+        heap_caps_free(wsg->px);
+        wsg->px = NULL;
+        wsg->h  = 0;
+        wsg->w  = 0;
+    }
 }

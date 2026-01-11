@@ -4,3 +4,6 @@
 [submodule "emulator/src-lib/cnfa"]
 	path = emulator/src-lib/cnfa
 	url = https://github.com/cntools/cnfa.git
+[submodule "emulator/src-lib/platform-midi"]
+	path = emulator/src-lib/platform-midi
+	url = https://github.com/dylwhich/platform-midi.git

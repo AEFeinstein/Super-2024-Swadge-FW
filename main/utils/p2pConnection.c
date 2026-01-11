@@ -13,6 +13,7 @@
 
 #include "hdw-esp-now.h"
 #include "p2pConnection.h"
+#include "hdw-nvs.h"
 
 //==============================================================================
 // Defines
@@ -41,7 +42,6 @@ static const char* P2P_TAG = "P2P";
 static void p2pConnectionTimeout(void* arg);
 static void p2pTxAllRetriesTimeout(void* arg);
 static void p2pTxRetryTimeout(void* arg);
-static void p2pRestart(p2pInfo* p2p);
 static void p2pRestartTmrCb(void* arg);
 static void p2pStartRestartTimer(void* arg);
 static void p2pProcConnectionEvt(p2pInfo* p2p, connectionEvt_t event);
@@ -94,7 +94,7 @@ void p2pInitialize(p2pInfo* p2p, uint8_t modeId, p2pConCbFn conCbFn, p2pMsgRxCbF
     p2p->incomingModeId = modeId;
 
     // Get and save the string form of our MAC address
-    esp_wifi_get_mac(WIFI_IF_STA, p2p->cnc.myMac);
+    getMacAddrNvs(p2p->cnc.myMac);
 
     // Set up the connection message
     p2p->conMsg.startByte   = P2P_START_BYTE;
@@ -115,45 +115,49 @@ void p2pInitialize(p2pInfo* p2p, uint8_t modeId, p2pConCbFn conCbFn, p2pMsgRxCbF
     p2p->startMsg.seqNum      = 0;
     memset(p2p->startMsg.macAddr, 0xFF, sizeof(p2p->startMsg.macAddr));
 
-    // Set up a timer for acknowledging messages
-    esp_timer_create_args_t p2pTxRetryTimeoutArgs = {
-        .callback              = p2pTxRetryTimeout,
-        .arg                   = p2p,
-        .dispatch_method       = ESP_TIMER_TASK,
-        .name                  = "p2pt_rt",
-        .skip_unhandled_events = false,
-    };
-    esp_timer_create(&p2pTxRetryTimeoutArgs, &p2p->tmr.TxRetry);
+    // Only create timers if they aren't already created, which is the case during reinitialization
+    if (NULL == p2p->tmr.TxRetry)
+    {
+        // Set up a timer for acknowledging messages
+        esp_timer_create_args_t p2pTxRetryTimeoutArgs = {
+            .callback              = p2pTxRetryTimeout,
+            .arg                   = p2p,
+            .dispatch_method       = ESP_TIMER_TASK,
+            .name                  = "p2pt_rt",
+            .skip_unhandled_events = false,
+        };
+        esp_timer_create(&p2pTxRetryTimeoutArgs, &p2p->tmr.TxRetry);
 
-    // Set up a timer for when a message never gets ACKed
-    esp_timer_create_args_t p2pTxAllRetriesTimeoutArgs = {
-        .callback              = p2pTxAllRetriesTimeout,
-        .arg                   = p2p,
-        .dispatch_method       = ESP_TIMER_TASK,
-        .name                  = "p2pt_art",
-        .skip_unhandled_events = false,
-    };
-    esp_timer_create(&p2pTxAllRetriesTimeoutArgs, &p2p->tmr.TxAllRetries);
+        // Set up a timer for when a message never gets ACKed
+        esp_timer_create_args_t p2pTxAllRetriesTimeoutArgs = {
+            .callback              = p2pTxAllRetriesTimeout,
+            .arg                   = p2p,
+            .dispatch_method       = ESP_TIMER_TASK,
+            .name                  = "p2pt_art",
+            .skip_unhandled_events = false,
+        };
+        esp_timer_create(&p2pTxAllRetriesTimeoutArgs, &p2p->tmr.TxAllRetries);
 
-    // Set up a timer to restart after abject failure
-    esp_timer_create_args_t p2pRestartArgs = {
-        .callback              = p2pRestartTmrCb,
-        .arg                   = p2p,
-        .dispatch_method       = ESP_TIMER_TASK,
-        .name                  = "p2pt_r",
-        .skip_unhandled_events = false,
-    };
-    esp_timer_create(&p2pRestartArgs, &p2p->tmr.Reinit);
+        // Set up a timer to restart after abject failure
+        esp_timer_create_args_t p2pRestartArgs = {
+            .callback              = p2pRestartTmrCb,
+            .arg                   = p2p,
+            .dispatch_method       = ESP_TIMER_TASK,
+            .name                  = "p2pt_r",
+            .skip_unhandled_events = false,
+        };
+        esp_timer_create(&p2pRestartArgs, &p2p->tmr.Reinit);
 
-    // Set up a timer to do an initial connection
-    esp_timer_create_args_t p2pConnectionTimeoutArgs = {
-        .callback              = p2pConnectionTimeout,
-        .arg                   = p2p,
-        .dispatch_method       = ESP_TIMER_TASK,
-        .name                  = "p2pt_ct",
-        .skip_unhandled_events = false,
-    };
-    esp_timer_create(&p2pConnectionTimeoutArgs, &p2p->tmr.Connection);
+        // Set up a timer to do an initial connection
+        esp_timer_create_args_t p2pConnectionTimeoutArgs = {
+            .callback              = p2pConnectionTimeout,
+            .arg                   = p2p,
+            .dispatch_method       = ESP_TIMER_TASK,
+            .name                  = "p2pt_ct",
+            .skip_unhandled_events = false,
+        };
+        esp_timer_create(&p2pConnectionTimeoutArgs, &p2p->tmr.Connection);
+    }
 }
 
 /**
@@ -191,8 +195,10 @@ void p2pStartConnection(p2pInfo* p2p)
  * @brief Stop up all timers
  *
  * @param p2p The p2pInfo struct with all the state information
+ * @param deleteTimers true to delete timers (all done, not calling this function from a timer) or false to stop but not
+ * delete timers (useful for reinitialization)
  */
-void p2pDeinit(p2pInfo* p2p)
+void p2pDeinit(p2pInfo* p2p, bool deleteTimers)
 {
     P2P_LOG("%s", __func__);
 
@@ -202,7 +208,22 @@ void p2pDeinit(p2pInfo* p2p)
         esp_timer_stop(p2p->tmr.TxRetry);
         esp_timer_stop(p2p->tmr.Reinit);
         esp_timer_stop(p2p->tmr.TxAllRetries);
+
+        if (deleteTimers)
+        {
+            esp_timer_delete(p2p->tmr.TxRetry);
+            esp_timer_delete(p2p->tmr.TxAllRetries);
+            esp_timer_delete(p2p->tmr.Reinit);
+            esp_timer_delete(p2p->tmr.Connection);
+            p2p->tmr.TxRetry      = NULL;
+            p2p->tmr.TxAllRetries = NULL;
+            p2p->tmr.Reinit       = NULL;
+            p2p->tmr.Connection   = NULL;
+        }
     }
+
+    // Clear out for good measure
+    memset(p2p, 0, sizeof(p2pInfo));
 }
 
 /**
@@ -786,7 +807,7 @@ static void p2pRestartTmrCb(void* arg)
  *
  * @param p2p The p2pInfo struct with all the state information
  */
-static void p2pRestart(p2pInfo* p2p)
+void p2pRestart(p2pInfo* p2p)
 {
     P2P_LOG("%s", __func__);
 
@@ -795,10 +816,16 @@ static void p2pRestart(p2pInfo* p2p)
         p2p->conCbFn(p2p, CON_LOST);
     }
 
-    uint8_t modeId         = p2p->modeId;
-    uint8_t incomingModeId = p2p->incomingModeId;
-    p2pDeinit(p2p);
-    p2pInitialize(p2p, modeId, p2p->conCbFn, p2p->msgRxCbFn, p2p->connectionRssi);
+    // Save old values
+    uint8_t modeId            = p2p->modeId;
+    uint8_t incomingModeId    = p2p->incomingModeId;
+    p2pConCbFn oldConCbFn     = p2p->conCbFn;
+    p2pMsgRxCbFn oldMsgRxCbFn = p2p->msgRxCbFn;
+    int8_t oldConnectionRssi  = p2p->connectionRssi;
+
+    // Don't call p2pDeinit() here because it deletes timers while being called from a timer callback
+    p2pDeinit(p2p, false);
+    p2pInitialize(p2p, modeId, oldConCbFn, oldMsgRxCbFn, oldConnectionRssi);
 
     if (incomingModeId != modeId)
     {
@@ -895,4 +922,53 @@ playOrder_t p2pGetPlayOrder(p2pInfo* p2p)
 void p2pSetPlayOrder(p2pInfo* p2p, playOrder_t order)
 {
     p2p->cnc.playOrder = order;
+}
+
+/**
+ * @brief Return if a transmission is idle, or in progress
+ *
+ * @param p2p The p2pInfo struct with all the state information
+ * @return true if a transmission is idle and ready to send a new packet.
+ *         false if transmission is in progress or not connected at all.
+ */
+bool p2pIsTxIdle(p2pInfo* p2p)
+{
+    return p2p->cnc.isConnected && !p2p->ack.isWaitingForAck;
+}
+
+/**
+ * @brief Get this Swadge's MAC address.
+ *
+ * Reading the MAC from the WiFi Interface may fail if WiFi isn't initialized, so this saves a copy of the MAC in NVS
+ * once it's read and returns the copy if the WiFi Interface isn't initialized.
+ *
+ * @param mac Where to read the MAC address into. Must be at least six bytes long.
+ * @return true if the MAC was read, false if it wasn't
+ */
+bool getMacAddrNvs(uint8_t* mac)
+{
+    // MAC addresses are always 6 bytes long
+    size_t macSize = 6;
+    // NVS key to save the MAC
+    const char macNvsKey[] = "MAC";
+
+    // Try to read MAC from NVS first
+    if (false == readNvsBlob(macNvsKey, mac, &macSize))
+    {
+        // If the NVS read fails, read MAC from hardware
+        if (ESP_OK == esp_wifi_get_mac(WIFI_IF_STA, mac))
+        {
+            // If the hardware read succeeds, write it to NVS
+            writeNvsBlob(macNvsKey, mac, macSize);
+        }
+        else
+        {
+            // Both NVS and HW reads failed
+            memset(mac, 0, macSize);
+            return false;
+        }
+    }
+
+    // MAC was read from somewhere, return it
+    return true;
 }

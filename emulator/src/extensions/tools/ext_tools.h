@@ -15,5 +15,9 @@
 
 extern emuExtension_t toolsEmuExtension;
 
-const char* getTimestampFilename(char* dst, size_t n, const char* prefix, const char* ext);
+void handleConsoleCommand(const char* command);
+
 bool takeScreenshot(const char* name);
+void startScreenRecording(const char* name);
+void stopScreenRecording(void);
+bool isScreenRecording(void);

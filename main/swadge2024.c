@@ -4,7 +4,7 @@
  *
  * \section intro_sec Introduction
  *
- * Welcome to the Swadge 2024 API documentation! Here you will find information on how to use all hardware features of a
+ * Welcome to the Swadge API documentation! Here you will find information on how to use all hardware features of a
  * Swadge and write a Swadge mode. A Swadge is <a href="https://www.magfest.org/">Magfest's</a> electronic swag-badges.
  * They play games and make music and shine bright and do all sorts of cool things.
  *
@@ -19,17 +19,27 @@
  * Most discussions happen in the Magfest Slack, in the \#circuitboards channel. If you are interested in joining and
  * contributing to this project, email circuitboards@magfest.org.
  *
- * General Swadge design principles <a
- * href="https://docs.google.com/document/d/1TzzatyRWp9t26YWF3qUlOg7NFgmsueL-0suqyDT98IE/edit">can be found here</a>.
+ * General Swadge design principles can be found in the \ref design_principles.
  *
  * \section start Where to Start
  *
- * If you're just starting Swadge development, you're already at the right place to start! Here's a good sequence of
- * pages to read from here.
+ * If you just want to run the Swadge emulator without setting up a development environment, see the \ref emulator
+ * for an installation guide and usage instructions.
+ *
+ * If you want to learn about creating MIDI song files for the Swadge, see the \ref MIDI guide. See also the
+ * \ref emulator which you can use to listen to MIDI files.
+ *
+ * If you're just starting Swadge development, you're already at the right place to start!
+ *
+ * \note If you're new to developing code and want a guided experience, try the \ref tutorial tutorial! It
+ * \note will walk you through creating a whole game with explanations on why certain options are picked. If you're more
+ * \note used to C and reading technical documentation, why not browse the rest of the repository?
+ *
+ * Here's a quick recommended order to exploring the repository:
  *
  * -# First, follow the guide to \ref setup. This will walk you through setting up the toolchain and compiling the
  * firmware and emulator.
- * -# Next, read about the basics of a Swadge Mode at \ref swadge2024.h.
+ * -# Next, read about the basics of a Swadge Mode at swadge2024.h.
  * -# Once you understand the basics of a Swadge Mode, check out the \ref swadge_mode_example to see a simple mode in
  * action.
  * -# After you grasp the example, you can go deeper and read the full \ref apis to understand the full capability of
@@ -71,6 +81,7 @@
  * \subsection swadge_mode_api Swadge Mode APIs
  *
  * - swadge2024.h: Write a mode. This is a good starting place
+ * - trophy.h: Add trophies to the swadge mode.
  *
  * \subsection input_api Input APIs
  *
@@ -78,12 +89,15 @@
  * - hdw-btn.h: Learn how to use both push and touch button input
  *     - touchUtils.h: Utilities to interpret touch button input as a virtual joystick, spin wheel, or cartesian plane
  * - hdw-imu.h: Learn how to use the inertial measurement unit
+ *     - imu_utils.h: Utilities to process IMU data
  * - hdw-temperature.h: Learn how to use the temperature sensor
  *
  * \subsection nwk_api Network APIs
  *
  * - hdw-esp-now.h: Broadcast and receive messages. This is fast and unreliable.
  * - p2pConnection.h: Connect to another Swadge and exchange messages. This is slower and more reliable.
+ * - swadgePass.h: Send and receive small amounts of data like avatars or high scores while the Swadge is idle.
+ * - nameList.h: A method of generating nice strings for swadgepass data that are small.
  *
  * \subsection pm_api Persistent Memory APIs
  *
@@ -94,7 +108,9 @@
  *     - fs_json.h: Load JSON
  *     - fs_txt.h: Load plaintext
  *     - midiFileParser.h: Load MIDI files
+ * - assets_preprocessor.h: Learn how to define a new asset file type processor for CNFS
  * - settingsManager.h: Set and get persistent settings for things like screen brightness
+ * - highScores.h: System to simplify keeping a high score table with SwadgePass support
  *
  * \subsection gr_api Graphics APIs
  *
@@ -105,11 +121,14 @@
  * - fill.h: Learn how to fill areas on the screen
  * - shapes.h: Learn how to draw shapes and curves on the screen
  * - wsg.h: Learn how to draw sprites on the screen
+ * - wsgCanvas.h: Tools for mixing wsgs into one file to save on memory space
+ * - wsgPalette.h: A layer on top of WSGs to allow the colors to be changed without new WSGs
  * - font.h: Learn how to draw text on the screen
+ * - hdw-ch32v003.h: The matrix array driver on the 2026 Swadge
  *
  * \subsection gui_api Graphical UI APIs
  *
- * - menu.h and menuManiaRenderer.h: Make and render a menu within a mode
+ * - menu.h and menuMegaRenderer.h: Make and render a menu within a mode
  * - dialogBox.h: Show messages and prompt users for a response
  * - touchTextEntry.h: Edit an arbitrary single line of text by selecting each letter at a time with up & down keys
  * - textEntry.h: Edit an arbitrary single line of text with a virtual QWERTY keyboard
@@ -141,6 +160,8 @@
  * - coreutil.h: General utilities for system profiling
  * - hdw-usb.h: Learn how to be a USB HID Gamepad
  *     - advanced_usb_control.h: Use USB for application development
+ * - cutscene.h Renders and makes sound effects for character dialogue. Generic enough to use for any game with any
+ * yearly theme.
  *
  * \section espressif_doc Espressif Documentation
  *
@@ -148,12 +169,12 @@
  * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
  * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
  * is useful:
- * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.1/esp32s2/api-reference/index.html">ESP-IDF API
+ * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-reference/index.html">ESP-IDF API
  * Reference</a>
- * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-­S2 Series
+ * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-S2 Series
  * Datasheet</a>
  * - <a
- * href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf">ESP32­-S2
+ * href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf">ESP32-S2
  * Technical Reference Manual</a>
  */
 
@@ -168,6 +189,7 @@
 #include <rom/usb/usb_persist.h>
 #include <rom/usb/chip_usb_dw_wrapper.h>
 #include <soc/rtc_cntl_reg.h>
+#include <soc/gpio_num.h>
 
 #include "advanced_usb_control.h"
 #include "shapes.h"
@@ -178,6 +200,7 @@
 #include "quickSettings.h"
 #include "midiPlayer.h"
 #include "introMode.h"
+#include "nameList.h"
 
 //==============================================================================
 // Defines
@@ -188,28 +211,77 @@
     #define RTC_DATA_ATTR
 #endif
 
+// Define hardware-specific GPIOs
+#if defined(CONFIG_HARDWARE_WAVEBIRD) || defined(CONFIG_HARDWARE_GUNSHIP)
+    #define GPIO_SAO_1 GPIO_NUM_17
+    #define GPIO_SAO_2 GPIO_NUM_18
+
+    #define GPIO_BTN_UP    GPIO_NUM_0
+    #define GPIO_BTN_DOWN  GPIO_NUM_4
+    #define GPIO_BTN_LEFT  GPIO_NUM_2
+    #define GPIO_BTN_RIGHT GPIO_NUM_1
+
+#elif defined(CONFIG_HARDWARE_HOTDOG_PRODUCTION)
+    #define GPIO_SAO_1 GPIO_NUM_40
+    #define GPIO_SAO_2 GPIO_NUM_42
+
+    #define GPIO_BTN_UP    GPIO_NUM_0
+    #define GPIO_BTN_DOWN  GPIO_NUM_4
+    #define GPIO_BTN_LEFT  GPIO_NUM_2
+    #define GPIO_BTN_RIGHT GPIO_NUM_1
+
+#elif defined(CONFIG_HARDWARE_HOTDOG_PROTO)
+    #define GPIO_SAO_1 GPIO_NUM_40
+    #define GPIO_SAO_2 GPIO_NUM_42
+
+    #define GPIO_BTN_UP    GPIO_NUM_1
+    #define GPIO_BTN_DOWN  GPIO_NUM_4
+    #define GPIO_BTN_LEFT  GPIO_NUM_0
+    #define GPIO_BTN_RIGHT GPIO_NUM_2
+
+#elif defined(CONFIG_HARDWARE_PULSE)
+    #define GPIO_SAO_1 GPIO_NUM_42 // Flip SAO GPIOs relative to Hotdog
+    #define GPIO_SAO_2 GPIO_NUM_40
+
+    #define GPIO_BTN_UP    GPIO_NUM_0
+    #define GPIO_BTN_DOWN  GPIO_NUM_4
+    #define GPIO_BTN_LEFT  GPIO_NUM_2
+    #define GPIO_BTN_RIGHT GPIO_NUM_1
+#else
+    #error "Define what hardware is being built for"
+#endif
+
 //==============================================================================
 // Variables
 //==============================================================================
 
 /// @brief The current Swadge mode
-static swadgeMode_t* cSwadgeMode = &mainMenuMode;
+static const swadgeMode_t* cSwadgeMode = &mainMenuMode;
+
+/// @brief Flag set when the swadge mode is started up
+static bool cSwadgeModeInit = false;
 
 /// @brief A pending Swadge mode to use after a deep sleep
-static RTC_DATA_ATTR swadgeMode_t* pendingSwadgeMode = NULL;
+static RTC_DATA_ATTR const swadgeMode_t* pendingSwadgeMode = NULL;
 
 /// @brief Flag set if the quick settings should be shown synchronously
 static bool shouldShowQuickSettings = false;
 /// @brief Flag set if the quick settings should be hidden synchronously
 static bool shouldHideQuickSettings = false;
 /// @brief A pointer to the Swadge mode under the quick settings
-static swadgeMode_t* modeBehindQuickSettings = NULL;
+static const swadgeMode_t* modeBehindQuickSettings = NULL;
 
-/// 25 FPS by default
+/// 40 FPS by default
 static uint32_t frameRateUs = DEFAULT_FRAME_RATE_US;
 
 /// @brief Timer to return to the main menu
 static int64_t timeExitPressed = 0;
+
+/// @brief System font
+static font_t sysFont;
+
+/// @brief Infinite impulse response filter for mic samples
+static uint32_t samp_iir = 0;
 
 //==============================================================================
 // Function declarations
@@ -232,8 +304,12 @@ static void dacCallback(uint8_t* samples, int16_t len);
 void app_main(void)
 {
 #ifdef CONFIG_DEBUG_OUTPUT_UART_SAO
-    // Redirect UART if configured to do so
-    uart_set_pin(UART_NUM_0, GPIO_NUM_18, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    // Make sure there isn't a pin conflict
+    if (GPIO_SAO_2 != GPIO_NUM_18)
+    {
+        // Redirect UART if configured and able
+        uart_set_pin(UART_NUM_0, GPIO_SAO_2, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    }
 #endif
 
     // Init NVS. Do this first to get test mode status and crashwrap logs
@@ -242,6 +318,10 @@ void app_main(void)
     // Read settings from NVS
     readAllSettings();
 
+    // Mark the mode as not initialized yet
+    cSwadgeModeInit = false;
+
+#ifdef CONFIG_FACTORY_TEST_NORMAL
     // If test mode was passed
     if (getTutorialCompletedSetting())
     {
@@ -253,6 +333,14 @@ void app_main(void)
         // Start the out-of-box experience / tutorial
         cSwadgeMode = &introMode;
     }
+#else
+    // If test mode was passed
+    if (getTestModePassedSetting())
+    {
+        // Show the main menu
+        cSwadgeMode = &mainMenuMode;
+    }
+#endif
     else
     {
         // Otherwise enter test mode
@@ -282,22 +370,25 @@ void app_main(void)
     // Check for prior crash info and install crash wrapper
     checkAndInstallCrashwrap();
 
-    // Init timers
-    esp_timer_init();
+    /* This function is called from startup code. Applications do not need to
+     * call this function before using other esp_timer APIs. Before calling
+     * this function, esp_timer_early_init() must be called by the startup code.
+     */
+    // esp_timer_init();
 
     // Init file system
     initCnfs();
 
     // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
-        GPIO_NUM_0,  // Up
-        GPIO_NUM_4,  // Down
-        GPIO_NUM_2,  // Left
-        GPIO_NUM_1,  // Right
-        GPIO_NUM_16, // A
-        GPIO_NUM_15, // B
-        GPIO_NUM_8,  // Start
-        GPIO_NUM_5   // Select
+        GPIO_BTN_UP,    // Up
+        GPIO_BTN_DOWN,  // Down
+        GPIO_BTN_LEFT,  // Left
+        GPIO_BTN_RIGHT, // Right
+        GPIO_NUM_16,    // A
+        GPIO_NUM_15,    // B
+        GPIO_NUM_8,     // Start
+        GPIO_NUM_5      // Select
     };
     touch_pad_t touchPads[] = {
         TOUCH_PAD_NUM9,  // GPIO_NUM_9
@@ -326,13 +417,17 @@ void app_main(void)
     initShapes();
 
     // Initialize the RGB LEDs
-    initLeds(GPIO_NUM_39,
-#ifdef CONFIG_DEBUG_OUTPUT_UART_SAO
-             GPIO_NUM_NC,
-#else
-             GPIO_NUM_18,
+    gpio_num_t ledMirrorGpio = GPIO_NUM_NC;
+#ifndef CONFIG_DEBUG_OUTPUT_UART_SAO
+    if (GPIO_SAO_2 != GPIO_NUM_18)
+    {
+        ledMirrorGpio = GPIO_SAO_2;
+    }
 #endif
-             getLedBrightnessSetting());
+
+    initLeds(GPIO_NUM_39, ledMirrorGpio, getLedBrightnessSetting());
+
+    initCh32v003(GPIO_SAO_1);
 
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();
@@ -341,11 +436,22 @@ void app_main(void)
     static int64_t tLastLoopUs = 0;
     tLastLoopUs                = esp_timer_get_time();
 
+    // Initialize system font and trophy-get sound
+    loadFont(IBM_VGA_8_FONT, &sysFont, false);
+
+    // Initialize username settings, must be done before the swadge mode
+    initUsernameSystem();
+
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)
     {
+        if (NULL != cSwadgeMode->trophyData)
+        {
+            trophySystemInit(cSwadgeMode->trophyData, cSwadgeMode->modeName);
+        }
         cSwadgeMode->fnEnterMode();
     }
+    cSwadgeModeInit = true;
 
     // Run the main loop, forever
     while (true)
@@ -356,7 +462,7 @@ void app_main(void)
         tLastLoopUs        = tNowUs;
 
         // Process ADC samples
-        if (NULL != cSwadgeMode->fnAudioCallback)
+        if (cSwadgeModeInit && NULL != cSwadgeMode->fnAudioCallback)
         {
             // This must have the same number of elements as the bounds in mic_param
             const uint16_t micGains[] = {
@@ -371,8 +477,6 @@ void app_main(void)
                 // Run all samples through an IIR filter
                 for (uint32_t i = 0; i < sampleCnt; i++)
                 {
-                    static uint32_t samp_iir = 0;
-
                     int32_t sample  = adcSamples[i];
                     samp_iir        = samp_iir - (samp_iir >> 9) + sample;
                     int32_t newSamp = (sample - (samp_iir >> 9));
@@ -405,8 +509,11 @@ void app_main(void)
             // Decrement the accumulation
             tAccumDraw -= frameRateUs;
 
+            // Amount fo time between main loop calls
+            uint64_t mainLoopCallDelay = 0;
+
             // Call the mode's main loop
-            if (NULL != cSwadgeMode->fnMainLoop)
+            if (cSwadgeModeInit && NULL != cSwadgeMode->fnMainLoop)
             {
                 // Keep track of the time between main loop calls
                 static uint64_t tLastMainLoopCall = 0;
@@ -414,8 +521,9 @@ void app_main(void)
                 {
                     tLastMainLoopCall = tNowUs;
                 }
+                mainLoopCallDelay = tNowUs - tLastMainLoopCall;
 
-                cSwadgeMode->fnMainLoop(tNowUs - tLastMainLoopCall);
+                cSwadgeMode->fnMainLoop(mainLoopCallDelay);
                 tLastMainLoopCall = tNowUs;
             }
 
@@ -445,14 +553,14 @@ void app_main(void)
             {
                 // Lower the flag
                 shouldShowQuickSettings = false;
-                // Pause the sound
-                soundPause();
 
                 // Save the current mode
                 modeBehindQuickSettings = cSwadgeMode;
+                cSwadgeModeInit         = false;
                 cSwadgeMode             = &quickSettingsMode;
                 // Show the quick settings
                 quickSettingsMode.fnEnterMode();
+                cSwadgeModeInit = true;
             }
             else if (shouldHideQuickSettings)
             {
@@ -462,8 +570,12 @@ void app_main(void)
                 quickSettingsMode.fnExitMode();
                 // Restore the mode
                 cSwadgeMode = modeBehindQuickSettings;
-                // Resume the sound
-                soundResume();
+            }
+
+            // If trophies are not null, draw
+            if (NULL != cSwadgeMode->trophyData)
+            {
+                trophyDraw(&sysFont, mainLoopCallDelay);
             }
 
             // Draw to the TFT
@@ -489,13 +601,17 @@ void app_main(void)
             esp_deep_sleep_start();
         }
 
+        // If you want to allow printf() from the ch32v003, you can call this. Note that it takes about 40us every time
+        // it's called. ch32v003CheckTerminal();
+
         // Yield to let the rest of the RTOS run
         taskYIELD();
     }
 
     // Deinitialize the swadge mode
-    if (NULL != cSwadgeMode->fnExitMode)
+    if (cSwadgeModeInit && NULL != cSwadgeMode->fnExitMode)
     {
+        cSwadgeModeInit = false;
         cSwadgeMode->fnExitMode();
     }
 
@@ -510,12 +626,16 @@ static void initOptionalPeripherals(void)
     // Init mic if it is used by the mode
     if (NULL != cSwadgeMode->fnAudioCallback)
     {
+        setDacShutdown(true);
+
         // Initialize and start the mic as a continuous ADC
         initMic(GPIO_NUM_7);
         startMic();
     }
     else
     {
+        setDacShutdown(false);
+
         // Otherwise initialize the battery monitor as a oneshot ADC
         initBattmon(GPIO_NUM_6);
 
@@ -523,13 +643,12 @@ static void initOptionalPeripherals(void)
 #if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
         // Initialize the speaker. The DAC uses the same DMA controller for continuous output,
         // so it can't be initialized at the same time as the microphone
-        initDac(dacCallback);
+        initDac(DAC_CHANNEL_MASK_CH0, // GPIO_NUM_17
+                GPIO_NUM_18, dacCallback);
         dacStart();
         initGlobalMidiPlayer();
 #elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
-        // Init buzzer. This must be called before initMic()
-        initBuzzer(GPIO_NUM_40, LEDC_TIMER_0, LEDC_CHANNEL_0, //
-                   GPIO_NUM_42, LEDC_TIMER_1, LEDC_CHANNEL_1, getBgmVolumeSetting(), getSfxVolumeSetting());
+    #error "Buzzer is no longer supported, get with the times!"
 #endif
     }
 
@@ -554,6 +673,9 @@ static void initOptionalPeripherals(void)
     {
         initTemperatureSensor();
     }
+
+    // Load some default firmware that blinks eyes
+    ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
 }
 
 /**
@@ -561,9 +683,13 @@ static void initOptionalPeripherals(void)
  */
 void deinitSystem(void)
 {
+    // Deinit font and sfx
+    freeFont(&sysFont);
+
     // Deinit the swadge mode
-    if (NULL != cSwadgeMode->fnExitMode)
+    if (cSwadgeModeInit && NULL != cSwadgeMode->fnExitMode)
     {
+        cSwadgeModeInit = false;
         cSwadgeMode->fnExitMode();
     }
 
@@ -598,7 +724,7 @@ void deinitSystem(void)
 static void swadgeModeEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len,
                                    int8_t rssi)
 {
-    if (NULL != cSwadgeMode->fnEspNowRecvCb)
+    if (cSwadgeModeInit && NULL != cSwadgeMode->fnEspNowRecvCb)
     {
         cSwadgeMode->fnEspNowRecvCb(esp_now_info, data, len, rssi);
     }
@@ -613,7 +739,7 @@ static void swadgeModeEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, cons
  */
 static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
-    if (NULL != cSwadgeMode->fnEspNowSendCb)
+    if (cSwadgeModeInit && NULL != cSwadgeMode->fnEspNowSendCb)
     {
         cSwadgeMode->fnEspNowSendCb(mac_addr, status);
     }
@@ -633,6 +759,7 @@ static void setSwadgeMode(void* swadgeMode)
     }
 
     // Stop the prior mode
+    cSwadgeModeInit = false;
     if (cSwadgeMode->fnExitMode)
     {
         cSwadgeMode->fnExitMode();
@@ -642,8 +769,13 @@ static void setSwadgeMode(void* swadgeMode)
     cSwadgeMode = swadgeMode;
     if (cSwadgeMode->fnEnterMode)
     {
+        if (NULL != cSwadgeMode->trophyData)
+        {
+            trophySystemInit(cSwadgeMode->trophyData, cSwadgeMode->modeName);
+        }
         cSwadgeMode->fnEnterMode();
     }
+    cSwadgeModeInit = true;
 }
 
 /**
@@ -651,7 +783,7 @@ static void setSwadgeMode(void* swadgeMode)
  *
  * @param mode A pointer to the mode to switch to
  */
-void switchToSwadgeMode(swadgeMode_t* mode)
+void switchToSwadgeMode(const swadgeMode_t* mode)
 {
     // Set the framerate back to default
     setFrameRateUs(DEFAULT_FRAME_RATE_US);
@@ -667,6 +799,7 @@ void softSwitchToPendingSwadge(void)
     if (pendingSwadgeMode)
     {
         // Exit the current mode
+        cSwadgeModeInit = false;
         if (NULL != cSwadgeMode->fnExitMode)
         {
             cSwadgeMode->fnExitMode();
@@ -685,8 +818,13 @@ void softSwitchToPendingSwadge(void)
         // Enter the next mode
         if (NULL != cSwadgeMode->fnEnterMode)
         {
+            if (NULL != cSwadgeMode->trophyData)
+            {
+                trophySystemInit(cSwadgeMode->trophyData, cSwadgeMode->modeName);
+            }
             cSwadgeMode->fnEnterMode();
         }
+        cSwadgeModeInit = true;
 
         // Reenable the TFT backlight
         enableTFTBacklight();
@@ -761,6 +899,16 @@ void setFrameRateUs(uint32_t newFrameRateUs)
 }
 
 /**
+ * @brief Get the current framerate, in microseconds
+ *
+ * @return uint32_t The time between frame draws, in microseconds
+ */
+uint32_t getFrameRateUs(void)
+{
+    return frameRateUs;
+}
+
+/**
  * @brief
  *
  * @param samples
@@ -769,7 +917,7 @@ void setFrameRateUs(uint32_t newFrameRateUs)
 void dacCallback(uint8_t* samples, int16_t len)
 {
     // If there is a DAC callback for the current mode
-    if (cSwadgeMode->fnDacCb)
+    if (cSwadgeModeInit && cSwadgeMode->fnDacCb)
     {
         // Call that
         cSwadgeMode->fnDacCb(samples, len);
@@ -779,4 +927,110 @@ void dacCallback(uint8_t* samples, int16_t len)
         // Otherwise use the song player
         globalMidiPlayerFillBuffer(samples, len);
     }
+}
+
+/**
+ * @brief Enable the speaker (and battery monitor) and disable the microphone
+ */
+void switchToSpeaker(void)
+{
+    // Stop the microphone
+    stopMic();
+    deinitMic();
+
+    // Start the speaker
+    initDac(DAC_CHANNEL_MASK_CH0, // GPIO_NUM_17
+            GPIO_NUM_18, dacCallback);
+    setDacShutdown(false);
+    initGlobalMidiPlayer();
+
+    // Start battery monitoring
+    initBattmon(GPIO_NUM_6);
+}
+
+/**
+ * @brief Enable the microphone and disable the speaker (and battery monitor)
+ */
+void switchToMicrophone(void)
+{
+    // Stop battery monitoring
+    deinitBattmon();
+
+    // Stop the speaker
+    globalMidiPlayerStop(true);
+    deinitGlobalMidiPlayer();
+    setDacShutdown(true);
+    deinitDac();
+
+    // Reset the IIR
+    samp_iir = 0;
+
+    // Initialize and start the mic as a continuous ADC
+    initMic(GPIO_NUM_7);
+    startMic();
+}
+
+/**
+ * @brief Power down all hardware peripherals
+ */
+void powerDownPeripherals(void)
+{
+    powerDownBattmon();
+    powerDownButtons();
+    powerDownDac();
+    powerDownEspNow();
+    powerDownAccel();
+    powerDownLed();
+    powerDownMic();
+    powerDownTemperatureSensor();
+    powerDownTft();
+    powerDownUsb();
+}
+
+/**
+ * @brief Power up all hardware peripherals
+ */
+void powerUpPeripherals(void)
+{
+    // Always powered up
+    powerUpButtons();
+    powerUpLed();
+    powerUpUsb();
+    powerUpTft();
+
+    // One or the other
+    if (NULL != cSwadgeMode->fnAudioCallback)
+    {
+        powerUpMic();
+    }
+    else
+    {
+        powerUpDac();
+        powerUpBattmon();
+    }
+
+    // Optional peripherals
+    if (NO_WIFI != cSwadgeMode->wifiMode)
+    {
+        powerUpEspNow();
+    }
+
+    if (cSwadgeMode->usesAccelerometer)
+    {
+        powerUpAccel();
+    }
+
+    if (cSwadgeMode->usesThermometer)
+    {
+        powerUpTemperatureSensor();
+    }
+}
+
+/**
+ * @brief Get the Sys Ibm Font. Font is pre-loaded fto ensure a font is always available for devs to use.
+ *
+ */
+font_t* getSysFont(void)
+{
+    return &sysFont;
 }

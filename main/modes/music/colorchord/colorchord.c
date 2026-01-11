@@ -19,6 +19,9 @@
 #define TEXT_Y      10
 #define TEXT_MARGIN 20
 
+#define EYE_FPS    20
+#define EYE_FPS_US (1000000 / EYE_FPS)
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -47,7 +50,6 @@ void colorchordButtonCb(buttonEvt_t* evt);
 
 typedef struct
 {
-    font_t ibm_vga8;
     dft32_data dd;
     embeddedNf_data end;
     embeddedOut_data eod;
@@ -57,6 +59,13 @@ typedef struct
     uint16_t* sampleHist;
     uint16_t sampleHistHead;
     uint16_t sampleHistCount;
+
+    // Variables for LED eyes
+    int32_t eyeTimer;
+    uint16_t binAvgHist[EYE_FPS];
+    int32_t bahIdx;
+    uint8_t barHeights[EYE_LED_W];
+    uint8_t bmpSlot;
 } colorchord_t;
 
 //==============================================================================
@@ -94,14 +103,12 @@ swadgeMode_t colorchordMode = {
 void colorchordEnterMode(void)
 {
     // Allocate memory for this mode
-    colorchord = (colorchord_t*)calloc(1, sizeof(colorchord_t));
+    colorchord = (colorchord_t*)heap_caps_calloc(1, sizeof(colorchord_t), MALLOC_CAP_8BIT);
 
     colorchord->sampleHistCount = 512;
-    colorchord->sampleHist      = (uint16_t*)calloc(colorchord->sampleHistCount, sizeof(uint16_t));
-    colorchord->sampleHistHead  = 0;
-
-    // Load a font
-    loadFont("ibm_vga8.font", &colorchord->ibm_vga8, false);
+    colorchord->sampleHist
+        = (uint16_t*)heap_caps_calloc(colorchord->sampleHistCount, sizeof(uint16_t), MALLOC_CAP_8BIT);
+    colorchord->sampleHistHead = 0;
 
     // Init CC
     InitColorChord(&colorchord->end, &colorchord->dd);
@@ -115,10 +122,9 @@ void colorchordExitMode(void)
 {
     if (colorchord->sampleHist)
     {
-        free(colorchord->sampleHist);
+        heap_caps_free(colorchord->sampleHist);
     }
-    freeFont(&colorchord->ibm_vga8);
-    free(colorchord);
+    heap_caps_free(colorchord);
 }
 
 /**
@@ -137,13 +143,32 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
     // Clear everything
     clearPxTft();
 
-    // Draw the spectrum as a bar graph. Figure out bar and margin size
-    int16_t binWidth  = (TFT_WIDTH / FIX_BINS);
-    int16_t binMargin = (TFT_WIDTH - (binWidth * FIX_BINS)) / 2;
-
     // This is the center line to draw the graph around
-    uint8_t centerLine
-        = (TEXT_Y + colorchord->ibm_vga8.height + 2) + (TFT_HEIGHT - (TEXT_Y + colorchord->ibm_vga8.height + 2)) / 2;
+    uint8_t centerLine = TFT_HEIGHT / 2;
+
+    // Draw sine wave
+    uint16_t* sampleHist     = colorchord->sampleHist;
+    uint16_t sampleHistCount = colorchord->sampleHistCount;
+    int16_t sampleHistMark   = colorchord->sampleHistHead - 1;
+
+    int16_t lastX = 0xFF;
+    int16_t lastY = 0;
+    for (int16_t x = 0; x < TFT_WIDTH; x++)
+    {
+        if (sampleHistMark < 0)
+        {
+            sampleHistMark = sampleHistCount - 1;
+        }
+        int16_t sample = sampleHist[sampleHistMark];
+        sampleHistMark--;
+        uint16_t y = ((sample * TFT_HEIGHT) >> 16) + centerLine;
+        if (0xFF != lastX)
+        {
+            drawLineFast(lastX, lastY, x, y, c333);
+        }
+        lastX = x;
+        lastY = y;
+    }
 
     // Find the max value
     for (uint16_t i = 0; i < FIX_BINS; i++)
@@ -154,11 +179,15 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
         }
     }
 
+    // Draw the spectrum as a bar graph. Figure out bar and margin size
+    int16_t binWidth  = (TFT_WIDTH / FIX_BINS);
+    int16_t binMargin = (TFT_WIDTH - (binWidth * FIX_BINS)) / 2;
+
     // Plot the bars
     for (uint16_t i = 0; i < FIX_BINS; i++)
     {
         uint8_t height
-            = ((TFT_HEIGHT - colorchord->ibm_vga8.height - 2) * colorchord->end.fuzzed_bins[i]) / colorchord->maxValue;
+            = ((TFT_HEIGHT - getSysFont()->height - 2) * colorchord->end.fuzzed_bins[i]) / colorchord->maxValue;
 
         paletteColor_t color = RGBtoPalette(
             ECCtoHEX(((i << SEMI_BITS_PER_BIN) + colorchord->eod.RootNoteOffset) % NOTE_RANGE, 255, 255));
@@ -176,54 +205,30 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
         }
     }
 
-    // Draw sine wave
-    {
-        SETUP_FOR_TURBO();
-        int x;
-        uint16_t* sampleHist     = colorchord->sampleHist;
-        uint16_t sampleHistCount = colorchord->sampleHistCount;
-        int16_t sampleHistMark   = colorchord->sampleHistHead - 1;
-
-        for (x = 0; x < TFT_WIDTH; x++)
-        {
-            if (sampleHistMark < 0)
-            {
-                sampleHistMark = sampleHistCount - 1;
-            }
-            int16_t sample = sampleHist[sampleHistMark];
-            sampleHistMark--;
-            uint16_t y = ((sample * TFT_HEIGHT) >> 16) + (TFT_HEIGHT / 2);
-            if (y >= TFT_HEIGHT)
-            {
-                continue;
-            }
-            TURBO_SET_PIXEL(x, y, 215);
-        }
-    }
-
     // Draw the HUD text
     char text[16] = {0};
 
     // Draw gain indicator
-    snprintf(text, sizeof(text), "Gain: %" PRIu8, getMicGainSetting());
-    drawText(&colorchord->ibm_vga8, c555, text, TEXT_MARGIN, TEXT_Y);
+    uint8_t gain = getMicGainSetting();
+    snprintf(text, sizeof(text), "Gain: %" PRIu8, gain);
+    drawText(getSysFont(), c555, text, TEXT_MARGIN, TEXT_Y);
 
     // Underline it if selected
     if (CC_OPT_GAIN == colorchord->optSel)
     {
-        int16_t lineY = 10 + colorchord->ibm_vga8.height + 2;
-        drawLine(TEXT_MARGIN, lineY, TEXT_MARGIN + textWidth(&colorchord->ibm_vga8, text) - 1, lineY, c555, 0);
+        int16_t lineY = 10 + getSysFont()->height + 2;
+        drawLine(TEXT_MARGIN, lineY, TEXT_MARGIN + textWidth(getSysFont(), text) - 1, lineY, c555, 0);
     }
 
     // Draw LED brightness indicator
     snprintf(text, sizeof(text), "LED: %" PRIu8, getLedBrightnessSetting());
-    int16_t tWidth = textWidth(&colorchord->ibm_vga8, text);
-    drawText(&colorchord->ibm_vga8, c555, text, (TFT_WIDTH - tWidth) / 2, TEXT_Y);
+    int16_t tWidth = textWidth(getSysFont(), text);
+    drawText(getSysFont(), c555, text, (TFT_WIDTH - tWidth) / 2, TEXT_Y);
 
     // Underline it if selected
     if (CC_OPT_LED_BRIGHT == colorchord->optSel)
     {
-        int16_t lineY = TEXT_Y + colorchord->ibm_vga8.height + 2;
+        int16_t lineY = TEXT_Y + getSysFont()->height + 2;
         drawLine((TFT_WIDTH - tWidth) / 2, lineY, (TFT_WIDTH - tWidth) / 2 + tWidth - 1, lineY, c555, 0);
     }
 
@@ -243,21 +248,97 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
             break;
         }
     }
-    int16_t textX = TFT_WIDTH - TEXT_MARGIN - textWidth(&colorchord->ibm_vga8, text);
-    drawText(&colorchord->ibm_vga8, c555, text, textX, TEXT_Y);
+    int16_t textX = TFT_WIDTH - TEXT_MARGIN - textWidth(getSysFont(), text);
+    drawText(getSysFont(), c555, text, textX, TEXT_Y);
 
     // Underline it if selected
     if (CC_OPT_LED_MODE == colorchord->optSel)
     {
-        int16_t lineY = TEXT_Y + colorchord->ibm_vga8.height + 2;
-        drawLine(textX, lineY, textX + textWidth(&colorchord->ibm_vga8, text) - 1, lineY, c555, 0);
+        int16_t lineY = TEXT_Y + getSysFont()->height + 2;
+        drawLine(textX, lineY, textX + textWidth(getSysFont(), text) - 1, lineY, c555, 0);
     }
 
     // Draw reminder text
     const char exitText[] = "Hold Menu to Exit";
-    int16_t exitWidth     = textWidth(&colorchord->ibm_vga8, exitText);
-    drawText(&colorchord->ibm_vga8, c555, exitText, (TFT_WIDTH - exitWidth) / 2,
-             TFT_HEIGHT - colorchord->ibm_vga8.height - TEXT_Y);
+    int16_t exitWidth     = textWidth(getSysFont(), exitText);
+    drawText(getSysFont(), c555, exitText, (TFT_WIDTH - exitWidth) / 2, TFT_HEIGHT - getSysFont()->height - TEXT_Y);
+
+    RUN_TIMER_EVERY(colorchord->eyeTimer, EYE_FPS_US, elapsedUs, {
+        // There are 24 bins and 12 columns, so average every two bins into a column
+        uint16_t binAvgs[EYE_LED_W] = {0};
+        uint16_t maxBinAvg          = 0;
+        for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(binAvgs); bIdx++)
+        {
+            binAvgs[bIdx] = (colorchord->end.folded_bins[2 * bIdx] + colorchord->end.folded_bins[(2 * bIdx) + 1]) / 2;
+
+            // Keep track of the largest average
+            if (binAvgs[bIdx] > maxBinAvg)
+            {
+                maxBinAvg = binAvgs[bIdx];
+            }
+        }
+
+        // Add the largest average to the history
+        colorchord->binAvgHist[colorchord->bahIdx] = maxBinAvg;
+        colorchord->bahIdx                         = (colorchord->bahIdx + 1) % ARRAY_SIZE(colorchord->binAvgHist);
+
+        // Find the largest average in the moving history
+        for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(colorchord->binAvgHist); bIdx++)
+        {
+            if (colorchord->binAvgHist[bIdx] > maxBinAvg)
+            {
+                maxBinAvg = colorchord->binAvgHist[bIdx];
+            }
+        }
+
+        // Bring up the average to a floor, derived from mic gain.
+        // This prevents visualizing noise on the LEDs
+        maxBinAvg = MAX(87 * gain, maxBinAvg);
+
+        // Don't bother drawing if there is no change
+        bool change = false;
+
+        // Normalize the values to LED_H
+        if (maxBinAvg)
+        {
+            for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(binAvgs); bIdx++)
+            {
+                binAvgs[bIdx] = ((1 + EYE_LED_H) * binAvgs[bIdx]) / maxBinAvg;
+
+                if (binAvgs[bIdx] > colorchord->barHeights[bIdx])
+                {
+                    colorchord->barHeights[bIdx] = binAvgs[bIdx];
+                    change                       = true;
+                }
+                else if (colorchord->barHeights[bIdx])
+                {
+                    colorchord->barHeights[bIdx]--;
+                    change = true;
+                }
+            }
+        }
+
+        if (change)
+        {
+            // Draw bars to the eye LEDs
+            uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
+            for (int x = 0; x < EYE_LED_W; x++)
+            {
+                for (int y = 0; y < EYE_LED_H; y++)
+                {
+                    if (y > (EYE_LED_H - colorchord->barHeights[x]))
+                    {
+                        bitmap[EYE_LED_H - 1 - y][x] = EYE_LED_BRIGHT;
+                    }
+                }
+            }
+            // Write and select the bitmap to an unused slot
+            ch32v003WriteBitmap(colorchord->bmpSlot, bitmap);
+            ch32v003SelectBitmap(colorchord->bmpSlot);
+            // Set up the next slot for the next frame
+            colorchord->bmpSlot = (colorchord->bmpSlot + 1) % CH32V003_MAX_IMAGE_SLOTS;
+        }
+    });
 }
 
 /**

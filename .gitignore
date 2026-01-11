@@ -40,6 +40,9 @@
 *.x86_64
 *.hex
 
+# cfun intermediates
+*.cfun.lst
+
 # Debug files
 *.dSYM/
 *.su
@@ -62,7 +65,9 @@ docs/*.pu
 
 .vscode/c_cpp_properties.json
 .vscode/settings.json
+.idea
 
+.assets_ts
 assets_image
 managed_components
 nvs.json
@@ -73,6 +78,7 @@ plantuml.jar
 swadge_emulator
 crash-*.txt
 screenshot-*.png
+screen-recording-*.gif
 rec-*.csv
 
 *.pyc
@@ -90,3 +96,10 @@ tools/font_maker/*.ttf
 main/utils/cnfs_image.c
 main/utils/cnfs_image.h
 tools/cnfs/cnfs_gen
+
+_old/*
+bigbug-mem.csv
+
+args_*.txt
+
+*.tiled-session

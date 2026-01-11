@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdint.h>
-#include <unistd.h>
 #include <sys/stat.h>
 #include <time.h>
 
@@ -12,9 +11,12 @@
 #define PID 0x4269
 
 #ifdef WIN32
-const int reg_packet_length = 65;
+const int reg_packet_length = 255;
+const int reg_back_rest = 256;
 #else
-const int reg_packet_length = 64;
+#include <unistd.h>
+const int reg_packet_length = 254;
+const int reg_back_rest = 254;
 #endif
 
 hid_device * hd;
@@ -28,7 +30,7 @@ int main( int argc, char ** argv )
 	if( !hd ) { fprintf( stderr, "Could not open USB\n" ); return -94; }
 
 	// Disable tick.
-	uint8_t rdata[65] = { 0 };
+	uint8_t rdata[256] = { 0 };
 	rdata[0] = 173;
 	r = hid_get_feature_report( hd, rdata, reg_packet_length );
 	printf( "Got data: %d bytes\n", r );
@@ -43,13 +45,14 @@ int main( int argc, char ** argv )
 	for( i = 0; i < 1024; i++ )
 	{
 		r = hid_get_feature_report( hd, rdata, reg_packet_length );
-		if( r != reg_packet_length )
+		rdata[0] = 173;
+		if( r != reg_back_rest )
 		{
 			fprintf( stderr, "Error reading message (%d)\n", r );
 		}
 	}
 	double dEnd = OGGetAbsoluteTime();
-	printf( "Reads: %5.0f/sec / %3.2f kB/s\n", 1024.0/(dEnd - dStart), (63)/(dEnd - dStart));
+	printf( "Reads: %5.0f/sec / %3.2f kB/s\n", 1024.0/(dEnd - dStart), (reg_packet_length)/(dEnd - dStart));
 
 	dStart = OGGetAbsoluteTime();
 	for( i = 0; i < 1024; i++ )
@@ -59,11 +62,11 @@ int main( int argc, char ** argv )
 		r = hid_send_feature_report( hd, rdata, reg_packet_length );
 		if( r != reg_packet_length )
 		{
-			fprintf( stderr, "Error reading message (%d)\n", r );
+			fprintf( stderr, "Error writing message (%d)\n", r );
 		}
 	}
 	dEnd = OGGetAbsoluteTime();
-	printf( "Writes: %5.0f/sec / %3.2f kB/s\n", 1024.0/(dEnd - dStart), (63)/(dEnd - dStart) );
+	printf( "Writes: %5.0f/sec / %3.2f kB/s\n", 1024.0/(dEnd - dStart), (reg_packet_length)/(dEnd - dStart) );
 
 	rdata[0] = 173;
 	rdata[1] = 0x00;
@@ -78,7 +81,7 @@ int main( int argc, char ** argv )
 	int f;
 	for( f = 0; f < 10; f++ )
 	{
-		for( y = 0; y < 240; y++ )
+		for( y = 0; y < 240; y+=10 )
 		{
 			for( x = 0; x < 280; x += 56 )
 			{

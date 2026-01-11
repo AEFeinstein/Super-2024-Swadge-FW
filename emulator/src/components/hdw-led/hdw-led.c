@@ -11,8 +11,9 @@
 // Variables
 //==============================================================================
 
-static led_t rdLeds[CONFIG_NUM_LEDS + 1] = {0};
-static uint8_t ledBrightness             = 0;
+static led_t currentLeds[CONFIG_NUM_LEDS] = {0};
+static led_t dimmedLeds[CONFIG_NUM_LEDS]  = {0};
+static uint8_t ledBrightness              = 0;
 
 //==============================================================================
 // Functions
@@ -27,7 +28,8 @@ static uint8_t ledBrightness             = 0;
  */
 esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt, uint8_t brightness)
 {
-    memset(rdLeds, 0, sizeof(rdLeds));
+    memset(currentLeds, 0, sizeof(currentLeds));
+    memset(dimmedLeds, 0, sizeof(dimmedLeds));
     setLedBrightness(brightness);
     return ESP_OK;
 }
@@ -40,6 +42,22 @@ esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt, uint8_t brightness)
 esp_err_t deinitLeds(void)
 {
     return ESP_OK;
+}
+
+/**
+ * @brief
+ */
+void powerDownLed(void)
+{
+    WARN_UNIMPLEMENTED();
+}
+
+/**
+ * @brief
+ */
+void powerUpLed(void)
+{
+    WARN_UNIMPLEMENTED();
 }
 
 /**
@@ -68,30 +86,23 @@ esp_err_t setLeds(led_t* leds, uint8_t numLeds)
         numLeds = CONFIG_NUM_LEDS;
     }
 
+    // Save LED values
+    memcpy(currentLeds, leds, sizeof(led_t) * numLeds);
+
+    // Fill a local copy of LEDs with brightness applied
     for (uint8_t i = 0; i < numLeds; i++)
     {
-        rdLeds[i].r = (leds[i].r >> ledBrightness);
-        rdLeds[i].g = (leds[i].g >> ledBrightness);
-        rdLeds[i].b = (leds[i].b >> ledBrightness);
+        dimmedLeds[i].r = (leds[i].r >> ledBrightness);
+        dimmedLeds[i].g = (leds[i].g >> ledBrightness);
+        dimmedLeds[i].b = (leds[i].b >> ledBrightness);
     }
 
     return ESP_OK;
 }
 
-uint8_t getLedState(led_t* leds, uint8_t numLeds)
+const led_t* getLedState(void)
 {
-    if (NULL != leds && numLeds > 0)
-    {
-        if (numLeds > CONFIG_NUM_LEDS + 1)
-        {
-            numLeds = CONFIG_NUM_LEDS + 1;
-        }
-
-        memcpy(leds, rdLeds, sizeof(led_t) * numLeds);
-        return numLeds;
-    }
-
-    return 0;
+    return currentLeds;
 }
 
 /**
@@ -103,7 +114,7 @@ uint8_t getLedState(led_t* leds, uint8_t numLeds)
 led_t* getLedMemory(uint8_t* numLeds)
 {
     *numLeds = CONFIG_NUM_LEDS;
-    return rdLeds;
+    return dimmedLeds;
 }
 
 /**

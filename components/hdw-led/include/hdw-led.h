@@ -3,7 +3,7 @@
  * \section led_design Design Philosophy
  *
  * LED code is based on <a
- * href="https://github.com/espressif/esp-idf/tree/v5.2.1/examples/peripherals/rmt/led_strip">Espressif's RMT
+ * href="https://github.com/espressif/esp-idf/tree/v5.2.5/examples/peripherals/rmt/led_strip">Espressif's RMT
  * Transmit Example - LED Strip</a>.
  *
  * Each LED has a red, green, and blue component. Each component ranges from 0 to 255.
@@ -30,10 +30,6 @@
  * must be flushed before entering light sleep. If they are not, garbage data may be sent after light sleep begins,
  * resulting in indeterminate LED behavior.
  *
- * Even though \c CONFIG_NUM_LEDS declares eight LEDs, there is a ninth LED which is controllable. By default, setting
- * \c CONFIG_NUM_LEDS LEDs will automatically set the ninth to the average of the sixth, seventh, and eighth, which
- * surround it on the PCB. To set the ninth LED, set `CONFIG_NUM_LEDS + 1` LEDs.
- *
  * \section led_example Example
  *
  * Set the LEDs to a rough rainbow:
@@ -55,7 +51,7 @@
 #include <stdint.h>
 
 #include <esp_err.h>
-#include <hal/gpio_types.h>
+#include <soc/gpio_num.h>
 
 /// @brief The maximum LED brightness setting
 #define MAX_LED_BRIGHTNESS 8
@@ -72,9 +68,11 @@ typedef struct __attribute__((packed))
 
 esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt, uint8_t brightness);
 esp_err_t deinitLeds(void);
+void powerDownLed(void);
+void powerUpLed(void);
 esp_err_t setLeds(led_t* leds, uint8_t numLeds);
 void setLedBrightness(uint8_t brightness);
-uint8_t getLedState(led_t* leds, uint8_t numLeds);
+const led_t* getLedState(void);
 void flushLeds(void);
 
 #endif

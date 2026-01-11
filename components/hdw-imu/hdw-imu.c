@@ -356,6 +356,23 @@ esp_err_t deInitAccelerometer(void)
 }
 
 /**
+ * @brief Power down the accelerometer and gyroscope
+ */
+void powerDownAccel(void)
+{
+    LSM6DSLSet(LSM6DSL_CTRL1_XL, 0b00000000); // Power down Accelerometer
+    LSM6DSLSet(LSM6DSL_CTRL2_G, 0b00000000);  // Power down Gyro
+}
+
+/**
+ * @brief Power up the accelerometer and gyroscope
+ */
+void powerUpAccel(void)
+{
+    accelSetRegistersAndReset();
+}
+
+/**
  * @brief Read all pending samples in IMU and perform a sensor fusion pass
  *
  * @return ESP_OK if successful, or nonzero if error.
@@ -748,10 +765,8 @@ float accelGetStdDevInCal()
 void accelSetRegistersAndReset(void)
 {
     LSM6DSLSet(LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b000); // Reset FIFO
-    LSM6DSLSet(
-        LSM6DSL_FIFO_CTRL5,
-        (0b0101 << 3)
-            | 0b110); // 208 Hz ODR, Continuous mode. If the FIFO is full, the new sample overwrites the older one.
+    // 208 Hz ODR, Continuous mode. If the FIFO is full, the new sample overwrites the older one.
+    LSM6DSLSet(LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b110);
     LSM6DSLSet(LSM6DSL_FIFO_CTRL3, 0b00001001); // Put both devices (Accel + Gyro) in FIFO.
     LSM6DSLSet(LSM6DSL_CTRL1_XL, 0b01011001);   // Setup accel (16 g's FS)
     LSM6DSLSet(LSM6DSL_CTRL2_G, 0b01011100);    // Setup gyro, 2000dps

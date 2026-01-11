@@ -40,7 +40,7 @@ I (781) cpu_start: Project name:     swadge2024
 I (786) cpu_start: App version:      v1.1.0-336-g6580f8a0
 I (791) cpu_start: Compile time:     Jul 17 2024 17:56:51
 I (796) cpu_start: ELF file SHA256:  a0f9cb97d9158df6...
-I (801) cpu_start: ESP-IDF:          v5.2.1
+I (801) cpu_start: ESP-IDF:          v5.3.1
 I (805) cpu_start: Min chip rev:     v0.0
 I (809) cpu_start: Max chip rev:     v1.99 
 I (813) cpu_start: Chip rev:         v1.0
@@ -107,7 +107,7 @@ I (1202) gpio: GPIO[38]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulld
 
 This option will route serial debug output through a pin on the Simple Add-On (SAO) connector (GPIO 18). It's functionally the same as `DEBUG_OUTPUT_UART`, but in a more physically accessible location. The two pins used are:
 
-<img src="./sao_hdr.png" width="512">
+<img src="./images/sao_hdr.png" width="512">
 
 ### DEBUG_OUTPUT_USB
 
@@ -169,7 +169,7 @@ I (692) gpio: GPIO[5]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldow
 I (752) gpio: GPIO[21]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0
 I (752) gpio: GPIO[38]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0
 ```
-To figure out where your last crash was, xecute the `xtensa-esp32s2-elf-addr2line` line as it appears in the log. I.e.
+To figure out where your last crash was, execute the `xtensa-esp32s2-elf-addr2line` line as it appears in the log. I.e.
 
 ```bash
 $ xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf 0x4008aab0:0x00060930

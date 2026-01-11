@@ -8,8 +8,9 @@
 
 #if HEATSHRINK_DYNAMIC_ALLOC
     /* Optional replacement of malloc/free */
-    #define HEATSHRINK_MALLOC(SZ)  malloc(SZ)
-    #define HEATSHRINK_FREE(P, SZ) free(P)
+    #include <esp_heap_caps.h>
+    #define HEATSHRINK_MALLOC(SZ)  heap_caps_malloc(SZ, MALLOC_CAP_8BIT)
+    #define HEATSHRINK_FREE(P, SZ) heap_caps_free(P)
 #else
     /* Required parameters for static configuration */
     #define HEATSHRINK_STATIC_INPUT_BUFFER_SIZE 32
@@ -21,6 +22,6 @@
 #define HEATSHRINK_DEBUGGING_LOGS 0
 
 /* Use indexing for faster compression. (This requires additional space.) */
-#define HEATSHRINK_USE_INDEX 1
+#define HEATSHRINK_USE_INDEX 0
 
 #endif

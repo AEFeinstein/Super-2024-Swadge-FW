@@ -86,6 +86,14 @@ void fastNormVec(q24_8* xp, q24_8* yp)
         y      = -y;
     }
 
+    // Fixed point division bitshifts up, so make sure the inputs are small enough to not disturb the sign bit
+    while (x > 0x007FFFFF || y > 0x007FFFFF)
+    {
+        // Dividing both components by two won't change the direction
+        x /= 2;
+        y /= 2;
+    }
+
     // Check special cases
     if (x == 0)
     {
@@ -400,7 +408,7 @@ int main(int argc __attribute__((unused)), char** argv __attribute__((unused)))
 
     #define TEST_RANGE 1000
     // Allocate space for test results
-    testResult_t* results = calloc(4 * TEST_RANGE * TEST_RANGE, sizeof(testResult_t));
+    testResult_t* results = heap_caps_calloc(4 * TEST_RANGE * TEST_RANGE, sizeof(testResult_t), MALLOC_CAP_8BIT);
     // Test all vectors in a 1000 x 1000 range
     for (int x = -TEST_RANGE; x < TEST_RANGE; x++)
     {
@@ -461,7 +469,7 @@ int main(int argc __attribute__((unused)), char** argv __attribute__((unused)))
     }
 
     // Clean up
-    free(results);
+    heap_caps_free(results);
     return 0;
 }
 

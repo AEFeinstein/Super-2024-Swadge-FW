@@ -16,7 +16,7 @@
 
 int global_i = 100;
 menu_t * menu;
-menuManiaRenderer_t* menuManiaRenderer;
+menuMegaRenderer_t* menuMegaRenderer;
 font_t logbook;
 int testmode = 0;
 const char * menu_Bootload = "Bootloader";
@@ -38,9 +38,9 @@ uint32_t asm_read_gpio();
 
 wsg_t example_sprite;
 
-static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool mainMenuCb(const char* label, bool selected, unsigned long settingVal)
 {
-	if( !selected ) return;
+	if( !selected ) return true;
 
     if( label == mainMenuMode.modeName )
     {
@@ -58,6 +58,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
 	{
 		testmode = 1;
 	}
+	return true;
 }
 
 void sandbox_main(void)
@@ -80,10 +81,10 @@ void sandbox_main(void)
     addSingleItemToMenu(menu, menu_GraphicsTestMode);
     addSingleItemToMenu(menu, mainMenuMode.modeName);
     addSingleItemToMenu(menu, menu_Bootload);
-    loadFont("logbook.font", &logbook, false);
-    menuManiaRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    loadFont(LOGBOOK_FONT, &logbook, false);
+    menuMegaRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
 
-    loadWsg("kid0.wsg", &example_sprite, true);
+    loadWsg(HP_BOTTOM_BIGMA_WSG, &example_sprite, true);
 #endif
 
     ESP_LOGI( "sandbox", "Loaded" );
@@ -176,7 +177,7 @@ void sandbox_tick()
 	}
 	else
 	{
-	    drawMenuMania(menu, menuManiaRenderer, 1);
+	    drawMenuMega(menu, menuMegaRenderer, 1);
 	}
 
     buttonEvt_t evt              = {0};

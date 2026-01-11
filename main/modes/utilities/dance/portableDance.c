@@ -11,19 +11,26 @@
 void portableDanceLoadSetting(portableDance_t* dance);
 
 //==============================================================================
+// Const Variables
+//==============================================================================
+
+static const char nvsKeyDanceIndex[] = "dance_index";
+static const char nvsKeyDanceSpeed[] = "dance_speed";
+
+//==============================================================================
 // Functions
 //==============================================================================
 
 /**
  * @brief Returns a pointer to a portableDance_t.
  *
- * @param nvsKey The key where the dance index will be loaded and saved, if not NULL
+ * @param nvsNs The namespace where the dance index and speed will be loaded and saved, if not NULL
  * @return A pointer to a new portableDance_t
  */
-portableDance_t* initPortableDance(const char* nvsKey)
+portableDance_t* initPortableDance(const char* nvsNs)
 {
-    portableDance_t* dance = calloc(1, sizeof(portableDance_t));
-    dance->dances          = calloc(1, sizeof(ledDanceOpt_t) * getNumDances());
+    portableDance_t* dance = heap_caps_calloc(1, sizeof(portableDance_t), MALLOC_CAP_8BIT);
+    dance->dances          = heap_caps_calloc(1, sizeof(ledDanceOpt_t) * getNumDances(), MALLOC_CAP_8BIT);
     for (uint8_t i = 0; i < getNumDances(); i++)
     {
         dance->dances[i].dance  = ledDances + i;
@@ -31,10 +38,11 @@ portableDance_t* initPortableDance(const char* nvsKey)
     }
 
     dance->resetDance = true;
+    dance->speed      = DANCE_SPEED_MULT;
 
-    if (nvsKey != NULL)
+    if (nvsNs != NULL)
     {
-        dance->nvsKey = nvsKey;
+        dance->nvsNs = nvsNs;
         portableDanceLoadSetting(dance);
     }
 
@@ -52,9 +60,9 @@ void freePortableDance(portableDance_t* dance)
     {
         if (dance->dances != NULL)
         {
-            free(dance->dances);
+            heap_caps_free(dance->dances);
         }
-        free(dance);
+        heap_caps_free(dance);
     }
 }
 
@@ -66,8 +74,8 @@ void freePortableDance(portableDance_t* dance)
  */
 void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
 {
-    dance->dances[dance->danceIndex].dance->func((int32_t)elapsedUs, dance->dances[dance->danceIndex].dance->arg,
-                                                 dance->resetDance);
+    dance->dances[dance->danceIndex].dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
+                                                 dance->dances[dance->danceIndex].dance->arg, dance->resetDance);
     dance->resetDance = false;
 }
 
@@ -79,9 +87,9 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
 void portableDanceLoadSetting(portableDance_t* dance)
 {
     int32_t danceIndex = 0;
-    if (!readNvs32(dance->nvsKey, &danceIndex))
+    if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceIndex, &danceIndex))
     {
-        writeNvs32(dance->nvsKey, danceIndex);
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceIndex, danceIndex);
     }
 
     if (danceIndex < 0)
@@ -94,6 +102,38 @@ void portableDanceLoadSetting(portableDance_t* dance)
     }
 
     dance->danceIndex = (uint8_t)danceIndex;
+
+    int32_t speed = DANCE_SPEED_MULT;
+    if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceSpeed, &speed))
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSpeed, speed);
+    }
+    dance->speed = speed;
+}
+
+/**
+ * @brief Sets the current LED dance to the one specified, if within range, and updates the saved index. This works even
+ * if a dance is disabled.
+ *
+ * @param dance The portableDance_t pointer to update
+ * @param danceIndex The index of the dance to select
+ * @return true if the dance was within the array range, false if not
+ */
+bool portableDanceSetByIndex(portableDance_t* dance, uint8_t danceIndex)
+{
+    if (danceIndex >= getNumDances())
+    {
+        return false;
+    }
+
+    dance->danceIndex = danceIndex;
+    dance->resetDance = true;
+
+    if (dance->nvsNs != NULL)
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceIndex, dance->danceIndex);
+    }
+    return true;
 }
 
 /**
@@ -110,17 +150,25 @@ bool portableDanceSetByName(portableDance_t* dance, const char* danceName)
     {
         if (!strcmp(dance->dances[i].dance->name, danceName))
         {
-            dance->danceIndex = i;
-            dance->resetDance = true;
-
-            if (dance->nvsKey != NULL)
-            {
-                writeNvs32(dance->nvsKey, dance->danceIndex);
-            }
-            return true;
+            return portableDanceSetByIndex(dance, i);
         }
     }
     return false;
+}
+
+/**
+ * @brief Sets the current LED dance speed and persists it to NVS if there is an NVS namespace set.
+ *
+ * @param dance The portableDance_t pointer to update
+ * @param speed The dance speed to set. Dance will run at ::DANCE_SPEED_MULT / speed
+ */
+void portableDanceSetSpeed(portableDance_t* dance, int32_t speed)
+{
+    dance->speed = speed;
+    if (dance->nvsNs != NULL)
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSpeed, speed);
+    }
 }
 
 /**
@@ -146,9 +194,9 @@ void portableDanceNext(portableDance_t* dance)
 
     dance->resetDance = true;
 
-    if (dance->nvsKey != NULL)
+    if (dance->nvsNs != NULL)
     {
-        writeNvs32(dance->nvsKey, dance->danceIndex);
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceIndex, dance->danceIndex);
     }
 }
 
@@ -174,9 +222,9 @@ void portableDancePrev(portableDance_t* dance)
 
     dance->resetDance = true;
 
-    if (dance->nvsKey != NULL)
+    if (dance->nvsNs != NULL)
     {
-        writeNvs32(dance->nvsKey, dance->danceIndex);
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceIndex, dance->danceIndex);
     }
 }
 

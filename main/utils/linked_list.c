@@ -8,6 +8,7 @@
 
 #include <esp_log.h>
 #include <esp_random.h>
+#include <esp_heap_caps.h>
 
 #include "linked_list.h"
 
@@ -42,7 +43,7 @@ static void validateList(const char* func, int line, bool nl, list_t* list, node
 void push(list_t* list, void* val)
 {
     VALIDATE_LIST(__func__, __LINE__, true, list, val);
-    node_t* newLast = malloc(sizeof(node_t));
+    node_t* newLast = heap_caps_malloc(sizeof(node_t), MALLOC_CAP_8BIT);
     newLast->val    = val;
     newLast->next   = NULL;
     newLast->prev   = list->last;
@@ -93,7 +94,7 @@ void* pop(list_t* list)
 
         // Get the last node val, then free it and update length
         retval = target->val;
-        free(target);
+        heap_caps_free(target);
         list->length--;
     }
 
@@ -110,7 +111,7 @@ void* pop(list_t* list)
 void unshift(list_t* list, void* val)
 {
     VALIDATE_LIST(__func__, __LINE__, true, list, val);
-    node_t* newFirst = malloc(sizeof(node_t));
+    node_t* newFirst = heap_caps_malloc(sizeof(node_t), MALLOC_CAP_8BIT);
     newFirst->val    = val;
     newFirst->next   = list->first;
     newFirst->prev   = NULL;
@@ -161,7 +162,7 @@ void* shift(list_t* list)
 
         // Get the first node val, then free it and update length
         retval = target->val;
-        free(target);
+        heap_caps_free(target);
         list->length--;
     }
 
@@ -193,7 +194,7 @@ bool addIdx(list_t* list, void* val, uint16_t index)
     // Else if the index we're trying to add to is before the end of the list
     else if (index < list->length - 1)
     {
-        node_t* newNode = malloc(sizeof(node_t));
+        node_t* newNode = heap_caps_malloc(sizeof(node_t), MALLOC_CAP_8BIT);
         newNode->val    = val;
         newNode->next   = NULL;
         newNode->prev   = NULL;
@@ -221,6 +222,116 @@ bool addIdx(list_t* list, void* val, uint16_t index)
     }
     VALIDATE_LIST(__func__, __LINE__, false, list, val);
     return true;
+}
+
+/**
+ * @brief Insert a value into the list immediately before the given node.
+ *
+ * If the given node is NULL, inserts at the end of the list
+ *
+ * @param list  The list to add the entry to
+ * @param val   The new value to add to the list
+ * @param entry The existing entry, after which to insert the value
+ */
+void addBefore(list_t* list, void* val, node_t* entry)
+{
+    VALIDATE_LIST(__func__, __LINE__, true, list, val);
+
+    if (entry == list->first)
+    {
+        // Add at head
+        unshift(list, val);
+    }
+    else if (entry == NULL)
+    {
+        push(list, val);
+    }
+    else
+    {
+        node_t* prev    = entry->prev;
+        node_t* newNode = heap_caps_malloc(sizeof(node_t), MALLOC_CAP_8BIT);
+        newNode->val    = val;
+        newNode->prev   = prev;
+        newNode->next   = entry;
+
+        if (prev)
+        {
+            prev->next = newNode;
+        }
+        entry->prev = newNode;
+        list->length++;
+    }
+}
+
+/**
+ * @brief Insert a value into the list immediately after the given node.
+ *
+ * If the given node is NULL, inserts at the beginning of the list
+ *
+ * @param list  The list to add the entry to
+ * @param val   The new value to add to the list
+ * @param entry The existing entry, after which to insert the value
+ */
+void addAfter(list_t* list, void* val, node_t* entry)
+{
+    VALIDATE_LIST(__func__, __LINE__, true, list, val);
+
+    if (entry == list->last)
+    {
+        push(list, val);
+    }
+    else if (entry == NULL)
+    {
+        // Add at head
+        unshift(list, val);
+    }
+    else
+    {
+        node_t* next    = entry->next;
+        node_t* newNode = heap_caps_malloc(sizeof(node_t), MALLOC_CAP_8BIT);
+        newNode->val    = val;
+        newNode->prev   = entry;
+        newNode->next   = next;
+
+        if (next)
+        {
+            next->prev = newNode;
+        }
+        entry->next = newNode;
+        list->length++;
+    }
+}
+
+/**
+ * @brief Get the value at an index in the list
+ *
+ * @param list The list to get from
+ * @param index The index to get the value from
+ * @return The value that was removed. May be NULL if the index was invalid
+ */
+void* getAtIndex(list_t* list, uint16_t index)
+{
+    if (NULL == list || list->length == 0)
+    {
+        return NULL;
+    }
+    if (index == list->length - 1)
+    {
+        return list->last->val;
+    }
+    else if (index < list->length - 1)
+    {
+        node_t* current = list->first;
+        for (uint16_t i = 0; i < index; i++)
+        {
+            current = current->next;
+        }
+        return current->val;
+    }
+    else
+    {
+        return NULL;
+    }
 }
 
 /**
@@ -271,7 +382,7 @@ void* removeIdx(list_t* list, uint16_t index)
         current->next       = target->next;
         current->next->prev = current;
 
-        free(target);
+        heap_caps_free(target);
         target = NULL;
 
         list->length--;
@@ -286,7 +397,8 @@ void* removeIdx(list_t* list, uint16_t index)
 }
 
 /**
- * Remove a specific entry from the linked list by ::node_t.
+ * @brief Remove a specific entry from the linked list by ::node_t.
+ *
  * This relinks the entry's neighbors, but does not validate that it was part of the given ::list_t.
  * If the given ::node_t was not part of the given ::list_t, the list length will desync.
  *
@@ -337,10 +449,33 @@ void* removeEntry(list_t* list, node_t* entry)
     VALIDATE_LIST(__func__, __LINE__, false, list, entry);
 
     // free the memory
-    free(entry);
+    heap_caps_free(entry);
 
     // Return the value
     return retVal;
+}
+
+/**
+ * @brief Remove a specific entry from the linked list by value and relink neighbors.
+ *
+ * If the given value was not part of the given ::list_t, nothing will happen.
+ *
+ * @param list The list to remove an entry from
+ * @param val The value to remove from the list
+ * @return The removed value from the entry, may be NULL if the value wasn't in the list
+ */
+void* removeVal(list_t* list, void* val)
+{
+    node_t* node = list->first;
+    while (node)
+    {
+        if (val == node->val)
+        {
+            return removeEntry(list, node);
+        }
+        node = node->next;
+    }
+    return NULL;
 }
 
 /**
@@ -356,6 +491,40 @@ void clear(list_t* list)
         pop(list);
     }
     VALIDATE_LIST(__func__, __LINE__, false, list, NULL);
+}
+
+/**
+ * @brief Get the next node, wrapping around to the first at the end of the list
+ *
+ * @param list The list of nodes
+ * @param node The current node to get the node after
+ * @return The next node, potentially wrapping around to the start of the list
+ */
+node_t* getNextWraparound(list_t* list, node_t* node)
+{
+    // Make sure node is valid
+    if (node)
+    {
+        // If there is a next node
+        if (node->next)
+        {
+            // Return it
+            return node->next;
+        }
+        else
+        {
+            // Otherwise wrap around and return the first
+            return list->first;
+        }
+    }
+    else if (list)
+    {
+        // If no node is given, start at the beginning of the list
+        return list->first;
+    }
+
+    // Node and list are invalid, so there is no next
+    return NULL;
 }
 
 #ifdef TEST_LIST

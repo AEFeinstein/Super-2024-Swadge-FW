@@ -20,7 +20,6 @@ static const uint8_t* cnfsData;
 static int32_t cnfsDataSz;
 
 static const cnfsFileEntry* cnfsFiles;
-static int32_t cnfsNumFiles;
 
 //==============================================================================
 // Functions
@@ -35,14 +34,13 @@ static int32_t cnfsNumFiles;
 bool initCnfs(void)
 {
     /* Get local references from cnfs_data.c */
-    cnfsData     = getCnfsImage();
-    cnfsDataSz   = getCnfsSize();
-    cnfsFiles    = getCnfsFiles();
-    cnfsNumFiles = getCnfsNumFiles();
+    cnfsData   = getCnfsImage();
+    cnfsDataSz = getCnfsSize();
+    cnfsFiles  = getCnfsFiles();
 
     /* Debug print */
-    ESP_LOGI("CNFS", "Size: %" PRIu32 ", Files: %" PRIu32, cnfsDataSz, cnfsNumFiles);
-    return (0 != cnfsDataSz) && (0 != cnfsNumFiles);
+    ESP_LOGI("CNFS", "Size: %" PRIu32 ", Files: %" PRId16, cnfsDataSz, CNFS_NUM_FILES);
+    return (0 != cnfsDataSz) && (0 != CNFS_NUM_FILES);
 }
 
 /**
@@ -59,39 +57,23 @@ bool deinitCnfs(void)
  * @brief Get a pointer to a file, without needing to read it. Same rules that
  * apply to cnfsGetFile, and under the hood, cnfsGetFile uses this function.
  *
- * @param fname   The name of the file to find.
+ * @param fIdx the cnfsFileIdx_t of the file to get
  * @param flen    A pointer to a size_t to return the size of the file.
  * @return A pointer to the read data if successful, or NULL if there is a failure
  *         Do not free this pointer. It is pointing to flash.
  */
-const uint8_t* cnfsGetFile(const char* fname, size_t* flen)
+const uint8_t* cnfsGetFile(cnfsFileIdx_t fIdx, size_t* flen)
 {
-    int low  = 0;
-    int high = cnfsNumFiles - 1;
-    int mid  = (low + high) / 2;
-
-    // Binary search the file list, since it's sorted.
-    while (low <= high)
+    if (0 <= fIdx && fIdx < CNFS_NUM_FILES)
     {
-        const cnfsFileEntry* e = cnfsFiles + mid;
-        int sc                 = strcmp(e->name, fname);
-        if (sc < 0)
-        {
-            low = mid + 1;
-        }
-        else if (sc == 0)
-        {
-            *flen = e->len;
-            return &cnfsData[e->offset];
-        }
-        else
-        {
-            high = mid - 1;
-        }
-        mid = (low + high) / 2;
+        *flen = cnfsFiles[fIdx].len;
+        return &cnfsData[cnfsFiles[fIdx].offset];
     }
-    ESP_LOGE("CNFS", "Failed to open %s", fname);
-    return 0;
+    else
+    {
+        *flen = 0;
+        return NULL;
+    }
 }
 
 /**
@@ -99,15 +81,15 @@ const uint8_t* cnfsGetFile(const char* fname, size_t* flen)
  * assets_image folder before compilation and flashing will automatically
  * be included in the firmware.
  *
- * @param fname   The name of the file to load
+ * @param fIdx The cnfsFileIdx_t of the file to load
  * @param outsize A pointer to a size_t to return how much data was read
  * @param readToSpiRam true to use SPI RAM, false to use normal RAM
  * @return A pointer to the read data if successful, or NULL if there is a failure
  *         This data must be freed when done
  */
-uint8_t* cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
+uint8_t* cnfsReadFile(cnfsFileIdx_t fIdx, size_t* outsize, bool readToSpiRam)
 {
-    const uint8_t* fptr = cnfsGetFile(fname, outsize);
+    const uint8_t* fptr = cnfsGetFile(fIdx, outsize);
 
     if (!fptr)
     {
@@ -122,7 +104,7 @@ uint8_t* cnfsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
     }
     else
     {
-        output = (uint8_t*)calloc((*outsize + 1), sizeof(uint8_t));
+        output = (uint8_t*)heap_caps_calloc((*outsize + 1), sizeof(uint8_t), MALLOC_CAP_8BIT);
     }
     memcpy(output, fptr, *outsize);
     return output;

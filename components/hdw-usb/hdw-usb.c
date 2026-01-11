@@ -123,6 +123,16 @@ static const uint8_t hid_configuration_descriptor[] = {
                        10),                           // polling interval
 };
 
+static const tinyusb_config_t tusb_cfg = {
+    .device_descriptor        = NULL,
+    .string_descriptor        = hid_string_descriptor,
+    .string_descriptor_count  = 0,
+    .external_phy             = false,
+    .configuration_descriptor = hid_configuration_descriptor,
+    .self_powered             = false,
+    .vbus_monitor_io          = false,
+};
+
 //==============================================================================
 // Function declarations
 //==============================================================================
@@ -134,9 +144,11 @@ static bool tud_hid_n_gamepad_report_ns(uint8_t instance, uint8_t report_id, int
 // Variables
 //==============================================================================
 
-static fnAdvancedUsbHandler advancedUsbHandler;
-static fnSetSwadgeMode setSwadgeMode;
-static const uint8_t* c_descriptor;
+fnAdvancedUsbHandler advancedUsbHandler   = NULL;
+fnSetSwadgeMode setSwadgeMode             = NULL;
+bool redirectPrintf                       = false;
+static const uint8_t* c_descriptor        = NULL;
+static const tinyusb_config_t* c_tusb_cfg = NULL;
 
 //==============================================================================
 // Functions
@@ -147,15 +159,16 @@ static const uint8_t* c_descriptor;
  *
  * @param _setSwadgeMode A function that can be called from this component to set the Swadge mode
  * @param _advancedUsbHandler A function that can be called from this component to handle USB commands
- * @param redirectPrintf true to redirect printf() to USB, false to leave it over UART
+ * @param _redirectPrintf true to redirect printf() to USB, false to leave it over UART
  */
-void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHandler, bool redirectPrintf)
+void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHandler, bool _redirectPrintf)
 {
     ESP_LOGI(TAG, "USB initialization");
 
     // Save the function pointers
     advancedUsbHandler = _advancedUsbHandler;
     setSwadgeMode      = _setSwadgeMode;
+    redirectPrintf     = _redirectPrintf;
 
     uint8_t mac[6];
     esp_err_t e = esp_read_mac(mac, ESP_MAC_WIFI_SOFTAP);
@@ -166,13 +179,6 @@ void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHa
         hid_string_descriptor[3] = serial_string;
     }
 
-    const tinyusb_config_t tusb_cfg = {
-        .device_descriptor        = NULL,
-        .string_descriptor        = hid_string_descriptor,
-        .external_phy             = false,
-        .configuration_descriptor = hid_configuration_descriptor,
-    };
-
     // Initialize TinyUSB with the default descriptor
     initTusb(&tusb_cfg, hid_report_descriptor);
 
@@ -180,6 +186,9 @@ void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHa
     {
         // Set the log to print with advanced_usb_write_log_printf()
         esp_log_set_vprintf(advanced_usb_write_log_printf);
+
+        // For emission of uprintf symbol.
+        uprintf("printf overridden");
     }
 
     ESP_LOGI(TAG, "USB initialization DONE");
@@ -188,22 +197,39 @@ void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHa
 /**
  * @brief Initialize TinyUSB
  *
- * @param tusb_cfg The TinyUSB configuration
+ * @param config The TinyUSB configuration
  * @param descriptor The descriptor to use for this configuration
  */
-void initTusb(const tinyusb_config_t* tusb_cfg, const uint8_t* descriptor)
+void initTusb(const tinyusb_config_t* config, const uint8_t* descriptor)
 {
+    c_tusb_cfg   = config;
     c_descriptor = descriptor;
-    ESP_ERROR_CHECK(tinyusb_driver_install(tusb_cfg));
+    ESP_ERROR_CHECK(tinyusb_driver_install(c_tusb_cfg));
 }
 
 /**
  * @brief Deinitialize USB HID device
- * Note, this does nothing as tinyusb_driver_uninstall() doesn't exist
  */
 void deinitUsb(void)
 {
+    ESP_ERROR_CHECK(tinyusb_driver_uninstall());
     return;
+}
+
+/**
+ * @brief Power down the USB
+ */
+void powerDownUsb(void)
+{
+    deinitUsb();
+}
+
+/**
+ * @brief Power up the TODO
+ */
+void powerUpUsb(void)
+{
+    initUsb(setSwadgeMode, advancedUsbHandler, redirectPrintf);
 }
 
 /**

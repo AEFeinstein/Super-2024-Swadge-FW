@@ -7,3 +7,4 @@
 #pragma once
 
 #include "hal/gpio_types.h"
+#include "soc/gpio_num.h"

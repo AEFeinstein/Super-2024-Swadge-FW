@@ -11,7 +11,7 @@
 #include "esp_err.h"
 
 #include "touch_pad.h"
-#include "hal/gpio_types.h"
+#include "soc/gpio_num.h"
 
 // #include "soc/soc_caps.h"
 

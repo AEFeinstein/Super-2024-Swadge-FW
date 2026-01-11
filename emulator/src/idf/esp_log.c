@@ -2,6 +2,8 @@
 
 #include <esp_log.h>
 
+#include <esp_timer.h>
+
 static const char levelChars[] = {
     'N', // ESP_LOG_NONE
     'E', // ESP_LOG_ERROR
@@ -11,7 +13,8 @@ static const char levelChars[] = {
     'V'  // ESP_LOG_VERBOSE
 };
 
-void esp_log_write(esp_log_level_t level, const char* tag, const char* format, ...)
+void esp_log_write(esp_log_level_t level, const char* file, int line, const char* func, const char* tag,
+                   const char* format, ...)
 {
     if (level <= LOG_LOCAL_LEVEL)
     {
@@ -21,6 +24,7 @@ void esp_log_write(esp_log_level_t level, const char* tag, const char* format, .
         vsnprintf(dbgStr, sizeof(dbgStr), format, args);
         va_end(args);
 
-        printf("%c|%s| %s\n", levelChars[level], tag, dbgStr);
+        printf("%c (%" PRId64 ") %s | %s:%d - %s() | %s\n", levelChars[level], esp_timer_get_time() / 1000, tag, file,
+               line, func, dbgStr);
     }
 }

@@ -3,7 +3,7 @@
  * \section tft_design Design Philosophy
  *
  * TFT code is based on <a
- * href="https://github.com/espressif/esp-idf/tree/v5.2.1/examples/peripherals/lcd/tjpgd">Espressif's LCD tjpgd
+ * href="https://github.com/espressif/esp-idf/tree/v5.2.5/examples/peripherals/lcd/tjpgd">Espressif's LCD tjpgd
  * example</a>.
  *
  * Each pixel in the frame-buffer is of type ::paletteColor_t.
@@ -78,7 +78,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <hal/gpio_types.h>
+#include <soc/gpio_num.h>
 #include <hal/spi_types.h>
 #include <driver/ledc.h>
 #include <esp_err.h>
@@ -126,6 +126,8 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
              gpio_num_t backlight, bool isPwmBacklight, ledc_channel_t ledcChannel, ledc_timer_t ledcTimer,
              uint8_t brightness);
 void deinitTFT(void);
+void powerDownTft(void);
+void powerUpTft(void);
 esp_err_t setTFTBacklightBrightness(uint8_t intensity);
 void disableTFTBacklight(void);
 void enableTFTBacklight(void);
@@ -172,11 +174,34 @@ void drawDisplayTft(fnBackgroundDrawCallback_t cb);
             : "a4");
 #else
     /// @brief Do nothing if this isn't an __XTENSA__ platform
-    #define SETUP_FOR_TURBO()
+    #define SETUP_FOR_TURBO() bool turboSetup = true
     /// @brief Passthrough call to setPxTft() if this isn't an __XTENSA__ platform
-    #define TURBO_SET_PIXEL(opxc, opy, colorVal)        setPxTft(opxc, opy, colorVal)
+    #define TURBO_SET_PIXEL(opxc, opy, colorVal)                               \
+        do                                                                     \
+        {                                                                      \
+            if (!turboSetup)                                                   \
+            {                                                                  \
+                fprintf(stderr, "SETUP_FOR_TURBO() not called\n");             \
+                exit(1);                                                       \
+            }                                                                  \
+            if (opxc < 0 || opxc >= TFT_WIDTH || opy < 0 || opy >= TFT_HEIGHT) \
+            {                                                                  \
+                fprintf(stderr, "PXL OOB (%d, %d)\n", opxc, opy);              \
+                exit(1);                                                       \
+            }                                                                  \
+            setPxTft(opxc, opy, colorVal);                                     \
+        } while (0)
     /// @brief Passthrough call to setPxTft() if this isn't an __XTENSA__ platform
-    #define TURBO_SET_PIXEL_BOUNDS(opxc, opy, colorVal) setPxTft(opxc, opy, colorVal)
+    #define TURBO_SET_PIXEL_BOUNDS(opxc, opy, colorVal)            \
+        do                                                         \
+        {                                                          \
+            if (!turboSetup)                                       \
+            {                                                      \
+                fprintf(stderr, "SETUP_FOR_TURBO() not called\n"); \
+                exit(1);                                           \
+            }                                                      \
+            setPxTft(opxc, opy, colorVal);                         \
+        } while (0)
 #endif
 
 #endif

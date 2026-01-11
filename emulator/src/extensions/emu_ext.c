@@ -15,11 +15,15 @@
 // Extension Includes
 #include "ext_touch.h"
 #include "ext_leds.h"
+#include "ext_led_eyes.h"
 #include "ext_fuzzer.h"
+#include "ext_gamepad.h"
 #include "ext_keymap.h"
+#include "ext_midi.h"
 #include "ext_modes.h"
 #include "ext_replay.h"
 #include "ext_tools.h"
+#include "ext_mega_pulse_ex.h"
 
 //==============================================================================
 // Registered Extensions
@@ -29,10 +33,10 @@
 // ADD ALL EXTENSIONS HERE IN ORDER TO REGISTER THEM
 //==============================================================================
 
-static const emuExtension_t* registeredExtensions[] = {
-    &touchEmuCallback,  &ledEmuExtension,    &fuzzerEmuExtension, &keymapEmuCallback,
-    &modesEmuExtension, &replayEmuExtension, &toolsEmuExtension,
-};
+static const emuExtension_t* registeredExtensions[]
+    = {&touchEmuCallback,   &ledEmuExtension,   &ledEyesEmuExtension,  &fuzzerEmuExtension,
+       &toolsEmuExtension,  &keymapEmuCallback, &modesEmuExtension,    &gamepadEmuExtension,
+       &replayEmuExtension, &midiEmuExtension,  &megaPulseEmuExtension};
 
 //==============================================================================
 // Macros
@@ -80,7 +84,6 @@ static const emuExtension_t* registeredExtensions[] = {
  */
 typedef struct
 {
-    bool hidden;        ///< Whether or not this pane is invisible
     paneLocation_t loc; ///< Location of the pane
     uint32_t minW;      ///< Requested minimum width of the pane
     uint32_t minH;      ///< Requested minimum height of the pane
@@ -200,7 +203,7 @@ static void preloadExtensions(void)
 }
 
 /**
- * @brief
+ * @brief Initializes all registered emulator extensions
  *
  * @param args
  */
@@ -216,7 +219,7 @@ void initExtensions(emuArgs_t* args)
 
         if (ext->fnInitCb)
         {
-            printf("Extension %s initializing... ", ext->name);
+            printf("Extension %s initializing...\n", ext->name);
             info->enabled = ext->fnInitCb(args);
             printf("%s!\n", info->enabled ? "enabled" : "disabled");
         }
@@ -232,7 +235,7 @@ void initExtensions(emuArgs_t* args)
 }
 
 /**
- * @brief
+ * @brief Deinitializes all registered emulator extensions
  *
  */
 void deinitExtensions(void)
@@ -247,6 +250,14 @@ void deinitExtensions(void)
         while ((paneInfo = (emuPaneInfo_t*)pop(&extInfo->panes)))
         {
             free(paneInfo);
+        }
+
+        if (extInfo->initialized)
+        {
+            if (extInfo->extension->fnDeinitCb)
+            {
+                extInfo->extension->fnDeinitCb();
+            }
         }
         free(extInfo);
     }
@@ -303,11 +314,23 @@ bool disableExtension(const char* name)
     {
         extInfo->enabled = false;
 
-        // If the extension had panes, we will need to recalculate
-        if (extInfo->panes.length > 0)
+        // Unload the extension's frames
+        emuPaneInfo_t* paneInfo;
+        while ((paneInfo = (emuPaneInfo_t*)pop(&extInfo->panes)))
         {
-            extManager.paneMinsCalculated = false;
+            free(paneInfo);
         }
+
+        if (extInfo->initialized)
+        {
+            if (extInfo->extension->fnDeinitCb)
+            {
+                extInfo->extension->fnDeinitCb();
+            }
+        }
+
+        // If the extension had panes, we will need to recalculate
+        extManager.paneMinsCalculated = false;
 
         return true;
     }
@@ -327,19 +350,53 @@ bool disableExtension(const char* name)
  * @param loc  Which edge of the screen the pane should be placed in
  * @param minW The minimum width of the pane
  * @param minH The minimum height of the pane
+ * @return An ID number for the requested pane
  */
-void requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, uint32_t minH)
+int requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, uint32_t minH)
 {
     emuExtInfo_t* extInfo = findExtInfo(ext);
     if (NULL != extInfo)
     {
         emuPaneInfo_t* paneInfo = calloc(1, sizeof(emuPaneInfo_t));
 
-        paneInfo->loc  = loc;
-        paneInfo->minW = minW;
-        paneInfo->minH = minH;
+        paneInfo->loc          = loc;
+        paneInfo->minW         = minW;
+        paneInfo->minH         = minH;
+        paneInfo->pane.visible = true;
+        paneInfo->pane.id      = extInfo->panes.length;
 
         push(&extInfo->panes, paneInfo);
+        extManager.paneMinsCalculated = false;
+
+        return paneInfo->pane.id;
+    }
+    return -1;
+}
+
+/**
+ * @brief Sets the visibility of a panel using its ID
+ *
+ * @param ext The extension for the pane
+ * @param paneId The ID of the pane, as returned by requestPane()
+ * @param visible The visibilty to set
+ */
+void setPaneVisibility(const emuExtension_t* ext, int paneId, bool visible)
+{
+    emuExtInfo_t* extInfo = findExtInfo(ext);
+    if (NULL != extInfo)
+    {
+        node_t* node = extInfo->panes.first;
+        for (int i = 0; node != NULL && i < paneId; i++)
+        {
+            node = node->next;
+        }
+
+        if (node != NULL)
+        {
+            emuPaneInfo_t* pane           = node->val;
+            pane->pane.visible            = visible;
+            extManager.paneMinsCalculated = false;
+        }
     }
 }
 
@@ -350,15 +407,23 @@ void requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, u
  * matching the value of each extension's panes' ::paneLocation_t.
  *
  * @param[out] paneMinimums A pointer to a 0-initialized array of at least 4 ::emuPaneMinimum_t to be used as output.
+ * @return true if the pane minimums have changed
+ * @return false if the pane minimums did not change
+
  */
-void calculatePaneMinimums(emuPaneMinimum_t* paneMinimums)
+bool calculatePaneMinimums(emuPaneMinimum_t* paneMinimums)
 {
     // Figure out the minimum required height/width of each pane side
     // For this we don't need to know anything about the actual window dimensions yet
 
+    bool result = false;
+
     // Check if the cached pane minimums are still good
     if (!extManager.paneMinsCalculated)
     {
+        // Reset the pane minimums so they don't ratchet up
+        memset(extManager.paneMinimums, 0, sizeof(extManager.paneMinimums));
+
         // Iterate over all the extensions
         // Update the cached pane minimums
         node_t* extNode = extManager.extensions.first;
@@ -374,7 +439,7 @@ void calculatePaneMinimums(emuPaneMinimum_t* paneMinimums)
                 {
                     // Make sure each pane isn't hidden
                     emuPaneInfo_t* paneInfo = (emuPaneInfo_t*)(paneNode->val);
-                    if (!paneInfo->hidden)
+                    if (paneInfo->pane.visible)
                     {
                         // Get the minumums for this pane's location
                         emuPaneMinimum_t* locMin = (extManager.paneMinimums + paneInfo->loc);
@@ -413,10 +478,12 @@ void calculatePaneMinimums(emuPaneMinimum_t* paneMinimums)
 
         // Cache is valid again!
         extManager.paneMinsCalculated = true;
+        result                        = true;
     }
 
     // Copy the cached pane minimums to the output
     memcpy(paneMinimums, extManager.paneMinimums, sizeof(extManager.paneMinimums));
+    return result;
 }
 
 /**
@@ -435,7 +502,7 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
     emuPaneMinimum_t paneInfos[4];
     calculatePaneMinimums(paneInfos);
 
-    // Figure out how much the screen should be scaled b
+    // Figure out how much the screen should be scaled by
     uint8_t widthMult = (winW - paneInfos[PANE_LEFT].min - paneInfos[PANE_RIGHT].min) / screenW;
     if (0 == widthMult)
     {
@@ -478,6 +545,11 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
                                     / (paneInfos[PANE_LEFT].min + paneInfos[PANE_RIGHT].min);
         winPanes[PANE_LEFT].paneH = winH;
     }
+    else
+    {
+        winPanes[PANE_LEFT].paneW = 0;
+        winPanes[PANE_LEFT].paneH = 0;
+    }
 
     // The screen will be just to the right of the left pane and its divider
     screenPane->paneX = winPanes[PANE_LEFT].paneW + leftDivW;
@@ -489,6 +561,11 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
     {
         winPanes[PANE_RIGHT].paneW = winW - (winPanes[PANE_LEFT].paneW + leftDivW + screenPane->paneW + rightDivW);
         winPanes[PANE_RIGHT].paneH = winH;
+    }
+    else
+    {
+        winPanes[PANE_RIGHT].paneW = 0;
+        winPanes[PANE_RIGHT].paneH = 0;
     }
 
     // Now do the horizontal panes, which have the same X and W as the screen
@@ -517,7 +594,22 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
           + (winH - winPanes[PANE_TOP].paneH - winPanes[PANE_BOTTOM].paneH - screenPane->paneH - topDivH - bottomDivH)
                 / 2;
 
-    winPanes[PANE_BOTTOM].paneX = screenPane->paneX;
+    // Center the screen in the window if it's bigger
+    if (paneInfos[PANE_LEFT].count == 0 && paneInfos[PANE_RIGHT].count == 0)
+    {
+        screenPane->paneX = (winW - screenPane->paneW) / 2;
+
+        winPanes[PANE_BOTTOM].paneX = 0;
+        winPanes[PANE_TOP].paneX    = 0;
+
+        winPanes[PANE_BOTTOM].paneW = winW;
+        winPanes[PANE_TOP].paneW    = winW;
+    }
+    else
+    {
+        winPanes[PANE_BOTTOM].paneX = screenPane->paneX;
+        winPanes[PANE_TOP].paneX    = screenPane->paneX;
+    }
     winPanes[PANE_BOTTOM].paneY = screenPane->paneY + screenPane->paneH + bottomDivH;
 
 ///< Macro for calculating the offset of the current sub-pane within the overall pane
@@ -547,14 +639,15 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
             node_t* paneNode = extInfo->panes.first;
             while (NULL != paneNode)
             {
-                // Make sure each pane isn't hidden
                 emuPaneInfo_t* paneInfo = (emuPaneInfo_t*)(paneNode->val);
                 emuPane_t* cbPane       = &(paneInfo->pane);
 
                 // Copy the overall pane settings for the appropriate side onto the sub-pane for this callback
-                memcpy(cbPane, (winPanes + paneInfo->loc), sizeof(emuPane_t));
+                cbPane->paneX = winPanes[paneInfo->loc].paneX;
+                cbPane->paneW = winPanes[paneInfo->loc].paneW;
+                cbPane->paneY = winPanes[paneInfo->loc].paneY;
+                cbPane->paneH = winPanes[paneInfo->loc].paneH;
 
-                // Now, we just override the variable settings
                 switch (paneInfo->loc)
                 {
                     case PANE_LEFT:
@@ -694,7 +787,7 @@ void doExtRenderCb(uint32_t winW, uint32_t winH)
     {
         emuExtInfo_t* info = (emuExtInfo_t*)(node->val);
 
-        if (info && info->enabled && info->extension && info->extension->fnRenderCb)
+        if (info && info->enabled && info->extension && info->extension->fnRenderCb && 0 != info->panes.length)
         {
             emuPane_t panes[info->panes.length];
             uint8_t i        = 0;
@@ -702,7 +795,8 @@ void doExtRenderCb(uint32_t winW, uint32_t winH)
             while (NULL != paneNode)
             {
                 emuPaneInfo_t* paneInfo = (emuPaneInfo_t*)paneNode->val;
-                if (!paneInfo->hidden)
+
+                if (paneInfo->pane.visible)
                 {
                     memcpy(&panes[i++], &paneInfo->pane, sizeof(emuPane_t));
                 }

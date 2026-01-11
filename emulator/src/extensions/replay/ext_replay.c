@@ -9,12 +9,13 @@
 #include "emu_main.h"
 #include "ext_modes.h"
 #include "ext_tools.h"
+#include "emu_utils.h"
+#include "esp_random_emu.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
-#include <time.h>
 #include <unistd.h>
 
 #include "hdw-tft_emu.h"
@@ -55,9 +56,11 @@ typedef enum
     QUIT,
     SCREENSHOT,
     SET_MODE,
+    RANDOM_SEED,
+    COMMAND,
 } replayLogType_t;
 
-#define LAST_TYPE SET_MODE
+#define LAST_TYPE COMMAND
 
 //==============================================================================
 // Structs
@@ -74,8 +77,10 @@ typedef struct
         buttonBit_t buttonVal;
         int32_t touchVal;
         int16_t accelVal;
+        uint32_t seedVal;
         char* filename;
         char* modeName;
+        char* commandStr;
     };
 } replayEntry_t;
 
@@ -97,6 +102,8 @@ typedef struct
     int16_t lastAccelY;
     int16_t lastAccelZ;
 
+    uint32_t newSeed;
+
     replayEntry_t nextEntry;
 } replay_t;
 
@@ -117,12 +124,8 @@ static void writeEntry(const replayEntry_t* entry);
 //==============================================================================
 
 static const char* replayLogTypeStrs[] = {
-    "BtnDown", "BtnUp",  "TouchPhi", "TouchR", "TouchI",     "AccelX",
-    "AccelY",  "AccelZ", "Fuzz",     "Quit",   "Screenshot", "SetMode",
-};
-
-static const char* replayButtonNames[] = {
-    "Up", "Down", "Left", "Right", "A", "B", "Start", "Select",
+    "BtnDown", "BtnUp", "TouchPhi", "TouchR",     "TouchI",  "AccelX", "AccelY",
+    "AccelZ",  "Fuzz",  "Quit",     "Screenshot", "SetMode", "Seed",   "Command",
 };
 
 emuExtension_t replayEmuExtension = {
@@ -136,7 +139,8 @@ emuExtension_t replayEmuExtension = {
     .fnRenderCb      = NULL,
 };
 
-replay_t replay = {0};
+bool replayInitialized = false;
+replay_t replay        = {0};
 
 //==============================================================================
 // Functions
@@ -151,31 +155,18 @@ replay_t replay = {0};
  */
 static bool replayInit(emuArgs_t* emuArgs)
 {
+    replay.lastAccelZ = 256;
+
     if (emuArgs->record)
     {
-        // Construct a timestamp-based filename
-        char buf[64];
-        const char* filename = emuArgs->recordFile;
+        startRecording(emuArgs->recordFile);
 
-        if (!filename || !*filename)
-        {
-            filename = getTimestampFilename(buf, sizeof(buf) - 1, "rec-", "csv");
-        }
-
-        // If specified, use custom filename, otherwise use timestamp one
-        printf("\nReplay: Recording inputs to file %s\n", filename);
-        replay.file = fopen(filename, "w");
-        replay.mode = RECORD;
-        return replay.file != NULL;
+        return (replayInitialized = (replay.file != NULL));
     }
     else if (emuArgs->playback)
     {
-        printf("\nReplay: Replaying inputs from file %s\n", emuArgs->replayFile);
-        replay.file = fopen(emuArgs->replayFile, "r");
-        replay.mode = REPLAY;
-
-        // Return true if the file was opened OK and has a valid header and first entry
-        return NULL != replay.file && readEntry(&replay.nextEntry);
+        startPlayback(emuArgs->replayFile);
+        return (replayInitialized = true);
     }
 
     return false;
@@ -301,11 +292,13 @@ static void replayRecordFrame(uint64_t frame)
                 break;
             }
 
-            // These would be manually inserted, so no need to handle writing
+            // These are already inserted elsewhere, so there's nothing to do per-frame
             case FUZZ:
             case QUIT:
             case SCREENSHOT:
             case SET_MODE:
+            case RANDOM_SEED:
+            case COMMAND:
                 break;
         }
     }
@@ -451,6 +444,21 @@ static void replayPlaybackFrame(uint64_t frame)
                     }
                     break;
                 }
+
+                case RANDOM_SEED:
+                {
+                    emulatorSetEspRandomSeed(replay.nextEntry.seedVal);
+                    break;
+                }
+
+                case COMMAND:
+                {
+                    handleConsoleCommand(replay.nextEntry.commandStr);
+
+                    free(replay.nextEntry.commandStr);
+                    replay.nextEntry.commandStr = NULL;
+                    break;
+                }
             }
 
             // Get the next entry
@@ -503,7 +511,7 @@ static void replayPreFrame(uint64_t frame)
 
 static bool readEntry(replayEntry_t* entry)
 {
-    char buffer[64];
+    char buffer[1024];
     if (!replay.headerHandled)
     {
         if (1 != fscanf(replay.file, "%63[^\n]\n", buffer) || strncmp(buffer, HEADER, strlen(buffer)))
@@ -518,7 +526,7 @@ static bool readEntry(replayEntry_t* entry)
 
     int result;
     // Read timestamp index
-    result = fscanf(replay.file, "%" PRId64 ",", &replay.nextEntry.time);
+    result = fscanf(replay.file, "%" PRId64 ",", &entry->time);
 
     // Check if the index key was readable
     if (result != 1)
@@ -546,7 +554,7 @@ static bool readEntry(replayEntry_t* entry)
         const char* str = replayLogTypeStrs[type];
         if (!strncmp(str, buffer, sizeof(buffer) - 1))
         {
-            replay.nextEntry.type = type;
+            entry->type = type;
             break;
         }
 
@@ -558,7 +566,7 @@ static bool readEntry(replayEntry_t* entry)
         }
     }
 
-    switch (replay.nextEntry.type)
+    switch (entry->type)
     {
         case BUTTON_PRESS:
         case BUTTON_RELEASE:
@@ -569,22 +577,14 @@ static bool readEntry(replayEntry_t* entry)
                 return false;
             }
 
-            for (uint8_t i = 0; i < 8; i++)
+            buttonBit_t button = parseButtonName(buffer);
+            if (button == (buttonBit_t)0)
             {
-                buttonBit_t button = (1 << i);
-                if (!strncmp(replayButtonNames[i], buffer, sizeof(buffer) - 1))
-                {
-                    replay.nextEntry.buttonVal = button;
-                    break;
-                }
-
-                if (i == 7)
-                {
-                    // Should have broken by now, throw error
-                    printf("ERR: Can't find button matching '%s'\n", buffer);
-                    return false;
-                }
+                // No button matched, throw error
+                printf("ERR: Can't find button matching '%s'\n", buffer);
+                return false;
             }
+            entry->buttonVal = button;
 
             break;
         }
@@ -593,7 +593,7 @@ static bool readEntry(replayEntry_t* entry)
         case TOUCH_R:
         case TOUCH_INTENSITY:
         {
-            if (1 != fscanf(replay.file, "%" PRId32 "\n", &replay.nextEntry.touchVal))
+            if (1 != fscanf(replay.file, "%" PRId32 "\n", &entry->touchVal))
             {
                 return false;
             }
@@ -604,7 +604,7 @@ static bool readEntry(replayEntry_t* entry)
         case ACCEL_Y:
         case ACCEL_Z:
         {
-            if (1 != fscanf(replay.file, "%hd\n", &replay.nextEntry.accelVal))
+            if (1 != fscanf(replay.file, "%hd\n", &entry->accelVal))
             {
                 return false;
             }
@@ -665,6 +665,29 @@ static bool readEntry(replayEntry_t* entry)
             break;
         }
 
+        case RANDOM_SEED:
+        {
+            // Read the seed value from the file
+            if (1 != fscanf(replay.file, "%" PRIu32 "\n", &entry->seedVal))
+            {
+                return false;
+            }
+            break;
+        }
+
+        case COMMAND:
+        {
+            if (1 != fscanf(replay.file, "%1023[^\n]\n", buffer))
+            {
+                return false;
+            }
+
+            char* tmpStr = malloc(strlen(buffer) + 1);
+            strncpy(tmpStr, buffer, strlen(buffer) + 1);
+            entry->commandStr = tmpStr;
+            break;
+        }
+
         default:
         {
             return false;
@@ -676,7 +699,7 @@ static bool readEntry(replayEntry_t* entry)
 
 static void writeEntry(const replayEntry_t* entry)
 {
-    char buffer[256];
+    char buffer[1024];
     char* ptr = buffer;
 #define BUFSIZE (buffer + sizeof(buffer) - 1 - ptr)
 
@@ -691,15 +714,7 @@ static void writeEntry(const replayEntry_t* entry)
         case BUTTON_PRESS:
         case BUTTON_RELEASE:
         {
-            // Find button index
-            int i = 0;
-            while ((1 << i) != entry->buttonVal && i < 7)
-            {
-                i++;
-            }
-
-            // TODO: Check for invalid button index?
-            snprintf(ptr, BUFSIZE, "%s\n", replayButtonNames[i]);
+            snprintf(ptr, BUFSIZE, "%s\n", getButtonName(entry->buttonVal));
             break;
         }
 
@@ -733,11 +748,127 @@ static void writeEntry(const replayEntry_t* entry)
 
         case SET_MODE:
         {
+            snprintf(ptr, BUFSIZE, "%s\n", entry->modeName ? entry->modeName : "");
+            break;
+        }
+
+        case RANDOM_SEED:
+        {
+            snprintf(ptr, BUFSIZE, "%" PRIu32 "\n", entry->seedVal);
+            break;
+        }
+
+        case COMMAND:
+        {
+            snprintf(ptr, BUFSIZE, "%s\n", entry->commandStr ? entry->commandStr : "");
             break;
         }
     }
 
     fwrite(buffer, 1, strlen(buffer), replay.file);
+}
+
+/**
+ * @brief Begins recording emulator inputs to the given filename
+ *
+ * @param filename The name of the recording file to write
+ */
+void startRecording(const char* filename)
+{
+    if (replay.file != NULL)
+    {
+        fclose(replay.file);
+        replay.file = NULL;
+    }
+
+    char buf[128];
+    if (!filename || !*filename)
+    {
+        filename = getTimestampFilename(buf, sizeof(buf) - 1, "rec-", "csv");
+    }
+
+    // If specified, use custom filename, otherwise use timestamp one
+    printf("\nReplay: Recording inputs to file %s\n", filename);
+    replay.file = fopen(filename, "w");
+    replay.mode = RECORD;
+    if (replay.file != NULL)
+    {
+        if (emulatorArgs.startMode)
+        {
+            if (!replay.headerHandled)
+            {
+                replay.headerHandled = true;
+                fwrite(HEADER, 1, strlen(HEADER), replay.file);
+            }
+
+            // Immediately record the start mode
+            replayEntry_t modeEntry = {
+                .type     = SET_MODE,
+                .time     = 0,
+                .modeName = NULL,
+            };
+
+            char* tmpStr = malloc(strlen(emulatorArgs.startMode) + 1);
+            strncpy(tmpStr, emulatorArgs.startMode, strlen(emulatorArgs.startMode) + 1);
+            modeEntry.modeName = tmpStr;
+
+            writeEntry(&modeEntry);
+            free(tmpStr);
+        }
+
+        if (emulatorArgs.seed)
+        {
+            if (!replay.headerHandled)
+            {
+                replay.headerHandled = true;
+                fwrite(HEADER, 1, strlen(HEADER), replay.file);
+            }
+
+            // Immediately record the start mode
+            replayEntry_t seedEntry = {
+                .type    = RANDOM_SEED,
+                .time    = 0,
+                .seedVal = emulatorArgs.seed,
+            };
+            writeEntry(&seedEntry);
+        }
+    }
+}
+
+void stopRecording(void)
+{
+    if (replay.file != NULL && replay.mode == RECORD)
+    {
+        fclose(replay.file);
+        replay.file = NULL;
+        printf("\nStopped recording inputs\n");
+    }
+}
+
+bool isRecordingInput(void)
+{
+    return replay.file != NULL && replay.mode == RECORD;
+}
+
+/**
+ * @brief Begins playing back emulator inputs from the given file
+ *
+ * @param recordingName The name of the recording file to play back
+ */
+void startPlayback(const char* recordingName)
+{
+    if (replay.file != NULL)
+    {
+        fclose(replay.file);
+        replay.file = NULL;
+    }
+
+    printf("\nReplay: Replaying inputs from file %s\n", recordingName);
+    replay.file = fopen(recordingName, "r");
+    replay.mode = REPLAY;
+
+    // Return true if the file was opened OK and has a valid header and first entry
+    readEntry(&replay.nextEntry);
 }
 
 /**
@@ -750,15 +881,77 @@ void recordScreenshotTaken(const char* name)
     // Check that we're recording, otherwise we don't do anything
     if (replay.mode == RECORD && replay.file)
     {
-        // Create a copy of the filename since entry.filename is not const
-        char tmp[strlen(name) + 1];
-        strcpy(tmp, name);
-
         replayEntry_t entry = {
             .time     = esp_timer_get_time(),
             .type     = SCREENSHOT,
-            .filename = tmp,
+            .filename = NULL,
+        };
+
+        if (name)
+        {
+            // Create a copy of the filename since entry.filename is not const
+            char tmp[strlen(name) + 1];
+            strcpy(tmp, name);
+            entry.filename = tmp;
+            writeEntry(&entry);
+        }
+        else
+        {
+            writeEntry(&entry);
+        }
+    }
+}
+
+/**
+ * @brief Notifies the replay extension that the random seed was set
+ *
+ * @param seed The seed value
+ */
+void emulatorRecordRandomSeed(uint32_t seed)
+{
+    if (replay.mode == RECORD && replay.file)
+    {
+        replayEntry_t entry = {
+            // We want this to happen as early as possible so minor timing differences don't cause it to get missed
+            .time    = 0,
+            .type    = RANDOM_SEED,
+            .seedVal = seed,
         };
         writeEntry(&entry);
+    }
+}
+
+/**
+ * @brief Notifies the replay extension that a command was used
+ *
+ * @param command The command string
+ */
+void emulatorRecordCommand(const char* command)
+{
+    if (replay.mode == RECORD && replay.file)
+    {
+        replayEntry_t entry = {
+            .time       = esp_timer_get_time(),
+            .type       = COMMAND,
+            .commandStr = NULL,
+        };
+
+        if (command)
+        {
+            if (!strncmp("record", command, strlen("record")))
+            {
+                // Don't insert recording-related commands into the recording
+                return;
+            }
+            // Create a copy of the filename since entry.commandStr is not const
+            char tmp[strlen(command) + 1];
+            strcpy(tmp, command);
+            entry.commandStr = tmp;
+            writeEntry(&entry);
+        }
+        else
+        {
+            writeEntry(&entry);
+        }
     }
 }

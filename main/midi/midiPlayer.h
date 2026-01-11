@@ -16,7 +16,7 @@
  * \code{.c}
  * // Load a MIDI file
  * midiFile_t ode_to_joy;
- * loadMidiFile("ode.mid", &ode_to_joy, true);
+ * loadMidiFile(ODE_MID, &ode_to_joy, true);
  *
  * // Play the song on the BGM channel
  * globalMidiPlayerPlaySong(&ode_to_joy, MIDI_BGM);
@@ -59,6 +59,8 @@
 
 #include "swSynth.h"
 #include "midiFileParser.h"
+#include "cnfs_image.h"
+#include "hdw-dac.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -72,9 +74,7 @@
 // The total number of pooled voices
 #define POOL_VOICE_COUNT 24
 // The number of voices reserved for percussion
-#define PERCUSSION_VOICES 8
-// The number of oscillators each voice gets. Maybe we'll need more than one for like, chorus?
-#define OSC_PER_VOICE 1
+#define PERCUSSION_VOICES 16
 // The number of global MIDI players
 #define NUM_GLOBAL_PLAYERS 2
 // The index of the system-wide MIDI player for sound effects
@@ -88,6 +88,28 @@
 #define MIDI_FALSE        0x00
 #define MIDI_TO_BOOL(val) (val > 63)
 #define BOOL_TO_MIDI(val) (val ? MIDI_TRUE : MIDI_FALSE)
+#define MIDI_DEF_HEADROOM 0x4000
+#define PITCH_BEND_CENTER 0x2000
+
+/// @brief Convert the sample count to MIDI ticks
+#define SAMPLES_TO_MIDI_TICKS(n, tempo, div) ((int64_t)(n) * 1000000 * (div) / DAC_SAMPLE_RATE_HZ / (tempo))
+
+#define SAMPLES_PER_TICK(tempo, div) ((uint64_t)DAC_SAMPLE_RATE_HZ * (tempo) / div / 1000000)
+
+/// @brief Convert a number of MIDI ticks to the offset of the first sample of the
+#define TICKS_TO_SAMPLES(ticks, tempo, div) ((int64_t)(ticks) * DAC_SAMPLE_RATE_HZ / (1000000) * (tempo) / (div))
+
+/// @brief Convert samples to milliseconds
+#define SAMPLES_TO_MS(samp) (((samp) * 1000) / DAC_SAMPLE_RATE_HZ)
+
+/// @brief Convert samples to microseconds
+#define SAMPLES_TO_US(samp) (((samp) * 1000000) / DAC_SAMPLE_RATE_HZ)
+
+/// @brief Calculate the number of DAC samples in the given number of milliseconds
+#define MS_TO_SAMPLES(ms) ((ms) * DAC_SAMPLE_RATE_HZ / 1000)
+
+/// @brief Convert MIDI ticks to microseconds
+#define MIDI_TICKS_TO_US(ticks, tempo, div) (int64_t)((int64_t)((int64_t)(ticks) * (int64_t)(tempo)) / ((int64_t)(div)))
 
 /// @brief Callback function used to provide feedback when a song finishes playing
 typedef void (*songFinishedCbFn)(void);
@@ -118,6 +140,9 @@ typedef enum
     WAVETABLE,
     SAMPLE,
     NOISE,
+    WAVE_SHAPE,
+    MULTI_SAMPLE,
+    PLAY_FUNC,
 } timbreType_t;
 
 /**
@@ -132,6 +157,36 @@ typedef enum
     /// @brief This timbre represents a monophonic instrument
     TF_MONO = 2,
 } timbreFlags_t;
+
+/**
+ * @brief Enum which defines the method used to retrieve a sample from each voice
+ */
+typedef enum
+{
+    VOICE_WAVE_FUNC,
+    VOICE_PLAY_FUNC,
+    VOICE_SAMPLE,
+} voiceType_t;
+
+/**
+ * @brief Enum representing specific ADSR states
+ *
+ */
+typedef enum
+{
+    /// @brief On, in which the note is on but doesn't have any specific ADSR states set (what?)
+    ADSR_ON = 0,
+    /// @brief Attack, in which the volume rises from 0 to the max volume linearly
+    ADSR_ATTACK = 1,
+    /// @brief Decay, in which the volume falls from the max volume to the sustain volume linearly
+    ADSR_DECAY = 2,
+    /// @brief Sustain, in which the volume remains at the sustain volume
+    ADSR_SUSTAIN = 3,
+    /// @brief Release, in which the volume falls from the sustain volume to 0 quadratically
+    ADSR_RELEASE = 4,
+    /// @brief Off, in which the note has finished playing completely
+    ADSR_OFF = 5,
+} adsrState_t;
 
 /**
  * @brief Defines the MIDI note numbers mapped to by the General MIDI percussion note names
@@ -187,24 +242,24 @@ typedef enum
     LOW_AGOGO       = 68,
     CABASA          = 69,
     MARACAS         = 70,
-    /// @brief This note supersdes any ::SHORT_WHISTLE or ::LONG_WHISTLE notes playing
+    /// @brief This note supersedes any ::SHORT_WHISTLE or ::LONG_WHISTLE notes playing
     SHORT_WHISTLE = 71,
-    /// @brief This note supersdes any ::SHORT_WHISTLE or ::LONG_WHISTLE notes playing
+    /// @brief This note supersedes any ::SHORT_WHISTLE or ::LONG_WHISTLE notes playing
     LONG_WHISTLE = 72,
-    /// @brief This note supersdes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
+    /// @brief This note supersedes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
     SHORT_GUIRO = 73,
-    /// @brief This note supersdes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
+    /// @brief This note supersedes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
     LONG_GUIRO     = 74,
     CLAVES         = 75,
     HIGH_WOODBLOCK = 76,
     LOW_WOODBLOCK  = 77,
-    /// @brief This note supersdes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
+    /// @brief This note supersedes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
     MUTE_CUICA = 78,
-    /// @brief This note supersdes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
+    /// @brief This note supersedes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
     OPEN_CUICA = 79,
-    /// @brief This note supersdes any ::MUTE_TRIANGLE or ::OPEN_TRIANGLE notes playing
+    /// @brief This note supersedes any ::MUTE_TRIANGLE or ::OPEN_TRIANGLE notes playing
     MUTE_TRIANGLE = 80,
-    /// @brief This note supersdes any ::MUTE_TRIANGLE or ::OPEN_TRIANGLE notes playing
+    /// @brief This note supersedes any ::MUTE_TRIANGLE or ::OPEN_TRIANGLE notes playing
     OPEN_TRIANGLE = 81,
     // Roland GS Extensions
     /*SHAKER = 82,
@@ -216,6 +271,125 @@ typedef enum
     // End Roland GS Extensions
 } percussionNote_t;
 
+/**
+ * @brief Defines the MIDI continuous controller registers
+ *
+ * Values suffixed with `_MSB` and `_LSB` represent the upper and lower 7 bits of two
+ * separate MIDI controller values. Some values are designated as switches, which
+ * will be considered off when set between 0 and 63, and on when set from 64 to 127.
+ * All other values represent a single 7-bit value with a range of 0 to 127 inclusive
+ * unless otherwise specified.
+ */
+typedef enum
+{
+    MCC_BANK_MSB             = 0,
+    MCC_MODULATION_WHEEL_MSB = 1,
+    MCC_BREATH_MSB           = 2,
+
+    MCC_FOOT_PEDAL_MSB      = 4,
+    MCC_PORTAMENTO_TIME_MSB = 5,
+    MCC_DATA_ENTRY_MSB      = 6,
+    MCC_VOLUME_MSB          = 7,
+    MCC_BALANCE_MSB         = 8,
+
+    MCC_PAN_MSB        = 10,
+    MCC_EXPRESSION_MSB = 11,
+    MCC_EFFECT_1_MSB   = 12,
+    MCC_EFFECT_2_MSB   = 13,
+
+    MCC_GP_SLIDER_1 = 16,
+    MCC_GP_SLIDER_2 = 17,
+    MCC_GP_SLIDER_3 = 18,
+    MCC_GP_SLIDER_4 = 19,
+
+    MCC_BANK_LSB             = 32,
+    MCC_MODULATION_WHEEL_LSB = 33,
+    MCC_BREATH_LSB           = 34,
+
+    MCC_FOOT_PEDAL_LSB      = 36,
+    MCC_PORTAMENTO_TIME_LSB = 37,
+    MCC_DATA_ENTRY_LSB      = 38,
+    MCC_VOLUME_LSB          = 39,
+    MCC_BALANCE_LSB         = 40,
+
+    MCC_PAN_LSB        = 42,
+    MCC_EXPRESSION_LSB = 43,
+    MCC_EFFECT_1_LSB   = 44,
+    MCC_EFFECT_2_LSB   = 45,
+
+    //< Switch
+    MCC_HOLD_PEDAL = 64,
+    //< Switch
+    MCC_PORTAMENTO = 65,
+    //< Switch
+    MCC_SUSTENUTO_PEDAL = 66,
+    //< Switch
+    MCC_SOFT_PEDAL = 67,
+    //< Switch
+    MCC_LEGATO_PEDAL = 68,
+    //< Switch
+    MCC_HOLD_2_PEDAL       = 69,
+    MCC_SOUND_VARIATION    = 70,
+    MCC_SOUND_TIMBRE       = 71,
+    MCC_SOUND_RELEASE_TIME = 72,
+    MCC_SOUND_ATTACK_TIME  = 73,
+    MCC_SOUND_BRIGHTNESS   = 74,
+    // Decay
+    MCC_SOUND_CONTROL_6 = 75,
+    // Sustain level
+    MCC_SOUND_CONTROL_7  = 76,
+    MCC_SOUND_CONTROL_8  = 77,
+    MCC_SOUND_CONTROL_9  = 78,
+    MCC_SOUND_CONTROL_10 = 79,
+    //< Switch
+    MCC_GP_BUTTON_1 = 80,
+    //< Switch
+    MCC_GP_BUTTON_2 = 81,
+    //< Switch
+    MCC_GP_BUTTON_3 = 82,
+    //< Switch
+    MCC_GP_BUTTON_4 = 83,
+
+    MCC_EFFECTS_LEVEL            = 91,
+    MCC_TREMOLO_LEVEL            = 92,
+    MCC_CHORUS_LEVEL             = 93,
+    MCC_DETUNE_LEVEL             = 94,
+    MCC_PHASER_LEVEL             = 95,
+    MCC_DATA_BUTTON_INC          = 96,
+    MCC_DATA_BUTTON_DEC          = 97,
+    MCC_NON_REGISTERED_PARAM_LSB = 98,
+    MCC_NON_REGISTERED_PARAM_MSB = 99,
+    MCC_REGISTERED_PARAM_LSB     = 100,
+    MCC_REGISTERED_PARAM_MSB     = 101,
+
+    //< No data
+    MCC_ALL_SOUND_OFF = 120,
+    //< No data
+    MCC_ALL_CONTROLS_OFF = 121,
+    //< Switch
+    MCC_LOCAL_KEYBOARD = 122,
+    //< No data
+    MCC_ALL_NOTE_OFF = 123,
+    //< No data
+    MCC_OMNI_MODE_OFF = 124,
+    //< No data
+    MCC_OMNI_MODE_ON = 125,
+    //< No data
+    MCC_MONO_OPERATION = 126,
+    //< No data
+    MCC_POLY_OPERATION = 127,
+} midiControl_t;
+
+/**
+ * @brief Values that can be directly compared against midiSysexEvent_t::manufacturerId
+ */
+typedef enum
+{
+    MMFR_EDUCATIONAL_USE         = 0x807D,
+    MMFR_UNIVERSAL_NON_REAL_TIME = 0x807E,
+    MMFR_UNIVERSAL_REAL_TIME     = 0x807F,
+} midiManufacturerId_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -226,17 +400,29 @@ typedef enum
  */
 typedef struct
 {
-    // Time taken to ramp up to full volume
-    int32_t attack;
+    /// @brief Base time taken to ramp up to full volume
+    int32_t attackTime;
 
-    // Time taken for the volume to fade to the sustain volume
-    int32_t decay;
+    /// @brief This value will be multiplied by the note velocity and added to the attack time,
+    q24_8 attackTimeVel;
 
-    // Time it takes to silence the note after release
-    int32_t release;
+    /// @brief Base time taken for the volume to fade to the sustain volume
+    int32_t decayTime;
 
-    // The volume of the sustain note, proportional to the original volume
-    uint8_t sustain;
+    /// @brief This value will be multiplied by the note velocity and added to the decay time
+    q24_8 decayTimeVel;
+
+    /// @brief Base time it takes to silence the note after release, in DAC samples
+    int32_t releaseTime;
+
+    /// @brief This value will be multiplied by the note velocity and added to the attack time
+    q24_8 releaseTimeVel;
+
+    /// @brief The base volume of the sustained note, proportional to the sample volume
+    uint8_t sustainVol;
+
+    /// @brief This value will be multiplied by the note velocity and added to the attack time
+    q24_8 sustainVolVel;
 
     /// @brief The index of the repeat loop
     // uint32_t loopStart;
@@ -244,6 +430,12 @@ typedef struct
     // uint32_t loopEnd;
 
 } envelope_t;
+
+typedef struct
+{
+    /// @brief The number of chorused voices to mix
+    uint8_t chorus;
+} timbreEffects_t;
 
 /**
  * @brief A function that returns samples for a percussion timbre rather than a melodic one
@@ -272,6 +464,42 @@ typedef void (*midiTextCallback_t)(metaEventType_t type, const char* text, uint3
 typedef bool (*midiStreamingCallback_t)(midiEvent_t* event);
 
 /**
+ * @brief Struct that holds information about a sample that can be played
+ *
+ */
+typedef struct
+{
+    /// @brief The file index containing the sample data
+    cnfsFileIdx_t fIdx;
+
+    /// @brief The sample rate.
+    uint32_t rate;
+
+    /// @brief The base frequency, at which the sample plays at normal speed
+    uq8_24 baseNote;
+
+    /// @brief Fine tuning of the note, +/- 100 cents
+    int8_t tune;
+
+    /// @brief 0 to loop forever, or the number of loops to play
+    uint32_t loop;
+
+    /// @brief The start of the loop portion of the sample
+    uint32_t loopStart;
+
+    /// @brief The end of the loop portion of the sample
+    uint32_t loopEnd;
+} timbreSample_t;
+
+typedef struct
+{
+    uint8_t noteStart;
+    uint8_t noteEnd;
+    timbreSample_t sample;
+    envelope_t envelope;
+} noteSampleMap_t;
+
+/**
  * @brief Defines the sound characteristics of a particular instrument.
  */
 typedef struct
@@ -284,38 +512,42 @@ typedef struct
 
     union
     {
-        /// @brief The index of this timbre's wave in the table, when type is WAVETABLE
-        uint16_t waveIndex;
+        struct
+        {
+            /// @brief The index of this timbre's wave in the table, when type is WAVETABLE
+            uint16_t waveIndex;
+
+            /// @brief The function to use to retrieve wavetable samples
+            waveFunc_t waveFunc;
+        };
+
+        timbreSample_t sample;
 
         struct
         {
-            /// @brief The frequency of the base sample to be used when pitch shifting
-
-            // This should just always be C4? (440 << 8)
-            // uint32_t freq = (440 << 8);
-
-            /// @brief A pointer to this timbre's sample data
-            int8_t* data;
-
-            /// @brief The length of the sample in bytes
-            uint32_t count;
-
-            /// @brief The sample rate divisor. Each audio sample will be played this many times.
-            /// The audio data's actual sample rate should be (32768 / rate)
-            uint8_t rate;
-        } sample;
+            /// @brief A map of different samples to use
+            const noteSampleMap_t* map;
+            /// @brief The length of the sample map
+            size_t count;
+        } multiSample;
 
         struct
         {
             /// @brief A callback to call for drum data
-            percussionFunc_t playFunc;
+            percussionFunc_t func;
             /// @brief User data to pass to the drumkit
             void* data;
-        } percussion;
+        } playFunc;
+
+        /// @brief The shape of this wave, when type is RAW_WAVE
+        oscillatorShape_t shape;
     };
 
-    /// @brief The ASDR characterstics of this timbre
+    /// @brief The ASDR characteristics of this timbre
     envelope_t envelope;
+
+    /// @brief Various effects applied to this timbre. May be ignored by percussion timbres
+    timbreEffects_t effects;
 
     /// @brief The name of this timbre, if any
     const char* name;
@@ -328,28 +560,88 @@ typedef struct
  */
 typedef struct
 {
-    /// @brief The number of ticks remaining before transitioning to the next state
-    uint32_t transitionTicks;
+    /// @brief The current volume as a fixed-point value.
+    uq8_24 curVol;
 
-    /// @brief The target volume of this tick
-    uint8_t targetVol;
+    /// @brief Rate-of-change of the volume per tick, can be positive or negative
+    q8_24 volRate;
 
-    /// @brief The monotonic tick counter for playback of sampled timbres
+    /// @brief Acceleration of the volume per tick, which will be added to the rate
+    q8_24 volAccel;
+
+    /// @brief The monotonic tick counter for this voice since starting
+    uint32_t voiceTick;
+
+    /// @brief The non-monotonic tick counter for playback of sampled timbres
     uint32_t sampleTick;
+
+    /// @brief The next tick at which state will change
+    uint32_t stateChangeTick;
+
+    /// @brief The ultimate pitch of this voice after pitch bending, etc.
+    uq16_16 pitch;
 
     /// @brief The MIDI note number for the sound being played
     uint8_t note;
 
-    /// @brief The synthesizer oscillators used to generate the sounds
-    synthOscillator_t oscillators[OSC_PER_VOICE];
+    /// @brief The MIDI note velocity of the playing note
+    uint8_t velocity;
 
-    /// @brief An array of scratch data for percussion functions to use
-    // TODO union this with the oscillators? They shouldn't both be used
-    // But we need to make sure those oscillators don't get summed
-    uint32_t percScratch[4];
+    /// @brief The index of the MIDI channel that owns the currently playing note.
+    /// If 255 or any other value >= 16, this was not played via MIDI
+    uint8_t channel;
 
-    /// @brief A pointer to the timbre of this voice, which defines its musical characteristics
-    const midiTimbre_t* timbre;
+    /// @brief The method for obtaining the next audio sample
+    voiceType_t type;
+
+    union
+    {
+        struct
+        {
+            /// @brief The raw sample data
+            const uint8_t* data;
+            /// @brief The number of samples in the data
+            uint32_t length;
+
+            /// @brief The number of samples per second of raw sample data
+            uint32_t rate;
+
+            /// @brief The sample number to return to after reaching the loop end
+            uint32_t loopStart;
+            /// @brief The sample number after which to return to the loop start
+            uint32_t loopEnd;
+
+            /// @brief The sample's base frequency
+            uq16_16 baseNote;
+
+            /// @brief The sample's fine tuning
+            int8_t tune;
+
+            /// @brief The number of fractional samples remaining
+            uq24_8 error;
+
+            /// @brief The number of loops remaining before the voice will transition to the released state
+            uint32_t loopsRemaining;
+
+            /// @brief The pre-calculated samples-per-second
+            uq24_8 sampleRateRatio;
+        } sample;
+
+        struct
+        {
+            waveFunc_t func;
+            synthOscillator_t oscillator;
+        } wave;
+
+        struct
+        {
+            percussionFunc_t func;
+            uint32_t scratch[4];
+        } playFunc;
+    };
+
+    /// @brief The envelope defined for this voice
+    envelope_t envelope;
 } midiVoice_t;
 
 /**
@@ -362,7 +654,6 @@ typedef struct
     /// @brief Whether this note is set to on via MIDI, regardless of if it's making sound
     uint32_t on;
 
-    /*
     /// @brief Bitfield of voices currently in the attack stage
     uint32_t attack;
 
@@ -374,10 +665,12 @@ typedef struct
 
     /// @brief Bitfield of voices currently in the release stage
     uint32_t release;
-    */
 
     /// @brief Bitfield of voices which are being held by the pedal
     uint32_t held;
+
+    /// @brief Bitfield of voices which are being held by the sustenuto pedal
+    uint32_t sustenuto;
 } voiceStates_t;
 
 /**
@@ -388,8 +681,17 @@ typedef struct
     /// @brief The 14-bit volume level for this channel only
     uint16_t volume;
 
+    /// @brief The bank to use for program changes on this channel
+    uint16_t bank;
+
     /// @brief The ID of the program (timbre) set for this channel
     uint8_t program;
+
+    /// @brief Whether selectedParameter represents a registered or non-registered parameter
+    bool registeredParameter;
+
+    /// @brief The ID of the currently selected registered or non-registered parameter
+    uint16_t selectedParameter;
 
     /// @brief The actual current timbre definition which the program ID corresponds to
     midiTimbre_t timbre;
@@ -406,6 +708,11 @@ typedef struct
     /// @brief Whether notes will be held after release
     bool held;
 
+    /// @brief Whether certain notes will be held after release
+    bool sustenuto;
+
+    /// @brief If set, events on this channel will be completely ignored
+    bool ignore;
 } midiChannel_t;
 
 /**
@@ -438,12 +745,6 @@ typedef struct
     /// @brief The global voice pool state bitmaps
     voiceStates_t poolVoiceStates;
 
-    /// @brief An array holding a pointer to every oscillator
-    synthOscillator_t* allOscillators[(POOL_VOICE_COUNT + PERCUSSION_VOICES) * OSC_PER_VOICE];
-
-    /// @brief The total number of oscillators in the \c allOscillators array
-    uint16_t oscillatorCount;
-
     /// @brief Whether this player is playing a song or a MIDI stream
     midiPlayerMode_t mode;
 
@@ -459,12 +760,21 @@ typedef struct
     /// @brief A callback to call when the playing song is finished
     songFinishedCbFn songFinishedCallback;
 
+    /// @brief The constant value to multiply each frame's samples by, before being shifted right 16 bits
+    /// This value must be between 0x0000 (muted) and 0x7FFF (100% volume). The default value is 0x2666 (30%),
+    /// and something around this value should be considered "full volume" with values higher than that being
+    /// much more likely to clip for louder sounds
+    int32_t headroom;
+
     /// @brief Number of samples that were clipped
     /// Note: This is not set when using \c midiPlayerFillBufferMulti()
     uint32_t clipped;
 
     /// @brief The number of samples elapsed in the playing song
     uint64_t sampleCount;
+
+    /// @brief The current MIDI tick
+    uint32_t tick;
 
     /// @brief The next event in the MIDI file, which occurs after the current time
     midiEvent_t pendingEvent;
@@ -478,8 +788,17 @@ typedef struct
     /// @brief True when playback of the current file is paused
     bool paused;
 
+    /// @brief True when the MIDI player is seeking, and will not produce sound
+    bool seeking;
+
     /// @brief If true, the playing file will automatically repeat when complete
     bool loop;
+
+    /// @brief If true, all events from the current song have been read and we are waiting for notes to end.
+    bool songEnding;
+
+    /// @brief Force a check for MIDI events on the next sample
+    bool forceCheckEvents;
 } midiPlayer_t;
 
 /**
@@ -495,6 +814,14 @@ void midiPlayerInit(midiPlayer_t* player);
  * @param player The MIDI player to reset
  */
 void midiPlayerReset(midiPlayer_t* player);
+
+/**
+ * @brief Reset the MIDI player state by only doing the bare minimum.
+ * This is useful when playing multiple sound effects in quick succession.
+ *
+ * @param player The MIDI player to reset
+ */
+void midiPlayerResetNewSong(midiPlayer_t* player);
 
 /**
  * @brief Calculate and return the next MIDI sample, stepping the player state forward by one sample
@@ -532,6 +859,32 @@ void midiPlayerFillBufferMulti(midiPlayer_t* players, uint8_t playerCount, uint8
 void midiAllSoundOff(midiPlayer_t* player);
 
 /**
+ * @brief Reset all controllers on a MIDI channel.
+ *
+ * This includes:
+ * - Sustain Pedal
+ * - Legato, Vibrato, Sustenuto, etc.
+ *
+ * @param player
+ * @param channel
+ */
+void midiResetChannelControllers(midiPlayer_t* player, uint8_t channel);
+
+/**
+ * @brief Activate General MIDI mode on a MIDI player
+ *
+ * @param player The MIDI player to set to General MIDI mode
+ */
+void midiGmOn(midiPlayer_t* player);
+
+/**
+ * @brief Deactivate General MIDI mode on a MIDI player
+ *
+ * @param player The MIDI player to take out of General MIDI mode
+ */
+void midiGmOff(midiPlayer_t* player);
+
+/**
  * @brief Tun off all notes which are currently on, as though midiNoteOff() were called
  * for each note. This respects the sustain pedal.
  *
@@ -548,9 +901,19 @@ void midiAllNotesOff(midiPlayer_t* player, uint8_t channel);
  * @param player The MIDI player
  * @param channel The MIDI channel on which to start the note
  * @param note The note number to play
- * @param velocity The note velocity which affects its volume.
+ * @param velocity The note velocity which affects its volume and effects
  */
 void midiNoteOn(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t velocity);
+
+/**
+ * @brief Change the velocity of a note on a given MIDI channel, after the note starts playing
+ *
+ * @param player The MIDI player
+ * @param channel The MIDI channel on which to change the note velocity
+ * @param note The currently-playing note number to modify
+ * @param velocity The note velocity which affects its volume and effects
+ */
+void midiAfterTouch(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t velocity);
 
 /**
  * @brief Stop playing a particular note on a given MIDI channel
@@ -574,13 +937,28 @@ void midiSetProgram(midiPlayer_t* player, uint8_t channel, uint8_t program);
 /**
  * @brief Set the hold pedal status.
  *
- * This is a convenience method for midiControlChange(player, channel, CONTROL_HOLD (64), val ? 127:0)
+ * When set, all notes that are currently on will be sustained until the pedal is unset, as well as
+ * all notes that are played after the pedal is set.
+ *
+ * This is a convenience method for midiControlChange(player, channel, MCC_HOLD_PEDAL (64), val ? 127:0)
  *
  * @param player The MIDI player
  * @param channel The MIDI channel to set the hold status for
  * @param val The sustain pedal value. Values 0-63 are OFF, and 64-127 are ON.
  */
 void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val);
+
+/**
+ * @brief Set the sustenuto pedal status.
+ *
+ * When set, only the notes that are currently on will be sustained until the pedal is unset. Notes
+ * that are played after the pedal is set will not be sustained.
+ *
+ * @param player The MIDI player
+ * @param channel The MIDI channel to set the sustenuto status for
+ * @param val The sustenuto pedal value. Values 0-63 are OFF, and 64-127 are ON.
+ */
+void midiSustenuto(midiPlayer_t* player, uint8_t channel, uint8_t val);
 
 /**
  * @brief Set a MIDI control value
@@ -590,7 +968,50 @@ void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val);
  * @param control The control number to set
  * @param val The control value, from 0-127 whose meaning depends on the control number
  */
-void midiControlChange(midiPlayer_t* player, uint8_t channel, uint8_t control, uint8_t val);
+void midiControlChange(midiPlayer_t* player, uint8_t channel, midiControl_t control, uint8_t val);
+
+/**
+ * @brief Get the value of a MIDI control
+ *
+ * @param player The MIDI player
+ * @param channel The channel to retrieve the control from
+ * @param control The MIDI control number of the control
+ * @return uint8_t The value of the specified control, or 0 if the specified controller is not implemented
+ */
+uint8_t midiGetControlValue(midiPlayer_t* player, uint8_t channel, midiControl_t control);
+
+/**
+ * @brief Get the combined value of two MIDI control registers
+ *
+ * @param player The MIDI player
+ * @param channel The channel to retrieve the control from
+ * @param control The MIDI control number of either of the two controls that make up the value
+ * @return uint16_t The value of the specified control, or 0 if the specified controller is not implemented
+ */
+uint16_t midiGetControlValue14bit(midiPlayer_t* player, uint8_t channel, midiControl_t control);
+
+/**
+ * @brief Set a registered or non-registered parameter value
+ *
+ * @param player The MIDI player
+ * @param channel The channel to set the parameter on
+ * @param registered true if param refers to a registered parameter number and false if it refers to a non-registered
+ * @param param The registered or non-registered MIDI parameter to set the value of
+ * @param value The 14-bit value to set the parameter to
+ */
+void midiSetParameter(midiPlayer_t* player, uint8_t channel, bool registered, uint16_t param, uint16_t value);
+
+/**
+ * @brief Get the value of a registered or non-registered parameter
+ *
+ * @param player The MIDI player
+ * @param channel The channel to retrieve the parameter from
+ * @param registered true if param refers to a registered parameter number and false if it refers to a non-registered
+ * @param param The registered or non-registered MIDI parameter number to retrieve the value for
+ * @return The current 14-bit value of the given registered or non-registered parameter, or 0 if the parameter is
+ * unsupported
+ */
+uint16_t midiGetParameterValue(midiPlayer_t* player, uint8_t channel, bool registered, uint16_t param);
 
 /**
  * @brief Set the pitch wheel value on a given MIDI channel
@@ -621,7 +1042,7 @@ void midiSetTempo(midiPlayer_t* player, uint32_t tempo);
  * @param player The MIDI player
  * @param file A pointer to the MIDI file to be played
  */
-void midiSetFile(midiPlayer_t* player, midiFile_t* file);
+void midiSetFile(midiPlayer_t* player, const midiFile_t* file);
 
 /**
  * @brief Set the paused state of a MIDI song
@@ -630,6 +1051,23 @@ void midiSetFile(midiPlayer_t* player, midiFile_t* file);
  * @param pause True to pause, false to play
  */
 void midiPause(midiPlayer_t* player, bool pause);
+
+/**
+ * @brief Seek to a given time offset within a file
+ *
+ * Note that in the current implementation, seeking backwards by any amount requires
+ * re-reading the file from the beginning, and so may be very slow, particularly for
+ * large MIDI files.
+ *
+ * @param player The MIDI player to seek on
+ * @param ticks The absolute number of MIDI ticks to seek to. If this is -1, it
+ *              will seek to the end of the song
+ */
+void midiSeek(midiPlayer_t* player, uint32_t ticks);
+
+//==============================================================================
+// Global MIDI Player Functions
+//==============================================================================
 
 /**
  * @brief Initialize the system-wide MIDI players for both BGM and SFX
@@ -660,7 +1098,7 @@ void globalMidiPlayerFillBuffer(uint8_t* samples, int16_t len);
 void globalMidiPlayerPlaySong(midiFile_t* song, uint8_t trackType);
 
 /**
- * @brief Play a song on noe of the system-wide MIDI players, with a callback once the song finishes
+ * @brief Play a song on one of the system-wide MIDI players, with a callback once the song finishes
  *
  * @param song A pointer to the song to play
  * @param trackType The player to use, either MIDI_SFX or MIDI_BGM
@@ -683,13 +1121,13 @@ void globalMidiPlayerSetVolume(uint8_t trackType, int32_t volumeSetting);
 void globalMidiPlayerPauseAll(void);
 
 /**
- * @brief Resume all songs currently being played by the system-widi MIDI players
+ * @brief Resume all songs currently being played by the system-wide MIDI players
  *
  */
 void globalMidiPlayerResumeAll(void);
 
 /**
- * @brief Stop all songs currently bein gplayed by the system-widi MIDI players,
+ * @brief Stop all songs currently being played by the system-wide MIDI players,
  * optionally resetting their state to the beginning of the song
  *
  * @param reset if true, the players will be reset to the beginning of the song
@@ -720,3 +1158,58 @@ void globalMidiRestore(void* data);
  * @return midiPlayer_t*
  */
 midiPlayer_t* globalMidiPlayerGet(uint8_t trackType);
+
+/**
+ * @brief Return a pointer to the predefined timbre assigned to the given bank and program IDs
+ *
+ * If no timbre is assigned, the default (Acoustic Grand Piano) will be used
+ *
+ * @param percussion True to return the percussion timbre for the bank, otherwise a pitched timbre
+ * @param bank The bank to select the instrument from, from 0 to 127 with 0 being the GM instruments
+ * @param program The program ID within the bank corresponding to the timbre, from 0 to 127
+ * @return const midiTimbre_t* A pointer to the timbre that will be used
+ */
+const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, uint8_t program);
+
+/**
+ * @brief Play a single note with custom MIDI parameters, without affecting any existing channel settings
+ *
+ * @param player The MIDI player to play the note on
+ * @param chanId The channel ID to used. A channel number greater than 15 may be used, as a sort of tag
+ * @param note The MIDI note to play
+ * @param velocity The note velocity, which controls its volume
+ * @param timbre A reference to the timbre, which defines all instrument parameters. No reference is kept.
+ * @param percussion True to assign the note to a percussion voice, false to use a normal voices
+ * @return const midiVoice_t* A reference to the voice allocated to this sound, which can be used to turn it off
+ */
+const midiVoice_t* soundNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velocity,
+                               const midiTimbre_t* timbre, bool percussion);
+
+/**
+ * @brief Stop playing a single note with custom MIDI parameters.
+ *
+ * @warning Where possible, using soundVoiceRelease() or soundVoiceOff() is recommended instead for efficiency.
+ *
+ * @param player The MIDI player to stop the note playing on
+ * @param chanId The channel ID passed to soundNoteOn(). A channel number greater than 15 may be used
+ * @param note The MIDI note to stop playing
+ * @param velocity The note off velocity, which is not used but could affect release speed
+ * @param percussion True to stop a note played with percussion voices, false to stop a note played with normal voices
+ */
+void soundNoteOff(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velocity, bool percussion);
+
+/**
+ * @brief Transition the given voice into the 'release' state, equivalent to a MIDI Note Off
+ *
+ * @param player The MIDI player that owns the voice
+ * @param voice
+ */
+void soundVoiceRelease(midiPlayer_t* player, const midiVoice_t* voice);
+
+/**
+ * @brief Immediately stop a single voice from playing, disregarding all ADSR parameters
+ *
+ * @param player The MIDI player that owns the voice
+ * @param voice  The voice returned by soundNoteOn()
+ */
+void soundVoiceOff(midiPlayer_t* player, const midiVoice_t* voice);

@@ -84,18 +84,79 @@ float fixToFloat(q24_8 fx);
 #ifdef FP_MATH_DEFINES
 
     /**
+     * @brief Convert an integer to a fixed point type with N fractional bits
+     * @param in The integer to convert to a fixed point type with N fractional bits
+     * @return A fixed point type with N fractional bits
+     */
+    #define TO_FX_QN(in, fracBits) ((in) * (1 << (fracBits)))
+
+    /**
+     * @brief Convert a fixed point type with N fractional bits to an integer
+     * @param in The fixed point type with N fractional bits to convert to integer
+     * @return An integer
+     */
+    #define FROM_FX_QN(in, fracBits) ((in) >> (fracBits))
+
+    /**
+     * @brief Add two fixed point type with N fractional bits numbers together
+     * @param a An operand
+     * @param b The other operand
+     * @return The sum
+     */
+    #define ADD_FX_QN(a, b, fracBits) ((a) + (b))
+
+    /**
+     * @brief Subtract a fixed point type with N fractional bits from another
+     * @param a The number to subtract from
+     * @param b The number to subtract
+     * @return The difference
+     */
+    #define SUB_FX_QN(a, b, fracBits) ((a) - (b))
+
+    /**
+     * @brief Multiply two fixed point type with N fractional bits
+     * @param a An operand
+     * @param b The other operand
+     * @return The result
+     */
+    #define MUL_FX_QN(a, b, fracBits) (((a) * (b)) >> (fracBits))
+
+    /**
+     * @brief Divide a fixed point type with N fractional bits by another
+     * @param a The numerator
+     * @param b The denominator
+     * @return The result
+     */
+    #define DIV_FX_QN(a, b, fracBits) (((a) << (fracBits)) / (b))
+
+    /**
+     * @brief Find the floor of a fixed point type with N fractional bits
+     * @param a The number to floor
+     * @return The floor of the input
+     */
+    #define FLOOR_FX_QN(a, fracBits) ((a) & (~((1 << (fracBits)) - 1)))
+
+    /**
+     * @brief Convert an integer fraction to fixed point type with N fractional bits
+     * @param num The numerator
+     * @param denom The denominator
+     * @return The fraction in fixed point type with N fractional bits
+     */
+    #define TO_FX_FRAC_QN(num, denom, fracBits) DIV_FX(num, denom)
+
+    /**
      * @brief Convert an integer to a q24_8
      * @param in The integer to convert to q24_8
      * @return A q24_8
      */
-    #define TO_FX(in) ((in) << FRAC_BITS)
+    #define TO_FX(in) TO_FX_QN(in, FRAC_BITS)
 
     /**
      * @brief Convert a q24_8 to an integer
      * @param in The q24_8 to convert to integer
      * @return An integer
      */
-    #define FROM_FX(in) ((in) >> FRAC_BITS)
+    #define FROM_FX(in) FROM_FX_QN(in, FRAC_BITS)
 
     /**
      * @brief Add two q24_8 numbers together
@@ -103,7 +164,7 @@ float fixToFloat(q24_8 fx);
      * @param b The other operand
      * @return The sum
      */
-    #define ADD_FX(a, b) ((a) + (b))
+    #define ADD_FX(a, b) ADD_FX_QN(a, b, FRAC_BITS)
 
     /**
      * @brief Subtract a q24_8 from another
@@ -111,7 +172,7 @@ float fixToFloat(q24_8 fx);
      * @param b The number to subtract
      * @return The difference
      */
-    #define SUB_FX(a, b) ((a) - (b))
+    #define SUB_FX(a, b) SUB_FX_QN(a, b, FRAC_BITS)
 
     /**
      * @brief Multiply two q24_8
@@ -119,7 +180,7 @@ float fixToFloat(q24_8 fx);
      * @param b The other operand
      * @return The result
      */
-    #define MUL_FX(a, b) (((a) * (b)) >> FRAC_BITS)
+    #define MUL_FX(a, b) MUL_FX_QN(a, b, FRAC_BITS)
 
     /**
      * @brief Divide a q24_8 by another
@@ -127,14 +188,14 @@ float fixToFloat(q24_8 fx);
      * @param b The denominator
      * @return The result
      */
-    #define DIV_FX(a, b) (((a) << FRAC_BITS) / (b))
+    #define DIV_FX(a, b) DIV_FX_QN(a, b, FRAC_BITS)
 
     /**
      * @brief Find the floor of a q24_8
      * @param a The number to floor
      * @return The floor of the input
      */
-    #define FLOOR_FX(a) ((a) & (~((1 << FRAC_BITS) - 1)))
+    #define FLOOR_FX(a) FLOOR_FX_QN(a, FRAC_BITS)
 
     /**
      * @brief Convert an integer fraction to q24_8
@@ -142,7 +203,7 @@ float fixToFloat(q24_8 fx);
      * @param denom The denominator
      * @return The fraction in q24_8
      */
-    #define TO_FX_FRAC(num, denom) DIV_FX(num, denom)
+    #define TO_FX_FRAC(num, denom) TO_FX_FRAC_QN(num, denom, FRAC_BITS)
 
 #else
 

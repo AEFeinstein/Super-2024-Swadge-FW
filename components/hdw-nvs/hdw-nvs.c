@@ -6,11 +6,21 @@
 #include <esp_log.h>
 #include <nvs_flash.h>
 #include <nvs.h>
+#include <string.h>
+#include <esp_heap_caps.h>
 
 #include "hdw-nvs.h"
 #if defined(CONFIG_SOUND_OUTPUT_BUZZER)
     #include "hdw-bzr.h"
 #endif
+
+//==============================================================================
+// Defines
+//==============================================================================
+
+#define LOG_NVS_ERROR(err, ns, key)                                                                                    \
+    ESP_LOGE("NVS", "%s:%d err %s(0x%04X), namespace: %s, key: %s", __func__, __LINE__, esp_err_to_name(err), err, ns, \
+             key)
 
 //==============================================================================
 // Functions
@@ -185,7 +195,7 @@ bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
                 case ESP_ERR_NVS_INVALID_NAME:
                 case ESP_ERR_NVS_INVALID_LENGTH:
                 {
-                    ESP_LOGE("NVS", "%s readErr %s on %s", __func__, esp_err_to_name(readErr), namespace);
+                    LOG_NVS_ERROR(readErr, namespace, key);
                     break;
                 }
             }
@@ -200,7 +210,7 @@ bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
         case ESP_ERR_NVS_INVALID_NAME:
         case ESP_ERR_NO_MEM:
         {
-            ESP_LOGE("NVS", "%s openErr %s", __func__, esp_err_to_name(openErr));
+            LOG_NVS_ERROR(openErr, namespace, key);
             break;
         }
     }
@@ -254,7 +264,7 @@ bool writeNamespaceNvs32(const char* namespace, const char* key, int32_t val)
                 case ESP_ERR_NVS_NOT_ENOUGH_SPACE:
                 case ESP_ERR_NVS_REMOVE_FAILED:
                 {
-                    ESP_LOGE("NVS", "%s err %s", __func__, esp_err_to_name(writeErr));
+                    LOG_NVS_ERROR(writeErr, namespace, key);
                     break;
                 }
             }
@@ -270,7 +280,7 @@ bool writeNamespaceNvs32(const char* namespace, const char* key, int32_t val)
         case ESP_ERR_NVS_INVALID_NAME:
         case ESP_ERR_NO_MEM:
         {
-            ESP_LOGE("NVS", "%s openErr %s", __func__, esp_err_to_name(openErr));
+            LOG_NVS_ERROR(openErr, namespace, key);
             break;
         }
     }
@@ -355,7 +365,7 @@ bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_valu
                 case ESP_ERR_NVS_INVALID_NAME:
                 case ESP_ERR_NVS_INVALID_LENGTH:
                 {
-                    ESP_LOGE("NVS", "%s readErr %s", __func__, esp_err_to_name(readErr));
+                    LOG_NVS_ERROR(readErr, namespace, key);
                     break;
                 }
             }
@@ -370,7 +380,7 @@ bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_valu
         case ESP_ERR_NVS_INVALID_NAME:
         case ESP_ERR_NO_MEM:
         {
-            ESP_LOGE("NVS", "%s openErr %s", __func__, esp_err_to_name(openErr));
+            LOG_NVS_ERROR(openErr, namespace, key);
             break;
         }
     }
@@ -425,7 +435,7 @@ bool writeNamespaceNvsBlob(const char* namespace, const char* key, const void* v
                 case ESP_ERR_NVS_NOT_ENOUGH_SPACE:
                 case ESP_ERR_NVS_REMOVE_FAILED:
                 {
-                    ESP_LOGE("NVS", "%s err %s", __func__, esp_err_to_name(writeErr));
+                    LOG_NVS_ERROR(writeErr, namespace, key);
                     break;
                 }
             }
@@ -441,7 +451,7 @@ bool writeNamespaceNvsBlob(const char* namespace, const char* key, const void* v
         case ESP_ERR_NVS_INVALID_NAME:
         case ESP_ERR_NO_MEM:
         {
-            ESP_LOGE("NVS", "%s openErr %s", __func__, esp_err_to_name(openErr));
+            LOG_NVS_ERROR(openErr, namespace, key);
             break;
         }
     }
@@ -505,7 +515,7 @@ bool eraseNamespaceNvsKey(const char* namespace, const char* key)
                 case ESP_ERR_NVS_NOT_ENOUGH_SPACE:
                 case ESP_ERR_NVS_REMOVE_FAILED:
                 {
-                    ESP_LOGE("NVS", "%s err %s", __func__, esp_err_to_name(writeErr));
+                    LOG_NVS_ERROR(writeErr, namespace, key);
                     break;
                 }
             }
@@ -521,7 +531,7 @@ bool eraseNamespaceNvsKey(const char* namespace, const char* key)
         case ESP_ERR_NVS_INVALID_NAME:
         case ESP_ERR_NO_MEM:
         {
-            ESP_LOGE("NVS", "%s openErr %s", __func__, esp_err_to_name(openErr));
+            LOG_NVS_ERROR(openErr, namespace, key);
             break;
         }
     }
@@ -556,7 +566,7 @@ bool readNvsStats(nvs_stats_t* outStats)
         default:
         case ESP_ERR_INVALID_ARG:
         {
-            ESP_LOGE("NVS", "%s err %s", __func__, esp_err_to_name(readErr));
+            LOG_NVS_ERROR(readErr, "", "");
             return false;
         }
     }
@@ -615,7 +625,7 @@ bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nv
         {
             if (ESP_OK != (res = nvs_entry_info(it, &outEntryInfos[i])))
             {
-                ESP_LOGE("NVS", "nvs_entry_info() did not return OK: %s", esp_err_to_name(res));
+                LOG_NVS_ERROR(res, namespace, "");
                 nvs_release_iterator(it);
                 return false;
             }
@@ -632,6 +642,52 @@ bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nv
     }
     // Only return true if the error code was the expected one
     return res == ESP_ERR_NVS_NOT_FOUND;
+}
+
+/**
+ * @brief Fill a given ::list_t with all the NVS string keys for the given namespace.
+ *
+ * The ::list_t should be empty before passing into this function.
+ *
+ * List elements must be heap_caps_free()
+ *
+ * @param namespace The namespace to get keys from
+ * @param list A list to fill with keys.
+ */
+void getNvsKeys(const char* namespace, list_t* list)
+{
+    // Get an iterator
+    nvs_iterator_t it = NULL;
+    ESP_ERROR_CHECK(nvs_entry_find(NVS_DEFAULT_PART_NAME, namespace, NVS_TYPE_ANY, &it));
+
+    esp_err_t res = ESP_OK;
+    while (res == ESP_OK)
+    {
+        nvs_entry_info_t info;
+        if (ESP_OK != nvs_entry_info(it, &info))
+        {
+            // No info, finish
+            break;
+        }
+        else
+        {
+            // Info was read, check the namespace
+            if (!strcmp(info.namespace_name, namespace))
+            {
+                // Make a copy of the key and push it into the list
+                size_t keyLen = strlen(info.key) + 1;
+                char* keyCopy = heap_caps_calloc(sizeof(char), keyLen, MALLOC_CAP_SPIRAM);
+                memcpy(keyCopy, info.key, keyLen);
+                push(list, keyCopy);
+            }
+
+            // Iterate
+            res = nvs_entry_next(&it);
+        }
+    }
+
+    // Release the iterator
+    nvs_release_iterator(it);
 }
 
 /**

@@ -111,6 +111,7 @@ typedef struct
     int32_t stepSize;       ///< The step that should be added to the accumulator each sample, dependent on frequency
     uint32_t tVol;          ///< The target volume (amplitude)
     uint32_t cVol;          ///< The current volume which smoothly transitions to the target volume
+    uint8_t chorus;         ///< The number of offset samples to return
 } synthOscillator_t;
 
 //==============================================================================

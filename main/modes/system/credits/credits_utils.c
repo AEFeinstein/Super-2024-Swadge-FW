@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include <string.h>
+#include "hdw-led.h"
 #include "soundFuncs.h"
 #include "hdw-tft.h"
 #include "fs_font.h"
@@ -34,10 +35,22 @@ void initCredits(credits_t* credits, font_t* font, const creditsEntry_t* entries
     credits->entries    = entries;
     credits->numEntries = numEntries;
 
-    // Load and play song
-    loadMidiFile("credits.mid", &credits->song, false);
-    soundGetPlayerBgm()->loop = true;
-    soundPlayBgm(&credits->song, BZR_STEREO);
+    // Init MIDI player is initialized
+    initGlobalMidiPlayer();
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    midiGmOn(player);
+
+    // Load the MIDI file
+    loadMidiFile(MAXIMUM_HYPE_CREDITS_MID, &credits->song, true);
+    midiSetFile(player, &credits->song);
+
+    // Play the song
+    player->loop = true;
+    midiPause(player, false);
+
+    // Turn off LEDs
+    led_t leds[CONFIG_NUM_LEDS] = {0};
+    setLeds(leds, CONFIG_NUM_LEDS);
 }
 
 /**
@@ -48,6 +61,7 @@ void initCredits(credits_t* credits, font_t* font, const creditsEntry_t* entries
 void deinitCredits(credits_t* credits)
 {
     unloadMidiFile(&credits->song);
+    deinitGlobalMidiPlayer();
 }
 
 /**

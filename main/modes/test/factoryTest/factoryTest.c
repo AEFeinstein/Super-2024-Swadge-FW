@@ -15,6 +15,7 @@
 
 #include "factoryTest.h"
 #include "mainMenu.h"
+#include "esp_sleep.h"
 
 //==============================================================================
 // Defines
@@ -32,6 +33,8 @@
 #define TOUCHBAR_WIDTH  60
 #define TOUCHBAR_HEIGHT 60
 #define TOUCHBAR_Y_OFF  32
+
+#define ON_OFF_TEST 0
 
 //==============================================================================
 // Enums
@@ -71,6 +74,9 @@ void testReadAndValidateAccelerometer(void);
 void plotButtonState(int16_t x, int16_t y, testButtonState_t state);
 static void touchFillCircleSegments(int16_t x, int16_t y, int16_t r, int16_t segs, bool center);
 
+static void testEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
+static void testEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -90,6 +96,7 @@ typedef struct
     uint16_t maxValue;
     // Buzzers
     midiFile_t song;
+    bool spkActive;
     // Button
     testButtonState_t buttonStates[8];
     // Touch, as an 8-way joystick with center deadzone
@@ -116,7 +123,9 @@ typedef struct
     bool buttonsPassed;
     bool touchPassed;
     bool accelPassed;
-    bool bzrMicPassed;
+    bool micPassed;
+    // ESPNOW timer
+    int32_t broadcastTimer;
 } factoryTest_t;
 
 factoryTest_t* test;
@@ -125,7 +134,7 @@ const char factoryTestName[] = "Factory Test";
 
 swadgeMode_t factoryTestMode = {
     .modeName                 = factoryTestName,
-    .wifiMode                 = NO_WIFI,
+    .wifiMode                 = ESP_NOW,
     .overrideUsb              = false,
     .usesAccelerometer        = true,
     .usesThermometer          = true,
@@ -135,8 +144,8 @@ swadgeMode_t factoryTestMode = {
     .fnMainLoop               = testMainLoop,
     .fnAudioCallback          = testAudioCb,
     .fnBackgroundDrawCallback = NULL,
-    .fnEspNowRecvCb           = NULL,
-    .fnEspNowSendCb           = NULL,
+    .fnEspNowRecvCb           = testEspNowRecvCb,
+    .fnEspNowSendCb           = testEspNowSendCb,
     .fnAdvancedUSB            = NULL,
 };
 
@@ -149,15 +158,23 @@ swadgeMode_t factoryTestMode = {
  */
 void testEnterMode(void)
 {
+#if ON_OFF_TEST
+    // Test power down and up
+    powerDownPeripherals();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    powerUpPeripherals();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+#endif
+
     // Allocate memory for this mode
-    test = (factoryTest_t*)calloc(1, sizeof(factoryTest_t));
+    test = (factoryTest_t*)heap_caps_calloc(1, sizeof(factoryTest_t), MALLOC_CAP_8BIT);
 
     // Load a font
-    loadFont("ibm_vga8.font", &test->ibm_vga8, false);
+    loadFont(IBM_VGA_8_FONT, &test->ibm_vga8, true);
 
     // Load a sprite
-    loadWsg("kid0.wsg", &test->kd_idle0, false);
-    loadWsg("kid1.wsg", &test->kd_idle1, false);
+    loadWsg(KID_0_WSG, &test->kd_idle0, true);
+    loadWsg(KID_1_WSG, &test->kd_idle1, true);
 
     // Init last touchState index to indicate no previous state
     test->lastTouchStateIdx = UINT8_MAX;
@@ -174,12 +191,21 @@ void testEnterMode(void)
     setMicGainSetting(MAX_MIC_GAIN);
 
     // Play a song
-    loadMidiFile("stereo_test.mid", &test->song, false);
-    soundPlayBgm(&test->song, BZR_STEREO);
+    loadMidiFile(MAXIMUM_HYPE_CREDITS_MID, &test->song, true);
+    switchToSpeaker();
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    midiGmOn(player);
+    midiSetFile(player, &test->song);
+    player->loop = true;
+    midiPause(player, false);
+    test->spkActive = true;
 
     // Clear out accel setting.
     accelSetRegistersAndReset();
     accelPerformCal();
+
+    // Load firmware that turns all LEDs on, then sweeps horizontal and vertical test patterns
+    ch32v003RunBinaryAsset(MATRIX_FACTORY_CFUN_BIN);
 
     // Set NVM to indicate test not passed yet
     // setTestModePassedSetting(false);
@@ -194,7 +220,7 @@ void testExitMode(void)
     freeWsg(&test->kd_idle0);
     freeWsg(&test->kd_idle1);
     unloadMidiFile(&test->song);
-    free(test);
+    heap_caps_free(test);
 }
 
 /**
@@ -214,8 +240,16 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     testReadAndValidateTouch();
     testReadAndValidateAccelerometer();
 
+    // If everything but the mic passed, and the mic isn't active
+    if (test->spkActive && test->buttonsPassed && test->touchPassed && test->accelPassed)
+    {
+        // Switch to microphone mode
+        test->spkActive = false;
+        switchToMicrophone();
+    }
+
     // Check for a test pass
-    if (test->buttonsPassed && test->touchPassed && test->accelPassed && test->bzrMicPassed)
+    if (test->buttonsPassed && test->touchPassed && test->accelPassed && test->micPassed)
     {
         // Set NVM to indicate the test passed
         setTestModePassedSetting(true);
@@ -248,7 +282,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     {
         energy += test->end.fuzzed_bins[i];
         uint8_t height       = ((TFT_HEIGHT / 2) * test->end.fuzzed_bins[i]) / test->maxValue;
-        paletteColor_t color = test->bzrMicPassed ? c050 : c500; // paletteHsvToHex((i * 256) / FIX_BINS, 255, 255);
+        paletteColor_t color = test->micPassed ? c050 : c500; // paletteHsvToHex((i * 256) / FIX_BINS, 255, 255);
         int16_t x0           = binMargin + (i * binWidth);
         int16_t x1           = binMargin + ((i + 1) * binWidth);
         // Big enough, fill an area
@@ -258,7 +292,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     // Check for a pass
     if (energy > 100000)
     {
-        test->bzrMicPassed = true;
+        test->micPassed = true;
     }
 
     // Draw button states
@@ -399,9 +433,9 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     {
         sprintf(dbgStr, "Test Accelerometer");
     }
-    else if (false == test->bzrMicPassed)
+    else if (false == test->micPassed)
     {
-        sprintf(dbgStr, "Test Buzzer & Mic");
+        sprintf(dbgStr, "Test Microphone");
     }
     else if (getTestModePassedSetting())
     {
@@ -411,9 +445,13 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     int16_t tWidth = textWidth(&test->ibm_vga8, dbgStr);
     drawText(&test->ibm_vga8, c555, dbgStr, (TFT_WIDTH - tWidth) / 2, 0);
 
-    sprintf(dbgStr, "Verify RGB LEDs & Tunes");
+    sprintf(dbgStr, "Verify LEDs");
+    if (test->spkActive)
+    {
+        strcat(dbgStr, " and Speaker");
+    }
     tWidth = textWidth(&test->ibm_vga8, dbgStr);
-    drawText(&test->ibm_vga8, c555, dbgStr, 70, test->ibm_vga8.height + 8);
+    drawText(&test->ibm_vga8, c555, dbgStr, (TFT_WIDTH - tWidth) / 2, test->ibm_vga8.height + 8);
 
     // Animate a sprite
     test->tSpriteElapsedUs += elapsedUs;
@@ -424,14 +462,8 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     }
 
     // Draw the sprite
-    if (0 == test->spriteFrame)
-    {
-        drawWsg(&test->kd_idle0, 32, 4, false, false, 0);
-    }
-    else
-    {
-        drawWsg(&test->kd_idle1, 32, 4, false, false, 0);
-    }
+    drawWsg(0 == test->spriteFrame ? &test->kd_idle0 : &test->kd_idle1, //
+            125, 90, false, false, 0);
 
     // Pulse LEDs, each color for 1s
     test->tLedElapsedUs += elapsedUs;
@@ -506,6 +538,17 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
         leds[i].b = test->cLed.b;
     }
     setLeds(leds, CONFIG_NUM_LEDS);
+
+    // Display core temperature
+    char temperatureStr[32] = {0};
+    snprintf(temperatureStr, sizeof(temperatureStr) - 1, "%.1fC", readTemperatureSensor());
+    drawText(&test->ibm_vga8, c555, temperatureStr, 221 - textWidth(&test->ibm_vga8, temperatureStr) / 2, 140);
+
+    // Send an ESP NOW packet every 1s
+    RUN_TIMER_EVERY(test->broadcastTimer, 1000000, elapsedUs, {
+        const char bcastStr[] = "BROADCAST";
+        espNowSend(bcastStr, sizeof(bcastStr));
+    });
 }
 
 /**
@@ -761,7 +804,7 @@ void testAudioCb(uint16_t* samples, uint32_t sampleCnt)
             }
 
             // If already passed, just return
-            if (true == test->bzrMicPassed)
+            if (true == test->micPassed)
             {
                 return;
             }
@@ -904,4 +947,14 @@ static void touchFillCircleSegments(int16_t x, int16_t y, int16_t r, int16_t seg
                       y - r - 1, x + r + 1, y + r + 1);
         }
     }
+}
+
+static void testEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
+{
+    ESP_LOGI("NOW", "RX");
+}
+
+static void testEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
+{
+    ESP_LOGI("NOW", "TX %s", (ESP_NOW_SEND_SUCCESS == status) ? "Success" : "Fail");
 }

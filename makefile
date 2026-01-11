@@ -36,9 +36,9 @@ ifeq ($(HOST_OS),Windows)
 endif
 
 # clang-format may actually be clang-format-17
-CLANG_FORMAT:=clang-format
+CLANG_FORMAT:=clang-format-17
 ifeq (, $(shell which $(CLANG_FORMAT)))
-	CLANG_FORMAT:=clang-format-17
+	CLANG_FORMAT:=clang-format
 endif
 
 ifeq ($(HOST_OS),Linux)
@@ -53,7 +53,16 @@ endif
 # Source Files
 ################################################################################
 
-CNFS_FILE = main/utils/cnfs_image.c
+ASSETS_IN = ./assets
+ASSETS_OUT = ./assets_image
+ASSET_FILES = $(shell $(FIND) $(ASSETS_IN) -type f)
+CNFS_FILE   = main/utils/cnfs_image.c
+CNFS_FILE_H = main/utils/cnfs_image.h
+ASSETS_TIMESTAMP_FILE = ./.assets_ts
+ASSETS_CONF_FILE = ./assets.conf
+
+ASSETS_PROJ_FOLDER = ./tools/assets_preprocessor
+ASSETS_PREPROCESSOR = $(ASSETS_PROJ_FOLDER)/assets_preprocessor
 
 # This is a list of directories to scan for c files recursively
 SRC_DIRS_RECURSIVE = emulator/src main
@@ -66,9 +75,13 @@ SRC_FILES = $(CNFS_FILE)
 SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
 # This is all the source files combined and deduplicated
 SOURCES   = $(sort $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC_FILES))
+# Remove firmware's cnfs.c because emu_cnfs.c duplicates those functions
+SOURCES   := $(filter-out main/utils/cnfs.c, $(SOURCES))
 
 # The emulator doesn't build components, but there is a target for formatting them
-ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]")
+ALL_FILES = $(shell $(FIND) components assets $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]" -or -iname "*.cfun")
+
+SUBMODULES = $(shell git config --file .gitmodules --name-only --get-regexp path | sed -nr 's/submodule.(.*).path/\1/p')
 
 ################################################################################
 # Includes
@@ -97,7 +110,6 @@ CFLAGS = \
 	-fdata-sections \
 	-gdwarf-4 \
 	-ggdb \
-	-O2 \
 	-fno-jump-tables \
 	-finline-functions \
 	-std=gnu17
@@ -114,13 +126,42 @@ else
 # Required for OpenGL and some other libraries
 CFLAGS += \
 	-I/opt/X11/include \
-	-I/opt/homebrew/include
+	-I/opt/homebrew/include \
+	-mmacosx-version-min=10.0
 endif
 
+CFLAGS_SANITIZE=
 ifeq ($(HOST_OS),Linux)
-CFLAGS += \
+CFLAGS_SANITIZE += \
 	-fsanitize=address \
-	-fsanitize=bounds-strict
+	-fsanitize=bounds-strict \
+	-fsanitize=leak \
+	-fsanitize=undefined \
+	-fsanitize=pointer-compare \
+	-fsanitize=shift \
+	-fsanitize=shift-exponent \
+	-fsanitize=shift-base \
+	-fsanitize=integer-divide-by-zero \
+	-fsanitize=unreachable \
+	-fsanitize=vla-bound \
+	-fsanitize=null \
+	-fsanitize=return \
+	-fsanitize=signed-integer-overflow \
+	-fsanitize=bounds \
+	-fsanitize=bounds-strict \
+	-fsanitize=alignment \
+	-fsanitize=object-size \
+	-fsanitize=float-divide-by-zero \
+	-fsanitize=float-cast-overflow \
+	-fsanitize=nonnull-attribute \
+	-fsanitize=returns-nonnull-attribute \
+	-fsanitize=bool \
+	-fsanitize=enum \
+	-fsanitize=vptr \
+	-fsanitize=pointer-overflow \
+	-fsanitize=builtin \
+	-fsanitize-address-use-after-scope
+
 ENABLE_GCOV=false
 
 ifeq ($(ENABLE_GCOV),true)
@@ -152,7 +193,6 @@ CFLAGS_WARNINGS_EXTRA = \
 	-Wunused-local-typedefs \
 	-Wuninitialized \
 	-Wshadow \
-	-Wredundant-decls \
 	-Wswitch \
 	-Wcast-align \
 	-Wformat-nonliteral \
@@ -168,6 +208,7 @@ CFLAGS_WARNINGS_EXTRA = \
 #	-Wpedantic \
 #	-Wconversion \
 #	-Wsign-conversion \
+#	-Wredundant-decls \
 #	-Wdouble-promotion
 
 ifneq ($(HOST_OS),Darwin)
@@ -185,10 +226,14 @@ endif
 ################################################################################
 
 # Create a variable with the git hash and branch name
-GIT_HASH  = \"$(shell git rev-parse --short=7 HEAD)\"
+GIT_HASH  = $(shell git rev-parse --short=7 HEAD)
 
 # Used by the ESP SDK
 DEFINES_LIST = \
+	CONFIG_ESP_SYSTEM_PANIC=y\
+	CONFIG_ESP_SYSTEM_GDBSTUB_RUNTIME=y\
+	CONFIG_DEBUG_OUTPUT_USB=y\
+	CONFIG_HARDWARE_PULSE=y \
 	CONFIG_IDF_TARGET_ESP32S2=y \
 	SOC_RMT_CHANNELS_PER_GROUP=4 \
 	SOC_TOUCH_SENSOR_NUM=15 \
@@ -207,27 +252,41 @@ DEFINES_LIST = \
 	CONFIG_GC9307_240x280=y \
 	CONFIG_TFT_MAX_BRIGHTNESS=200 \
 	CONFIG_TFT_MIN_BRIGHTNESS=10 \
-	CONFIG_NUM_LEDS=8 \
+	CONFIG_NUM_LEDS=6 \
 	configENABLE_FREERTOS_DEBUG_OCDAWARE=1 \
 	_GNU_SOURCE \
-	IDF_VER="v5.2.1" \
+	IDF_VER="v5.2.5" \
 	ESP_PLATFORM \
 	_POSIX_READER_WRITER_LOCKS \
 	CFG_TUSB_MCU=OPT_MCU_ESP32S2 \
-	CONFIG_SOUND_OUTPUT_SPEAKER=y
+	CONFIG_SOUND_OUTPUT_SPEAKER=y \
+	CONFIG_FACTORY_TEST_NORMAL=y \
+	SOC_TOUCH_PAD_THRESHOLD_MAX=0x1FFFFF
 
-# If this is not WSL, use OpenGL for rawdraw
+# If this is not WSL
 ifeq ($(IS_WSL),0)
-	DEFINES_LIST += CNFGOGL
+# And this is not MacOS
+ifneq ($(HOST_OS),Darwin)
+# Use OpenGL for rawdraw
+DEFINES_LIST += CNFGOGL
+endif
 endif
 
 # Extra defines
 DEFINES_LIST += \
-	GIT_SHA1=${GIT_HASH} \
+	GIT_SHA1=\\\"${GIT_HASH}\\\" \
 	HAS_XINERAMA=1 \
 	FULL_SCREEN_STEAL_FOCUS=1
 
 DEFINES = $(patsubst %, -D%, $(DEFINES_LIST))
+
+################################################################################
+# Files to write compiler arguments to (workaround for Windows line limits)
+################################################################################
+
+ARGS_DEFINES_FILE       = args_defines.txt
+ARGS_WARNINGS_FILE      = args_warnings.txt
+ARGS_C_FLAGS            = args_c_flags.txt
 
 ################################################################################
 # Output Objects
@@ -256,7 +315,7 @@ ifeq ($(HOST_OS),Darwin)
 endif
 
 # These are directories to look for library files in
-LIB_DIRS = 
+LIB_DIRS =
 
 # On MacOS we need to ensure that X11 is added for OpenGL and some others
 ifeq ($(HOST_OS),Darwin)
@@ -274,19 +333,25 @@ LIBRARY_FLAGS += \
 	-static-libstdc++
 else
 LIBRARY_FLAGS += \
+    -framework Carbon \
+    -framework Foundation \
+	-framework CoreFoundation \
+	-framework CoreMIDI \
 	-framework AudioToolbox
 endif
 
 ifeq ($(HOST_OS),Linux)
 LIBRARY_FLAGS += \
-	-fsanitize=address \
-	-fsanitize=bounds-strict \
+	$(CFLAGS_SANITIZE) \
 	-fno-omit-frame-pointer \
 	-static-libasan
-
 ifeq ($(ENABLE_GCOV),true)
     LIBRARY_FLAGS += -lgcov -fprofile-arcs -ftest-coverage
 endif
+endif
+
+ifeq ($(HOST_OS),Windows)
+	LIBRARY_FLAGS += -Wl,-Bstatic -lpthread
 endif
 
 ################################################################################
@@ -296,47 +361,133 @@ endif
 # These are the files to build
 EXECUTABLE = swadge_emulator
 
+MACOS_APP     = SwadgeEmulator.app
+MACOS_ICON    = build/SwadgeEmulator.icns
+MACOS_ICONSET = build/SwadgeEmulator.iconset
+MACOS_PLIST   = emulator/resources/Info.plist
+
 ################################################################################
 # Targets for Building
 ################################################################################
 
 # This list of targets do not build files which match their name
-.PHONY: all assets clean docs format cppcheck firmware clean-firmware $(CNFS_FILE) print-%
+.PHONY: all assets preprocess-assets firmware bundle \
+	clean clean-firmware clean-docs clean-assets clean-git clean-utils fullclean \
+	docs format gen-coverage update-dependencies cppcheck \
+	usbflash monitor installudev \
+	print-%
 
 # Build the executable
 all: $(EXECUTABLE)
 
-# To build the executable file, you have to compile the objects first
-$(EXECUTABLE): $(OBJECTS)
+# Recipes to save gcc arguments to files, dependent on the makefile itself
+# This is a workaround for Windows, which has an 8192 char limit for commands
+$(ARGS_DEFINES_FILE): makefile
+	@echo $(DEFINES) > $(ARGS_DEFINES_FILE)
+
+$(ARGS_WARNINGS_FILE): makefile
+	@echo $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) > $(ARGS_WARNINGS_FILE)
+
+$(ARGS_C_FLAGS):makefile
+	@echo $(CFLAGS) $(CFLAGS_SANITIZE) > $(ARGS_C_FLAGS)
+
+# Force clean of assets
+preprocess-assets: clean-assets assets
+
+# Asset processing prereqs
+$(ASSETS_PREPROCESSOR):
+	$(MAKE) -C $(ASSETS_PROJ_FOLDER)
+
+./tools/cnfs/cnfs_gen:
+	$(MAKE) -C ./tools/cnfs
+
+# The "assets" target is dependent on all the asset files
+assets $(ASSETS_TIMESTAMP_FILE) &: $(ASSETS_CONF_FILE) $(ASSET_FILES)
+	$(MAKE) -C $(ASSETS_PROJ_FOLDER)
+	$(ASSETS_PREPROCESSOR) -c $(ASSETS_CONF_FILE) -i $(ASSETS_IN)/ -o $(ASSETS_OUT)/ -t $(ASSETS_TIMESTAMP_FILE)
+
+# To create CNFS_FILE, first the assets must be processed
+$(CNFS_FILE) $(CNFS_FILE_H) &: $(ASSETS_TIMESTAMP_FILE) | ./tools/cnfs/cnfs_gen assets
+	./tools/cnfs/cnfs_gen $(ASSETS_OUT)/ $(CNFS_FILE) $(CNFS_FILE_H)
+
+# To build the main file, you have to compile the objects
+$(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
 	$(CC) $(OBJECTS) $(LIBRARY_FLAGS) -o $@
 
 # This compiles each c file into an o file
-./$(OBJ_DIR)/%.o: ./%.c
+# $(CNFS_FILE) is a dependency of all objects because some C files include "cnfs_image.h"
+# $(CNFS_FILE) is not a phony target, so it should only be called if the file doesn't exist
+./$(OBJ_DIR)/%.o: ./%.c $(CNFS_FILE) $(ARGS_DEFINES_FILE) $(ARGS_WARNINGS_FILE) $(ARGS_C_FLAGS)
 	@mkdir -p $(@D) # This creates a directory before building an object in it.
-	$(CC) $(CFLAGS) $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) $(DEFINES) $(INC) $< -o $@
+	$(CC) @$(ARGS_C_FLAGS) @$(ARGS_WARNINGS_FILE) @$(ARGS_DEFINES_FILE) $(INC) $< -o $@
 
-# To create the c file with assets, run these tools
-$(CNFS_FILE):
-	$(MAKE) -C ./tools/assets_preprocessor/
-	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
-	$(MAKE) -C ./tools/cnfs/
-	./tools/cnfs/cnfs_gen assets_image/ main/utils/cnfs_image.c main/utils/cnfs_image.h
+# Build the firmware. Cmake will take care of generating the CNFS files
+firmware:
+	idf.py build
 
-# This cleans emulator files
-clean:
-	$(MAKE) -C ./tools/assets_preprocessor/ clean
-	$(MAKE) -C ./tools/cnfs clean
+# Build an macOS bundle, which depends on a .app
+bundle: $(MACOS_APP)
+
+# Build an macOS app, which depends on ab executable, icon, and plist
+$(MACOS_APP): $(EXECUTABLE) $(MACOS_ICON) $(MACOS_PLIST)
+	rm -rf $(MACOS_APP)
+	mkdir -p $(MACOS_APP)/Contents/{MacOS,Resources,libs}
+	cat $(MACOS_PLIST) | sed "s/##GIT_HASH##/$(GIT_HASH)/" > $(MACOS_APP)/Contents/Info.plist
+	echo "APPLSwadgeEmulator" > $(MACOS_APP)/Contents/PkgInfo
+	cp $(MACOS_ICON) $(MACOS_APP)/Contents/Resources/
+	vtool -set-build-version macos 10.0 10.0 -replace -output $(MACOS_APP)/Contents/MacOS/SwadgeEmulator $(EXECUTABLE)
+	dylibbundler -od -b -x ./$(MACOS_APP)/Contents/MacOS/SwadgeEmulator -d ./$(MACOS_APP)/Contents/libs/
+
+# Build a macOS icon, which depends on a png
+$(MACOS_ICON): emulator/resources/icon.png
+	rm -rf $(MACOS_ICONSET)
+	mkdir -p $(MACOS_ICONSET)
+	sips -z 16 16     $< --out $(MACOS_ICONSET)/icon_16x16.png
+	sips -z 32 32     $< --out $(MACOS_ICONSET)/icon_16x16@2x.png
+	sips -z 32 32     $< --out $(MACOS_ICONSET)/icon_32x32.png
+	sips -z 64 64     $< --out $(MACOS_ICONSET)/icon_32x32@2x.png
+	sips -z 128 128   $< --out $(MACOS_ICONSET)/icon_128x128.png
+	sips -z 256 256   $< --out $(MACOS_ICONSET)/icon_128x128@2x.png
+	sips -z 256 256   $< --out $(MACOS_ICONSET)/icon_256x256.png
+	sips -z 512 512   $< --out $(MACOS_ICONSET)/icon_256x256@2x.png
+	sips -z 512 512   $< --out $(MACOS_ICONSET)/icon_512x512.png
+	sips -z 1024 1024 $< --out $(MACOS_ICONSET)/icon_512x512@2x.png
+	iconutil -c icns -o $(MACOS_ICON) $(MACOS_ICONSET)
+	rm -r $(MACOS_ICONSET)
+
+################################################################################
+# Targets for cleaning
+################################################################################
+
+# Clean emulator files, depends on cleaning assets too
+clean: clean-assets
 	-@rm -f $(OBJECTS) $(EXECUTABLE)
-	-@rm -rf ./docs/html
-	-@rm -rf ./main/utils/cnfs/cnfs_image.c
+	-@rm -f $(ARGS_DEFINES_FILE) $(ARGS_WARNINGS_FILE) $(ARGS_C_FLAGS)
 
-# This cleans everything
-fullclean: clean
-	idf.py fullclean
+# Clean firmware files, depends on cleaning assets too
+clean-firmware: clean-assets
+	idf.py clean
+
+# Clean docs
+clean-docs:
+	-@rm -rf ./docs/html
+
+# Clean assets
+clean-assets:
+	$(MAKE) -C $(ASSETS_PROJ_FOLDER) clean
+	$(MAKE) -C ./tools/cnfs clean
+	-@rm -rf $(CNFS_FILE) $(CNFS_FILE_H)
+	-@rm -rf $(ASSETS_OUT)/* $(ASSETS_TIMESTAMP_FILE)
+
+# Clean git. Be careful, since this will wipe uncommitted changes
+clean-git:
 	git clean -dfX
 	git clean -df
 	git clean -fX
 	git clean -f
+
+# Clean utilities
+clean-utils:
 	$(MAKE) -C ./tools/sandbox_test clean
 	$(MAKE) -C ./tools/hidapi_test clean
 	$(MAKE) -C ./tools/bootload_reboot_stub clean
@@ -344,37 +495,48 @@ fullclean: clean
 	$(MAKE) -C ./tools/swadgeterm clean
 	$(MAKE) -C ./tools/reboot_into_bootloader clean
 
+# This cleans everything
+fullclean: clean clean-firmware clean-docs clean-assets clean-git clean-utils
+	-@rm -rf managed_components/
+	-@rm -rf build/
+	idf.py fullclean
+
 ################################################################################
 # Utility targets
 ################################################################################
 
-docs:
+plantuml.jar:
 	-wget -nc -O plantuml.jar https://github.com/plantuml/plantuml/releases/download/v1.2023.4/plantuml-1.2023.4.jar
+
+docs: plantuml.jar
 	doxygen ./Doxyfile
 
 format:
 	$(CLANG_FORMAT) -i -style=file $(ALL_FILES)
 
+gen-coverage:
+	lcov --capture --directory ./emulator/obj/ --output-file ./coverage.info
+	genhtml ./coverage.info --output-directory ./coverage
+	firefox ./coverage/index.html &
+
+update-dependencies:
+	for submodule in $(SUBMODULES) ; do \
+		echo Updating $$submodule to latest ; \
+		git -C $$submodule fetch --prune ; \
+		git -C $$submodule checkout origin/HEAD ; \
+	done
+	idf.py update-dependencies
+
 ################################################################################
-# Firmware targets
+# Flashing targets
 ################################################################################
 
-clean-firmware:
-	idf.py clean
-	$(MAKE) -C ./tools/assets_preprocessor/ clean
-	-@rm -rf ./docs/html
-	-@rm -rf ./assets_image/*
-
-firmware:
-	idf.py build
-
-# For now, works on Linux.  You can copy-paste these for Windows.
-
+# Target to flash over USB. 
 ifeq ($(HOST_OS),Windows)
-usbflash :
+usbflash : assets $(CNFS_FILE) firmware
 	tools/reflash_and_monitor.bat
 else
-usbflash :
+usbflash : assets $(CNFS_FILE) firmware
 	# In case we are already in the bootloader...
 	($(MAKE) -C tools/bootload_reboot_stub reboot)||(true)
 	# Command reboot out of game into bootloader.
@@ -385,9 +547,11 @@ usbflash :
 	$(MAKE) -C tools/swadgeterm monitor
 endif
 
+# Target to launch a USB monitor for firmware debugging
 monitor :
 	$(MAKE) -C tools/swadgeterm monitor
 
+# Targt to create 99-swadge.rules if it doesn't already exist
 /etc/udev/rules.d/99-swadge.rules :
 	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", MODE=\"0664\", GROUP=\"%s\", ATTRS{idVendor}==\"1209\", ATTRS{idProduct}==\"4269\"\n" $(UDEV_GROUP) > /tmp/99-swadge.rules
 	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", ATTRS{idVendor}==\"1209\", ATTRS{idProduct}==\"4269\", GROUP=\"%s\", MODE=\"0660\"\n" $(UDEV_GROUP) >> /tmp/99-swadge.rules
@@ -395,6 +559,7 @@ monitor :
 	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", ATTRS{idVendor}==\"303a\", ATTRS{idProduct}==\"00??\", GROUP=\"%s\", MODE=\"0660\"\n" $(UDEV_GROUP) >> /tmp/99-swadge.rules
 	sudo cp -a /tmp/99-swadge.rules /etc/udev/rules.d/99-swadge.rules
 
+# Target to automatically add udev rules on Linux
 installudev : /etc/udev/rules.d/99-swadge.rules
 	getent group plugdev >/dev/null && sudo usermod -aG plugdev $(USER) || true
 	sudo udevadm control --reload
@@ -430,10 +595,9 @@ CPPCHECK_IGNORE_FLAGS = $(patsubst %,-i%, $(CPPCHECK_IGNORE))
 cppcheck:
 	cppcheck $(CPPCHECK_FLAGS) $(DEFINES) $(INC) $(CPPCHECK_DIRS) $(CPPCHECK_IGNORE_FLAGS)
 
-gen-coverage:
-	lcov --capture --directory ./emulator/obj/ --output-file ./coverage.info
-	genhtml ./coverage.info --output-directory ./coverage
-	firefox ./coverage/index.html &
+################################################################################
+# Makefile debug targets
+################################################################################
 
 # Print any value from this makefile
 print-%  : ; @echo $* = $($*)

@@ -4,6 +4,7 @@
 
 #include "hdw-usb.h"
 #include "emu_main.h"
+#include "midi_device.h"
 
 //==============================================================================
 // Functions
@@ -26,6 +27,22 @@ void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHa
  * Note, this does nothing as tinyusb_driver_uninstall() doesn't exist
  */
 void deinitUsb(void)
+{
+    midid_reset(0);
+}
+
+/**
+ * @brief
+ */
+void powerDownUsb(void)
+{
+    WARN_UNIMPLEMENTED();
+}
+
+/**
+ * @brief
+ */
+void powerUpUsb(void)
 {
     WARN_UNIMPLEMENTED();
 }

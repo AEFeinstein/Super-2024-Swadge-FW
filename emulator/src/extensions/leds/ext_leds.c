@@ -3,6 +3,7 @@
 #include "hdw-led.h"
 #include "hdw-led_emu.h"
 #include "macros.h"
+#include "vector2d.h"
 
 #include "rawdraw_sf.h"
 
@@ -10,7 +11,8 @@
 // Defines
 //==============================================================================
 
-#define MIN_LED_WIDTH 64
+#define MIN_LED_DIM 64
+#define LED_MARGIN  16
 
 //==============================================================================
 // Static Function Prototypes
@@ -37,9 +39,13 @@ emuExtension_t ledEmuExtension = {
 // Where LEDs are drawn, kinda
 // first value is the LED column (top-to-bottom(?))
 // second value is the row
-static const int16_t ledOffsets[8][2] = {
-    {1, 2}, {0, 3}, {0, 1}, {1, 0}, // Left side LEDs
-    {2, 0}, {3, 1}, {3, 3}, {2, 2}, // Right side LEDs
+static const vec_t ledOffsets[CONFIG_NUM_LEDS] = {
+    {.x = 1, .y = 0}, // 1
+    {.x = 1, .y = 2}, // 2
+    {.x = 1, .y = 1}, // 3
+    {.x = 0, .y = 1}, // 4
+    {.x = 0, .y = 2}, // 5
+    {.x = 0, .y = 0}, // 6
 };
 
 //==============================================================================
@@ -47,7 +53,7 @@ static const int16_t ledOffsets[8][2] = {
 //==============================================================================
 
 /**
- * @brief Initializes the
+ * @brief Initializes the LED panes
  *
  * @param args
  * @return true if the extension is enabled
@@ -57,8 +63,8 @@ static bool ledsExtInit(emuArgs_t* args)
 {
     if (!args->hideLeds)
     {
-        requestPane(&ledEmuExtension, PANE_LEFT, MIN_LED_WIDTH * 2, 1);
-        requestPane(&ledEmuExtension, PANE_RIGHT, MIN_LED_WIDTH * 2, 1);
+        requestPane(&ledEmuExtension, PANE_LEFT, MIN_LED_DIM, MIN_LED_DIM * 3);
+        requestPane(&ledEmuExtension, PANE_RIGHT, MIN_LED_DIM, MIN_LED_DIM * 3);
         return true;
     }
 
@@ -91,17 +97,27 @@ static void drawLeds(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8
     {
         for (int i = 0; i < MIN(numLeds, ARRAY_SIZE(ledOffsets)); i++)
         {
-            // Use left pane for offsets 0 and 1, right for offsets 2 and 3
-            const emuPane_t* pane = (ledOffsets[i][0] < 2) ? (panes + 0) : (panes + 1);
+            // Use the left pane for offset 0, right pane for offset 1
+            const emuPane_t* pane;
+            if (0 == ledOffsets[i].x)
+            {
+                // Left pane
+                pane = &panes[0];
+            }
+            else
+            {
+                // Right pane
+                pane = &panes[1];
+            }
 
-            int16_t ledH = pane->paneH / (numLeds / 2);
-            int16_t ledW = pane->paneW / 2;
+            int16_t ledH = (pane->paneH - (2 * LED_MARGIN)) / 3;
+            int16_t ledW = pane->paneW;
 
-            int16_t xOffset = pane->paneX + (ledOffsets[i][0] % 2) * (ledW / 2);
-            int16_t yOffset = ledOffsets[i][1] * ledH;
+            int16_t xOffset = pane->paneX;
+            int16_t yOffset = pane->paneY + (ledOffsets[i].y * (ledH + LED_MARGIN));
 
             CNFGColor((leds[i].r << 24) | (leds[i].g << 16) | (leds[i].b << 8) | 0xFF);
-            CNFGTackRectangle(xOffset, yOffset, xOffset + ledW * 3 / 2, yOffset + ledH);
+            CNFGTackRectangle(xOffset, yOffset, xOffset + ledW, yOffset + ledH);
         }
     }
 }

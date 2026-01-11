@@ -45,21 +45,21 @@
  *
  *     if (mode->textData != NULL)
  *     {
- *         free(mode->textData);
+ *         heap_caps_free(mode->textData);
  *     }
  *     mode->textData = strdup(text);
  * }
  *
  * void setup(void)
  * {
- *     modeData = calloc(1, sizeof(modeData_t));
+ *     modeData = heap_caps_calloc(1, sizeof(modeData_t), MALLOC_CAP_8BIT);
  *     // Setup function
  *     uint16_t entryW = 160;
  *     uint16_t entryH = 16;
  *     uint16_t entryX = (TFT_WIDTH - entryW) / 2;
  *     uint16_t entryY = (TFT_HEIGHT - entryH) / 2;
  *
- *     loadFont("ibm_vga8.font", &modeData->font);
+ *     loadFont(IBM_VGA_8_FONT, &modeData->font);
  *
  *     modeData->textEntry = initTextEntry(entryX, entryY, entryW, entryH, &font, ENTRY_ALPHANUM, textEntryCb);
  *
@@ -74,7 +74,7 @@
  *
  *     if (modeData->textData != NULL)
  *     {
- *         free(modeData->textData);
+ *         heap_caps_free(modeData->textData);
  *     }
  * }
  *

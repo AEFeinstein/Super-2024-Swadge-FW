@@ -153,11 +153,12 @@ accelTest_t* accelTest = NULL;
 static void accelTestEnterMode(void)
 {
     // Allocate and clear all memory for this mode. All the variables are contained in a single struct for convenience.
-    // calloc() is used instead of malloc() because calloc() also initializes the allocated memory to zeros.
-    accelTest = calloc(1, sizeof(accelTest_t));
+    // heap_caps_calloc() is used instead of heap_caps_malloc() because heap_caps_calloc() also initializes the
+    // allocated memory to zeros.
+    accelTest = heap_caps_calloc(1, sizeof(accelTest_t), MALLOC_CAP_8BIT);
 
     // Load a font
-    loadFont("ibm_vga8.font", &accelTest->ibm, false);
+    loadFont(IBM_VGA_8_FONT, &accelTest->ibm, false);
 
     // writeTextlabels doesn't get reset by accelTestReset(), so initialize that here
     accelTest->writeTextLabels = true;
@@ -176,7 +177,7 @@ static void accelTestExitMode(void)
 {
     // Free the font
     freeFont(&accelTest->ibm);
-    free(accelTest);
+    heap_caps_free(accelTest);
 }
 
 /**
@@ -267,9 +268,10 @@ static void accelDrawBunny(void)
     mathRotateVectorByQuaternion(plusx_out, LSM6DSL.fqQuat, plusx_out);
     mathRotateVectorByQuaternion(plusz_out, LSM6DSL.fqQuat, plusz_out);
 
-    int16_t bunny_verts_out[sizeof(bunny_verts) / 3 / 2 * 3];
+    int16_t bunny_verts_out[numBunnyVerts() / 3 * 3];
+    memset(bunny_verts_out, 0, sizeof(bunny_verts_out));
     int i, vertices = 0;
-    for (i = 0; i < sizeof(bunny_verts) / 2; i += 3)
+    for (i = 0; i < numBunnyVerts(); i += 3)
     {
         // Performingthe transform this way is about 700us.
         float bx                          = bunny_verts[i + 2];
@@ -286,7 +288,7 @@ static void accelDrawBunny(void)
     }
 
     int lines = 0;
-    for (i = 0; i < sizeof(bunny_lines); i += 2)
+    for (i = 0; i < numBunnyLines(); i += 2)
     {
         int v1    = bunny_lines[i] * 3;
         int v2    = bunny_lines[i + 1] * 3;
