@@ -411,35 +411,8 @@ static void swadgeItEnterMode(void)
     // Allocate mode memory
     si = heap_caps_calloc(1, sizeof(swadgeIt_t), MALLOC_CAP_8BIT);
 
-    // Allocate menu
-    si->menu = initMenu(swadgeItStrName, swadgeItMenuCb);
-    addSingleItemToMenu(si->menu, swadgeItStrReaction);
-    addSingleItemToMenu(si->menu, swadgeItStrMemory);
-    addSingleItemToMenu(si->menu, swadgeItStrHighScores);
-    addSingleItemToMenu(si->menu, swadgeItStrHelp);
-    addSingleItemToMenu(si->menu, swadgeItStrExit);
-    si->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
-
-    si->bgMenu = initMenu(NULL, NULL);
-    si->help   = initHelpScreen(si->bgMenu, si->menuRenderer, siHelpPages, ARRAY_SIZE(siHelpPages));
-
-    // Load all SFX samples
-    for (int8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
-    {
-        si->sfx[i].samples = readHeatshrinkFile(siEvtData[i].sfx_fidx, &si->sfx[i].len, true);
-    }
-    si->scream.samples = readHeatshrinkFile(DAC_SCREAM_RAW, &si->scream.len, true);
-
-    // Load all images
-    for (int8_t i = 0; i < ARRAY_SIZE(si->img); i++)
-    {
-        loadWsg(siEvtData[i].image, &si->img[i], true);
-    }
-
-    // For yell detection
-    InitColorChord(&si->end, &si->dd);
-
     // Read high scores from NVS to mode memory
+    // This must be done before checking SwadgePasses
     const struct
     {
         const char* key;
@@ -461,6 +434,7 @@ static void swadgeItEnterMode(void)
     }
 
     // Get unused SwadgePasses for this mode
+    // This should be done before loading other data because it's RAM-intensive
     list_t swadgePasses = {0};
     getSwadgePasses(&swadgePasses, &swadgeItMode, false);
 
@@ -491,6 +465,34 @@ static void swadgeItEnterMode(void)
         passNode = passNode->next;
     }
     freeSwadgePasses(&swadgePasses);
+
+    // Allocate menu
+    si->menu = initMenu(swadgeItStrName, swadgeItMenuCb);
+    addSingleItemToMenu(si->menu, swadgeItStrReaction);
+    addSingleItemToMenu(si->menu, swadgeItStrMemory);
+    addSingleItemToMenu(si->menu, swadgeItStrHighScores);
+    addSingleItemToMenu(si->menu, swadgeItStrHelp);
+    addSingleItemToMenu(si->menu, swadgeItStrExit);
+    si->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
+
+    si->bgMenu = initMenu(NULL, NULL);
+    si->help   = initHelpScreen(si->bgMenu, si->menuRenderer, siHelpPages, ARRAY_SIZE(siHelpPages));
+
+    // Load all SFX samples
+    for (int8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
+    {
+        si->sfx[i].samples = readHeatshrinkFile(siEvtData[i].sfx_fidx, &si->sfx[i].len, true);
+    }
+    si->scream.samples = readHeatshrinkFile(DAC_SCREAM_RAW, &si->scream.len, true);
+
+    // Load all images
+    for (int8_t i = 0; i < ARRAY_SIZE(si->img); i++)
+    {
+        loadWsg(siEvtData[i].image, &si->img[i], true);
+    }
+
+    // For yell detection
+    InitColorChord(&si->end, &si->dd);
 }
 
 /**
