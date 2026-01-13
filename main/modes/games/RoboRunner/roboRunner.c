@@ -300,8 +300,13 @@ runnerData_t* rd;
 
 static void runnerEnterMode()
 {
+    // Allocate mode memory
+    rd = (runnerData_t*)heap_caps_calloc(1, sizeof(runnerData_t), MALLOC_CAP_8BIT);
+
+    // SwadgePass
+    rd->otherHS = getLatestRemoteScore();
+
     // Load WSGs
-    rd             = (runnerData_t*)heap_caps_calloc(1, sizeof(runnerData_t), MALLOC_CAP_8BIT);
     rd->robot.imgs = heap_caps_calloc(ARRAY_SIZE(robotImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(robotImages); idx++)
     {
@@ -347,9 +352,6 @@ static void runnerEnterMode()
     {
         rd->prevScore = 0;
     }
-
-    // SwadgePass
-    rd->otherHS = getLatestRemoteScore();
 
     // Trophy
     rd->feetTraveledTotal = trophyGetSavedValue(&roboRunnerTrophies[1]);

@@ -420,6 +420,12 @@ static void atriumEnterMode(void)
     // Initialize memory
     atr = (atrium_t*)heap_caps_calloc(1, sizeof(atrium_t), MALLOC_CAP_8BIT);
 
+    // Swadgepass
+    getSwadgePasses(&atr->spList, &atriumMode, true);
+    node_t* spNode = atr->spList.first;
+    int i          = 0;
+    atr->loadAnims = 0;
+
     // Load images with a common decoder and decode space
     {
         // Initialize memory for a lot of big image loads
@@ -474,12 +480,6 @@ static void atriumEnterMode(void)
     {
         loadWsg(teams[idx], &atr->teamElements[idx], true);
     }
-
-    // Swadgepass
-    getSwadgePasses(&atr->spList, &atriumMode, true);
-    node_t* spNode = atr->spList.first;
-    int i          = 0;
-    atr->loadAnims = 0;
 
     trophyUpdate(&atriumTrophyData.list[0], 1, true); // Award "Welcome to the Atrium" trophy
 
