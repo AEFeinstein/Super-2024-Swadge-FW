@@ -400,9 +400,9 @@ void platformerEnterMode(void)
     // }
 
     list_t swadgePasses = {0};
-    // It's okay to get already-used passes, since the high score table only saves one per SP user.
-    getSwadgePasses(&swadgePasses, &modePlatformer, true);
-    saveHighScoresFromSwadgePass(&platformer->highScores, KEY_SCORES, swadgePasses, megaPulseGetSwadgePassHighScore);
+    getSwadgePasses(&swadgePasses, &modePlatformer, false);
+    saveHighScoresFromSwadgePass(&platformer->highScores, KEY_SCORES, swadgePasses, &modePlatformer,
+                                 megaPulseGetSwadgePassHighScore);
     freeSwadgePasses(&swadgePasses);
 
     loadFont(MEGAMAX_JONES_FONT, &platformer->font, false);

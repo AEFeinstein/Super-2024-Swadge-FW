@@ -337,10 +337,9 @@ static void cosCrunchEnterMode(void)
     cc->highScores.highScoreCount = HIGH_SCORE_COUNT;
     initHighScores(&cc->highScores, CC_NVS_NAMESPACE);
 
-    // It's okay to get already-used passes, since the high score table only saves one per SP user.
     list_t swadgePasses = {0};
-    getSwadgePasses(&swadgePasses, &cosCrunchMode, true);
-    saveHighScoresFromSwadgePass(&cc->highScores, CC_NVS_NAMESPACE, swadgePasses, cosCrunchGetSwadgePassHighScore);
+    getSwadgePasses(&swadgePasses, &cosCrunchMode, false);
+    saveHighScoresFromSwadgePass(&cc->highScores, CC_NVS_NAMESPACE, swadgePasses, &cosCrunchMode, cosCrunchGetSwadgePassHighScore);
     freeSwadgePasses(&swadgePasses);
 
     int32_t tutorialSeen;

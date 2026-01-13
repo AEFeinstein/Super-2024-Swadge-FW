@@ -85,9 +85,11 @@ bool updateHighScores(highScores_t* hs, const char* nvsNamespace, score_t newSco
  * @param hs The ::highScores_t struct that contains the high scores
  * @param nvsNamespace The NVS namespace to write data to
  * @param swadgePasses A ::list_t of SwadgePasses from getSwadgePasses()
+ * @param mode The ::swadgeMode that is consuming these SwadgePasses. They will be marked as used by this mode.
  * @param fnGetSwadgePassHighScore Pointer to a function that returns your mode's high score from a SwadgePass packet
  */
 void saveHighScoresFromSwadgePass(highScores_t* hs, const char* nvsNamespace, list_t swadgePasses,
+                                  const struct swadgeMode* mode,
                                   int32_t (*fnGetSwadgePassHighScore)(const swadgePassPacket_t* packet));
 
 /**
