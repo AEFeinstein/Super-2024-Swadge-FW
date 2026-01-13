@@ -30,6 +30,9 @@ static const char sm_err_over_species_id[] = "The monster at index %"PRIu8" has 
 static const char sm_err_over_nickname_idx[] = "The %s at index %"PRIu8" has nickname index %"PRIu16", but expected at most %"PRIu16".";
 static const char sm_err_zero_monster_name_length[] = "The %s at index %"PRIu8" with nickname index %"PRIu16" has an empty nickname.";
 static const char sm_err_over_monster_name_length[] = "The %s at index %"PRIu8" with nickname index %"PRIu16" has a nickname that's %u characters, but expected at most %"PRIu8".";
+static const char sm_err_invalid_gender[] = "%s at index %"PRIu8" is female, but the %s species is genderless or all male.";
+static const char sm_err_over_exp[] = "%s at index %"PRIu8" has %"PRIu32" exp, but the max for the %s species is %"PRIu32".";
+static const char sm_err_over_level[] = "%s at index %"PRIu8" has level "PRIu8", but expected at most "PRIu8".";
 
 // Set default values for a new save
 void initSaveData(save_data_fixed_t* saveData) {
@@ -123,7 +126,6 @@ monster_box_header_t* initMonsterBoxPacked(const uint8_t numMonsters) {
 void unpackMonster(monster_instance_t* dest, monster_instance_packed_t* src) {
     dest->nicknameIdx = src->nicknameIdx;
     dest->trainerNameIdx = src->trainerNameIdx;
-    dest->trainerId = src->trainerId;
     dest->friendship = src->friendship;
     dest->monsterId = src->monsterId;
     dest->isFemale = src->isFemale;
@@ -160,7 +162,6 @@ void unpackMonster(monster_instance_t* dest, monster_instance_packed_t* src) {
 void packMonster(monster_instance_packed_t* dest, monster_instance_t* src) {
     dest->nicknameIdx = src->nicknameIdx;
     dest->trainerNameIdx = src->trainerNameIdx;
-    dest->trainerId = src->trainerId;
     dest->friendship = src->friendship;
     dest->monsterId = src->monsterId;
     dest->isFemale = src->isFemale;
@@ -195,6 +196,7 @@ void packMonster(monster_instance_packed_t* dest, monster_instance_t* src) {
 }
 
 // Load a monster box structure from NVS with a given string key suffix
+// Will free and re-allocate memory for the monster box
 bool loadMonsterBox(char* keySuffix, monster_box_header_t** monsterBoxWithHeader) {
     // Make sure the pointer is non-NULL
     if(!monsterBoxWithHeader) {
@@ -356,6 +358,8 @@ bool saveMonsterBox(char* keySuffix, monster_box_header_t* monsterBoxWithHeader)
     return true;
 }
 
+// Load a monster box structure from NVS with a given box number
+// Will free and re-allocate memory for the monster box
 bool loadMonsterBoxByNum(uint8_t boxId, monster_box_header_t** monsterBoxWithHeader) {
     // Convert the box ID into a string
     char keySuffix[INDEXED_KEY_SUFFIX_LEN];
@@ -469,7 +473,7 @@ bool checkMonsterBoxIntegrity(monster_box_header_t* monsterBoxWithHeader, names_
             }
             
             // The monster name in the structure must have a length greater than 0
-            size_t nameLength = strlen(monsterNames[monsterBox[i].nicknameIdx]);
+            size_t nameLength = strnlen(monsterNames[monsterBox[i].nicknameIdx], monsterNamesWithHeader->nameLength);
             if(nameLength == 0) {
                 if(textOut && *textOut) {
                     snprintf(*textOut, MAX_ERROR_LEN, sm_err_zero_monster_name_length, speciesDefs[monsterBox[i].monsterId].name, i, monsterBox[i].nicknameIdx);
@@ -489,15 +493,38 @@ bool checkMonsterBoxIntegrity(monster_box_header_t* monsterBoxWithHeader, names_
             
             
         }
-        strlen(trainerNames[i])
+        // TODO: check these separately from boxes
+        strnlen(trainerNames[i], trainerNamesWithHeader->nameLength)
         
-        uint8_t monsterId;
+        // The isFemale flag must be unset if the species is genderless or all male
+        uint8_t genderRatio = speciesDefs[monsterBox[i].genderRatio;
+        if(monsterBox[i].isFemale && (genderRatio == GENDER_RATIO_GENDERLESS || genderRatio == GENDER_RATIO_100_M)) {
+            if(textOut && *textOut) {
+                snprintf(*textOut, MAX_ERROR_LEN, sm_err_invalid_gender, monsterNames[monsterBox[i].nicknameIdx * monsterNamesWithHeader->nameLength], i, speciesDefs[monsterBox[i].monsterId].name);
+            }
+            return false;
+        }
+        
+        // The monster's exp must be less than or equal to the total exp required for its exp group to reach level 100
+        uint32_t maxExp = getTotalExpToLevel(MAX_LEVEL, speciesDefs[monsterBox[i].monsterId].expGroup);
+        if(monsterBox[i].exp > maxExp) {
+            if(textOut && *textOut) {
+                snprintf(*textOut, MAX_ERROR_LEN, sm_err_over_exp, monsterNames[monsterBox[i].nicknameIdx * monsterNamesWithHeader->nameLength], i, monsterBox[i].exp, speciesDefs[monsterBox[i].monsterId].name, maxExp);
+            }
+            return false;
+        }
+        
+        // The monster's level must be less than or equal to MAX_LEVEL
+        if(monsterBox[i].level > MAX_LEVEL) {
+            if(textOut && *textOut) {
+                snprintf(*textOut, MAX_ERROR_LEN, sm_err_over_level, monsterNames[monsterBox[i].nicknameIdx * monsterNamesWithHeader->nameLength], i, monsterBox[i].level, MAX_LEVEL);
+            }
+            return false;
+        }
+        
+        // TODO: validate the following and delete from this list
         uint8_t nicknameIdx;
         uint8_t trainerNameIdx;
-        uint8_t friendship;
-        uint16_t trainerId;
-        bool isFemale;
-        bool isShiny;
         uint32_t exp;
         uint8_t level;
         monster_ivs_t ivs;

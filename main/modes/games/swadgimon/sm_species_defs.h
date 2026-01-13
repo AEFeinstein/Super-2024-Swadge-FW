@@ -9,21 +9,21 @@ typedef enum {
 
 static const monster_t speciesDefs[] = {
     {
-        .monsterId = ID_GENERIMON;
+        .monsterId = ID_GENERIMON,
         .name = "Generimon",
         .description = "Bland and nonspecific.",
-        .types[2] = {TYPE_NORMAL, TYPE_NONE},
+        .types = {TYPE_NORMAL, TYPE_NONE},
         .catchRate = 255,
         .expYield = 1,
-        .evYields = ,
+        .evYields = {1, 0, 0, 0, 0, 0},
         .genderRatio = GENDER_RATIO_50M,
-        .baseStats = ,
+        .baseStats = {1, 1, 1, 1, 1, 1},
         .expGroup = EXP_GROUP_FAST,
-        .evolutions[3] = ,
-        .learnableTMs = ,
-        .learnableHMs = ,
-        .otherValidMoves = ,
-        .levelUpMoves = ,
+        .evolutions = {0},
+        .learnableTMs = {0},
+        .learnableHMs = {0},
+        .otherValidMoves = {0},
+        .levelUpMoves = {{1, 1}},
     },
 }
 

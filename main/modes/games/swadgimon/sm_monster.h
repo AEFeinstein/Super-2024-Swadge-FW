@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "sm_constants.h"
+#include "sm_names.h"
 
 // Definitions of effort values yielded to victor upon defeating monsters of given species, and data in RAM for: a specific monster's inherent "from birth" stats, a specific monster's effort or "training" stats, and number of stat boosting items used on a monster
 typedef struct {
@@ -144,18 +145,17 @@ typedef struct {
     uint8_t nicknameIdx;
     uint8_t trainerNameIdx;
     uint8_t friendship;
-    uint16_t trainerId;
+    uint32_t exp;
+    uint16_t moveIds[NUM_MOVES_PER_MONSTER];
     bool isFemale;
     bool isShiny;
-    uint32_t exp;
     uint8_t level;
     monster_ivs_t ivs;
     monster_evs_t evs;
-    uint16_t moveIds[NUM_MOVES_PER_MONSTER];
     uint8_t ppUps[NUM_MOVES_PER_MONSTER];
     monster_stat_ups_t statUps;
-    // 43 bytes
-    // compiler adds 1 byte of padding
+    // 41 bytes
+    // compiler adds 3 bytes of padding
 } monster_instance_t;
 
 // Data saved to NVS for caught monsters
@@ -169,11 +169,10 @@ typedef struct __attribute__((packed)) {
     // 4 bytes
     uint8_t nicknameIdx;
     uint8_t trainerNameIdx;
-    uint16_t trainerId;
     uint8_t friendship;
     uint8_t level:7;
     // compiler adds 1 bit of padding
-    // 6 bytes
+    // 4 bytes
     monster_ivs_packed_t ivs; // 4 bytes
     monster_evs_t evs; // 6 bytes
     uint16_t moveIds[NUM_MOVES_PER_MONSTER]; // 8 bytes
@@ -214,5 +213,14 @@ typedef struct {
     monster_final_stats_t finalStats;
     uint8_t level;
 } monster_instance_cache_data_t;
+
+void generateWildMonsterBySpecies(monster_instance_t* monsterOut, monster_instance_party_data_t* partyDataOut, monster_final_stats_t* finalStatsOut, uint8_t speciesId, uint8_t levelMin, uint8_t levelMax);
+void getFinalStats(monster_final_stats_t* finalStats, monster_instance_t* monster);
+uint16_t getFinalStatHp(uint16_t baseStat, uint8_t iv, uint8_t ev, uint8_t statUp, uint8_t level);
+uint16_t getFinalStatNonHp(uint16_t baseStat, uint8_t iv, uint8_t ev, uint8_t statUp, uint8_t level);
+uint32_t getTotalExpToLevel(uint8_t targetLevel, exp_group_t expGroup);
+uint32_t getExpToNextLevel(uint8_t currentLevel, exp_group_t expGroup);
+void applyExpToPartyByStrategy(monster_instance_t* (party[]), monster_instance_party_data_t* (partyState[]), uniq_arr_t* monstersParticipated, uint32_t exp, exp_strategy_t strategy);
+void releaseMonster(monster_instance_t* monster, names_header_t* monsterNames, names_header_t* trainerNames);
 
 #endif

@@ -28,7 +28,7 @@ bool uniqArrRemoveIdx(uniq_arr_t* uniqArr, unsigned int idx);
 bool uniqArrRemove(uniq_arr_t* uniqArr, uint8_t data);
 bool uniqArrIntersection(uniq_arr_t* uniqArr1Dest, uniq_arr_t* uniqArr2);
 bool uniqArrUnion(uniq_arr_t* uniqArr1Dest, uniq_arr_t* uniqArr2);
-bool uniqArrDifference(uniq_arr_t* uniqArr1Dest, uniq_arr_t^ uniqArr2);
+bool uniqArrDifference(uniq_arr_t* uniqArr1Dest, uniq_arr_t* uniqArr2);
 void uniqArrCopy(uniq_arr_t* dest, uniq_arr_t* src, bool spiRam);
 bool uniqArrEmpty(uniq_arr_t* uniqArr);
 bool uniqArrFull(uniq_arr_t* uniqArr);

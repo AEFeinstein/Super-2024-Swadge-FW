@@ -181,7 +181,7 @@ bool uniqArrUnion(uniq_arr_t* uniqArr1Dest, uniq_arr_t* uniqArr2) {
 }
 
 // Runs in O(n^2)
-bool uniqArrDifference(uniq_arr_t* uniqArr1Dest, uniq_arr_t^ uniqArr2) {
+bool uniqArrDifference(uniq_arr_t* uniqArr1Dest, uniq_arr_t* uniqArr2) {
     assert(uniqArr1Dest && uniqArr2);
     
     for(int i = 0; i < uniqArr2->lengthInUse; i++) {
