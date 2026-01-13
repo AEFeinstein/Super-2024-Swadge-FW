@@ -550,6 +550,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         cc->interlude.timeUs     = PLAYER_INTERLUDE_TIME_US;
         cc->interlude.elapsedUs  = 0;
         cc->interlude.swirlyEyes = false;
+        ch32v003SelectBitmap(EYES_SLOT_DEFAULT);
     }
 
     switch (cc->state)
@@ -581,10 +582,6 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                     ch32v003SelectBitmap(EYES_SLOT_SWIRL + frame);
                     cc->interlude.swirlFrame = frame;
                 }
-            }
-            else
-            {
-                ch32v003SelectBitmap(EYES_SLOT_DEFAULT);
             }
 
             cosCrunchClearLeds();
