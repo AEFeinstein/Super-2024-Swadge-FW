@@ -1594,7 +1594,7 @@ void loadProfiles(int maxProfiles, int page)
             if (sIdx < MAX_NUM_SWADGE_PASSES)
             {
                 unpackProfileData(&atr->sonaList[sIdx]);
-                generateSwadgesonaImage(&atr->sonaList[sIdx].swsn, false);
+                generateSwadgesonaImage(&atr->sonaList[sIdx].swsn, true);
             }
         }
         atr->loadedProfs = true; // mark as loaded
