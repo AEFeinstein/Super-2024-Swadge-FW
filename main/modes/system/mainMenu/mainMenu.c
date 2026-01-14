@@ -261,7 +261,7 @@ const trophyDataList_t menuTrophyData = {
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
 const char mainMenuName[]                       = "Main Menu";
-const char mainMenuTitle[]                      = "Swadge";
+const char mainMenuTitle[]                      = "Swadge 3.1";
 static const char mainMenuShowSecretsMenuName[] = "Secrets In Menu: ";
 static const char factoryResetName[]            = "Factory Reset";
 static const char confirmResetName[]            = "! Confirm Reset !";
