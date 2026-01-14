@@ -9,10 +9,9 @@
 //---------------------------------------------------------------------------------//
 
 // Lobby
-#define SONA_PER            4
-#define MAX_SWADGESONA_IDXS (MAX_NUM_SWADGE_PASSES / SONA_PER) - (MAX_NUM_SWADGE_PASSES % SONA_PER) / SONA_PER
-#define ANIM_TIMER_MS       16667
-#define LOBBY_ARROW_Y       TFT_HEIGHT / 2 - 12
+#define SONA_PER      4
+#define ANIM_TIMER_MS 16667
+#define LOBBY_ARROW_Y TFT_HEIGHT / 2 - 12
 
 // Profile
 #define CARDTEXTPAD 4
@@ -287,7 +286,6 @@ typedef struct
 
     // Profile data
     userProfile_t loadedProfile; // Loaded profile for drawing
-    swadgesona_t* profileSona;
 
     // Main
     atriumState state;
@@ -296,7 +294,6 @@ typedef struct
 
     // Lobbies
     lobbyState_t lbState;
-    uint8_t lobbySwsnIdxs[MAX_SWADGESONA_IDXS];
     int64_t animTimer;
     int64_t animBodyTimer;
     int loadBodyAnims;
@@ -304,7 +301,6 @@ typedef struct
     bool fakeLoad;
     bool shuffle;
     bool loadedProfs;
-    bool drawnProfs;
     bool animDirection;
     int8_t page;
     int8_t lastPage;
@@ -321,20 +317,16 @@ typedef struct
 
     // Profile viewer/editor
     int selection;
-    int xloc;
     int yloc;
     bool drawSaved;
     int32_t created;
     bool loadedTeams;
-    int32_t points;
 
     // SwadgePass Profile
     userProfile_t spProfile;
 
     // LEDs
     led_t leds[CONFIG_NUM_LEDS];
-    int8_t ledChase;
-
 } atrium_t;
 
 //---------------------------------------------------------------------------------//
@@ -731,6 +723,9 @@ static void atriumMainLoop(int64_t elapsedUs)
                     {
                         atr->state = ATR_PROFILE;
                         globalMidiPlayerPlaySong(&atr->sfx[0], MIDI_SFX); // play choose sound
+
+                        // Redraw Swadgesona image with a body for the profile card
+                        generateSwadgesonaImage(&atr->sonaList[atr->page * SONA_PER + atr->selection].swsn, true);
                     }
                     else if ((evt.button & PB_LEFT))
                     {
@@ -918,6 +913,9 @@ static void viewProfile(buttonEvt_t* evt, uint64_t elapsedUs)
             {
                 atr->state     = ATR_DISPLAY;
                 atr->loadAnims = 0;
+
+                // Redraw Swadgesona image without a body for the Atrium
+                generateSwadgesonaImage(&atr->sonaList[atr->page * SONA_PER + atr->selection].swsn, false);
             }
         }
     }
@@ -1594,7 +1592,8 @@ void loadProfiles(int maxProfiles, int page)
             if (sIdx < MAX_NUM_SWADGE_PASSES)
             {
                 unpackProfileData(&atr->sonaList[sIdx]);
-                generateSwadgesonaImage(&atr->sonaList[sIdx].swsn, true);
+                // Generate images without bodies for the Atrium view
+                generateSwadgesonaImage(&atr->sonaList[sIdx].swsn, false);
             }
         }
         atr->loadedProfs = true; // mark as loaded
