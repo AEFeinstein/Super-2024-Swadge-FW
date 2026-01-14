@@ -3293,7 +3293,8 @@ void killEnemy(mgEntity_t* target)
         target->updateFunction(target);
     }
 
-    target->visible        = true; //Force ENTITY_DEAD to be visible because updateFunction may flip it to invisible due to invincibilityFrames
+    target->visible = true; // Force ENTITY_DEAD to be visible because updateFunction may flip it to invisible due to
+                            // invincibilityFrames
     target->updateFunction = (isABoss) ? &updateBossDead : &updateEntityDead;
 }
 

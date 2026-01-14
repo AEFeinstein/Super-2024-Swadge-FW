@@ -100,6 +100,7 @@ bool updateHighScores(highScores_t* hs, const char* nvsNamespace, score_t newSco
 }
 
 void saveHighScoresFromSwadgePass(highScores_t* hs, const char* nvsNamespace, list_t swadgePasses,
+                                  const struct swadgeMode* mode,
                                   int32_t (*fnGetSwadgePassHighScore)(const swadgePassPacket_t* packet))
 {
     if (swadgePasses.length > 0)
@@ -117,6 +118,13 @@ void saveHighScoresFromSwadgePass(highScores_t* hs, const char* nvsNamespace, li
             node = node->next;
         }
         updateHighScores(hs, nvsNamespace, spScores, ARRAY_SIZE(spScores));
+
+        node = swadgePasses.first;
+        while (node)
+        {
+            setPacketUsedByMode((swadgePassData_t*)node->val, mode, true);
+            node = node->next;
+        }
     }
 }
 

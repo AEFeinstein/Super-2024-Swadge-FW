@@ -253,25 +253,28 @@ void getSwadgePasses(list_t* swadgePasses, const struct swadgeMode* mode, bool g
         // Read the data from NVS
         size_t outLen         = sizeof(swadgePassNvs_t);
         swadgePassData_t* spd = heap_caps_calloc(1, sizeof(swadgePassData_t), MALLOC_CAP_SPIRAM);
-        readNamespaceNvsBlob(NS_SP, key, &spd->data, &outLen);
-
-        // Validate the length
-        if (sizeof(swadgePassNvs_t) == outLen)
+        if (spd)
         {
-            // Add to the list if either all data is requested or it hasn't been used yet
-            if (getUsed || (mode && false == isPacketUsedByMode(spd, mode)))
+            readNamespaceNvsBlob(NS_SP, key, &spd->data, &outLen);
+
+            // Validate the length
+            if (sizeof(swadgePassNvs_t) == outLen)
             {
-                // Add key to the data
-                memcpy(spd->key, key, strlen(key));
-                push(swadgePasses, spd);
+                // Add to the list if either all data is requested or it hasn't been used yet
+                if (getUsed || (mode && false == isPacketUsedByMode(spd, mode)))
+                {
+                    // Add key to the data
+                    memcpy(spd->key, key, strlen(key));
+                    push(swadgePasses, spd);
+                }
             }
-        }
 
-        // If the data wasn't added to the list
-        if ((NULL == swadgePasses->last) || (spd != swadgePasses->last->val))
-        {
-            // Free it
-            heap_caps_free(spd);
+            // If the data wasn't added to the list
+            if ((NULL == swadgePasses->last) || (spd != swadgePasses->last->val))
+            {
+                // Free it
+                heap_caps_free(spd);
+            }
         }
 
         // Iterate keys
@@ -338,5 +341,50 @@ void setPacketUsedByMode(swadgePassData_t* data, const struct swadgeMode* mode, 
 
         // Write the change to NVS
         writeNamespaceNvsBlob(NS_SP, data->key, (void*)&data->data, sizeof(swadgePassNvs_t));
+    }
+}
+
+/**
+ * @brief Prune received SwadgePasses down to MAX_NUM_SWADGE_PASSES (50).
+ *
+ * The 3.1.0 release had a maximum of 100 SwadgePasses, but that was too many.
+ *
+ * This function must be called once on startup to ensure memory doesn't run out.
+ */
+void pruneSwadgePasses(void)
+{
+    int32_t spCount = 0;
+
+    // Get the NVS keys
+    list_t keyList = {0};
+    getNvsKeys(NS_SP, &keyList);
+
+    // If too many SwadgePasses are saved
+    if (keyList.length > MAX_NUM_SWADGE_PASSES)
+    {
+        // For each key
+        node_t* keyNode = keyList.first;
+        while (keyNode)
+        {
+            // Get the key and increment the count
+            const char* key = (const char*)keyNode->val;
+            spCount++;
+
+            // If the count is over the limit
+            if (spCount > MAX_NUM_SWADGE_PASSES)
+            {
+                // Erase this key
+                eraseNamespaceNvsKey(NS_SP, key);
+            }
+
+            // Iterate keys
+            keyNode = keyNode->next;
+        }
+    }
+
+    // Free keys
+    while (keyList.first)
+    {
+        heap_caps_free(pop(&keyList));
     }
 }
