@@ -339,7 +339,8 @@ static void cosCrunchEnterMode(void)
 
     list_t swadgePasses = {0};
     getSwadgePasses(&swadgePasses, &cosCrunchMode, false);
-    saveHighScoresFromSwadgePass(&cc->highScores, CC_NVS_NAMESPACE, swadgePasses, &cosCrunchMode, cosCrunchGetSwadgePassHighScore);
+    saveHighScoresFromSwadgePass(&cc->highScores, CC_NVS_NAMESPACE, swadgePasses, &cosCrunchMode,
+                                 cosCrunchGetSwadgePassHighScore);
     freeSwadgePasses(&swadgePasses);
 
     int32_t tutorialSeen;
