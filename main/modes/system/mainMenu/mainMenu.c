@@ -263,7 +263,7 @@ const trophyDataList_t menuTrophyData = {
 const char mainMenuName[] = "Main Menu";
 const char mainMenuTitle[]
 #if defined(CONFIG_HARDWARE_SWADGEBOY)
-    = "Swadgeboy 3.1";
+    = "Swadgeboy";
 #else
     = "Swadge 3.1";
 #endif
