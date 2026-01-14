@@ -83,11 +83,11 @@ void artilleryGameOverLoop(artilleryData_t* ad, uint32_t elapsedUs)
 
             if (thisScore > otherScore)
             {
-                title = str_lose;
+                title = str_win;
             }
             else if (thisScore < otherScore)
             {
-                title = str_win;
+                title = str_lose;
             }
             else
             {
