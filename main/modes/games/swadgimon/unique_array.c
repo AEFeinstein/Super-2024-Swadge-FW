@@ -23,6 +23,7 @@ void uniqArrInit(uniq_arr_t* uniqArr, unsigned int capacity, bool spiRam) {
     uniqArr->buffer = uniqArrInitNewBuffer(capacity, spiRam);
     uniqArr->capacity = capacity;
     uniqArr->lengthInUse = 0;
+    uniqArr->spiRam = spiRam;
 }
 
 // Free the memory in use by the actual buffer.
@@ -74,7 +75,7 @@ bool uniqArrPut(uniq_arr_t* uniqArr, uint8_t data) {
 }
 
 // Returns true if the index is within used bounds of the array, false otherwise.
-// Sets dataOu to the value of the element at the given index, if it exists. Otherwise, does not change dataOut.
+// Sets dataOut to the value of the element at the given index, if it exists. Otherwise, does not change dataOut.
 // Runs in O(1)
 bool uniqArrGet(uniq_arr_t* uniqArr, uint8_t* dataOut, unsigned int idx) {
     assert(uniqArr && uniqArr->buffer && dataOut);
@@ -197,11 +198,18 @@ bool uniqArrDifference(uniq_arr_t* uniqArr1Dest, uniq_arr_t* uniqArr2) {
 }
 
 // Runs in O(n)
+// The dest capacity must first be set to 0, or uniqArrInit must first be called on the dest array
+// Will reallocate the dest array's buffer if it's too small or if it's in the opposite RAM type from the given spiRam bool
 void uniqArrCopy(uniq_arr_t* dest, uniq_arr_t* src, bool spiRam) {
     assert(dest && src);
     
-    uniqArrFreeBuffer(dest);
-    uniqArrInit(dest, src->capacity, spiRam);
+    if(dest->capacity < src->lengthInUse || dest->spiRam != spiRam) {
+        uniqArrFreeBuffer(dest);
+        uniqArrInit(dest, src->capacity, spiRam);
+    }
+    
+    assert(dest->buffer);
+    
     memcpy(dest->buffer, src->buffer, src->lengthInUse);
     dest->lengthInUse = src->lengthInUse;
 }

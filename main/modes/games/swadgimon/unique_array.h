@@ -14,6 +14,7 @@ typedef struct
     uint8_t* buffer;                   ///< The pointer to the start of the data being stored
     volatile unsigned int lengthInUse; ///< The most recent index in use by the array
     unsigned int capacity;             ///< The number of elements in the buffer
+    bool spiRam;                       ///< Whether the buffer is stored in SPI RAM or normal RAM
 } uniq_arr_t;
 
 void uniqArrInit(uniq_arr_t* uniqArr, unsigned int capacity, bool spiRam);
