@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="70" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="568">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="70" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="572">
  <editorsettings>
   <export target="../../assets/platformer/levels/Donut.raw" format="Mega Pulse EX"/>
  </editorsettings>
@@ -345,9 +345,7 @@
   <object id="448" template="templates/Shrubble (Lvl. 4).tx" gid="211" x="3720" y="456" rotation="180"/>
   <object id="463" template="templates/Scroll Lock (Up).tx" x="974.656" y="328.118"/>
   <object id="464" template="templates/Scroll Unlock (All Directions).tx" x="95.3643" y="600.31"/>
-  <object id="466" template="templates/Scroll Unlock (All Directions).tx" x="327.471" y="730.588"/>
   <object id="473" template="templates/Scroll Lock (Up).tx" x="1407.62" y="168.75"/>
-  <object id="474" template="templates/Scroll Unlock (All Directions).tx" x="1408.37" y="263.04"/>
   <object id="477" template="templates/Scroll Lock (Up).tx" x="3021.78" y="183.568"/>
   <object id="478" template="templates/Scroll Unlock (All Directions).tx" x="1457.38" y="1017.36"/>
   <object id="479" template="templates/Scroll Lock (Right).tx" x="3255.44" y="637.67"/>
@@ -374,17 +372,14 @@
   <object id="512" template="templates/Bouncepad.tx" gid="1073742061" x="3039.64" y="670.039" rotation="0"/>
   <object id="515" template="templates/Bouncepad.tx" x="3251.11" y="575.846" rotation="90"/>
   <object id="516" template="templates/Bouncepad.tx" x="3250.03" y="543.686" rotation="90"/>
-  <object id="517" template="templates/Warp Exit (Floor).tx" x="2638.9" y="663.776"/>
-  <object id="518" template="templates/Warp Exit (Floor).tx" x="2638.58" y="416.707"/>
-  <object id="519" template="templates/Scroll Unlock (All Directions).tx" x="2638.43" y="408.955"/>
+  <object id="517" template="templates/Warp Exit (Floor).tx" x="2640" y="664"/>
+  <object id="518" template="templates/Warp Exit (Floor).tx" x="2640" y="416"/>
   <object id="520" template="templates/Bouncepad.tx" x="2622.95" y="688.259"/>
   <object id="521" template="templates/Bouncepad.tx" x="2654.14" y="687.832"/>
   <object id="522" template="templates/Bouncepad.tx" gid="1073742061" x="2624.23" y="447.316" rotation="0"/>
   <object id="523" template="templates/Bouncepad.tx" gid="1073742061" x="2655.85" y="448.17" rotation="0"/>
   <object id="524" template="templates/Bouncepad.tx" x="2721.98" y="560.908" rotation="90"/>
   <object id="525" template="templates/Bouncepad.tx" x="2720.51" y="529.529" rotation="90"/>
-  <object id="526" template="templates/Scroll Lock (Right).tx" x="3304" y="556"/>
-  <object id="527" template="templates/Scroll Unlock (All Directions).tx" x="3474.59" y="430.72"/>
   <object id="528" template="templates/Bouncepad.tx" x="3936.32" y="272.707" rotation="90"/>
   <object id="529" template="templates/Bouncepad.tx" x="3936.81" y="303.97" rotation="90"/>
   <object id="530" template="templates/Bouncepad.tx" x="3935.06" y="432.758" rotation="90"/>
@@ -399,7 +394,6 @@
   <object id="552" template="templates/Bouncepad (45º).tx" x="178.708" y="753.482"/>
   <object id="553" template="templates/Bouncepad (45º).tx" x="3424.15" y="450.406"/>
   <object id="554" template="templates/Bouncepad (45º).tx" x="3423.39" y="416.73"/>
-  <object id="556" template="templates/Scroll Unlock (All Directions).tx" x="2780.5" y="544.543"/>
   <object id="557" template="templates/Scroll Lock (Up).tx" x="3720" y="856"/>
   <object id="558" template="templates/Warp Exit (Wall) .tx" x="1497.82" y="911.777"/>
   <object id="559" template="templates/Bouncepad (45º).tx" gid="2147483884" x="3519.72" y="258.106" rotation="0"/>
@@ -411,8 +405,7 @@
   <object id="565" template="templates/Bouncepad.tx" x="2160" y="1072"/>
   <object id="566" template="templates/Dust Bunny.tx" x="2200.29" y="999.049"/>
   <object id="567" template="templates/Kinetic Donut.tx" x="3984" y="1048"/>
+  <object id="568" template="templates/Scroll Lock (Left).tx" x="3400" y="424"/>
  </objectgroup>
- <objectgroup id="3" name="Annotations">
-  <object id="43" x="404.08" y="846.867" width="296" height="256"/>
- </objectgroup>
+ <objectgroup id="3" name="Annotations"/>
 </map>
