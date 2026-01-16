@@ -433,6 +433,11 @@ static void swadgeItEnterMode(void)
         }
     }
 
+    // Switching to speaker disables the microphone
+    switchToSpeaker();
+    // This disables speaker too
+    dacStop();
+
     // Get unused SwadgePasses for this mode
     // This should be done before loading other data because it's RAM-intensive
     list_t swadgePasses = {0};
@@ -465,6 +470,9 @@ static void swadgeItEnterMode(void)
         passNode = passNode->next;
     }
     freeSwadgePasses(&swadgePasses);
+
+    // This re-enables the speakers
+    dacStart();
 
     // Allocate menu
     si->menu = initMenu(swadgeItStrName, swadgeItMenuCb);

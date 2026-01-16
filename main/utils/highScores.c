@@ -119,12 +119,20 @@ void saveHighScoresFromSwadgePass(highScores_t* hs, const char* nvsNamespace, li
         }
         updateHighScores(hs, nvsNamespace, spScores, ARRAY_SIZE(spScores));
 
+        // Switching to speaker disables the microphone
+        switchToSpeaker();
+        // This disables speaker too
+        dacStop();
+
         node = swadgePasses.first;
         while (node)
         {
             setPacketUsedByMode((swadgePassData_t*)node->val, mode, true);
             node = node->next;
         }
+
+        // This re-enables the speakers
+        dacStart();
     }
 }
 
