@@ -8,13 +8,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <esp_heap_caps.h>
-#include <esp_random.h>
+
+#include "esp_heap_caps.h"
+#include "esp_random.h"
 #include "hdw-nvs.h"
+
 #include "sm_save.h"
 
 static const char sm_namespace_key[] = "sm";
-static const char sm_save_fixed_key[] = "save_fixed";
+//static const char sm_save_fixed_key[] = "save_fixed";
 static const char sm_save_monster_box_key_prefix[] = "box_";
 static const char sm_save_monster_box_party_key_suffix[] = "party";
 static const char sm_save_monster_box_daycare_key_suffix[] = "daycare";
@@ -22,17 +24,17 @@ static const char sm_save_trainer_names_key[] = "names_trainer";
 static const char sm_save_monster_names_key[] = "names_monster";
 
 static const char sm_err_wrong_save_format[] = "The save format is %"PRIu8", but expected %"PRIu8".";
-static const char sm_err_wrong_monster_length[] = "Monster length is %"PRIu16" bytes, but expected %"PRIu16".";
+static const char sm_err_wrong_monster_length[] = "Monster length is %"PRIu16" bytes, but expected %zu.";
 static const char sm_err_zero_box_length[] = "The box capacity is 0 monsters.";
 static const char sm_err_over_box_length[] = "The box capacity is %"PRIu8" monsters, but expected at most %"PRIu8".";
 static const char sm_err_nonzero_monster[] = "The monster at index %"PRIu8" contains data, but no species ID.";
 static const char sm_err_over_species_id[] = "The monster at index %"PRIu8" has species ID %"PRIu8", but expected at most %"PRIu8".";
 static const char sm_err_over_nickname_idx[] = "The %s at index %"PRIu8" has nickname index %"PRIu16", but expected at most %"PRIu16".";
 static const char sm_err_zero_monster_name_length[] = "The %s at index %"PRIu8" with nickname index %"PRIu16" has an empty nickname.";
-static const char sm_err_over_monster_name_length[] = "The %s at index %"PRIu8" with nickname index %"PRIu16" has a nickname that's %u characters, but expected at most %"PRIu8".";
+static const char sm_err_over_monster_name_length[] = "The %s at index %"PRIu8" with nickname index %"PRIu16" has a nickname that's %zu characters, but expected at most %"PRIu8".";
 static const char sm_err_invalid_gender[] = "%s at index %"PRIu8" is female, but the %s species is genderless or all male.";
 static const char sm_err_over_exp[] = "%s at index %"PRIu8" has %"PRIu32" exp, but the max for the %s species is %"PRIu32".";
-static const char sm_err_over_level[] = "%s at index %"PRIu8" has level "PRIu8", but expected at most "PRIu8".";
+static const char sm_err_over_level[] = "%s at index %"PRIu8" has level %"PRIu8", but expected at most %"PRIu8".";
 
 // Set default values for a new save
 void initSaveData(save_data_fixed_t* saveData) {
@@ -44,7 +46,7 @@ void initSaveData(save_data_fixed_t* saveData) {
 }
 
 // Load the save data from NVS
-void loadSaveData() {
+void loadSaveData(void) {
     // Declare pointers
     names_header_t* trainerNamesWithHeader;
     names_header_t* monsterNamesWithHeader;
@@ -62,10 +64,10 @@ void loadSaveData() {
     }
     
     // Derive pointers to data after headers
-    char (*trainerNames)[] = (char*)[] &trainerNamesWithHeader[1];
-    char (*monsterNames)[] = (char*)[] &monsterNamesWithHeader[1];
-    monster_instance_t (*party)[] = (monster_instance_t*)[] &partyWithHeader[1];
-    monster_instance_t (*daycare)[] = (monster_instance_t*)[] &daycareWithHeader[1];
+    char* trainerNames = (char*) &trainerNamesWithHeader[1];
+    char* monsterNames = (char*) &monsterNamesWithHeader[1];
+    monster_instance_t* party = (monster_instance_t*) &partyWithHeader[1];
+    monster_instance_t* daycare = (monster_instance_t*) &daycareWithHeader[1];
     
     // TODO: handle fixed save data
     
@@ -73,7 +75,12 @@ void loadSaveData() {
 }
 
 // Save the save data to NVS
-void saveSaveData() {
+void saveSaveData(void) {
+    names_header_t* trainerNamesWithHeader = NULL;
+    names_header_t* monsterNamesWithHeader = NULL;
+    monster_box_header_t* partyWithHeader = NULL;
+    monster_box_header_t* daycareWithHeader = NULL;
+    monster_box_header_t* monsterBoxesWithHeaders[NUM_MONSTER_BOXES] = {0};
     // TODO: get all these pointers from somewhere
     
     bool success = saveTrainerNames(trainerNamesWithHeader);
@@ -197,7 +204,7 @@ void packMonster(monster_instance_packed_t* dest, monster_instance_t* src) {
 
 // Load a monster box structure from NVS with a given string key suffix
 // Will free and re-allocate memory for the monster box
-bool loadMonsterBox(char* keySuffix, monster_box_header_t** monsterBoxWithHeader) {
+bool loadMonsterBox(const char* keySuffix, monster_box_header_t** monsterBoxWithHeader) {
     // Make sure the pointer is non-NULL
     if(!monsterBoxWithHeader) {
         return false;
@@ -205,7 +212,7 @@ bool loadMonsterBox(char* keySuffix, monster_box_header_t** monsterBoxWithHeader
     
     // Combine the key prefix and suffix
     char key[NVS_KEY_NAME_MAX_SIZE];
-    size_t snprintfRetVal = snprintf(key, NVS_KEY_NAME_MAX_SIZE, "%s%s", sm_save_monster_box_key_prefix, keySuffix);
+    int snprintfRetVal = snprintf(key, NVS_KEY_NAME_MAX_SIZE, "%s%s", sm_save_monster_box_key_prefix, keySuffix);
     // Check whether any characters were truncated
     if(snprintfRetVal < 0 || snprintfRetVal >= NVS_KEY_NAME_MAX_SIZE) {
         return false;
@@ -255,13 +262,13 @@ bool loadMonsterBox(char* keySuffix, monster_box_header_t** monsterBoxWithHeader
     }
     
     // Derive pointers to data after headers
-    monster_instance_packed_t (monsterBoxPacked)[] = (monster_instance_packed_t)[] &monsterBoxWithHeaderPacked[1];
-    monster_instance_t (monsterBox)[] = (monster_instance_t)[] &(*monsterBoxWithHeader)[1];
+    monster_instance_packed_t* monsterBoxPacked = (monster_instance_packed_t*) &monsterBoxWithHeaderPacked[1];
+    monster_instance_t* monsterBox = (monster_instance_t*) &(*monsterBoxWithHeader)[1];
     
     // Copy the monsters from the packed structure into the unpacked structure
     int16_t firstNonEmptyMonsterIdx = -1;
     monster_instance_packed_t emptyMonsterPacked = {0};
-    for(uint8_t i = 0; i < monsterBoxWithHeader->numMonsters; i++) {
+    for(uint8_t i = 0; i < (*monsterBoxWithHeader)->numMonsters; i++) {
         unpackMonster(&monsterBox[i], &monsterBoxPacked[i]);
         if(firstNonEmptyMonsterIdx > -1 && memcmp(&emptyMonsterPacked, &monsterBoxPacked[i], sizeof(monster_instance_packed_t)) == 0) {
             firstNonEmptyMonsterIdx = i;
@@ -287,17 +294,17 @@ bool loadMonsterBox(char* keySuffix, monster_box_header_t** monsterBoxWithHeader
 }
 
 // Save a monster box structure to NVS with a given string key suffix
-bool saveMonsterBox(char* keySuffix, monster_box_header_t* monsterBoxWithHeader) {
+bool saveMonsterBox(const char* keySuffix, monster_box_header_t* monsterBoxWithHeader) {
     // Bounds check 1
     // The number of monsters in this box must be between 1 and the current X*Y size, inclusive
-    if(monsterBoxWithHeaderPacked->numMonsters == 0 ||
-       monsterBoxWithHeaderPacked->numMonsters > NUM_MONSTERS_PER_BOX_X * NUM_MONSTERS_PER_BOX_Y) {
+    if(monsterBoxWithHeader->numMonsters == 0 ||
+       monsterBoxWithHeader->numMonsters > NUM_MONSTERS_PER_BOX_X * NUM_MONSTERS_PER_BOX_Y) {
         return false;
     }
     
     // Combine the key prefix and suffix
     char key[NVS_KEY_NAME_MAX_SIZE];
-    size_t snprintfRetVal = snprintf(key, NVS_KEY_NAME_MAX_SIZE, "%s%s", sm_save_monster_box_key_prefix, keySuffix);
+    int snprintfRetVal = snprintf(key, NVS_KEY_NAME_MAX_SIZE, "%s%s", sm_save_monster_box_key_prefix, keySuffix);
     // Check whether any characters were truncated
     if(snprintfRetVal < 0 || snprintfRetVal >= NVS_KEY_NAME_MAX_SIZE) {
         return false;
@@ -319,8 +326,8 @@ bool saveMonsterBox(char* keySuffix, monster_box_header_t* monsterBoxWithHeader)
     }
     
     // Derive pointers to data after headers
-    monster_instance_t (monsterBoxPacked)[] = (monster_instance_packed_t)[] &monsterBoxWithHeaderPacked[1];
-    monster_instance_t (monsterBox)[] = (monster_instance_t)[] &monsterBoxWithHeader[1];
+    monster_instance_packed_t* monsterBoxPacked = (monster_instance_packed_t*) &monsterBoxWithHeaderPacked[1];
+    monster_instance_t* monsterBox = (monster_instance_t*) &monsterBoxWithHeader[1];
     
     // Copy the monsters from the packed structure into the unpacked structure
     int16_t firstNonEmptyMonsterIdx = -1;
@@ -363,7 +370,7 @@ bool saveMonsterBox(char* keySuffix, monster_box_header_t* monsterBoxWithHeader)
 bool loadMonsterBoxByNum(uint8_t boxId, monster_box_header_t** monsterBoxWithHeader) {
     // Convert the box ID into a string
     char keySuffix[INDEXED_KEY_SUFFIX_LEN];
-    size_t snprintfRetVal = snprintf(keySuffix, INDEXED_KEY_SUFFIX_LEN, "%0*" PRIu8, INDEXED_KEY_SUFFIX_LEN - 1, boxId);
+    int snprintfRetVal = snprintf(keySuffix, INDEXED_KEY_SUFFIX_LEN, "%0*" PRIu8, INDEXED_KEY_SUFFIX_LEN - 1, boxId);
     // Check whether any characters were truncated
     if(snprintfRetVal < 0 || snprintfRetVal >= INDEXED_KEY_SUFFIX_LEN) {
         return false;
@@ -376,7 +383,7 @@ bool loadMonsterBoxByNum(uint8_t boxId, monster_box_header_t** monsterBoxWithHea
 bool saveMonsterBoxByNum(uint8_t boxId, monster_box_header_t* monsterBoxWithHeader) {
     // Convert the box ID into a string
     char keySuffix[INDEXED_KEY_SUFFIX_LEN];
-    size_t snprintfRetVal = snprintf(keySuffix, INDEXED_KEY_SUFFIX_LEN, "%0*" PRIu8, INDEXED_KEY_SUFFIX_LEN - 1, boxId);
+    int snprintfRetVal = snprintf(keySuffix, INDEXED_KEY_SUFFIX_LEN, "%0*" PRIu8, INDEXED_KEY_SUFFIX_LEN - 1, boxId);
     // Check whether any characters were truncated
     if(snprintfRetVal < 0 || snprintfRetVal >= INDEXED_KEY_SUFFIX_LEN) {
         return false;
@@ -429,19 +436,19 @@ bool checkMonsterBoxIntegrity(monster_box_header_t* monsterBoxWithHeader, names_
         return false; 
     }
     
-    TODO: check trainer and monster name header contents
+    //TODO: check trainer and monster name header contents
     
     // Derive pointers to data after headers
-    monster_instance_t (monsterBox)[] = (monster_instance_t)[] &monsterBoxWithHeader[1];
-    char (*trainerNames)[] = (char*)[] &trainerNamesWithHeader[1];
-    char (*monsterNames)[] = (char*)[] &monsterNamesWithHeader[1];
+    monster_instance_t* monsterBox = (monster_instance_t*) &monsterBoxWithHeader[1];
+    char* trainerNames = (char*) &trainerNamesWithHeader[1];
+    char* monsterNames = (char*) &monsterNamesWithHeader[1];
     
     monster_instance_t emptyMonster = {0};
     
     for(uint8_t i = 0; i < monsterBoxWithHeader->numMonsters; i++) {
         // If the monster's species ID is 0, all other fields must be 0
         if(monsterBox[i].monsterId == 0) {
-            if(memcmp(monsterBox[i], emptyMonster, sizeof(monster_instance_t)) != 0) {
+            if(memcmp(&monsterBox[i], &emptyMonster, sizeof(monster_instance_t)) != 0) {
                 if(textOut && *textOut) {
                     snprintf(*textOut, MAX_ERROR_LEN, sm_err_nonzero_monster, i);
                 }
@@ -454,7 +461,7 @@ bool checkMonsterBoxIntegrity(monster_box_header_t* monsterBoxWithHeader, names_
         
         // The species ID must be valid
         if(monsterBox[i].monsterId >= NUM_SPECIES_INCL_NULL) {
-            if(memcmp(monsterBox[i], emptyMonster, sizeof(monster_instance_t)) != 0) {
+            if(memcmp(&monsterBox[i], &emptyMonster, sizeof(monster_instance_t)) != 0) {
                 if(textOut && *textOut) {
                     snprintf(*textOut, MAX_ERROR_LEN, sm_err_over_species_id, i, monsterBox[i].monsterId, NUM_SPECIES_INCL_NULL - 1);
                 }
@@ -473,7 +480,7 @@ bool checkMonsterBoxIntegrity(monster_box_header_t* monsterBoxWithHeader, names_
             }
             
             // The monster name in the structure must have a length greater than 0
-            size_t nameLength = strnlen(monsterNames[monsterBox[i].nicknameIdx], monsterNamesWithHeader->nameLength);
+            size_t nameLength = strnlen(&monsterNames[monsterBox[i].nicknameIdx], monsterNamesWithHeader->nameLength);
             if(nameLength == 0) {
                 if(textOut && *textOut) {
                     snprintf(*textOut, MAX_ERROR_LEN, sm_err_zero_monster_name_length, speciesDefs[monsterBox[i].monsterId].name, i, monsterBox[i].nicknameIdx);
@@ -484,7 +491,7 @@ bool checkMonsterBoxIntegrity(monster_box_header_t* monsterBoxWithHeader, names_
             // The monster name in the structure must have a length less than or equal to the maximum length allowed in the structure
             if(nameLength > monsterNamesWithHeader->nameLength) {
                 if(textOut && *textOut) {
-                    snprintf(*textOut, MAX_ERROR_LEN, sm_err_over_monster_name_length, speciesDefs[monsterBox[i].monsterId].name, i, monsterBox[i].nicknameIdx, monsterNamesWithHeader->numNames);
+                    snprintf(*textOut, MAX_ERROR_LEN, sm_err_over_monster_name_length, speciesDefs[monsterBox[i].monsterId].name, i, monsterBox[i].nicknameIdx, nameLength, monsterNamesWithHeader->numNames);
                 }
                 return false;
             }
@@ -494,13 +501,13 @@ bool checkMonsterBoxIntegrity(monster_box_header_t* monsterBoxWithHeader, names_
             
         }
         // TODO: check these separately from boxes
-        strnlen(trainerNames[i], trainerNamesWithHeader->nameLength)
+        //strnlen(trainerNames[i], trainerNamesWithHeader->nameLength);
         
         // The isFemale flag must be unset if the species is genderless or all male
-        uint8_t genderRatio = speciesDefs[monsterBox[i].genderRatio;
-        if(monsterBox[i].isFemale && (genderRatio == GENDER_RATIO_GENDERLESS || genderRatio == GENDER_RATIO_100_M)) {
+        uint8_t genderRatio = speciesDefs[monsterBox[i].monsterId].genderRatio;
+        if(monsterBox[i].isFemale && (genderRatio == GENDER_RATIO_GENDERLESS || genderRatio == GENDER_RATIO_100M)) {
             if(textOut && *textOut) {
-                snprintf(*textOut, MAX_ERROR_LEN, sm_err_invalid_gender, monsterNames[monsterBox[i].nicknameIdx * monsterNamesWithHeader->nameLength], i, speciesDefs[monsterBox[i].monsterId].name);
+                snprintf(*textOut, MAX_ERROR_LEN, sm_err_invalid_gender, &monsterNames[monsterBox[i].nicknameIdx * monsterNamesWithHeader->nameLength], i, speciesDefs[monsterBox[i].monsterId].name);
             }
             return false;
         }
@@ -509,7 +516,7 @@ bool checkMonsterBoxIntegrity(monster_box_header_t* monsterBoxWithHeader, names_
         uint32_t maxExp = getTotalExpToLevel(MAX_LEVEL, speciesDefs[monsterBox[i].monsterId].expGroup);
         if(monsterBox[i].exp > maxExp) {
             if(textOut && *textOut) {
-                snprintf(*textOut, MAX_ERROR_LEN, sm_err_over_exp, monsterNames[monsterBox[i].nicknameIdx * monsterNamesWithHeader->nameLength], i, monsterBox[i].exp, speciesDefs[monsterBox[i].monsterId].name, maxExp);
+                snprintf(*textOut, MAX_ERROR_LEN, sm_err_over_exp, &monsterNames[monsterBox[i].nicknameIdx * monsterNamesWithHeader->nameLength], i, monsterBox[i].exp, speciesDefs[monsterBox[i].monsterId].name, maxExp);
             }
             return false;
         }
@@ -517,12 +524,13 @@ bool checkMonsterBoxIntegrity(monster_box_header_t* monsterBoxWithHeader, names_
         // The monster's level must be less than or equal to MAX_LEVEL
         if(monsterBox[i].level > MAX_LEVEL) {
             if(textOut && *textOut) {
-                snprintf(*textOut, MAX_ERROR_LEN, sm_err_over_level, monsterNames[monsterBox[i].nicknameIdx * monsterNamesWithHeader->nameLength], i, monsterBox[i].level, MAX_LEVEL);
+                snprintf(*textOut, MAX_ERROR_LEN, sm_err_over_level, &monsterNames[monsterBox[i].nicknameIdx * monsterNamesWithHeader->nameLength], i, monsterBox[i].level, MAX_LEVEL);
             }
             return false;
         }
         
         // TODO: validate the following and delete from this list
+        /*
         uint8_t nicknameIdx;
         uint8_t trainerNameIdx;
         uint32_t exp;
@@ -532,7 +540,10 @@ bool checkMonsterBoxIntegrity(monster_box_header_t* monsterBoxWithHeader, names_
         uint16_t moveIds[NUM_MOVES_PER_MONSTER];
         uint8_t ppUps[NUM_MOVES_PER_MONSTER];
         monster_stat_ups_t statUps;
+        */
+        
     }
+    return true;
 }
 
 // Allocate memory for a names structure and set its header fields
@@ -551,6 +562,8 @@ static names_header_t* initNames(const uint8_t nameLength, const uint16_t numNam
     namesWithHeader->saveFormat = CURRENT_SAVE_FORMAT;
     namesWithHeader->nameLength = nameLength;
     namesWithHeader->numNames = numNames;
+    
+    return namesWithHeader;
 }
 
 // Load a names structure from NVS with a given string key
@@ -573,14 +586,14 @@ static bool loadNames(const char* key, names_header_t** namesWithHeader, uint8_t
     // Integrity check
     // The save format needs to be one we know how to read
     // We currently only know how to read a single format
-    if(*namesWithHeader->saveFormat != CURRENT_SAVE_FORMAT ||
-       *namesWithHeader->nameLength > maxNameLength)
+    if((*namesWithHeader)->saveFormat != CURRENT_SAVE_FORMAT ||
+       (*namesWithHeader)->nameLength > maxNameLength)
         return false;
     
     // Bounds check 2
     // The rest of the blob after the header needs to have the exact number of bytes expected by multiplying the number of bytes per name with the number of names
     size_t dataLength = blobLength - sizeof(names_header_t);
-    if(dataLength != *namesWithHeader->nameLength * *namesWithHeader->numNames)
+    if(dataLength != (*namesWithHeader)->nameLength * (*namesWithHeader)->numNames)
         return false;
     
     return true;
@@ -592,7 +605,7 @@ static bool saveNames(const char* key, names_header_t* namesWithHeader) {
 }
 
 // Initialize the trainer names structure
-names_header_t* initTrainerNames() {
+names_header_t* initTrainerNames(void) {
     return initNames(MAX_TRAINER_NAME_LEN, MIN_TRAINER_NAMES);
 }
 
@@ -607,7 +620,7 @@ bool saveTrainerNames(names_header_t* trainerNamesWithHeader) {
 }
 
 // Initialize the monster names structure
-names_header_t* initMonsterNames() {
+names_header_t* initMonsterNames(void) {
     return initNames(MAX_MONSTER_NAME_LEN, 0);
 }
 

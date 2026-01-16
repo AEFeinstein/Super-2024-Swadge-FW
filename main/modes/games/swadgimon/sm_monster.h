@@ -3,6 +3,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+
+#include "unique_array.h"
+
 #include "sm_constants.h"
 #include "sm_names.h"
 
@@ -99,36 +102,36 @@ typedef enum {
 // Struct used for definitions of evolutions a specific monster species to a specific other species
 // TODO: propagate const keyword
 typedef struct {
-    evolution_method_t method;
-    uint16_t parameter;
-    uint8_t targetMonsterId;
+    const evolution_method_t method;
+    const uint16_t parameter;
+    const uint8_t targetMonsterId;
 } monster_evolution_t;
 
 // Struct used for definitions of learned moves at specific levels
 // TODO: propagate const keyword
 typedef struct {
-    uint16_t moveId;
-    uint8_t level;
+    const uint16_t moveId;
+    const uint8_t level;
 } monster_level_up_move_t;
 
 // Definitions of monster species
 // TODO: propagate const keyword
 typedef struct {
-    uint8_t monsterId;
-    char* name;
-    char* description;
-    monster_type_t types[2];
-    uint8_t catchRate;
-    uint8_t expYield;
-    monster_ev_yields_t evYields;
-    uint8_t genderRatio; // 0=100% male, 254=100% female, 255=genderless
-    monster_base_stats_t baseStats;
-    exp_group_t expGroup;
-    monster_evolution_t evolutions[3];
-    uint16_t* learnableTMs;
-    uint16_t* learnableHMs;
-    uint16_t* otherValidMoves;
-    monster_level_up_move_t* levelUpMoves;
+    const uint8_t monsterId;
+    const char* const name;
+    const char* const description;
+    const monster_type_t types[2];
+    const uint8_t catchRate;
+    const uint8_t expYield;
+    const monster_ev_yields_t evYields;
+    const uint8_t genderRatio; // 0=100% male, 254=100% female, 255=genderless
+    const monster_base_stats_t baseStats;
+    const exp_group_t expGroup;
+    const monster_evolution_t* const evolutions;
+    const uint16_t* const learnableTMs;
+    const uint16_t* const learnableHMs;
+    const uint16_t* const otherValidMoves;
+    const monster_level_up_move_t* const levelUpMoves;
 } monster_t;
 
 // Struct used for definitions of battleable trainers' monsters
@@ -215,12 +218,14 @@ typedef struct {
 } monster_instance_cache_data_t;
 
 void generateWildMonsterBySpecies(monster_instance_t* monsterOut, monster_instance_party_data_t* partyDataOut, monster_final_stats_t* finalStatsOut, uint8_t speciesId, uint8_t levelMin, uint8_t levelMax);
-void getFinalStats(monster_final_stats_t* finalStats, monster_instance_t* monster);
+void getFinalStats(monster_final_stats_t* finalStats, const monster_instance_t* monster);
 uint16_t getFinalStatHp(uint16_t baseStat, uint8_t iv, uint8_t ev, uint8_t statUp, uint8_t level);
 uint16_t getFinalStatNonHp(uint16_t baseStat, uint8_t iv, uint8_t ev, uint8_t statUp, uint8_t level);
 uint32_t getTotalExpToLevel(uint8_t targetLevel, exp_group_t expGroup);
 uint32_t getExpToNextLevel(uint8_t currentLevel, exp_group_t expGroup);
-void applyExpToPartyByStrategy(monster_instance_t* (party[]), monster_instance_party_data_t* (partyState[]), uniq_arr_t* monstersParticipated, uint32_t exp, exp_strategy_t strategy);
+void applyExpToMonster(monster_instance_t* monster, monster_instance_party_data_t* partyState, monster_final_stats_t* finalStats, uint32_t expToAdd);
+void applyExpToParty(monster_instance_t party[], monster_instance_party_data_t partyState[], monster_final_stats_t finalStats[], uint32_t expToAdd[]);
+void applyExpToPartyByStrategy(monster_instance_t party[], monster_instance_party_data_t partyState[], monster_final_stats_t finalStats[], uniq_arr_t* monstersParticipated, uint32_t exp, exp_strategy_t strategy);
 void releaseMonster(monster_instance_t* monster, names_header_t* monsterNames, names_header_t* trainerNames);
 
 #endif

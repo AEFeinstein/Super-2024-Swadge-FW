@@ -3,60 +3,59 @@
 
 #include <macros.h>
 #include "esp_random.h"
-#include "unique_array.h"
 
 #include "sm_monster.h"
 #include "sm_species_defs.h"
 
 void generateWildMonsterBySpecies(monster_instance_t* monsterOut, monster_instance_party_data_t* partyDataOut, monster_final_stats_t* finalStatsOut, uint8_t speciesId, uint8_t levelMin, uint8_t levelMax) {
-    monster_t* species = &speciesDefs[speciesId];
+    const monster_t* species = &speciesDefs[speciesId];
 
-    monster->monsterId = species->monsterId;
-    monster->nicknameIdx = MONSTER_NAME_IDX_NONE;
-    monster->trainerNameIdx = TRAINER_NAME_IDX_NONE;
-    monster->friendship = 0;
-    monster->isFemale = (esp_random() % GENDER_RATIO_GENDERLESS) < species->genderRatio;
-    monster->isShiny = (esp_random() % SHINY_DIVISOR) == 0;
-    monster->level = esp_random() % (levelMax - levelMin) + 1; // TODO: use a normal distribution?
-    monster->exp = getTotalExpToLevel(monster->level, species->expGroup);
+    monsterOut->monsterId = species->monsterId;
+    monsterOut->nicknameIdx = MONSTER_NAME_IDX_NONE;
+    monsterOut->trainerNameIdx = TRAINER_NAME_IDX_NONE;
+    monsterOut->friendship = 0;
+    monsterOut->isFemale = (esp_random() % GENDER_RATIO_GENDERLESS) < species->genderRatio;
+    monsterOut->isShiny = (esp_random() % SHINY_DIVISOR) == 0;
+    monsterOut->level = esp_random() % (levelMax - levelMin) + 1; // TODO: use a normal distribution?
+    monsterOut->exp = getTotalExpToLevel(monsterOut->level, species->expGroup);
     
-    monster->ivs.hp = esp_random() % (MAX_IV + 1);
-    monster->ivs.atk = esp_random() % (MAX_IV + 1);
-    monster->ivs.def = esp_random() % (MAX_IV + 1);
-    monster->ivs.spAtk = esp_random() % (MAX_IV + 1);
-    monster->ivs.spDef = esp_random() % (MAX_IV + 1);
-    monster->ivs.speed = esp_random() % (MAX_IV + 1);
+    monsterOut->ivs.hp = esp_random() % (MAX_IV + 1);
+    monsterOut->ivs.atk = esp_random() % (MAX_IV + 1);
+    monsterOut->ivs.def = esp_random() % (MAX_IV + 1);
+    monsterOut->ivs.spAtk = esp_random() % (MAX_IV + 1);
+    monsterOut->ivs.spDef = esp_random() % (MAX_IV + 1);
+    monsterOut->ivs.speed = esp_random() % (MAX_IV + 1);
     
-    monster->evs.hp = 0;
-    monster->evs.atk = 0;
-    monster->evs.def = 0;
-    monster->evs.spAtk = 0;
-    monster->evs.spDef = 0;
-    monster->evs.speed = 0;
+    monsterOut->evs.hp = 0;
+    monsterOut->evs.atk = 0;
+    monsterOut->evs.def = 0;
+    monsterOut->evs.spAtk = 0;
+    monsterOut->evs.spDef = 0;
+    monsterOut->evs.speed = 0;
     
     for(int i = 0; i < NUM_MOVES_PER_MONSTER; i++) {
         // TODO: generate moveset from species->levelUpMoves
-        monster->moveIds[i] = 0;
-        monster->ppUps[i] = 0;
-        partyData->curMovePps[i] = 0;
+        monsterOut->moveIds[i] = 0;
+        monsterOut->ppUps[i] = 0;
+        partyDataOut->curMovePps[i] = 0;
     }
     
-    monster->statUps.hp = 0;
-    monster->statUps.atk = 0;
-    monster->statUps.def = 0;
-    monster->statUps.spAtk = 0;
-    monster->statUps.spDef = 0;
-    monster->statUps.speed = 0;
+    monsterOut->statUps.hp = 0;
+    monsterOut->statUps.atk = 0;
+    monsterOut->statUps.def = 0;
+    monsterOut->statUps.spAtk = 0;
+    monsterOut->statUps.spDef = 0;
+    monsterOut->statUps.speed = 0;
     
-    getFinalStats(finalStatsOut, monster);
+    getFinalStats(finalStatsOut, monsterOut);
     
-    partyData->curHp = finalStatsOut->hp;
-    partyData->statusCondition = STATUS_NORMAL;
+    partyDataOut->curHp = finalStatsOut->hp;
+    partyDataOut->statusCondition = STATUS_NORMAL;
 }
 
 // Calculate all effective stats from their individual stat components
-void getFinalStats(monster_final_stats_t* finalStats, monster_instance_t* monster) {
-    monster_base_stats_t* baseStats = speciesDefs[speciesId].baseStats;
+void getFinalStats(monster_final_stats_t* finalStats, const monster_instance_t* monster) {
+    const monster_base_stats_t* baseStats = &speciesDefs[monster->monsterId].baseStats;
     
     finalStats->hp = getFinalStatHp(baseStats->hp, monster->ivs.hp, monster->evs.hp, monster->statUps.hp, monster->level);
     finalStats->atk = getFinalStatNonHp(baseStats->atk, monster->ivs.atk, monster->evs.atk, monster->statUps.atk, monster->level);
@@ -82,11 +81,13 @@ uint32_t getTotalExpToLevel(uint8_t targetLevel, exp_group_t expGroup) {
     uint32_t targetLevelCubed = pow(targetLevel, 3);
     
     switch(expGroup) {
-        case EXP_GROUP_FAST:
+        case EXP_GROUP_FAST: {
             return 4 * targetLevelCubed / 5.0;
-        case EXP_GROUP_MEDIUM_FAST:
+        }
+        case EXP_GROUP_MEDIUM_FAST: {
             return targetLevelCubed;
-        case EXP_GROUP_FLUCTUATING:
+        }
+        case EXP_GROUP_FLUCTUATING: {
             if(targetLevel < 15) {
                 return targetLevelCubed * (targetLevel + 1 / 3.0 + 24) / 50; // TODO: transcription error with the location of "24" with respect to the parenthesis in GameDesignDoc.md?
             } else if(targetLevel < 36) {
@@ -94,7 +95,8 @@ uint32_t getTotalExpToLevel(uint8_t targetLevel, exp_group_t expGroup) {
             } else {
                 return targetLevelCubed * (targetLevel / 2.0 + 32) / 50;
             }
-        case EXP_GROUP_ERRATIC:
+        }
+        case EXP_GROUP_ERRATIC: {
             if(targetLevel < 50) {
                 return targetLevelCubed * (100 - targetLevel) / 50.0;
             } else if(targetLevel < 68) {
@@ -104,12 +106,16 @@ uint32_t getTotalExpToLevel(uint8_t targetLevel, exp_group_t expGroup) {
             } else {
                 return targetLevelCubed * (160 - targetLevel) / 100.0;
             }
-        case EXP_GROUP_MEDIUM_SLOW:
+        }
+        case EXP_GROUP_MEDIUM_SLOW: {
             return 6 * targetLevelCubed / 5.0 - 15 * pow(targetLevel, 2) + 100 * targetLevel - 140;
-        case EXP_GROUP_SLOW:
+        }
+        case EXP_GROUP_SLOW: {
             return 5 * targetLevelCubed / 4.0;
-        //default:
-        //    return getTotalExpToLevel(targetLevel, EXP_GROUP_SLOW);
+        }
+        default: {
+            return getTotalExpToLevel(targetLevel, EXP_GROUP_SLOW);
+        }
     }
 }
 
@@ -121,12 +127,12 @@ uint32_t getExpToNextLevel(uint8_t currentLevel, exp_group_t expGroup) {
 // Apply given amount of exp to a monster, and level it up if needed.
 // Any excess exp is lost
 void applyExpToMonster(monster_instance_t* monster, monster_instance_party_data_t* partyState, monster_final_stats_t* finalStats, uint32_t expToAdd) {
-    exp_group_t expGroup = speciesDefs[party[curMonster]->monsterId].expGroup;
-    monster->exp = MIN(monster->exp + expToAdd, getTotalExpToLevel(MAX_LEVEL, monster->expGroup));
+    exp_group_t expGroup = speciesDefs[monster->monsterId].expGroup;
+    monster->exp = MIN(monster->exp + expToAdd, getTotalExpToLevel(MAX_LEVEL, expGroup));
     
     // TODO: exp earned dialogs
     
-    while(monster->exp >= getExpToNextLevel(monster->level, monster->expGroup) && monster->level < MAX_LEVEL) {
+    while(monster->exp >= getExpToNextLevel(monster->level, expGroup) && monster->level < MAX_LEVEL) {
         monster->level++;
         // TODO: level up dialogs
         
@@ -136,26 +142,26 @@ void applyExpToMonster(monster_instance_t* monster, monster_instance_party_data_
 
 // Apply given amounts of exp to individual party members, and level them up if needed
 // Any excess exp is lost
-void applyExpToParty(monster_instance_t* (party[]), monster_instance_party_data_t* (partyState[]), monster_final_stats_t* (finalStats[]), uint32_t expToAdd[PARTY_SIZE]) {
+void applyExpToParty(monster_instance_t party[], monster_instance_party_data_t partyState[], monster_final_stats_t finalStats[], uint32_t expToAdd[]) {
     for(int i = 0; i < PARTY_SIZE; i++) {
-        applyExpToMonster((*party)[i], (*partyState)[i], (*finalStats)[i], expToAdd[i]);
+        applyExpToMonster(&party[i], &partyState[i], &finalStats[i], expToAdd[i]);
     }
 }
 
 // Allocate and apply given amount of exp to the monsters in the party, using the given distribution strategy.
 // Any excess exp is allocated using fallback strategies, but lost if all monsters are max level
-void applyExpToPartyByStrategy(monster_instance_t* (party[]), monster_instance_party_data_t* (partyState[]), monster_final_stats_t* (finalStats[]), uniq_arr_t* monstersParticipated, uint32_t exp, exp_strategy_t strategy) {
+void applyExpToPartyByStrategy(monster_instance_t party[], monster_instance_party_data_t partyState[], monster_final_stats_t finalStats[], uniq_arr_t* monstersParticipated, uint32_t exp, exp_strategy_t strategy) {
     uniq_arr_t monstersToGetExp;
     uniqArrInit(&monstersToGetExp, PARTY_SIZE, true);
     
     for(uint8_t i = 0; i < PARTY_SIZE; i++) {
         // Stop checking monsters once we hit a blank slot
-        if((*party)[i]->monsterId == 0) {
+        if(party[i].monsterId == 0) {
             break;
         }
         
         // If the monster is below the max level, add it to a list
-        if ((*party)[i].level < MAX_LEVEL) {
+        if (party[i].level < MAX_LEVEL) {
             uniqArrPut(&monstersToGetExp, i);
         }
     }
@@ -172,11 +178,11 @@ void applyExpToPartyByStrategy(monster_instance_t* (party[]), monster_instance_p
     exp_group_t expGroup[PARTY_SIZE];
     
     // Cache frequently needed variables
-    for(unsigned int i = uniqArrLength(&monstersToGetExp); i >= 0; i--) {
+    for(int i = uniqArrLength(&monstersToGetExp); i >= 0; i--) {
         uint8_t curMonster;
         uniqArrGet(&monstersToGetExp, &curMonster, i);
         
-        expGroup[curMonster] = speciesDefs[party[curMonster]->monsterId].expGroup;
+        expGroup[curMonster] = speciesDefs[party[curMonster].monsterId].expGroup;
         
         // Check how much exp we can add without going over max level
         expToMaxLevel[curMonster] = getTotalExpToLevel(MAX_LEVEL, expGroup[curMonster]) - party[curMonster].exp;
@@ -188,9 +194,10 @@ void applyExpToPartyByStrategy(monster_instance_t* (party[]), monster_instance_p
     
     switch(strategy) {
         case EXP_STRATEGY_LAST: // All exp to the monster that was in the battle when the enemy fainted
-            for(unsigned int i = uniqArrLength(monstersParticipatedToGetExp) - 1; i >= 0 && expRemaining > 0; i--) {
+        {
+            for(int i = uniqArrLength(&monstersParticipatedToGetExp) - 1; i >= 0 && expRemaining > 0; i--) {
                 uint8_t curMonster;
-                uniqArrGet(monstersParticipatedToGetExp, &curMonster, i);
+                uniqArrGet(&monstersParticipatedToGetExp, &curMonster, i);
                 
                 // Aim to add all remaining exp, up to the maximum monster level
                 uint32_t expToAddTemp = MIN(expRemaining, expToMaxLevel[curMonster]);
@@ -211,7 +218,9 @@ void applyExpToPartyByStrategy(monster_instance_t* (party[]), monster_instance_p
             // TODO: allocate exp to non-participating monsters
             
             break;
+        }
         case EXP_STRATEGY_PARTICIPATED: // Split exp evenly beteween all monsters that participated in the battle
+        {
             ///// TODO: Code below here could be reused for other cases
             
             unsigned int numMonstersToGetExp = uniqArrLength(&monstersParticipatedToGetExp);
@@ -228,7 +237,7 @@ void applyExpToPartyByStrategy(monster_instance_t* (party[]), monster_instance_p
                     allocatedExp = false;
                     uint32_t expPerMonster = expRemaining / numMonstersToGetExp; // We deal with the remainder later
                     
-                    for(unsigned int i = numMonstersToGetExp; i >= 0; i--) {
+                    for(int i = numMonstersToGetExp; i >= 0; i--) {
                         uint8_t curMonster;
                         uniqArrGet(&monstersParticipatedToGetExp, &curMonster, i);
                         
@@ -258,7 +267,7 @@ void applyExpToPartyByStrategy(monster_instance_t* (party[]), monster_instance_p
                     
                     // Apply the modifications made to the eligibility list
                     uniqArrCopy(&monstersParticipatedToGetExp, &monstersParticipatedToGetExpModified, true);
-                    numMonstersToGetExp = uniqArrLength(&numMonstersParticipatedToGetExp);
+                    numMonstersToGetExp = uniqArrLength(&monstersParticipatedToGetExp);
                 } while(expRemaining > 0 && numMonstersToGetExp > 0 && allocatedExp);
             }
             
@@ -267,10 +276,19 @@ void applyExpToPartyByStrategy(monster_instance_t* (party[]), monster_instance_p
             // TODO: allocate exp to non-participating monsters
             
             break;
+        }
         case EXP_STRATEGY_CATCH_UP_SLOW: // Split exp between all monsters in the party, but give more to lower-level monsters. If all monsters are the same level, give more to monsters with less % progress to the next level. Then, try to keep all monsters at the same %
-        case EXP_STRATEGY_CATCH_UP_FAST: // All exp to the lowest-level monster. If all monsters are the same level, give all to monsters with less % progress to the next level. Then, try to keep all monsters at the same %
-        case EXP_STRATEGY_ALL: // Split exp evenly between all monsters in the party
+        {
             break;
+        }
+        case EXP_STRATEGY_CATCH_UP_FAST: // All exp to the lowest-level monster. If all monsters are the same level, give all to monsters with less % progress to the next level. Then, try to keep all monsters at the same %
+        {
+            break;
+        }
+        case EXP_STRATEGY_ALL: // Split exp evenly between all monsters in the party
+        {
+            break;
+        }
     }
     
     applyExpToParty(party, partyState, finalStats, expToAdd);

@@ -49,25 +49,25 @@ typedef struct {
 } save_data_loaded_t;
 
 void initSaveData(save_data_fixed_t* saveData);
-void loadSaveData();
-void saveSaveData();
+void loadSaveData(void);
+void saveSaveData(void);
 static monster_box_header_t* initMonsterBoxVarSize(const uint16_t monsterLength, const uint8_t numMonsters, bool doBlobSizeCheck);
 monster_box_header_t* initMonsterBox(const uint8_t numMonsters);
 monster_box_header_t* initMonsterBoxPacked(const uint8_t numMonsters);
 void unpackMonster(monster_instance_t* dest, monster_instance_packed_t* src);
 void packMonster(monster_instance_packed_t* dest, monster_instance_t* src);
-bool loadMonsterBox(char* keySuffix, monster_box_header_t** monsterBoxWithHeader);
-bool saveMonsterBox(char* keySuffix, monster_box_header_t* monsterBoxWithHeader);
+bool loadMonsterBox(const char* keySuffix, monster_box_header_t** monsterBoxWithHeader);
+bool saveMonsterBox(const char* keySuffix, monster_box_header_t* monsterBoxWithHeader);
 bool loadMonsterBoxByNum(uint8_t boxId, monster_box_header_t** monsterBoxWithHeader);
 bool saveMonsterBoxByNum(uint8_t boxId, monster_box_header_t* monsterBoxWithHeader);
 bool checkMonsterBoxIntegrity(monster_box_header_t* monsterBoxWithHeader, names_header_t* trainerNamesWithHeader, names_header_t* monsterNamesWithHeader, char** textOut);
 static names_header_t* initNames(const uint8_t nameLength, const uint16_t numNames);
 static bool loadNames(const char* key, names_header_t** namesWithHeader, uint8_t maxNameLength);
 static bool saveNames(const char* key, names_header_t* namesWithHeader);
-names_header_t* initTrainerNames();
+names_header_t* initTrainerNames(void);
 bool loadTrainerNames(names_header_t** trainerNamesWithHeader);
 bool saveTrainerNames(names_header_t* trainerNamesWithHeader);
-names_header_t* initMonsterNames();
+names_header_t* initMonsterNames(void);
 bool loadMonsterNames(names_header_t** monsterNames);
 bool saveMonsterNames(names_header_t* monsterNamesWithHeader);
 

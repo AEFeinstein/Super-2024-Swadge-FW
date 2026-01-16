@@ -3,15 +3,19 @@
  * Specifically designed for small arrays of bytes
  */
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "esp_heap_caps.h"
 
 #include "unique_array.h"
 
 // Runs in O(1)
 static uint8_t* uniqArrInitNewBuffer(unsigned int capacity, bool spiRam) {
-    uint8_t* buffer = heap_caps_malloc(uniqArr->capacity, spiRam ? MALLOC_CAP_SPIRAM : 0);
+    uint8_t* buffer = heap_caps_malloc(capacity, spiRam ? MALLOC_CAP_SPIRAM : 0);
     assert(buffer);
     return buffer;
 }
@@ -137,7 +141,7 @@ bool uniqArrRemove(uniq_arr_t* uniqArr, uint8_t data) {
     
     unsigned int existingIdx = 0;
     
-    if(!uniqArrSearch(uniqArr, &existingIdx, dataIn) {
+    if(!uniqArrSearch(uniqArr, &existingIdx, data)) {
         return false;
     }
     
@@ -175,7 +179,7 @@ bool uniqArrUnion(uniq_arr_t* uniqArr1Dest, uniq_arr_t* uniqArr2) {
             return false;
         }
         
-        uniqArrPut(uniqArr1Dest, data); TODO: preserve arr1Dest's ordering
+        uniqArrPut(uniqArr1Dest, data); //TODO: preserve arr1Dest's ordering
     }
     
     return true;
