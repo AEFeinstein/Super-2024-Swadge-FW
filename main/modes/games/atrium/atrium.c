@@ -420,7 +420,7 @@ static void atriumEnterMode(void)
     while (spNode)
     {
         // Make a convenience pointer to the data in this node
-        swadgePassData_t* spd      = (swadgePassData_t*)spNode->val;
+        swadgePassData_t* spd            = (swadgePassData_t*)spNode->val;
         atr->sonaList[sonaIdx].swsn.core = spd->data.packet.swadgesona.core;
         setUsernameFrom32(&atr->sonaList[sonaIdx].swsn.name, spd->data.packet.swadgesona.core.packedName);
 
