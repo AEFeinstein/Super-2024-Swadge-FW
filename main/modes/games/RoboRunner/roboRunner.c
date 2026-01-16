@@ -933,6 +933,11 @@ static void roboRunnerPacket(swadgePassPacket_t* packet)
 
 static int32_t getLatestRemoteScore()
 {
+    // Switching to speaker disables the microphone
+    switchToSpeaker();
+    // This disables speaker too
+    dacStop();
+
     list_t spList = {0};
     getSwadgePasses(&spList, &roboRunnerMode, false);
     node_t* spNode = spList.first;
@@ -948,6 +953,11 @@ static int32_t getLatestRemoteScore()
         }
         spNode = spNode->next;
     }
+    freeSwadgePasses(&spList);
+
+    // This re-enables the speakers
+    dacStart();
+
     return val;
 }
 

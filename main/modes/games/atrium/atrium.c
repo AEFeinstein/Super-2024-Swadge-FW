@@ -407,10 +407,46 @@ static void atriumEnterMode(void)
     // Initialize memory
     atr = (atrium_t*)heap_caps_calloc(1, sizeof(atrium_t), MALLOC_CAP_8BIT);
 
+    // Switching to speaker disables the microphone
+    switchToSpeaker();
+    // This disables speaker too
+    dacStop();
+
     // Swadgepass
     getSwadgePasses(&atr->spList, &atriumMode, true);
     node_t* spNode = atr->spList.first;
-    int i          = 0;
+
+    int sonaIdx = 0;
+    while (spNode)
+    {
+        // Make a convenience pointer to the data in this node
+        swadgePassData_t* spd      = (swadgePassData_t*)spNode->val;
+        atr->sonaList[sonaIdx].swsn.core = spd->data.packet.swadgesona.core;
+        setUsernameFrom32(&atr->sonaList[sonaIdx].swsn.name, spd->data.packet.swadgesona.core.packedName);
+
+        atr->sonaList[sonaIdx].packedProfile = spd->data.packet.atrium.packedProfile;
+        atr->sonaList[sonaIdx].points        = spd->data.packet.atrium.points;
+
+        // If the data hasn't been used yet
+        if (!isPacketUsedByMode(spd, &atriumMode))
+        {
+            // Print some packet data
+            ESP_LOGI("SP", "Receive from %s. Preamble is %" PRIu16, spd->key, spd->data.packet.preamble);
+
+            // Mark the packet as used
+            setPacketUsedByMode(spd, &atriumMode, true);
+        }
+
+        // Iterate to the next data
+        sonaIdx++;
+        spNode = spNode->next;
+    }
+
+    atr->numRemoteSwsn = sonaIdx;
+
+    // This re-enables the speakers
+    dacStart();
+
     atr->loadAnims = 0;
 
     // Load images with a common decoder and decode space
@@ -469,33 +505,6 @@ static void atriumEnterMode(void)
     }
 
     trophyUpdate(&atriumTrophyData.list[0], 1, true); // Award "Welcome to the Atrium" trophy
-
-    while (spNode)
-    {
-        // Make a convenience pointer to the data in this node
-        swadgePassData_t* spd      = (swadgePassData_t*)spNode->val;
-        atr->sonaList[i].swsn.core = spd->data.packet.swadgesona.core;
-        setUsernameFrom32(&atr->sonaList[i].swsn.name, spd->data.packet.swadgesona.core.packedName);
-
-        atr->sonaList[i].packedProfile = spd->data.packet.atrium.packedProfile;
-        atr->sonaList[i].points        = spd->data.packet.atrium.points;
-
-        // If the data hasn't been used yet
-        if (!isPacketUsedByMode(spd, &atriumMode))
-        {
-            // Print some packet data
-            ESP_LOGI("SP", "Receive from %s. Preamble is %" PRIu16, spd->key, spd->data.packet.preamble);
-
-            // Mark the packet as used
-            setPacketUsedByMode(spd, &atriumMode, true);
-        }
-
-        // Iterate to the next data
-        i++;
-        spNode = spNode->next;
-    }
-
-    atr->numRemoteSwsn = i;
 
     trophyUpdate(&atriumTrophyData.list[4], atr->numRemoteSwsn, true); // update count for 10 passes
     if (atr->numRemoteSwsn > 10)

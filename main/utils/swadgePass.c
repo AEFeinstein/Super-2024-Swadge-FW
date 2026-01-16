@@ -317,7 +317,9 @@ bool isPacketUsedByMode(swadgePassData_t* data, const struct swadgeMode* mode)
 /**
  * @brief Set if a given mode has used this SwadgePass data yet.
  *
- * This will write changes to NVS.
+ * This will write changes to NVS. Note that if this is called many times in a row, like when processing a batch of
+ * SwadgePasses, the microphone and speaker should be disabled. We have seen freezes doing many NVS writes while those
+ * peripherals are active
  *
  * @param data The SwadgePass data
  * @param mode The mode using the SwadgePass data

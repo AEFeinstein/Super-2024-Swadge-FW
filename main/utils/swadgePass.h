@@ -54,6 +54,22 @@
  * the data is used, it can be marked as such with setPacketUsedByMode(). This will save the used state to non-volatile
  * storage, which persists reboots.
  *
+ * \warning
+ * setPacketUsedByMode() writes to NVS and we have seen freezes while writing to NVS many times in a row while the
+ microphone and speaker peripherals are active. It is strongly advised to turn off those peripherals during NVS writes.
+ Example:
+ * \code{.c}
+ * // Switching to speaker disables the microphone
+ * switchToSpeaker();
+ * // This disables speaker too
+ * dacStop();
+ *
+ * // Process all SwadgePasses with setPacketUsedByMode()
+ *
+ * // This re-enables the speakers
+ * dacStart();
+ * \endcode
+ *
  * When the Swadge Mode is finished with the SwadgePass data, it must be freed with freeSwadgePasses().
  *
  * \subsection sp_size_limits SwadgePass Size Limitations
