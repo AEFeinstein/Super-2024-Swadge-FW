@@ -56,6 +56,23 @@
  *
  * When the Swadge Mode is finished with the SwadgePass data, it must be freed with freeSwadgePasses().
  *
+ * \subsection sp_size_limits SwadgePass Size Limitations
+ *
+ * \warning
+ * Read this section carefully! It caused some pretty visible bugs across the entire firmware release. Turns out all
+ Swadge modes need RAM and most write to NVS too.
+ *
+ * Version 3.1.0 was released with ::MAX_NUM_SWADGE_PASSES set to 100. This seemed like a good idea at the time, but in
+ practice the Swadge could only store 80 to 90 SwadgePasses in NVS and would often crash while trying to load them to
+ RAM. Version 3.1.1 added pruneSwadgePasses(), which is called on startup and erases SwadgePasses to the new limit of
+ ::MAX_NUM_SWADGE_PASSES (50). This function does not need to be called manually.
+ *
+ * It must also be noted that getSwadgePasses() is a memory-intensive function because it has to load all relevant NVS
+ keys to RAM and then load the SwadgePass data to RAM as well. This function should be called early in a Swadge mode's
+ lifecycle, ideally before other audio or visual assets are loaded or memory is otherwise allocated for menus, gameplay
+ logic, or other reasons. After SwadgePass data is extracted, freeSwadgePasses() should be called to make space for
+ loading assets, allocating gameplay RAM, etc.
+ *
  * \section swadgePass_example Example
  *
  * \subsection sp_building_packet_example Building a Packet for Transmission Example
@@ -114,7 +131,7 @@
 // Defines
 //==============================================================================
 
-#define MAX_NUM_SWADGE_PASSES 100
+#define MAX_NUM_SWADGE_PASSES 50
 
 //==============================================================================
 // Structs
@@ -197,3 +214,5 @@ void freeSwadgePasses(list_t* swadgePasses);
 
 bool isPacketUsedByMode(swadgePassData_t* data, const struct swadgeMode* mode);
 void setPacketUsedByMode(swadgePassData_t* data, const struct swadgeMode* mode, bool isUsed);
+
+void pruneSwadgePasses(void);

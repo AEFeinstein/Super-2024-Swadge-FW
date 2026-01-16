@@ -917,7 +917,7 @@ void artilleryPassTurn(artilleryData_t* ad)
                 }
                 case AG_WIRELESS:
                 {
-                    isP1 = (GOING_FIRST == p2pGetPlayOrder(&ad->p2p));
+                    isP1 = (GOING_SECOND == p2pGetPlayOrder(&ad->p2p));
                     trophyUpdate(&artilleryTrophies[AT_P2P], trophyGetSavedValue(&artilleryTrophies[AT_P2P]) + 1, true);
                     break;
                 }

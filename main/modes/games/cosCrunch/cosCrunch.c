@@ -333,6 +333,16 @@ static void cosCrunchEnterMode(void)
 
     cc = heap_caps_calloc(1, sizeof(cosCrunch_t), MALLOC_CAP_8BIT);
 
+    // Initialize high scores
+    cc->highScores.highScoreCount = HIGH_SCORE_COUNT;
+    initHighScores(&cc->highScores, CC_NVS_NAMESPACE);
+
+    list_t swadgePasses = {0};
+    getSwadgePasses(&swadgePasses, &cosCrunchMode, false);
+    saveHighScoresFromSwadgePass(&cc->highScores, CC_NVS_NAMESPACE, swadgePasses, &cosCrunchMode,
+                                 cosCrunchGetSwadgePassHighScore);
+    freeSwadgePasses(&swadgePasses);
+
     int32_t tutorialSeen;
     if (readNamespaceNvs32(CC_NVS_NAMESPACE, NVS_KEY_TUTORIAL_SEEN, &tutorialSeen))
     {
@@ -391,15 +401,6 @@ static void cosCrunchEnterMode(void)
     cc->sfxPlayer = globalMidiPlayerGet(MIDI_SFX);
 
     cosCrunchClearLeds();
-
-    cc->highScores.highScoreCount = HIGH_SCORE_COUNT;
-    initHighScores(&cc->highScores, CC_NVS_NAMESPACE);
-
-    list_t swadgePasses = {0};
-    // It's okay to get already-used passes, since the high score table only saves one per SP user.
-    getSwadgePasses(&swadgePasses, &cosCrunchMode, true);
-    saveHighScoresFromSwadgePass(&cc->highScores, CC_NVS_NAMESPACE, swadgePasses, cosCrunchGetSwadgePassHighScore);
-    freeSwadgePasses(&swadgePasses);
 }
 
 static void cosCrunchExitMode(void)
@@ -550,6 +551,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         cc->interlude.timeUs     = PLAYER_INTERLUDE_TIME_US;
         cc->interlude.elapsedUs  = 0;
         cc->interlude.swirlyEyes = false;
+        ch32v003SelectBitmap(EYES_SLOT_DEFAULT);
     }
 
     switch (cc->state)
@@ -581,10 +583,6 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                     ch32v003SelectBitmap(EYES_SLOT_SWIRL + frame);
                     cc->interlude.swirlFrame = frame;
                 }
-            }
-            else
-            {
-                ch32v003SelectBitmap(EYES_SLOT_DEFAULT);
             }
 
             cosCrunchClearLeds();

@@ -8,14 +8,10 @@
 // DEFINES
 //---------------------------------------------------------------------------------//
 
-#define TFT_WIDTH  280
-#define TFT_HEIGHT 240
-
 // Lobby
-#define SONA_PER            4
-#define MAX_SWADGESONA_IDXS (MAX_NUM_SWADGE_PASSES / SONA_PER) - (MAX_NUM_SWADGE_PASSES % SONA_PER) / SONA_PER
-#define ANIM_TIMER_MS       16667
-#define LOBBY_ARROW_Y       TFT_HEIGHT / 2 - 12
+#define SONA_PER      4
+#define ANIM_TIMER_MS 16667
+#define LOBBY_ARROW_Y TFT_HEIGHT / 2 - 12
 
 // Profile
 #define CARDTEXTPAD 4
@@ -268,7 +264,7 @@ typedef struct
     int8_t fact0;
     int8_t fact1;
     int8_t fact2;
-    int8_t numPasses;      // Number of other unique passes encountered
+    uint8_t numPasses;     // Number of other unique passes encountered
     int32_t packedProfile; // card select 0-3, fact0 4-7, fact1 8-11, fact2 12-15, team 16-19, numpasses 20-28
     swadgesona_t swsn;     // Swadgesona data
     int32_t points;
@@ -290,7 +286,6 @@ typedef struct
 
     // Profile data
     userProfile_t loadedProfile; // Loaded profile for drawing
-    swadgesona_t* profileSona;
 
     // Main
     atriumState state;
@@ -299,7 +294,6 @@ typedef struct
 
     // Lobbies
     lobbyState_t lbState;
-    uint8_t lobbySwsnIdxs[MAX_SWADGESONA_IDXS];
     int64_t animTimer;
     int64_t animBodyTimer;
     int loadBodyAnims;
@@ -307,17 +301,13 @@ typedef struct
     bool fakeLoad;
     bool shuffle;
     bool loadedProfs;
-    bool drawnProfs;
-    bool loadedBodies;
-    bool concertLoadedBodies;
     bool animDirection;
     int8_t page;
     int8_t lastPage;
     int8_t remSwsn;
     int8_t totalPages;
     int8_t selectedArrow;
-    int8_t bodyIdx[SONA_PER];
-    int8_t concertBodyIdx[SONA_PER];
+    int8_t bodyIdxs[MAX_NUM_SWADGE_PASSES];
 
     // BGM
     midiPlayer_t* player;
@@ -327,20 +317,16 @@ typedef struct
 
     // Profile viewer/editor
     int selection;
-    int xloc;
     int yloc;
     bool drawSaved;
     int32_t created;
     bool loadedTeams;
-    int32_t points;
 
     // SwadgePass Profile
     userProfile_t spProfile;
 
     // LEDs
     led_t leds[CONFIG_NUM_LEDS];
-    int8_t ledChase;
-
 } atrium_t;
 
 //---------------------------------------------------------------------------------//
@@ -370,7 +356,8 @@ static void drawCard(userProfile_t profile, bool local, uint64_t elapsedUs);
 void drawEditSelection(buttonEvt_t* evt, int yloc);
 void drawEditUI(buttonEvt_t* evt, int yloc, bool direction);
 void drawSonaSelector(buttonEvt_t evt, int selection);
-static void drawConcertBodies(int8_t sonas, uint64_t elapsedUs);
+static void drawConcertBodies(int8_t sonas, int32_t page, uint64_t elapsedUs);
+static void randomizeBodies(void);
 
 // Swadgepass
 static void atriumAddSP(struct swadgePassPacket* packet);
@@ -419,6 +406,12 @@ static void atriumEnterMode(void)
 {
     // Initialize memory
     atr = (atrium_t*)heap_caps_calloc(1, sizeof(atrium_t), MALLOC_CAP_8BIT);
+
+    // Swadgepass
+    getSwadgePasses(&atr->spList, &atriumMode, true);
+    node_t* spNode = atr->spList.first;
+    int i          = 0;
+    atr->loadAnims = 0;
 
     // Load images with a common decoder and decode space
     {
@@ -474,12 +467,6 @@ static void atriumEnterMode(void)
     {
         loadWsg(teams[idx], &atr->teamElements[idx], true);
     }
-
-    // Swadgepass
-    getSwadgePasses(&atr->spList, &atriumMode, true);
-    node_t* spNode = atr->spList.first;
-    int i          = 0;
-    atr->loadAnims = 0;
 
     trophyUpdate(&atriumTrophyData.list[0], 1, true); // Award "Welcome to the Atrium" trophy
 
@@ -619,6 +606,7 @@ static void atriumMainLoop(int64_t elapsedUs)
                         atr->loadAnims = 0;
                         globalMidiPlayerPlaySong(&atr->bgm[1], MIDI_BGM); // change BGM
                         globalMidiPlayerPlaySong(&atr->sfx[0], MIDI_SFX); // play choose sound
+                        randomizeBodies(); // Randomize bodies when entering the Atrium display
                     }
                     else if ((evt.button & PB_B))
                     {
@@ -679,6 +667,7 @@ static void atriumMainLoop(int64_t elapsedUs)
                         if (atr->lbState > 0)
                         {
                             atr->lbState--;
+                            randomizeBodies(); // Randomize bodies when changing the lobby style
                             atr->loadAnims = 0;
                             globalMidiPlayerPlaySong(&atr->sfx[1], MIDI_SFX); // play move sound
                         }
@@ -689,6 +678,7 @@ static void atriumMainLoop(int64_t elapsedUs)
                         if (atr->lbState < 2)
                         {
                             atr->lbState++;
+                            randomizeBodies(); // Randomize bodies when changing the lobby style
                             atr->loadAnims = 0;
                             globalMidiPlayerPlaySong(&atr->sfx[1], MIDI_SFX); // play move sound
                         }
@@ -733,6 +723,9 @@ static void atriumMainLoop(int64_t elapsedUs)
                     {
                         atr->state = ATR_PROFILE;
                         globalMidiPlayerPlaySong(&atr->sfx[0], MIDI_SFX); // play choose sound
+
+                        // Redraw Swadgesona image with a body for the profile card
+                        generateSwadgesonaImage(&atr->sonaList[atr->page * SONA_PER + atr->selection].swsn, true);
                     }
                     else if ((evt.button & PB_LEFT))
                     {
@@ -784,6 +777,36 @@ static void atriumMainLoop(int64_t elapsedUs)
         default:
         {
             break;
+        }
+    }
+}
+
+/**
+ * @brief Randomize all Swadgesona bodies for the current lobby style
+ */
+static void randomizeBodies(void)
+{
+    for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(atr->bodyIdxs); bIdx++)
+    {
+        switch (atr->lbState)
+        {
+            case BG_GAZEBO:
+            {
+                atr->bodyIdxs[bIdx] = rand() % ARRAY_SIZE(sonaBodies);
+                break;
+            }
+            case BG_CONCERT:
+            {
+                // Four different musician body types
+                atr->bodyIdxs[bIdx] = rand() % 4;
+                break;
+            }
+            default:
+            case BG_ARCADE:
+            {
+                // No bodies to randomize
+                break;
+            }
         }
     }
 }
@@ -890,6 +913,9 @@ static void viewProfile(buttonEvt_t* evt, uint64_t elapsedUs)
             {
                 atr->state     = ATR_DISPLAY;
                 atr->loadAnims = 0;
+
+                // Redraw Swadgesona image without a body for the Atrium
+                generateSwadgesonaImage(&atr->sonaList[atr->page * SONA_PER + atr->selection].swsn, false);
             }
         }
     }
@@ -1102,7 +1128,6 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
             {
                 atr->loadedProfs = false; // reset loaded profiles to load new ones
             }
-            atr->bodyIdx[i] = rand() % ARRAY_SIZE(sonaBodies);
         }
         atr->loadedProfs = false; // reset loaded profiles to load new ones
 
@@ -1138,7 +1163,7 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
         {
             case BG_GAZEBO:
             {
-                drawWsgSimple(&atr->bodies[atr->bodyIdx[i]], 20 + (i * 60),
+                drawWsgSimple(&atr->bodies[atr->bodyIdxs[(page * SONA_PER) + i]], 20 + (i * 60),
                               128); // draw the body
                 break;
             }
@@ -1150,7 +1175,7 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
             }
             case BG_CONCERT:
             {
-                drawConcertBodies(sonas, elapsedUs);
+                drawConcertBodies(sonas, page, elapsedUs);
                 break;
             }
             default:
@@ -1161,7 +1186,7 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
     }
 }
 
-static void drawConcertBodies(int8_t sonas, uint64_t elapsedUs)
+static void drawConcertBodies(int8_t sonas, int32_t page, uint64_t elapsedUs)
 {
     atr->animBodyTimer += elapsedUs;
     if (atr->animBodyTimer >= ANIM_TIMER_MS * 20 && atr->loadBodyAnims < 20)
@@ -1174,22 +1199,12 @@ static void drawConcertBodies(int8_t sonas, uint64_t elapsedUs)
         atr->loadBodyAnims = 0;
     }
 
-    if (atr->concertLoadedBodies == false)
-    {
-        for (int i = 0; i < sonas; i++)
-        {
-            atr->concertBodyIdx[i] = i;
-        }
-
-        atr->concertLoadedBodies = true;
-    }
-
     for (int i = 0; i < sonas; i++)
     {
-        switch (atr->concertBodyIdx[i])
+        switch (atr->bodyIdxs[(page * SONA_PER) + i])
         {
+            default:
             case 0: // bass has 5 frames and starts at index 0 in wsg list  69X88
-
             {
                 int frame = atr->loadBodyAnims % 5;
 
@@ -1197,7 +1212,6 @@ static void drawConcertBodies(int8_t sonas, uint64_t elapsedUs)
                 break;
             }
             case 1: // guitar has 7 frames and starts at index 5 in wsg list  57X77
-
             {
                 int frame = atr->loadBodyAnims % 7;
                 if (atr->loadBodyAnims >= 7 && atr->loadBodyAnims < 10)
@@ -1217,7 +1231,6 @@ static void drawConcertBodies(int8_t sonas, uint64_t elapsedUs)
                 break;
             }
             case 2: // triangle has 10 frames and starts at index 13 in wsg list 75X78
-
             {
                 int frame = atr->loadBodyAnims % 10;
                 if (atr->loadBodyAnims >= 10)
@@ -1247,11 +1260,6 @@ static void drawConcertBodies(int8_t sonas, uint64_t elapsedUs)
                     frame = 5 - atr->loadBodyAnims % 5;
                     drawWsgSimple(&atr->concertBodies[23 + frame], 20 + (i * 60) - 3, 116);
                 }
-
-                break;
-            }
-            default:
-            {
                 break;
             }
         }
@@ -1263,9 +1271,9 @@ static void drawLobbyArrows(int selected)
     // Left, down, up, right
     const int16_t angles[] = {180, 90, 270, 0};
     bool arrowEnabled[4]   = {true, true, true, true};
-    int16_t xloc[]         = {5, TFT_WIDTH / 2 - atr->uiElements[0].w / 2, TFT_WIDTH / 2 - atr->uiElements[0].w / 2,
+    const int16_t xloc[]   = {5, TFT_WIDTH / 2 - atr->uiElements[0].w / 2, TFT_WIDTH / 2 - atr->uiElements[0].w / 2,
                               TFT_WIDTH - 5 - atr->uiElements[0].w};
-    int16_t yloc[]         = {LOBBY_ARROW_Y, 220, 20, LOBBY_ARROW_Y};
+    const int16_t yloc[]   = {LOBBY_ARROW_Y, 220, 20, LOBBY_ARROW_Y};
 
     if (ATR_DISPLAY == atr->state)
     {
@@ -1577,33 +1585,24 @@ void loadProfiles(int maxProfiles, int page)
     else
     {
         ESP_LOGI(ATR_TAG, "Loading profiles: maxProfiles=%d, page=%d", maxProfiles, page);
-        if (atr->lastPage == page)
-        {
-        }
-        else
-        {
-            atr->loadedBodies = false;
-        }
 
         for (int i = 0; i < maxProfiles; i++)
         {
-            unpackProfileData(&atr->sonaList[page * 4 + i]);
-            generateSwadgesonaImage(&atr->sonaList[page * 4 + i].swsn, false);
-            ESP_LOGI(ATR_TAG, "Loaded profile %d for page %d", page * 4 + i, page);
-            if (atr->loadedBodies == false)
+            uint32_t sIdx = page * 4 + i;
+            if (sIdx < MAX_NUM_SWADGE_PASSES)
             {
-                atr->bodyIdx[i] = rand() % ARRAY_SIZE(sonaBodies);
+                unpackProfileData(&atr->sonaList[sIdx]);
+                // Generate images without bodies for the Atrium view
+                generateSwadgesonaImage(&atr->sonaList[sIdx].swsn, false);
             }
         }
-        atr->loadedProfs  = true; // mark as loaded
-        atr->loadedBodies = true; // don't randomize bodies again
+        atr->loadedProfs = true; // mark as loaded
     }
 }
 
 userProfile_t loadProfileFromNVS(void)
 {
     userProfile_t loadedProfile = {0};
-    int8_t team                 = 0;
     int32_t teamchecker         = 0;
 
     if (!readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_CREATEDKEY,
@@ -1618,7 +1617,7 @@ userProfile_t loadProfileFromNVS(void)
         loadedProfile.numPasses  = 0;
         loadedProfile.points     = 0;
 
-        team = esp_random() % 3; // assign random team 0,1,2
+        int8_t team = esp_random() % 3; // assign random team 0,1,2
         ESP_LOGI(ATR_TAG, "team rng is %" PRId8, team);
         loadSPSona(&loadedProfile.swsn.core); // load the sona image from swadgepass data
         loadedProfile.team = team;
@@ -1762,12 +1761,12 @@ void packProfileData(userProfile_t* profile)
 void unpackProfileData(userProfile_t* profile)
 {
     /* clang-format off */
-    profile->cardSelect = profile->packedProfile  &0b00000000000000000000000000001111;
-    profile->fact0 = (profile->packedProfile      &0b00000000000000000000000011110000) >>4;
-    profile->fact1 = (profile->packedProfile      &0b00000000000000000000111100000000) >>8;
-    profile->fact2 = (profile->packedProfile      &0b00000000000000001111000000000000) >>12;
-    profile->team = (profile->packedProfile       &0b00000000000011110000000000000000) >>16;
-    profile->numPasses = (profile->packedProfile  &0b00001111111100000000000000000000) >>20;
+    profile->cardSelect = ( profile->packedProfile & 0b00000000000000000000000000001111)        % ARRAY_SIZE(cardImages);
+    profile->fact0      = ((profile->packedProfile & 0b00000000000000000000000011110000) >> 4)  % ARRAY_SIZE(fact0);
+    profile->fact1      = ((profile->packedProfile & 0b00000000000000000000111100000000) >> 8)  % ARRAY_SIZE(fact1);
+    profile->fact2      = ((profile->packedProfile & 0b00000000000000001111000000000000) >> 12) % ARRAY_SIZE(fact2);
+    profile->team       = ((profile->packedProfile & 0b00000000000011110000000000000000) >> 16) % ARRAY_SIZE(teams);
+    profile->numPasses  = ((profile->packedProfile & 0b00001111111100000000000000000000) >> 20);
     ESP_LOGI(ATR_TAG, "unpacked profile is cardselect %" PRId8 ", fact0 %" PRId8 ", fact1 %" PRId8 ", fact2 %" PRId8 ", numPasses %" PRId8 ", team %" PRId8 "",
            profile->cardSelect, profile->fact0, profile->fact1,
            profile->fact2, profile->numPasses, profile->team);

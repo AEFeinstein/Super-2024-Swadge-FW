@@ -273,8 +273,12 @@ static void randomizeFaces(finder_t* myfind)
 }
 static void addNewFace(finder_t* myfind)
 {
-    face_t* curFace = heap_caps_calloc(1, sizeof(face_t), MALLOC_CAP_8BIT);
-    push(&myfind->faceList, (void*)curFace);
+    int curFaces = startingFaces + (myfind->stage * facesPerLevel);
+    if (curFaces < MaxStaticFaces || curFaces < MaxDynamicFaces)
+    {
+        face_t* curFace = heap_caps_calloc(1, sizeof(face_t), MALLOC_CAP_8BIT);
+        push(&myfind->faceList, (void*)curFace);
+    }
 }
 static vec_t faceDance()
 {

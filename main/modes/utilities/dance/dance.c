@@ -176,6 +176,11 @@ void danceEnterMode(void)
 
     danceState = heap_caps_calloc(1, sizeof(danceMode_t), MALLOC_CAP_8BIT);
 
+    // Initialize SwadgePass
+    initSwadgePassReceiver();
+    fillSwadgePassPacket(&danceState->packet);
+    danceState->swadgePassCount = 0;
+
     danceState->dance = initPortableDance(nvsNs);
 
     danceState->blankScreen = false;
@@ -227,11 +232,6 @@ void danceEnterMode(void)
 
     // Add exit to the menu
     addSingleItemToMenu(danceState->menu, str_exit);
-
-    // Initialize SwadgePass
-    initSwadgePassReceiver();
-    fillSwadgePassPacket(&danceState->packet);
-    danceState->swadgePassCount = 0;
 }
 
 /**

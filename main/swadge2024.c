@@ -453,6 +453,9 @@ void app_main(void)
     }
     cSwadgeModeInit = true;
 
+    // Prune SwadgePasses down to size. This prevents running out of memory later
+    pruneSwadgePasses();
+
     // Run the main loop, forever
     while (true)
     {
