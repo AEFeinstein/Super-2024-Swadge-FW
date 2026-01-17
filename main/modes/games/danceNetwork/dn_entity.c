@@ -1673,6 +1673,7 @@ void dn_trySelectTrack(dn_entity_t* self)
                     bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
                     self->destroyFlag                                 = true;
                     bData->tiles[from.y][from.x].unit->paused         = true;
+                    bData->tiles[from.y][from.x].unit->gray           = true;
                     /////////////////////
                     // Make the bullet //
                     /////////////////////
@@ -1801,10 +1802,10 @@ void dn_trySelectTrack(dn_entity_t* self)
 void dn_drawPlayerTurn(dn_entity_t* self)
 {
     // Temporary solution to showing rerolls until LED Matrix works
-    // drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[0]], 5,
-    //                     30 + 100 * (self->gameData->camera.pos.y < 60060), 3, 3);
-    // drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[1]], 257,
-    //                     30 + 100 * (self->gameData->camera.pos.y < 60060), 3, 3);
+    drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[0]], 5,
+                        30 + 100 * (self->gameData->camera.pos.y < 60060), 3, 3);
+    drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[1]], 257,
+                        30 + 100 * (self->gameData->camera.pos.y < 60060), 3, 3);
 
     paletteColor_t col = self->gameData->phase < DN_P2_DANCE_PHASE ? c055 : c550;
     drawCircleQuadrants(41, 41, 41, false, false, true, false, col);
