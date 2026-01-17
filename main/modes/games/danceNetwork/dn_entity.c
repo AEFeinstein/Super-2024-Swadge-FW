@@ -1673,6 +1673,7 @@ void dn_trySelectTrack(dn_entity_t* self)
                     bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
                     self->destroyFlag                                 = true;
                     bData->tiles[from.y][from.x].unit->paused         = true;
+                    bData->tiles[from.y][from.x].unit->gray           = true;
                     /////////////////////
                     // Make the bullet //
                     /////////////////////
