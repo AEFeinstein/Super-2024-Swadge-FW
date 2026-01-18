@@ -283,8 +283,10 @@ static void addNewFace(finder_t* myfind)
 static vec_t faceDance()
 {
     return (vec_t){
-        .x = 75 - (esp_random() % 150),
-        .y = 75 - (esp_random() % 150),
+        .x = (75 - (esp_random() % 150)) | 1, //These numbers cannot be 0
+        .y = (75 - (esp_random() % 150)) | 1, // |1 ensures they be odd, QED not 0
+        // Technically this means faces favor moving to the right, slightly
+        //TODO: balance change this in v2
     };
 }
 static void startNewGame(finder_t* myFind)
