@@ -132,10 +132,18 @@ const trophyData_t findingFacesModeTrophies[] = {
     },
     {
         .title       = "Beginner Zen",
+        .description = "Get to stage 25 in Zen Mode.",
+        .image       = FINDER_TROPHY_ZEN_25_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Medium Zen",
         .description = "Get to stage 50 in Zen Mode.",
         .image       = FINDER_TROPHY_ZEN_50_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1, // For trigger type, set to one
     },
     {
@@ -153,6 +161,24 @@ const trophyData_t findingFacesModeTrophies[] = {
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Almost as good as Raven",
+        .description = "Have more than 48000 score in time attack.",
+        .image       = FINDER_TROPHY_SCORE_RAVEN_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_FINAL,
+        .maxVal      = 1, // For trigger type, set to one
+        .hidden      = true,
+    },
+    {
+        .title       = "Please Leave",
+        .description = "Get to stage 999 in Zen Mode.",
+        .image       = FINDER_TROPHY_ZEN_999_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1, // For trigger type, set to one
+        .hidden      = true,
     },
 };
 
@@ -469,23 +495,35 @@ static void findingMainLoop(int64_t elapsedUs)
                                 {
                                     trophyUpdate(&findingFacesModeTrophies[5], 1, true);
                                 }
+                                if (finder->score >= 48000)
+                                {
+                                    trophyUpdate(&findingFacesModeTrophies[10], 1, true);
+                                }
                             }
                             else
                             {
                                 finder->score++;
                                 // check for zen score trophies
-                                // Zen mode trophies: 50, 69, 100 rounds
-                                if (finder->score >= 50)
+                                // Zen mode trophies: 25, 50, 69, 100 rounds
+                                if (finder->score >= 25)
                                 {
                                     trophyUpdate(&findingFacesModeTrophies[6], 1, true);
                                 }
-                                if (finder->score >= 69)
+                                if (finder->score >= 50)
                                 {
                                     trophyUpdate(&findingFacesModeTrophies[7], 1, true);
                                 }
-                                if (finder->score >= 100)
+                                if (finder->score >= 69)
                                 {
                                     trophyUpdate(&findingFacesModeTrophies[8], 1, true);
+                                }
+                                if (finder->score >= 100)
+                                {
+                                    trophyUpdate(&findingFacesModeTrophies[9], 1, true);
+                                }
+                                if (finder->score >= 999)
+                                {
+                                    trophyUpdate(&findingFacesModeTrophies[11], 1, true);
                                 }
                             }
                             finder->millisInstructing = TimePerInstruction;
