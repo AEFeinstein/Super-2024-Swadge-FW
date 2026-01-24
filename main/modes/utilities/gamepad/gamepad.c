@@ -858,8 +858,8 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
 
         // A list of all the hat directions, in order
         static const uint8_t hatDirs[] = {
-            GAMEPAD_HAT_UP,   GAMEPAD_HAT_UP_RIGHT,  GAMEPAD_HAT_RIGHT, GAMEPAD_HAT_DOWN_RIGHT,
-            GAMEPAD_HAT_DOWN, GAMEPAD_HAT_DOWN_LEFT, GAMEPAD_HAT_LEFT,  GAMEPAD_HAT_UP_LEFT,
+            GAMEPAD_HAT_UP, GAMEPAD_HAT_UP_RIGHT, GAMEPAD_HAT_RIGHT, GAMEPAD_HAT_DOWN_RIGHT,
+            GAMEPAD_HAT_DOWN, GAMEPAD_HAT_DOWN_LEFT, GAMEPAD_HAT_LEFT, GAMEPAD_HAT_UP_LEFT
         };
 
         // For each hat direction
@@ -947,8 +947,8 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
             if (ESP_OK == accelIntegrate() && ESP_OK == accelGetOrientVec(&a_x, &a_y, &a_z))
             {
                 // Values are roughly -256 to 256, so divide, clamp, and save
-                gamepad->gpState.z = -CLAMP((a_x) / 2, -128, 127);
-                gamepad->gpState.rx = CLAMP((a_y) / 2, -128, 127);
+                gamepad->gpState.rx = -CLAMP((a_x) / 2, -128, 127);
+                gamepad->gpState.ry = CLAMP((a_y) / 2, -128, 127);
                 //gamepad->gpState.rz = CLAMP((a_z) / 2, -128, 127); //Nothing to map this to!
             }
 
@@ -1039,7 +1039,7 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
             bitmap[2][0] = btnBrightness;
             bitmap[2][1] = btnBrightness;
 
-            /*switch (gamepad->gpState.hat)
+            switch (gamepad->gpState.hat)
             {
                 case GAMEPAD_HAT_UP:
                 case GAMEPAD_HAT_UP_LEFT:
@@ -1093,7 +1093,7 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
                     // fallthrough
                 default:
                     break;
-            }*/
+            }
 
             // Write and select the bitmap to an unused slot
             ch32v003WriteBitmap(gamepad->bmpSlot, bitmap);
@@ -1301,6 +1301,7 @@ void gamepadGenericButtonCb(buttonEvt_t* evt)
                                   | GAMEPAD_BUTTON_11 | GAMEPAD_BUTTON_10 | GAMEPAD_BUTTON_X | GAMEPAD_BUTTON_C
                                   | GAMEPAD_BUTTON_4 | GAMEPAD_BUTTON_5 | GAMEPAD_BUTTON_TL | GAMEPAD_BUTTON_TR | GAMEPAD_BUTTON_12 | GAMEPAD_BUTTON_13 | GAMEPAD_BUTTON_14 | GAMEPAD_BUTTON_15);
 
+    // Map to XBOX style, not labels
     if (evt->state & PB_A)
     {
         gamepad->gpState.buttons |= GAMEPAD_BUTTON_B;
@@ -1341,49 +1342,39 @@ void gamepadGenericButtonCb(buttonEvt_t* evt)
             gamepad->gpState.hat = GAMEPAD_HAT_CENTERED;
             if (evt->state & PB_UP)
             {
-                /*if (evt->state & PB_RIGHT)
+                if (evt->state & PB_RIGHT)
                 {
                     gamepad->gpState.hat = GAMEPAD_HAT_UP_RIGHT;
-                    gamepad->gpState.buttons |= GAMEPAD_BUTTON_15;
                 }
                 else if (evt->state & PB_LEFT)
                 {
                     gamepad->gpState.hat = GAMEPAD_HAT_UP_LEFT;
-                    gamepad->gpState.buttons |= GAMEPAD_BUTTON_14;
                 }
                 else
-                {*/
+                {
                     gamepad->gpState.hat = GAMEPAD_HAT_UP;
-                    gamepad->gpState.buttons |= GAMEPAD_BUTTON_12;
-                //}
-            }
-            /*else*/ if (evt->state & PB_DOWN)
-            {
-                /*if (evt->state & PB_RIGHT)
+                }
+            } else if (evt->state & PB_DOWN) {
+                if (evt->state & PB_RIGHT)
                 {
                     gamepad->gpState.hat = GAMEPAD_HAT_DOWN_RIGHT;
-                    gamepad->gpState.buttons |= GAMEPAD_BUTTON_15;
                 }
                 else if (evt->state & PB_LEFT)
                 {
                     gamepad->gpState.hat = GAMEPAD_HAT_DOWN_LEFT;
-                    gamepad->gpState.buttons |= GAMEPAD_BUTTON_14;
                 }
                 else
-                {*/
+                {
                     gamepad->gpState.hat = GAMEPAD_HAT_DOWN;
-                    gamepad->gpState.buttons |= GAMEPAD_BUTTON_13;
-                //}
+                }
             }
-            if (evt->state & PB_RIGHT)
+            else if (evt->state & PB_RIGHT)
             {
                 gamepad->gpState.hat = GAMEPAD_HAT_RIGHT;
-                gamepad->gpState.buttons |= GAMEPAD_BUTTON_15;
             }
-            if (evt->state & PB_LEFT)
+            else if (evt->state & PB_LEFT)
             {
                 gamepad->gpState.hat = GAMEPAD_HAT_LEFT;
-                gamepad->gpState.buttons |= GAMEPAD_BUTTON_14;
             }
             break;
         }
@@ -1413,25 +1404,25 @@ void gamepadGenericButtonCb(buttonEvt_t* evt)
         }
         case GAMEPAD_DPAD_R_STICK_SETTING:
         {
-            gamepad->gpState.z = 0;
             gamepad->gpState.rx = 0;
+            gamepad->gpState.ry = 0;
             int32_t intensity   = getGamepadPcDpadStickIntensitySetting();
 
             if (evt->state & PB_UP)
             {
-                gamepad->gpState.rx = -intensity;
+                gamepad->gpState.ry = -intensity;
             }
             if (evt->state & PB_DOWN)
             {
-                gamepad->gpState.rx = intensity;
+                gamepad->gpState.ry = intensity;
             }
             if (evt->state & PB_RIGHT)
             {
-                gamepad->gpState.z = intensity;
+                gamepad->gpState.rx = intensity;
             }
             if (evt->state & PB_LEFT)
             {
-                gamepad->gpState.z = -intensity;
+                gamepad->gpState.rx = -intensity;
             }
             break;
         }
@@ -1547,8 +1538,8 @@ void gamepadNsReportStateToHost(void)
             {
                 if (touched || getGamepadPcTouchStickRecenterSetting())
                 {
-                    gamepad->gpNsState.z = x;
-                    gamepad->gpNsState.rx = y;
+                    gamepad->gpNsState.rx = x;
+                    gamepad->gpNsState.ry = y;
                     //gamepad->gpNsState.rz = z;
                 }
                 break;
@@ -1668,17 +1659,16 @@ void gamepadGenericReportStateToHost(void)
             {
                 if (touched || getGamepadPcTouchStickRecenterSetting())
                 {
-                    gamepad->gpState.z = x;
-                    gamepad->gpState.rx = y;
+                    gamepad->gpState.rx = x;
+                    gamepad->gpState.ry = y;
                     //gamepad->gpState.rx = z;
                 }
                 break;
             }
         }
-
         // Send the state over USB
         tud_hid_gamepad_report(HID_ITF_PROTOCOL_NONE, gamepad->gpState.x, gamepad->gpState.y, gamepad->gpState.z,
-                               gamepad->gpState.rx, gamepad->gpState.ry, gamepad->gpState.rz, 0,
+                               gamepad->gpState.rz, gamepad->gpState.rx, gamepad->gpState.ry, gamepad->gpState.hat,
                                gamepad->gpState.buttons);
     }
 }
