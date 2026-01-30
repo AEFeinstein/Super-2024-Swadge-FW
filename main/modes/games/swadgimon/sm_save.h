@@ -2,24 +2,29 @@
 #define _SM_SAVE_H_
 
 #include <stdint.h>
+
+#include "macros.h"
+
 #include "sm_constants.h"
 #include "sm_dex.h"
 #include "sm_monster.h"
+#include "sm_monster_names.h"
 #include "sm_names.h"
 #include "sm_species_defs.h"
 
+// This comes from partitions.csv, and must be changed in both places simultaneously
+// partitions.csv
+// emulator/src/components/hdw-nvs.c
+#ifndef NVS_PARTITION_SIZE
+#define NVS_PARTITION_SIZE   0x6000
+#endif
+
 #define CURRENT_SAVE_FORMAT 0
 // Maximum number of bytes per NVS blob. From ESP-IDF documentation
-#define NVS_BLOB_MAX_SIZE 1984
+//#define NVS_BLOB_MAX_SIZE 1984
+#define NVS_BLOB_MAX_SIZE MIN(508000, (uint32_t) (NVS_PARTITION_SIZE * 0.976) - 4000)
 // Number of digits to use for box IDs in NVS keys. Includes null character
 #define INDEXED_KEY_SUFFIX_LEN 4
-
-typedef struct {
-    // Do not change the order or size of members in this struct
-    uint8_t saveFormat;
-    uint8_t numMonsters;
-    uint16_t monsterLength;
-} monster_box_header_t;
 
 typedef struct {
     uint32_t trainerId;
@@ -38,12 +43,12 @@ typedef struct {
 } save_data_fixed_t;
 
 typedef struct {
-    monster_instance_t party[PARTY_SIZE];
-    monster_instance_party_data_t partyExtraData[PARTY_SIZE];
-    
     monster_box_header_t* boxes[NUM_MONSTER_BOXES];
     
-    monster_instance_t daycare[NUM_MONSTERS_IN_DAYCARE];
+    monster_box_header_t* party;
+    monster_box_header_t* daycare;
+    
+    monster_instance_party_data_t partyExtraData[PARTY_SIZE];
     
     dex_species_t dex[NUM_SPECIES_INCL_NULL];
 } save_data_loaded_t;
@@ -51,24 +56,19 @@ typedef struct {
 void initSaveData(save_data_fixed_t* saveData);
 void loadSaveData(void);
 void saveSaveData(void);
-static monster_box_header_t* initMonsterBoxVarSize(const uint16_t monsterLength, const uint8_t numMonsters, bool doBlobSizeCheck);
-monster_box_header_t* initMonsterBox(const uint8_t numMonsters);
-monster_box_header_t* initMonsterBoxPacked(const uint8_t numMonsters);
-void unpackMonster(monster_instance_t* dest, monster_instance_packed_t* src);
-void packMonster(monster_instance_packed_t* dest, monster_instance_t* src);
+monster_box_header_t* initMonsterBox(uint8_t numMonsters);
+monster_box_header_t* initMonsterBoxPacked(uint8_t numMonsters);
+void unpackMonster(monster_instance_t* dest, const monster_instance_packed_t* src);
+void packMonster(monster_instance_packed_t* dest, const monster_instance_t* src);
 bool loadMonsterBox(const char* keySuffix, monster_box_header_t** monsterBoxWithHeader);
-bool saveMonsterBox(const char* keySuffix, monster_box_header_t* monsterBoxWithHeader);
+bool saveMonsterBox(const char* keySuffix, const monster_box_header_t* monsterBoxWithHeader);
 bool loadMonsterBoxByNum(uint8_t boxId, monster_box_header_t** monsterBoxWithHeader);
-bool saveMonsterBoxByNum(uint8_t boxId, monster_box_header_t* monsterBoxWithHeader);
+bool saveMonsterBoxByNum(uint8_t boxId, const monster_box_header_t* monsterBoxWithHeader);
 bool checkMonsterBoxIntegrity(monster_box_header_t* monsterBoxWithHeader, names_header_t* trainerNamesWithHeader, names_header_t* monsterNamesWithHeader, char** textOut);
-static names_header_t* initNames(const uint8_t nameLength, const uint16_t numNames);
-static bool loadNames(const char* key, names_header_t** namesWithHeader, uint8_t maxNameLength);
-static bool saveNames(const char* key, names_header_t* namesWithHeader);
 names_header_t* initTrainerNames(void);
 bool loadTrainerNames(names_header_t** trainerNamesWithHeader);
-bool saveTrainerNames(names_header_t* trainerNamesWithHeader);
-names_header_t* initMonsterNames(void);
-bool loadMonsterNames(names_header_t** monsterNames);
-bool saveMonsterNames(names_header_t* monsterNamesWithHeader);
+bool saveTrainerNames(const names_header_t* trainerNamesWithHeader);
+bool loadMonsterNames(names_header_t** monsterNamesWithHeader);
+bool saveMonsterNames(const names_header_t* monsterNamesWithHeader);
 
 #endif

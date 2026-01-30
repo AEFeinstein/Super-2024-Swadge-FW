@@ -10,5 +10,7 @@ typedef struct {
     uint16_t numNames;
 } names_header_t;
 
+names_header_t* initNames(uint8_t nameLength, uint16_t numNames);
+
 #endif
 

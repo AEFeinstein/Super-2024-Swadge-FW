@@ -7,6 +7,7 @@
 #include "unique_array.h"
 
 #include "sm_constants.h"
+#include "sm_dex.h"
 #include "sm_names.h"
 
 // Definitions of effort values yielded to victor upon defeating monsters of given species, and data in RAM for: a specific monster's inherent "from birth" stats, a specific monster's effort or "training" stats, and number of stat boosting items used on a monster
@@ -217,7 +218,16 @@ typedef struct {
     uint8_t level;
 } monster_instance_cache_data_t;
 
+typedef struct {
+    // Do not change the order or size of members in this struct
+    uint8_t saveFormat;
+    uint8_t numMonsters;
+    uint16_t monsterLength;
+} monster_box_header_t;
+
+monster_instance_t* monsterBoxGet(const monster_box_header_t* monsterBoxWithHeader, uint8_t idx);
 void generateWildMonsterBySpecies(monster_instance_t* monsterOut, monster_instance_party_data_t* partyDataOut, monster_final_stats_t* finalStatsOut, uint8_t speciesId, uint8_t levelMin, uint8_t levelMax);
+const char* getDisplayName(const monster_instance_t* monster, const names_header_t* monsterNamesWithHeader);
 void getFinalStats(monster_final_stats_t* finalStats, const monster_instance_t* monster);
 uint16_t getFinalStatHp(uint16_t baseStat, uint8_t iv, uint8_t ev, uint8_t statUp, uint8_t level);
 uint16_t getFinalStatNonHp(uint16_t baseStat, uint8_t iv, uint8_t ev, uint8_t statUp, uint8_t level);
@@ -225,7 +235,11 @@ uint32_t getTotalExpToLevel(uint8_t targetLevel, exp_group_t expGroup);
 uint32_t getExpToNextLevel(uint8_t currentLevel, exp_group_t expGroup);
 void applyExpToMonster(monster_instance_t* monster, monster_instance_party_data_t* partyState, monster_final_stats_t* finalStats, uint32_t expToAdd);
 void applyExpToParty(monster_instance_t party[], monster_instance_party_data_t partyState[], monster_final_stats_t finalStats[], uint32_t expToAdd[]);
-void applyExpToPartyByStrategy(monster_instance_t party[], monster_instance_party_data_t partyState[], monster_final_stats_t finalStats[], uniq_arr_t* monstersParticipated, uint32_t exp, exp_strategy_t strategy);
-void releaseMonster(monster_instance_t* monster, names_header_t* monsterNames, names_header_t* trainerNames);
+void applyExpToPartyByStrategy(monster_instance_t party[], monster_instance_party_data_t partyState[], monster_final_stats_t finalStats[], const uniq_arr_t* monstersParticipated, uint32_t exp, exp_strategy_t strategy);
+monster_instance_t* findEmptyMonsterSlot(monster_instance_t* party, monster_box_header_t* monsterBoxesWithHeaders[], uint8_t startBox);
+bool catchMonster(const monster_instance_t* monster, monster_instance_t* party, monster_box_header_t* monsterBoxesWithHeaders[], dex_species_t* dex, uint8_t ballUsed);
+bool tryCatchMonster(const monster_instance_t* monster, const monster_instance_party_data_t* monsterPartyState, const monster_final_stats_t* monsterFinalStats, uint8_t ballUsed);
+bool tryRunAway(monster_instance_t* playerMonster, monster_final_stats_t* playerMonsterFinalStats, monster_instance_t* wildMonster, monster_final_stats_t* wildMonsterFinalStats, uint8_t attemptNum);
+bool releaseMonster(monster_instance_t* monster, names_header_t* monsterNamesWithHeader, names_header_t* trainerNamesWithHeader);
 
 #endif

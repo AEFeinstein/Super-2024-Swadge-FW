@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <math.h>
 #include <string.h>
 
@@ -5,7 +6,27 @@
 #include "esp_random.h"
 
 #include "sm_monster.h"
+#include "sm_monster_names.h"
 #include "sm_species_defs.h"
+
+
+
+// When the player loses a battle, this is multiplied by the level of the player's highest-level party monster to determine how much money they lose
+static uint16_t numBadgesToBasePayout[] = {8, 24, 48, 80, 120};
+
+
+
+// Return a pointer to the monster at the given index, or NULL if the index is past the bounds of the array
+// Runs in O(1)
+monster_instance_t* monsterBoxGet(const monster_box_header_t* monsterBoxWithHeader, uint8_t idx) {
+    assert(monsterBoxWithHeader);
+    
+    if(idx >= monsterBoxWithHeader->numMonsters) {
+        return NULL;
+    }
+    
+    return &((monster_instance_t*) &monsterBoxWithHeader[1])[idx * monsterBoxWithHeader->monsterLength];
+}
 
 void generateWildMonsterBySpecies(monster_instance_t* monsterOut, monster_instance_party_data_t* partyDataOut, monster_final_stats_t* finalStatsOut, uint8_t speciesId, uint8_t levelMin, uint8_t levelMax) {
     const monster_t* species = &speciesDefs[speciesId];
@@ -51,6 +72,15 @@ void generateWildMonsterBySpecies(monster_instance_t* monsterOut, monster_instan
     
     partyDataOut->curHp = finalStatsOut->hp;
     partyDataOut->statusCondition = STATUS_NORMAL;
+}
+
+const char* getDisplayName(const monster_instance_t* monster, const names_header_t* monsterNamesWithHeader) {
+    if(monster->nicknameIdx > 0) {
+        return monsterNamesGet(monsterNamesWithHeader, monster->nicknameIdx);
+    }
+    else {
+        return speciesDefs[monster->monsterId].name;
+    }
 }
 
 // Calculate all effective stats from their individual stat components
@@ -150,7 +180,7 @@ void applyExpToParty(monster_instance_t party[], monster_instance_party_data_t p
 
 // Allocate and apply given amount of exp to the monsters in the party, using the given distribution strategy.
 // Any excess exp is allocated using fallback strategies, but lost if all monsters are max level
-void applyExpToPartyByStrategy(monster_instance_t party[], monster_instance_party_data_t partyState[], monster_final_stats_t finalStats[], uniq_arr_t* monstersParticipated, uint32_t exp, exp_strategy_t strategy) {
+void applyExpToPartyByStrategy(monster_instance_t party[], monster_instance_party_data_t partyState[], monster_final_stats_t finalStats[], const uniq_arr_t* monstersParticipated, uint32_t exp, exp_strategy_t strategy) {
     uniq_arr_t monstersToGetExp;
     uniqArrInit(&monstersToGetExp, PARTY_SIZE, true);
     
@@ -297,8 +327,151 @@ void applyExpToPartyByStrategy(monster_instance_t party[], monster_instance_part
     uniqArrFreeBuffer(&monstersParticipatedToGetExp);
 }
 
-void releaseMonster(monster_instance_t* monster, names_header_t* monsterNames, names_header_t* trainerNames) {
-    // TODO: delete monster name
-    // TODO: decrease reference to trainer name
-    memset(monster, 0, sizeof(monster_instance_t));
+monster_instance_t* findEmptyMonsterSlot(monster_instance_t* party, monster_box_header_t* monsterBoxesWithHeaders[], uint8_t startBox) {
+    monster_instance_t emptyMonster = {0};
+    
+    // First, try to find an empty slot in the party
+    for(int i = 0; i < PARTY_SIZE; i++) {
+        
+        if(memcmp(&party[i], &emptyMonster, sizeof(monster_instance_t)) == 0) {
+            return &party[i];
+        }
+    }
+    
+    // If the party is full, try to find a slot in the boxes, starting in the box the user viewed most recently, and wrapping around
+    for(int i = 0; i < NUM_MONSTER_BOXES; i++) {
+        uint8_t boxIdx = (startBox + i) % NUM_MONSTER_BOXES;
+        monster_box_header_t* monsterBoxWithHeader = monsterBoxesWithHeaders[boxIdx];
+        
+        for(int monsterIdx = 0; monsterIdx < monsterBoxWithHeader->numMonsters; monsterIdx++) {
+            monster_instance_t* monster = monsterBoxGet(monsterBoxWithHeader, monsterIdx);
+            
+            if(monster == NULL) {
+                // TODO: what should the error behavior be here?
+                continue;
+            }
+            
+            if(memcmp(monster, &emptyMonster, sizeof(monster_instance_t)) == 0) {
+                return monster;
+            }
+        }
+    }
+    
+    // No empty slot was found
+    return NULL;
 }
+
+bool catchMonster(const monster_instance_t* monster, monster_instance_t* party, monster_box_header_t* monsterBoxesWithHeaders[], dex_species_t* dex, uint8_t ballUsed) {
+    monster_instance_t* dest = findEmptyMonsterSlot(party, monsterBoxesWithHeaders, 0 /*TODO: load last box index used from save data*/);
+    
+    if(dest == NULL) {
+        return false;
+    }
+    
+    memcpy(dest, monster, sizeof(monster_instance_t));
+    
+    // TODO: input nickname
+    
+    dest->trainerNameIdx = 0;
+    // TODO: save ball used
+    
+    if(!dex[dest->monsterId].caught) {
+        dex[dest->monsterId].caught = true;
+        
+        // TODO: show dex screen for this monster
+    }
+    
+    return true;
+}
+
+bool tryCatchMonster(const monster_instance_t* monster, const monster_instance_party_data_t* monsterPartyState, const monster_final_stats_t* monsterFinalStats, uint8_t ballUsed) {
+    // TODO: get the ball bonus for real
+    double ballBonus = 1.0;
+    
+    double statusModifier;
+    switch(monsterPartyState->statusCondition) {
+        case STATUS_SLEEP:
+        case STATUS_FREEZE:
+        {
+            statusModifier = 2.0;
+            break;
+        }
+        case STATUS_BURN:
+        case STATUS_PARALYZE:
+        case STATUS_POISON:
+        {
+            statusModifier = 1.5;
+            break;
+        }
+        case STATUS_NORMAL:
+        default:
+        {
+            statusModifier = 1.0;
+            break;
+        }
+    }
+    
+    uint32_t modifiedCatchRate = (3 * monsterFinalStats->hp - 2 * monsterPartyState->curHp) / (double) (3 * monsterFinalStats->hp) * speciesDefs[monster->monsterId].catchRate * ballBonus * statusModifier;
+    
+    if(modifiedCatchRate > 255) {
+        return true;
+    }
+    
+    uint32_t shakeChance = (uint32_t) round(1048560/sqrt(sqrt(16711680.0/modifiedCatchRate)));
+    
+    for(int i = 0; i < 4; i++) {
+        if(esp_random() % 65536 >= shakeChance) {
+            return false;
+        }
+        
+        // TODO: render shake
+    }
+    
+    return true;
+}
+
+bool tryRunAway(monster_instance_t* playerMonster, monster_final_stats_t* playerMonsterFinalStats, monster_instance_t* wildMonster, monster_final_stats_t* wildMonsterFinalStats, uint8_t attemptNum) {
+    // TODO: abilities that guarantee success
+    
+    return esp_random() % 255 < playerMonsterFinalStats->speed * 128 / wildMonsterFinalStats->speed + 30 * attemptNum;
+}
+
+// Release a monster
+bool releaseMonster(monster_instance_t* monster, names_header_t* monsterNamesWithHeader, names_header_t* trainerNamesWithHeader) {
+    // Delete monster name, if it exists
+    if(monster->nicknameIdx != 0 && !monsterNamesRemoveIdx(monsterNamesWithHeader, monster->nicknameIdx)) {
+        return false;
+    }
+    
+    // TODO: decrease reference to trainer name
+    
+    // Delete monster
+    memset(monster, 0, sizeof(monster_instance_t));
+    
+    // The music fades, the curtains fall,
+    // your quest comes to its end.
+    // We laughed, we cried, but through it all,
+    // I'm glad I called you "friend."
+    
+    return true;
+    
+    // The music swells across the hall, your quests have reached their end. something something and through it all, I'm glad I called you "friend."
+    // The badges turn and crowds move on, Past booths of neon light. But though our battle-time is gone, Go find your spark tonight.
+    // Amidst the masks and painted steel, Where fans and legends meet. I hope you find a bond that’s real, Along the city street.
+    // The music swells across the hall, The speakers start to hum. I’ve loved our time, through it all, But now your time has come.
+    // The speakers thrum beneath our feet, The crowd begins to roar. I leave you where the rhythms meet, To seek out something more.
+    // Amidst the masks and neon glare, We’ve reached our journey's end. I release you to the vibrant air, My pixelated friend.
+}
+
+// TODO: find a better home for this function
+uint32_t moneyLostOnBlackout(const monster_box_header_t* party, uint32_t curMoney, uint8_t numBadgesOwned) {
+    uint8_t maxLevel = 0;
+    
+    for(uint8_t i = 0; i < PARTY_SIZE; i++) {
+        maxLevel = MAX(maxLevel, monsterBoxGet(party, i)->level);
+    }
+    
+    // Cap the money lost to a fixed percentage
+    return MIN(maxLevel * numBadgesToBasePayout[numBadgesOwned], round(curMoney * MAX_MONEY_LOST_RATIO));
+}
+

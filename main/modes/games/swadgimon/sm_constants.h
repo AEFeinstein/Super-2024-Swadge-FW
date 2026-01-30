@@ -43,6 +43,10 @@
 #define SHINY_DIVISOR 1024
 
 #define STARTING_MONEY 2000
+// The maximum percentage of their money the player can lose at once, when losing a battle.
+// e.g. if set to 0.33, the player can lose at most 33% of their money in a single battle.
+// The actual amount lost will usually be lower, and is controlled in moneyLostOnBlackout()
+#define MAX_MONEY_LOST_RATIO 0.2
 
 #define MAX_ERROR_LEN 128
 

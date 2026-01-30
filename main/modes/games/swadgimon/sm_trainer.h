@@ -10,7 +10,7 @@
 struct {
     const char* name;
     const bool hasCustomMoves;
-    const monster_trainer_instance_t const monsters[PARTY_SIZE];
+    const monster_trainer_instance_t monsters[PARTY_SIZE];
 } trainer_t;
 
 #endif
