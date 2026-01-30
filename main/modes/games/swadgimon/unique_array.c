@@ -50,7 +50,7 @@ void uniqArrReset(uniq_arr_t* uniqArr) {
 
 // Returns the number of elements currently stored
 // Runs in O(1)
-unsigned int uniqArrLength(uniq_arr_t* uniqArr) {
+unsigned int uniqArrLength(const uniq_arr_t* uniqArr) {
     assert(uniqArr);
     
     return uniqArr->lengthInUse;
@@ -58,7 +58,7 @@ unsigned int uniqArrLength(uniq_arr_t* uniqArr) {
 
 // Returns the total number of elements that can be stored
 // Runs in O(1)
-unsigned int uniqArrCapacity(uniq_arr_t* uniqArr) {
+unsigned int uniqArrCapacity(const uniq_arr_t* uniqArr) {
     assert(uniqArr);
     
     return uniqArr->capacity;
@@ -81,7 +81,7 @@ bool uniqArrPut(uniq_arr_t* uniqArr, uint8_t data) {
 // Returns true if the index is within used bounds of the array, false otherwise.
 // Sets dataOut to the value of the element at the given index, if it exists. Otherwise, does not change dataOut.
 // Runs in O(1)
-bool uniqArrGet(uniq_arr_t* uniqArr, uint8_t* dataOut, unsigned int idx) {
+bool uniqArrGet(const uniq_arr_t* uniqArr, uint8_t* dataOut, unsigned int idx) {
     assert(uniqArr && uniqArr->buffer && dataOut);
     
     if(idx >= uniqArr->lengthInUse) {
@@ -95,7 +95,7 @@ bool uniqArrGet(uniq_arr_t* uniqArr, uint8_t* dataOut, unsigned int idx) {
 // Returns true if the given data exists in the array, false otherwise.
 // Sets idxOut to the index of the data, if it exists. Otherwise, does not change idxOut.
 // Runs in O(n)
-bool uniqArrSearch(uniq_arr_t* uniqArr, unsigned int* idxOut, uint8_t data) {
+bool uniqArrSearch(const uniq_arr_t* uniqArr, unsigned int* idxOut, uint8_t data) {
     assert(uniqArr && uniqArr->buffer);
     
     // Search the buffer for the given data
@@ -149,7 +149,7 @@ bool uniqArrRemove(uniq_arr_t* uniqArr, uint8_t data) {
 }
 
 // Runs in O(n^2)
-bool uniqArrIntersection(uniq_arr_t* uniqArr1Dest, uniq_arr_t* uniqArr2) {
+bool uniqArrIntersection(uniq_arr_t* uniqArr1Dest, const uniq_arr_t* uniqArr2) {
     assert(uniqArr1Dest && uniqArr2);
     
     for(int i = 0; i < uniqArr1Dest->lengthInUse; i++) {
@@ -169,7 +169,7 @@ bool uniqArrIntersection(uniq_arr_t* uniqArr1Dest, uniq_arr_t* uniqArr2) {
 }
 
 // Runs in O(n^2)
-bool uniqArrUnion(uniq_arr_t* uniqArr1Dest, uniq_arr_t* uniqArr2) {
+bool uniqArrUnion(uniq_arr_t* uniqArr1Dest, const uniq_arr_t* uniqArr2) {
     assert(uniqArr1Dest && uniqArr2);
     
     for(int i = 0; i < uniqArr2->lengthInUse; i++) {
@@ -186,7 +186,7 @@ bool uniqArrUnion(uniq_arr_t* uniqArr1Dest, uniq_arr_t* uniqArr2) {
 }
 
 // Runs in O(n^2)
-bool uniqArrDifference(uniq_arr_t* uniqArr1Dest, uniq_arr_t* uniqArr2) {
+bool uniqArrDifference(uniq_arr_t* uniqArr1Dest, const uniq_arr_t* uniqArr2) {
     assert(uniqArr1Dest && uniqArr2);
     
     for(int i = 0; i < uniqArr2->lengthInUse; i++) {
@@ -204,7 +204,7 @@ bool uniqArrDifference(uniq_arr_t* uniqArr1Dest, uniq_arr_t* uniqArr2) {
 // Runs in O(n)
 // The dest capacity must first be set to 0, or uniqArrInit must first be called on the dest array
 // Will reallocate the dest array's buffer if it's too small or if it's in the opposite RAM type from the given spiRam bool
-void uniqArrCopy(uniq_arr_t* dest, uniq_arr_t* src, bool spiRam) {
+void uniqArrCopy(uniq_arr_t* dest, const uniq_arr_t* src, bool spiRam) {
     assert(dest && src);
     
     if(dest->capacity < src->lengthInUse || dest->spiRam != spiRam) {
@@ -219,14 +219,14 @@ void uniqArrCopy(uniq_arr_t* dest, uniq_arr_t* src, bool spiRam) {
 }
 
 // Runs in O(1)
-bool uniqArrEmpty(uniq_arr_t* uniqArr) {
+bool uniqArrEmpty(const uniq_arr_t* uniqArr) {
     assert(uniqArr);
     
     return uniqArr->lengthInUse == 0;
 }
 
 // Runs in O(1)
-bool uniqArrFull(uniq_arr_t* uniqArr) {
+bool uniqArrFull(const uniq_arr_t* uniqArr) {
     assert(uniqArr);
     
     return uniqArr->lengthInUse == uniqArr->capacity;
