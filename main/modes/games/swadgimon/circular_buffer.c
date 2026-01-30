@@ -24,7 +24,8 @@ static void circBufAdvanceHead(circ_buf_t* circBuf) {
 }
 
 void circBufInit(circ_buf_t* circBuf, unsigned int capacity, unsigned int elementLength, bool spiRam) {
-    circBuf->buffer = heap_caps_malloc(capacity * elementLength, spiRam ? MALLOC_CAP_SPIRAM : 0);
+    // Allocate 1 more element than requested, to allow detection of empty/full state using head/tail pointers, rather than using a separate variable. This consumes more space, but is more thread-safe when interrupts are used
+    circBuf->buffer = heap_caps_malloc((capacity + 1) * elementLength, spiRam ? MALLOC_CAP_SPIRAM : 0);
     
     circBuf->capacity = capacity;
     circBuf->elementLength = elementLength;
@@ -52,7 +53,7 @@ void circBufReset(circ_buf_t* circBuf) {
 }
 
 // Returns the number of elements currently stored
-unsigned int circBufLength(circ_buf_t* circBuf) {
+unsigned int circBufLength(const circ_buf_t* circBuf) {
     assert(circBuf);
     
     unsigned int length = circBuf->capacity;
@@ -69,38 +70,38 @@ unsigned int circBufLength(circ_buf_t* circBuf) {
 }
 
 // Returns the total number of elements that can be stored
-unsigned int circBufCapacity(circ_buf_t* circBuf) {
+unsigned int circBufCapacity(const circ_buf_t* circBuf) {
     assert(circBuf);
     
     return circBuf->capacity;
 }
 
 // Returns the size (in bytes) of each element
-unsigned int circBufElementLength(circ_buf_t* circBuf) {
+unsigned int circBufElementLength(const circ_buf_t* circBuf) {
     assert(circBuf);
     
     return circBuf->elementLength;
 }
 
 // Adds an element to the end of the buffer, overwriting the oldest element if the buffer is full.
-// dataIn must be at least as long as the buffer's elementLength.
-void circBufPut(circ_buf_t* circBuf, void* dataIn) {
-    assert(circBuf && circBuf->buffer && dataIn);
+// data must be at least as long as the buffer's elementLength.
+void circBufPut(circ_buf_t* circBuf, const void* data) {
+    assert(circBuf && circBuf->buffer && data);
     
-    memcpy(&circBuf[circBuf->head * circBuf->elementLength], dataIn, circBuf->elementLength);
+    memcpy(&circBuf[circBuf->head * circBuf->elementLength], data, circBuf->elementLength);
     circBufAdvanceHead(circBuf);
 }
 
 // Adds an element to the end of the buffer only if the buffer is not full.
-// dataIn must be at least as long as the buffer's elementLength.
-bool circBufTryPut(circ_buf_t* circBuf, void* dataIn) {
-    assert(circBuf && circBuf->buffer && dataIn);
+// data must be at least as long as the buffer's elementLength.
+bool circBufTryPut(circ_buf_t* circBuf, const void* data) {
+    assert(circBuf && circBuf->buffer && data);
     
     if(circBufFull(circBuf)) {
         return false;
     }
     
-    memcpy(&circBuf[circBuf->head * circBuf->elementLength], dataIn, circBuf->elementLength);
+    memcpy(&circBuf[circBuf->head * circBuf->elementLength], data, circBuf->elementLength);
     circBufAdvanceHead(circBuf);
     return true;
 }
@@ -119,7 +120,7 @@ bool circBufGet(circ_buf_t* circBuf, void* dataOut) {
     return true;
 }
 
-bool circBufPeek(circ_buf_t* circBuf, void* dataOut, unsigned int index) {
+bool circBufPeek(const circ_buf_t* circBuf, void* dataOut, unsigned int index) {
     assert(circBuf && circBuf->buffer && dataOut);
     
     if(circBufEmpty(circBuf) || index >= circBufLength(circBuf)) {
@@ -132,13 +133,13 @@ bool circBufPeek(circ_buf_t* circBuf, void* dataOut, unsigned int index) {
     return true;
 }
 
-bool circBufEmpty(circ_buf_t* circBuf) {
+bool circBufEmpty(const circ_buf_t* circBuf) {
     assert(circBuf);
     
     return circBuf->head == circBuf->tail;
 }
 
-bool circBufFull(circ_buf_t* circBuf) {
+bool circBufFull(const circ_buf_t* circBuf) {
     assert(circBuf);
     
     return ((circBuf->head + 1) % circBuf->capacity) == circBuf->tail;

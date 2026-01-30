@@ -15,14 +15,14 @@ typedef struct
 void circBufInit(circ_buf_t* circBuf, unsigned int capacity, unsigned int elementLength, bool spiRam);
 void circBufFreeBuffer(circ_buf_t* circBuf);
 void circBufReset(circ_buf_t* circBuf);
-unsigned int circBufLength(circ_buf_t* circBuf);
-unsigned int circBufCapacity(circ_buf_t* circBuf);
-unsigned int circBufElementLength(circ_buf_t* circBuf);
-void circBufPut(circ_buf_t* circBuf, void* dataIn);
-bool circBufTryPut(circ_buf_t* circBuf, void* dataIn);
+unsigned int circBufLength(const circ_buf_t* circBuf);
+unsigned int circBufCapacity(const circ_buf_t* circBuf);
+unsigned int circBufElementLength(const circ_buf_t* circBuf);
+void circBufPut(circ_buf_t* circBuf, const void* data);
+bool circBufTryPut(circ_buf_t* circBuf, const void* data);
 bool circBufGet(circ_buf_t* circBuf, void* dataOut);
-bool circBufPeek(circ_buf_t* circBuf, void* dataOut, unsigned int index);
-bool circBufEmpty(circ_buf_t* circBuf);
-bool circBufFull(circ_buf_t* circBuf);
+bool circBufPeek(const circ_buf_t* circBuf, void* dataOut, unsigned int index);
+bool circBufEmpty(const circ_buf_t* circBuf);
+bool circBufFull(const circ_buf_t* circBuf);
 
 #endif
