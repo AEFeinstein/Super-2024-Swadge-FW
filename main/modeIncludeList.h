@@ -40,6 +40,7 @@
 #include "danceNetwork.h"
 #include "factoryTest.h"
 #include "faceFinder.h"
+#include "formulaMag.h"
 #include "gamepad.h"
 #include "introMode.h"
 #include "jukebox.h"
