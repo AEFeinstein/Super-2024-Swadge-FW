@@ -93,7 +93,7 @@ bool updateHighScores(highScores_t* hs, const char* nvsNamespace, score_t newSco
 
     if (changed)
     {
-        writeNamespaceNvsBlob(nvsNamespace, NVS_KEY_HIGH_SCORES, hs->highScores, sizeof(hs->highScores));
+        writeNamespaceNvsBlob(nvsNamespace, NVS_KEY_HIGH_SCORES, hs->highScores, hs->highScoreCount * sizeof(score_t));
     }
 
     return changed;
@@ -127,7 +127,7 @@ void saveHighScoresFromSwadgePass(highScores_t* hs, const char* nvsNamespace, li
         node = swadgePasses.first;
         while (node)
         {
-            setPacketUsedByMode((swadgePassData_t*)node->val, mode, true);
+            setPacketUsedByMode(node->val, mode, true);
             node = node->next;
         }
 
