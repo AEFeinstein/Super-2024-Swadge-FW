@@ -1447,19 +1447,17 @@ void gamepadNsReportStateToHost(void)
         touched                     = getTouchJoystick(&phi, &r, &intensity);
         gamepadTouch_t touchSetting = getGamepadNsTouchSetting();
 
-        int32_t x, y, z;
+        int32_t x, y;
         if (touched)
         {
             getTouchCartesian(phi, r, &x, &y);
             x = (255 * x) / 1024;
             y = (-255 * y) / 1024;
-            z = 0;
         }
         else
         {
             x = 128;
             y = 128;
-            z = 0;
         }
 
         switch (touchSetting)
@@ -1532,7 +1530,6 @@ void gamepadNsReportStateToHost(void)
                 {
                     gamepad->gpNsState.x = x;
                     gamepad->gpNsState.y = y;
-                    // gamepad->gpNsState.z = z;
                 }
                 break;
             }
@@ -1542,7 +1539,6 @@ void gamepadNsReportStateToHost(void)
                 {
                     gamepad->gpNsState.rx = x;
                     gamepad->gpNsState.ry = y;
-                    // gamepad->gpNsState.rz = z;
                 }
                 break;
             }
@@ -1566,20 +1562,17 @@ void gamepadGenericReportStateToHost(void)
         int32_t phi, r, intensity;
         touched = getTouchJoystick(&phi, &r, &intensity);
 
-        int32_t x, y, z;
+        int32_t x, y;
         if (touched)
         {
             getTouchCartesian(phi, r, &x, &y);
             x = (255 * x) / 1024 - 128;
             y = (-255 * y) / 1024 - 128;
-            // gamepad->gpState.z = (127 * (phi - 180)) / 360;
-            z = 0;
         }
         else
         {
             x = 0;
             y = 0;
-            z = 0;
         }
 
         gamepadTouch_t touchSetting = getGamepadPcTouchSetting();
@@ -1653,7 +1646,6 @@ void gamepadGenericReportStateToHost(void)
                 {
                     gamepad->gpState.x = x;
                     gamepad->gpState.y = y;
-                    // gamepad->gpState.z = z;
                 }
                 break;
             }
@@ -1663,7 +1655,6 @@ void gamepadGenericReportStateToHost(void)
                 {
                     gamepad->gpState.rx = x;
                     gamepad->gpState.ry = y;
-                    // gamepad->gpState.rx = z;
                 }
                 break;
             }
