@@ -44,6 +44,7 @@
 #include "introMode.h"
 #include "jukebox.h"
 #include "keebTest.h"
+#include "lockpick.h"
 #include "mainMenu.h"
 #include "megaPulseEx.h"
 #include "mode_ch32v003test.h"
