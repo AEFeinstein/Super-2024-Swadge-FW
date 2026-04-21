@@ -70,8 +70,7 @@ typedef struct
 {
     vec_t touchpad;
     uint16_t buttonState;
-    /// Number from 1-4 for low-high. 0 means none pressed.
-    uint8_t octavePressed;
+    int32_t intensity;
 
     int32_t showNote;
     int64_t noteMessageTimeUs;
@@ -126,15 +125,14 @@ static const int32_t noteFreqs[] = {87, 93, 98, 104, 110, 117, 123, 131, 139, 14
 #define STT_MIN_HZ noteFreqs[0]
 #define STT_MAX_HZ noteFreqs[ARRAY_SIZE(noteFreqs) - 1]
 
-#define STT_MIN_VOLUME 10
-#define STT_MAX_VOLUME 255
+#define STT_MIN_VOLUME    10
+#define STT_MAX_VOLUME    255
+#define STT_MAX_INTENSITY 75000
 
 /// Time to lerp pitch from (100 - PITCH_ATTACK_BEND_PCT)% to target pitch at button press
 #define PITCH_LERP_US 200000
 /// Percentage of the pitch to lerp linearly over PITCH_LERP_US at button press
-#define PITCH_ATTACK_BEND_PCT 15
-/// Time to lerp volume from 0 to target volume at button press
-#define VOLUME_LERP_US 100000
+#define PITCH_ATTACK_BEND_PCT 0
 
 #define EYES_SLOT_BLINK   3
 #define EYES_SLOT_DEFAULT 4
@@ -158,7 +156,7 @@ static void sttEnterMode(void)
     stt->touchpad.x = 512;
     stt->touchpad.y = 512;
     // Prevent mouth from animating closed at mode launch
-    stt->noteStateElapsedUs = VOLUME_LERP_US;
+    stt->noteStateElapsedUs = 0;
     // Prevent immediate blink at mode launch
     stt->blinkInProgress = true;
 
@@ -216,27 +214,21 @@ static void sttMainLoop(int64_t elapsedUs)
         }
     }
 
-    uint8_t octavePressed = 0;
-    if (stt->buttonState & PB_DOWN)
+    int32_t angle, radius, intensity;
+    bool touchpadPressed = getTouchJoystick(&angle, &radius, &intensity);
+    if (touchpadPressed)
     {
-        octavePressed = 1;
+        getTouchCartesianSquircle(angle, radius, &stt->touchpad.x, &stt->touchpad.y);
+        intensity = MIN(intensity, STT_MAX_INTENSITY);
     }
-    else if (stt->buttonState & PB_LEFT)
+    else
     {
-        octavePressed = 2;
-    }
-    else if (stt->buttonState & PB_RIGHT)
-    {
-        octavePressed = 3;
-    }
-    else if (stt->buttonState & PB_UP)
-    {
-        octavePressed = 4;
+        intensity = 0;
     }
 
-    if (octavePressed != stt->octavePressed)
+    if ((intensity == 0 && stt->intensity != 0) || (intensity != 0 && stt->intensity == 0))
     {
-        if (octavePressed != 0)
+        if (intensity > 0)
         {
             trophyUpdate(&sttTrophies[0], 1, true);
         }
@@ -257,11 +249,11 @@ static void sttMainLoop(int64_t elapsedUs)
         }
 
         stt->noteStateElapsedUs = 0;
-        stt->octavePressed      = octavePressed;
-        ch32v003SelectBitmap(EYES_SLOT_OCTAVES + octavePressed);
+        ch32v003SelectBitmap(EYES_SLOT_OCTAVES + 3);
     }
+    stt->intensity = intensity;
 
-    if (stt->octavePressed == 0)
+    if (stt->intensity == 0)
     {
         stt->blinkTimerUs -= elapsedUs;
         if (stt->blinkTimerUs <= 0)
@@ -280,15 +272,9 @@ static void sttMainLoop(int64_t elapsedUs)
         }
     }
 
-    int32_t angle, radius, intensity;
-    if (getTouchJoystick(&angle, &radius, &intensity))
-    {
-        getTouchCartesianSquircle(angle, radius, &stt->touchpad.x, &stt->touchpad.y);
-    }
-
     const char* note = NULL;
     uint8_t volume;
-    if (stt->octavePressed != 0)
+    if (stt->intensity > 0)
     {
         int32_t noteHz = stt->touchpad.x * (STT_MAX_HZ - STT_MIN_HZ) / 1023 + STT_MIN_HZ;
 
@@ -302,33 +288,21 @@ static void sttMainLoop(int64_t elapsedUs)
             }
         }
 
-        noteHz = noteHz << (stt->octavePressed - 1);
+        noteHz = noteHz << 2;
         if (stt->noteStateElapsedUs < PITCH_LERP_US)
         {
             noteHz -= noteHz / 100 * PITCH_ATTACK_BEND_PCT * (PITCH_LERP_US - stt->noteStateElapsedUs) / PITCH_LERP_US;
         }
         swSynthSetFreq(&stt->sttOsc, noteHz);
 
-        volume = MAX(stt->touchpad.y * STT_MAX_VOLUME / 1023, STT_MIN_VOLUME);
-        if (stt->noteStateElapsedUs < VOLUME_LERP_US)
-        {
-            volume = volume * ((float)stt->noteStateElapsedUs / VOLUME_LERP_US);
-        }
+        volume = MAX(stt->intensity * STT_MAX_VOLUME / STT_MAX_INTENSITY, STT_MIN_VOLUME);
 
         stt->cheekFlushRate
             = CLAMP(1.0f - ((float)stt->noteStateElapsedUs - CHEEK_FLUSH_DELAY_US) / CHEEK_FLUSH_TIME_US, 0, 1.0f);
     }
     else
     {
-        if (stt->noteStateElapsedUs < VOLUME_LERP_US)
-        {
-            volume = stt->touchpad.y * STT_MAX_VOLUME / 1023;
-            volume -= volume * ((float)stt->noteStateElapsedUs / VOLUME_LERP_US);
-        }
-        else
-        {
-            volume = 0;
-        }
+        volume = 0;
     }
 
     swSynthSetVolume(&stt->sttOsc, volume);
@@ -356,6 +330,7 @@ static void sttMainLoop(int64_t elapsedUs)
     drawEllipse(TFT_WIDTH / 2, TFT_HEIGHT / 2, xRadius, yRadius, c000);
 
     const char* msg = NULL;
+    char buf[32];
     if (stt->noteMessageTimeUs > 0)
     {
         if (stt->showNote)
@@ -372,6 +347,11 @@ static void sttMainLoop(int64_t elapsedUs)
     else if (stt->showNote)
     {
         msg = note;
+    }
+    else
+    {
+        snprintf(buf, sizeof(buf), "Intensity: %" PRIi32, stt->intensity);
+        msg = buf;
     }
     if (msg != NULL)
     {
