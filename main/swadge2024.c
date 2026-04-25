@@ -1,4 +1,4 @@
-/*! \mainpage Swadge 2024
+/*! \mainpage Swadge ESP32-S2
  *
  * Generated on \showdate "%A, %B %-d, %H:%M:%S"
  *
@@ -10,11 +10,16 @@
  *
  * The Swadge GitHub repository can be found at <a
  * href="https://github.com/AEFeinstein/Super-2024-Swadge-FW">https://github.com/AEFeinstein/Super-2024-Swadge-FW</a>.
- * The corresponding hardware repository for the Super Magfest 2024 Swadge can be found at <a
- * href="https://github.com/AEFeinstein/Super-2024-Swadge-HW">https://github.com/AEFeinstein/Super-2024-Swadge-HW</a>.
+ * This single repository hosts firmware for multiple years. See <a href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/releases">
+ * the releases</a> for different year's final firmware.
+ * The corresponding hardware repositories for the Super Magfest Swadges can be found at:
+ * - Squarewavebird - <a href="https://github.com/AEFeinstein/Super-2023-Swadge-HW">https://github.com/AEFeinstein/Super-2023-Swadge-HW</a>
+ * - Gunship - <a href="https://github.com/AEFeinstein/Super-2024-Swadge-HW">https://github.com/AEFeinstein/Super-2024-Swadge-HW</a>
+ * - Hot Dog - <a href="https://github.com/AEFeinstein/Super-2025-Swadge-HW">https://github.com/AEFeinstein/Super-2025-Swadge-HW</a>
+ * - Alpha Pulse - <a href="https://github.com/AEFeinstein/Super-2026-Swadge-HW">https://github.com/AEFeinstein/Super-2026-Swadge-HW</a>
  *
  * This is living documentation, so if you notice that something is incorrect or incomplete, please fix or complete it,
- * and submit a pull request.
+ * and <a href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/pulls">submit a pull request</a>.
  *
  * Most discussions happen in the Magfest Slack, in the \#circuitboards channel. If you are interested in joining and
  * contributing to this project, email circuitboards@magfest.org.
@@ -23,25 +28,15 @@
  *
  * \section start Where to Start
  *
- * If you just want to run the Swadge emulator without setting up a development environment, see the \ref emulator
- * for an installation guide and usage instructions.
- *
- * If you want to learn about creating MIDI song files for the Swadge, see the \ref MIDI guide. See also the
- * \ref emulator which you can use to listen to MIDI files.
- *
- * If you're just starting Swadge development, you're already at the right place to start!
- *
- * \note If you're new to developing code and want a guided experience, try the \ref tutorial tutorial! It
- * \note will walk you through creating a whole game with explanations on why certain options are picked. If you're more
- * \note used to C and reading technical documentation, why not browse the rest of the repository?
- *
- * Here's a quick recommended order to exploring the repository:
+ * If you're just starting Swadge development, you're already at the right place to start! Here's a quick recommended order to exploring the repository:
  *
  * -# First, follow the guide to \ref setup. This will walk you through setting up the toolchain and compiling the
  * firmware and emulator.
+ *     \note If you just want to run the Swadge emulator without setting up a development environment, see the \ref emulator for an installation guide and usage instructions.
  * -# Next, read about the basics of a Swadge Mode at swadge2024.h.
  * -# Once you understand the basics of a Swadge Mode, check out the \ref swadge_mode_example to see a simple mode in
  * action.
+ *     \note If you're new to developing code and want a guided experience, try the \ref tutorial tutorial! It will walk you through creating a whole game with explanations on why certain options are picked.
  * -# After you grasp the example, you can go deeper and read the full \ref apis to understand the full capability of
  * the Swadge firmware.
  * -# If you have any crashes on real hardware, read and use \ref serial_out to help debug the issue.
@@ -50,6 +45,9 @@
  * -# If you want to bring a mode forward from last year's Swadge, take a look at \ref porting.
  * -# Finally, if you want to do lower level or \c component programming, read the \ref espressif_doc to understand the
  * full capability of the ESP32-S2 chip.
+ *
+ * If you want to learn about creating MIDI song files for the Swadge, see the \ref MIDI guide. See also the
+ * \ref emulator which you can use to listen to MIDI files.
  *
  * \section swadge_mode_example Swadge Mode Example
  *

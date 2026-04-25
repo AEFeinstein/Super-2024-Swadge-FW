@@ -35,8 +35,8 @@ ifeq ($(HOST_OS),Windows)
 	FIND:=$(shell cygpath `where find | grep bin | grep -v " "`)
 endif
 
-# clang-format may actually be clang-format-17
-CLANG_FORMAT:=clang-format-17
+# clang-format may actually be clang-format-22
+CLANG_FORMAT:=clang-format-22
 ifeq (, $(shell which $(CLANG_FORMAT)))
 	CLANG_FORMAT:=clang-format
 endif
@@ -44,6 +44,8 @@ endif
 ifeq ($(HOST_OS),Linux)
 	ifneq (,$(shell getent group plugdev))
 		UDEV_GROUP:=plugdev
+	else ifneq (,$(shell getent group uucp))
+		UDEV_GROUP:=uucp
 	else
 		UDEV_GROUP:=$(USER)
 	endif
@@ -343,8 +345,7 @@ endif
 ifeq ($(HOST_OS),Linux)
 LIBRARY_FLAGS += \
 	$(CFLAGS_SANITIZE) \
-	-fno-omit-frame-pointer \
-	-static-libasan
+	-fno-omit-frame-pointer
 ifeq ($(ENABLE_GCOV),true)
     LIBRARY_FLAGS += -lgcov -fprofile-arcs -ftest-coverage
 endif
@@ -561,7 +562,7 @@ monitor :
 
 # Target to automatically add udev rules on Linux
 installudev : /etc/udev/rules.d/99-swadge.rules
-	getent group plugdev >/dev/null && sudo usermod -aG plugdev $(USER) || true
+	getent group $(UDEV_GROUP) >/dev/null && sudo usermod -aG $(UDEV_GROUP) $(USER) || true
 	sudo udevadm control --reload
 	sudo udevadm trigger
 
