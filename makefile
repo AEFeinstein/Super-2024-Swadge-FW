@@ -35,8 +35,8 @@ ifeq ($(HOST_OS),Windows)
 	FIND:=$(shell cygpath `where find | grep bin | grep -v " "`)
 endif
 
-# clang-format may actually be clang-format-17
-CLANG_FORMAT:=clang-format-17
+# clang-format may actually be clang-format-22
+CLANG_FORMAT:=clang-format-22
 ifeq (, $(shell which $(CLANG_FORMAT)))
 	CLANG_FORMAT:=clang-format
 endif

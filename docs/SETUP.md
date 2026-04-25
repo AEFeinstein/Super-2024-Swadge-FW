@@ -35,7 +35,7 @@ The continuous integration for this project runs on a Windows instance. This mea
     ```bash
     pacman --noconfirm -S base-devel gcc gdb zip mingw-w64-x86_64-graphviz mingw-w64-x86_64-cppcheck doxygen
     ```
-5. [Install `LLVM-17.0.6-win64.exe`](https://github.com/llvm/llvm-project/releases/tag/llvmorg-17.0.6). This is for the `clang-format-17` tool. During the install, when it asks to add LLVM to the system PATH, add it to the path for all users.
+5. [Install `LLVM-22.1.4-win64.exe`](https://github.com/llvm/llvm-project/releases/tag/llvmorg-22.1.4). This is for the `clang-format-22` tool. During the install, when it asks to add LLVM to the system PATH, add it to the path for all users.
 6. Add the following paths to the Windows path variable. [Here are some instructions on how to do that](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/).
     * `C:\msys64\mingw64\bin`
     * `C:\msys64\usr\bin`
@@ -73,7 +73,7 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
     * `pacman` and `yay`:
         ```bash
         sudo pacman -S --needed base-devel ccache clang cmake cppcheck dfu-util doxygen gcc-libs gdb git graphviz lcov libasan libpulse libusb libx11 libxext libxinerama mesa python-pip qemu
-        yay -S --needed clang17 visual-studio-code-bin
+        yay -S --needed visual-studio-code-bin
         ```
 2. Install `doxygen` separately from their website (https://www.doxygen.nl/download.html). Note that the version used in this project is currently 1.16.1 and the version in many package managers is less than that. You will need to extract the binary somewhere and add it to your `PATH` variable. For example, GitHub Actions installs `doxygen` like this:
     ```bash
@@ -88,13 +88,13 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
     ```bash
     sudo apt remove doxygen
     ```
-3. Install `clang-17` and `clang-format-17` separately. Note that the version used in this project is currently 17 and the version in many package managers is different than that. Different versions of `clang-format` format code differently.
-    \note This script is for Debian OSs only. For other Linuxes, search for how to install `clang-format-17`.
+3. Install `clang-22` and `clang-format-22` separately. Note that the version used in this project is currently 22 and the version in many package managers is different than that. Different versions of `clang-format` format code differently.
+    \note This script is for Debian OSs only. For other Linuxes, search for how to install `clang-format-22`.
     ```bash
     wget https://apt.llvm.org/llvm.sh
     chmod u+x llvm.sh
-    sudo ./llvm.sh 17
-    sudo apt install clang-format-17
+    sudo ./llvm.sh 22
+    sudo apt install clang-format-22
     ```
 4. Clone the ESP-IDF v5.2.5 and install the tools. Note that it will clone into `~/esp/esp-idf`.
     ```bash
