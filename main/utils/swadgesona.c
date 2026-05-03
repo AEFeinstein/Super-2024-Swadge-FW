@@ -492,10 +492,156 @@ void loadSPSona(swadgesonaCore_t* sw)
     }
 }
 
-// Get indexes
-cnfsFileIdx_t getHairWSG(swadgesona_t* sw)
+// Get images separate from the sona
+bool getFeatureWSG(swadgesona_t* sw, features_t feature, wsg_t* dest)
 {
-    return hairWsgs[sw->core.hairStyle];
+    // Canvas
+    freeWsg(dest);
+    canvasBlankInit(dest, 64, 64, cTransparent, true);
+
+    bool found = false;
+
+    switch (feature)
+    {
+        case SWSN_BODY:
+        {
+            wsgPaletteReset(&sw->pal);
+            _getPaletteFromIdx(&sw->pal, COLOR_SKIN, sw->core.skin);
+            canvasDrawSimplePal(dest, SWSN_HEAD_WSG, 0, 0, &sw->pal);
+            found = true;
+            break;
+        }
+        case SWSN_BODY_MARKS:
+        {
+            if (sw->core.bodyMarks != BME_NONE)
+            {
+                canvasDrawSimplePal(dest, bodymarksWsgs[sw->core.bodyMarks - 1], 0, 0, &sw->pal);
+                found = true;
+            }
+            break;
+        }
+        case SWSN_EARS:
+        {
+            if (sw->core.earShape != EAE_HUMAN)
+            {
+                wsgPaletteReset(&sw->pal);
+                _getPaletteFromIdx(&sw->pal, COLOR_SKIN, sw->core.skin);
+                canvasDrawSimplePal(dest, earWsgs[sw->core.earShape - 1], 0, 0, &sw->pal);
+                found = true;
+            }
+            break;
+        }
+        case SWSN_EYE:
+        {
+            wsgPaletteReset(&sw->pal);
+            _getPaletteFromIdx(&sw->pal, COLOR_EYES, sw->core.eyeColor);
+            canvasDrawSimplePal(dest, eyeWsgs[sw->core.eyeShape], 0, 0, &sw->pal);
+            found = true;
+            break;
+        }
+        case SWSN_EYEBROW:
+        {
+            wsgPaletteReset(&sw->pal);
+            _getPaletteFromIdx(&sw->pal, COLOR_HAIR, sw->core.hairColor);
+            canvasDrawSimplePal(dest, eyebrowsWsgs[sw->core.eyebrows], 0, 0, &sw->pal);
+            found = true;
+            break;
+        }
+        case SWSN_HAIR:
+        {
+            if (sw->core.hairStyle != HE_NONE)
+            {
+                wsgPaletteReset(&sw->pal);
+                _getPaletteFromIdx(&sw->pal, COLOR_HAIR, sw->core.hairColor);
+                canvasDrawSimplePal(dest, hairWsgs[sw->core.hairStyle - 1], 0, 0, &sw->pal);
+                found = true;
+            }
+            break;
+        }
+        case SWSN_HAT:
+        {
+            if (sw->core.hat != HAE_NONE)
+            {
+                wsgPaletteReset(&sw->pal);
+                if (sw->core.hat == HAE_PULSE) // If pulse use special color code
+                {
+                    switch (sw->core.hatColor)
+                    {
+                        case HA_BLUE:
+                        case HA_DARK_BLUE:
+                        {
+                            sw->pal.newColors[c033] = c005;
+                            sw->pal.newColors[c055] = c035;
+                            break;
+                        }
+                        case HA_DARK_GREEN:
+                        case HA_GREEN:
+                        {
+                            sw->pal.newColors[c033] = c142;
+                            sw->pal.newColors[c055] = c252;
+                            break;
+                        }
+                        case HA_HOT_PINK:
+                        case HA_PINK:
+                        case HA_PURPLE:
+                        {
+                            sw->pal.newColors[c033] = c504;
+                            sw->pal.newColors[c055] = c515;
+                            break;
+                        }
+                        case HA_ORANGE: // Red
+                        {
+                            sw->pal.newColors[c033] = c500;
+                            sw->pal.newColors[c055] = c532;
+                            break;
+                        }
+                        case HA_YELLOW:
+                        {
+                            sw->pal.newColors[c033] = c541;
+                            sw->pal.newColors[c055] = c552;
+                            break;
+                        }
+                        default:
+                        {
+                            sw->pal.newColors[c033] = c033;
+                            sw->pal.newColors[c055] = c055;
+                            break;
+                        }
+                    }
+                }
+                else if (sw->core.hat != HAE_BIGMA && sw->core.hat != HAE_BATTRICE && sw->core.hat != HAE_MET_HELMET
+                         && sw->core.hat != HAE_SAWTOOTH)
+                {
+                    _getPaletteFromIdx(&sw->pal, COLOR_HAT, sw->core.hatColor);
+                }
+                // Draw hat
+                found = true;
+                canvasDrawSimplePal(dest, hatWsgs[sw->core.hat - 1], 0, 0, &sw->pal);
+            }
+            break;
+        }
+        case SWSN_MOUTH:
+        {
+            canvasDrawSimple(dest, mouthWsgs[sw->core.mouthShape], 0, 0);
+            found = true;
+            break;
+        }
+        case SWSN_GLASSES:
+        {
+            if (sw->core.glasses != G_NONE)
+            {
+                wsgPaletteReset(&sw->pal);
+                _getPaletteFromIdx(&sw->pal, COLOR_GLASSES, sw->core.glassesColor);
+                canvasDrawSimplePal(dest, glassesWsgs[sw->core.glasses - 1], 0, 0, &sw->pal);
+                found = true;
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
 }
 
 //==============================================================================
