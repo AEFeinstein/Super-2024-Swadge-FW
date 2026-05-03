@@ -618,13 +618,13 @@ void loadSPSona(swadgesonaCore_t* sw);
 // Get indexes
 /**
  * @brief Copy the sprite and color at an index to a wsg_t. Please erase after use.
- * 
+ *
  * @note Please note that there are probably some issues with this:
  * - Human ears are default, and will provide a "false" signal
  * - There are some special cases I have not handled, including vitiligo, Hair that has to go front and back, etc.
  *
  * @param sw Swadgesona to extract wsg from
- * @param feature The feature to load 
+ * @param feature The feature to load
  * @param dest The place to save the file into
  * @return bool True if it found a sprite, false otherwise
  */

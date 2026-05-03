@@ -642,6 +642,7 @@ bool getFeatureWSG(swadgesona_t* sw, features_t feature, wsg_t* dest)
             break;
         }
     }
+    return found;
 }
 
 //==============================================================================
