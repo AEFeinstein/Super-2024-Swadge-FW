@@ -282,13 +282,16 @@ DEFINES_LIST += \
 
 DEFINES = $(patsubst %, -D%, $(DEFINES_LIST))
 
+DEFINES_NO_ESP = $(filter-out -DESP_PLATFORM,$(DEFINES))
+
 ################################################################################
 # Files to write compiler arguments to (workaround for Windows line limits)
 ################################################################################
 
-ARGS_DEFINES_FILE       = args_defines.txt
-ARGS_WARNINGS_FILE      = args_warnings.txt
-ARGS_C_FLAGS            = args_c_flags.txt
+ARGS_DEFINES_FILE        = args_defines.txt
+ARGS_DEFINES_FILE_NO_ESP = args_defines_no_esp.txt
+ARGS_WARNINGS_FILE       = args_warnings.txt
+ARGS_C_FLAGS             = args_c_flags.txt
 
 ################################################################################
 # Output Objects
@@ -386,6 +389,9 @@ all: $(EXECUTABLE)
 $(ARGS_DEFINES_FILE): makefile
 	@echo $(DEFINES) > $(ARGS_DEFINES_FILE)
 
+$(ARGS_DEFINES_FILE_NO_ESP): makefile
+	@echo $(DEFINES_NO_ESP) > $(ARGS_DEFINES_FILE_NO_ESP)
+
 $(ARGS_WARNINGS_FILE): makefile
 	@echo $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) > $(ARGS_WARNINGS_FILE)
 
@@ -418,9 +424,13 @@ $(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
 # This compiles each c file into an o file
 # $(CNFS_FILE) is a dependency of all objects because some C files include "cnfs_image.h"
 # $(CNFS_FILE) is not a phony target, so it should only be called if the file doesn't exist
-./$(OBJ_DIR)/%.o: ./%.c $(CNFS_FILE) $(ARGS_DEFINES_FILE) $(ARGS_WARNINGS_FILE) $(ARGS_C_FLAGS)
+./$(OBJ_DIR)/%.o: ./%.c $(CNFS_FILE) $(ARGS_DEFINES_FILE) $(ARGS_DEFINES_FILE_NO_ESP) $(ARGS_WARNINGS_FILE) $(ARGS_C_FLAGS)
 	@mkdir -p $(@D) # This creates a directory before building an object in it.
+ifeq ($(findstring /amy/,$(@D)),/amy/)
 	$(CC) @$(ARGS_C_FLAGS) @$(ARGS_WARNINGS_FILE) @$(ARGS_DEFINES_FILE) $(INC) $< -o $@
+else
+	$(CC) @$(ARGS_C_FLAGS) @$(ARGS_WARNINGS_FILE) @$(ARGS_DEFINES_FILE_NO_ESP) $(INC) $< -o $@
+endif
 
 # Build the firmware. Cmake will take care of generating the CNFS files
 firmware:
@@ -463,7 +473,7 @@ $(MACOS_ICON): emulator/resources/icon.png
 # Clean emulator files, depends on cleaning assets too
 clean: clean-assets
 	-@rm -f $(OBJECTS) $(EXECUTABLE)
-	-@rm -f $(ARGS_DEFINES_FILE) $(ARGS_WARNINGS_FILE) $(ARGS_C_FLAGS)
+	-@rm -f $(ARGS_DEFINES_FILE) $(ARGS_DEFINES_FILE_NO_ESP) $(ARGS_WARNINGS_FILE) $(ARGS_C_FLAGS)
 
 # Clean firmware files, depends on cleaning assets too
 clean-firmware: clean-assets

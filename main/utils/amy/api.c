@@ -1,0 +1,405 @@
+// api.c
+// C callable entry points to amy
+
+#include "amy.h"
+
+amy_config_t amy_default_config() {
+    amy_config_t c;
+    c.features.reverb = 1;
+    c.features.echo = 1;
+    c.features.chorus = 1;
+    c.features.partials = 1;
+    c.features.custom = 1;
+    c.features.default_synths = 0;
+    c.features.audio_in = 0;
+    c.features.startup_bleep = 0;
+
+    // Use all platform features by default.
+    c.platform.multicore = 1;
+    c.platform.multithread = 1;
+
+    c.write_samples_fn = NULL;
+    c.amy_external_render_hook = NULL;
+    c.amy_external_coef_hook = NULL;
+    c.amy_external_block_done_hook = NULL;
+    c.amy_external_midi_input_hook = NULL;
+    c.amy_external_sequencer_hook = NULL;
+    c.amy_external_fopen_hook = NULL;
+    c.amy_external_fwrite_hook = NULL;
+    c.amy_external_fread_hook = NULL;
+    c.amy_external_fseek_hook = NULL;
+    c.amy_external_fclose_hook = NULL;
+    c.amy_external_file_transfer_done_hook = NULL;
+
+    c.midi = AMY_MIDI_IS_NONE;
+    c.audio = AMY_AUDIO_IS_NONE;
+    c.ks_oscs = 1;
+
+    c.max_oscs = 180;
+    c.max_sequencer_tags = 256;
+    c.max_voices = 64;
+    c.max_synths = 64;
+    c.max_memory_patches = 32;
+
+    // caps
+    #if defined(TULIP) || defined(AMYBOARD) || defined(AMYBOARD_ARDUINO)
+    c.ram_caps_events = MALLOC_CAP_SPIRAM;
+    c.ram_caps_synth = MALLOC_CAP_SPIRAM;
+    c.ram_caps_block = MALLOC_CAP_DEFAULT;
+    c.ram_caps_fbl = MALLOC_CAP_DEFAULT;
+    c.ram_caps_delay = MALLOC_CAP_SPIRAM;
+    c.ram_caps_sample = MALLOC_CAP_SPIRAM;
+    c.ram_caps_sysex = MALLOC_CAP_SPIRAM;
+    #else
+    c.ram_caps_events = MALLOC_CAP_DEFAULT;
+    c.ram_caps_synth = MALLOC_CAP_DEFAULT;
+    c.ram_caps_block = MALLOC_CAP_DEFAULT;
+    c.ram_caps_fbl = MALLOC_CAP_DEFAULT;
+    c.ram_caps_delay = MALLOC_CAP_DEFAULT;
+    c.ram_caps_sample = MALLOC_CAP_DEFAULT;
+    c.ram_caps_sysex = MALLOC_CAP_DEFAULT;
+    #endif    
+
+    c.capture_device_id = -1;
+    c.playback_device_id = -1;
+
+    c.i2s_lrc = -1;
+    c.i2s_dout = -1;
+    c.i2s_din = -1;
+    c.i2s_bclk = -1;
+    c.i2s_mclk = -1;
+    c.i2s_mclk_mult = 256;  // MCLK = mclk_mult * Fs.
+    c.midi_out = -1;
+    c.midi_in = -1;
+    c.midi_uart = -1; 
+
+    #if defined(AMYBOARD_ARDUINO) || defined(AMYBOARD)
+    // Set default pins 
+    c.features.audio_in = 1;
+    c.audio = AMY_AUDIO_IS_I2S;
+    c.midi = AMY_MIDI_IS_UART | AMY_MIDI_IS_USB_GADGET;
+    c.i2s_lrc = AMYBOARD_LRC;
+    c.i2s_bclk = AMYBOARD_BCLK;
+    c.i2s_dout = AMYBOARD_DOUT;
+    c.i2s_din = AMYBOARD_DIN;
+    c.i2s_mclk = AMYBOARD_MCLK;
+    c.midi_out = AMYBOARD_MIDI_OUT_TYPE_A; // TYPE A. User can set type B with 15 
+    c.midi_in = AMYBOARD_MIDI_IN;
+    #endif
+
+    #ifdef ESP_PLATFORM
+    c.midi_uart = 1; // This is MIDI UART _number_, like index
+    #endif
+
+    #if (defined ARDUINO_ARCH_RP2040) || (defined ARDUINO_ARCH_RP2350)
+    c.midi_uart = 1; // This is MIDI UART _number_, like index
+    #endif
+
+    return c;
+}
+
+
+// create a new default API accessible event
+amy_event amy_default_event() {
+    amy_event e;
+    amy_clear_event(&e);
+    return e;
+}
+
+void amy_clear_event(amy_event *e) {
+    e->status = EVENT_EMPTY;
+    AMY_UNSET(e->time);
+    AMY_UNSET(e->osc);
+    AMY_UNSET(e->preset);
+    AMY_UNSET(e->wave);
+    AMY_UNSET(e->patch_number);
+    AMY_UNSET(e->trigger_phase);
+    AMY_UNSET(e->feedback);
+    AMY_UNSET(e->velocity);
+    AMY_UNSET(e->midi_note);
+    AMY_UNSET(e->volume);
+    AMY_UNSET(e->pitch_bend);
+    AMY_UNSET(e->tempo);
+    AMY_UNSET(e->latency_ms);
+    AMY_UNSET(e->ratio);
+    for (int i = 0; i < NUM_COMBO_COEFS; ++i) {
+        AMY_UNSET(e->amp_coefs[i]);
+        AMY_UNSET(e->freq_coefs[i]);
+        AMY_UNSET(e->filter_freq_coefs[i]);
+        AMY_UNSET(e->duty_coefs[i]);
+        AMY_UNSET(e->pan_coefs[i]);
+    }
+    AMY_UNSET(e->resonance);
+    AMY_UNSET(e->portamento_ms);
+    AMY_UNSET(e->filter_type);
+    AMY_UNSET(e->chained_osc);
+    AMY_UNSET(e->mod_source);
+    AMY_UNSET(e->algorithm);
+    AMY_UNSET(e->bp_is_set[0]);
+    AMY_UNSET(e->bp_is_set[1]);
+    AMY_UNSET(e->eg_type[0]);
+    AMY_UNSET(e->eg_type[1]);
+    AMY_UNSET(e->reset_osc);
+    AMY_UNSET(e->note_source);
+    for (int i = 0; i < MAX_ALGO_OPS; ++i) {
+        AMY_UNSET(e->algo_source[i]);
+    }
+    for (int i = 0; i < MAX_VOICES_PER_INSTRUMENT; ++i) {
+        AMY_UNSET(e->voices[i]);
+    }
+    for (int i = 0; i < MAX_BPS; ++i) {
+        AMY_UNSET(e->eg0_times[i]);
+        AMY_UNSET(e->eg0_values[i]);
+        AMY_UNSET(e->eg1_times[i]);
+        AMY_UNSET(e->eg1_values[i]);
+    }
+    AMY_UNSET(e->synth);
+    AMY_UNSET(e->synth_flags);
+    AMY_UNSET(e->to_synth);
+    AMY_UNSET(e->synth_delay_ms);
+    AMY_UNSET(e->grab_midi_notes);
+    AMY_UNSET(e->pedal);
+    AMY_UNSET(e->num_voices);
+    AMY_UNSET(e->sequence[SEQUENCE_TICK]);
+    AMY_UNSET(e->sequence[SEQUENCE_PERIOD]);
+    AMY_UNSET(e->sequence[SEQUENCE_TAG]);
+    AMY_UNSET(e->eq_l);
+    AMY_UNSET(e->eq_m);
+    AMY_UNSET(e->eq_h);
+    AMY_UNSET(e->echo_level);
+    AMY_UNSET(e->echo_delay_ms);
+    AMY_UNSET(e->echo_max_delay_ms);
+    AMY_UNSET(e->echo_feedback);
+    AMY_UNSET(e->echo_filter_coef);
+    AMY_UNSET(e->chorus_level);
+    AMY_UNSET(e->chorus_max_delay);
+    AMY_UNSET(e->chorus_lfo_freq);
+    AMY_UNSET(e->chorus_depth);
+    AMY_UNSET(e->reverb_level);
+    AMY_UNSET(e->reverb_liveness);
+    AMY_UNSET(e->reverb_damping);
+    AMY_UNSET(e->reverb_xover_hz);
+    AMY_UNSET(e->oscs_per_voice);
+}
+
+
+// get last-written output, returns number of bytes written.
+int amy_get_output_buffer(output_sample_type * samples) {
+    if (amy_out_block == NULL) return 0;  // amy_fill_buffer has not yet run.
+    for(uint16_t i=0;i<AMY_BLOCK_SIZE*AMY_NCHANS;i++) samples[i] = amy_out_block[i];
+    return AMY_BLOCK_SIZE * AMY_NCHANS * sizeof(output_sample_type);
+}
+
+// get AUDIO_IN0 and AUDIO_IN1, returns number of bytes written.
+int amy_get_input_buffer(output_sample_type * samples) {
+    for(uint16_t i=0;i<AMY_BLOCK_SIZE*AMY_NCHANS;i++) samples[i] = amy_in_block[i];
+    return AMY_BLOCK_SIZE * AMY_NCHANS * sizeof(output_sample_type);
+}
+
+// set AUDIO_EXT0 and AUDIO_EXT1
+void amy_set_external_input_buffer(output_sample_type * samples) {
+    for(uint16_t i=0;i<AMY_BLOCK_SIZE*AMY_NCHANS;i++) amy_external_in_block[i] = samples[i];
+}
+
+output_sample_type * amy_simple_fill_buffer() {
+    amy_execute_deltas();
+    amy_render(0, AMY_OSCS, 0);
+    return amy_fill_buffer();
+}
+
+
+// on all platforms, sysclock is based on total samples played, using audio out (i2s or etc) as system clock
+uint32_t amy_sysclock() {
+    // Time is returned in integer milliseconds.  uint32_t rollover is 49.7 days.
+    return (uint32_t)((amy_global.total_blocks * AMY_BLOCK_SIZE / (float)AMY_SAMPLE_RATE) * 1000);
+}
+
+
+// given a wire message string play / schedule the event directly (WIRE API)
+void amy_add_message(char *message) {
+    peek_stack("add_message");
+    amy_event e; // = amy_default_event();
+    // Parse the wire string into an event
+    int length = strlen(message);
+    char *remains = message;
+    while(length > 0) {
+        amy_clear_event(&e);
+	int pos = amy_parse_message(remains, length, &e);
+	amy_add_event(&e);
+	remains += pos;
+	length -= pos;
+    }
+}
+
+// given an event play / schedule the event directly (C API)
+void amy_add_event(amy_event *e) {
+    peek_stack("add_event");
+    amy_process_event(e);
+    // Do not "play" events that are not sent directly to the AMY synthesizer, e.g. sequencer events or stored patches
+    if(e->status == EVENT_SCHEDULED) {
+        amy_event_to_deltas_queue(e, 0, &amy_global.delta_queue);
+    }
+}
+
+// defined in midi_mappings.c
+extern void juno_filter_midi_handler(uint8_t * bytes, uint16_t len, uint8_t is_sysex);
+extern void midi_cc_handler(uint8_t * bytes, uint16_t len, uint8_t is_sysex);
+
+#ifdef __EMSCRIPTEN__
+void amy_start_web() {
+    // a shim for web AMY, as it's annoying to build structs in js
+    amy_config_t amy_config = amy_default_config();
+    amy_config.midi = AMY_MIDI_IS_WEBMIDI;
+    amy_config.features.default_synths = 1;
+    amy_config.features.startup_bleep = 1;
+    amy_config.amy_external_midi_input_hook = midi_cc_handler;
+    amy_start(amy_config);
+}
+
+void amy_start_web_no_synths() {
+    // a shim for web AMY, as it's annoying to build structs in js
+    amy_config_t amy_config = amy_default_config();
+    amy_config.midi = AMY_MIDI_IS_WEBMIDI;
+    amy_config.features.default_synths = 0;
+    amy_config.amy_external_midi_input_hook = midi_cc_handler;
+    amy_start(amy_config);
+}
+#endif
+
+
+void amy_default_synths() {
+    // Configure several default synthesizers for "out of box" playability.
+
+    // sine wave "bleeper" on ch 0 (not a MIDI channel)
+    amy_event e = amy_default_event();
+    e.patch_number= 1024;
+    // osc=0 sinewave.
+    // Sine is default, but we need to have one delta, else the number of oscs is zero = no patch.
+    patches_store_patch(&e, "v0w0");
+    e.num_voices = 1;
+    e.synth = 0;
+    amy_add_event(&e);
+
+    // GM drum synth on channel 10
+    e = amy_default_event();
+    e.patch_number = 1025;
+    patches_store_patch(&e, "w7f0");
+    e.num_voices = 6;
+    e.synth = 10;
+    // Flag to perform note -> drum PCM patch translation.
+    e.synth_flags = _SYNTH_FLAGS_MIDI_DRUMS | _SYNTH_FLAGS_IGNORE_NOTE_OFFS;
+    amy_add_event(&e);
+
+    // DX7 6 note poly on channel 2
+    e = amy_default_event();
+    e.num_voices = 6;
+    e.patch_number = 128;
+    e.synth = 2;
+    amy_add_event(&e);
+
+    // Juno 6 poly on channel 1
+    // Define this last so if we release it, the oscs aren't fragmented.
+    e = amy_default_event();
+    e.num_voices = 6;
+    e.patch_number = 0;
+    e.synth = 1;
+    amy_add_event(&e);
+    // Add some MIDI CCs for the Juno (defined in midi_mappings.c).
+    amy_global.config.amy_external_midi_input_hook = juno_filter_midi_handler;
+}
+
+// Schedule a bleep now
+void amy_bleep(uint32_t start) {
+    amy_event e = amy_default_event();
+    e.osc = AMY_OSCS - 1;  // Use a high-up osc to avoid collisions?
+    e.time = start;
+    e.wave = SINE;
+    e.freq_coefs[COEF_CONST] = 220;
+    e.pan_coefs[COEF_CONST] = 0.9;
+    e.velocity = 1;
+    amy_add_event(&e);
+    e.time = start + 150;
+    e.freq_coefs[COEF_CONST] = 440;
+    e.pan_coefs[COEF_CONST] = 0.1;
+    amy_add_event(&e);
+    e.time = start + 300;
+    e.velocity = 0;
+    e.pan_coefs[COEF_CONST] = 0.5;  // Restore default pan to osc.
+    amy_add_event(&e);
+}
+
+// Schedule a bleep now using default bleep synth (0)
+void amy_bleep_synth(uint32_t start) {
+    amy_event e = amy_default_event();
+    e.synth = 0;
+    e.time = start;
+    // you have to use notes with synths, so the voice manager can grok.
+    e.midi_note = 57;
+    e.pan_coefs[COEF_CONST] = 0.9;
+    e.velocity = 1;
+    amy_add_event(&e);
+    e.time = start + 150;
+    e.midi_note = 69;
+    e.pan_coefs[COEF_CONST] = 0.1;
+    amy_add_event(&e);
+    e.time = start + 300;
+    e.velocity = 0;
+    e.pan_coefs[COEF_CONST] = 0.5;  // Restore default pan to osc 0.
+    amy_add_event(&e);
+}
+
+#ifndef AMY_NO_MINIAUDIO
+extern void miniaudio_start();
+extern void miniaudio_stop();
+#endif
+
+void amy_start(amy_config_t c) {
+    global_init(c);
+    amy_profiles_init();
+    transfer_init();
+    oscs_init();
+    amy_platform_init();
+    run_midi();  // Must be after platform_init in case F_CPU is modified on RP2040 Arduino.
+    if(AMY_HAS_DEFAULT_SYNTHS) amy_default_synths();
+    if(AMY_HAS_STARTUP_BLEEP) {
+        if(AMY_HAS_DEFAULT_SYNTHS)
+            amy_bleep_synth(0);  // bleep using the default sinewave synth voice.
+        else
+            amy_bleep(0);  // bleep using raw oscs.
+    }
+#if !defined(ESP_PLATFORM) && !defined(PICO_ON_DEVICE) && !defined(ARDUINO) && !defined(__EMSCRIPTEN__) && !defined(AMY_NO_MINIAUDIO)
+    if (amy_global.config.audio == AMY_AUDIO_IS_MINIAUDIO)
+        miniaudio_start();
+#endif
+    if (amy_global.config.amy_external_midi_input_hook == NULL) {
+        amy_global.config.amy_external_midi_input_hook = midi_cc_handler;
+    }
+}
+
+void amy_stop() {
+#if !defined(ESP_PLATFORM) && !defined(PICO_ON_DEVICE) && !defined(ARDUINO) && !defined(AMY_NO_MINIAUDIO)
+    if (amy_global.config.audio == AMY_AUDIO_IS_MINIAUDIO)
+        miniaudio_stop();
+#endif
+    stop_midi();
+    amy_platform_deinit();
+    oscs_deinit();
+}
+
+
+int16_t *amy_update() {
+    // Single function to update buffers.
+    amy_update_tasks();
+    int16_t *block = amy_render_audio();
+    if (AMY_HAS_I2S && !amy_global.i2s_is_in_background) {
+        amy_i2s_write(
+            (uint8_t *)block, AMY_BLOCK_SIZE * AMY_NCHANS * sizeof(int16_t)
+        );
+    }
+    if (amy_global.config.write_samples_fn) {
+        amy_global.config.write_samples_fn(
+            (uint8_t *)block, AMY_BLOCK_SIZE * AMY_NCHANS * sizeof(int16_t)
+        );
+    }
+    return block;
+}

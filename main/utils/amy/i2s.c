@@ -1,0 +1,627 @@
+// i2s.c
+// handle i2s audio in & out on many platforms
+// esp32 --> esp32, esp32-s3, esp32-p4 
+// AMYBOARD, which is a esp32s3 but with special i2s setup
+// rp2350, rp2040
+// teensy 3.6, 4.0, 4.1
+
+// Only run this code on MCUs
+#if defined(ESP_PLATFORM) || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO) || defined(ARDUINO_ARCH_RP2350)
+
+#include "amy.h"
+
+#ifdef ESP_PLATFORM
+#include <esp_task.h>
+
+///////////////////////////////////////////////////////////////
+// ESP32, S3, P4 (maybe others)
+
+// A note on RTOS synchronization:
+// For maximumum flexibility, AMY offers two flags:
+//  - config.platform.multicore - whether to use a second core, if avaliable.
+//  - config.platform.multithread - whether to use RTOS multithreading, if avaliable.
+// (ESP32 is the only platform where we've tried RTOS, so it's the only context where multithread matters).
+// When using RTOS threads (tasks), synchronization is handled by xTaskNotifyGive(task_handle) / ulTaskNotifyTake():
+// A service task waits to be notified by calling ulTaskNotifyTake(); that call does not specify where that
+// notification comes from.  Another task calls xTaskNotifyGive() naming the particular task to be notified,
+// which then releases the ulTaskNotifyTake() in that task.
+// We use this mechanism as follows:
+//   * esp_render_task (the task that runs on the second core):
+//      - Waits for notification (from main fill_audio thread)
+//      - renders half the oscs
+//      - notifies either fill_buffer (multithread) or amy_update (single thread) when done.
+//      - loop
+//   * esp_fill_audio_buffer_task (launched as one parallel task):
+//      - if not using I2S, waits for notification (from amy_update task)
+//      - read I2S input (if used)
+//      - execute AMY command updates (deltas)
+//      - Notify esp_render_task
+//      - render the other half of oscs
+//      - Wait for notification (indicating that esp_render_task is done)
+//      - call amy_fill_buffer (to combine the rendered oscs into output samples)
+//      - Notify amy_update_handle that the new block is ready
+//      - If I2S enabled, write samples to I2S.
+//      - loop
+//   * ESP's amy_platform_init
+//      - if multicore, launch esp_render_task
+//      - if multithread, launch esp_fill_audio_buffer_task
+//      - if not I2S, Notify fill_buffer to get it started
+//   * ESP's amy_render_audio
+//      - If multithread, wait for Notification (from fill_audio_buffer)
+//      - If not I2S, Notify fill_buffer
+//      - If not multithread
+//        - If multicore, Notify amy_render_handle to get task on second core to render
+//          - wait for Notification indicating esp_render_task is done
+//        - else render all oscs
+//        - call amy_fill_buffer
+
+#include "driver/i2s_std.h"
+#ifdef AMYBOARD_ARDUINO
+#include "driver/i2c.h"
+#endif
+i2s_chan_handle_t tx_handle;
+i2s_chan_handle_t rx_handle;
+
+
+#if !defined(AMYBOARD) && !defined(AMYBOARD_ARDUINO)
+// default ESP setup i2s
+amy_err_t esp32_setup_i2s(void) {
+    i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
+    if(AMY_HAS_AUDIO_IN) {
+        i2s_new_channel(&chan_cfg, &tx_handle, &rx_handle);
+    } else {
+        i2s_new_channel(&chan_cfg, &tx_handle, NULL);        
+    }
+// PCM5101 DAC works at either 32 bit or (default) 16 bit
+// PCM1808 ADC needs I2S_32BIT to work
+#define I2S_32BIT
+#ifdef I2S_32BIT
+    i2s_std_config_t std_cfg = {
+        .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(AMY_SAMPLE_RATE),
+        .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_STEREO),
+        .gpio_cfg = {
+            .mclk = (amy_global.config.i2s_mclk == -1)? I2S_GPIO_UNUSED : amy_global.config.i2s_mclk,
+            .bclk = amy_global.config.i2s_bclk,
+            .ws = amy_global.config.i2s_lrc,
+            .dout = amy_global.config.i2s_dout,
+            .din = amy_global.config.i2s_din,
+            .invert_flags = {
+                .mclk_inv = false,
+                .bclk_inv = false,
+                .ws_inv = false,
+            },
+        },
+    };
+#else // 16 bit I2S
+    i2s_std_config_t std_cfg = {
+        .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(AMY_SAMPLE_RATE),
+        .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO),
+        .gpio_cfg = {
+            .mclk = (amy_global.config.i2s_mclk == -1)? I2S_GPIO_UNUSED : amy_global.config.i2s_mclk,
+            .bclk = amy_global.config.i2s_bclk,
+            .ws = amy_global.config.i2s_lrc,
+            .dout = amy_global.config.i2s_dout,
+            .din = amy_global.config.i2s_din,
+            .invert_flags = {
+                .mclk_inv = false,
+                .bclk_inv = false,
+                .ws_inv = false,
+            },
+        },
+    };
+#endif
+    /* Initialize the channel */
+    i2s_channel_init_std_mode(tx_handle, &std_cfg);
+    if(AMY_HAS_AUDIO_IN) i2s_channel_init_std_mode(rx_handle, &std_cfg);
+
+    /* Before writing data, start the TX channel first */
+    i2s_channel_enable(tx_handle);
+    if(AMY_HAS_AUDIO_IN) i2s_channel_enable(rx_handle);
+    return AMY_OK;
+}
+
+#else
+// AMYBOARD or AMYBOARD_ARDUINO i2s setup, which uses two audio codecs, for audio in and SPDIF
+amy_err_t esp32_setup_i2s(void) {
+    i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_SLAVE);  // ************* I2S_ROLE_SLAVE - needs external I2S clock input.
+    i2s_new_channel(&chan_cfg, &tx_handle, &rx_handle);
+
+#define I2S_32BIT
+    i2s_std_config_t std_cfg = {
+        .clk_cfg = {
+            .sample_rate_hz = AMY_SAMPLE_RATE,
+            .clk_src = I2S_CLK_SRC_EXTERNAL,
+            .ext_clk_freq_hz = AMY_SAMPLE_RATE * 512,
+            .mclk_multiple = 512, 
+        },
+        .slot_cfg = {
+            .data_bit_width = I2S_DATA_BIT_WIDTH_32BIT,
+            .slot_bit_width = I2S_SLOT_BIT_WIDTH_32BIT,
+            .slot_mode = I2S_SLOT_MODE_STEREO,
+            .slot_mask = I2S_STD_SLOT_BOTH,
+            .ws_width = 32,
+            .ws_pol = false, // false in STD_PHILIPS macro
+            .bit_shift = false, // true for STD_PHILIPS macro, but that results in *2* bits delay of dout vs lrclk in Follower mode. false gives 1 bit delay, as expected for i2s.
+            .left_align = false,
+            .big_endian = false,
+            .bit_order_lsb = false,
+        },
+        .gpio_cfg = {
+            .mclk = amy_global.config.i2s_mclk, 
+            .bclk = amy_global.config.i2s_bclk,
+            .ws = amy_global.config.i2s_lrc,
+            .dout = amy_global.config.i2s_dout,
+            .din = amy_global.config.i2s_din,
+            .invert_flags = {
+                .mclk_inv = false,
+                .bclk_inv = true, // invert bclk for pcm9211 
+                .ws_inv = false,
+            },
+        },
+    };
+    /* Initialize the channel */
+    i2s_channel_init_std_mode(tx_handle, &std_cfg);
+    i2s_channel_init_std_mode(rx_handle, &std_cfg);
+
+    /* Before writing data, start the TX channel first */
+    i2s_channel_enable(tx_handle);
+    i2s_channel_enable(rx_handle);
+
+#ifdef AMYBOARD_ARDUINO
+    // Initialize PCM9211 SPDIF transceiver via I2C.
+    // On the MicroPython AMYBOARD path this is done in Python (amyboard.py).
+    {
+        #define PCM9211_I2C_ADDR   0x40
+        #define PCM9211_I2C_SDA    17
+        #define PCM9211_I2C_SCL    18
+        #define PCM9211_I2C_FREQ   400000
+
+        i2c_config_t i2c_conf = {
+            .mode = I2C_MODE_MASTER,
+            .sda_io_num = PCM9211_I2C_SDA,
+            .scl_io_num = PCM9211_I2C_SCL,
+            .sda_pullup_en = GPIO_PULLUP_ENABLE,
+            .scl_pullup_en = GPIO_PULLUP_ENABLE,
+            .master.clk_speed = PCM9211_I2C_FREQ,
+        };
+        i2c_param_config(I2C_NUM_0, &i2c_conf);
+        i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
+
+        static const uint8_t pcm9211_regs[][2] = {
+            { 0x40, 0x33 },  // Power down ADC, DIR, DIT, OSC
+            { 0x40, 0xC0 },  // Normal operation for all
+            { 0x34, 0x00 },  // Initialize DIR - biphase amps on, input from RXIN0
+            { 0x26, 0x01 },  // Main Out is DIR/ADC if no DIR sync
+            { 0x6B, 0x00 },  // Main output pins are DIR/ADC AUTO
+            { 0x30, 0x04 },  // PLL sends 512fs as SCK
+            { 0x31, 0x0A },  // XTI SCK as 512fs too
+            { 0x60, 0x44 },  // DIT sends SPDIF from AUXIN1 through MPO0
+            { 0x61, 0x20 },  // DIT SCK ratio = 512fs (must match PLL config in 0x30/0x31)
+            { 0x78, 0x3D },  // MPO0 = TXOUT, MPO1 = VOUT
+            { 0x6F, 0x40 },  // MPIO_A = CLKST / MPIO_B = AUXIN2 / MPIO_C = AUXIN1
+        };
+
+        for (int i = 0; i < sizeof(pcm9211_regs) / sizeof(pcm9211_regs[0]); i++) {
+            uint8_t buf[2] = { pcm9211_regs[i][0], pcm9211_regs[i][1] };
+            esp_err_t ret = i2c_master_write_to_device(
+                I2C_NUM_0, PCM9211_I2C_ADDR, buf, 2, pdMS_TO_TICKS(100));
+            if (ret != ESP_OK) {
+                fprintf(stderr, "PCM9211: reg 0x%02x write 0x%02x failed: %s\n",
+                    buf[0], buf[1], esp_err_to_name(ret));
+            }
+        }
+
+        // Tear down the I2C driver so Arduino Wire can use bus 0 later
+        i2c_driver_delete(I2C_NUM_0);
+    }
+#endif // AMYBOARD_ARDUINO
+
+    return AMY_OK;
+}
+
+#endif
+
+amy_err_t esp32_teardown_i2s(void) {
+    i2s_channel_disable(tx_handle);
+    if(AMY_HAS_AUDIO_IN) i2s_channel_disable(rx_handle);
+    i2s_del_channel(tx_handle);
+    if(AMY_HAS_AUDIO_IN) i2s_del_channel(rx_handle);
+    return AMY_OK;
+}
+
+
+/////////////////////////////////////
+// ESP mulithread/multicore rendering
+
+TaskHandle_t amy_render_handle;
+TaskHandle_t amy_fill_buffer_handle;
+
+// Task to notify when amy_update is waiting for a completed buffer
+TaskHandle_t amy_update_handle = NULL;
+
+// Who esp_render_task tells that it is done.
+TaskHandle_t amy_render_task_done_handle = NULL;
+
+// Render the second core
+void esp_render_task( void * pvParameters) {
+    while(1) {
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);  // from esp_render_on_cores
+        amy_render(0, AMY_OSCS/2, 1);
+        // Tell (someone) we're done.
+        xTaskNotifyGive(amy_render_task_done_handle);  // to esp_render_on_cores
+    }
+}
+
+void esp_render_on_cores() {
+    // Call amy_render on all the oscs, using multicore if available.
+    if (amy_global.config.platform.multicore) {
+        // Tell the esp_render_task to inform *us* when it's done.
+        amy_render_task_done_handle = xTaskGetCurrentTaskHandle();
+        // Tell the other core to start rendering.
+        xTaskNotifyGive(amy_render_handle);  // to esp_render_task
+        // Render me
+        amy_render(AMY_OSCS/2, AMY_OSCS, 0);
+        // Wait for the other core to finish
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);  // from esp_render_task
+    } else {
+        // We render everything on this core.
+        amy_render(0, AMY_OSCS, 0);
+    }
+}
+
+#ifdef I2S_32BIT
+  static int32_t block32[AMY_BLOCK_SIZE * AMY_NCHANS];
+  #define I2S_BYTES_PER_SAMPLE 4
+#else
+  #define I2S_BYTES_PER_SAMPLE AMY_BYTES_PER_SAMPLE
+#endif
+extern output_sample_type * amy_in_block;
+
+// Place where render thread leaves address of samples.
+// Set by esp_fill_audio_buffer_task, cleared when returned by amy_render_audio (if used).
+int16_t *volatile last_audio_buffer = NULL;
+// (see also amy_get_output_buffer, I should choose only one of these)
+
+void esp_read_i2s_input() {
+    // Read a block of i2s input.  Separated to isolate noise from different i2s formats.
+    size_t read = 0;
+#ifdef I2S_32BIT
+    i2s_channel_read(rx_handle, block32, AMY_BLOCK_SIZE * AMY_NCHANS * sizeof(int32_t), &read, portMAX_DELAY);
+    for (int i = 0; i < AMY_BLOCK_SIZE * AMY_NCHANS; ++i)
+        amy_in_block[i] = (block32[i] >> 16);
+#else
+    i2s_channel_read(rx_handle, amy_in_block, AMY_BLOCK_SIZE * AMY_NCHANS * sizeof(output_sample_type), &read, portMAX_DELAY);
+#endif
+    if(read != AMY_BLOCK_SIZE * AMY_NCHANS * I2S_BYTES_PER_SAMPLE) {
+        fprintf(stderr,"i2s input underrun: %d vs %d\n", read, AMY_BLOCK_SIZE * AMY_NCHANS * I2S_BYTES_PER_SAMPLE);
+    }
+}
+
+// Make AMY's FABT run forever , as a FreeRTOS task 
+void esp_fill_audio_buffer_task() {
+    while(1) {
+        AMY_PROFILE_START(AMY_ESP_FILL_BUFFER)
+        if(AMY_HAS_I2S && AMY_HAS_AUDIO_IN) {
+            esp_read_i2s_input();
+	}
+        // Get ready to render
+        amy_execute_deltas();
+
+        // Render on whichever cores we have available.
+        esp_render_on_cores();
+        
+        // Write to i2s
+        output_sample_type *block = amy_fill_buffer();
+	AMY_PROFILE_STOP(AMY_ESP_FILL_BUFFER)
+
+        last_audio_buffer = block;
+        
+        // Notify amy_update() that a block is ready (so it can return from amy_render_audio).
+        if (amy_update_handle)
+            xTaskNotifyGive(amy_update_handle);  // to amy_render_audio
+
+        if (AMY_HAS_I2S) {
+            amy_i2s_write((uint8_t *)block, AMY_BLOCK_SIZE * AMY_NCHANS * sizeof(int16_t));
+        } else {
+            // Wait for update sync.
+            ulTaskNotifyTake(pdTRUE, portMAX_DELAY);  // from amy_render_audio:!AMY_HAS_I2S
+        }
+    }
+}
+
+// init AMY from the esp. wraps some amy funcs in a task to do multicore rendering on the ESP32 
+void amy_platform_init() {
+    // If we're running amy_update, this should be the task we need to return to.
+    // However, if we're not using amy_update (e.g., Tulip/AMYboard native), we don't
+    // want to do this - the un-handled xTaskNotifyGives cause Tulip to crash when it
+    // turns on WiFi.
+#ifdef ARDUINO
+    amy_update_handle = xTaskGetCurrentTaskHandle();
+#endif
+    if (AMY_HAS_I2S) {
+        // Start i2s
+        esp32_setup_i2s();
+    }
+    if (amy_global.config.platform.multicore) {
+        // On ESP, multicore starts a second thread even if multithread is not requested.
+        // Create the second core rendering task
+        xTaskCreatePinnedToCore(&esp_render_task, AMY_RENDER_TASK_NAME, AMY_RENDER_TASK_STACK_SIZE, NULL, AMY_RENDER_TASK_PRIORITY, &amy_render_handle, AMY_RENDER_TASK_COREID);
+    }
+    if (amy_global.config.platform.multithread) {
+        // Create the fill audio buffer thread, combines, does volume & filters
+        xTaskCreatePinnedToCore(&esp_fill_audio_buffer_task, AMY_FILL_BUFFER_TASK_NAME, AMY_FILL_BUFFER_TASK_STACK_SIZE, NULL, AMY_FILL_BUFFER_TASK_PRIORITY, &amy_fill_buffer_handle, AMY_FILL_BUFFER_TASK_COREID);
+        // Let amy_update know we have I2S covered.
+        if (AMY_HAS_I2S) {
+            amy_global.i2s_is_in_background = 1;
+        }
+    }
+}
+
+void amy_platform_deinit() {
+    if (AMY_HAS_I2S) {
+        esp32_teardown_i2s();
+    }
+    if (amy_global.config.platform.multicore) {
+        vTaskDelete(amy_render_handle);
+    }
+    if (amy_global.config.platform.multithread) {
+        vTaskDelete(amy_fill_buffer_handle);
+    }
+}
+
+extern void esp_poll_midi(void);
+
+void amy_update_tasks() {
+    if (!amy_global.config.platform.multithread) {
+        amy_execute_deltas();
+        esp_poll_midi();
+    } else{
+        // Rendering is happening on separate thread, nothing to do.
+    }
+}
+
+int16_t *amy_render_audio() {
+    // Called by api.amy_update() to render the audio.  Not used for non-Arduino.
+    int16_t *buf = NULL;
+    if (amy_global.config.platform.multithread) {
+        // Wait for esp_fill_audio_buffer_task to indicate a buffer is ready.
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);  // from esp_fill_audio_buffer_task
+        buf = last_audio_buffer;
+        // Allow the FABT to generate another block
+        if (!AMY_HAS_I2S) {
+            xTaskNotifyGive(amy_fill_buffer_handle);  // to esp_fill_audio_buffer_task:!AMY_HAS_I2S
+        }
+    } else {
+        // No multithread, we have to render here.
+        esp_render_on_cores();
+        buf = amy_fill_buffer();
+    }
+    return buf;
+}
+
+size_t amy_i2s_write(const uint8_t *buffer, size_t nbytes) {
+    size_t written = 0;
+    int16_t *block = (int16_t *)buffer;
+    
+#ifdef I2S_32BIT // including AMYBOARD
+    // Convert to 32 bits
+    for (int i = 0; i < AMY_BLOCK_SIZE * AMY_NCHANS; ++i)
+        block32[i] = ((int32_t)block[i]) << 16;
+    i2s_channel_write(tx_handle, block32, AMY_BLOCK_SIZE * AMY_NCHANS * I2S_BYTES_PER_SAMPLE, &written, portMAX_DELAY);
+#else  // 16 bit I2S
+    i2s_channel_write(tx_handle, block, AMY_BLOCK_SIZE * AMY_NCHANS * I2S_BYTES_PER_SAMPLE, &written, portMAX_DELAY);
+#endif
+
+    if(written != AMY_BLOCK_SIZE * AMY_NCHANS * I2S_BYTES_PER_SAMPLE) {
+        fprintf(stderr,"i2s output underrun: %d vs %d\n", written, AMY_BLOCK_SIZE * AMY_NCHANS * I2S_BYTES_PER_SAMPLE);
+    }
+    return 1;
+}
+
+#elif (defined ARDUINO_ARCH_RP2040) || (defined ARDUINO_ARCH_RP2350)
+
+#include "hardware/clocks.h"
+#include "hardware/structs/clocks.h"
+#include "pico/multicore.h"
+#include "pico/stdlib.h"
+#include "pico-audio/audio_i2s.h"
+#include "pico/binary_info.h"
+#include "pico/util/queue.h"
+
+// Provided by pico_support.cpp
+extern void pico_setup_i2s(amy_config_t *config);
+extern void pico_teardown_i2s(amy_config_t *config);
+extern void pico_i2s_read_write_buffer(int16_t *in_samples, const int16_t *out_samples, int nframes);
+
+struct audio_buffer_pool *ap;
+
+static inline uint32_t _millis(void)
+{
+    return to_ms_since_boot(get_absolute_time());
+}
+
+typedef struct
+{
+    int32_t (*func)(int32_t);
+    int32_t data;
+} queue_entry_t;
+
+queue_t call_queue;
+queue_t results_queue;
+
+volatile bool core1_running = true;
+// This is the ram allocated for the core1 stack.
+// It's also the flag that core1 task is running, if non-NULL.
+uint32_t * my_core1_separate_stack_address = NULL;
+
+extern void on_pico_uart_rx();
+
+void amy_update_tasks() {
+    amy_execute_deltas();
+    if(amy_global.config.midi & AMY_MIDI_IS_UART) on_pico_uart_rx();
+#ifdef TUD_USB_GADGET
+    if(amy_global.config.midi & AMY_MIDI_IS_USB_GADGET) on_pico_uart_rx();
+#endif
+}
+
+#define USE_SECOND_CORE
+
+int32_t render_other_core(int32_t data) {
+    amy_render(AMY_OSCS/2, AMY_OSCS, 1);
+    return AMY_OK;
+}
+
+int16_t *amy_render_audio() {
+#ifdef USE_SECOND_CORE
+    if (amy_global.config.platform.multicore) {
+        int32_t res;
+        queue_entry_t entry = {render_other_core, AMY_OK};
+        queue_add_blocking(&call_queue, &entry);
+        amy_render(0, AMY_OSCS/2, 0);
+        queue_remove_blocking(&results_queue, &res);
+    } else
+#endif
+        amy_render(0, AMY_OSCS, 0);
+    int16_t *block = amy_fill_buffer();
+    return block;
+}
+
+size_t amy_i2s_write(const uint8_t *buffer, size_t nbytes) {
+    // Single function to update buffers.
+    // len is the number of int16 sample frames.
+    pico_i2s_read_write_buffer(amy_in_block, (const int16_t *)buffer, AMY_BLOCK_SIZE);
+    return nbytes;
+}
+
+
+struct audio_buffer_pool *init_audio() {
+    static audio_format_t audio_format = {
+            .format = AUDIO_BUFFER_FORMAT_PCM_S16,
+            .sample_freq = AMY_SAMPLE_RATE,
+            .channel_count = AMY_NCHANS,
+    };
+
+    static struct audio_buffer_format producer_format = {
+            .format = &audio_format,
+            .sample_stride = sizeof(int16_t) * AMY_NCHANS,
+    };
+
+    struct audio_buffer_pool *producer_pool = audio_new_producer_pool(&producer_format, 3, AMY_BLOCK_SIZE);
+
+    bool __unused ok;
+    const struct audio_format *output_format;
+    struct audio_i2s_config config = {
+            .data_pin = amy_global.config.i2s_dout,
+            .clock_pin_base = amy_global.config.i2s_bclk,
+            .dma_channel = 0,
+            .pio_sm = 0,
+    };
+
+    output_format = audio_i2s_setup(&audio_format, &config);
+    if (!output_format) {
+        panic("PicoAudio: Unable to open audio device.\n");
+    }
+
+    ok = audio_i2s_connect(producer_pool);
+    assert(ok);
+    audio_i2s_set_enabled(true);
+
+    return producer_pool;
+}
+
+void core1_main() {
+    while (core1_running) {
+        queue_entry_t entry;
+        queue_remove_blocking(&call_queue, &entry);
+        int32_t result = entry.func(entry.data);
+        queue_add_blocking(&results_queue, &result);
+    }
+}
+
+void amy_platform_init() {
+    if (AMY_HAS_I2S) {
+        pico_setup_i2s(&amy_global.config);
+    }
+#ifdef USE_SECOND_CORE
+    if (amy_global.config.platform.multicore) {
+        if (my_core1_separate_stack_address == NULL) {  // Task is not already running.
+            my_core1_separate_stack_address = (uint32_t*)malloc(0x2000);
+            queue_init(&call_queue, sizeof(queue_entry_t), 2);
+            queue_init(&results_queue, sizeof(int32_t), 2);
+            core1_running = true;
+            multicore_launch_core1_with_stack(core1_main, my_core1_separate_stack_address, 0x2000);
+            sleep_ms(500);
+        }
+    }
+#endif
+}
+
+void amy_platform_deinit() {
+#ifdef USE_SECOND_CORE
+    if (amy_global.config.platform.multicore) {
+        if (my_core1_separate_stack_address) {  // Task is actually running.
+            core1_running = false;  // signal the core1 task to exit.
+            sleep_ms(100);  // time for it to exit
+            queue_free(&results_queue);
+            queue_free(&call_queue);
+            free(my_core1_separate_stack_address);
+            my_core1_separate_stack_address = NULL;
+        }
+    }
+#endif
+    pico_teardown_i2s(&amy_global.config);
+}
+
+
+#elif defined __IMXRT1062__
+
+
+extern void teensy_setup_i2s();
+extern void teensy_teardown_i2s();
+extern size_t teensy_i2s_write(const uint8_t *buffer, size_t nbytes);
+
+extern int16_t teensy_get_serial_byte();
+
+void amy_platform_init() {
+    if (AMY_HAS_I2S) {
+        teensy_setup_i2s();
+    }
+}
+
+void amy_platform_deinit() {
+    if (AMY_HAS_I2S) {
+        teensy_teardown_i2s();
+    }
+}
+
+void amy_update_tasks() {
+    if(amy_global.config.midi & AMY_MIDI_IS_UART) {
+        // do midi in here
+        uint8_t bytes[1];
+        int t;
+        while((t = teensy_get_serial_byte()) >= 0) {
+            bytes[0] = t;
+            convert_midi_bytes_to_messages(bytes,1,0);
+        }
+    }
+    amy_execute_deltas();
+}
+
+int16_t *amy_render_audio() {
+    amy_render(0, AMY_OSCS, 0);
+    int16_t *block = amy_fill_buffer();
+    return block;
+}
+
+size_t amy_i2s_write(const uint8_t *buffer, size_t nbytes) {
+    return teensy_i2s_write(buffer, nbytes);
+}
+
+#else
+
+//...
+
+#endif
+
+
+#endif
