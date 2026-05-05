@@ -500,6 +500,20 @@ typedef enum
     G_COUNT
 } glasses_t;
 
+typedef enum
+{
+    SWSN_BODY,
+    SWSN_BODY_MARKS,
+    SWSN_EARS,
+    SWSN_EYEBROW,
+    SWSN_EYE,
+    SWSN_HAIR,
+    SWSN_HAT,
+    SWSN_MOUTH,
+    SWSN_GLASSES,
+    SWSN_OPTIONS
+} features_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -603,9 +617,16 @@ void loadSPSona(swadgesonaCore_t* sw);
 
 // Get indexes
 /**
- * @brief Get the hair CNFS index from the swadgesona for drawing behind custom bodies
+ * @brief Copy the sprite and color at an index to a wsg_t. This function allocates memory for the wsg_t, please
+ * freeWsg() when done with image.
+ *
+ * @note Please note that there are probably some issues with this:
+ * - Human ears are default, and will provide a "false" signal
+ * - There are some special cases I have not handled, including vitiligo, Hair that has to go front and back, etc.
  *
  * @param sw Swadgesona to extract wsg from
- * @return cnfsFileIdx_t index into the CNFS system where the hairstyle is at.
+ * @param feature The feature to load
+ * @param dest The place to save the file into
+ * @return bool True if it found a sprite, false otherwise
  */
-cnfsFileIdx_t getHairWSG(swadgesona_t* sw);
+bool getFeatureWSG(swadgesona_t* sw, features_t feature, wsg_t* dest);

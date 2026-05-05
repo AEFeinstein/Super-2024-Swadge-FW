@@ -28,6 +28,8 @@ typedef struct
     int list[OPTION_COUNT];
     bool menu;
     int16_t menuSlot;
+    wsg_t test;
+    int idx;
 } stData_t;
 
 swadgeMode_t sonaTestMode = {
@@ -47,6 +49,7 @@ static void stEnterMode(void)
 
 static void stExitMode(void)
 {
+    freeWsg(&st->test);
     heap_caps_free(st);
 }
 
@@ -174,6 +177,14 @@ static void stMainLoop(int64_t elapsedUs)
     snprintf(buffer, sizeof(buffer) - 1, "Index: %" PRId16, st->list[st->selection]);
     drawText(getSysFont(), c555, buffer, 32, TFT_HEIGHT - 16);
     drawText(getSysFont(), c550, st->swsn.name.nameBuffer, 16, 16);
+
+    // Test pulling individual sprites out
+    /* drawRectFilled(0, 0, TFT_WIDTH, 64, c555);
+    for (int i = 0; i < SWSN_OPTIONS; i++)
+    {
+        getFeatureWSG(&st->swsn, i, &st->test);
+        drawWsgSimple(&st->test, i * 32, 0);
+    } */
 }
 
 static void stCopyListToSona(swadgesona_t* swsn, int* list)
