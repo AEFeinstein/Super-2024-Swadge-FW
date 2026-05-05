@@ -239,6 +239,14 @@ typedef enum
  */
 static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx);
 
+/**
+ * @brief Added the hat currently selected in the swadgesona and saves it to the indicated wsg_t.
+ * 
+ * @param sw The swadgesona to pull data from
+ * @param dest The image to write to. Set to the image on the swadgesona if required.
+ */
+static void _splatHat(swadgesona_t* sw, wsg_t* dest);
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -424,63 +432,7 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
     }
 
     // Hats
-    if (sw->core.hat != HAE_NONE)
-    {
-        wsgPaletteReset(&sw->pal);
-        if (sw->core.hat == HAE_PULSE) // If pulse use special color code
-        {
-            switch (sw->core.hatColor)
-            {
-                case HA_BLUE:
-                case HA_DARK_BLUE:
-                {
-                    sw->pal.newColors[c033] = c005;
-                    sw->pal.newColors[c055] = c035;
-                    break;
-                }
-                case HA_DARK_GREEN:
-                case HA_GREEN:
-                {
-                    sw->pal.newColors[c033] = c142;
-                    sw->pal.newColors[c055] = c252;
-                    break;
-                }
-                case HA_HOT_PINK:
-                case HA_PINK:
-                case HA_PURPLE:
-                {
-                    sw->pal.newColors[c033] = c504;
-                    sw->pal.newColors[c055] = c515;
-                    break;
-                }
-                case HA_ORANGE: // Red
-                {
-                    sw->pal.newColors[c033] = c500;
-                    sw->pal.newColors[c055] = c532;
-                    break;
-                }
-                case HA_YELLOW:
-                {
-                    sw->pal.newColors[c033] = c541;
-                    sw->pal.newColors[c055] = c552;
-                    break;
-                }
-                default:
-                {
-                    sw->pal.newColors[c033] = c033;
-                    sw->pal.newColors[c055] = c055;
-                    break;
-                }
-            }
-        }
-        else if (sw->core.hat != HAE_BIGMA && sw->core.hat != HAE_BATTRICE && sw->core.hat != HAE_MET_HELMET
-                 && sw->core.hat != HAE_SAWTOOTH)
-        {
-            _getPaletteFromIdx(&sw->pal, COLOR_HAT, sw->core.hatColor);
-        }
-        // Draw hat
-        canvasDrawSimplePal(&sw->image, hatWsgs[sw->core.hat - 1], 0, 0, &sw->pal);
-    }
+    _splatHat(sw, &sw->image);
 }
 
 void loadSPSona(swadgesonaCore_t* sw)
@@ -560,63 +512,10 @@ bool getFeatureWSG(swadgesona_t* sw, features_t feature, wsg_t* dest)
         }
         case SWSN_HAT:
         {
+            _splatHat(sw, dest);
             if (sw->core.hat != HAE_NONE)
             {
-                wsgPaletteReset(&sw->pal);
-                if (sw->core.hat == HAE_PULSE) // If pulse use special color code
-                {
-                    switch (sw->core.hatColor)
-                    {
-                        case HA_BLUE:
-                        case HA_DARK_BLUE:
-                        {
-                            sw->pal.newColors[c033] = c005;
-                            sw->pal.newColors[c055] = c035;
-                            break;
-                        }
-                        case HA_DARK_GREEN:
-                        case HA_GREEN:
-                        {
-                            sw->pal.newColors[c033] = c142;
-                            sw->pal.newColors[c055] = c252;
-                            break;
-                        }
-                        case HA_HOT_PINK:
-                        case HA_PINK:
-                        case HA_PURPLE:
-                        {
-                            sw->pal.newColors[c033] = c504;
-                            sw->pal.newColors[c055] = c515;
-                            break;
-                        }
-                        case HA_ORANGE: // Red
-                        {
-                            sw->pal.newColors[c033] = c500;
-                            sw->pal.newColors[c055] = c532;
-                            break;
-                        }
-                        case HA_YELLOW:
-                        {
-                            sw->pal.newColors[c033] = c541;
-                            sw->pal.newColors[c055] = c552;
-                            break;
-                        }
-                        default:
-                        {
-                            sw->pal.newColors[c033] = c033;
-                            sw->pal.newColors[c055] = c055;
-                            break;
-                        }
-                    }
-                }
-                else if (sw->core.hat != HAE_BIGMA && sw->core.hat != HAE_BATTRICE && sw->core.hat != HAE_MET_HELMET
-                         && sw->core.hat != HAE_SAWTOOTH)
-                {
-                    _getPaletteFromIdx(&sw->pal, COLOR_HAT, sw->core.hatColor);
-                }
-                // Draw hat
                 found = true;
-                canvasDrawSimplePal(dest, hatWsgs[sw->core.hat - 1], 0, 0, &sw->pal);
             }
             break;
         }
@@ -1228,5 +1127,66 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
             }
             break;
         }
+    }
+}
+
+static void _splatHat(swadgesona_t* sw, wsg_t* dest)
+{
+    if (sw->core.hat != HAE_NONE)
+    {
+        wsgPaletteReset(&sw->pal);
+        if (sw->core.hat == HAE_PULSE) // If pulse use special color code
+        {
+            switch (sw->core.hatColor)
+            {
+                case HA_BLUE:
+                case HA_DARK_BLUE:
+                {
+                    sw->pal.newColors[c033] = c005;
+                    sw->pal.newColors[c055] = c035;
+                    break;
+                }
+                case HA_DARK_GREEN:
+                case HA_GREEN:
+                {
+                    sw->pal.newColors[c033] = c142;
+                    sw->pal.newColors[c055] = c252;
+                    break;
+                }
+                case HA_HOT_PINK:
+                case HA_PINK:
+                case HA_PURPLE:
+                {
+                    sw->pal.newColors[c033] = c504;
+                    sw->pal.newColors[c055] = c515;
+                    break;
+                }
+                case HA_ORANGE: // Red
+                {
+                    sw->pal.newColors[c033] = c500;
+                    sw->pal.newColors[c055] = c532;
+                    break;
+                }
+                case HA_YELLOW:
+                {
+                    sw->pal.newColors[c033] = c541;
+                    sw->pal.newColors[c055] = c552;
+                    break;
+                }
+                default:
+                {
+                    sw->pal.newColors[c033] = c033;
+                    sw->pal.newColors[c055] = c055;
+                    break;
+                }
+            }
+        }
+        else if (sw->core.hat != HAE_BIGMA && sw->core.hat != HAE_BATTRICE && sw->core.hat != HAE_MET_HELMET
+                 && sw->core.hat != HAE_SAWTOOTH)
+        {
+            _getPaletteFromIdx(&sw->pal, COLOR_HAT, sw->core.hatColor);
+        }
+        // Draw hat
+        canvasDrawSimplePal(dest, hatWsgs[sw->core.hat - 1], 0, 0, &sw->pal);
     }
 }

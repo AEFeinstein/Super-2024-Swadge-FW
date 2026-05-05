@@ -617,7 +617,8 @@ void loadSPSona(swadgesonaCore_t* sw);
 
 // Get indexes
 /**
- * @brief Copy the sprite and color at an index to a wsg_t. Please erase after use.
+ * @brief Copy the sprite and color at an index to a wsg_t. This function allocates memory for the wsg_t, please
+ * freeWsg() when done with image.
  *
  * @note Please note that there are probably some issues with this:
  * - Human ears are default, and will provide a "false" signal
