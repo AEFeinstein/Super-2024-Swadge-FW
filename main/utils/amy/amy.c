@@ -80,8 +80,13 @@ void amy_profiles_print() {}
 #include "clipping_lookup_table.h"
 
 // Final output delay lines.
-delay_line_t *chorus_delay_lines[AMY_MAX_CHANNELS] = {NULL, NULL};
-delay_line_t *echo_delay_lines[AMY_MAX_CHANNELS] = {NULL, NULL};
+#if 2 == AMY_MAX_CHANNELS
+    delay_line_t *chorus_delay_lines[AMY_MAX_CHANNELS] = {NULL, NULL};
+    delay_line_t *echo_delay_lines[AMY_MAX_CHANNELS] = {NULL, NULL};
+#else
+    delay_line_t *chorus_delay_lines[AMY_MAX_CHANNELS] = {NULL};
+    delay_line_t *echo_delay_lines[AMY_MAX_CHANNELS] = {NULL};
+#endif
 SAMPLE *delay_mod = NULL;
 
 

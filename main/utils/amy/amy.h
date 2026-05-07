@@ -34,6 +34,9 @@ extern pthread_mutex_t amy_queue_lock;
 #endif
 #endif
 
+#include "hdw-dac.h"
+
+#define AMY_NO_MINIAUDIO
 
 // This is for baked in samples that come with AMY. The header file written by `amy/headers.py` writes this.
 typedef struct {
@@ -66,8 +69,8 @@ extern const uint32_t pcm_wavetable_len;
 #define AMY_BLOCK_SIZE 128
 #define BLOCK_SIZE_BITS 7 // log2 of BLOCK_SIZE
 #else
-#define AMY_BLOCK_SIZE 256
-#define BLOCK_SIZE_BITS 8 // log2 of BLOCK_SIZE
+#define AMY_BLOCK_SIZE DAC_BUF_SIZE // 256
+#define BLOCK_SIZE_BITS 9 // log2 of BLOCK_SIZE // 8
 #endif
 
 #ifdef AMY_DAISY
@@ -75,7 +78,7 @@ extern const uint32_t pcm_wavetable_len;
 #elif defined __EMSCRIPTEN__
 #define AMY_SAMPLE_RATE 48000
 #else
-#define AMY_SAMPLE_RATE 44100 
+#define AMY_SAMPLE_RATE DAC_SAMPLE_RATE_HZ // 44100 
 #endif
 
 #define PCM_AMY_SAMPLE_RATE 22050
@@ -102,20 +105,20 @@ extern const uint32_t pcm_wavetable_len;
 
 
 // upper bounds for static arrays.
-#define AMY_MAX_CORES 2          
-#define AMY_MAX_CHANNELS 2
+#define AMY_MAX_CORES 1 // 2          
+#define AMY_MAX_CHANNELS 1 // 2
 
 // Always use 2 channels. Clients that want mono can deinterleave
-#define AMY_NCHANS 2
+#define AMY_NCHANS 1 // 2
 
 
 // Use dual cores on supported platforms
-#if (defined (ESP_PLATFORM) || defined (ARDUINO_ARCH_RP2040) ||defined(ARDUINO_ARCH_RP2350))
-#define AMY_DUALCORE
-#define AMY_CORES 2
-#else
+// #if (defined (ESP_PLATFORM) || defined (ARDUINO_ARCH_RP2040) ||defined(ARDUINO_ARCH_RP2350))
+// #define AMY_DUALCORE
+// #define AMY_CORES 2
+// #else
 #define AMY_CORES 1
-#endif
+// #endif
 
 #define AMY_HAS_STARTUP_BLEEP (amy_global.config.features.startup_bleep)
 #define AMY_HAS_REVERB (amy_global.config.features.reverb)

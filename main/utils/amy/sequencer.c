@@ -178,7 +178,6 @@ void sequencer_check_and_fill() {
 
 ///// Sequencers per platform
 
-#undef ESP_PLATFORM
 #ifdef ESP_PLATFORM
 // ESP: do it with hardware timer
 #include "esp_timer.h"
