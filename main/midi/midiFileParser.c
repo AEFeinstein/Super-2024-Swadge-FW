@@ -386,9 +386,9 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
                         break;
                     }
 
-                    case TEMPO:
+                    case ME_TEMPO:
                     {
-                        track->nextEvent.meta.type = TEMPO;
+                        track->nextEvent.meta.type = ME_TEMPO;
 
                         if (metaLength == 3)
                         {
@@ -1229,7 +1229,7 @@ int midiWriteEvent(uint8_t* out, int max, const midiEvent_t* event)
                     break;
                 }
 
-                case TEMPO:
+                case ME_TEMPO:
                 {
                     if (written < max)
                     {

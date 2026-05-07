@@ -82,7 +82,7 @@
 // The index of the system-wide MIDI player for background music
 #define MIDI_BGM 1
 // The maximum volume setting for globalMidiPlayerSetVolume()
-#define MAX_VOLUME 13
+#define MIDI_MAX_VOLUME 13
 
 #define MIDI_TRUE         0x7F
 #define MIDI_FALSE        0x00

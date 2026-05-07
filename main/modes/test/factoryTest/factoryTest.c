@@ -184,8 +184,8 @@ void testEnterMode(void)
     test->maxValue = 1;
 
     // Temporarily set the buzzer to full volume
-    globalMidiPlayerSetVolume(MIDI_BGM, MAX_VOLUME);
-    globalMidiPlayerSetVolume(MIDI_SFX, MAX_VOLUME);
+    globalMidiPlayerSetVolume(MIDI_BGM, MIDI_MAX_VOLUME);
+    globalMidiPlayerSetVolume(MIDI_SFX, MIDI_MAX_VOLUME);
 
     // Set the mic to listen
     setMicGainSetting(MAX_MIC_GAIN);

@@ -46,7 +46,7 @@ typedef enum
     CHANNEL_PREFIX = 0x20,
     PORT_PREFIX    = 0x21,
     END_OF_TRACK   = 0x2F,
-    TEMPO          = 0x51,
+    ME_TEMPO       = 0x51,
     SMPTE_OFFSET   = 0x54,
     TIME_SIGNATURE = 0x58,
     KEY_SIGNATURE  = 0x59,

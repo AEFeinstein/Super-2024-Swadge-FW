@@ -1076,7 +1076,7 @@ static void handleMetaEvent(midiPlayer_t* player, const midiMetaEvent_t* event)
             break;
         }
 
-        case TEMPO:
+        case ME_TEMPO:
         {
             midiSetTempo(player, event->tempo);
             break;

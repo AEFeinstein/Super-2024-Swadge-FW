@@ -2638,7 +2638,7 @@ static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile)
                     }
                 }
             }
-            else if (event.type == META_EVENT && event.meta.type == TEMPO)
+            else if (event.type == META_EVENT && event.meta.type == ME_TEMPO)
             {
                 tempo = event.meta.tempo;
             }
