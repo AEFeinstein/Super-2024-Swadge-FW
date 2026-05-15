@@ -44,7 +44,7 @@
 #define TOUCHPAD_Y_OFF 8
 #define TOUCHPAD_X_OFF 10
 
-#define GP_NS_CENTERED -128
+#define GP_NS_CENTERED 128
 
 //==============================================================================
 // Enums
