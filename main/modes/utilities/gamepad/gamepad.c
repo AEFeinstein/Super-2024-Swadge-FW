@@ -607,6 +607,7 @@ void gamepadNsMainLoop(int64_t elapsedUs __attribute__((unused)))
         };
 
         // For each hat direction
+        uint8_t hatsDrawn = 0;
         for (uint8_t i = 0; i < ARRAY_SIZE(hatDirs); i++)
         {
             // The degree around the cluster
@@ -633,42 +634,42 @@ void gamepadNsMainLoop(int64_t elapsedUs __attribute__((unused)))
                     {
                         case GAMEPAD_HAT_UP:
                         {
-                            isPressed = (0 == gamepad->gpNsState.x) && (0 > gamepad->gpNsState.y);
+                            isPressed = (128 == gamepad->gpNsState.x) && (128 > gamepad->gpNsState.y);
                             break;
                         }
                         case GAMEPAD_HAT_UP_RIGHT:
                         {
-                            isPressed = (0 < gamepad->gpNsState.x) && (0 > gamepad->gpNsState.y);
+                            isPressed = (128 < gamepad->gpNsState.x) && (128 > gamepad->gpNsState.y);
                             break;
                         }
                         case GAMEPAD_HAT_RIGHT:
                         {
-                            isPressed = (0 < gamepad->gpNsState.x) && (0 == gamepad->gpNsState.y);
+                            isPressed = (128 < gamepad->gpNsState.x) && (128 == gamepad->gpNsState.y);
                             break;
                         }
                         case GAMEPAD_HAT_DOWN_RIGHT:
                         {
-                            isPressed = (0 < gamepad->gpNsState.x) && (0 < gamepad->gpNsState.y);
+                            isPressed = (128 < gamepad->gpNsState.x) && (128 < gamepad->gpNsState.y);
                             break;
                         }
                         case GAMEPAD_HAT_DOWN:
                         {
-                            isPressed = (0 == gamepad->gpNsState.x) && (0 < gamepad->gpNsState.y);
+                            isPressed = (128 == gamepad->gpNsState.x) && (128 < gamepad->gpNsState.y);
                             break;
                         }
                         case GAMEPAD_HAT_DOWN_LEFT:
                         {
-                            isPressed = (0 > gamepad->gpNsState.x) && (0 < gamepad->gpNsState.y);
+                            isPressed = (128 > gamepad->gpNsState.x) && (128 < gamepad->gpNsState.y);
                             break;
                         }
                         case GAMEPAD_HAT_LEFT:
                         {
-                            isPressed = (0 > gamepad->gpNsState.x) && (0 == gamepad->gpNsState.y);
+                            isPressed = (128 > gamepad->gpNsState.x) && (128 == gamepad->gpNsState.y);
                             break;
                         }
                         case GAMEPAD_HAT_UP_LEFT:
                         {
-                            isPressed = (0 > gamepad->gpNsState.x) && (0 > gamepad->gpNsState.y);
+                            isPressed = (128 > gamepad->gpNsState.x) && (128 > gamepad->gpNsState.y);
                             break;
                         }
                     }
@@ -676,6 +677,10 @@ void gamepadNsMainLoop(int64_t elapsedUs __attribute__((unused)))
                 }
             }
 
+            if (isPressed)
+            {
+                hatsDrawn |= (1 << i);
+            }
             drawFunc = isPressed ? &drawCircleFilled : &drawCircle;
             drawFunc(xc, yc, DPAD_BTN_RADIUS, c551);
         }
@@ -754,14 +759,11 @@ void gamepadNsMainLoop(int64_t elapsedUs __attribute__((unused)))
         uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
         uint8_t btnBrightness                = 0;
 
-        if ((gamepad->gpNsState.hat == gamepad->previousHat)
-            && (gamepad->gpNsState.buttons == gamepad->previousButtons))
+        // Only draw when there's a change
+        if (hatsDrawn != gamepad->previousHatsDrawn || gamepad->gpNsState.buttons != gamepad->previousButtons)
         {
-            // Skip eye update if no change
-            // break;
-        }
-        else
-        {
+            gamepad->previousHatsDrawn = hatsDrawn;
+
             bitmap[5][0]  = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_TL) ? EYE_LED_BRIGHT : 0;
             bitmap[5][5]  = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_TL2) ? EYE_LED_BRIGHT : 0;
             bitmap[5][6]  = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_TR2) ? EYE_LED_BRIGHT : 0;
@@ -796,60 +798,44 @@ void gamepadNsMainLoop(int64_t elapsedUs __attribute__((unused)))
             bitmap[2][6]  = btnBrightness;
             bitmap[2][7]  = btnBrightness;
 
-            switch (gamepad->gpNsState.hat)
+            if (hatsDrawn
+                & ((1 << (GAMEPAD_NS_HAT_UP - 1)) | (1 << (GAMEPAD_NS_HAT_UP_LEFT - 1))
+                   | (1 << (GAMEPAD_NS_HAT_UP_RIGHT - 1))))
             {
-                case GAMEPAD_NS_HAT_UP:
-                case GAMEPAD_NS_HAT_UP_LEFT:
-                case GAMEPAD_NS_HAT_UP_RIGHT:
-                    bitmap[5][2] = EYE_LED_BRIGHT;
-                    bitmap[5][3] = EYE_LED_BRIGHT;
-                    bitmap[4][2] = EYE_LED_BRIGHT;
-                    bitmap[4][3] = EYE_LED_BRIGHT;
-                    // fallthrough
-                default:
-                    break;
+                bitmap[5][2] = EYE_LED_BRIGHT;
+                bitmap[5][3] = EYE_LED_BRIGHT;
+                bitmap[4][2] = EYE_LED_BRIGHT;
+                bitmap[4][3] = EYE_LED_BRIGHT;
             }
 
-            switch (gamepad->gpNsState.hat)
+            if (hatsDrawn
+                & ((1 << (GAMEPAD_NS_HAT_RIGHT - 1)) | (1 << (GAMEPAD_NS_HAT_UP_RIGHT - 1))
+                   | (1 << (GAMEPAD_NS_HAT_DOWN_RIGHT - 1))))
             {
-                case GAMEPAD_NS_HAT_RIGHT:
-                case GAMEPAD_NS_HAT_UP_RIGHT:
-                case GAMEPAD_NS_HAT_DOWN_RIGHT:
-                    bitmap[3][4] = EYE_LED_BRIGHT;
-                    bitmap[3][5] = EYE_LED_BRIGHT;
-                    bitmap[2][4] = EYE_LED_BRIGHT;
-                    bitmap[2][5] = EYE_LED_BRIGHT;
-                    // fallthrough
-                default:
-                    break;
+                bitmap[3][4] = EYE_LED_BRIGHT;
+                bitmap[3][5] = EYE_LED_BRIGHT;
+                bitmap[2][4] = EYE_LED_BRIGHT;
+                bitmap[2][5] = EYE_LED_BRIGHT;
             }
 
-            switch (gamepad->gpNsState.hat)
+            if (hatsDrawn
+                & ((1 << (GAMEPAD_NS_HAT_DOWN - 1)) | (1 << (GAMEPAD_NS_HAT_DOWN_RIGHT - 1))
+                   | (1 << (GAMEPAD_NS_HAT_DOWN_LEFT - 1))))
             {
-                case GAMEPAD_NS_HAT_DOWN:
-                case GAMEPAD_NS_HAT_DOWN_RIGHT:
-                case GAMEPAD_NS_HAT_DOWN_LEFT:
-                    bitmap[1][2] = EYE_LED_BRIGHT;
-                    bitmap[1][3] = EYE_LED_BRIGHT;
-                    bitmap[0][2] = EYE_LED_BRIGHT;
-                    bitmap[0][3] = EYE_LED_BRIGHT;
-                    // fallthrough
-                default:
-                    break;
+                bitmap[1][2] = EYE_LED_BRIGHT;
+                bitmap[1][3] = EYE_LED_BRIGHT;
+                bitmap[0][2] = EYE_LED_BRIGHT;
+                bitmap[0][3] = EYE_LED_BRIGHT;
             }
 
-            switch (gamepad->gpNsState.hat)
+            if (hatsDrawn
+                & ((1 << (GAMEPAD_NS_HAT_LEFT - 1)) | (1 << (GAMEPAD_NS_HAT_UP_LEFT - 1))
+                   | (1 << (GAMEPAD_NS_HAT_DOWN_LEFT - 1))))
             {
-                case GAMEPAD_NS_HAT_LEFT:
-                case GAMEPAD_NS_HAT_UP_LEFT:
-                case GAMEPAD_NS_HAT_DOWN_LEFT:
-                    bitmap[3][0] = EYE_LED_BRIGHT;
-                    bitmap[3][1] = EYE_LED_BRIGHT;
-                    bitmap[2][0] = EYE_LED_BRIGHT;
-                    bitmap[2][1] = EYE_LED_BRIGHT;
-                    // fallthrough
-                default:
-                    break;
+                bitmap[3][0] = EYE_LED_BRIGHT;
+                bitmap[3][1] = EYE_LED_BRIGHT;
+                bitmap[2][0] = EYE_LED_BRIGHT;
+                bitmap[2][1] = EYE_LED_BRIGHT;
             }
 
             // Write and select the bitmap to an unused slot
