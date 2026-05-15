@@ -105,7 +105,6 @@ bool process_font(processorInput_t* arg)
     int charStartX      = 0;
     int charEndX        = 0;
     bool isCountingChar = false;
-    char ch             = ' ';
     for (int x = 0; x < w; x++)
     {
         switch (0xFFFFFF & getPx(data, w, x, h - 1))
@@ -124,8 +123,6 @@ bool process_font(processorInput_t* arg)
                 {
                     appendCharToFile(fp, data, w, h, charStartX, charEndX);
                     charsWritten++;
-                    /* Increment the char (dbg) */
-                    ch++;
                 }
                 charStartX     = x + 1;
                 charEndX       = x + 1;

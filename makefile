@@ -343,8 +343,7 @@ endif
 ifeq ($(HOST_OS),Linux)
 LIBRARY_FLAGS += \
 	$(CFLAGS_SANITIZE) \
-	-fno-omit-frame-pointer \
-	-static-libasan
+	-fno-omit-frame-pointer
 ifeq ($(ENABLE_GCOV),true)
     LIBRARY_FLAGS += -lgcov -fprofile-arcs -ftest-coverage
 endif
