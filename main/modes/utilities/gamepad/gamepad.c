@@ -179,14 +179,6 @@ swadgeMode_t gamepadMode = {
 
 };
 
-// const hid_gamepad_button_bm_t touchMap[] = {
-//     GAMEPAD_BUTTON_C, GAMEPAD_BUTTON_X, GAMEPAD_BUTTON_C, GAMEPAD_BUTTON_10, GAMEPAD_BUTTON_4,
-// };
-
-// const hid_gamepad_button_bm_t touchMapNs[] = {
-//     GAMEPAD_NS_BUTTON_Y, GAMEPAD_NS_BUTTON_TL, GAMEPAD_NS_BUTTON_Z, GAMEPAD_NS_BUTTON_TR, GAMEPAD_NS_BUTTON_X,
-// };
-
 /// @brief  Switch Descriptor
 static const tusb_desc_device_t nsDescriptor = {
     .bLength            = 18U,
