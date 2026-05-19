@@ -6,6 +6,70 @@
 #include "fp_math.h"
 
 //==============================================================================
+// Defines
+//==============================================================================
+
+#define NUM_STRINGS 6
+
+//==============================================================================
+// Enums
+//==============================================================================
+
+// In q24_8
+typedef enum
+{
+    E2  = 21096,
+    F2  = 22351,
+    Fs2 = 23680,
+    G2  = 25088,
+    Gs2 = 26579,
+    A2  = 28160,
+    As2 = 29834,
+    B2  = 31609,
+    C3  = 33488,
+    Cs3 = 35479,
+    D3  = 37589,
+    Ds3 = 39824,
+    E3  = 42192,
+    F3  = 44701,
+    Fs3 = 47359,
+    G3  = 50175,
+    Gs3 = 53159,
+    A3  = 56320,
+    As3 = 59669,
+    B3  = 63217,
+    C4  = 66976,
+    Cs4 = 70959,
+    D4  = 75178,
+    Ds4 = 79649,
+    E4  = 84385,
+    F4  = 89402,
+    Fs4 = 94718,
+    G4  = 100351,
+    Gs4 = 106318,
+    A4  = 112640,
+    As4 = 119338,
+    B4  = 126434,
+    C5  = 133952,
+    Cs5 = 141917,
+    D5  = 150356,
+    Ds5 = 159297,
+    E5  = 168769,
+    F5  = 178805,
+    Fs5 = 189437,
+    G5  = 200702,
+    Gs5 = 212636,
+    A5  = 225280,
+    As5 = 238676,
+    B5  = 252868,
+    C6  = 267905,
+    Cs6 = 283835,
+    D6  = 300713,
+    Ds6 = 318594,
+    E6  = 337539,
+} q24_8_freq;
+
+//==============================================================================
 // Structs
 //==============================================================================
 
@@ -18,9 +82,18 @@ typedef struct
 
 typedef struct
 {
-    ks_string string;
+    q24_8 notes[NUM_STRINGS];
+    const char* name;
+} guitarChord_t;
+
+typedef struct
+{
+    bool isPlaying;
+    ks_string strings[NUM_STRINGS];
     bool tpTouched;
     vec_t tpJs;
+    uint16_t btnState;
+    const char* chordStr;
 } karplusStrong_t;
 
 //==============================================================================
@@ -46,6 +119,89 @@ const trophyDataList_t ksTrophyData = {
     .length   = ARRAY_SIZE(ksTrophies),
 };
 
+static const guitarChord_t gChords[] = {
+    // Open
+    {
+        .name  = "Open",
+        .notes = {E2, A2, D3, G3, B3, E4},
+    },
+    // PB_UP
+    {
+        .name  = "D Major",
+        .notes = {0, 0, D3, A3, D4, Fs4},
+    },
+    // PB_DOWN
+    {
+        .name  = "E Minor",
+        .notes = {E2, B2, E3, G3, B3, E4},
+    },
+    // PB_DOWN | PB_UP
+    {
+        .name  = "None",
+        .notes = {0, 0, 0, 0, 0, 0},
+    },
+    // PB_LEFT
+    {
+        .name  = "G Major",
+        .notes = {G2, B2, D3, G3, B3, G4},
+    },
+    // PB_LEFT | PB_UP
+    {
+        .name  = "None",
+        .notes = {0, 0, 0, 0, 0, 0},
+    },
+    // PB_LEFT | PB_DOWN
+    {
+        .name  = "None",
+        .notes = {0, 0, 0, 0, 0, 0},
+    },
+    // PB_LEFT | PB_DOWN | PB_UP
+    {
+        .name  = "None",
+        .notes = {0, 0, 0, 0, 0, 0},
+    },
+    // PB_RIGHT
+    {
+        .name  = "C Major",
+        .notes = {0, C3, E3, G3, C4, E4},
+    },
+    // PB_RIGHT | PB_UP
+    {
+        .name  = "None",
+        .notes = {0, 0, 0, 0, 0, 0},
+    },
+    // PB_RIGHT | PB_DOWN
+    {
+        .name  = "None",
+        .notes = {0, 0, 0, 0, 0, 0},
+    },
+    // PB_RIGHT | PB_DOWN | PB_UP
+    {
+        .name  = "None",
+        .notes = {0, 0, 0, 0, 0, 0},
+    },
+    // PB_RIGHT | PB_LEFT
+    {
+        .name  = "None",
+        .notes = {0, 0, 0, 0, 0, 0},
+    },
+    // PB_RIGHT | PB_LEFT | PB_UP
+    {
+        .name  = "None",
+        .notes = {0, 0, 0, 0, 0, 0},
+    },
+    // PB_RIGHT | PB_LEFT | PB_DOWN
+    {
+        .name  = "None",
+        .notes = {0, 0, 0, 0, 0, 0},
+    },
+    // PB_RIGHT | PB_LEFT | PB_DOWN | PB_UP
+    {
+        .name  = "None",
+        .notes = {0, 0, 0, 0, 0, 0},
+    },
+};
+
 //==============================================================================
 // Function Prototypes
 //==============================================================================
@@ -57,7 +213,6 @@ static void ksBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h,
 static void ksDacCallback(uint8_t* samples, int16_t len);
 
 static void initKsString(ks_string* string, q24_8 frequency);
-static void reinitKsString(ks_string* string);
 static void deinitKsString(ks_string* string);
 static void genKsStringSamples(ks_string* string, uint8_t* samples, uint32_t numSamples);
 
@@ -96,7 +251,6 @@ static void ksEnterMode(void)
 
     // Initialize mode
     ks = heap_caps_calloc(1, sizeof(karplusStrong_t), MALLOC_CAP_8BIT);
-    initKsString(&ks->string, TO_FX(440));
 }
 
 /**
@@ -104,7 +258,10 @@ static void ksEnterMode(void)
  */
 static void ksExitMode(void)
 {
-    deinitKsString(&ks->string);
+    for (int i = 0; i < ARRAY_SIZE(ks->strings); i++)
+    {
+        deinitKsString(&ks->strings[i]);
+    }
     heap_caps_free(ks);
 }
 
@@ -120,10 +277,8 @@ static void ksMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        if (evt.down)
-        {
-            reinitKsString(&ks->string);
-        }
+        ks->btnState = evt.state & (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT);
+        ks->chordStr = gChords[ks->btnState].name;
     }
 
     // Check touchpad events
@@ -134,9 +289,19 @@ static void ksMainLoop(int64_t elapsedUs)
         getTouchCartesian(angle, radius, &ks->tpJs.x, &ks->tpJs.y);
         if (ks->tpTouched)
         {
+            // Vertical zero-crossing occurred
             if ((ks->tpJs.y > 512 && lastJs.y <= 512) || (ks->tpJs.y < 512 && lastJs.y >= 512))
             {
-                reinitKsString(&ks->string);
+                ks->isPlaying = false;
+                for (int sIdx = 0; sIdx < ARRAY_SIZE(ks->strings); sIdx++)
+                {
+                    deinitKsString(&ks->strings[sIdx]);
+                    if (gChords[ks->btnState].notes[sIdx])
+                    {
+                        initKsString(&ks->strings[sIdx], gChords[ks->btnState].notes[sIdx]);
+                        ks->isPlaying = true;
+                    }
+                }
             }
         }
         ks->tpTouched = true;
@@ -148,6 +313,13 @@ static void ksMainLoop(int64_t elapsedUs)
 
     // Draw FPS
     DRAW_FPS_COUNTER((*getSysFont()));
+
+    // Draw chord name
+    if (ks->chordStr)
+    {
+        font_t* f = getSysFont();
+        drawText(f, c555, ks->chordStr, (TFT_WIDTH - textWidth(f, ks->chordStr)) / 2, (TFT_HEIGHT - f->height) / 2);
+    }
 }
 
 /**
@@ -174,14 +346,37 @@ static void ksBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h,
  */
 static void ksDacCallback(uint8_t* samples, int16_t len)
 {
-    // Make sure the string is initialized first
-    if (ks->string.delayLine)
+    if (ks->isPlaying)
     {
-        genKsStringSamples(&ks->string, samples, len);
+        // Buffer to sum all string output
+        uint16_t sumBuf[len];
+        memset(sumBuf, 0, sizeof(sumBuf));
+
+        // For each string
+        for (int sIdx = 0; sIdx < ARRAY_SIZE(ks->strings); sIdx++)
+        {
+            if (ks->strings[sIdx].delayLine)
+            {
+                // Generate samples
+                uint8_t tmpBuf[len];
+                genKsStringSamples(&ks->strings[sIdx], tmpBuf, len);
+
+                // Add to the sum buf
+                for (int i = 0; i < len; i++)
+                {
+                    sumBuf[i] += tmpBuf[i];
+                }
+            }
+        }
+
+        // Write to output buffer
+        for (int i = 0; i < len; i++)
+        {
+            samples[i] = sumBuf[i] / NUM_STRINGS;
+        }
     }
     else
     {
-        // If not initialized, fill with 'zeros'
         memset(samples, 128, len);
     }
 }
@@ -194,25 +389,17 @@ static void ksDacCallback(uint8_t* samples, int16_t len)
  */
 static void initKsString(ks_string* string, q24_8 frequency)
 {
-    // Calculate the delay line length, then allocate it and fill it with random numbers
-    // With the division the q24_8 math comes out to a normal integer
-    string->delayLineLen = (TO_FX(DAC_SAMPLE_RATE_HZ) + (frequency / 2)) / frequency;
-    string->delayLine    = heap_caps_calloc(string->delayLineLen, sizeof(int32_t), MALLOC_CAP_8BIT);
-    esp_fill_random(string->delayLine, string->delayLineLen * sizeof(int32_t));
+    if (!string->delayLine)
+    {
+        // Calculate the delay line length, then allocate it and fill it with random numbers
+        // With the division the q24_8 math comes out to a normal integer
+        string->delayLineLen = (TO_FX(DAC_SAMPLE_RATE_HZ) + (frequency / 2)) / frequency;
+        string->delayLine    = heap_caps_calloc(string->delayLineLen, sizeof(int32_t), MALLOC_CAP_8BIT);
+        esp_fill_random(string->delayLine, string->delayLineLen * sizeof(int32_t));
 
-    // Reset the index
-    string->delayLineIdx = 0;
-}
-
-/**
- * @brief Reinitialize a Karplus Strong string by randomizing the delay line
- *
- * @param string The string to reinitialize
- */
-static void reinitKsString(ks_string* string)
-{
-    esp_fill_random(string->delayLine, string->delayLineLen * sizeof(int32_t));
-    string->delayLineIdx = 0;
+        // Reset the index
+        string->delayLineIdx = 0;
+    }
 }
 
 /**
@@ -222,7 +409,11 @@ static void reinitKsString(ks_string* string)
  */
 static void deinitKsString(ks_string* string)
 {
-    heap_caps_free(string->delayLine);
+    if (string->delayLine)
+    {
+        heap_caps_free(string->delayLine);
+        memset(string, 0, sizeof(ks_string));
+    }
 }
 
 /**
