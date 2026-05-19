@@ -75,25 +75,38 @@ typedef enum
 
 typedef struct
 {
+    // Delay line for synthesis
     int32_t* delayLine;
     uint32_t delayLineLen;
     uint32_t delayLineIdx;
+
+    // For touchpad input
+    int16_t yCrossing;
+
+    // For TFT drawing
+    paletteColor_t color;
 } ks_string;
 
 typedef struct
 {
     q24_8 notes[NUM_STRINGS];
     const char* name;
+    led_t color;
 } guitarChord_t;
 
 typedef struct
 {
-    bool isPlaying;
     ks_string strings[NUM_STRINGS];
-    bool tpTouched;
     vec_t tpJs;
-    uint16_t btnState;
+    int32_t stringColorTimer;
     const char* chordStr;
+
+    uint16_t btnState;
+
+    bool tpTouched;
+
+    led_t leds[CONFIG_NUM_LEDS];
+    int32_t ledTimer;
 } karplusStrong_t;
 
 //==============================================================================
@@ -124,81 +137,97 @@ static const guitarChord_t gChords[] = {
     {
         .name  = "Open",
         .notes = {E2, A2, D3, G3, B3, E4},
+        .color = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
     },
     // PB_UP
     {
         .name  = "D Major",
         .notes = {0, 0, D3, A3, D4, Fs4},
+        .color = {.r = 0xFF, .g = 0x00, .b = 0x00},
     },
     // PB_DOWN
     {
         .name  = "E Minor",
         .notes = {E2, B2, E3, G3, B3, E4},
+        .color = {.r = 0xFF, .g = 0x00, .b = 0xFF},
     },
     // PB_DOWN | PB_UP
     {
         .name  = "None",
         .notes = {0, 0, 0, 0, 0, 0},
+        .color = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
     },
     // PB_LEFT
     {
         .name  = "G Major",
         .notes = {G2, B2, D3, G3, B3, G4},
+        .color = {.r = 0x00, .g = 0xFF, .b = 0x00},
     },
     // PB_LEFT | PB_UP
     {
         .name  = "None",
         .notes = {0, 0, 0, 0, 0, 0},
+        .color = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
     },
     // PB_LEFT | PB_DOWN
     {
         .name  = "None",
         .notes = {0, 0, 0, 0, 0, 0},
+        .color = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
     },
     // PB_LEFT | PB_DOWN | PB_UP
     {
         .name  = "None",
         .notes = {0, 0, 0, 0, 0, 0},
+        .color = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
     },
     // PB_RIGHT
     {
         .name  = "C Major",
         .notes = {0, C3, E3, G3, C4, E4},
+        .color = {.r = 0x00, .g = 0x00, .b = 0xFF},
     },
     // PB_RIGHT | PB_UP
     {
         .name  = "None",
         .notes = {0, 0, 0, 0, 0, 0},
+        .color = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
     },
     // PB_RIGHT | PB_DOWN
     {
         .name  = "None",
         .notes = {0, 0, 0, 0, 0, 0},
+        .color = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
     },
     // PB_RIGHT | PB_DOWN | PB_UP
     {
         .name  = "None",
         .notes = {0, 0, 0, 0, 0, 0},
+        .color = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
     },
     // PB_RIGHT | PB_LEFT
     {
         .name  = "None",
         .notes = {0, 0, 0, 0, 0, 0},
+        .color = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
     },
     // PB_RIGHT | PB_LEFT | PB_UP
     {
         .name  = "None",
         .notes = {0, 0, 0, 0, 0, 0},
+        .color = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
     },
     // PB_RIGHT | PB_LEFT | PB_DOWN
     {
         .name  = "None",
         .notes = {0, 0, 0, 0, 0, 0},
+        .color = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
     },
     // PB_RIGHT | PB_LEFT | PB_DOWN | PB_UP
     {
         .name  = "None",
         .notes = {0, 0, 0, 0, 0, 0},
+        .color = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
     },
 };
 
@@ -246,11 +275,23 @@ swadgeMode_t karplusStrongMode = {
  */
 static void ksEnterMode(void)
 {
-    // Uncapped framerate
-    setFrameRateUs(0);
+    // 60 FPS
+    setFrameRateUs(1000000 / 60);
 
     // Initialize mode
     ks = heap_caps_calloc(1, sizeof(karplusStrong_t), MALLOC_CAP_8BIT);
+
+    // Set pluck crossings (touchpad is 0->1024)
+    int16_t gap = 1024 / (1 + ARRAY_SIZE(ks->strings));
+    int16_t yc  = 1024 - gap;
+    for (int sIdx = 0; sIdx < ARRAY_SIZE(ks->strings); sIdx++)
+    {
+        ks->strings[sIdx].yCrossing = yc;
+        yc -= gap;
+    }
+
+    // Blank LEDs
+    setLeds(ks->leds, CONFIG_NUM_LEDS);
 }
 
 /**
@@ -258,10 +299,13 @@ static void ksEnterMode(void)
  */
 static void ksExitMode(void)
 {
-    for (int i = 0; i < ARRAY_SIZE(ks->strings); i++)
+    // Deinit all strings
+    for (int sIdx = 0; sIdx < ARRAY_SIZE(ks->strings); sIdx++)
     {
-        deinitKsString(&ks->strings[i]);
+        deinitKsString(&ks->strings[sIdx]);
     }
+
+    // Free memory
     heap_caps_free(ks);
 }
 
@@ -277,6 +321,7 @@ static void ksMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
+        // Save state and name
         ks->btnState = evt.state & (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT);
         ks->chordStr = gChords[ks->btnState].name;
     }
@@ -285,29 +330,39 @@ static void ksMainLoop(int64_t elapsedUs)
     int32_t angle, radius, intensity;
     if (getTouchJoystick(&angle, &radius, &intensity))
     {
+        // Save last touchpad location
         vec_t lastJs = ks->tpJs;
+        // Get current touchpad location
         getTouchCartesian(angle, radius, &ks->tpJs.x, &ks->tpJs.y);
+        // If the touchpad was previously touched, we can compare points
         if (ks->tpTouched)
         {
-            // Vertical zero-crossing occurred
-            if ((ks->tpJs.y > 512 && lastJs.y <= 512) || (ks->tpJs.y < 512 && lastJs.y >= 512))
+            // For each string
+            for (int sIdx = 0; sIdx < ARRAY_SIZE(ks->strings); sIdx++)
             {
-                ks->isPlaying = false;
-                for (int sIdx = 0; sIdx < ARRAY_SIZE(ks->strings); sIdx++)
+                // If there is a note here
+                if (gChords[ks->btnState].notes[sIdx])
                 {
-                    deinitKsString(&ks->strings[sIdx]);
-                    if (gChords[ks->btnState].notes[sIdx])
+                    // Check if a vertical crossing occurred
+                    int16_t yc = ks->strings[sIdx].yCrossing;
+                    if ((ks->tpJs.y > yc && lastJs.y <= yc) || (ks->tpJs.y < yc && lastJs.y >= yc))
                     {
+                        // Pluck the string
+                        deinitKsString(&ks->strings[sIdx]);
                         initKsString(&ks->strings[sIdx], gChords[ks->btnState].notes[sIdx]);
-                        ks->isPlaying = true;
+                        ks->strings[sIdx].color = c555;
+
+                        ks->leds[sIdx] = gChords[ks->btnState].color;
                     }
                 }
             }
         }
+        // Mark the touchpad as touched for next time
         ks->tpTouched = true;
     }
     else
     {
+        // Mark the touchpad as not touched
         ks->tpTouched = false;
     }
 
@@ -320,6 +375,49 @@ static void ksMainLoop(int64_t elapsedUs)
         font_t* f = getSysFont();
         drawText(f, c555, ks->chordStr, (TFT_WIDTH - textWidth(f, ks->chordStr)) / 2, (TFT_HEIGHT - f->height) / 2);
     }
+
+    // Draw Strings
+    paletteColor_t* fb = getPxTftFramebuffer();
+    int16_t gap        = TFT_HEIGHT / (1 + ARRAY_SIZE(ks->strings));
+    int16_t yIdx       = gap;
+    for (int sIdx = 0; sIdx < ARRAY_SIZE(ks->strings); sIdx++)
+    {
+        memset(&fb[TFT_WIDTH * yIdx], ks->strings[sIdx].color, TFT_WIDTH);
+        yIdx += gap;
+    }
+
+    // Run a timer to decay string color
+    RUN_TIMER_EVERY(ks->stringColorTimer, 1000000 / 6, elapsedUs, {
+        for (int sIdx = 0; sIdx < ARRAY_SIZE(ks->strings); sIdx++)
+        {
+            if (ks->strings[sIdx].color)
+            {
+                // Math to go c555 -> c444, etc.
+                ks->strings[sIdx].color -= (1 + 6 + 36);
+            }
+        }
+    });
+
+    // Run a timer to decay LEDs
+    RUN_TIMER_EVERY(ks->ledTimer, 1000000 / 256, elapsedUs, {
+        for (int lIdx = 0; lIdx < CONFIG_NUM_LEDS; lIdx++)
+        {
+            if (ks->leds[lIdx].r)
+            {
+                ks->leds[lIdx].r--;
+            }
+            if (ks->leds[lIdx].g)
+            {
+                ks->leds[lIdx].g--;
+            }
+            if (ks->leds[lIdx].b)
+            {
+                ks->leds[lIdx].b--;
+            }
+        }
+    });
+
+    setLeds(ks->leds, CONFIG_NUM_LEDS);
 }
 
 /**
@@ -334,8 +432,9 @@ static void ksMainLoop(int64_t elapsedUs)
  */
 static void ksBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
+    // Simple fill
     paletteColor_t* tftFb = getPxTftFramebuffer();
-    memset(&tftFb[y * TFT_WIDTH + x], c111, w * h);
+    memset(&tftFb[y * TFT_WIDTH + x], c011, w * h);
 }
 
 /**
@@ -346,38 +445,31 @@ static void ksBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h,
  */
 static void ksDacCallback(uint8_t* samples, int16_t len)
 {
-    if (ks->isPlaying)
+    // Buffer to sum all string output
+    uint16_t sumBuf[len];
+    memset(sumBuf, 0, sizeof(sumBuf));
+
+    // For each string
+    for (int sIdx = 0; sIdx < ARRAY_SIZE(ks->strings); sIdx++)
     {
-        // Buffer to sum all string output
-        uint16_t sumBuf[len];
-        memset(sumBuf, 0, sizeof(sumBuf));
-
-        // For each string
-        for (int sIdx = 0; sIdx < ARRAY_SIZE(ks->strings); sIdx++)
+        if (ks->strings[sIdx].delayLine)
         {
-            if (ks->strings[sIdx].delayLine)
-            {
-                // Generate samples
-                uint8_t tmpBuf[len];
-                genKsStringSamples(&ks->strings[sIdx], tmpBuf, len);
+            // Generate samples
+            uint8_t tmpBuf[len];
+            genKsStringSamples(&ks->strings[sIdx], tmpBuf, len);
 
-                // Add to the sum buf
-                for (int i = 0; i < len; i++)
-                {
-                    sumBuf[i] += tmpBuf[i];
-                }
+            // Add to the sum buf
+            for (int i = 0; i < len; i++)
+            {
+                sumBuf[i] += tmpBuf[i];
             }
         }
-
-        // Write to output buffer
-        for (int i = 0; i < len; i++)
-        {
-            samples[i] = sumBuf[i] / NUM_STRINGS;
-        }
     }
-    else
+
+    // Write to output buffer
+    for (int i = 0; i < len; i++)
     {
-        memset(samples, 128, len);
+        samples[i] = sumBuf[i] / NUM_STRINGS;
     }
 }
 
@@ -397,6 +489,11 @@ static void initKsString(ks_string* string, q24_8 frequency)
         string->delayLine    = heap_caps_calloc(string->delayLineLen, sizeof(int32_t), MALLOC_CAP_8BIT);
         esp_fill_random(string->delayLine, string->delayLineLen * sizeof(int32_t));
 
+        for (int i = 0; i < string->delayLineLen; i++)
+        {
+            string->delayLine[i] /= 32768;
+        }
+
         // Reset the index
         string->delayLineIdx = 0;
     }
@@ -411,8 +508,13 @@ static void deinitKsString(ks_string* string)
 {
     if (string->delayLine)
     {
+        // Free the delay line
         heap_caps_free(string->delayLine);
+
+        // Clear everything else, but preserve yCrossing
+        int16_t yc = string->yCrossing;
         memset(string, 0, sizeof(ks_string));
+        string->yCrossing = yc;
     }
 }
 
@@ -438,7 +540,7 @@ static void genKsStringSamples(ks_string* string, uint8_t* samples, uint32_t num
         int32_t current  = string->delayLine[string->delayLineIdx];
         int32_t averaged = (current + string->delayLine[nextIdx]) / 2;
 
-        // Decay the current delay line value
+        // Update the value in the delay line (decayed average of adjacent samples)
         string->delayLine[string->delayLineIdx] = (averaged * 32637) / 32768; // 0.99600219726
 
         // Iterate delay line index
