@@ -1456,25 +1456,25 @@ void gamepadGenericButtonCb(buttonEvt_t* evt)
         }
         case GAMEPAD_DPAD_R_STICK_SETTING:
         {
+            gamepad->gpState.z = 0;
             gamepad->gpState.rx = 0;
-            gamepad->gpState.ry = 0;
             int32_t intensity   = getGamepadPcDpadStickIntensitySetting();
 
             if (evt->state & PB_UP)
             {
-                gamepad->gpState.ry = -intensity;
+                gamepad->gpState.rx = -intensity;
             }
             if (evt->state & PB_DOWN)
             {
-                gamepad->gpState.ry = intensity;
+                gamepad->gpState.rx = intensity;
             }
             if (evt->state & PB_RIGHT)
             {
-                gamepad->gpState.rx = intensity;
+                gamepad->gpState.z = intensity;
             }
             if (evt->state & PB_LEFT)
             {
-                gamepad->gpState.rx = -intensity;
+                gamepad->gpState.z = -intensity;
             }
             break;
         }
@@ -1587,8 +1587,8 @@ void gamepadNsReportStateToHost(void)
             {
                 if (touched || getGamepadPcTouchStickRecenterSetting())
                 {
-                    gamepad->gpNsState.rx = x;
-                    gamepad->gpNsState.ry = y;
+                    gamepad->gpNsState.z = x;
+                    gamepad->gpNsState.rx = y;
                 }
                 break;
             }
@@ -1703,8 +1703,8 @@ void gamepadGenericReportStateToHost(void)
             {
                 if (touched || getGamepadPcTouchStickRecenterSetting())
                 {
-                    gamepad->gpState.rx = x;
-                    gamepad->gpState.ry = y;
+                    gamepad->gpState.z = x;
+                    gamepad->gpState.rx = y;
                 }
                 break;
             }
