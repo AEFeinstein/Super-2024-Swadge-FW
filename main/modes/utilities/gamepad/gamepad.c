@@ -1576,7 +1576,7 @@ void gamepadNsReportStateToHost(void)
             }
             case GAMEPAD_TOUCH_L_STICK_SETTING:
             {
-                if (touched || getGamepadPcTouchStickRecenterSetting())
+                if (touched || getGamepadNsTouchStickRecenterSetting())
                 {
                     gamepad->gpNsState.x = x;
                     gamepad->gpNsState.y = y;
@@ -1585,10 +1585,10 @@ void gamepadNsReportStateToHost(void)
             }
             case GAMEPAD_TOUCH_R_STICK_SETTING:
             {
-                if (touched || getGamepadPcTouchStickRecenterSetting())
+                if (touched || getGamepadNsTouchStickRecenterSetting())
                 {
-                    gamepad->gpNsState.z = x;
-                    gamepad->gpNsState.rx = y;
+                    gamepad->gpNsState.rx = x;
+                    gamepad->gpNsState.ry = y;
                 }
                 break;
             }
