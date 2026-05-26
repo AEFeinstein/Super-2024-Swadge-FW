@@ -1053,8 +1053,8 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
             if (ESP_OK == accelIntegrate() && ESP_OK == accelGetOrientVec(&a_x, &a_y, &a_z))
             {
                 // Values are roughly -256 to 256, so divide, clamp, and save
-                gamepad->gpState.rx = -CLAMP((a_x) / 2, -128, 127);
-                gamepad->gpState.ry = CLAMP((a_y) / 2, -128, 127);
+                gamepad->gpState.ry = -CLAMP((a_x) / 2, -128, 127);
+                gamepad->gpState.rz = CLAMP((a_y) / 2, -128, 127);
                 // gamepad->gpState.rz = CLAMP((a_z) / 2, -128, 127); //Nothing to map this to!
             }
 
@@ -1062,9 +1062,9 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
             int16_t barY = (TFT_HEIGHT * 3) / 4;
 
             // Plot X accel
-            int16_t barWidth = ((gamepad->gpState.rx + 128) * MAX_ACCEL_BAR_W) / 256;
-            fillDisplayArea(TFT_WIDTH - barWidth, barY, TFT_WIDTH, barY + ACCEL_BAR_HEIGHT, c500);
-            barY += (ACCEL_BAR_HEIGHT + ACCEL_BAR_SEP);
+            // int16_t barWidth = ((gamepad->gpState.rx + 128) * MAX_ACCEL_BAR_W) / 256;
+            // fillDisplayArea(TFT_WIDTH - barWidth, barY, TFT_WIDTH, barY + ACCEL_BAR_HEIGHT, c500);
+            // barY += (ACCEL_BAR_HEIGHT + ACCEL_BAR_SEP);
 
             // Plot Y accel
             barWidth = ((gamepad->gpState.ry + 128) * MAX_ACCEL_BAR_W) / 256;
@@ -1456,25 +1456,25 @@ void gamepadGenericButtonCb(buttonEvt_t* evt)
         }
         case GAMEPAD_DPAD_R_STICK_SETTING:
         {
+            gamepad->gpState.z  = 0;
             gamepad->gpState.rx = 0;
-            gamepad->gpState.ry = 0;
             int32_t intensity   = getGamepadPcDpadStickIntensitySetting();
 
             if (evt->state & PB_UP)
             {
-                gamepad->gpState.ry = -intensity;
+                gamepad->gpState.rx = -intensity;
             }
             if (evt->state & PB_DOWN)
             {
-                gamepad->gpState.ry = intensity;
+                gamepad->gpState.rx = intensity;
             }
             if (evt->state & PB_RIGHT)
             {
-                gamepad->gpState.rx = intensity;
+                gamepad->gpState.z = intensity;
             }
             if (evt->state & PB_LEFT)
             {
-                gamepad->gpState.rx = -intensity;
+                gamepad->gpState.z = -intensity;
             }
             break;
         }
@@ -1703,8 +1703,8 @@ void gamepadGenericReportStateToHost(void)
             {
                 if (touched || getGamepadPcTouchStickRecenterSetting())
                 {
-                    gamepad->gpState.rx = x;
-                    gamepad->gpState.ry = y;
+                    gamepad->gpState.z = x;
+                    gamepad->gpState.rx = y;
                 }
                 break;
             }
