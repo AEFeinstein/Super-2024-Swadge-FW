@@ -1303,13 +1303,11 @@ static void introDrawSwadgeImu(int64_t elapsedUs)
         vertices++;
     }
 
-    int lines = 0;
     for (i = 0; i < numBunnyLines(); i += 2)
     {
         int v1 = bunny_lines[i] * 3;
         int v2 = bunny_lines[i + 1] * 3;
         drawLineFast(bunny_verts_out[v1], bunny_verts_out[v1 + 1], bunny_verts_out[v2], bunny_verts_out[v2 + 1], c511);
-        lines++;
     }
 }
 
