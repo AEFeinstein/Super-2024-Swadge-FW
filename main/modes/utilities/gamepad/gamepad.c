@@ -1,3 +1,47 @@
+/**
+ * @file gamepad.c
+ *
+ * There is a lot of confusion about how PC gamepad mappings work.
+ *
+ * As of writing, tinyusb's hid.h says this:
+ *
+ * \code{.c}
+ * typedef struct TU_ATTR_PACKED
+ * {
+ *   int8_t  x;         ///< Delta x  movement of left analog-stick
+ *   int8_t  y;         ///< Delta y  movement of left analog-stick
+ *   int8_t  z;         ///< Delta z  movement of right analog-joystick
+ *   int8_t  rz;        ///< Delta Rz movement of right analog-joystick
+ *   int8_t  rx;        ///< Delta Rx movement of analog left trigger
+ *   int8_t  ry;        ///< Delta Ry movement of analog right trigger
+ *   uint8_t hat;       ///< Buttons mask for currently pressed buttons in the DPad/hat
+ *   uint32_t buttons;  ///< Buttons mask for currently pressed buttons
+ * } hid_gamepad_report_t;
+ * \endcode
+ *
+ * These comments are incorrect, and I suspect it's because the bytes are
+ * ordered (rz, rx, ry) rather than (rx, ry, rz). What it should be is:
+ *
+ * | Axis | Description | Struct Byte |
+ * |------|-------------|-------------|
+ * | 0    | L Stick X   | x           |
+ * | 1    | L Stick Y   | y           |
+ * | 2    | R Stick X   | z           |
+ * | 3    | R Stick Y   | rx          |
+ * | 4    | L Trigger   | ry          |
+ * | 5    | R Trigger   | rz          |
+ * | 6    | Hat X       | hat         |
+ * | 7    | Hat Y       | hat         |
+ *
+ * On top of this, Steam seems to have a different interpretation of
+ * gamepad data than other gamepad testers (https://gpadtester.com/,
+ * jstest-gtk, etc.). Ignore Steam's gamepad tester. Remap the inputs in Steam.
+ *
+ * The Swadge can map the D-Pad to either L Stick, R Stick, or Hat.
+ * The Swadge can map the touchpad to either L Stick, R Stick, or more buttons.
+ * The Swadge can map the accelerometer to LR Triggers or nothing.
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -1067,7 +1111,7 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
             // barY += (ACCEL_BAR_HEIGHT + ACCEL_BAR_SEP);
 
             // Plot Y accel
-            barWidth = ((gamepad->gpState.ry + 128) * MAX_ACCEL_BAR_W) / 256;
+            int16_t barWidth = ((gamepad->gpState.ry + 128) * MAX_ACCEL_BAR_W) / 256;
             fillDisplayArea(TFT_WIDTH - barWidth, barY, TFT_WIDTH, barY + ACCEL_BAR_HEIGHT, c050);
             barY += (ACCEL_BAR_HEIGHT + ACCEL_BAR_SEP);
 
@@ -1703,7 +1747,7 @@ void gamepadGenericReportStateToHost(void)
             {
                 if (touched || getGamepadPcTouchStickRecenterSetting())
                 {
-                    gamepad->gpState.z = x;
+                    gamepad->gpState.z  = x;
                     gamepad->gpState.rx = y;
                 }
                 break;
