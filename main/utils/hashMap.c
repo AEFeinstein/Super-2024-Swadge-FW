@@ -118,7 +118,6 @@ static void hashCheckSize(hashMap_t* map)
             // Zero the new memory as realloc does not do it for us
             memset(newArray + map->size, 0, (size - map->size) * sizeof(hashBucket_t));
 
-            int moved = 0;
             // Rehash everything in the old portion of the array
             for (int i = 0; i < map->size; i++)
             {
@@ -137,7 +136,6 @@ static void hashCheckSize(hashMap_t* map)
                             // The node belongs in a different bucket after the resize
                             hashNode_t tmp = bucketRemove(map, bucket, node, listNode, NULL);
                             node = bucketPut(map, &newArray[tmp.hash % size], tmp.key, tmp.value, tmp.hash, NULL);
-                            moved++;
                         }
                     }
                 }
@@ -149,7 +147,6 @@ static void hashCheckSize(hashMap_t* map)
                         // The node belongs in a different bucket after the resize
                         hashNode_t tmp = bucketRemove(map, bucket, node, NULL, NULL);
                         node           = bucketPut(map, &newArray[tmp.hash % size], tmp.key, tmp.value, tmp.hash, NULL);
-                        moved++;
                     }
                 }
             }
@@ -200,7 +197,6 @@ static hashNode_t* hashFindNode(hashMap_t* map, const void* key, uint32_t* hashO
         node = &bucket->single;
     }
 
-    int tries = 1;
     if (node->key != NULL && (node->hash != hash || !eqFn(node->key, key)))
     {
         // Node doesn't match!
@@ -210,7 +206,6 @@ static hashNode_t* hashFindNode(hashMap_t* map, const void* key, uint32_t* hashO
         {
             for (node_t* listNode = bucket->multi.first; listNode != NULL; listNode = listNode->next)
             {
-                tries++;
                 hashNode_t* newNode = listNode->val;
                 if (newNode->hash == hash && eqFn(newNode->key, key))
                 {
@@ -288,7 +283,6 @@ static hashNode_t* bucketPut(hashMap_t* map, hashBucket_t* bucket, const void* k
     // (It could still have only 1 entry but that's fine)
     hashNode_t* node = bucket->hasMulti ? (hashNode_t*)bucket->multi.first->val : &bucket->single;
 
-    int tries = 1;
     if (node->key != NULL && (node->hash != hash || !eqFn(node->key, key)))
     {
         // Node is non-empty and doesn't match hash
@@ -338,7 +332,6 @@ static hashNode_t* bucketPut(hashMap_t* map, hashBucket_t* bucket, const void* k
             node = NULL;
             for (node_t* listNode = bucket->multi.first; listNode != NULL; listNode = listNode->next)
             {
-                tries++;
                 newNode = listNode->val;
                 if (newNode->hash == hash && eqFn(newNode->key, key))
                 {

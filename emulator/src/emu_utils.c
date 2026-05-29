@@ -127,7 +127,7 @@ bool makeDirs(const char* path)
             cur++;
         }
 
-        char* next = strchr(cur, '/');
+        const char* next = strchr(cur, '/');
 
         if (next)
         {

@@ -287,7 +287,6 @@ static void accelDrawBunny(void)
         vertices++;
     }
 
-    int lines = 0;
     for (i = 0; i < numBunnyLines(); i += 2)
     {
         int v1    = bunny_lines[i] * 3;
@@ -298,7 +297,6 @@ static void accelDrawBunny(void)
         else if (col < 0)
             continue;
         drawLineFast(bunny_verts_out[v1], bunny_verts_out[v1 + 1], bunny_verts_out[v2], bunny_verts_out[v2 + 1], col);
-        lines++;
     }
 }
 
