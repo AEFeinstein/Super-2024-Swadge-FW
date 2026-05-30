@@ -15,7 +15,7 @@ static bool seeded       = false;
 static bool seedValueSet = false;
 static unsigned int seed = 0;
 
-uint32_t esp_random(void)
+static void seedIfUnseeded(void)
 {
     if (!seeded)
     {
@@ -33,8 +33,23 @@ uint32_t esp_random(void)
 
         emulatorRecordRandomSeed(seed);
     }
+}
+
+uint32_t esp_random(void)
+{
+    seedIfUnseeded();
     uint32_t val = rand();
     return val;
+}
+
+void esp_fill_random(void* buf, size_t len)
+{
+    seedIfUnseeded();
+    uint8_t* buf8 = (uint8_t*)buf;
+    for (size_t i = 0; i < len; i++)
+    {
+        buf8[i] = esp_random();
+    }
 }
 
 void emulatorSetEspRandomSeed(uint32_t seed_)
