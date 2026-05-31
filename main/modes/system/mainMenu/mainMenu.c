@@ -421,7 +421,7 @@ static bool mainMenuCb(const char* label, bool selected, uint32_t settingVal)
     // Stop the buzzer when changing volume, not for fanfare
     if (false == mainMenu->fanfarePlaying)
     {
-        soundStop(true);
+        globalMidiPlayerStop(true);
     }
 #endif
 
@@ -481,7 +481,7 @@ static bool mainMenuCb(const char* label, bool selected, uint32_t settingVal)
             {
                 mainMenu->lastBgmVol = settingVal;
                 setBgmVolumeSetting(settingVal);
-                soundPlayBgm(&mainMenu->jingle, BZR_STEREO);
+                globalMidiPlayerPlaySong(&mainMenu->jingle, MIDI_BGM);
                 mainMenu->fanfarePlaying = false;
             }
         }
@@ -491,7 +491,7 @@ static bool mainMenuCb(const char* label, bool selected, uint32_t settingVal)
             {
                 mainMenu->lastSfxVol = settingVal;
                 setSfxVolumeSetting(settingVal);
-                soundPlaySfx(&mainMenu->jingle, BZR_STEREO);
+                globalMidiPlayerPlaySong(&mainMenu->jingle, MIDI_SFX);
                 mainMenu->fanfarePlaying = false;
             }
         }

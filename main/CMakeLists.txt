@@ -146,8 +146,7 @@ idf_component_register(SRCS "modes/games/atrium/atrium.c"
                                 "./utils/midi"
                                 "./utils/network"
                                 "./utils/peripherals"
-                                "./utils/settings"
-                                "./utils/sound")
+                                "./utils/settings")
 
 # Custom target will always cause its dependencies to be evaluated and is
 # run by default

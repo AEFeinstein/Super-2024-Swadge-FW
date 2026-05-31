@@ -227,7 +227,6 @@
 #include "helpPages.h"
 
 // Sound utilities
-#include "soundFuncs.h"
 #include "swSynth.h"
 #include "midiPlayer.h"
 

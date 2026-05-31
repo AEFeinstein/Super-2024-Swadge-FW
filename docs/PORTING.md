@@ -93,9 +93,9 @@ with `midiFile_t`, and changing the name used to load the file from `file.sng` t
 | `BTN_B`                    | `PB_B`                     |
 | `START`                    | `PB_START`                 |
 | `SELECT`                   | `PB_SELECT`                |
-| `buzzer_play_sfx(`         | `bzrPlaySfx(`              |
-| `buzzer_play_bgm(`         | `soundPlayBgm(`            |
-| `buzzer_stop(`             | `soundStop(`               |
+| `buzzer_play_sfx(song)`    | `globalMidiPlayerPlaySong(song, MIDI_SFX)` |
+| `buzzer_play_bgm(song)`    | `globalMidiPlayerPlaySong(song, MIDI_BGM)` |
+| `buzzer_stop()`            | `globalMidiPlayerStop()`   |
 | `incMicGain()`             | `incMicGainSetting()`      |
 | `decMicGain()`             | `decMicGainSetting()`      |
 | `getMicGain()`             | `getMicGainSetting()`      |

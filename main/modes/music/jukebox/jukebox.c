@@ -345,7 +345,7 @@ void jukeboxEnterMode(void)
     portableDanceDisableDance(jukebox->portableDances, "Fire B");
     portableDanceDisableDance(jukebox->portableDances, "Flashlight");
 
-    soundStop(true);
+    globalMidiPlayerStop(true);
 }
 
 /**
@@ -353,7 +353,7 @@ void jukeboxEnterMode(void)
  */
 void jukeboxExitMode(void)
 {
-    soundStop(true);
+    globalMidiPlayerStop(true);
 
     // Free fonts
     freeFont(&jukebox->radiostars);
@@ -395,47 +395,47 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
         {
             if (jukebox->isPlaying)
             {
-                soundStop(true);
+                globalMidiPlayerStop(true);
                 jukebox->isPlaying = false;
             }
             else
             {
                 if (jukebox->inMusicSubmode)
                 {
-                    if (soundGetPlayerBgm() != NULL)
+                    if (globalMidiPlayerGet(MIDI_BGM) != NULL)
                     {
-                        soundGetPlayerBgm()->loop = bgmCategories[jukebox->categoryIdx].shouldLoop;
+                        globalMidiPlayerGet(MIDI_BGM)->loop = bgmCategories[jukebox->categoryIdx].shouldLoop;
                     }
 
                     if (bgmCategories[jukebox->categoryIdx].generalMidi)
                     {
-                        midiGmOn(soundGetPlayerBgm());
+                        midiGmOn(globalMidiPlayerGet(MIDI_BGM));
                     }
                     else
                     {
-                        midiGmOff(soundGetPlayerBgm());
+                        midiGmOff(globalMidiPlayerGet(MIDI_BGM));
                     }
 
-                    soundPlayBgmCb(&jukebox->bgmMidis[jukebox->categoryIdx][jukebox->songIdx], BZR_STEREO,
+                    globalMidiPlayerPlaySongCb(&jukebox->bgmMidis[jukebox->categoryIdx][jukebox->songIdx], MIDI_BGM,
                                    jukeboxBzrDoneCb);
                 }
                 else
                 {
-                    if (soundGetPlayerSfx() != NULL)
+                    if (globalMidiPlayerGet(MIDI_SFX) != NULL)
                     {
-                        soundGetPlayerSfx()->loop = sfxCategories[jukebox->categoryIdx].shouldLoop;
+                        globalMidiPlayerGet(MIDI_SFX)->loop = sfxCategories[jukebox->categoryIdx].shouldLoop;
                     }
 
                     if (sfxCategories[jukebox->categoryIdx].generalMidi)
                     {
-                        midiGmOn(soundGetPlayerSfx());
+                        midiGmOn(globalMidiPlayerGet(MIDI_SFX));
                     }
                     else
                     {
-                        midiGmOff(soundGetPlayerSfx());
+                        midiGmOff(globalMidiPlayerGet(MIDI_SFX));
                     }
 
-                    soundPlaySfxCb(&jukebox->sfxMidis[jukebox->categoryIdx][jukebox->songIdx], BZR_STEREO,
+                    globalMidiPlayerPlaySongCb(&jukebox->sfxMidis[jukebox->categoryIdx][jukebox->songIdx], MIDI_SFX,
                                    jukeboxBzrDoneCb);
                 }
                 jukebox->isPlaying            = true;
@@ -454,7 +454,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
         }
         case PB_START:
         {
-            soundStop(true);
+            globalMidiPlayerStop(true);
             jukebox->isPlaying      = false;
             jukebox->categoryIdx    = 0;
             jukebox->songIdx        = 0;
@@ -481,7 +481,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             jukebox->categoryIdx = jukebox->categoryIdx - 1;
             if (jukebox->categoryIdx != before)
             {
-                soundStop(true);
+                globalMidiPlayerStop(true);
                 jukebox->isPlaying = false;
                 jukebox->songIdx   = 0;
             }
@@ -503,7 +503,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             jukebox->categoryIdx = (jukebox->categoryIdx + 1) % length;
             if (jukebox->categoryIdx != before)
             {
-                soundStop(true);
+                globalMidiPlayerStop(true);
                 jukebox->isPlaying = false;
                 jukebox->songIdx   = 0;
             }
@@ -529,7 +529,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             jukebox->songIdx = jukebox->songIdx - 1;
             if (jukebox->songIdx != before)
             {
-                soundStop(true);
+                globalMidiPlayerStop(true);
                 jukebox->isPlaying = false;
             }
             break;
@@ -550,7 +550,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             jukebox->songIdx = (jukebox->songIdx + 1) % length;
             if (jukebox->songIdx != before)
             {
-                soundStop(true);
+                globalMidiPlayerStop(true);
                 jukebox->isPlaying = false;
             }
             break;

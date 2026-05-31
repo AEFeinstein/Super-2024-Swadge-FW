@@ -136,8 +136,6 @@
  *
  * - hdw-dac.h: Learn how to use the DAC (speaker)
  * - hdw-mic.h: Learn how to use the microphone
- * - soundFuncs.h: Helper functions to use either the buzzers or DAC speaker, depending on build configuration. These
- * macros should be used instead of calling buzzer or DAC functions directly!
  * - swSynth.h: Learn how to generate oscillating output for the DAC speaker
  * - midiPlayer.h: Learn how to play MIDI files on the DAC speaker
  *
@@ -807,7 +805,7 @@ void softSwitchToPendingSwadge(void)
         }
 
         // Stop the music
-        soundStop(true);
+        globalMidiPlayerStop(true);
 
         // Switch the mode pointer
         cSwadgeMode       = pendingSwadgeMode;
