@@ -93,8 +93,8 @@ tools/font_maker/*.ttf
 
 *.DS_Store
 
-main/utils/cnfs_image.c
-main/utils/cnfs_image.h
+main/utils/filesystem/cnfs_image.c
+main/utils/filesystem/cnfs_image.h
 tools/cnfs/cnfs_gen
 
 _old/*

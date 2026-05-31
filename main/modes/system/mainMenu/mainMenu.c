@@ -65,51 +65,6 @@ const trophyData_t mainMenuTrophies[] = {
         .identifier  = NULL,
     },
     {
-        .title       = "LEMONS!",
-        .description = "Played Mega Pulse EX for the first time",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-        .identifier  = &modePlatformer,
-    },
-    {
-        .title       = "Day -1",
-        .description = "Played Cosplay Crunch for the first time",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-        .identifier  = &cosCrunchMode,
-    },
-    {
-        .title       = "Get it!",
-        .description = "Played Swadge It! for the first time",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-        .identifier  = &swadgeItMode,
-    },
-    {
-        .title       = "Swordfish isn't always the password",
-        .description = "Played Swadgedoku for the first time",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-        .identifier  = &swadgedokuMode,
-    },
-    {
-        .title       = "PulseMan and the King... Man",
-        .description = "Played Alpha Pulse for the first time",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-        .identifier  = &danceNetworkMode,
-    },
-    {
         .title       = "Runnin' and runnin'",
         .description = "Played Robo Runner for the first time",
         .image       = NO_IMAGE_SET,
@@ -117,33 +72,6 @@ const trophyData_t mainMenuTrophies[] = {
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
         .identifier  = &roboRunnerMode,
-    },
-    {
-        .title       = "It's pronounced 'Pie-Cross'",
-        .description = "Played Picross for the first time",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-        .identifier  = &modePicross,
-    },
-    {
-        .title       = "What's our vector, Victor?",
-        .description = "Played Vector Tanks for the first time",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-        .identifier  = &artilleryMode,
-    },
-    {
-        .title       = "Daft Punk would be proud",
-        .description = "Opened Colorchord for the first time",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-        .identifier  = &colorchordMode,
     },
     {
         .title       = "A jukebox hero",
@@ -155,15 +83,6 @@ const trophyData_t mainMenuTrophies[] = {
         .identifier  = &jukeboxMode,
     },
     {
-        .title       = "mm2wood.mid",
-        .description = "Opened the Sequencer for the first time",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-        .identifier  = &sequencerMode,
-    },
-    {
         .title       = "Who needs a tuning fork?",
         .description = "Opened Tunernome for the first time",
         .image       = NO_IMAGE_SET,
@@ -171,24 +90,6 @@ const trophyData_t mainMenuTrophies[] = {
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
         .identifier  = &tunernomeMode,
-    },
-    // {
-    //     .title       = "The smallest player",
-    //     .description = "Opened MIDI Player for the first time",
-    //     .image       = NO_IMAGE_SET,
-    //     .type        = TROPHY_TYPE_TRIGGER,
-    //     .difficulty  = TROPHY_DIFF_EASY,
-    //     .maxVal      = 1,
-    //     .identifier  = &synthMode,
-    // },
-    {
-        .title       = "The song of my people",
-        .description = "Opened Swadgetamatone for the first time",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-        .identifier  = &swadgetamatoneMode,
     },
     {
         .title       = "Blinded by the lights",
@@ -198,24 +99,6 @@ const trophyData_t mainMenuTrophies[] = {
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
         .identifier  = &danceMode,
-    },
-    {
-        .title       = "I still like physical dice",
-        .description = "Opened Dice Roller for the first time",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-        .identifier  = &modeDiceRoller,
-    },
-    {
-        .title       = "It can't hit the corner",
-        .description = "Opened Bouncy items for the first time",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-        .identifier  = &bouncyMode,
     },
     {
         .title       = "...Was once not enough?",
@@ -235,15 +118,6 @@ const trophyData_t mainMenuTrophies[] = {
         .maxVal      = 1,
         .identifier  = &gamepadMode,
     },
-    {
-        .title       = "MANHUNT!",
-        .description = "Opened Mascot Madness for the first time.",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1, // For trigger type, set to one
-        .identifier  = &findingFacesMode,
-    },
 };
 
 const trophySettings_t menuTrophySettings = {
@@ -261,7 +135,7 @@ const trophyDataList_t menuTrophyData = {
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
 const char mainMenuName[]                       = "Main Menu";
-const char mainMenuTitle[]                      = "Swadge 3.1.2";
+const char mainMenuTitle[]                      = "Swadge 4.0.0";
 static const char mainMenuShowSecretsMenuName[] = "Secrets In Menu: ";
 static const char factoryResetName[]            = "Factory Reset";
 static const char confirmResetName[]            = "! Confirm Reset !";

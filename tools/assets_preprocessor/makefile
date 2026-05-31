@@ -15,7 +15,7 @@ endif
 ################################################################################
 
 # This is a list of directories to scan for c files recursively
-SRC_DIRS_RECURSIVE = ./src ./src-lib ../../main/asset_loaders/common
+SRC_DIRS_RECURSIVE = ./src ./src-lib ../../main/utils/filesystem/heatshrink/common
 # This is a list of directories to scan for c files not recursively
 SRC_DIRS_FLAT =
 # This is a list of files to compile directly. There's no scanning here

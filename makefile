@@ -58,8 +58,8 @@ endif
 ASSETS_IN = ./assets
 ASSETS_OUT = ./assets_image
 ASSET_FILES = $(shell $(FIND) $(ASSETS_IN) -type f)
-CNFS_FILE   = main/utils/cnfs_image.c
-CNFS_FILE_H = main/utils/cnfs_image.h
+CNFS_FILE   = main/utils/filesystem/cnfs_image.c
+CNFS_FILE_H = main/utils/filesystem/cnfs_image.h
 ASSETS_TIMESTAMP_FILE = ./.assets_ts
 ASSETS_CONF_FILE = ./assets.conf
 
@@ -78,7 +78,7 @@ SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
 # This is all the source files combined and deduplicated
 SOURCES   = $(sort $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC_FILES))
 # Remove firmware's cnfs.c because emu_cnfs.c duplicates those functions
-SOURCES   := $(filter-out main/utils/cnfs.c, $(SOURCES))
+SOURCES   := $(filter-out main/utils/filesystem/cnfs.c, $(SOURCES))
 
 # The emulator doesn't build components, but there is a target for formatting them
 ALL_FILES = $(shell $(FIND) components assets $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]" -or -iname "*.cfun")
