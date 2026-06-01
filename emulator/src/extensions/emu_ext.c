@@ -35,9 +35,8 @@
 //==============================================================================
 
 static const emuExtension_t* registeredExtensions[] = {
-    &touchEmu1DHExtension, &touchEmu1DVExtension, &ledEmuExtension,   &ledEyesEmuExtension,
-    &fuzzerEmuExtension,   &toolsEmuExtension,    &keymapEmuCallback, &modesEmuExtension,
-    &gamepadEmuExtension,  &replayEmuExtension,   &midiEmuExtension,
+    &ledEmuExtension,   &touchEmu1DVExtension, &touchEmu1DHExtension, &fuzzerEmuExtension, &toolsEmuExtension,
+    &keymapEmuCallback, &modesEmuExtension,    &gamepadEmuExtension,  &replayEmuExtension, &midiEmuExtension,
 };
 
 //==============================================================================
@@ -655,18 +654,18 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
                     case PANE_LEFT:
                     case PANE_RIGHT:
                     {
-                        // Handle the left/right columns
-                        // We just set the Y and Height
-                        cbPane->paneY += SUBPANE_OFFSET(paneInfo->loc, H);
-                        cbPane->paneH = SUBPANE_SIZE(paneInfo->loc, H);
+                        // Line up left and right panels side by side
+                        cbPane->paneX += SUBPANE_OFFSET(paneInfo->loc, W);
+                        cbPane->paneW = SUBPANE_SIZE(paneInfo->loc, W);
                         break;
                     }
 
                     case PANE_TOP:
                     case PANE_BOTTOM:
                     {
-                        cbPane->paneX += SUBPANE_OFFSET(paneInfo->loc, W);
-                        cbPane->paneW = SUBPANE_SIZE(paneInfo->loc, W);
+                        // Stack top and bottom panes vertically
+                        cbPane->paneY += SUBPANE_OFFSET(paneInfo->loc, H);
+                        cbPane->paneH = SUBPANE_SIZE(paneInfo->loc, H);
                         break;
                     }
                 }
