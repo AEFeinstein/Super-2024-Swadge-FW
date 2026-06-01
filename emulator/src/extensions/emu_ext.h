@@ -99,13 +99,15 @@
  */
 typedef enum
 {
-    EMU_MOUSE_LEFT   = 0x01,
-    EMU_MOUSE_MIDDLE = 0x02,
-    EMU_MOUSE_RIGHT  = 0x04,
-    EMU_SCROLL_UP    = 0x08,
-    EMU_SCROLL_DOWN  = 0x10,
-    EMU_SCROLL_LEFT  = 0x20,
-    EMU_SCROLL_RIGHT = 0x40,
+    EMU_MOUSE_LEFT     = 1,
+    EMU_MOUSE_MIDDLE   = 2,
+    EMU_MOUSE_RIGHT    = 3,
+    EMU_SCROLL_UP      = 4,
+    EMU_SCROLL_DOWN    = 5,
+    EMU_SCROLL_LEFT    = 6,
+    EMU_SCROLL_RIGHT   = 7,
+    EMU_SCROLL_THUMB_1 = 8,
+    EMU_SCROLL_THUMB_2 = 9,
 } mouseButton_t;
 
 typedef enum
