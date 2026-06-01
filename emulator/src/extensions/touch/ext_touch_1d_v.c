@@ -9,7 +9,7 @@
 #include "macros.h"
 #include "trigonometry.h"
 
-#include "ext_touch_1d_h.h"
+#include "ext_touch_1d_v.h"
 
 //==============================================================================
 // Defines
@@ -36,11 +36,11 @@
 // Function Prototypes
 //==============================================================================
 
-static bool touch_1DH_Init(emuArgs_t* emuArgs);
-static int32_t touch_1DH_Key(uint32_t key, bool down, modKey_t modifiers);
-static bool touch_1DH_MouseMove(int32_t x, int32_t y, mouseButton_t buttonMask);
-static bool touch_1DH_MouseButton(int32_t x, int32_t y, mouseButton_t button, bool down);
-static void touch_1DH_Render(uint32_t winW, uint32_t winH, const emuPane_t* pane, uint8_t numPanes);
+static bool touch_1DV_Init(emuArgs_t* emuArgs);
+static int32_t touch_1DV_Key(uint32_t key, bool down, modKey_t modifiers);
+static bool touch_1DV_MouseMove(int32_t x, int32_t y, mouseButton_t buttonMask);
+static bool touch_1DV_MouseButton(int32_t x, int32_t y, mouseButton_t button, bool down);
+static void touch_1DV_Render(uint32_t winW, uint32_t winH, const emuPane_t* pane, uint8_t numPanes);
 static bool isInBounds(int32_t* x, int32_t* y);
 static void calcCirclePoly(RDPoint* buf, uint32_t tris, uint32_t xo, uint32_t yo, uint32_t r);
 
@@ -66,19 +66,19 @@ typedef struct
 // Variables
 //==============================================================================
 
-emuExtension_t touchEmu1DHExtension = {
-    .name            = "touch_1DH",
-    .fnInitCb        = touch_1DH_Init,
+emuExtension_t touchEmu1DVExtension = {
+    .name            = "touch_1DV",
+    .fnInitCb        = touch_1DV_Init,
     .fnDeinitCb      = NULL,
     .fnPreFrameCb    = NULL,
     .fnPostFrameCb   = NULL,
-    .fnKeyCb         = touch_1DH_Key,
-    .fnMouseMoveCb   = touch_1DH_MouseMove,
-    .fnMouseButtonCb = touch_1DH_MouseButton,
-    .fnRenderCb      = touch_1DH_Render,
+    .fnKeyCb         = touch_1DV_Key,
+    .fnMouseMoveCb   = touch_1DV_MouseMove,
+    .fnMouseButtonCb = touch_1DV_MouseButton,
+    .fnRenderCb      = touch_1DV_Render,
 };
 
-static emuTouch_t emuTouch1DH = {0};
+static emuTouch_t emuTouch1DV = {0};
 
 //==============================================================================
 // Functions
@@ -92,16 +92,16 @@ static emuTouch_t emuTouch1DH = {0};
  * @param emuArgs
  * @return true If touchpad emulation is enabled (it is)
  */
-static bool touch_1DH_Init(emuArgs_t* emuArgs)
+static bool touch_1DV_Init(emuArgs_t* emuArgs)
 {
-    emuTouch1DH.clicked   = false;
-    emuTouch1DH.mouseX    = -1;
-    emuTouch1DH.mouseY    = -1;
-    emuTouch1DH.intensity = INTENSITY_MIN;
+    emuTouch1DV.clicked   = false;
+    emuTouch1DV.mouseX    = -1;
+    emuTouch1DV.mouseY    = -1;
+    emuTouch1DV.intensity = INTENSITY_MIN;
 
     if (emuArgs->emulateTouch)
     {
-        requestPane(&touchEmu1DHExtension, PANE_BOTTOM, PANE_MIN_SIZE, PANE_MIN_SIZE);
+        requestPane(&touchEmu1DVExtension, PANE_RIGHT, PANE_MIN_SIZE, PANE_MIN_SIZE);
     }
 
     return true;
@@ -117,12 +117,12 @@ static bool touch_1DH_Init(emuArgs_t* emuArgs)
  */
 bool isInBounds(int32_t* x, int32_t* y)
 {
-    if (emuTouch1DH.paneX <= *x && *x < emuTouch1DH.paneX + emuTouch1DH.paneW)
+    if (emuTouch1DV.paneX <= *x && *x < emuTouch1DV.paneX + emuTouch1DV.paneW)
     {
-        if (emuTouch1DH.paneY <= *y && *y < emuTouch1DH.paneY + emuTouch1DH.paneH)
+        if (emuTouch1DV.paneY <= *y && *y < emuTouch1DV.paneY + emuTouch1DV.paneH)
         {
-            *x -= emuTouch1DH.paneX;
-            *y -= emuTouch1DH.paneY;
+            *x -= emuTouch1DV.paneX;
+            *y -= emuTouch1DV.paneY;
             return true;
         }
     }
@@ -138,38 +138,38 @@ bool isInBounds(int32_t* x, int32_t* y)
  * @return true  If the event should be consumed
  * @return false If the event should not be consumed
  */
-static bool updateTouch_1DH(int32_t x, int32_t y, bool clicked)
+static bool updateTouch_1DV(int32_t x, int32_t y, bool clicked)
 {
     if (isInBounds(&x, &y))
     {
-        if (emuTouch1DH.clicked && !clicked)
+        if (emuTouch1DV.clicked && !clicked)
         {
             // TODO notify Swadge
-            printf("Touch 1D H release\n");
+            printf("Touch 1D V release\n");
         }
 
-        emuTouch1DH.clicked = clicked;
-        emuTouch1DH.mouseX  = x;
-        emuTouch1DH.mouseY  = y;
+        emuTouch1DV.clicked = clicked;
+        emuTouch1DV.mouseX  = x;
+        emuTouch1DV.mouseY  = y;
 
         if (clicked)
         {
             // TODO notify Swadge
-            printf("Touch 1D H %" PRId32 " (%" PRId32 ") \n", (emuTouch1DH.mouseX * 1024) / emuTouch1DH.paneW,
-                   emuTouch1DH.intensity);
+            printf("Touch 1D V %" PRId32 " (%" PRId32 ") \n", (emuTouch1DV.mouseY * 1024) / emuTouch1DV.paneH,
+                   emuTouch1DV.intensity);
         }
         return true;
     }
     else
     {
-        if (emuTouch1DH.clicked)
+        if (emuTouch1DV.clicked)
         {
             // TODO notify Swadge
-            printf("Touch 1D H release\n");
+            printf("Touch 1D V release\n");
         }
-        emuTouch1DH.clicked = false;
-        emuTouch1DH.mouseX  = -1;
-        emuTouch1DH.mouseY  = -1;
+        emuTouch1DV.clicked = false;
+        emuTouch1DV.mouseX  = -1;
+        emuTouch1DV.mouseY  = -1;
 
         // TODO notify Swadge
         return false;
@@ -184,13 +184,14 @@ static bool updateTouch_1DH(int32_t x, int32_t y, bool clicked)
  * @param modifiers
  * @return int32_t
  */
-static int32_t touch_1DH_Key(uint32_t key, bool down, modKey_t modifiers)
+static int32_t touch_1DV_Key(uint32_t key, bool down, modKey_t modifiers)
 {
-    int32_t keyDigit = key - '1';
+    // TODO fix '0'
+    int32_t keyDigit = key - '6';
 
     if (keyDigit < 0 || keyDigit >= NUM_KEY_ZONES || modifiers != EMU_MOD_NONE)
     {
-        // Do not consume event, we only want 1 to 4 without a modifier
+        // Do not consume event, we only want 6 to 0 without a modifier
         return 0;
     }
 
@@ -198,20 +199,20 @@ static int32_t touch_1DH_Key(uint32_t key, bool down, modKey_t modifiers)
     uint32_t keyBit = 1 << keyDigit;
 
     // Calculate area for simulated touch
-    int32_t zoneW = emuTouch1DH.paneW / NUM_KEY_ZONES;
-    int32_t simX  = emuTouch1DH.paneX + (zoneW / 2) + (keyDigit * zoneW);
-    int32_t simY  = emuTouch1DH.paneY + (emuTouch1DH.paneH / 2);
+    int32_t zoneH = emuTouch1DV.paneH / NUM_KEY_ZONES;
+    int32_t simX  = emuTouch1DV.paneX + (emuTouch1DV.paneW / 2);
+    int32_t simY  = emuTouch1DV.paneY + (zoneH / 2) + (keyDigit * zoneH);
 
     // Process simulated touch
-    if (down && !(emuTouch1DH.keyState & keyBit))
+    if (down && !(emuTouch1DV.keyState & keyBit))
     {
-        emuTouch1DH.keyState |= keyBit;
-        updateTouch_1DH(simX, simY, true);
+        emuTouch1DV.keyState |= keyBit;
+        updateTouch_1DV(simX, simY, true);
     }
-    else if (emuTouch1DH.keyState & keyBit)
+    else if (emuTouch1DV.keyState & keyBit)
     {
-        emuTouch1DH.keyState &= ~keyBit;
-        updateTouch_1DH(simX, simY, false);
+        emuTouch1DV.keyState &= ~keyBit;
+        updateTouch_1DV(simX, simY, false);
     }
 
     // Consume event
@@ -227,9 +228,9 @@ static int32_t touch_1DH_Key(uint32_t key, bool down, modKey_t modifiers)
  * @return true
  * @return false
  */
-static bool touch_1DH_MouseMove(int32_t x, int32_t y, mouseButton_t buttonMask)
+static bool touch_1DV_MouseMove(int32_t x, int32_t y, mouseButton_t buttonMask)
 {
-    return updateTouch_1DH(x, y, (buttonMask & EMU_MOUSE_LEFT) == EMU_MOUSE_LEFT);
+    return updateTouch_1DV(x, y, (buttonMask & EMU_MOUSE_LEFT) == EMU_MOUSE_LEFT);
 }
 
 /**
@@ -242,20 +243,20 @@ static bool touch_1DH_MouseMove(int32_t x, int32_t y, mouseButton_t buttonMask)
  * @return true
  * @return false
  */
-static bool touch_1DH_MouseButton(int32_t x, int32_t y, mouseButton_t button, bool down)
+static bool touch_1DV_MouseButton(int32_t x, int32_t y, mouseButton_t button, bool down)
 {
     if (button == EMU_MOUSE_LEFT)
     {
-        return updateTouch_1DH(x, y, down);
+        return updateTouch_1DV(x, y, down);
     }
     else if (button == EMU_SCROLL_UP)
     {
-        emuTouch1DH.intensity = CLAMP(emuTouch1DH.intensity + 1024, INTENSITY_MIN, INTENSITY_MAX);
+        emuTouch1DV.intensity = CLAMP(emuTouch1DV.intensity + 1024, INTENSITY_MIN, INTENSITY_MAX);
         return true;
     }
     else if (button == EMU_SCROLL_DOWN)
     {
-        emuTouch1DH.intensity = CLAMP(emuTouch1DH.intensity - 1024, INTENSITY_MIN, INTENSITY_MAX);
+        emuTouch1DV.intensity = CLAMP(emuTouch1DV.intensity - 1024, INTENSITY_MIN, INTENSITY_MAX);
         return true;
     }
     return false;
@@ -269,7 +270,7 @@ static bool touch_1DH_MouseButton(int32_t x, int32_t y, mouseButton_t button, bo
  * @param pane
  * @param numPanes
  */
-static void touch_1DH_Render(uint32_t winW, uint32_t winH, const emuPane_t* pane, uint8_t numPanes)
+static void touch_1DV_Render(uint32_t winW, uint32_t winH, const emuPane_t* pane, uint8_t numPanes)
 {
     // We only should have one pane, so just exit if we don't have it
     if (numPanes < 1)
@@ -278,24 +279,24 @@ static void touch_1DH_Render(uint32_t winW, uint32_t winH, const emuPane_t* pane
     }
 
     // Save the pane dimensions for later
-    emuTouch1DH.paneX = pane->paneX;
-    emuTouch1DH.paneW = pane->paneW;
-    emuTouch1DH.paneH = pane->paneH;
-    emuTouch1DH.paneY = pane->paneY;
+    emuTouch1DV.paneX = pane->paneX;
+    emuTouch1DV.paneW = pane->paneW;
+    emuTouch1DV.paneH = pane->paneH;
+    emuTouch1DV.paneY = pane->paneY;
 
     CNFGColor(COLOR_BG);
     CNFGTackRectangle(pane->paneX, pane->paneY, pane->paneX + pane->paneW, pane->paneY + pane->paneH);
 
-    if (emuTouch1DH.mouseX >= 0 && emuTouch1DH.mouseY >= 0)
+    if (emuTouch1DV.mouseX >= 0 && emuTouch1DV.mouseY >= 0)
     {
         // Draw a circle for the touch location
         RDPoint points[36];
-        uint32_t r = 8 + ((24 * (emuTouch1DH.intensity - INTENSITY_MIN)) / INTENSITY_MAX);
-        uint32_t x = emuTouch1DH.paneX + emuTouch1DH.mouseX;
-        uint32_t y = emuTouch1DH.paneY + emuTouch1DH.mouseY;
+        uint32_t r = 8 + ((24 * (emuTouch1DV.intensity - INTENSITY_MIN)) / INTENSITY_MAX);
+        uint32_t x = emuTouch1DV.paneX + emuTouch1DV.mouseX;
+        uint32_t y = emuTouch1DV.paneY + emuTouch1DV.mouseY;
         calcCirclePoly(points, ARRAY_SIZE(points), x, y, r);
 
-        if (emuTouch1DH.clicked)
+        if (emuTouch1DV.clicked)
         {
             CNFGColor(COLOR_TOUCH);
         }
