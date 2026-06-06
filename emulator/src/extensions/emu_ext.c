@@ -13,18 +13,19 @@
 #include <string.h>
 
 // Extension Includes
-#include "ext_touch.h"
-#include "ext_touch_1d_h.h"
-#include "ext_touch_1d_v.h"
-#include "ext_leds.h"
-#include "ext_led_eyes.h"
 #include "ext_fuzzer.h"
 #include "ext_gamepad.h"
 #include "ext_keymap.h"
+#include "ext_led_eyes.h"
+#include "ext_leds.h"
 #include "ext_midi.h"
 #include "ext_modes.h"
 #include "ext_replay.h"
+#include "ext_spacer_v.h"
 #include "ext_tools.h"
+#include "ext_touch_1d_h.h"
+#include "ext_touch_1d_v.h"
+#include "ext_touch.h"
 
 //==============================================================================
 // Registered Extensions
@@ -35,8 +36,9 @@
 //==============================================================================
 
 static const emuExtension_t* registeredExtensions[] = {
-    &ledEmuExtension,   &touchEmu1DVExtension, &touchEmu1DHExtension, &fuzzerEmuExtension, &toolsEmuExtension,
-    &keymapEmuCallback, &modesEmuExtension,    &gamepadEmuExtension,  &replayEmuExtension, &midiEmuExtension,
+    &vSpacerExtension,    &ledEmuExtension,    &touchEmu1DVExtension, &touchEmu1DHExtension,
+    &fuzzerEmuExtension,  &toolsEmuExtension,  &keymapEmuCallback,    &modesEmuExtension,
+    &gamepadEmuExtension, &replayEmuExtension, &midiEmuExtension,
 };
 
 //==============================================================================

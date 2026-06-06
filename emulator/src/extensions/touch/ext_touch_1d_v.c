@@ -15,9 +15,6 @@
 // Defines
 //==============================================================================
 
-// The minimum width & height of the pane
-#define PANE_MIN_SIZE 128
-
 // Background color
 #define COLOR_BG 0x336633FF
 // Some sort of dark yellow, I think, for active touch
@@ -101,7 +98,7 @@ static bool touch_1DV_Init(emuArgs_t* emuArgs)
 
     if (emuArgs->emulateTouch)
     {
-        requestPane(&touchEmu1DVExtension, PANE_RIGHT, PANE_MIN_SIZE, PANE_MIN_SIZE);
+        requestPane(&touchEmu1DVExtension, PANE_RIGHT, V_TOUCH_PANE_MIN_SIZE, V_TOUCH_PANE_MIN_SIZE);
     }
 
     return true;

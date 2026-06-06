@@ -9,4 +9,7 @@
 
 #include "emu_ext.h"
 
+// The minimum width & height of the pane
+#define V_TOUCH_PANE_MIN_SIZE 128
+
 extern emuExtension_t touchEmu1DVExtension;
