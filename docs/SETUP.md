@@ -105,7 +105,7 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
     ```bash
     make installudev
     ```
-    The <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.6/esp32s2/api-guides/dfu.html#udev-rule-linux-only">IDF documentation</a> also recommends:
+    The <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.7/esp32s2/api-guides/dfu.html#udev-rule-linux-only">IDF documentation</a> also recommends:
     > Create file `/etc/udev/rules.d/40-dfuse.rules` with the following content:
     > ```
     > SUBSYSTEMS=="usb", ATTRS{idVendor}=="303a", ATTRS{idProduct}=="00??", GROUP="plugdev", MODE="0666"

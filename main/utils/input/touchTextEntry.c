@@ -9,6 +9,7 @@
 
 #include "font.h"
 #include "hdw-btn.h"
+#include "hdw-touch.h"
 #include "hdw-tft.h"
 #include "touchUtils.h"
 #include "fill.h"

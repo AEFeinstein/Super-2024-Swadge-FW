@@ -84,7 +84,8 @@
  * \subsection input_api Input APIs
  *
  * - hdw-battmon.h: Learn how to check the battery voltage
- * - hdw-btn.h: Learn how to use both push and touch button input
+ * - hdw-btn.h: Learn how to use push button input
+ * - hdw-touch.h: Learn how to use touch sensor input
  *     - touchUtils.h: Utilities to interpret touch button input as a virtual joystick, spin wheel, or cartesian plane
  * - hdw-imu.h: Learn how to use the inertial measurement unit
  *     - imu_utils.h: Utilities to process IMU data
@@ -165,7 +166,7 @@
  * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
  * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
  * is useful:
- * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-reference/index.html">ESP-IDF API
+ * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.7/esp32s2/api-reference/index.html">ESP-IDF API
  * Reference</a>
  * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-S2 Series
  * Datasheet</a>
@@ -386,6 +387,8 @@ void app_main(void)
         GPIO_NUM_8,     // Start
         GPIO_NUM_5      // Select
     };
+    initButtons(pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]));
+
     touch_pad_t touchPads[] = {
         TOUCH_PAD_NUM9,  // GPIO_NUM_9
         TOUCH_PAD_NUM10, // GPIO_NUM_10
@@ -394,8 +397,7 @@ void app_main(void)
         TOUCH_PAD_NUM13, // GPIO_NUM_13
         TOUCH_PAD_NUM14, // GPIO_NUM_14
     };
-    initButtons(pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]), touchPads,
-                sizeof(touchPads) / sizeof(touchPads[0]));
+    initTouchPads(touchPads, sizeof(touchPads) / sizeof(touchPads[0]), 0.2f, true);
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
@@ -694,6 +696,7 @@ void deinitSystem(void)
 
     // Deinitialize everything
     deinitButtons();
+    deinitTouchPads();
 #if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
     deinitGlobalMidiPlayer();
     deinitDac();
@@ -976,6 +979,7 @@ void powerDownPeripherals(void)
 {
     powerDownBattmon();
     powerDownButtons();
+    powerDownTouchPads();
     powerDownDac();
     powerDownEspNow();
     powerDownAccel();
@@ -993,6 +997,7 @@ void powerUpPeripherals(void)
 {
     // Always powered up
     powerUpButtons();
+    powerUpTouchPads();
     powerUpLed();
     powerUpUsb();
     powerUpTft();

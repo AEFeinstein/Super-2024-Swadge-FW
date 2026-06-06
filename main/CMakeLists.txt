@@ -96,6 +96,7 @@ idf_component_register(SRCS "modes/games/atrium/atrium.c"
                                   hdw-nvs
                                   hdw-tft
                                   hdw-temperature
+                                  hdw-touch
                                   hdw-usb
                                   crashwrap
                     REQUIRES esp_timer

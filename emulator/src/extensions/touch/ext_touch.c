@@ -14,8 +14,8 @@
 #include "emu_args.h"
 #include "rawdraw_sf.h"
 
-#include "hdw-btn.h"
-#include "hdw-btn_emu.h"
+#include "hdw-touch.h"
+#include "hdw-touch_emu.h"
 
 //==============================================================================
 // Defines

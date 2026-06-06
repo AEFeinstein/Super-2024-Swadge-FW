@@ -48,7 +48,7 @@ PROJECT_NAME           = "Swadge ESP32-S2"
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = 2.0.0
+PROJECT_NUMBER         =
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewers a
@@ -1027,10 +1027,8 @@ WARN_LOGFILE           = doxy_warnings.txt
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = ./main \
-                         ./main/modes/games/cosCrunch/cosCrunch.h \
-                         ./main/modes/games/cosCrunch/cosCrunchUtil.h \
-                         ./main/asset_loaders/heatshrink_helper.h \
-                         ./main/asset_loaders/heatshrink_helper.c \
+                         ./main/utils/filesystem/heatshrink/heatshrink_helper.h \
+                         ./main/utils/filesystem/heatshrink/heatshrink_helper.c \
                          ./tools/assets_preprocessor/src \
                          ./components \
                          ./docs/CODE_OF_CONDUCT.md \

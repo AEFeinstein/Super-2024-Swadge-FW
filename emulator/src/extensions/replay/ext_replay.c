@@ -3,6 +3,8 @@
 #include "esp_timer.h"
 #include "hdw-btn.h"
 #include "hdw-btn_emu.h"
+#include "hdw-touch.h"
+#include "hdw-touch_emu.h"
 #include "hdw-imu.h"
 #include "hdw-imu_emu.h"
 #include "macros.h"

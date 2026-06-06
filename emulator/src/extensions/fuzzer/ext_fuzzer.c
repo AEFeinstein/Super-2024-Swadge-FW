@@ -9,6 +9,7 @@
 #include "ext_fuzzer.h"
 #include "emu_args.h"
 #include "hdw-btn_emu.h"
+#include "hdw-touch_emu.h"
 #include "hdw-imu_emu.h"
 #include "esp_timer_emu.h"
 
