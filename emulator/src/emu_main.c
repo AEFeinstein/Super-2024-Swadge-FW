@@ -411,8 +411,8 @@ void taskYIELD(void)
         // Sleep for one ms
         static struct timespec tRemaining = {0};
         const struct timespec tSleep      = {
-                 .tv_sec  = 0 + tRemaining.tv_sec,
-                 .tv_nsec = 1000000 + tRemaining.tv_nsec,
+            .tv_sec  = 0 + tRemaining.tv_sec,
+            .tv_nsec = 1000000 + tRemaining.tv_nsec,
         };
         nanosleep(&tSleep, &tRemaining);
 

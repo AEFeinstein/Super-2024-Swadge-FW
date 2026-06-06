@@ -51,8 +51,7 @@
 #include <stdbool.h>
 #include <driver/touch_pad.h>
 
-void initTouchPads(const touch_pad_t* touchPads, uint8_t numTouchPads, float touchPadSensitivity,
-                            bool denoiseEnable);
+void initTouchPads(const touch_pad_t* touchPads, uint8_t numTouchPads, float touchPadSensitivity, bool denoiseEnable);
 void deinitTouchPads(void);
 void powerUpTouchPads(void);
 void powerDownTouchPads(void);

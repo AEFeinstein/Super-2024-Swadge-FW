@@ -10,13 +10,17 @@
  *
  * The Swadge GitHub repository can be found at <a
  * href="https://github.com/AEFeinstein/Super-2024-Swadge-FW">https://github.com/AEFeinstein/Super-2024-Swadge-FW</a>.
- * This single repository hosts firmware for multiple years. See <a href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/releases">
- * the releases</a> for different year's final firmware.
- * The corresponding hardware repositories for the Super Magfest Swadges can be found at:
- * - Squarewavebird - <a href="https://github.com/AEFeinstein/Super-2023-Swadge-HW">https://github.com/AEFeinstein/Super-2023-Swadge-HW</a>
- * - Gunship - <a href="https://github.com/AEFeinstein/Super-2024-Swadge-HW">https://github.com/AEFeinstein/Super-2024-Swadge-HW</a>
- * - Hot Dog - <a href="https://github.com/AEFeinstein/Super-2025-Swadge-HW">https://github.com/AEFeinstein/Super-2025-Swadge-HW</a>
- * - Alpha Pulse - <a href="https://github.com/AEFeinstein/Super-2026-Swadge-HW">https://github.com/AEFeinstein/Super-2026-Swadge-HW</a>
+ * This single repository hosts firmware for multiple years. See <a
+ * href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/releases"> the releases</a> for different year's final
+ * firmware. The corresponding hardware repositories for the Super Magfest Swadges can be found at:
+ * - Squarewavebird - <a
+ * href="https://github.com/AEFeinstein/Super-2023-Swadge-HW">https://github.com/AEFeinstein/Super-2023-Swadge-HW</a>
+ * - Gunship - <a
+ * href="https://github.com/AEFeinstein/Super-2024-Swadge-HW">https://github.com/AEFeinstein/Super-2024-Swadge-HW</a>
+ * - Hot Dog - <a
+ * href="https://github.com/AEFeinstein/Super-2025-Swadge-HW">https://github.com/AEFeinstein/Super-2025-Swadge-HW</a>
+ * - Alpha Pulse - <a
+ * href="https://github.com/AEFeinstein/Super-2026-Swadge-HW">https://github.com/AEFeinstein/Super-2026-Swadge-HW</a>
  *
  * This is living documentation, so if you notice that something is incorrect or incomplete, please fix or complete it,
  * and <a href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/pulls">submit a pull request</a>.
@@ -28,15 +32,18 @@
  *
  * \section start Where to Start
  *
- * If you're just starting Swadge development, you're already at the right place to start! Here's a quick recommended order to exploring the repository:
+ * If you're just starting Swadge development, you're already at the right place to start! Here's a quick recommended
+ * order to exploring the repository:
  *
  * -# First, follow the guide to \ref setup. This will walk you through setting up the toolchain and compiling the
  * firmware and emulator.
- *     \note If you just want to run the Swadge emulator without setting up a development environment, see the \ref emulator for an installation guide and usage instructions.
+ *     \note If you just want to run the Swadge emulator without setting up a development environment, see the \ref
+ * emulator for an installation guide and usage instructions.
  * -# Next, read about the basics of a Swadge Mode at swadge2024.h.
  * -# Once you understand the basics of a Swadge Mode, check out the \ref swadge_mode_example to see a simple mode in
  * action.
- *     \note If you're new to developing code and want a guided experience, try the \ref tutorial tutorial! It will walk you through creating a whole game with explanations on why certain options are picked.
+ *     \note If you're new to developing code and want a guided experience, try the \ref tutorial tutorial! It will walk
+ * you through creating a whole game with explanations on why certain options are picked.
  * -# After you grasp the example, you can go deeper and read the full \ref apis to understand the full capability of
  * the Swadge firmware.
  * -# If you have any crashes on real hardware, read and use \ref serial_out to help debug the issue.

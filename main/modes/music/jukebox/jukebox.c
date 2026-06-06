@@ -417,7 +417,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
                     }
 
                     globalMidiPlayerPlaySongCb(&jukebox->bgmMidis[jukebox->categoryIdx][jukebox->songIdx], MIDI_BGM,
-                                   jukeboxBzrDoneCb);
+                                               jukeboxBzrDoneCb);
                 }
                 else
                 {
@@ -436,7 +436,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
                     }
 
                     globalMidiPlayerPlaySongCb(&jukebox->sfxMidis[jukebox->categoryIdx][jukebox->songIdx], MIDI_SFX,
-                                   jukeboxBzrDoneCb);
+                                               jukeboxBzrDoneCb);
                 }
                 jukebox->isPlaying            = true;
                 jukebox->usBetweenDecorations = 0;

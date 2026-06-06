@@ -229,8 +229,8 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     // If we haven't customized the back option to be around the ring, then we use the center
     // So, remove one from the ring items to compensate
     bool missingItem  = (menu->parentMenu
-                        || (!menu->parentMenu && menu->items->last && menu->items->last->val
-                            && ((menuItem_t*)menu->items->last->val)->label == mnuBackStr));
+                         || (!menu->parentMenu && menu->items->last && menu->items->last->val
+                             && ((menuItem_t*)menu->items->last->val)->label == mnuBackStr));
     uint8_t ringItems = menu->items->length - (missingItem ? 1 : 0);
 
     uint16_t unselR = renderer->unselR;

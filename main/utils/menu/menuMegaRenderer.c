@@ -626,9 +626,9 @@ static void setLedsFromBg(menuMegaRenderer_t* renderer)
         // Extract LED color from bg color
         int32_t rgb = paletteToRGB(renderer->bgColors[ledColorIdx]);
         led_t led   = {
-              .r = (rgb >> 16) & 0xFF,
-              .g = (rgb >> 8) & 0xFF,
-              .b = (rgb >> 0) & 0xFF,
+            .r = (rgb >> 16) & 0xFF,
+            .g = (rgb >> 8) & 0xFF,
+            .b = (rgb >> 0) & 0xFF,
         };
         renderer->leds[ledConveyorOrder[idx]] = led;
     }

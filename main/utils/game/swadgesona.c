@@ -241,7 +241,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
 
 /**
  * @brief Added the hat currently selected in the swadgesona and saves it to the indicated wsg_t.
- * 
+ *
  * @param sw The swadgesona to pull data from
  * @param dest The image to write to. Set to the image on the swadgesona if required.
  */

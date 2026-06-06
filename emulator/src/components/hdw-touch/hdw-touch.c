@@ -23,11 +23,10 @@ static int32_t lastTouchIntensity = 0;
 // Functions
 //==============================================================================
 
-void initTouchPads(const touch_pad_t* touchPads, uint8_t numTouchPads, float touchPadSensitivity,
-                            bool denoiseEnable)
+void initTouchPads(const touch_pad_t* touchPads, uint8_t numTouchPads, float touchPadSensitivity, bool denoiseEnable)
 {
-    lastTouchPhi = 0;
-    lastTouchRadius = 0;
+    lastTouchPhi       = 0;
+    lastTouchRadius    = 0;
     lastTouchIntensity = 0;
 }
 

@@ -80,7 +80,7 @@ void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons)
         ESP_LOGE("BTN", "Too many buttons initialized (%d), max 31", numPushButtons);
         return;
     }
-    
+
     ESP_LOGD("BTN", "initializing buttons");
 
     // create a queue to handle polling GPIO from ISR

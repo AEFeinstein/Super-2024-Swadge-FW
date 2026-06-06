@@ -48,8 +48,7 @@ static int getBaseTouchVals(int32_t* data, int count);
  * @param touchPadSensitivity The sensitivity to set for these touchPads
  * @param denoiseEnable true to denoise the input, false to use it raw
  */
-void initTouchPads(const touch_pad_t* touchPads, uint8_t numTouchPads, float touchPadSensitivity,
-                            bool denoiseEnable)
+void initTouchPads(const touch_pad_t* touchPads, uint8_t numTouchPads, float touchPadSensitivity, bool denoiseEnable)
 {
     ESP_LOGD("TOUCH", "Initializing touch pads");
 

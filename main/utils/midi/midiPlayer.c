@@ -1529,7 +1529,7 @@ int32_t midiPlayerStep(midiPlayer_t* player)
                             | player->poolVoiceStates.sustenuto | player->poolVoiceStates.release
                             | player->poolVoiceStates.attack | player->poolVoiceStates.decay
                             | player->poolVoiceStates.sustain;
-    uint32_t anyVoices = activeVoices;
+    uint32_t anyVoices    = activeVoices;
     while (0 != activeVoices)
     {
         uint8_t voiceIdx = __builtin_ctz(activeVoices);
