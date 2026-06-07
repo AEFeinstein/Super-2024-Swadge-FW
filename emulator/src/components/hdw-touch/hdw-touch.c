@@ -45,6 +45,13 @@ void powerDownTouchPads(void)
     WARN_UNIMPLEMENTED();
 }
 
+void initTouchJoystick(uint8_t centerPadIdx, const uint8_t* ringPadIdxs)
+{
+    lastTouchPhi       = 0;
+    lastTouchRadius    = 0;
+    lastTouchIntensity = 0;
+}
+
 /**
  * @brief Get the touch intensity and location in terms of angle and distance from
  * the center touchpad
@@ -55,7 +62,7 @@ void powerDownTouchPads(void)
  * @return true If the touchpad was touched and values were written to the out-params
  * @return false If no touch is detected and nothing was written
  */
-int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
+bool getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
 {
     // If lastTouchIntensity is 0, we should return false as that's "not touched"
     if (0 == lastTouchIntensity)
@@ -87,4 +94,15 @@ void emulatorSetTouchJoystick(int32_t phi, int32_t radius, int32_t intensity)
     lastTouchPhi       = phi;
     lastTouchRadius    = radius;
     lastTouchIntensity = intensity;
+}
+
+void initTouchLinear(const touchLinearCfg_t* touchLinearCfgs, uint8_t numTouchLinearCfgs)
+{
+    WARN_UNIMPLEMENTED();
+}
+
+uint8_t getTouchLinear(linearTouch_t* touches, uint8_t numLinearTouches)
+{
+    WARN_UNIMPLEMENTED();
+    return 0;
 }

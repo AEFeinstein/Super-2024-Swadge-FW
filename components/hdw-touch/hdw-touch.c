@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include <stdio.h>
+#include <string.h>
 
 #include <esp_timer.h>
 #include <esp_heap_caps.h>
@@ -11,7 +12,25 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
+#include "esp_macros.h"
 #include "hdw-touch.h"
+
+//==============================================================================
+// Defines
+//==============================================================================
+
+#define NUM_TZ_RING 5
+
+//==============================================================================
+// Enums
+//==============================================================================
+
+typedef enum
+{
+    TI_NONE,     ///< Not configured for high level output
+    TI_JOYSTICK, ///< Configured to report as a 2D joystick
+    TI_LINEAR,   ///< Configured to report as a set of linear 1D arrays
+} touchInitMode_t;
 
 //==============================================================================
 // Variables
@@ -28,6 +47,19 @@ static bool _denoiseEnable = false;
 
 /// Used in getBaseTouchVals() to get zeroed touch pad values
 static int32_t* baseOffsets = NULL;
+
+/// The initialization mode for the touch pads
+touchInitMode_t _touchInitMode = TI_NONE;
+
+/// The index of the touch pad in _touchPads[] used as the center zone for the joystick
+uint8_t _centerZone = 0;
+/// The indices of the touch pads in _touchPads[] used as the ring for the joystick
+uint8_t _ringZones[NUM_TZ_RING] = {0};
+
+/// The number of linear configurations of touch pads
+uint8_t _numTouchLinearCfgs = 0;
+/// The linear configurations of touch pads, including indices into _touchPads[]
+const touchLinearCfg_t* _touchLinearCfgs = NULL;
 
 //==============================================================================
 // Function Declarations
@@ -169,7 +201,6 @@ void powerDownTouchPads(void)
 
 /**
  * @brief Get totally raw touch pad values from buffer.
- * NOTE: You must have touch callbacks enabled to use this.
  *
  * @param rawValues is a pointer to an array of int32_t's to receive the raw touch data.
  * @param maxPads is the number of ints in your array.
@@ -194,7 +225,6 @@ static int getTouchRawValues(uint32_t* rawValues, int maxPads)
 
 /**
  * @brief Get "zeroed" touch pad values.
- * NOTE: You must have touch callbacks enabled to use this.
  *
  * @param data is a pointer to an array of int32_t's to receive the zeroed touch data.
  * @param count is the number of ints in your array.
@@ -257,26 +287,48 @@ int getBaseTouchVals(int32_t* data, int count)
 }
 
 /**
+ * @brief Initialize the touch pads as a virtual joystick. The arguments are indices into the array `touchPads[]` which
+ * should have been previously passed into initTouchPads()
+ *
+ * @param centerPadIdx The touch pad index to use as the center of the joystick
+ * @param ringPadIdxs A list of touch pad indices to use as the ring of the joystick. Must be at least ::NUM_TZ_RING
+ * long.
+ */
+void initTouchJoystick(uint8_t centerPadIdx, const uint8_t* ringPadIdxs)
+{
+    if (_numTouchPads >= (NUM_TZ_RING + 1))
+    {
+        _centerZone = centerPadIdx;
+        memcpy(_ringZones, ringPadIdxs, sizeof(uint8_t) * NUM_TZ_RING);
+
+        _touchInitMode = TI_JOYSTICK;
+    }
+}
+
+/**
  * @brief Get high-level touch input, an analog input.
- * NOTE: You must have touch callbacks enabled to use this.
  *
  * @param[out] phi the angle of the touch. Where 0 is right, 320 is up, 640 is left and 960 is down.
  * @param[out] r is how far from center you are.  511 is on the outside edge, 0 is on the inside.
  * @param[out] intensity is how hard the user is pressing.
  * @return true if touched (joystick), false if not touched (no centroid)
  */
-int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
+bool getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
 {
-#define TOUCH_CENTER 2
-    const uint8_t ringZones[] = {3, 0, 1, 4, 5};
-#define NUM_TZ_RING 5
+    if (TI_JOYSTICK != _touchInitMode)
+    {
+        return false;
+    }
+
     int32_t baseVals[6];
     int32_t ringIntensity = 0;
     int bc                = getBaseTouchVals(baseVals, 6);
     if (bc != 6)
+    {
         return 0;
+    }
 
-    int centerIntensity = baseVals[TOUCH_CENTER];
+    int centerIntensity = baseVals[_centerZone];
 
     // First, compute phi.
 
@@ -285,7 +337,7 @@ int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
     int peakBin = -1;
     for (int i = 0; i < NUM_TZ_RING; i++)
     {
-        int32_t bv = baseVals[ringZones[i]];
+        int32_t bv = baseVals[_ringZones[i]];
         if (bv > peak)
         {
             peak    = bv;
@@ -295,18 +347,18 @@ int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
 
     if (peakBin < 0)
     {
-        return 0;
+        return false;
     }
 
     // Arbitrary, but we use 1200 as the minimum peak value.
     if (peak < 4200 && centerIntensity < 4200)
     {
-        return 0;
+        return false;
     }
 
     // We know our peak bin, now we need to know the average and differential of the adjacent bins.
-    int leftOfPeak  = (peakBin > 0) ? baseVals[ringZones[peakBin - 1]] : baseVals[ringZones[NUM_TZ_RING - 1]];
-    int rightOfPeak = (peakBin < NUM_TZ_RING - 1) ? baseVals[ringZones[peakBin + 1]] : baseVals[ringZones[0]];
+    int leftOfPeak  = (peakBin > 0) ? baseVals[_ringZones[peakBin - 1]] : baseVals[_ringZones[NUM_TZ_RING - 1]];
+    int rightOfPeak = (peakBin < NUM_TZ_RING - 1) ? baseVals[_ringZones[peakBin + 1]] : baseVals[_ringZones[0]];
 
     int oPeak  = peak;
     int center = peakBin << 8;
@@ -332,7 +384,9 @@ int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
 
     center -= 80;
     if (center < -1280)
+    {
         center += 1280;
+    }
     int ringPh = (center < 0) ? (center + 1280) : center;
 
     // 0->1280 --> 0->360
@@ -361,5 +415,55 @@ int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
     *phi = (*phi + 225) % 360;
 #endif
 
-    return 1;
+    return true;
+}
+
+/**
+ * @brief Initialize the touch pads as a set of linear arrays.
+ *
+ * @param touchLinearCfgs A list of configurations for each linear touch pad array
+ * @param numTouchLinearCfgs The number of configurations of linear touch pad arrays. This memory is not copied, so it
+ * must be valid for the lifetime of the firmware.
+ */
+void initTouchLinear(const touchLinearCfg_t* touchLinearCfgs, uint8_t numTouchLinearCfgs)
+{
+    // Save the number of configurations
+    _numTouchLinearCfgs = numTouchLinearCfgs;
+    _touchLinearCfgs    = touchLinearCfgs;
+
+    // Mark initialization
+    _touchInitMode = TI_LINEAR;
+}
+
+/**
+ * @brief Get a high level touch input from each configured linear array
+ *
+ * @param[out] touches The results of the touch, including if a touch was detected, intensity, and position
+ * @param[in] numLinearTouches The number of linear arrays to try to read
+ * @return The number of linear arrays successfully read
+ */
+uint8_t getTouchLinear(linearTouch_t* touches, uint8_t numLinearTouches)
+{
+    // Zero out results to start
+    memset(touches, 0, sizeof(linearTouch_t) * numLinearTouches);
+
+    // Return if not initialized
+    if (_touchInitMode != TI_LINEAR)
+    {
+        return 0;
+    }
+
+    // Loop over the min of requested and configured linear touches
+    if (_numTouchLinearCfgs < numLinearTouches)
+    {
+        numLinearTouches = _numTouchLinearCfgs;
+    }
+    for (uint8_t idx = 0; idx < numLinearTouches; idx++)
+    {
+        // TODO use configuration and calculate touches
+        touches[idx].touched = false;
+    }
+
+    // Return number of read linear touches
+    return numLinearTouches;
 }

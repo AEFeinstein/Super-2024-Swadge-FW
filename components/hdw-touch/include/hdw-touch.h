@@ -51,8 +51,32 @@
 #include <stdbool.h>
 #include <driver/touch_pad.h>
 
+/**
+ * @brief The configuration for a linear set of touch pads
+ */
+typedef struct
+{
+    uint8_t numTouchPads;        ///< The number of touch pads in the linear configuration
+    const uint8_t* touchPadIdxs; ///< A list of touch pad indices into `touchPads[]` given to initTouchPads()
+} touchLinearCfg_t;
+
+/**
+ * @brief The result of a linear touch
+ */
+typedef struct
+{
+    int32_t position;  ///< The position of the touch, from 0 to 1023
+    int32_t intensity; ///< How hard the touch is being pressed
+    bool touched;      ///< true if a touch is registered, false if it isn't
+} linearTouch_t;
+
 void initTouchPads(const touch_pad_t* touchPads, uint8_t numTouchPads, float touchPadSensitivity, bool denoiseEnable);
 void deinitTouchPads(void);
 void powerUpTouchPads(void);
 void powerDownTouchPads(void);
-int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity);
+
+void initTouchJoystick(uint8_t centerPadIdx, const uint8_t* ringPadIdxs);
+bool getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity);
+
+void initTouchLinear(const touchLinearCfg_t* touchLinearCfgs, uint8_t numTouchLinearCfgs);
+uint8_t getTouchLinear(linearTouch_t* touches, uint8_t numLinearTouches);

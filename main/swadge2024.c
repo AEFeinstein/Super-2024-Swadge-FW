@@ -92,7 +92,7 @@
  *
  * - hdw-battmon.h: Learn how to check the battery voltage
  * - hdw-btn.h: Learn how to use push button input
- * - hdw-touch.h: Learn how to use touch sensor input
+ * - hdw-touch.h: Learn how to use touch pad input
  *     - touchUtils.h: Utilities to interpret touch button input as a virtual joystick, spin wheel, or cartesian plane
  * - hdw-imu.h: Learn how to use the inertial measurement unit
  *     - imu_utils.h: Utilities to process IMU data
@@ -405,6 +405,8 @@ void app_main(void)
         TOUCH_PAD_NUM14, // GPIO_NUM_14
     };
     initTouchPads(touchPads, sizeof(touchPads) / sizeof(touchPads[0]), 0.2f, true);
+    const uint8_t touchRingIdxs[] = {3, 0, 1, 4, 5};
+    initTouchJoystick(2, touchRingIdxs);
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
