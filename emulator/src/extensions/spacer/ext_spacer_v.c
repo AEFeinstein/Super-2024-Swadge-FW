@@ -1,5 +1,5 @@
 #include <stddef.h>
-#include "ext_touch_1d_v.h"
+#include "ext_touch_linear.h"
 #include "ext_spacer_v.h"
 
 bool vSpacerInit(emuArgs_t* emuArgs);
@@ -20,7 +20,7 @@ bool vSpacerInit(emuArgs_t* emuArgs)
 {
     if (emuArgs->emulateTouch)
     {
-        requestPane(&vSpacerExtension, PANE_LEFT, V_TOUCH_PANE_MIN_SIZE, V_TOUCH_PANE_MIN_SIZE);
+        requestPane(&vSpacerExtension, PANE_LEFT, TOUCH_PANE_MIN_SIZE, TOUCH_PANE_MIN_SIZE);
     }
     return true;
 }

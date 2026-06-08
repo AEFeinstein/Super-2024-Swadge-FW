@@ -23,8 +23,8 @@
 #include "ext_replay.h"
 #include "ext_spacer_v.h"
 #include "ext_tools.h"
-#include "ext_touch_1d_h.h"
-#include "ext_touch_1d_v.h"
+#include "ext_touch_1d_horz.h"
+#include "ext_touch_1d_vert.h"
 #include "ext_touch.h"
 
 //==============================================================================
@@ -36,8 +36,8 @@
 //==============================================================================
 
 static const emuExtension_t* registeredExtensions[] = {
-    &vSpacerExtension,    &ledEmuExtension,    &touchEmu1DVExtension, &touchEmu1DHExtension,
-    &fuzzerEmuExtension,  &toolsEmuExtension,  &keymapEmuCallback,    &modesEmuExtension,
+    &vSpacerExtension,    &ledEmuExtension,    &touchEmu1DVertExtension, &touchEmu1DHorzExtension,
+    &fuzzerEmuExtension,  &toolsEmuExtension,  &keymapEmuCallback,       &modesEmuExtension,
     &gamepadEmuExtension, &replayEmuExtension, &midiEmuExtension,
 };
 

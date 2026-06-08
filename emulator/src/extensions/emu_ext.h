@@ -99,16 +99,16 @@
  */
 typedef enum
 {
-    EMU_MOUSE_NONE     = 0,
-    EMU_MOUSE_LEFT     = 1,
-    EMU_MOUSE_MIDDLE   = 2,
-    EMU_MOUSE_RIGHT    = 3,
-    EMU_SCROLL_UP      = 4,
-    EMU_SCROLL_DOWN    = 5,
-    EMU_SCROLL_LEFT    = 6,
-    EMU_SCROLL_RIGHT   = 7,
-    EMU_SCROLL_THUMB_1 = 8,
-    EMU_SCROLL_THUMB_2 = 9,
+    EMU_MOUSE_NONE    = 0,
+    EMU_MOUSE_LEFT    = 1,
+    EMU_MOUSE_MIDDLE  = 2,
+    EMU_MOUSE_RIGHT   = 3,
+    EMU_SCROLL_UP     = 4,
+    EMU_SCROLL_DOWN   = 5,
+    EMU_SCROLL_LEFT   = 6,
+    EMU_SCROLL_RIGHT  = 7,
+    EMU_MOUSE_THUMB_1 = 8,
+    EMU_MOUSE_THUMB_2 = 9,
 } mouseButton_t;
 
 typedef enum
@@ -121,8 +121,8 @@ typedef enum
     EMU_SCROLL_BIT_DOWN    = 1 << (EMU_SCROLL_DOWN - 1),
     EMU_SCROLL_BIT_LEFT    = 1 << (EMU_SCROLL_LEFT - 1),
     EMU_SCROLL_BIT_RIGHT   = 1 << (EMU_SCROLL_RIGHT - 1),
-    EMU_SCROLL_BIT_THUMB_1 = 1 << (EMU_SCROLL_THUMB_1 - 1),
-    EMU_SCROLL_BIT_THUMB_2 = 1 << (EMU_SCROLL_THUMB_2 - 1),
+    EMU_SCROLL_BIT_THUMB_1 = 1 << (EMU_MOUSE_THUMB_1 - 1),
+    EMU_SCROLL_BIT_THUMB_2 = 1 << (EMU_MOUSE_THUMB_2 - 1),
 } mouseBit_t;
 
 typedef enum
