@@ -9,6 +9,7 @@
 #include "macros.h"
 #include "trigonometry.h"
 
+#include "hdw-touch_emu.h"
 #include "ext_touch_1d_v.h"
 
 //==============================================================================
@@ -35,7 +36,7 @@
 
 static bool touch_1DV_Init(emuArgs_t* emuArgs);
 static int32_t touch_1DV_Key(uint32_t key, bool down, modKey_t modifiers);
-static bool touch_1DV_MouseMove(int32_t x, int32_t y, mouseButton_t buttonMask);
+static bool touch_1DV_MouseMove(int32_t x, int32_t y, mouseBit_t buttonMask);
 static bool touch_1DV_MouseButton(int32_t x, int32_t y, mouseButton_t button, bool down);
 static void touch_1DV_Render(uint32_t winW, uint32_t winH, const emuPane_t* pane, uint8_t numPanes);
 static bool isInBounds(int32_t* x, int32_t* y);
@@ -225,9 +226,9 @@ static int32_t touch_1DV_Key(uint32_t key, bool down, modKey_t modifiers)
  * @return true
  * @return false
  */
-static bool touch_1DV_MouseMove(int32_t x, int32_t y, mouseButton_t buttonMask)
+static bool touch_1DV_MouseMove(int32_t x, int32_t y, mouseBit_t buttonMask)
 {
-    return updateTouch_1DV(x, y, (buttonMask & EMU_MOUSE_LEFT) == EMU_MOUSE_LEFT);
+    return updateTouch_1DV(x, y, (buttonMask & EMU_MOUSE_BIT_LEFT) == EMU_MOUSE_BIT_LEFT);
 }
 
 /**
@@ -247,14 +248,14 @@ static bool touch_1DV_MouseButton(int32_t x, int32_t y, mouseButton_t button, bo
         return updateTouch_1DV(x, y, down);
     }
     else if (button == EMU_SCROLL_UP)
-    {
-        emuTouch1DV.intensity = CLAMP(emuTouch1DV.intensity + 1024, INTENSITY_MIN, INTENSITY_MAX);
-        return true;
+        {
+            emuTouch1DV.intensity = CLAMP(emuTouch1DV.intensity + 1024, INTENSITY_MIN, INTENSITY_MAX);
+            return true;
     }
     else if (button == EMU_SCROLL_DOWN)
-    {
-        emuTouch1DV.intensity = CLAMP(emuTouch1DV.intensity - 1024, INTENSITY_MIN, INTENSITY_MAX);
-        return true;
+        {
+            emuTouch1DV.intensity = CLAMP(emuTouch1DV.intensity - 1024, INTENSITY_MIN, INTENSITY_MAX);
+            return true;
     }
     return false;
 }

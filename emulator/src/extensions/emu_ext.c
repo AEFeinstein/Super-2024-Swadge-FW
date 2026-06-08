@@ -747,7 +747,7 @@ int32_t doExtKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
  * @param y The new mouse position Y-coordinate
  * @param buttonMask A mask of all the currently pressed mouse buttons
  */
-void doExtMouseMoveCb(int32_t x, int32_t y, mouseButton_t buttonMask)
+void doExtMouseMoveCb(int32_t x, int32_t y, mouseBit_t buttonMask)
 {
     EMU_CB_LOOP(fnMouseMoveCb)
     {

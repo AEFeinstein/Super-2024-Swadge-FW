@@ -106,3 +106,9 @@ uint8_t getTouchLinear(linearTouch_t* touches, uint8_t numLinearTouches)
     WARN_UNIMPLEMENTED();
     return 0;
 }
+
+void emulatorSetTouchLinear(int32_t arrIdx, int32_t position, int32_t intensity)
+{
+    // printf("%d, %d, %d\n", arrIdx, position, intensity);
+    WARN_UNIMPLEMENTED();
+}

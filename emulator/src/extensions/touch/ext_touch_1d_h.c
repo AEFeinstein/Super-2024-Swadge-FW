@@ -9,6 +9,7 @@
 #include "macros.h"
 #include "trigonometry.h"
 
+#include "hdw-touch_emu.h"
 #include "ext_touch_1d_h.h"
 
 //==============================================================================
@@ -38,7 +39,7 @@
 
 static bool touch_1DH_Init(emuArgs_t* emuArgs);
 static int32_t touch_1DH_Key(uint32_t key, bool down, modKey_t modifiers);
-static bool touch_1DH_MouseMove(int32_t x, int32_t y, mouseButton_t buttonMask);
+static bool touch_1DH_MouseMove(int32_t x, int32_t y, mouseBit_t buttonMask);
 static bool touch_1DH_MouseButton(int32_t x, int32_t y, mouseButton_t button, bool down);
 static void touch_1DH_Render(uint32_t winW, uint32_t winH, const emuPane_t* pane, uint8_t numPanes);
 static bool isInBounds(int32_t* x, int32_t* y);
@@ -48,9 +49,18 @@ static void calcCirclePoly(RDPoint* buf, uint32_t tris, uint32_t xo, uint32_t yo
 // Structs
 //==============================================================================
 
+typedef enum
+{
+    NOT_CLICKED,
+    LEFT_CLICKED,
+    LEFT_RELEASED,
+    RIGHT_CLICKED,
+    RIGHT_RELEASED,
+} mouseClickState_t;
+
 typedef struct
 {
-    bool clicked;
+    mouseClickState_t clickState;
     int32_t mouseX;
     int32_t mouseY;
     int32_t intensity;
@@ -94,10 +104,10 @@ static emuTouch_t emuTouch1DH = {0};
  */
 static bool touch_1DH_Init(emuArgs_t* emuArgs)
 {
-    emuTouch1DH.clicked   = false;
-    emuTouch1DH.mouseX    = -1;
-    emuTouch1DH.mouseY    = -1;
-    emuTouch1DH.intensity = INTENSITY_MIN;
+    emuTouch1DH.clickState = NOT_CLICKED;
+    emuTouch1DH.mouseX     = -1;
+    emuTouch1DH.mouseY     = -1;
+    emuTouch1DH.intensity  = INTENSITY_MIN;
 
     if (emuArgs->emulateTouch)
     {
@@ -138,42 +148,48 @@ bool isInBounds(int32_t* x, int32_t* y)
  * @return true  If the event should be consumed
  * @return false If the event should not be consumed
  */
-static bool updateTouch_1DH(int32_t x, int32_t y, bool clicked)
+static bool updateTouch_1DH(int32_t x, int32_t y, mouseButton_t clicked)
 {
     if (isInBounds(&x, &y))
     {
-        if (emuTouch1DH.clicked && !clicked)
+        // Update click state
+        if ((EMU_MOUSE_LEFT == clicked) || (EMU_MOUSE_RIGHT == clicked))
         {
-            // TODO notify Swadge
-            printf("Touch 1D H release\n");
+            // Update mouse state
+            emuTouch1DH.clickState = (EMU_MOUSE_LEFT == clicked) ? LEFT_CLICKED : RIGHT_CLICKED;
+            // Pressed down
+            emulatorSetTouchLinear(0, (emuTouch1DH.mouseX * 1024) / emuTouch1DH.paneW, emuTouch1DH.intensity);
+        }
+        else if (EMU_MOUSE_NONE == clicked)
+        {
+            if (LEFT_CLICKED == emuTouch1DH.clickState)
+            {
+                // Update mouse state
+                emuTouch1DH.clickState = LEFT_RELEASED;
+                // Release
+                emulatorSetTouchLinear(0, 0, 0);
+            }
+            else if (RIGHT_CLICKED == emuTouch1DH.clickState)
+            {
+                // Update mouse state
+                emuTouch1DH.clickState = RIGHT_RELEASED;
+                // Don't release the touch when the right mouse button is released
+            }
         }
 
-        emuTouch1DH.clicked = clicked;
-        emuTouch1DH.mouseX  = x;
-        emuTouch1DH.mouseY  = y;
-
-        if (clicked)
+        // Update position, except for the RIGHT_RELEASED state, which stays locked
+        if (RIGHT_RELEASED != emuTouch1DH.clickState)
         {
-            // TODO notify Swadge
-            printf("Touch 1D H %" PRId32 " (%" PRId32 ") \n", (emuTouch1DH.mouseX * 1024) / emuTouch1DH.paneW,
-                   emuTouch1DH.intensity);
+            emuTouch1DH.mouseX = x;
+            emuTouch1DH.mouseY = y;
         }
+
+        // In bounds, consumed
         return true;
     }
-    else
-    {
-        if (emuTouch1DH.clicked)
-        {
-            // TODO notify Swadge
-            printf("Touch 1D H release\n");
-        }
-        emuTouch1DH.clicked = false;
-        emuTouch1DH.mouseX  = -1;
-        emuTouch1DH.mouseY  = -1;
 
-        // TODO notify Swadge
-        return false;
-    }
+    // Out of bounds
+    return false;
 }
 
 /**
@@ -227,9 +243,18 @@ static int32_t touch_1DH_Key(uint32_t key, bool down, modKey_t modifiers)
  * @return true
  * @return false
  */
-static bool touch_1DH_MouseMove(int32_t x, int32_t y, mouseButton_t buttonMask)
+static bool touch_1DH_MouseMove(int32_t x, int32_t y, mouseBit_t buttonMask)
 {
-    return updateTouch_1DH(x, y, (buttonMask & EMU_MOUSE_LEFT) == EMU_MOUSE_LEFT);
+    mouseBit_t button = EMU_MOUSE_BIT_NONE;
+    if (LEFT_CLICKED == emuTouch1DH.clickState)
+    {
+        button = EMU_MOUSE_BIT_LEFT;
+    }
+    else if (RIGHT_CLICKED == emuTouch1DH.clickState)
+    {
+        button = EMU_MOUSE_BIT_RIGHT;
+    }
+    return updateTouch_1DH(x, y, button);
 }
 
 /**
@@ -244,19 +269,26 @@ static bool touch_1DH_MouseMove(int32_t x, int32_t y, mouseButton_t buttonMask)
  */
 static bool touch_1DH_MouseButton(int32_t x, int32_t y, mouseButton_t button, bool down)
 {
-    if (button == EMU_MOUSE_LEFT)
+    // printf("Button %04X\n", button); // 1 thru 9
+    if (button == EMU_MOUSE_LEFT || button == EMU_MOUSE_RIGHT)
     {
-        return updateTouch_1DH(x, y, down);
+        return updateTouch_1DH(x, y, down ? button : EMU_MOUSE_NONE);
     }
     else if (button == EMU_SCROLL_UP)
     {
-        emuTouch1DH.intensity = CLAMP(emuTouch1DH.intensity + 1024, INTENSITY_MIN, INTENSITY_MAX);
-        return true;
+        if (isInBounds(&x, &y))
+        {
+            emuTouch1DH.intensity = CLAMP(emuTouch1DH.intensity + 1024, INTENSITY_MIN, INTENSITY_MAX);
+            return true;
+        }
     }
     else if (button == EMU_SCROLL_DOWN)
     {
-        emuTouch1DH.intensity = CLAMP(emuTouch1DH.intensity - 1024, INTENSITY_MIN, INTENSITY_MAX);
-        return true;
+        if (isInBounds(&x, &y))
+        {
+            emuTouch1DH.intensity = CLAMP(emuTouch1DH.intensity - 1024, INTENSITY_MIN, INTENSITY_MAX);
+            return true;
+        }
     }
     return false;
 }
@@ -295,13 +327,20 @@ static void touch_1DH_Render(uint32_t winW, uint32_t winH, const emuPane_t* pane
         uint32_t y = emuTouch1DH.paneY + emuTouch1DH.mouseY;
         calcCirclePoly(points, ARRAY_SIZE(points), x, y, r);
 
-        if (emuTouch1DH.clicked)
+        switch (emuTouch1DH.clickState)
         {
-            CNFGColor(COLOR_TOUCH);
-        }
-        else
-        {
-            CNFGColor(COLOR_HOVER);
+            case LEFT_CLICKED:
+            case RIGHT_CLICKED:
+            case RIGHT_RELEASED:
+            {
+                CNFGColor(COLOR_TOUCH);
+                break;
+            }
+            default:
+            {
+                CNFGColor(COLOR_HOVER);
+                break;
+            }
         }
         CNFGTackPoly(points, ARRAY_SIZE(points));
     }

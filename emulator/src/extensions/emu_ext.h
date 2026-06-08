@@ -31,7 +31,7 @@
  * static void exampleExtPreFrame(uint64_t frameNum);
  * static void exampleExtPostFrame(uint64_t frameNum);
  * static int32_t exampleExtKey(uint32_t keycode, bool down);
- * static bool exampleExtMouseMove(int32_t x, int32_t y, mouseButton_t buttonMask);
+ * static bool exampleExtMouseMove(int32_t x, int32_t y, mouseBit_t buttonMask);
  * static bool exampleExtMouseButton(int32_t x, int32_t y, mouseButton_t button, bool down);
  * static void exampleExtRender(uint32_t winW, uint32_t winH, uint32_t paneW, uint32_t paneH, uint32_t paneX, uint32_t
  * paneY);
@@ -99,6 +99,7 @@
  */
 typedef enum
 {
+    EMU_MOUSE_NONE     = 0,
     EMU_MOUSE_LEFT     = 1,
     EMU_MOUSE_MIDDLE   = 2,
     EMU_MOUSE_RIGHT    = 3,
@@ -109,6 +110,20 @@ typedef enum
     EMU_SCROLL_THUMB_1 = 8,
     EMU_SCROLL_THUMB_2 = 9,
 } mouseButton_t;
+
+typedef enum
+{
+    EMU_MOUSE_BIT_NONE     = 0,
+    EMU_MOUSE_BIT_LEFT     = 1 << (EMU_MOUSE_LEFT - 1),
+    EMU_MOUSE_BIT_MIDDLE   = 1 << (EMU_MOUSE_MIDDLE - 1),
+    EMU_MOUSE_BIT_RIGHT    = 1 << (EMU_MOUSE_RIGHT - 1),
+    EMU_SCROLL_BIT_UP      = 1 << (EMU_SCROLL_UP - 1),
+    EMU_SCROLL_BIT_DOWN    = 1 << (EMU_SCROLL_DOWN - 1),
+    EMU_SCROLL_BIT_LEFT    = 1 << (EMU_SCROLL_LEFT - 1),
+    EMU_SCROLL_BIT_RIGHT   = 1 << (EMU_SCROLL_RIGHT - 1),
+    EMU_SCROLL_BIT_THUMB_1 = 1 << (EMU_SCROLL_THUMB_1 - 1),
+    EMU_SCROLL_BIT_THUMB_2 = 1 << (EMU_SCROLL_THUMB_2 - 1),
+} mouseBit_t;
 
 typedef enum
 {
@@ -227,7 +242,7 @@ typedef struct
      * @return true to stop further propagation of this event
      *
      */
-    bool (*fnMouseMoveCb)(int32_t x, int32_t y, mouseButton_t buttonMask);
+    bool (*fnMouseMoveCb)(int32_t x, int32_t y, mouseBit_t buttonMask);
 
     /**
      * @brief Function to be called whenever a mouse button is pressed or released
@@ -271,6 +286,6 @@ void setPaneVisibility(const emuExtension_t* ext, int paneId, bool visible);
 void doExtPreFrameCb(uint64_t frame);
 void doExtPostFrameCb(uint64_t frame);
 int32_t doExtKeyCb(uint32_t keycode, bool down, modKey_t modifiers);
-void doExtMouseMoveCb(int32_t x, int32_t y, mouseButton_t buttonMask);
+void doExtMouseMoveCb(int32_t x, int32_t y, mouseBit_t buttonMask);
 void doExtMouseButtonCb(int32_t x, int32_t y, mouseButton_t button, bool down);
 void doExtRenderCb(uint32_t winW, uint32_t winH);
