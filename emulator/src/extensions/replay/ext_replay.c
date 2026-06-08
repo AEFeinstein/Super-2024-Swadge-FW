@@ -60,6 +60,10 @@ typedef enum
     SET_MODE,
     RANDOM_SEED,
     COMMAND,
+    TOUCH_HORZ,
+    TOUCH_HORZ_INTENSITY,
+    TOUCH_VERT,
+    TOUCH_VERT_INTENSITY,
 } replayLogType_t;
 
 #define LAST_TYPE COMMAND
@@ -99,6 +103,12 @@ typedef struct
     int32_t lastTouchPhi;
     int32_t lastTouchR;
     int32_t lastTouchIntensity;
+
+    int32_t lastTouchHorz;
+    int32_t lastTouchHorzIntensity;
+
+    int32_t lastTouchVert;
+    int32_t lastTouchVertIntensity;
 
     int16_t lastAccelX;
     int16_t lastAccelY;
@@ -194,6 +204,9 @@ static void replayRecordFrame(uint64_t frame)
         touchIntensity = 0;
     }
 
+    linearTouch_t linearTouches[2];
+    getTouchLinear(linearTouches, 2);
+
     int16_t accelX, accelY, accelZ;
     accelGetOrientVec(&accelX, &accelY, &accelZ);
 
@@ -260,6 +273,42 @@ static void replayRecordFrame(uint64_t frame)
                 {
                     logEntry.touchVal = touchIntensity;
                     writeEntry(&logEntry);
+                }
+                break;
+            }
+
+            case TOUCH_HORZ:
+            {
+                if (linearTouches[0].position != replay.lastTouchHorz)
+                {
+                    logEntry.touchVal = linearTouches[0].position;
+                }
+                break;
+            }
+
+            case TOUCH_HORZ_INTENSITY:
+            {
+                if (linearTouches[0].intensity != replay.lastTouchHorzIntensity)
+                {
+                    logEntry.touchVal = linearTouches[0].intensity;
+                }
+                break;
+            }
+
+            case TOUCH_VERT:
+            {
+                if (linearTouches[0].position != replay.lastTouchVert)
+                {
+                    logEntry.touchVal = linearTouches[0].position;
+                }
+                break;
+            }
+
+            case TOUCH_VERT_INTENSITY:
+            {
+                if (linearTouches[0].intensity != replay.lastTouchVertIntensity)
+                {
+                    logEntry.touchVal = linearTouches[0].intensity;
                 }
                 break;
             }
@@ -332,6 +381,11 @@ static void replayPlaybackFrame(uint64_t frame)
         int32_t touchR         = replay.lastTouchR;
         int32_t touchIntensity = replay.lastTouchIntensity;
 
+        int32_t touchHorz          = replay.lastTouchHorz;
+        int32_t touchHorzIntensity = replay.lastTouchHorzIntensity;
+        int32_t touchVert          = replay.lastTouchVert;
+        int32_t touchVertIntensity = replay.lastTouchVertIntensity;
+
         int16_t accelX = replay.lastAccelX;
         int16_t accelY = replay.lastAccelY;
         int16_t accelZ = replay.lastAccelZ;
@@ -371,6 +425,30 @@ static void replayPlaybackFrame(uint64_t frame)
                 case TOUCH_INTENSITY:
                 {
                     touchIntensity = replay.nextEntry.touchVal;
+                    break;
+                }
+
+                case TOUCH_HORZ:
+                {
+                    touchHorz = replay.nextEntry.touchVal;
+                    break;
+                }
+
+                case TOUCH_HORZ_INTENSITY:
+                {
+                    touchHorzIntensity = replay.nextEntry.touchVal;
+                    break;
+                }
+
+                case TOUCH_VERT:
+                {
+                    touchVert = replay.nextEntry.touchVal;
+                    break;
+                }
+
+                case TOUCH_VERT_INTENSITY:
+                {
+                    touchVertIntensity = replay.nextEntry.touchVal;
                     break;
                 }
 
@@ -480,6 +558,20 @@ static void replayPlaybackFrame(uint64_t frame)
             replay.lastTouchPhi       = touchPhi;
             replay.lastTouchR         = touchR;
             replay.lastTouchIntensity = touchIntensity;
+        }
+
+        if (touchHorz != replay.lastTouchHorz || touchHorzIntensity != replay.lastTouchHorzIntensity)
+        {
+            emulatorSetTouchLinear(0, touchHorz, touchHorzIntensity);
+            replay.lastTouchHorz          = touchHorz;
+            replay.lastTouchHorzIntensity = touchHorzIntensity;
+        }
+
+        if (touchVert != replay.lastTouchVert || touchVertIntensity != replay.lastTouchVertIntensity)
+        {
+            emulatorSetTouchLinear(1, touchVert, touchVertIntensity);
+            replay.lastTouchVert          = touchVert;
+            replay.lastTouchVertIntensity = touchVertIntensity;
         }
 
         if (accelX != replay.lastAccelX || accelY != replay.lastAccelY || accelZ != replay.lastAccelZ)
@@ -594,6 +686,10 @@ static bool readEntry(replayEntry_t* entry)
         case TOUCH_PHI:
         case TOUCH_R:
         case TOUCH_INTENSITY:
+        case TOUCH_HORZ:
+        case TOUCH_HORZ_INTENSITY:
+        case TOUCH_VERT:
+        case TOUCH_VERT_INTENSITY:
         {
             if (1 != fscanf(replay.file, "%" PRId32 "\n", &entry->touchVal))
             {
@@ -723,6 +819,10 @@ static void writeEntry(const replayEntry_t* entry)
         case TOUCH_PHI:
         case TOUCH_R:
         case TOUCH_INTENSITY:
+        case TOUCH_HORZ:
+        case TOUCH_HORZ_INTENSITY:
+        case TOUCH_VERT:
+        case TOUCH_VERT_INTENSITY:
         {
             snprintf(ptr, BUFSIZE, "%" PRId32 "\n", entry->touchVal);
             break;
