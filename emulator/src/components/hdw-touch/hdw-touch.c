@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 
+#include <string.h>
 #include "emu_main.h"
 #include "hdw-touch.h"
 #include "hdw-touch_emu.h"
@@ -18,6 +19,8 @@ static int32_t lastTouchRadius = 0;
 
 /// The touchpad analog intensity
 static int32_t lastTouchIntensity = 0;
+
+linearTouch_t linearTouches[2] = {0};
 
 //==============================================================================
 // Functions
@@ -103,11 +106,21 @@ void initTouchLinear(const touchLinearCfg_t* touchLinearCfgs, uint8_t numTouchLi
 
 uint8_t getTouchLinear(linearTouch_t* touches, uint8_t numLinearTouches)
 {
-    WARN_UNIMPLEMENTED();
-    return 0;
+    int32_t numToCopy = sizeof(linearTouches) / sizeof(linearTouches[0]);
+    if (numLinearTouches < numToCopy)
+    {
+        numToCopy = numLinearTouches;
+    }
+    memcpy(touches, linearTouches, sizeof(linearTouch_t) * numToCopy);
+    return numToCopy;
 }
 
-void emulatorSetTouchLinear(int32_t arrIdx, int32_t position, int32_t intensity)
+void emulatorSetTouchLinear(uint32_t arrIdx, int32_t position, int32_t intensity)
 {
-    WARN_UNIMPLEMENTED();
+    if (arrIdx < sizeof(linearTouches) / sizeof(linearTouches[0]))
+    {
+        linearTouches[arrIdx].position  = position;
+        linearTouches[arrIdx].intensity = intensity;
+        linearTouches[arrIdx].touched   = (intensity > 0);
+    }
 }

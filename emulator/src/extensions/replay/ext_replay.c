@@ -64,9 +64,8 @@ typedef enum
     TOUCH_HORZ_INTENSITY,
     TOUCH_VERT,
     TOUCH_VERT_INTENSITY,
+    LAST_TYPE,
 } replayLogType_t;
-
-#define LAST_TYPE COMMAND
 
 //==============================================================================
 // Structs
@@ -136,8 +135,8 @@ static void writeEntry(const replayEntry_t* entry);
 //==============================================================================
 
 static const char* replayLogTypeStrs[] = {
-    "BtnDown", "BtnUp", "TouchPhi", "TouchR",     "TouchI",  "AccelX", "AccelY",
-    "AccelZ",  "Fuzz",  "Quit",     "Screenshot", "SetMode", "Seed",   "Command",
+    "BtnDown", "BtnUp",      "TouchPhi", "TouchR", "TouchI",  "AccelX", "AccelY",  "AccelZ", "Fuzz",
+    "Quit",    "Screenshot", "SetMode",  "Seed",   "Command", "TouchH", "TouchHI", "TouchV", "TouchVI",
 };
 
 emuExtension_t replayEmuExtension = {
@@ -212,7 +211,7 @@ static void replayRecordFrame(uint64_t frame)
 
     buttonBit_t curButtons = emulatorGetButtonState();
 
-    for (replayLogType_t type = BUTTON_PRESS; type <= LAST_TYPE; type += 1)
+    for (replayLogType_t type = BUTTON_PRESS; type < LAST_TYPE; type += 1)
     {
         logEntry.type = type;
 
@@ -282,6 +281,7 @@ static void replayRecordFrame(uint64_t frame)
                 if (linearTouches[0].position != replay.lastTouchHorz)
                 {
                     logEntry.touchVal = linearTouches[0].position;
+                    writeEntry(&logEntry);
                 }
                 break;
             }
@@ -291,24 +291,27 @@ static void replayRecordFrame(uint64_t frame)
                 if (linearTouches[0].intensity != replay.lastTouchHorzIntensity)
                 {
                     logEntry.touchVal = linearTouches[0].intensity;
+                    writeEntry(&logEntry);
                 }
                 break;
             }
 
             case TOUCH_VERT:
             {
-                if (linearTouches[0].position != replay.lastTouchVert)
+                if (linearTouches[1].position != replay.lastTouchVert)
                 {
-                    logEntry.touchVal = linearTouches[0].position;
+                    logEntry.touchVal = linearTouches[1].position;
+                    writeEntry(&logEntry);
                 }
                 break;
             }
 
             case TOUCH_VERT_INTENSITY:
             {
-                if (linearTouches[0].intensity != replay.lastTouchVertIntensity)
+                if (linearTouches[1].intensity != replay.lastTouchVertIntensity)
                 {
-                    logEntry.touchVal = linearTouches[0].intensity;
+                    logEntry.touchVal = linearTouches[1].intensity;
+                    writeEntry(&logEntry);
                 }
                 break;
             }
@@ -643,7 +646,7 @@ static bool readEntry(replayEntry_t* entry)
         return false;
     }
 
-    for (replayLogType_t type = BUTTON_PRESS; type <= LAST_TYPE; type += 1)
+    for (replayLogType_t type = BUTTON_PRESS; type < LAST_TYPE; type += 1)
     {
         const char* str = replayLogTypeStrs[type];
         if (!strncmp(str, buffer, sizeof(buffer) - 1))
@@ -652,7 +655,7 @@ static bool readEntry(replayEntry_t* entry)
             break;
         }
 
-        if (type == LAST_TYPE)
+        if (type > LAST_TYPE)
         {
             printf("ERR: No action type matched '%s'\n", buffer);
             return false;
