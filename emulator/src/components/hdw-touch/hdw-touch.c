@@ -8,8 +8,22 @@
 #include "hdw-touch_emu.h"
 
 //==============================================================================
+// Enums
+//==============================================================================
+
+typedef enum
+{
+    TOUCH_NONE,
+    TOUCH_JOYSTICK,
+    TOUCH_LINEAR,
+} touchMode_t;
+
+//==============================================================================
 // Variables
 //==============================================================================
+
+/// The mode of touch initialized
+static touchMode_t touchMode = TOUCH_NONE;
 
 /// The touchpad analog location angle
 static int32_t lastTouchPhi = 0;
@@ -28,9 +42,7 @@ linearTouch_t linearTouches[2] = {0};
 
 void initTouchPads(const touch_pad_t* touchPads, uint8_t numTouchPads, float touchPadSensitivity, bool denoiseEnable)
 {
-    lastTouchPhi       = 0;
-    lastTouchRadius    = 0;
-    lastTouchIntensity = 0;
+    WARN_UNIMPLEMENTED();
 }
 
 void deinitTouchPads(void)
@@ -53,6 +65,8 @@ void initTouchJoystick(uint8_t centerPadIdx, const uint8_t* ringPadIdxs)
     lastTouchPhi       = 0;
     lastTouchRadius    = 0;
     lastTouchIntensity = 0;
+
+    touchMode = TOUCH_JOYSTICK;
 }
 
 /**
@@ -67,6 +81,11 @@ void initTouchJoystick(uint8_t centerPadIdx, const uint8_t* ringPadIdxs)
  */
 bool getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
 {
+    if (TOUCH_JOYSTICK != touchMode)
+    {
+        return false;
+    }
+
     // If lastTouchIntensity is 0, we should return false as that's "not touched"
     if (0 == lastTouchIntensity)
     {
@@ -101,11 +120,17 @@ void emulatorSetTouchJoystick(int32_t phi, int32_t radius, int32_t intensity)
 
 void initTouchLinear(const touchLinearCfg_t* touchLinearCfgs, uint8_t numTouchLinearCfgs)
 {
-    WARN_UNIMPLEMENTED();
+    touchMode = TOUCH_LINEAR;
+    memset(linearTouches, 0, sizeof(linearTouches));
 }
 
 uint8_t getTouchLinear(linearTouch_t* touches, uint8_t numLinearTouches)
 {
+    if (TOUCH_LINEAR != touchMode)
+    {
+        return 0;
+    }
+
     int32_t numToCopy = sizeof(linearTouches) / sizeof(linearTouches[0]);
     if (numLinearTouches < numToCopy)
     {

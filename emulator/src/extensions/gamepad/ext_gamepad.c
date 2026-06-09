@@ -884,8 +884,8 @@ void gamepadPreFrameCb(uint64_t frame)
 
                         int angleDegreesRounded = (int)(angleDegrees + 360) % 360;
                         emulatorSetTouchJoystick(CLAMP(angleDegreesRounded, 0, 359), radius, 1024);
-                        emulatorSetTouchLinear(0, x, 1024);
-                        emulatorSetTouchLinear(1, y, 1024);
+                        emulatorSetTouchLinear(0, (x / 64) + 512, 1024);
+                        emulatorSetTouchLinear(1, (y / 64) + 512, 1024);
                     }
                 }
                 else if (event.axis == joystickConfig.accel.xAxis || event.axis == joystickConfig.accel.yAxis

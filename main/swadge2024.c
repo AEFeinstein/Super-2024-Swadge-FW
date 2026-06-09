@@ -405,8 +405,21 @@ void app_main(void)
         TOUCH_PAD_NUM14, // GPIO_NUM_14
     };
     initTouchPads(touchPads, sizeof(touchPads) / sizeof(touchPads[0]), 0.2f, true);
-    const uint8_t touchRingIdxs[] = {3, 0, 1, 4, 5};
-    initTouchJoystick(2, touchRingIdxs);
+    // const uint8_t touchRingIdxs[] = {3, 0, 1, 4, 5};
+    // initTouchJoystick(2, touchRingIdxs);
+    static const uint8_t horzIdxs[]           = {0, 1, 2};
+    static const uint8_t vertIdxs[]           = {3, 4, 5};
+    static const touchLinearCfg_t linearCfg[] = {
+        {
+            .numTouchPads = ARRAY_SIZE(horzIdxs),
+            .touchPadIdxs = horzIdxs,
+        },
+        {
+            .numTouchPads = ARRAY_SIZE(vertIdxs),
+            .touchPadIdxs = vertIdxs,
+        },
+    };
+    initTouchLinear(linearCfg, ARRAY_SIZE(linearCfg));
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
