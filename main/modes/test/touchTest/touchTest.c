@@ -9,7 +9,7 @@
 // Includes
 //==============================================================================
 
-#include "swadge2024.h"
+#include "swadge.h"
 #include "hdw-btn.h"
 #include "touchTest.h"
 #include "esp_log.h"

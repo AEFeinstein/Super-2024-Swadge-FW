@@ -2,7 +2,7 @@
 // Includes
 //==============================================================================
 
-#include "swadge2024.h"
+#include "swadge.h"
 #include "menuSimpleRenderer.h"
 #include "menu_utils.h"
 

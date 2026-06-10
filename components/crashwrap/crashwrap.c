@@ -199,7 +199,7 @@ void checkAndInstallCrashwrap(void)
             int i;
             char fulllog[1024];
             char* flend = fulllog;
-            flend += sprintf(flend, "xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf");
+            flend += sprintf(flend, "xtensa-esp32s2-elf-addr2line -e build/swadge.elf");
             for (i = 0; i < STACKPAIRS; i++)
             {
                 if (sizeof(fulllog) + fulllog - flend > 24 && epc_sp_pairs[i * 2 + 0])
@@ -212,8 +212,8 @@ void checkAndInstallCrashwrap(void)
         else
         {
             // Could not get full stack trace, do the best we can.
-            ESP_LOGW(crashwrapTag, "xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf 0x%08lx:0x%08lx",
-                     (uint32_t)fr.pc, (uint32_t)fr.ps);
+            ESP_LOGW(crashwrapTag, "xtensa-esp32s2-elf-addr2line -e build/swadge.elf 0x%08lx:0x%08lx", (uint32_t)fr.pc,
+                     (uint32_t)fr.ps);
         }
     }
 

@@ -62,7 +62,7 @@ class LabelThread(threading.Thread):
                 "--flash-size", "4MB",
                 "0x1000",  "bootloader.bin",
                 "0x8000",  "partition-table.bin",
-                "0x10000", "swadge2024.bin"])
+                "0x10000", "swadge.bin"])
 
             # It worked! Display a nice green message
             self.labelText = "Flash succeeded on " + str(self.serialPort.device)

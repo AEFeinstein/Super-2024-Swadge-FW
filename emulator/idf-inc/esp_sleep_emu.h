@@ -1,5 +1,5 @@
 #pragma once
-#include "swadge2024.h"
+#include "swadge.h"
 
 void emulatorForceSwitchToSwadgeMode(const swadgeMode_t* mode);
 void emulatorSetSwadgeModeLocked(bool locked);

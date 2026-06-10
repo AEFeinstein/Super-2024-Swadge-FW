@@ -10,9 +10,9 @@ on:
       - main
 
 env:
-  FIRMWARE_ARTIFACT: swadge2024-firmware
+  FIRMWARE_ARTIFACT: swadge-firmware
   FIRMWARE_ARTIFACT_PATH: fw-artifact
-  EMULATOR_ARTIFACT: swadge2024-emulator
+  EMULATOR_ARTIFACT: swadge-emulator
 
 jobs:
   Build-Firmware-And-Emulator:
@@ -137,8 +137,8 @@ jobs:
       if: matrix.firmware
       run: |
         mkdir -p ${{ env.FIRMWARE_ARTIFACT_PATH }}/
-        cp build/swadge2024.elf ${{ env.FIRMWARE_ARTIFACT_PATH }}/
-        cp build/swadge2024.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/swadge.elf ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/swadge.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
         cp build/dfu.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
         cp build/bootloader/bootloader.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
         cp build/partition_table/partition-table.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/

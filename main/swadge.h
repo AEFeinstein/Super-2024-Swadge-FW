@@ -1,4 +1,4 @@
-/*! \file swadge2024.h
+/*! \file swadge.h
  *
  * \section swadgeMode_design Design Philosophy
  *
@@ -136,7 +136,7 @@
  * #ifndef _DEMO_MODE_H_
  * #define _DEMO_MODE_H_
  *
- * #include "swadge2024.h"
+ * #include "swadge.h"
  *
  * extern swadgeMode_t demoMode;
  *

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "esp_system.h"
-#include "swadge2024.h"
+#include "swadge.h"
 #include "hal/gpio_types.h"
 #include "esp_log.h"
 #include "soc/efuse_reg.h"

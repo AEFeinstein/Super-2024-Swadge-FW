@@ -48,7 +48,7 @@ typedef struct
 //==============================================================================
 
 /**
- * @brief Call this to initialize the MAC variable. Call inside the swadge2024.h file.
+ * @brief Call this to initialize the MAC variable. Call inside the swadge.h file.
  *
  */
 void initUsernameSystem(void);

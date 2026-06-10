@@ -15,7 +15,7 @@
 // Swadge
 #include "nameList.h"
 #include "macros.h"
-#include "swadge2024.h"
+#include "swadge.h"
 #include "hdw-esp-now.h"
 
 // C

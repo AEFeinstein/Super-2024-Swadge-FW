@@ -22,7 +22,7 @@ This is a non-exhaustive list of changes I've found to be needed when porting Tu
 
 ## Things that need to be changed in mode header files
 
-- Add `#include "swadge2024.h"`
+- Add `#include "swadge.h"`
 - Naming conventions changed from `mode_tunernome.h` to `tunernome.h`. Don't forget to change your header guard names too:
 
     ```c

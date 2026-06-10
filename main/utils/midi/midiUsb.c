@@ -2,7 +2,7 @@
 
 #include <esp_log.h>
 
-#include "swadge2024.h"
+#include "swadge.h"
 #include "tinyusb.h"
 
 //==============================================================================

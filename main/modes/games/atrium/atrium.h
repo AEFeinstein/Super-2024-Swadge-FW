@@ -1,4 +1,4 @@
 #pragma once
-#include "swadge2024.h"
+#include "swadge.h"
 
 extern swadgeMode_t atriumMode;

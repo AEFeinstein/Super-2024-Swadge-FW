@@ -175,7 +175,7 @@
  * #include <stdbool.h>
  * #include <stdint.h>
  * #include <stdlib.h>
- * #include "swadge2024.h"
+ * #include "swadge.h"
  * #include "hashMap.h"
  *
  * // Just a simple struct to hold a WSG and its rotation for the values
@@ -266,7 +266,7 @@
  * #include <stdint.h>
  * #include <stdlib.h>
  * #include <stdio.h>
- * #include "swadge2024.h"
+ * #include "swadge.h"
  * #include "hashMap.h"
  *
  * // A struct to use for the key

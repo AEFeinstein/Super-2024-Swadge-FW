@@ -13,8 +13,6 @@
  * This single repository hosts firmware for multiple years. See <a
  * href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/releases"> the releases</a> for different year's final
  * firmware. The corresponding hardware repositories for the Super Magfest Swadges can be found at:
- * - Squarewavebird - <a
- * href="https://github.com/AEFeinstein/Super-2023-Swadge-HW">https://github.com/AEFeinstein/Super-2023-Swadge-HW</a>
  * - Gunship - <a
  * href="https://github.com/AEFeinstein/Super-2024-Swadge-HW">https://github.com/AEFeinstein/Super-2024-Swadge-HW</a>
  * - Hot Dog - <a
@@ -25,7 +23,8 @@
  * This is living documentation, so if you notice that something is incorrect or incomplete, please fix or complete it,
  * and <a href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/pulls">submit a pull request</a>.
  *
- * Most discussions happen in the Magfest Slack, in the \#circuitboards channel. If you are interested in joining and
+ * Most discussions happen in the Magfest Slack, in the \#super-circuitboards channel. If you are interested in joining
+ and
  * contributing to this project, email circuitboards@magfest.org.
  *
  * General Swadge design principles can be found in the \ref design_principles.
@@ -39,7 +38,7 @@
  * firmware and emulator.
  *     \note If you just want to run the Swadge emulator without setting up a development environment, see the \ref
  * emulator for an installation guide and usage instructions.
- * -# Next, read about the basics of a Swadge Mode at swadge2024.h.
+ * -# Next, read about the basics of a Swadge Mode at swadge.h.
  * -# Once you understand the basics of a Swadge Mode, check out the \ref swadge_mode_example to see a simple mode in
  * action.
  *     \note If you're new to developing code and want a guided experience, try the \ref tutorial tutorial! It will walk
@@ -81,30 +80,61 @@
  * \section apis API Reference
  *
  * What follows are all the APIs available to write Swadge modes. If something does not exist, and it would be
- * beneficial to multiple Swadge modes, please contribute both the firmware and API documentation. It's a team effort
+ * beneficial to multiple Swadge modes, please contribute both the firmware and API documentation. It's a team effort!
  *
  * \subsection swadge_mode_api Swadge Mode APIs
  *
- * - swadge2024.h: Write a mode. This is a good starting place
- * - trophy.h: Add trophies to the swadge mode.
+ * - swadge.h: Write a mode. This is a good starting place
+ * - modeIncludeList.h: A list of all modes, useful for building a top level menu or cross-mode interaction
+ * - macros.h: Convenient macros like MIN() and MAX()
+ * - coreutil.h: General utilities for system profiling
  *
  * \subsection input_api Input APIs
  *
- * - hdw-battmon.h: Learn how to check the battery voltage
  * - hdw-btn.h: Learn how to use push button input
  * - hdw-touch.h: Learn how to use touch pad input
  *     - touchUtils.h: Utilities to interpret touch button input as a virtual joystick, spin wheel, or cartesian plane
- * - hdw-imu.h: Learn how to use the inertial measurement unit
+ *     - wheel_menu.h: Show a menu wheel which is navigable with a circular touch-pad
+ * - Text Entry
+ *     - touchTextEntry.h: Edit an arbitrary single line of text by selecting each letter at a time with up & down keys
+ *     - textEntry.h: Edit an arbitrary single line of text with a virtual QWERTY keyboard
+ * - hdw-imu.h: Learn how to use the inertial measurement unit (motion controls)
  *     - imu_utils.h: Utilities to process IMU data
+ * - hdw-battmon.h: Learn how to check the battery voltage
  * - hdw-temperature.h: Learn how to use the temperature sensor
  *
- * \subsection nwk_api Network APIs
+ * \subsection led_api LED APIs
  *
- * - hdw-esp-now.h: Broadcast and receive messages. This is fast and unreliable.
- * - p2pConnection.h: Connect to another Swadge and exchange messages. This is slower and more reliable.
- * - swadgePass.h: Send and receive small amounts of data like avatars or high scores while the Swadge is idle.
- * - nameList.h: A method of generating nice strings for swadgepass data that are small.
+ * - hdw-led.h: Learn how to use the LEDs
+ * - hdw-ch32v003.h: The matrix array driver on the 2026 Swadge
+ * - Colorchord
+ *     - embeddedNf.h: The core Colorchord algorithm
+ *     - embeddedOut.h: Set LEDs by Colorchord Data
+ *     - ccconfig.h: Colorchord configuration
+ *     - DFT32.h: Discrete Fourier Transform used to analyze sound in the frequency domain
  *
+ * \subsection gr_api Graphics APIs
+ *
+ * - hdw-tft.h: Learn how to use the TFT
+ * - palette.h: Learn about available colors
+ * - color_utils.h: Learn about color manipulation
+ * - fill.h: Learn how to fill areas on the screen
+ * - shapes.h: Learn how to draw shapes and curves on the screen
+ * - wsg.h: Learn how to draw sprites on the screen
+ *     - wsgCanvas.h: Tools for mixing WSGs into one file to save on memory space
+ *     - wsgPalette.h: A layer on top of WSGs to allow the colors to be changed without new WSGs
+ * - font.h: Learn how to draw text on the screen
+ *
+ * \subsection audio_api Audio APIs
+ *
+ * - hdw-mic.h: Learn how to use the microphone
+ * - hdw-dac.h: Learn how to use the DAC (speaker)
+ *     - midiPlayer.h: Learn how to play MIDI files on the DAC speaker
+ *     - midiFileParser.h: Load MIDI files
+ *     - midiNoteFreqs.h: A list of MIDI note frequencies
+ *     - midiUtil.h: Utilities for bending MIDI pitch
+ *     - swSynth.h: Learn how to generate oscillating output for the DAC speaker
+
  * \subsection pm_api Persistent Memory APIs
  *
  * - hdw-nvs.h: Learn how to save and load persistent runtime data
@@ -113,59 +143,55 @@
  *     - fs_wsg.h: Load WSG images
  *     - fs_json.h: Load JSON
  *     - fs_txt.h: Load plaintext
- *     - midiFileParser.h: Load MIDI files
- * - assets_preprocessor.h: Learn how to define a new asset file type processor for CNFS
+ * - heatshrink_helper.h: Helpers to use Heatshrink compression and decompression. The [Heatshrink encoder and
+ decoder](https://github.com/atomicobject/heatshrink) are provided too.
  * - settingsManager.h: Set and get persistent settings for things like screen brightness
- * - highScores.h: System to simplify keeping a high score table with SwadgePass support
  *
- * \subsection gr_api Graphics APIs
+ * \subsection nwk_api Network APIs
  *
- * - hdw-led.h: Learn how to use the LEDs
- * - hdw-tft.h: Learn how to use the TFT
- * - palette.h: Learn about available colors
- * - color_utils.h: Learn about color manipulation
- * - fill.h: Learn how to fill areas on the screen
- * - shapes.h: Learn how to draw shapes and curves on the screen
- * - wsg.h: Learn how to draw sprites on the screen
- * - wsgCanvas.h: Tools for mixing wsgs into one file to save on memory space
- * - wsgPalette.h: A layer on top of WSGs to allow the colors to be changed without new WSGs
- * - font.h: Learn how to draw text on the screen
- * - hdw-ch32v003.h: The matrix array driver on the 2026 Swadge
+ * - hdw-esp-now.h: Broadcast and receive messages. This is fast and unreliable, like UDP.
+ * - p2pConnection.h: Connect to another Swadge and exchange messages. This is slower and more reliable, like TCP.
+ * - swadgePass.h: Send and receive small amounts of data like avatars or high scores while the Swadge is idle.
  *
- * \subsection gui_api Graphical UI APIs
+ * \subsection usb_api USB APIs
  *
- * - menu.h and menuMegaRenderer.h: Make and render a menu within a mode
+ * - hdw-usb.h: Learn how to be a USB HID Gamepad
+ * - advanced_usb_control.h: Use USB for application development
+ *
+ * \subsection gm_api Game Element APIs
+ *
+ * - cutscene.h Renders and makes sound effects for character dialogue. Generic enough to use for any game with any
+ yearly theme.
  * - dialogBox.h: Show messages and prompt users for a response
- * - touchTextEntry.h: Edit an arbitrary single line of text by selecting each letter at a time with up & down keys
- * - textEntry.h: Edit an arbitrary single line of text with a virtual QWERTY keyboard
- * - wheel_menu.h: Show a menu wheel which is navigable with a circular touch-pad
+ * - helpPages.h: Show multiple pages of multi-line text
+ * - highScores.h: System to simplify keeping a high score table with SwadgePass support
+ * - nameList.h: A method of generating nice strings for swadgepass data that are small.
+ * - swadgesona.h: Data structures for using Swadgesonas, user created avatars.
+ * - trophy.h: Add trophies to the swadge mode.
  *
- * \subsection audio_api Audio APIs
+ * \subsection menu_api Menu UI APIs
  *
- * - hdw-dac.h: Learn how to use the DAC (speaker)
- * - hdw-mic.h: Learn how to use the microphone
- * - swSynth.h: Learn how to generate oscillating output for the DAC speaker
- * - midiPlayer.h: Learn how to play MIDI files on the DAC speaker
+ * - menu.h: A tree-like data structure to represent multi-level menus with static and dynamic entries
+ *     - menu_utils.h: Utilities for working with a menu data structure
+ * - Renderers
+ *     - menuMegaRenderer.h: Render a menu in the Mega style
+ *     - menuManiaRenderer.h: Render a menu in the Mania style
+ *     - menuSimpleRenderer.h: Render a menu in a simple style
  *
- * \subsection math_api Math APIs
- *
- * - trigonometry.h: Fast math based on look up tables
- * - vector2d.h: Basic math for 2D vectors
- *     - vectorFl2d.h: Floating 2D vector math functions
- * - geometry.h: Basic math for 2D shapes, like collision checks
- *     - geometryFl.h: Floating point geometric functions
- * - fp_math.h: Fixed point decimal math. This is faster an less precise than using floating point
- *
- * \subsection oth_api Other Useful APIs
+ * \subsection ds_api Data Structures
  *
  * - linked_list.h: A basic data structure
  * - hashMap.h: A data structure for storing data in key-value pairs
- * - macros.h: Convenient macros like MIN() and MAX()
- * - coreutil.h: General utilities for system profiling
- * - hdw-usb.h: Learn how to be a USB HID Gamepad
- *     - advanced_usb_control.h: Use USB for application development
- * - cutscene.h Renders and makes sound effects for character dialogue. Generic enough to use for any game with any
- * yearly theme.
+ *
+ * \subsection math_api Math APIs
+ *
+ * - fp_math.h: Fixed point decimal math. This is faster an less precise than using floating point
+ * - geometry.h: Basic math for 2D shapes, like collision checks
+ *     - geometryFl.h: Floating point geometric functions
+ * - quaternions.h: Quaternions useful for 3D calculations
+ * - trigonometry.h: Fast math based on look up tables
+ * - vector2d.h: Basic math for 2D vectors
+ *     - vectorFl2d.h: Floating 2D vector math functions
  *
  * \section espressif_doc Espressif Documentation
  *
@@ -197,7 +223,7 @@
 
 #include "advanced_usb_control.h"
 #include "shapes.h"
-#include "swadge2024.h"
+#include "swadge.h"
 
 #include "factoryTest.h"
 #include "mainMenu.h"

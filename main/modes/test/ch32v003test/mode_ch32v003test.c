@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "swadge2024.h"
+#include "swadge.h"
 #include "mode_ch32v003test.h"
 #include "mainMenu.h"
 #include "hdw-ch32v003.h"

@@ -1,12 +1,14 @@
-# Super Magfest 2024 Swadge
+# Super Magfest ESP32-S2 Swadge
 
-This is the firmware repository for the Super Magfest 2024 Swadge. The Swadge is a wearable swag-badge powered by an ESP32-S2 and loaded with games and utilities. This project is based on the [Super Magfest 2023 Swadge](https://github.com/AEFeinstein/Super-2023-Swadge-FW).
+This is the firmware repository for the Super Magfest ESP32-S2 Swadges. The Swadge is a wearable swag-badge loaded with games and utilities. This project is based on the [Super Magfest 2023 Swadge](https://github.com/AEFeinstein/Super-2023-Swadge-FW).
 
-The corresponding hardware repository for the Super Magfest 2024 Swadge [can be found here](https://github.com/AEFeinstein/Super-2024-Swadge-HW).
+The corresponding hardware repositories for various years can be found at:
+
+- [2024 - Gunship](https://github.com/AEFeinstein/Super-2024-Swadge-HW)
+- [2025 - Hot Dog](https://github.com/AEFeinstein/Super-2025-Swadge-HW)
+- [2026 - Alpha Pulse](https://github.com/AEFeinstein/Super-2026-Swadge-HW)
 
 If you have any questions, feel free to create a Github ticket or email us at circuitboards@magfest.org.
-
-This is living documentation, so if you notice that something is incorrect or incomplete, please fix or complete it, and submit a pull request.
 
 ## Documentation
 
@@ -46,6 +48,6 @@ This project uses Github Actions to automatically build the firmware, emulator, 
 
 - Read [the documentation](https://adam.feinste.in/Super-2024-Swadge-FW/)
 - Search the internet for your issue
-- Ask about it either in a Github issue or the Slack channel, #circuitboards.
+- Ask about it either in a Github issue or the Slack channel, #super-circuitboards.
 
 If your problem is solved, then the solution should be added to the documentation in the appropriate place.

@@ -13,7 +13,7 @@
 #include "color_utils.h"
 #include "hdw-nvs.h"
 #include "vector2d.h"
-#include "swadge2024.h"
+#include "swadge.h"
 #include "color_utils.h"
 
 //==============================================================================

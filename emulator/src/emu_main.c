@@ -40,7 +40,7 @@
 #include "hdw-dac.h"
 #include "hdw-dac_emu.h"
 
-#include "swadge2024.h"
+#include "swadge.h"
 #include "macros.h"
 #include "trigonometry.h"
 
@@ -204,7 +204,7 @@ int main(int argc, char** argv)
     // Save window dimensions from the last loop
     if (emulatorArgs.fullscreen)
     {
-        CNFGSetupFullscreen("Swadge 2024 Simulator", 0);
+        CNFGSetupFullscreen("Swadge Simulator", 0);
     }
     else
     {
@@ -225,7 +225,7 @@ int main(int argc, char** argv)
         }
 
         // Add the screen size to the minimum pane sizes to get our window size
-        CNFGSetup("Swadge 2024 Simulator", winW, winH);
+        CNFGSetup("Swadge Simulator", winW, winH);
     }
 
     // Then initialize audio

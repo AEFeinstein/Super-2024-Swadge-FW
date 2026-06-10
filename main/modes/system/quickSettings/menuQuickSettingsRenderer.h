@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "swadge2024.h"
+#include "swadge.h"
 #include "font.h"
 #include "wsg.h"
 #include "linked_list.h"
