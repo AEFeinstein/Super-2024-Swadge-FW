@@ -94,7 +94,7 @@
  * - hdw-btn.h: Learn how to use push button input
  * - hdw-touch.h: Learn how to use touch pad input
  *     - touchUtils.h: Utilities to interpret touch button input as a virtual joystick, spin wheel, or cartesian plane
- *     - wheel_menu.h: Show a menu wheel which is navigable with a circular touch-pad
+ *     - wheel_menu.h: Show a menu wheel which is navigable with a circular touch pad
  * - Text Entry
  *     - touchTextEntry.h: Edit an arbitrary single line of text by selecting each letter at a time with up & down keys
  *     - textEntry.h: Edit an arbitrary single line of text with a virtual QWERTY keyboard
