@@ -160,9 +160,15 @@ static void touchTestHandleInput(void)
     }
 
     linearTouch_t touches[2] = {0};
-
     getTouchLinear(touches, ARRAY_SIZE(touches));
-    ESP_LOGD("TCH", "%" PRId32 " ~ %" PRId32 "\n", touches[0].position, touches[1].position);
+    for (uint8_t tIdx = 0; tIdx < ARRAY_SIZE(touches); tIdx++)
+    {
+        if (touches[tIdx].touched)
+        {
+            ESP_LOGI("TCH", "Touch %" PRIu8 " at %" PRId32 ", intensity %" PRId32, tIdx, touches[tIdx].position,
+                     touches[tIdx].intensity);
+        }
+    }
 }
 
 /**
