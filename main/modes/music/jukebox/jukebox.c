@@ -150,355 +150,6 @@ static const jukeboxSong_t bgm_roboRunner[] = {
     },
 };
 
-static const jukeboxSong_t bgm_vectorTanks[] = {
-    {
-        .fIdx = VT_FIGHT_ON_MID,
-        .name = "Fight On!",
-    },
-    {
-        .fIdx = VT_FUNK_MID,
-        .name = "Tanks Funk",
-    },
-    {
-        .fIdx = VT_POP_MID,
-        .name = "Tanks Pop",
-    },
-    {
-        .fIdx = VT_READY_AIM_FIRE_MID,
-        .name = "Ready, Aim, Fire!",
-    },
-    {
-        .fIdx = VT_RISK_MID,
-        .name = "Risk",
-    },
-    {
-        .fIdx = VT_VECTOR_TANK_MID,
-        .name = "Vector Tank",
-    },
-};
-
-static const jukeboxSong_t bgm_cosplayCrunch[] = {
-    {
-        .fIdx = COSPLAY_CRUNCH_MENU_MID,
-        .name = "Menu BGM",
-    },
-    {
-        .fIdx = COSPLAY_CRUNCH_BGM_MID,
-        .name = "Cosplay Crunch BGM",
-    },
-    {
-        .fIdx = COSPLAY_CRUNCH_GAME_OVER_MID,
-        .name = "Game Over",
-    },
-};
-
-static const jukeboxSong_t sfx_cosplayCrunch[] = {
-    {
-        .fIdx = CC_PACKAGE_GET_MID,
-        .name = "Package Get",
-    },
-};
-
-static const jukeboxSong_t bgm_picross[] = {
-    {
-        .fIdx = LULLABY_IN_NUMBERS_MID,
-        .name = "Lullaby in Numbers",
-    },
-};
-
-static const jukeboxSong_t bgm_megaPulse[] = {
-    {
-        .name = "INTRO STAGE",
-        .fIdx = BGM_INTRO_STAGE_MID,
-    },
-    {
-        .name = "BOSS BIGMA",
-        .fIdx = BGM_BOSS_BIGMA_MID,
-    },
-    {
-        .name = "POST FIGHT",
-        .fIdx = BGM_POST_FIGHT_MID,
-    },
-    {
-        .name = "Level Clear JINGLE",
-        .fIdx = BGM_LEVEL_CLEAR_JINGLE_MID,
-    },
-    {
-        .name = "STAGE SELECT",
-        .fIdx = BGM_STAGE_SELECT_MID,
-    },
-    {
-        .name = "KINETIC DONUT",
-        .fIdx = BGM_KINETIC_DONUT_MID,
-    },
-    {
-        .name = "BOSS KINETIC DONUT",
-        .fIdx = BGM_BOSS_KINETIC_DONUT_MID,
-    },
-    {
-        .name = "GRIND PANGOLIN",
-        .fIdx = BGM_GRIND_PANGOLIN_MID,
-    },
-    {
-        .name = "BOSS GRIND PANGOLIN",
-        .fIdx = BGM_BOSS_GRIND_PANGOLIN_MID,
-    },
-    {
-        .name = "SEVER YATAGA",
-        .fIdx = BGM_SEVER_YATAGA_MID,
-    },
-    {
-        .name = "BOSS SEVER YATAGA",
-        .fIdx = BGM_BOSS_SEVER_YATAGA_MID,
-    },
-    {
-        .name = "RIP BARONESS",
-        .fIdx = BGM_RIP_BARONESS_MID,
-    },
-    {
-        .name = "BOSS TRASH MAN",
-        .fIdx = BGM_BOSS_TRASH_MAN_MID,
-    },
-    {
-        .name = "SMASH GORILLA",
-        .fIdx = BGM_SMASH_GORILLA_MID,
-    },
-    {
-        .name = "BOSS SMASH GORILLA",
-        .fIdx = BGM_BOSS_SMASH_GORILLA_MID,
-    },
-    {
-        .name = "DEADEYE CHIRPZI",
-        .fIdx = BGM_DEADEYE_CHIRPZI_MID,
-    },
-    {
-        .name = "BOSS DEADEYE CHIRPZI",
-        .fIdx = BGM_BOSS_DEADEYE_CHIRPZI_MID,
-    },
-    {
-        .name = "DRAIN BAT",
-        .fIdx = BGM_DRAIN_BAT_MID,
-    },
-    {
-        .name = "BOSS DRAIN BAT",
-        .fIdx = BGM_BOSS_DRAIN_BAT_MID,
-    },
-    {
-        .name = "FLARE GRYFFYN",
-        .fIdx = BGM_FLARE_GRYFFYN_MID,
-    },
-    {
-        .name = "SAWTOOTH'S THEME",
-        .fIdx = BGM_SAWTOOTHS_THEME_MID,
-    },
-    {
-        .name = "BOSS FLARE GRIFFIN",
-        .fIdx = BGM_BOSS_FLARE_GRIFFIN_MID,
-    },
-    {
-        .name = "THE GAUNTLET",
-        .fIdx = BGM_THE_GAUNTLET_MID,
-    },
-    {
-        .name = "THE FINAL MEGAJAM",
-        .fIdx = BGM_THE_FINAL_MEGAJAM_MID,
-    },
-    {
-        .name = "PRE FIGHT",
-        .fIdx = BGM_PRE_FIGHT_MID,
-    },
-    {
-        .name = "BOSS HANK WADDLE",
-        .fIdx = BGM_BOSS_HANK_WADDLE_MID,
-    },
-    {
-        .name = "CLIMAX",
-        .fIdx = BGM_CLIMAX_MID,
-    },
-    {
-        .name = "MAXIMUM HYPE CREDITS",
-        .fIdx = MAXIMUM_HYPE_CREDITS_MID,
-    },
-    {
-        .name = "OVO LIVES!",
-        .fIdx = BGM_OVO_LIVES_MID,
-    },
-    {
-        .name = "LOOKS LIKE WE MADE IT",
-        .fIdx = BGM_LOOKS_LIKE_WE_MADE_IT_MID,
-    },
-    {
-        .name = "NAME ENTRY",
-        .fIdx = BGM_NAME_ENTRY_MID,
-    },
-};
-
-static const jukeboxSong_t sfx_megaPulse[] = {
-    {
-        .name = "INTRO",
-        .fIdx = BGM_INTRO_MID,
-    },
-    {
-        .name = "GAME OVER",
-        .fIdx = BGM_GAME_OVER_MID,
-    },
-    {
-        .name = "1UP",
-        .fIdx = SND_1UP_MID,
-    },
-    {
-        .name = "BREAK",
-        .fIdx = SND_BREAK_MID,
-    },
-    {
-        .name = "CHECKPOINT",
-        .fIdx = SND_CHECKPOINT_MID,
-    },
-    {
-        .name = "COIN",
-        .fIdx = SND_COIN_MID,
-    },
-    {
-        .name = "DIE",
-        .fIdx = SND_DIE_MID,
-    },
-    {
-        .name = "HIT",
-        .fIdx = SND_HIT_MID,
-    },
-    {
-        .name = "HURT",
-        .fIdx = SND_HURT_MID,
-    },
-    {
-        .name = "JUMP 1",
-        .fIdx = SND_JUMP_1_MID,
-    },
-    {
-        .name = "JUMP 2",
-        .fIdx = SND_JUMP_2_MID,
-    },
-    {
-        .name = "JUMP 3",
-        .fIdx = SND_JUMP_3_MID,
-    },
-    {
-        .name = "LEVEL CLEAR JINGLE",
-        .fIdx = BGM_LEVEL_CLEAR_JINGLE_MID,
-    },
-    {
-        .name = "LEVEL CLEAR A",
-        .fIdx = SND_LEVEL_CLEAR_A_MID,
-    },
-    {
-        .name = "LEVEL CLEAR B",
-        .fIdx = SND_LEVEL_CLEAR_B_MID,
-    },
-    {
-        .name = "LEVEL CLEAR C",
-        .fIdx = SND_LEVEL_CLEAR_C_MID,
-    },
-    {
-        .name = "LEVEL CLEAR D",
-        .fIdx = SND_LEVEL_CLEAR_D_MID,
-    },
-    {
-        .name = "LEVEL CLEAR",
-        .fIdx = SND_LEVEL_CLEAR_MID,
-    },
-    {
-        .name = "SWSN CHOOSE SFX MID",
-        .fIdx = SWSN_CHOOSE_SFX_MID,
-    },
-    {
-        .name = "MENU DENY",
-        .fIdx = SND_MENU_DENY_MID,
-    },
-    {
-        .name = "SWSN MOVE SFX MID",
-        .fIdx = SWSN_MOVE_SFX_MID,
-    },
-    {
-        .name = "OUT OF TIME",
-        .fIdx = SND_OUT_OF_TIME_MID,
-    },
-    {
-        .name = "PAUSE",
-        .fIdx = SND_PAUSE_MID,
-    },
-    {
-        .name = "POWER UP",
-        .fIdx = SND_POWER_UP_MID,
-    },
-    {
-        .name = "SQUISH",
-        .fIdx = SND_SQUISH_MID,
-    },
-    {
-        .name = "TALLY",
-        .fIdx = SND_TALLY_MID,
-    },
-    {
-        .name = "WARP",
-        .fIdx = SND_WARP_MID,
-    },
-    {
-        .name = "WAVE BALL",
-        .fIdx = SND_WAVE_BALL_MID,
-    },
-};
-
-static const jukeboxSong_t bgm_danceNetwork[] = {
-    {
-        .name = "Pawn's Gambit",
-        .fIdx = AP_PAWNS_GAMBIT_BGM_MID,
-    },
-    {
-        .name = "Pawn's Gambit Percussion",
-        .fIdx = AP_PAWNS_GAMBIT_PERCUSSION_MID,
-    },
-    {
-        .name = "Ten Steps Ahead",
-        .fIdx = AP_TEN_STEPS_AHEAD_BGM_MID,
-    },
-    {
-        .name = "Ten Steps Ahead Percussion",
-        .fIdx = AP_TEN_STEPS_AHEAD_PERCUSSION_MID,
-    },
-    {
-        .name = "The Will to Win",
-        .fIdx = AP_THE_WILL_TO_WIN_BGM_MID,
-    },
-    {
-        .name = "The Will to Win Percussion",
-        .fIdx = AP_THE_WILL_TO_WIN_PERCUSSION_MID,
-    },
-    {
-        .name = "Final Path",
-        .fIdx = AP_FINAL_PATH_BGM_MID,
-    },
-    {
-        .name = "Final Path Percussion",
-        .fIdx = AP_FINAL_PATH_PERCUSSION_MID,
-    },
-    {
-        .name = "Return of the Valiant",
-        .fIdx = AP_RETURN_OF_THE_VALIANT_BGM_MID,
-    },
-    {
-        .name = "Return of the Valiant Percussion",
-        .fIdx = AP_RETURN_OF_THE_VALIANT_PERCUSSION_MID,
-    },
-    {
-        .name = "Next Move",
-        .fIdx = AP_NEXT_MOVE_BGM_MID,
-    },
-    {
-        .name = "Next Move Percussion",
-        .fIdx = AP_NEXT_MOVE_PERCUSSION_MID,
-    },
-};
-
 static const jukeboxSong_t bgm_credits[] = {
     {
         .fIdx = MAXIMUM_HYPE_CREDITS_MID,
@@ -560,91 +211,11 @@ static const jukeboxSong_t bgm_atrium[] = {
     },
 };
 
-static const jukeboxSong_t bgm_findingFaces[] = {
-    {
-        .fIdx = FINDER_BGM_MENU_MID,
-        .name = "Menu",
-    },
-    {
-        .fIdx = FINDER_BGM_ZEN_MID,
-        .name = "Zen Mode Theme",
-    },
-    {
-        .fIdx = FINDER_BGM_SLOW_MID,
-        .name = "Slow",
-    },
-    {
-        .fIdx = FINDER_BGM_MED_MID,
-        .name = "Med",
-    },
-    {
-        .fIdx = FINDER_BGM_FAST_MID,
-        .name = "Fast",
-    },
-    {
-        .fIdx = FINDER_BGM_DEATH_MID,
-        .name = "Death",
-    },
-};
-
-static const jukeboxSong_t sfx_findingFaces[] = {
-    {
-        .fIdx = FINDER_RIGHT_MID,
-        .name = "Right",
-    },
-    {
-        .fIdx = FINDER_WRONG_MID,
-        .name = "Wrong",
-    },
-};
-
 static const jukeboxCategory_t bgmCategories[] = {
-    {
-        .category    = &modePlatformer,
-        .songs       = bgm_megaPulse,
-        .numSongs    = ARRAY_SIZE(bgm_megaPulse),
-        .generalMidi = true,
-        .shouldLoop  = true,
-    },
-    {
-        .category    = &cosCrunchMode,
-        .songs       = bgm_cosplayCrunch,
-        .numSongs    = ARRAY_SIZE(bgm_cosplayCrunch),
-        .generalMidi = true,
-        .shouldLoop  = true,
-    },
-    {
-        .category    = &artilleryMode,
-        .songs       = bgm_vectorTanks,
-        .numSongs    = ARRAY_SIZE(bgm_vectorTanks),
-        .generalMidi = true,
-        .shouldLoop  = true,
-    },
-    {
-        .category    = &danceNetworkMode,
-        .songs       = bgm_danceNetwork,
-        .numSongs    = ARRAY_SIZE(bgm_danceNetwork),
-        .generalMidi = true,
-        .shouldLoop  = true,
-    },
     {
         .category    = &roboRunnerMode,
         .songs       = bgm_roboRunner,
         .numSongs    = ARRAY_SIZE(bgm_roboRunner),
-        .generalMidi = true,
-        .shouldLoop  = true,
-    },
-    {
-        .category    = &findingFacesMode,
-        .songs       = bgm_findingFaces,
-        .numSongs    = ARRAY_SIZE(bgm_findingFaces),
-        .generalMidi = true,
-        .shouldLoop  = true,
-    },
-    {
-        .category    = &modePicross,
-        .songs       = bgm_picross,
-        .numSongs    = ARRAY_SIZE(bgm_picross),
         .generalMidi = true,
         .shouldLoop  = true,
     },
@@ -679,27 +250,6 @@ static const jukeboxCategory_t bgmCategories[] = {
 };
 
 static const jukeboxCategory_t sfxCategories[] = {
-    {
-        .category    = &modePlatformer,
-        .songs       = sfx_megaPulse,
-        .numSongs    = ARRAY_SIZE(sfx_megaPulse),
-        .generalMidi = true,
-        .shouldLoop  = false,
-    },
-    {
-        .category    = &cosCrunchMode,
-        .songs       = sfx_cosplayCrunch,
-        .numSongs    = ARRAY_SIZE(sfx_cosplayCrunch),
-        .generalMidi = true,
-        .shouldLoop  = false,
-    },
-    {
-        .category    = &findingFacesMode,
-        .songs       = sfx_findingFaces,
-        .numSongs    = ARRAY_SIZE(sfx_findingFaces),
-        .generalMidi = true,
-        .shouldLoop  = false,
-    },
     {
         .category    = &swsnCreatorMode,
         .songs       = sfx_swadgesona,
@@ -795,7 +345,7 @@ void jukeboxEnterMode(void)
     portableDanceDisableDance(jukebox->portableDances, "Fire B");
     portableDanceDisableDance(jukebox->portableDances, "Flashlight");
 
-    soundStop(true);
+    globalMidiPlayerStop(true);
 }
 
 /**
@@ -803,7 +353,7 @@ void jukeboxEnterMode(void)
  */
 void jukeboxExitMode(void)
 {
-    soundStop(true);
+    globalMidiPlayerStop(true);
 
     // Free fonts
     freeFont(&jukebox->radiostars);
@@ -845,48 +395,48 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
         {
             if (jukebox->isPlaying)
             {
-                soundStop(true);
+                globalMidiPlayerStop(true);
                 jukebox->isPlaying = false;
             }
             else
             {
                 if (jukebox->inMusicSubmode)
                 {
-                    if (soundGetPlayerBgm() != NULL)
+                    if (globalMidiPlayerGet(MIDI_BGM) != NULL)
                     {
-                        soundGetPlayerBgm()->loop = bgmCategories[jukebox->categoryIdx].shouldLoop;
+                        globalMidiPlayerGet(MIDI_BGM)->loop = bgmCategories[jukebox->categoryIdx].shouldLoop;
                     }
 
                     if (bgmCategories[jukebox->categoryIdx].generalMidi)
                     {
-                        midiGmOn(soundGetPlayerBgm());
+                        midiGmOn(globalMidiPlayerGet(MIDI_BGM));
                     }
                     else
                     {
-                        midiGmOff(soundGetPlayerBgm());
+                        midiGmOff(globalMidiPlayerGet(MIDI_BGM));
                     }
 
-                    soundPlayBgmCb(&jukebox->bgmMidis[jukebox->categoryIdx][jukebox->songIdx], BZR_STEREO,
-                                   jukeboxBzrDoneCb);
+                    globalMidiPlayerPlaySongCb(&jukebox->bgmMidis[jukebox->categoryIdx][jukebox->songIdx], MIDI_BGM,
+                                               jukeboxBzrDoneCb);
                 }
                 else
                 {
-                    if (soundGetPlayerSfx() != NULL)
+                    if (globalMidiPlayerGet(MIDI_SFX) != NULL)
                     {
-                        soundGetPlayerSfx()->loop = sfxCategories[jukebox->categoryIdx].shouldLoop;
+                        globalMidiPlayerGet(MIDI_SFX)->loop = sfxCategories[jukebox->categoryIdx].shouldLoop;
                     }
 
                     if (sfxCategories[jukebox->categoryIdx].generalMidi)
                     {
-                        midiGmOn(soundGetPlayerSfx());
+                        midiGmOn(globalMidiPlayerGet(MIDI_SFX));
                     }
                     else
                     {
-                        midiGmOff(soundGetPlayerSfx());
+                        midiGmOff(globalMidiPlayerGet(MIDI_SFX));
                     }
 
-                    soundPlaySfxCb(&jukebox->sfxMidis[jukebox->categoryIdx][jukebox->songIdx], BZR_STEREO,
-                                   jukeboxBzrDoneCb);
+                    globalMidiPlayerPlaySongCb(&jukebox->sfxMidis[jukebox->categoryIdx][jukebox->songIdx], MIDI_SFX,
+                                               jukeboxBzrDoneCb);
                 }
                 jukebox->isPlaying            = true;
                 jukebox->usBetweenDecorations = 0;
@@ -904,7 +454,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
         }
         case PB_START:
         {
-            soundStop(true);
+            globalMidiPlayerStop(true);
             jukebox->isPlaying      = false;
             jukebox->categoryIdx    = 0;
             jukebox->songIdx        = 0;
@@ -931,7 +481,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             jukebox->categoryIdx = jukebox->categoryIdx - 1;
             if (jukebox->categoryIdx != before)
             {
-                soundStop(true);
+                globalMidiPlayerStop(true);
                 jukebox->isPlaying = false;
                 jukebox->songIdx   = 0;
             }
@@ -953,7 +503,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             jukebox->categoryIdx = (jukebox->categoryIdx + 1) % length;
             if (jukebox->categoryIdx != before)
             {
-                soundStop(true);
+                globalMidiPlayerStop(true);
                 jukebox->isPlaying = false;
                 jukebox->songIdx   = 0;
             }
@@ -979,7 +529,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             jukebox->songIdx = jukebox->songIdx - 1;
             if (jukebox->songIdx != before)
             {
-                soundStop(true);
+                globalMidiPlayerStop(true);
                 jukebox->isPlaying = false;
             }
             break;
@@ -1000,7 +550,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             jukebox->songIdx = (jukebox->songIdx + 1) % length;
             if (jukebox->songIdx != before)
             {
-                soundStop(true);
+                globalMidiPlayerStop(true);
                 jukebox->isPlaying = false;
             }
             break;

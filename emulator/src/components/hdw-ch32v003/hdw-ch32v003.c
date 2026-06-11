@@ -287,8 +287,8 @@ static inline int8_t MINIRV32_LOAD1_SIGNEDs(uint32_t ofs, uint32_t* rval, uint32
                 switch (ir >> 13)                                                                                      \
                 {                                                                                                      \
                     case 0b000: /*c.addi4spn ADD Imm * 4 + SP TODO*/                                                   \
-                        cimm = (((ir >> 5) & 1) << 3) | (((ir >> 6) & 1) << 2) | (((ir >> 7) & 0xf) << 6)              \
-                               | (((ir >> 11) & 3) << 4);                                                              \
+                        cimm    = (((ir >> 5) & 1) << 3) | (((ir >> 6) & 1) << 2) | (((ir >> 7) & 0xf) << 6)           \
+                                  | (((ir >> 11) & 3) << 4);                                                           \
                         cimmext = (cimm & 0x200) ? (cimm | 0xfffffc00) : cimm;                                         \
                         rdid    = ((ir >> 2) & 7) + 8;                                                                 \
                         /*printf( "c.addi4spn %08x %d / %d\n", REG( 2 ), cimmext, rdid );*/                            \
@@ -328,8 +328,8 @@ static inline int8_t MINIRV32_LOAD1_SIGNEDs(uint32_t ofs, uint32_t* rval, uint32
                                 break;                                                                                 \
                             case 2: /*c.addi16sp TODO: Check me.*/                                                     \
                             {                                                                                          \
-                                cimm = (((ir >> 12) & 1) << 9) | (((ir >> 2) & 1) << 5) | (((ir >> 5) & 1) << 6)       \
-                                       | (((ir >> 6) & 1) << 4) | (((ir >> 3) & 3) << 7);                              \
+                                cimm    = (((ir >> 12) & 1) << 9) | (((ir >> 2) & 1) << 5) | (((ir >> 5) & 1) << 6)    \
+                                          | (((ir >> 6) & 1) << 4) | (((ir >> 3) & 3) << 7);                           \
                                 cimmext = (cimm & 0x200) ? (cimm | 0xfffffc00) : cimm;                                 \
                                 /*printf( "c.addi16sp -> %08x -> %08x\n",  REG(2), cimmext );*/                        \
                                 rval = REG(2) + cimmext;                                                               \

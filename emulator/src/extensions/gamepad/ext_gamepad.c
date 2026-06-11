@@ -2,6 +2,7 @@
 
 #include "emu_utils.h"
 #include "hdw-btn_emu.h"
+#include "hdw-touch_emu.h"
 #include "hdw-imu_emu.h"
 #include "macros.h"
 #include "trigonometry.h"
@@ -867,6 +868,8 @@ void gamepadPreFrameCb(uint64_t frame)
                         && (y >= -joystickConfig.touchpad.deadzone && y <= joystickConfig.touchpad.deadzone))
                     {
                         emulatorSetTouchJoystick(0, 0, 0);
+                        emulatorSetTouchLinear(0, 0, 0);
+                        emulatorSetTouchLinear(1, 0, 0);
                         // printf("0, 0\n");
                     }
                     else
@@ -881,6 +884,8 @@ void gamepadPreFrameCb(uint64_t frame)
 
                         int angleDegreesRounded = (int)(angleDegrees + 360) % 360;
                         emulatorSetTouchJoystick(CLAMP(angleDegreesRounded, 0, 359), radius, 1024);
+                        emulatorSetTouchLinear(0, (x / 64) + 512, 1024);
+                        emulatorSetTouchLinear(1, (y / 64) + 512, 1024);
                     }
                 }
                 else if (event.axis == joystickConfig.accel.xAxis || event.axis == joystickConfig.accel.yAxis

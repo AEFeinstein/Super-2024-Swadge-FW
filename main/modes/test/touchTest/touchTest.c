@@ -9,7 +9,7 @@
 // Includes
 //==============================================================================
 
-#include "swadge2024.h"
+#include "swadge.h"
 #include "hdw-btn.h"
 #include "touchTest.h"
 #include "esp_log.h"
@@ -158,6 +158,11 @@ static void touchTestHandleInput(void)
     {
         touchTest->spin.startSet = false;
     }
+
+    linearTouch_t touches[2] = {0};
+
+    getTouchLinear(touches, ARRAY_SIZE(touches));
+    ESP_LOGD("TCH", "%" PRId32 " ~ %" PRId32 "\n", touches[0].position, touches[1].position);
 }
 
 /**

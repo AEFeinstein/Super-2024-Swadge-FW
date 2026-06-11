@@ -8,7 +8,7 @@
 #ifndef _JUKEBOX_H_
 #define _JUKEBOX_H_
 
-#include "swadge2024.h"
+#include "swadge.h"
 
 extern swadgeMode_t jukeboxMode;
 

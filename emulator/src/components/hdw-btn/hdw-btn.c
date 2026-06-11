@@ -36,15 +36,6 @@ static uint32_t buttonState = 0;
 /// The queue for button events
 static list_t* buttonQueue;
 
-/// The touchpad analog location angle
-static int32_t lastTouchPhi = 0;
-
-/// The touchpad analog location radius
-static int32_t lastTouchRadius = 0;
-
-/// The touchpad analog intensity
-static int32_t lastTouchIntensity = 0;
-
 //==============================================================================
 // Functions
 //==============================================================================
@@ -55,11 +46,8 @@ static int32_t lastTouchIntensity = 0;
  * @param pushButtons A list of GPIOs with pushbuttons to initialize. The list should be in the same order as
  * ::buttonBit_t, starting at ::PB_UP
  * @param numPushButtons The number of pushbuttons to initialize
- * @param touchPads A list of touch areas that make up a touchpad to initialize.
- * @param numTouchPads The number of touch buttons to initialize
  */
-void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons, const touch_pad_t* touchPads,
-                 uint8_t numTouchPads)
+void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons)
 {
     buttonState = 0;
     buttonQueue = calloc(1, sizeof(list_t));
@@ -130,43 +118,6 @@ bool checkButtonQueue(buttonEvt_t* evt)
 }
 
 /**
- * @brief Get the touch intensity and location in terms of angle and distance from
- * the center touchpad
- *
- * @param[out] phi A pointer to return the angle of the center of the touch, in degrees
- * @param[out] r A pointer to return the radius of the touch centroid
- * @param[out] intensity A pointer to return the intensity of the touch
- * @return true If the touchpad was touched and values were written to the out-params
- * @return false If no touch is detected and nothing was written
- */
-int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
-{
-    // If lastTouchIntensity is 0, we should return false as that's "not touched"
-    if (0 == lastTouchIntensity)
-    {
-        return false;
-    }
-
-    // A touch in the center at 50% intensity
-    if (phi)
-    {
-        *phi = lastTouchPhi;
-    }
-
-    if (r)
-    {
-        *r = lastTouchRadius;
-    }
-
-    if (intensity)
-    {
-        *intensity = lastTouchIntensity;
-    }
-
-    return true;
-}
-
-/**
  * @brief Inject a single button press or release event into the emulator
  *
  * @param button
@@ -213,13 +164,6 @@ void emulatorInjectButton(buttonBit_t button, bool down)
 
     // Add the event to the list
     push(buttonQueue, evt);
-}
-
-void emulatorSetTouchJoystick(int32_t phi, int32_t radius, int32_t intensity)
-{
-    lastTouchPhi       = phi;
-    lastTouchRadius    = radius;
-    lastTouchIntensity = intensity;
 }
 
 /**

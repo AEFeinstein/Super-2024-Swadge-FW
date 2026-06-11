@@ -12,7 +12,7 @@ CC:=gcc
 LDFLAGS:=C:/windows/system32/setupapi.dll
 endif
 
-SYSELF:=../../../build/swadge2024.elf
+SYSELF:=../../../build/swadge.elf
 
 build : 
 	mkdir -p build
