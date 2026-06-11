@@ -136,7 +136,7 @@ Emulates a swadge
  -r, --record[=FILE]         Record emulator inputs to a file
  -s, --seed=SEED             Seed the random number generator with a specific value
  -c, --show-fps[=OPTION]     Display an FPS counter
- -t, --touch                 Simulate touch sensor readings with a virtual touchpad
+ -t, --touch                 Simulate touch pad readings with a virtual touchpad
      --vsync[=y|n]           Set whether VSync is enabled
  -h, --help                  Give this help list
      --usage                 Give a short usage message

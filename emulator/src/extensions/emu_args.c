@@ -220,7 +220,7 @@ static const optDoc_t argDocs[] =
     {'r', argRecord,      "FILE",  "Record emulator inputs to a file" },
     {'s', argSeed,        "SEED",  "Seed the random number generator with a specific value" },
     {'c', argShowFps,     NULL,    "Display an FPS counter" },
-    {'t', argTouch,       NULL,    "Simulate touch sensor readings with a virtual touchpad" },
+    {'t', argTouch,       NULL,    "Simulate touch pad readings with a virtual touchpad" },
     { 0,  argVsync,       "y|n",   "Set whether VSync is enabled" },
     {'h', argHelp,        NULL,    "Give this help list" },
     { 0,  argUsage,       NULL,    "Give a short usage message" },
