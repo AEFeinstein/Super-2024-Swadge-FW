@@ -270,12 +270,47 @@ jobs:
         token: ${{ secrets.SLACK_BOT_TOKEN }}
         payload: |
           channel: 'C6FNXU6KX'
-          text: |
-            *Build Result*: ${{ job.status }}\n
-            *Author*: ${{ github.event.head_commit.author.username }}\n
-            *Head Commit Message*:\n
-            ```\n
-            ${{ github.event.head_commit.message }}\n
-            ```\n
-            *Comparison*: ${{ github.event.compare }}\n
-            *Artifacts*: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          blocks:
+          - type: rich_text
+            elements:
+            - type: rich_text_section
+              elements:
+              - type: text
+                text: 'Author: '
+                style:
+                  bold: true
+              - type: text
+                text: ${{ github.event.head_commit.author.username }}
+          - type: markdown
+            text: |-
+              ```
+              ${{ github.event.head_commit.message }}
+              ```
+          - type: divider
+          - type: section
+            text:
+              type: mrkdwn
+              text: Comparison
+            accessory:
+              type: button
+              text:
+                type: plain_text
+                text: View
+                emoji: true
+              value: view_comparison
+              url: ${{ github.event.compare }}
+              action_id: button-action
+          - type: divider
+          - type: section
+            text:
+              type: mrkdwn
+              text: Build Artifacts
+            accessory:
+              type: button
+              text:
+                type: plain_text
+                text: Download
+                emoji: true
+              value: download_artifacts
+              url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+              action_id: button-action
