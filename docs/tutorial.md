@@ -216,7 +216,7 @@ Very few parts of the Swadge are going to be looking at our code, since it's not
 Here's the code required for the header file:
 ```C
 #pragma once
-#include "swadge2024.h"
+#include "swadge.h"
 
 extern swadgeMode_t roboRunnerMode;
 ```
@@ -231,7 +231,7 @@ Note that some headers have a `#ifndef _FILENAME_H_` instead of `#pragma once`. 
 
 #### \#include
 
-Moving on, the `#include` finds the appropriate file and loads the data and functions from it. `swadge2024.h` provides the core swadge functionality, so that's really important to have included in the program.
+Moving on, the `#include` finds the appropriate file and loads the data and functions from it. `swadge.h` provides the core swadge functionality, so that's really important to have included in the program.
 
 #### extern swadgeMode_t mode;
 

@@ -22,7 +22,7 @@ This is a non-exhaustive list of changes I've found to be needed when porting Tu
 
 ## Things that need to be changed in mode header files
 
-- Add `#include "swadge2024.h"`
+- Add `#include "swadge.h"`
 - Naming conventions changed from `mode_tunernome.h` to `tunernome.h`. Don't forget to change your header guard names too:
 
     ```c
@@ -93,9 +93,9 @@ with `midiFile_t`, and changing the name used to load the file from `file.sng` t
 | `BTN_B`                    | `PB_B`                     |
 | `START`                    | `PB_START`                 |
 | `SELECT`                   | `PB_SELECT`                |
-| `buzzer_play_sfx(`         | `bzrPlaySfx(`              |
-| `buzzer_play_bgm(`         | `soundPlayBgm(`            |
-| `buzzer_stop(`             | `soundStop(`               |
+| `buzzer_play_sfx(song)`    | `globalMidiPlayerPlaySong(song, MIDI_SFX)` |
+| `buzzer_play_bgm(song)`    | `globalMidiPlayerPlaySong(song, MIDI_BGM)` |
+| `buzzer_stop()`            | `globalMidiPlayerStop()`   |
 | `incMicGain()`             | `incMicGainSetting()`      |
 | `decMicGain()`             | `decMicGainSetting()`      |
 | `getMicGain()`             | `getMicGainSetting()`      |

@@ -11,7 +11,7 @@
 // Includes
 //==============================================================================
 
-#include "swadge2024.h"
+#include "swadge.h"
 #include "accelTest.h"
 #include "esp_log.h"
 #include "trigonometry.h"

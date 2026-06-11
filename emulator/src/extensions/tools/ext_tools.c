@@ -42,7 +42,7 @@
 
 #include "hdw-tft_emu.h"
 #include "esp_timer_emu.h"
-#include "swadge2024.h"
+#include "swadge.h"
 
 //==============================================================================
 // Function Prototypes

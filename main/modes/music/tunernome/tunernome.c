@@ -506,7 +506,7 @@ void switchToSubmode(tnMode newMode)
  */
 void tunernomeExitMode(void)
 {
-    soundStop(true);
+    globalMidiPlayerStop(true);
 
     freeFont(&tunernome->ibm_vga8);
     freeFont(&tunernome->radiostars);

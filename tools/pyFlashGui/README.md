@@ -27,7 +27,7 @@ options:
 
 ## Windows
 
-Flashing an ESP32-S2 over USB on Windows requires a specific driver to be installed. This driver only needs to be installed once. Instructions can be found in the [ESP-IDF Programming Guide](https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-guides/dfu.html#usb-drivers-windows-only) and are copied below:
+Flashing an ESP32-S2 over USB on Windows requires a specific driver to be installed. This driver only needs to be installed once. Instructions can be found in the [ESP-IDF Programming Guide](https://docs.espressif.com/projects/esp-idf/en/v5.2.7/esp32s2/api-guides/dfu.html#usb-drivers-windows-only) and are copied below:
 
 > `dfu-util` uses _libusb_ to access the device. You have to register on Windows the device with the WinUSB driver. Please see the [libusb wiki](https://github.com/libusb/libusb/wiki/Windows#How_to_use_libusb_on_Windows) for more details.
 >
@@ -38,7 +38,7 @@ Flashing an ESP32-S2 over USB on Windows requires a specific driver to be instal
 
 ## Linux
 
-The ESP-IDF Programming Guide also [specifies a udev rule for Linux](https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-guides/dfu.html#udev-rule-linux-only):
+The ESP-IDF Programming Guide also [specifies a udev rule for Linux](https://docs.espressif.com/projects/esp-idf/en/v5.2.7/esp32s2/api-guides/dfu.html#udev-rule-linux-only):
 
 > udev is a device manager for the Linux kernel. It allows us to run `dfu-util` (and `idf.py dfu-flash`) without `sudo` for gaining access to the chip.
 > 
@@ -69,14 +69,14 @@ For the script to actually flash firmware, the following files must be in the sa
 | File | Relative Path |
 | ------------- | ------------- |
 | ``bootloader.bin`` | ``../build/bootloader/bootloader.bin`` |
-| ``swadge2024.bin`` | ``../build/swadge2024.bin`` |
+| ``swadge.bin`` | ``../build/swadge.bin`` |
 | ``partition-table.bin`` | ``../build/partition_table/partition-table.bin`` |
 
 Assuming you've checked out the whole repository, set up the IDF, and are in the `Super-2024-Swadge-FW` folder, then this should build and place the files:
 
 ```bash
 idf.py build
-cp ./build/bootloader/bootloader.bin ./build/swadge2024.bin ./build/partition_table/partition-table.bin ./tools/pyFlashGui/
+cp ./build/bootloader/bootloader.bin ./build/swadge.bin ./build/partition_table/partition-table.bin ./tools/pyFlashGui/
 ```
 
 # Instructions

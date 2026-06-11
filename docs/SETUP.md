@@ -2,7 +2,7 @@
 
 ## General Notes
 
-It is strongly recommend that you follow the instructions on this page to set up your development environment, including the ESP-IDF. It is also possible to follow [Espressif's instructions to install ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/get-started/index.html#installation) through a standalone installer or an IDE. This can be done if you're sure you know what you're doing or the process written here doesn't work anymore.
+It is strongly recommend that you follow the instructions on this page to set up your development environment, including the ESP-IDF. It is also possible to follow [Espressif's instructions to install ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v5.2.7/esp32s2/get-started/index.html#installation) through a standalone installer or an IDE. This can be done if you're sure you know what you're doing or the process written here doesn't work anymore.
 
 It is recommended to use native tools (i.e. Windows programs on Windows), not Windows Subsystem for Linux (WSL) or a virtual machine.
 
@@ -48,11 +48,11 @@ The continuous integration for this project runs on a Windows instance. This mea
 
     <img src="./images/Correct_path.jpg">
 
-6. Clone the ESP-IDF v5.2.5 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
+6. Clone the ESP-IDF v5.2.7 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
 Note: Some installs of Python will have py.exe instead of python.exe - If this is the case, you can edit install.ps1 to replace all instances of python.exe to py.exe OR rename your locally installed py.exe file to python.exe
     ```powershell
     & Set-ExecutionPolicy -Scope CurrentUser Unrestricted
-    & git clone -b v5.2.5 --recurse-submodules https://github.com/espressif/esp-idf.git $HOME/esp/esp-idf
+    & git clone -b v5.2.7 --recurse-submodules https://github.com/espressif/esp-idf.git $HOME/esp/esp-idf
     & $HOME\esp\esp-idf\install.ps1
     ```
     \warning Sometimes `install.ps1` can be a bit finicky and not install everything it's supposed to. If it doesn't create a `$HOME/.espressif/python_env` folder, try running a few more times. As a last resort you can try editing `install.ps1` and swap the `"Setting up Python environment"` and `"Installing ESP-IDF tools"` sections to set up the Python environment first.
@@ -75,14 +75,14 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
         sudo pacman -S --needed base-devel ccache clang cmake cppcheck dfu-util doxygen gcc-libs gdb git graphviz lcov libasan libpulse libusb libx11 libxext libxinerama mesa python-pip qemu
         yay -S --needed visual-studio-code-bin
         ```
-2. Install `doxygen` separately from their website (https://www.doxygen.nl/download.html). Note that the version used in this project is currently 1.16.1 and the version in many package managers is less than that. You will need to extract the binary somewhere and add it to your `PATH` variable. For example, GitHub Actions installs `doxygen` like this:
+2. Install `doxygen` separately from their website (https://www.doxygen.nl/download.html). Note that the version used in this project is currently 1.17.0 and the version in many package managers is less than that. You will need to extract the binary somewhere and add it to your `PATH` variable. For example, GitHub Actions installs `doxygen` like this:
     ```bash
-    wget -q -P ~ https://www.doxygen.nl/files/doxygen-1.16.1.linux.bin.tar.gz
-    tar -xf ~/doxygen-1.16.1.linux.bin.tar.gz -C ~
+    wget -q -P ~ https://www.doxygen.nl/files/doxygen-1.17.0.linux.bin.tar.gz
+    tar -xf ~/doxygen-1.17.0.linux.bin.tar.gz -C ~
 
     # This will temporarily add doxygen to the PATH.
     # To do this permanently, add this line to the bottom of your ~/.bashrc file
-    export PATH="$PATH:$HOME/doxygen-1.16.1/bin"
+    export PATH="$PATH:$HOME/doxygen-1.17.0/bin"
     ```
     It is recommended that you uninstall any prior doxygen versions as well. The Debian command is:
     ```bash
@@ -96,16 +96,16 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
     sudo ./llvm.sh 22
     sudo apt install clang-format-22
     ```
-4. Clone the ESP-IDF v5.2.5 and install the tools. Note that it will clone into `~/esp/esp-idf`.
+4. Clone the ESP-IDF v5.2.7 and install the tools. Note that it will clone into `~/esp/esp-idf`.
     ```bash
-    git clone -b v5.2.5 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
+    git clone -b v5.2.7 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
     ~/esp/esp-idf/install.sh
     ```
 5. Install udev rules. This makefile recipe will add the user to the appropriate group and create `/etc/udev/rules.d/99-swadge.rules`:
     ```bash
     make installudev
     ```
-    The <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.6/esp32s2/api-guides/dfu.html#udev-rule-linux-only">IDF documentation</a> also recommends:
+    The <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.7/esp32s2/api-guides/dfu.html#udev-rule-linux-only">IDF documentation</a> also recommends:
     > Create file `/etc/udev/rules.d/40-dfuse.rules` with the following content:
     > ```
     > SUBSYSTEMS=="usb", ATTRS{idVendor}=="303a", ATTRS{idProduct}=="00??", GROUP="plugdev", MODE="0666"
@@ -125,9 +125,9 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
     ```bash
     brew install libxinerama pulseaudio clang-format cppcheck wget doxygen cmake graphviz
     ```
-5. Clone the ESP-IDF v5.2.5 and install the tools. Note that it will clone into `~/esp/esp-idf`.
+5. Clone the ESP-IDF v5.2.7 and install the tools. Note that it will clone into `~/esp/esp-idf`.
     ```bash
-    git clone -b v5.2.5 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
+    git clone -b v5.2.7 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
     ~/esp/esp-idf/install.sh
     ```
 6. Before running the simulator on your machine, you need to start pulseaudio like so:
@@ -209,7 +209,7 @@ code ~/esp/Super-2024-Swadge-FW
 
 On occasion the ESP-IDF version used to build this project will increment. The easiest way to update ESP-IDF is to delete the existing one, by default installed at `~/esp/esp-idf/`, and the tools, by default installed at `~/.espressif/`, and follow the guide above to clone the new ESP-IDF and run the install script.
 
-Alternatively, you can update the IDF in-place with the following commands. This example updates the IDF to 5.2.5, and you can change that version as is necessary. These are Linux commands, so they may need to be tweaked slightly for Windows.
+Alternatively, you can update the IDF in-place with the following commands. This example updates the IDF to 5.2.7, and you can change that version as is necessary. These are Linux commands, so they may need to be tweaked slightly for Windows.
 
 ```bash
 # Change directory to where the IDF is installed
@@ -217,7 +217,7 @@ cd ~/esp/esp-idf/
 
 # Update the IDF with git
 git fetch --prune
-git checkout tags/v5.2.5
+git checkout tags/v5.2.7
 git submodule update --init --recursive
 
 # Install updated tools and python environment

@@ -3,9 +3,9 @@
  * \section usb_design Design Philosophy
  *
  * The USB component uses Espressif's <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-reference/peripherals/usb_device.html">USB
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.7/esp32s2/api-reference/peripherals/usb_device.html">USB
  * Device Driver</a>. It's based on the <a
- * href="https://github.com/espressif/esp-idf/tree/v5.2.5/examples/peripherals/usb/device/tusb_hid">TinyUSB
+ * href="https://github.com/espressif/esp-idf/tree/v5.2.7/examples/peripherals/usb/device/tusb_hid">TinyUSB
  * Human Interface Device Example</a>.
  *
  * The Swadge primarily functions as a USB gamepad.
@@ -92,12 +92,12 @@ typedef struct TU_ATTR_PACKED
 {
     uint16_t buttons; ///< Buttons mask for currently pressed buttons
     uint8_t hat;      ///< Buttons mask for currently pressed buttons in the DPad/hat
-    uint8_t x;         ///< Delta x  movement of left analog-stick
-    uint8_t y;         ///< Delta y  movement of left analog-stick
-    uint8_t rx;        ///< Delta Rx movement of analog left trigger
-    uint8_t ry;        ///< Delta Ry movement of analog right trigger
-    uint8_t z;         ///< Delta z  movement of right analog-joystick
-    uint8_t rz;        ///< Delta Rz movement of right analog-joystick
+    uint8_t x;        ///< Delta x  movement of left analog-stick
+    uint8_t y;        ///< Delta y  movement of left analog-stick
+    uint8_t rx;       ///< Delta Rx movement of analog left trigger
+    uint8_t ry;       ///< Delta Ry movement of analog right trigger
+    uint8_t z;        ///< Delta z  movement of right analog-joystick
+    uint8_t rz;       ///< Delta Rz movement of right analog-joystick
 } hid_gamepad_ns_report_t;
 
 //==============================================================================

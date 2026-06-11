@@ -36,7 +36,7 @@ I (774) esp_psram: SPI SRAM memory test OK
 I (781) cpu_start: Pro cpu start user code
 I (781) cpu_start: cpu freq: 240000000 Hz
 I (781) cpu_start: Application information:
-I (781) cpu_start: Project name:     swadge2024
+I (781) cpu_start: Project name:     swadge
 I (786) cpu_start: App version:      v1.1.0-336-g6580f8a0
 I (791) cpu_start: Compile time:     Jul 17 2024 17:56:51
 I (796) cpu_start: ELF file SHA256:  a0f9cb97d9158df6...
@@ -156,7 +156,7 @@ W (661) crashwrap: Reason: StoreProhibited
 W (661) crashwrap: Description: Exception was unhandled.
 W (661) crashwrap: EXIT: 0x800a1e24 / PC: 0x4008aab0 / PS: 0x00060930 / A0: 0x8009301c / A1: 0x3ffda3a0 / SAR: 0x00000004 / EXECCAUSE: 0x0000001d / EXECVADDR: 0x00000000
 W (661) crashwrap: Backtrace:
-W (661) crashwrap: xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf 0x4008aab0:0x00060930
+W (661) crashwrap: xtensa-esp32s2-elf-addr2line -e build/swadge.elf 0x4008aab0:0x00060930
 I (692) SPIFFS: Partition size: total: 1890281, used: 110691
 I (692) gpio: GPIO[0]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0
 I (692) gpio: GPIO[4]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0
@@ -172,7 +172,7 @@ I (752) gpio: GPIO[38]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldo
 To figure out where your last crash was, execute the `xtensa-esp32s2-elf-addr2line` line as it appears in the log. I.e.
 
 ```bash
-$ xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf 0x4008aab0:0x00060930
+$ xtensa-esp32s2-elf-addr2line -e build/swadge.elf 0x4008aab0:0x00060930
 /home/cnlohr/git/Super-2024-Swadge-FW/main/modes/system/mainMenu/mainMenu.c:343
 ```
 
@@ -204,10 +204,10 @@ Backtrace: 0x4008b047:0x3ffda450 0x4008766e:0x3ffda480 0x400f2adc:0x3ffda720
 You can interpret the backtrace with the program `xtensa-esp32s2-elf-addr2line` and the exact `elf` file that was flashed. This will print a detailed stack trace noting exactly where the crash occurred.
 
 ```bash
-xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf 0x4008b047:0x3ffda450 0x4008766e:0x3ffda480 0x400f2adc:0x3ffda720
+xtensa-esp32s2-elf-addr2line -e build/swadge.elf 0x4008b047:0x3ffda450 0x4008766e:0x3ffda480 0x400f2adc:0x3ffda720
 
 /home/user/esp/Swadge-IDF-5.0/main/modes/system/mainMenu/mainMenu.c:208
-/home/user/esp/Swadge-IDF-5.0/main/swadge2024.c:346
+/home/user/esp/Swadge-IDF-5.0/main/swadge.c:346
 /home/user/esp/esp-idf/components/freertos/app_startup.c:208
 ```
 
@@ -223,13 +223,13 @@ W (660) crashwrap: Reason: StoreProhibited
 W (660) crashwrap: Description: Exception was unhandled.
 W (660) crashwrap: EXIT: 0x800a1f04 / PC: 0x4008ab82 / PS: 0x00060930 / A0: 0x800930fc / A1: 0x3ffda4c0 / SAR: 0x00000004 / EXECCAUSE: 0x0000001d / EXECVADDR: 0x00000000
 W (660) crashwrap: Backtrace:
-W (660) crashwrap: xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf 0x40083806:0x3ffda3c0 0x400251ad:0x3ffda410 0x40027210:0x3ffda430 0x4008ab7f:0x3ffda4c0 0x400930f9:0x3ffda4e0 0x4009318f:0x3ffda500 0x4008adfd:0x3ffda530 0x4008784d:0x3ffda570 0x400f230c:0x3ffda810
+W (660) crashwrap: xtensa-esp32s2-elf-addr2line -e build/swadge.elf 0x40083806:0x3ffda3c0 0x400251ad:0x3ffda410 0x40027210:0x3ffda430 0x4008ab7f:0x3ffda4c0 0x400930f9:0x3ffda4e0 0x4009318f:0x3ffda500 0x4008adfd:0x3ffda530 0x4008784d:0x3ffda570 0x400f230c:0x3ffda810
 ```
 
 You can copy/paste the last line into your terminal to get a full stack trace to get the function name / line numbers of all the calls.
 
 ```bash
-$ xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf 0x40083806:0x3ffda3c0 0x400251ad:0x3ffda410 0x40027210:0x3ffda430 0x4008ab7f:0x3ffda4c0 0x400930f9:0x3ffda4e0 0x4009318f:0x3ffda500 0x4008adfd:0x3ffda530 0x4008784d:0x3ffda570 0x400f230c:0x3ffda810
+$ xtensa-esp32s2-elf-addr2line -e build/swadge.elf 0x40083806:0x3ffda3c0 0x400251ad:0x3ffda410 0x40027210:0x3ffda430 0x4008ab7f:0x3ffda4c0 0x400930f9:0x3ffda4e0 0x4009318f:0x3ffda500 0x4008adfd:0x3ffda530 0x4008784d:0x3ffda570 0x400f230c:0x3ffda810
 .../esp-idf/components/esp_system/port/panic_handler.c:190
 .../esp-idf/components/esp_system/port/panic_handler.c:225
 .../esp-idf/components/xtensa/xtensa_vectors.S:805
@@ -237,6 +237,6 @@ $ xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf 0x40083806:0x3ffda3c0 0x4
 .../Super-2024-Swadge-FW/main/menu/menu.c:736
 .../Super-2024-Swadge-FW/main/menu/menu.c:810
 .../Super-2024-Swadge-FW/main/modes/system/mainMenu/mainMenu.c:287
-.../Super-2024-Swadge-FW/main/swadge2024.c:418
+.../Super-2024-Swadge-FW/main/swadge.c:418
 .../esp-idf/components/freertos/app_startup.c:208
 ```

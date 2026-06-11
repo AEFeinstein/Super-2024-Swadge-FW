@@ -31,6 +31,8 @@
 #include "hdw-led_emu.h"
 #include "hdw-btn.h"
 #include "hdw-btn_emu.h"
+#include "hdw-touch.h"
+#include "hdw-touch_emu.h"
 #include "hdw-imu_emu.h"
 
 #include "hdw-mic.h"
@@ -38,7 +40,7 @@
 #include "hdw-dac.h"
 #include "hdw-dac_emu.h"
 
-#include "swadge2024.h"
+#include "swadge.h"
 #include "macros.h"
 #include "trigonometry.h"
 
@@ -202,7 +204,7 @@ int main(int argc, char** argv)
     // Save window dimensions from the last loop
     if (emulatorArgs.fullscreen)
     {
-        CNFGSetupFullscreen("Swadge 2024 Simulator", 0);
+        CNFGSetupFullscreen("Swadge Simulator", 0);
     }
     else
     {
@@ -223,7 +225,7 @@ int main(int argc, char** argv)
         }
 
         // Add the screen size to the minimum pane sizes to get our window size
-        CNFGSetup("Swadge 2024 Simulator", winW, winH);
+        CNFGSetup("Swadge Simulator", winW, winH);
     }
 
     // Then initialize audio
@@ -409,8 +411,8 @@ void taskYIELD(void)
         // Sleep for one ms
         static struct timespec tRemaining = {0};
         const struct timespec tSleep      = {
-                 .tv_sec  = 0 + tRemaining.tv_sec,
-                 .tv_nsec = 1000000 + tRemaining.tv_nsec,
+            .tv_sec  = 0 + tRemaining.tv_sec,
+            .tv_nsec = 1000000 + tRemaining.tv_nsec,
         };
         nanosleep(&tSleep, &tRemaining);
 

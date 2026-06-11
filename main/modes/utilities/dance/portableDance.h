@@ -1,7 +1,7 @@
 #ifndef _PORTABLEDANCE_H_
 #define _PORTABLEDANCE_H_
 
-#include "swadge2024.h"
+#include "swadge.h"
 #include "dance.h"
 
 /// Speed scaling factor. Actual speed will be DANCE_SPEED_MULT / speed

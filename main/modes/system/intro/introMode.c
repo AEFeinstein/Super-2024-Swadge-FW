@@ -8,7 +8,7 @@
 #include "fs_font.h"
 #include "fs_wsg.h"
 #include "fs_json.h"
-#include "swadge2024.h"
+#include "swadge.h"
 #include "macros.h"
 #include "menu.h"
 #include "font.h"

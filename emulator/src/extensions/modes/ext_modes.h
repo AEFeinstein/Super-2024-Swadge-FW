@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 
-#include "swadge2024.h"
+#include "swadge.h"
 #include "emu_ext.h"
 
 extern emuExtension_t modesEmuExtension;
