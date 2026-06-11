@@ -9,6 +9,7 @@
 #include "ext_fuzzer.h"
 #include "emu_args.h"
 #include "hdw-btn_emu.h"
+#include "hdw-touch_emu.h"
 #include "hdw-imu_emu.h"
 #include "esp_timer_emu.h"
 
@@ -101,11 +102,17 @@ static void fuzzerPreFrameCb(uint64_t frame)
         {
             // Set a random angle, radius (up to 1024, not 1023), and intensity value 50% of the time
             emulatorSetTouchJoystick(rand() % 360, rand() % 1025, rand() % (1 << 18));
+
+            emulatorSetTouchLinear(0, rand() % 1024, rand() % (1 << 18));
+            emulatorSetTouchLinear(1, rand() % 1024, rand() % (1 << 18));
         }
         else
         {
             // Set no touch 50% of the time
             emulatorSetTouchJoystick(0, 0, 0);
+
+            emulatorSetTouchLinear(0, 0, 0);
+            emulatorSetTouchLinear(1, 0, 0);
         }
     }
 

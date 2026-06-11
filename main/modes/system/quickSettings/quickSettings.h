@@ -1,7 +1,7 @@
 #ifndef _QUICK_SETTINGS_MODE_H_
 #define _QUICK_SETTINGS_MODE_H_
 
-#include "swadge2024.h"
+#include "swadge.h"
 #include "hdw-tft.h"
 
 /// The width of the quick settings panel, centered in the screen

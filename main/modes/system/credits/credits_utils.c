@@ -4,12 +4,12 @@
 
 #include <string.h>
 #include "hdw-led.h"
-#include "soundFuncs.h"
 #include "hdw-tft.h"
 #include "fs_font.h"
 #include "midiFileParser.h"
 #include "macros.h"
 #include "credits_utils.h"
+#include "midiPlayer.h"
 
 //==============================================================================
 // Functions

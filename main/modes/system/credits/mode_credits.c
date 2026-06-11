@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "swadge2024.h"
+#include "swadge.h"
 #include "credits_utils.h"
 #include "mode_credits.h"
 #include "mainMenu.h"

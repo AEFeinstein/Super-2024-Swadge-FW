@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include "esp_sleep.h"
 #include "esp_sleep_emu.h"
-#include "swadge2024.h"
+#include "swadge.h"
 
 static uint64_t timeToLightSleep = 0;
 static bool modeLocked           = false;

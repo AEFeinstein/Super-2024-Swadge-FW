@@ -8,7 +8,6 @@
 #include <esp_timer.h>
 
 #include "embeddedOut.h"
-#include "soundFuncs.h"
 #include "hdw-led.h"
 #include "settingsManager.h"
 #include "touchTest.h"

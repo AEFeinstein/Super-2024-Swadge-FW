@@ -8,7 +8,7 @@
 #ifndef _DANCE_H_
 #define _DANCE_H_
 
-#include "swadge2024.h"
+#include "swadge.h"
 
 // Helper macros to pack an RGB color into an argument
 #define RGB_2_ARG(r, g, b) ((((r) & 0xFF) << 16) | (((g) & 0xFF) << 8) | (((b) & 0xFF)))

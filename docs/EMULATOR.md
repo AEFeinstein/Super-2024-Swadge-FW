@@ -55,10 +55,8 @@ the `install.sh` script:
 | K      | B              | The Swadge's B Button                                      |
 | I      | Menu           | The Swadge's Menu Button, for Quick Settings and Exit Mode |
 | O      | Pause          | The Swadge's Pause Button                                  |
-| 1      | Touchpad Up    | The top of the touchpad                                    |
-| 2      | Touchpad Left  | The left side of the touchpad                              |
-| 3      | Touchpad Right | The right side of the touchpad                             |
-| 4      | Touchpad Down  | The bottom of the touchpad                                 |
+| 1-5    | Horizontal Touchpad | Touch a point on the horizontal touchpad              |
+| 6-0    | Vertical Touchpad   | Touch a point on the vertical touchpad                |
 | Escape | Exit\*         | Exits the emulator, **only** when in fullscreen            |
 | F4, \` | Toggle Console | Opens or closes the emulator console                       |
 | F5     | Toggle FPS     | Shows or hides the FPS counter                             |
@@ -138,7 +136,7 @@ Emulates a swadge
  -r, --record[=FILE]         Record emulator inputs to a file
  -s, --seed=SEED             Seed the random number generator with a specific value
  -c, --show-fps[=OPTION]     Display an FPS counter
- -t, --touch                 Simulate touch sensor readings with a virtual touchpad
+ -t, --touch                 Simulate touch pad readings with a virtual touchpad
      --vsync[=y|n]           Set whether VSync is enabled
  -h, --help                  Give this help list
      --usage                 Give a short usage message
@@ -158,8 +156,7 @@ the Escape key can be used to exit the emulator.
 
 `--show-fps`: Displays an FPS counter below the emulator screen.
 
-`--touch`: Displays a simulated touchpad below the emulator screen. Clicking on this touchpad will generate
-touch events that will be read by any Swadge mode that uses the touchpad.
+`--touch`: Displays a simulated horizontal touchpad below the emulator screen and a vertical touchpad to the left of the screen. Clicking on this touchpad will generate touch events that will be read by any Swadge mode that uses the touchpad. The scroll wheel can be used to adjust touch intensity. Right clicking will lock a touch in place. Thumb buttons are light and hard touches.
 
 `--vsync`: Controls whether VSync is enabled. When VSync is enabled (the default behavior), the Swadge
 Emulator's frame rate will be capped at the monitor's refresh rate. If disabled with `--vsync no`, the

@@ -14,8 +14,8 @@
 #include "emu_args.h"
 #include "rawdraw_sf.h"
 
-#include "hdw-btn.h"
-#include "hdw-btn_emu.h"
+#include "hdw-touch.h"
+#include "hdw-touch_emu.h"
 
 //==============================================================================
 // Defines
@@ -68,7 +68,7 @@ static bool updateTouch(int32_t x, int32_t y, bool clicked);
 
 static bool touchInit(emuArgs_t* emuArgs);
 static int32_t touchKey(uint32_t key, bool down, modKey_t modifiers);
-static bool touchMouseMove(int32_t x, int32_t y, mouseButton_t buttonMask);
+static bool touchMouseMove(int32_t x, int32_t y, mouseBit_t buttonMask);
 static bool touchMouseButton(int32_t x, int32_t y, mouseButton_t button, bool down);
 static void touchRender(uint32_t winW, uint32_t winH, const emuPane_t* pane, uint8_t numPanes);
 
@@ -316,9 +316,9 @@ static int32_t touchKey(uint32_t key, bool down, modKey_t modifiers)
     return -1;
 }
 
-static bool touchMouseMove(int32_t x, int32_t y, mouseButton_t buttonMask)
+static bool touchMouseMove(int32_t x, int32_t y, mouseBit_t buttonMask)
 {
-    return updateTouch(x, y, (buttonMask & EMU_MOUSE_LEFT) == EMU_MOUSE_LEFT);
+    return updateTouch(x, y, (buttonMask & EMU_MOUSE_BIT_LEFT) == EMU_MOUSE_BIT_LEFT);
 }
 
 static bool touchMouseButton(int32_t x, int32_t y, mouseButton_t button, bool down)

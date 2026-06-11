@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "swadge2024.h"
+#include "swadge.h"
 #include "hdw-btn.h"
 #include "touchUtils.h"
 

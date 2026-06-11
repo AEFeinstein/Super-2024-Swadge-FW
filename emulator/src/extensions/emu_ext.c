@@ -13,17 +13,19 @@
 #include <string.h>
 
 // Extension Includes
-#include "ext_touch.h"
-#include "ext_leds.h"
-#include "ext_led_eyes.h"
 #include "ext_fuzzer.h"
 #include "ext_gamepad.h"
 #include "ext_keymap.h"
+#include "ext_led_eyes.h"
+#include "ext_leds.h"
 #include "ext_midi.h"
 #include "ext_modes.h"
 #include "ext_replay.h"
+#include "ext_spacer_v.h"
 #include "ext_tools.h"
-#include "ext_mega_pulse_ex.h"
+#include "ext_touch_1d_horz.h"
+#include "ext_touch_1d_vert.h"
+#include "ext_touch.h"
 
 //==============================================================================
 // Registered Extensions
@@ -33,10 +35,11 @@
 // ADD ALL EXTENSIONS HERE IN ORDER TO REGISTER THEM
 //==============================================================================
 
-static const emuExtension_t* registeredExtensions[]
-    = {&touchEmuCallback,   &ledEmuExtension,   &ledEyesEmuExtension,  &fuzzerEmuExtension,
-       &toolsEmuExtension,  &keymapEmuCallback, &modesEmuExtension,    &gamepadEmuExtension,
-       &replayEmuExtension, &midiEmuExtension,  &megaPulseEmuExtension};
+static const emuExtension_t* registeredExtensions[] = {
+    &vSpacerExtension,    &ledEmuExtension,    &touchEmu1DVertExtension, &touchEmu1DHorzExtension,
+    &fuzzerEmuExtension,  &toolsEmuExtension,  &keymapEmuCallback,       &modesEmuExtension,
+    &gamepadEmuExtension, &replayEmuExtension, &midiEmuExtension,
+};
 
 //==============================================================================
 // Macros
@@ -653,18 +656,18 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
                     case PANE_LEFT:
                     case PANE_RIGHT:
                     {
-                        // Handle the left/right columns
-                        // We just set the Y and Height
-                        cbPane->paneY += SUBPANE_OFFSET(paneInfo->loc, H);
-                        cbPane->paneH = SUBPANE_SIZE(paneInfo->loc, H);
+                        // Line up left and right panels side by side
+                        cbPane->paneX += SUBPANE_OFFSET(paneInfo->loc, W);
+                        cbPane->paneW = SUBPANE_SIZE(paneInfo->loc, W);
                         break;
                     }
 
                     case PANE_TOP:
                     case PANE_BOTTOM:
                     {
-                        cbPane->paneX += SUBPANE_OFFSET(paneInfo->loc, W);
-                        cbPane->paneW = SUBPANE_SIZE(paneInfo->loc, W);
+                        // Stack top and bottom panes vertically
+                        cbPane->paneY += SUBPANE_OFFSET(paneInfo->loc, H);
+                        cbPane->paneH = SUBPANE_SIZE(paneInfo->loc, H);
                         break;
                     }
                 }
@@ -744,7 +747,7 @@ int32_t doExtKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
  * @param y The new mouse position Y-coordinate
  * @param buttonMask A mask of all the currently pressed mouse buttons
  */
-void doExtMouseMoveCb(int32_t x, int32_t y, mouseButton_t buttonMask)
+void doExtMouseMoveCb(int32_t x, int32_t y, mouseBit_t buttonMask)
 {
     EMU_CB_LOOP(fnMouseMoveCb)
     {

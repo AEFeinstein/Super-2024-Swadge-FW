@@ -17,7 +17,6 @@
 #include "menu_utils.h"
 #include "menuQuickSettingsRenderer.h"
 #include "macros.h"
-#include "soundFuncs.h"
 
 #include "settingsManager.h"
 
@@ -190,10 +189,10 @@ static void quickSettingsEnterMode(void)
     memcpy(quickSettings->frozenScreen, getPxTftFramebuffer(), sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
 
     // Save the buzzer state and pause it
-    quickSettings->buzzerState = soundSave();
+    quickSettings->buzzerState = globalMidiSave();
 
     // Pause the sound
-    soundPause();
+    globalMidiPlayerPauseAll();
 
     // Save the LED state
     memcpy(quickSettings->ledState, getLedState(), sizeof(led_t) * CONFIG_NUM_LEDS);
@@ -289,10 +288,10 @@ static void quickSettingsExitMode(void)
     unloadMidiFile(&quickSettings->jingle);
 #endif
 
-    soundStop(true);
+    globalMidiPlayerStop(true);
 
     // Restore the buzzer state, which may be actively playing
-    soundRestore(quickSettings->buzzerState);
+    globalMidiRestore(quickSettings->buzzerState);
 
     // Restore the LED state
     setLeds(quickSettings->ledState, CONFIG_NUM_LEDS);
@@ -456,7 +455,7 @@ static void quickSettingsOnChange(const char* label, int32_t value)
 
     if (label == quickSettingsLeds)
     {
-        soundStop(true);
+        globalMidiPlayerStop(true);
         setLedBrightnessSetting(value);
         if (value > quickSettings->minLedsValue)
         {
@@ -467,7 +466,7 @@ static void quickSettingsOnChange(const char* label, int32_t value)
     }
     else if (label == quickSettingsBacklight)
     {
-        soundStop(true);
+        globalMidiPlayerStop(true);
         setTftBrightnessSetting(value);
         if (value > quickSettings->minTftValue)
         {
@@ -479,9 +478,9 @@ static void quickSettingsOnChange(const char* label, int32_t value)
     {
         if (value != quickSettings->prevSfxValue)
         {
-            soundStop(true);
+            globalMidiPlayerStop(true);
             setSfxVolumeSetting(value);
-            soundPlaySfx(&quickSettings->jingle, BZR_STEREO);
+            globalMidiPlayerPlaySong(&quickSettings->jingle, MIDI_SFX);
             quickSettings->prevSfxValue = value;
         }
 
@@ -494,9 +493,9 @@ static void quickSettingsOnChange(const char* label, int32_t value)
     {
         if (value != quickSettings->prevBgmValue)
         {
-            soundStop(true);
+            globalMidiPlayerStop(true);
             setBgmVolumeSetting(value);
-            soundPlayBgm(&quickSettings->jingle, BZR_STEREO);
+            globalMidiPlayerPlaySong(&quickSettings->jingle, MIDI_BGM);
             quickSettings->prevBgmValue = value;
         }
 

@@ -59,7 +59,7 @@
 #include "gamepad.h"
 #include "mainMenu.h"
 #include "settingsManager.h"
-#include "swadge2024.h"
+#include "swadge.h"
 
 //==============================================================================
 // Defines

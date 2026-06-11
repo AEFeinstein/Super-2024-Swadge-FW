@@ -1,7 +1,7 @@
 #ifndef _FACTORYTEST_H_
 #define _FACTORYTEST_H_
 
-#include "swadge2024.h"
+#include "swadge.h"
 
 extern swadgeMode_t factoryTestMode;
 
