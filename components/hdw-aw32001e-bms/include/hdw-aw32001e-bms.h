@@ -43,26 +43,28 @@
 #define _HDW_AW32001E_BMS_H_
 
 #include <stdint.h>
+#include <esp_err.h>
 #include <hal/gpio_types.h>
 #include <soc/gpio_num.h>
-#include <esp_err.h>
 
 /**
  * @brief BMS register addresses
  */
 typedef enum {
-    AW3200_INPUT_SRC = 0x00,        //VIN dynamic power management and IIN limit
-    AW3200_POWER_ON_CFG = 0x01,     //BAT disconnect delay time after WD timeout, shipping mode BAT disconnect, HIZ enable, charge enable, UVLO BAT threshold
-    AW3200_CHG_CURRENT = 0x02,      //REG and WD reset, charge current setting
-    AW3200_TERM_CURRENT = 0x03,     //BAT FET discharge current limit, pre-charge current limit
-    AW3200_CHG_VOLTAGE = 0x04,      //BAT charge voltage, BAT precharge voltage, recharge voltage threshold
-    AW3200_TIMER_WD = 0x05,         //Watchdog timer setting, charge termination, charge timer setting
-    AW3200_MAIN_CTRL = 0x06,        //NTC thermistor enable, shipping mode FET control, charge control, BAT OVP control
-    AW3200_SYS_CTRL = 0x07,         //system voltage control, disable PCB OTP, disable voltage input limit, thermal regulation threshold, VOUT threshold
-    AW3200_SYS_STATUS = 0x08,       //watchdog fault status, charge, PPM, power good, thermal regulation status
-    AW3200_FAULT_STATUS = 0x09,     //shipping mode delay time, VIN fault, thermal shutdown, BAT OVP, safety timer fault, NTC faults
-    AW3200_CHIP_ID = 0x0A,          //chip ID
+    INPUT_SRC = 0x00,        //VIN dynamic power management and IIN limit
+    POWER_ON_CFG = 0x01,     //BAT disconnect delay time after WD timeout, shipping mode BAT disconnect, HIZ enable, charge enable, UVLO BAT threshold
+    CHG_CURRENT = 0x02,      //REG and WD reset, charge current setting
+    TERM_CURRENT = 0x03,     //BAT FET discharge current limit, pre-charge current limit
+    CHG_VOLTAGE = 0x04,      //BAT charge voltage, BAT precharge voltage, recharge voltage threshold
+    TIMER_WD = 0x05,         //Watchdog timer setting, charge termination, charge timer setting
+    MAIN_CTRL = 0x06,        //NTC thermistor enable, shipping mode FET control, charge control, BAT OVP control
+    SYS_CTRL = 0x07,         //system voltage control, disable PCB OTP, disable voltage input limit, thermal regulation threshold, VOUT threshold
+    SYS_STATUS = 0x08,       //watchdog fault status, charge, PPM, power good, thermal regulation status
+    FAULT_STATUS = 0x09,     //shipping mode delay time, VIN fault, thermal shutdown, BAT OVP, safety timer fault, NTC faults
+    CHIP_ID = 0x0A,          //chip ID
 } AW32001Reg;
+
+AW32001Reg AW32001;
 
 /**
  * @brief BMS Charge Status
@@ -161,6 +163,29 @@ typedef enum {
   } DischargeCurrent;
 
 /**
+ * @brief Input Voltage Clamp
+ */
+
+ typedef enum {
+    VIN_DPM_3880mV,
+    VIN_DPM_3960mV,
+    VIN_DPM_4040mV,
+    VIN_DPM_4120mV,
+    VIN_DPM_4200mV, 
+    VIN_DPM_4280mV, 
+    VIN_DPM_4360mV,
+    VIN_DPM_4440mV,
+    VIN_DPM_4520mV, //default setting; do not go below 4520mV without changing Charge Voltage Threshold to be >250mV below this value.
+    VIN_DPM_4600mV, 
+    VIN_DPM_4680mV,
+    VIN_DPM_4760mV,
+    VIN_DPM_4840mV,
+    VIN_DPM_4920mV,
+    VIN_DPM_5000mV,
+    VIN_DPM_5080mV,
+ } VinDPMVoltage;
+
+/**
  * @brief Battery Charge Voltage Threshold in mV
  */
 
@@ -196,10 +221,22 @@ typedef enum {
   SYSVOLTAGE_4950,
 } SystemRegulatedVoltage;
 
-esp_err_t initBMS(FastChargeCurrent current, ChargeVoltageThreshold voltage, UnderVoltageLockout uvlo, JunctionTemperatureLimit tj, SystemRegulatedVoltage sys_voltage, uint8_t timeout);
+//==============================================================================
+// Functions
+//==============================================================================
 
+  esp_err_t initBMS(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup);
+  static esp_err_t AW32001Set(int dev, int reg, uint8_t val);
+  static int GeneralI2CGet(int device, int reg, uint8_t* data, int data_len);
+  esp_err_t setBMS(void);
+  
+  ChargeStatus getChargeStatus();                               // get charge status
   void enableCharge();                                          // enable charging
-  void setChargeEnable(bool enable);                            // charge control
+ 
+
+  //currently unused functions taken from the Arduino library:
+  
+  /*
   void setVinDPMVoltage(SystemRegulatedVoltage voltage);        // set input voltage limit
   void setIinLimitCurrent(FastChargeCurrent current);           // set input current limit, 50mA ~ 500mA(step 30mA, default 500mA)
   void setBatUVLO(UnderVoltageLockout uvlo);                    // set battery under voltage lockout(2430mV, 2490mV, 2580mV, 2670mV, 2760mV, 2850mV, 2940mV, 3030mV)
@@ -208,11 +245,14 @@ esp_err_t initBMS(FastChargeCurrent current, ChargeVoltageThreshold voltage, Und
   void setChargeVoltage(ChargeVoltageThreshold voltage);        // set charging voltage, 3600mV ~ 4545mV(step 15mV, default 4200mV)
   void setWatchdogTimer(uint8_t sec);                           // set charge watchdog timeout(0s, 40s, 80s, 160s, default 160s, 0 to disable)
   void feedWatchdog();                                          // feed watchdog timer
-  void setShipMode(bool en);                                    // set ship mode (default disable ship mode)
   void setThermistorControl(bool en);                           // set thermistor and PCB OTP mode (default enable NTC and enable PCB OTP)
   void setTJLimit(JunctionTemperatureLimit tj);                 // set junction temperature limit (default 120C)
-  ChargeStatus getChargeStatus();                               // get charge status
+  void setShipMode(bool en);                                    // set ship mode (default disable ship mode)
   void setHiZ(bool enable);                                     // set Hi-Z mode, true: USB -x-> SYS, false: USB -> SYS
+  */
+  
+  
+
 
 
 #endif 
