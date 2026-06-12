@@ -213,16 +213,16 @@ esp_err_t setBMS(void)
     int r = 0;
     uint8_t val = 0;
 
-    for (int i = 0; i < 9; i++)
+    for (int i = 0; i < 7; i++)
     {
         if (r != 0)
         {
-            ESP_LOGE("BMS", "Failed to set BMS register %d", i);
+            ESP_LOGE("BMS", "Failed to set BMS register 0x%02X", i);
             return ESP_FAIL;
             break;
         }
 
-        ESP_LOGI("BMS", "SWADGE BMS REGISTER: %d", i);
+        ESP_LOGI("BMS", "SWADGE BMS REGISTER: 0x%02X", i);
         switch (i)
         {
             case INPUT_SRC:  
@@ -294,6 +294,7 @@ esp_err_t setBMS(void)
         
 
     r |= AW32001Set(AW32001_ADDRESS, i, val);
+    ESP_LOGI("BMS", "SWADGE BMS REGISTER: 0x%02X written with value: 0x%02X", i, val);
     val = 0;
         
     }
