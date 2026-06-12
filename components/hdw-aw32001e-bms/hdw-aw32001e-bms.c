@@ -199,7 +199,9 @@ esp_err_t setBMS(void)
     #endif
 
     #if !defined(DEFAULT_BMS_SETTINGS) && !defined(SWADGE_BMS_SETTINGS)
+    uint8_t incurrent = INPUTCURRENT_500mA;
     uint8_t current = FASTCHARGE_128;
+    uint8_t discurrent = DISCHARGE_2000mA;
     uint8_t voltage = CHARGEVOLTAGE_4200mV;
     uint8_t uvlo = UVLO_3030mV;
     uint8_t tj = TJ_80C;
@@ -223,42 +225,69 @@ esp_err_t setBMS(void)
         ESP_LOGI("BMS", "SWADGE BMS REGISTER: %d", i);
         switch (i)
         {
-            0:  //Input Source Control. Default value 0x8F
+            case INPUT_SRC:  
                 //Bits 0-3 set IIN_LIM, bits 4-7 set VIN_DPM
                 #ifdef DEFAULT_BMS_SETTINGS
                 val = 0x8F;
                 #else
-                val = (current & 0x0F) | ((vin & 0x0F) << 4);
+                val = (incurrent & 0x0F) | ((vin & 0x0F) << 4);
                 #endif
                 break;
-            1:  //Power On Configuration
+            case POWER_ON_CFG:  
                 //Bits 0-2 set VBAT_UVLO, bit 3 sets charge enable, bit 4 sets HIZ mode, bit 5 sets battery disconnect interrupt time for reset, bits 6-7 sets power-on after reset delay time
+                //default values for these are: UVLO_2760mV, charge disabled (1), HIZ disabled (0), 4s (1), 16 (2) 
                 #ifdef DEFAULT_BMS_SETTINGS
                 val = 0xAC;
                 #else
-                val = (uvlo & 0x0F);
+                val = (uvlo & 0x7) | (1 <<3) | (0 << 4) | (1 << 5) | (2 << 6);
                 #endif
                 break;
-            2:
-                uvlo = UVLO_3030mV; 
+            case CHG_CURRENT: 
+                //Bits 0-5 set fast charge current, bit 6 sets WD timer reset, bit 7 sets software reset
+                //default values for these are: 128 (0x40), WD reset disabled (0), no software reset (0)
+                #ifdef DEFAULT_BMS_SETTINGS
+                val = 0x0F;
+                #else
+                val = (current & 0x3F) | (0 << 6) | (0 << 7);
+                #endif
                 break;
-            3:
-                tj = TJ_120C;
+            case TERM_CURRENT: 
+                //Bits 0-3 set pre-charge current, bits 4-7 set discharge current limit
+                //default values for these are: pre-charge current 3mA (1), discharge current limit 2000mA (9). TODO settable pre-charge current
+                #ifdef DEFAULT_BMS_SETTINGS
+                val = 0x91;
+                #else
+                val = (1 & 0x3) | (discurrent << 4);
+                #endif
                 break;
-            4:
-                sys_voltage = SYSVOLTAGE_4600; 
+            case CHG_VOLTAGE:
+                #ifdef DEFAULT_BMS_SETTINGS
+                val = 0xA3;
+                #else
+                //TODO 
+                #endif;
                 break;
-            5:
-                timeout = 0;
+            case TIMER_WD:
+                #ifdef DEFAULT_BMS_SETTINGS
+                val = 0x7A;
+                #else
+                //TODO 
+                #endif;
                 break;
-            6: 
+            case MAIN_CTRL: 
+                #ifdef DEFAULT_BMS_SETTINGS
+                val = 0xC0;
+                #else
+                //TODO 
+                #endif;
                 break;
-            7:
+            case SYS_CTRL:
+                #ifdef DEFAULT_BMS_SETTINGS
+                val = 0x38;
+                #else
+                //TODO 
+                #endif;
                 break; 
-            8:
-                break;
-            9:
-                break;
             default:
                 break;
         }
