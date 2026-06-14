@@ -126,7 +126,7 @@ int ggGetDrinkTextLen(void);
 
 /**
  * @brief Returns the length of the rules text array
- * 
+ *
  * @return int number of positions in the array
  */
 int ggGetRulesLenText(void);
