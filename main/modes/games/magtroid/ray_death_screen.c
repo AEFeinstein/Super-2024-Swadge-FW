@@ -48,8 +48,8 @@ void rayShowDeathScreen(ray_t* ray)
     ray->btnLockoutUs = RAY_BUTTON_LOCKOUT_US;
     raySwitchToScreen(RAY_DEATH_SCREEN);
     // Stop BGM when dead
-    soundStop(true);
-    soundPlaySfx(&ray->sfx_game_over, BZR_RIGHT);
+    globalMidiPlayerStop(true);
+    globalMidiPlayerPlaySong(&ray->sfx_game_over, MIDI_SFX);
 
     // Pick random text to display
     ray->deathText = deathTexts[esp_random() % ARRAY_SIZE(deathTexts)];

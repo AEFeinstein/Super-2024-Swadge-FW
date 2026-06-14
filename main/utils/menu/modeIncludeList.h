@@ -42,6 +42,7 @@
 #include "mainMenu.h"
 #include "mode_ch32v003test.h"
 #include "mode_credits.h"
+#include "mode_ray.h"
 #include "mode_synth.h"
 #include "nameTest.h"
 #include "roboRunner.h"

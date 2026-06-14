@@ -5,7 +5,7 @@
 // Includes
 //==============================================================================
 
-#include "swadge2024.h"
+#include "swadge.h"
 #include "fp_math.h"
 #include "starfield.h"
 #include "esp_random.h"
@@ -471,8 +471,8 @@ typedef struct
  */
 typedef struct
 {
-    char* name;    ///< The name of the texture
-    wsg_t texture; ///< An image used as a texture
+    cnfsFileIdx_t fIdx; ///< The file index of the texture
+    wsg_t texture;      ///< An image used as a texture
 } namedTexture_t;
 
 /**
@@ -574,9 +574,9 @@ typedef struct
     rayScreen_t screen;           ///< The current screen being shown
     rayPauseScreen_t pauseScreen; ///< The current pause screen being shown
 
-    menu_t* menu;                    ///< The main menu
-    menuLogbookRenderer_t* renderer; ///< Renderer for the menu
-    bool wasReset;                   ///< Flag to return to the main menu after wiping NVM
+    menu_t* menu;                 ///< The main menu
+    menuMegaRenderer_t* renderer; ///< Renderer for the menu
+    bool wasReset;                ///< Flag to return to the main menu after wiping NVM
 
     rayMap_t map;      ///< The loaded map
     int32_t doorTimer; ///< A timer used to open doors
@@ -653,24 +653,24 @@ typedef struct
 
     starfield_t starfield; ///< Starfield used for warp animation
 
-    song_t songs[NUM_MAPS + 1]; ///< Per-map background music, plus a boss theme
-    song_t sfx_door_open;       ///< SFX when a door opens
-    song_t sfx_e_damage;        ///< SFX when an enemy takes damage
-    song_t sfx_e_freeze;        ///< SFX when an enemy is frozen
-    song_t sfx_p_charge;        ///< SFX when the charge beam is shot
-    song_t sfx_p_damage;        ///< SFX when the player takes damage
-    song_t sfx_p_shoot;         ///< SFX when the a normal beam is shot
-    song_t sfx_e_block;         ///< SFX when an enemy blocks a shot
-    song_t sfx_e_dead;          ///< SFX when an enemy dies
-    song_t sfx_item_get;        ///< SFX when an item is obtained
-    song_t sfx_p_charge_start;  ///< SFX when the charge beam starts to charge
-    song_t sfx_p_missile;       ///< SFX when a missile is shot
-    song_t sfx_p_ice;           ///< SFX when the ice beam is shot
-    song_t sfx_p_xray;          ///< SFX when th xray beam is shot
-    song_t sfx_warp;            ///< SFX when the player warps
-    song_t sfx_lava_dmg;        ///< SFX when standing in lava
-    song_t sfx_health;          ///< SFX when picking up health
-    song_t sfx_game_over;       ///< SFX when the game is over
+    midiFile_t songs[NUM_MAPS + 1]; ///< Per-map background music, plus a boss theme
+    midiFile_t sfx_door_open;       ///< SFX when a door opens
+    midiFile_t sfx_e_damage;        ///< SFX when an enemy takes damage
+    midiFile_t sfx_e_freeze;        ///< SFX when an enemy is frozen
+    midiFile_t sfx_p_charge;        ///< SFX when the charge beam is shot
+    midiFile_t sfx_p_damage;        ///< SFX when the player takes damage
+    midiFile_t sfx_p_shoot;         ///< SFX when the a normal beam is shot
+    midiFile_t sfx_e_block;         ///< SFX when an enemy blocks a shot
+    midiFile_t sfx_e_dead;          ///< SFX when an enemy dies
+    midiFile_t sfx_item_get;        ///< SFX when an item is obtained
+    midiFile_t sfx_p_charge_start;  ///< SFX when the charge beam starts to charge
+    midiFile_t sfx_p_missile;       ///< SFX when a missile is shot
+    midiFile_t sfx_p_ice;           ///< SFX when the ice beam is shot
+    midiFile_t sfx_p_xray;          ///< SFX when th xray beam is shot
+    midiFile_t sfx_warp;            ///< SFX when the player warps
+    midiFile_t sfx_lava_dmg;        ///< SFX when standing in lava
+    midiFile_t sfx_health;          ///< SFX when picking up health
+    midiFile_t sfx_game_over;       ///< SFX when the game is over
 
     int32_t itemRotateTimer; ///< A timer to 'rotate' items by scaling the X direction
     int32_t itemRotateDeg;   ///< The number of degrees all items are 'rotated' by

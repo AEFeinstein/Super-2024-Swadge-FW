@@ -44,12 +44,11 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
     rayMap_t* map = &ray->map;
 
     // Construct map name
-    char name[] = "0.rmh";
-    name[0]     = '0' + mapId;
+    cnfsFileIdx_t mapFiles[] = {_0_RMH, _1_RMH, _2_RMH, _3_RMH, _4_RMH, _5_RMH};
 
     // Read and decompress the file
     uint32_t decompressedSize = 0;
-    uint8_t* fileData         = readHeatshrinkFile(name, &decompressedSize, spiRam);
+    uint8_t* fileData         = readHeatshrinkFile(mapFiles[mapId], &decompressedSize, spiRam);
     uint32_t fileIdx          = 0;
 
     // Read the width and height
@@ -238,7 +237,7 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
     free(fileData);
 
     // Play this map's music
-    soundPlayBgm(&ray->songs[ray->p.mapId], BZR_STEREO);
+    globalMidiPlayerPlaySong(&ray->songs[ray->p.mapId], MIDI_BGM);
 }
 
 /**
@@ -291,7 +290,7 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
     // If the boss was spawned, play the theme
     if (OBJ_ENEMY_BOSS == type)
     {
-        soundPlayBgm(&ray->songs[6], BZR_STEREO);
+        globalMidiPlayerPlaySong(&ray->songs[6], MIDI_BGM);
     }
 }
 
