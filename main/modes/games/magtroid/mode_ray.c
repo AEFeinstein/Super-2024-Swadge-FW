@@ -25,7 +25,7 @@ static void rayEnterMode(void);
 static void rayExitMode(void);
 static void rayMainLoop(int64_t elapsedUs);
 static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
-static void rayMenuCb(const char* label, bool selected, uint32_t settingVal);
+static bool rayMenuCb(const char* label, bool selected, uint32_t settingVal);
 static void rayInitMenu(void);
 
 //==============================================================================
@@ -55,8 +55,8 @@ const paletteColor_t rayMapColors[] = {
 };
 
 /// @brief The songs to play, must be in map order
-const char* const songFiles[]
-    = {"base_0.sng", "jungle_0.sng", "cave_0.sng", "base_1.sng", "jungle_1.sng", "cave_1.sng", "ray_boss.sng"};
+const cnfsFileIdx_t songFiles[]
+    = {BASE_0_MID, JUNGLE_0_MID, CAVE_0_MID, BASE_1_MID, JUNGLE_1_MID, CAVE_1_MID, RAY_BOSS_MID};
 
 /// @brief The NVS key to save and load player data
 const char RAY_NVS_KEY[] = "ray";
@@ -102,8 +102,8 @@ static void rayEnterMode(void)
     ray = calloc(1, sizeof(ray_t));
 
     // Load fonts
-    loadFont("logbook.font", &ray->logbook, true);
-    loadFont("ibm_vga8.font", &ray->ibm, true);
+    loadFont(LOGBOOK_FONT, &ray->logbook, true);
+    loadFont(IBM_VGA_8_FONT, &ray->ibm, true);
 
     // Initialize the menu
     rayInitMenu();
@@ -118,31 +118,33 @@ static void rayEnterMode(void)
     // Initialize texture manager and environment textures
     loadEnvTextures(ray);
 
+    // Set BGM to loop
+    globalMidiPlayerGet(MIDI_BGM)->loop = true;
+
     // Load songs
     for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(songFiles); sIdx++)
     {
-        loadSong(songFiles[sIdx], &ray->songs[sIdx], false);
-        ray->songs[sIdx].shouldLoop = true;
+        loadMidiFile(songFiles[sIdx], &ray->songs[sIdx], false);
     }
 
     // Load SFX
-    loadSong("r_door_open.sng", &ray->sfx_door_open, false);
-    loadSong("r_e_damage.sng", &ray->sfx_e_damage, false);
-    loadSong("r_e_freeze.sng", &ray->sfx_e_freeze, false);
-    loadSong("r_p_charge.sng", &ray->sfx_p_charge, false);
-    loadSong("r_p_damage.sng", &ray->sfx_p_damage, false);
-    loadSong("r_p_shoot.sng", &ray->sfx_p_shoot, false);
-    loadSong("r_e_block.sng", &ray->sfx_e_block, false);
-    loadSong("r_e_dead.sng", &ray->sfx_e_dead, false);
-    loadSong("r_item_get.sng", &ray->sfx_item_get, false);
-    loadSong("r_p_charge_start.sng", &ray->sfx_p_charge_start, false);
-    loadSong("r_p_missile.sng", &ray->sfx_p_missile, false);
-    loadSong("r_p_ice.sng", &ray->sfx_p_ice, false);
-    loadSong("r_p_xray.sng", &ray->sfx_p_xray, false);
-    loadSong("r_warp.sng", &ray->sfx_warp, false);
-    loadSong("r_lava_dmg.sng", &ray->sfx_lava_dmg, false);
-    loadSong("r_health.sng", &ray->sfx_health, false);
-    loadSong("r_game_over.sng", &ray->sfx_game_over, false);
+    loadMidiFile(R_DOOR_OPEN_MID, &ray->sfx_door_open, false);
+    loadMidiFile(R_E_DAMAGE_MID, &ray->sfx_e_damage, false);
+    loadMidiFile(R_E_FREEZE_MID, &ray->sfx_e_freeze, false);
+    loadMidiFile(R_P_CHARGE_MID, &ray->sfx_p_charge, false);
+    loadMidiFile(R_P_DAMAGE_MID, &ray->sfx_p_damage, false);
+    loadMidiFile(R_P_SHOOT_MID, &ray->sfx_p_shoot, false);
+    loadMidiFile(R_E_BLOCK_MID, &ray->sfx_e_block, false);
+    loadMidiFile(R_E_DEAD_MID, &ray->sfx_e_dead, false);
+    loadMidiFile(R_ITEM_GET_MID, &ray->sfx_item_get, false);
+    loadMidiFile(R_P_CHARGE_MID, &ray->sfx_p_charge_start, false);
+    loadMidiFile(R_P_MISSILE_MID, &ray->sfx_p_missile, false);
+    loadMidiFile(R_P_ICE_MID, &ray->sfx_p_ice, false);
+    loadMidiFile(R_P_XRAY_MID, &ray->sfx_p_xray, false);
+    loadMidiFile(R_WARP_MID, &ray->sfx_warp, false);
+    loadMidiFile(R_LAVA_DMG_MID, &ray->sfx_lava_dmg, false);
+    loadMidiFile(R_HEALTH_MID, &ray->sfx_health, false);
+    loadMidiFile(R_GAME_OVER_MID, &ray->sfx_game_over, false);
 
     // Set the menu as the screen
     raySwitchToScreen(RAY_MENU);
@@ -165,7 +167,7 @@ static void rayExitMode(void)
 {
     // Free menu
     deinitMenu(ray->menu);
-    deinitMenuLogbookRenderer(ray->renderer);
+    deinitMenuMegaRenderer(ray->renderer);
 
     // Free map, scripts, enemies, scenery, bullets, etc.
     rayFreeCurrentState(ray);
@@ -176,27 +178,27 @@ static void rayExitMode(void)
     // Free songs
     for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(songFiles); sIdx++)
     {
-        freeSong(&ray->songs[sIdx]);
+        unloadMidiFile(&ray->songs[sIdx]);
     }
 
     // Free SFX
-    freeSong(&ray->sfx_door_open);
-    freeSong(&ray->sfx_e_damage);
-    freeSong(&ray->sfx_e_freeze);
-    freeSong(&ray->sfx_p_charge);
-    freeSong(&ray->sfx_p_damage);
-    freeSong(&ray->sfx_p_shoot);
-    freeSong(&ray->sfx_e_block);
-    freeSong(&ray->sfx_e_dead);
-    freeSong(&ray->sfx_item_get);
-    freeSong(&ray->sfx_p_charge_start);
-    freeSong(&ray->sfx_p_missile);
-    freeSong(&ray->sfx_p_ice);
-    freeSong(&ray->sfx_p_xray);
-    freeSong(&ray->sfx_warp);
-    freeSong(&ray->sfx_lava_dmg);
-    freeSong(&ray->sfx_health);
-    freeSong(&ray->sfx_game_over);
+    unloadMidiFile(&ray->sfx_door_open);
+    unloadMidiFile(&ray->sfx_e_damage);
+    unloadMidiFile(&ray->sfx_e_freeze);
+    unloadMidiFile(&ray->sfx_p_charge);
+    unloadMidiFile(&ray->sfx_p_damage);
+    unloadMidiFile(&ray->sfx_p_shoot);
+    unloadMidiFile(&ray->sfx_e_block);
+    unloadMidiFile(&ray->sfx_e_dead);
+    unloadMidiFile(&ray->sfx_item_get);
+    unloadMidiFile(&ray->sfx_p_charge_start);
+    unloadMidiFile(&ray->sfx_p_missile);
+    unloadMidiFile(&ray->sfx_p_ice);
+    unloadMidiFile(&ray->sfx_p_xray);
+    unloadMidiFile(&ray->sfx_warp);
+    unloadMidiFile(&ray->sfx_lava_dmg);
+    unloadMidiFile(&ray->sfx_health);
+    unloadMidiFile(&ray->sfx_game_over);
 
     // Free the font
     freeFont(&ray->ibm);
@@ -377,7 +379,7 @@ static void rayMainLoop(int64_t elapsedUs)
                 }
             }
             // Draw the menu
-            drawMenuLogbook(ray->menu, ray->renderer, elapsedUs);
+            drawMenuMega(ray->menu, ray->renderer, elapsedUs);
             break;
         }
         case RAY_GAME:
@@ -514,7 +516,7 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
  * @param selected if the menu option was selected
  * @param settingVal The setting value, if this is a setting
  */
-static void rayMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool rayMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     if (selected)
     {
@@ -542,6 +544,7 @@ static void rayMenuCb(const char* label, bool selected, uint32_t settingVal)
             switchToSwadgeMode(&mainMenuMode);
         }
     }
+    return false;
 }
 
 /**
@@ -550,7 +553,7 @@ static void rayMenuCb(const char* label, bool selected, uint32_t settingVal)
 void rayStartGame(void)
 {
     // Stop the buzzer to not interfere with loading data
-    soundStop(true);
+    globalMidiPlayerStop(true);
 
     // Clear all lists
     rayFreeCurrentState(ray);
@@ -597,7 +600,7 @@ void raySwitchToScreen(rayScreen_t newScreen)
     {
         case RAY_MENU:
         {
-            soundStop(true);
+            globalMidiPlayerStop(true);
             // Reinit menu
             rayInitMenu();
             break;
@@ -623,7 +626,7 @@ static void rayInitMenu(void)
     // Tear down old menu, if it exists
     if (NULL != ray->renderer)
     {
-        deinitMenuLogbookRenderer(ray->renderer);
+        deinitMenuMegaRenderer(ray->renderer);
     }
     if (NULL != ray->menu)
     {
@@ -648,5 +651,5 @@ static void rayInitMenu(void)
     addSingleItemToMenu(ray->menu, rayExitStr);
 
     // Initialize a renderer
-    ray->renderer = initMenuLogbookRenderer(&ray->logbook);
+    ray->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
 }

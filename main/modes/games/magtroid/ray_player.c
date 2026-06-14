@@ -266,25 +266,25 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
                     {
                         // Allow charging a shot immediately after releasing a charge
                         ray->playerShotCooldown = 0;
-                        soundPlaySfx(&ray->sfx_p_charge, BZR_RIGHT);
+                        globalMidiPlayerPlaySong(&ray->sfx_p_charge, MIDI_SFX);
                         break;
                     }
                     case OBJ_BULLET_MISSILE:
                     {
                         ray->playerShotCooldown = 240000;
-                        soundPlaySfx(&ray->sfx_p_missile, BZR_RIGHT);
+                        globalMidiPlayerPlaySong(&ray->sfx_p_missile, MIDI_SFX);
                         break;
                     }
                     case OBJ_BULLET_ICE:
                     {
                         ray->playerShotCooldown = 480000;
-                        soundPlaySfx(&ray->sfx_p_ice, BZR_RIGHT);
+                        globalMidiPlayerPlaySong(&ray->sfx_p_ice, MIDI_SFX);
                         break;
                     }
                     case OBJ_BULLET_XRAY:
                     {
                         ray->playerShotCooldown = 240000;
-                        soundPlaySfx(&ray->sfx_p_xray, BZR_RIGHT);
+                        globalMidiPlayerPlaySong(&ray->sfx_p_xray, MIDI_SFX);
                         break;
                     }
                     case OBJ_BULLET_NORMAL:
@@ -298,7 +298,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
                         {
                             ray->playerShotCooldown = 120000 - ray->chargeTimer;
                         }
-                        soundPlaySfx(&ray->sfx_p_shoot, BZR_RIGHT);
+                        globalMidiPlayerPlaySong(&ray->sfx_p_shoot, MIDI_SFX);
                         break;
                     }
                 }
@@ -748,7 +748,7 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
             // Transient, add (GAME_START_HEALTH / 2) health, not going over the max
             inventory->health = MIN(inventory->health + (GAME_START_HEALTH / 2), inventory->maxHealth);
             // Play SFX
-            soundPlaySfx(&ray->sfx_health, BZR_RIGHT);
+            globalMidiPlayerPlaySong(&ray->sfx_health, MIDI_SFX);
             // Don't save after energy
             saveAfterObtain = false;
             break;
@@ -761,7 +761,7 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
                 inventory->numMissiles = MIN(inventory->numMissiles + 5, inventory->maxNumMissiles);
             }
             // Play SFX
-            soundPlaySfx(&ray->sfx_health, BZR_RIGHT);
+            globalMidiPlayerPlaySong(&ray->sfx_health, MIDI_SFX);
             // Don't save after missile ammo
             saveAfterObtain = false;
             break;
@@ -789,7 +789,7 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
         raySavePlayer(ray);
         raySaveVisitedTiles(ray);
         // Play SFX
-        soundPlaySfx(&ray->sfx_item_get, BZR_RIGHT);
+        globalMidiPlayerPlaySong(&ray->sfx_item_get, MIDI_SFX);
     }
 }
 
@@ -818,7 +818,7 @@ void rayPlayerCheckFloorEffect(ray_t* ray, uint32_t elapsedUs)
             ray->playerInLava = true;
             // Start looping SFX
             // ray->sfx_lava_dmg.shouldLoop = true;
-            // soundPlaySfx(&ray->sfx_lava_dmg, BZR_RIGHT);
+            // globalMidiPlayerPlaySong(&ray->sfx_lava_dmg, MIDI_SFX);
         }
     }
     else if (BG_FLOOR_HEAL == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type)
@@ -862,7 +862,7 @@ void rayPlayerDecrementHealth(ray_t* ray, int32_t health)
     if (health > 0)
     {
         // Play SFX
-        soundPlaySfx(&ray->sfx_p_damage, BZR_RIGHT);
+        globalMidiPlayerPlaySong(&ray->sfx_p_damage, MIDI_SFX);
     }
 
     // Make LEDs red
