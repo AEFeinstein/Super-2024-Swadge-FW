@@ -80,7 +80,7 @@ void rayShowCredits(ray_t* ray)
     rayCreditEntries[1].name = completionStr;
 
     // Stop music
-    soundStop(true);
+    globalMidiPlayerStop(true);
 
     // Init credits, which starts music
     initCredits(&ray->credits, &ray->logbook, rayCreditEntries, ARRAY_SIZE(rayCreditEntries));
@@ -99,7 +99,7 @@ void rayCreditsRender(ray_t* ray, uint32_t elapsedUs)
     {
         if (creditsButtonCb(&ray->credits, &evt))
         {
-            soundStop(true);
+            globalMidiPlayerStop(true);
             deinitCredits(&ray->credits);
             // Return to the menu
             raySwitchToScreen(RAY_MENU);
