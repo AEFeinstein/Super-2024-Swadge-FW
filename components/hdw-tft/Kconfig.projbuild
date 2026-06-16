@@ -16,6 +16,10 @@ menu "TFT Configuration"
 			bool "ST7789_240x240"
 			help
 				Display Driver is ST7789_240x240.
+		config ST7789_320x240
+			bool "ST7789_320x240"
+			help
+				Display Driver is ST7789_320x240.
 		config GC9307_240x280
 			bool "GC9307_240x280"
 			help
