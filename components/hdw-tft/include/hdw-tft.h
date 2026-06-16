@@ -100,6 +100,9 @@
 #elif defined(CONFIG_ST7789_240x240)
     #define TFT_WIDTH  240
     #define TFT_HEIGHT 240
+#elif defined(CONFIG_ST7789_320x240)
+    #define TFT_WIDTH  320
+    #define TFT_HEIGHT 240
 #elif defined(CONFIG_GC9307_240x280)
     #define TFT_WIDTH  280
     #define TFT_HEIGHT 240
