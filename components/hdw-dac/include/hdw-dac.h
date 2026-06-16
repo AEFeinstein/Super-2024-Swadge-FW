@@ -81,6 +81,22 @@
 /** The size of each buffer to fill with DAC samples */
 #define DAC_BUF_SIZE 512
 
+#if !SOC_DAC_SUPPORTED
+
+/**
+ * @brief DAC channel mask
+ *
+ * Supplied here when the DAC isn't supported for compilation purposes
+ */
+typedef enum
+{
+    DAC_CHANNEL_MASK_CH0 = BIT(0),          /*!< DAC channel 0 is GPIO25(ESP32) / GPIO17(ESP32S2) */
+    DAC_CHANNEL_MASK_CH1 = BIT(1),          /*!< DAC channel 1 is GPIO26(ESP32) / GPIO18(ESP32S2) */
+    DAC_CHANNEL_MASK_ALL = BIT(0) | BIT(1), /*!< Both DAC channel 0 and channel 1 */
+} dac_channel_mask_t;
+
+#endif
+
 //==============================================================================
 // Typedefs
 //==============================================================================
