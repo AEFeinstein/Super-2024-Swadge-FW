@@ -18,6 +18,8 @@
 // Variables
 //==============================================================================
 
+#if SOC_DAC_SUPPORTED
+
 /** The handle created for the DAC */
 static dac_continuous_handle_t dac_handle = NULL;
 
@@ -36,10 +38,13 @@ static uint8_t tmpDacBuf[DAC_BUF_SIZE] = {0};
 /** The GPIO which controls amplifier shutdown */
 static gpio_num_t shdnGpio;
 
+#endif
+
 //==============================================================================
 // Functions
 //==============================================================================
 
+#if SOC_DAC_SUPPORTED
 /**
  * @brief Callback for DAC conversion events
  *
@@ -63,6 +68,7 @@ static bool IRAM_ATTR dac_on_convert_done_callback(dac_continuous_handle_t handl
     xQueueSendFromISR(queue, event, &need_awoke);
     return need_awoke;
 }
+#endif
 
 /**
  * @brief Initialize the DAC
@@ -73,6 +79,7 @@ static bool IRAM_ATTR dac_on_convert_done_callback(dac_continuous_handle_t handl
  */
 void initDac(dac_channel_mask_t channel, gpio_num_t shdn_gpio, fnDacCallback_t cb)
 {
+#if SOC_DAC_SUPPORTED
     // If the DAC isn't initialized
     if (!dac_handle)
     {
@@ -113,6 +120,7 @@ void initDac(dac_channel_mask_t channel, gpio_num_t shdn_gpio, fnDacCallback_t c
         ESP_ERROR_CHECK(gpio_config(&shdn_gpio_config));
         ESP_ERROR_CHECK(gpio_set_level(shdn_gpio, 0));
     }
+#endif
 }
 
 /**
@@ -120,6 +128,7 @@ void initDac(dac_channel_mask_t channel, gpio_num_t shdn_gpio, fnDacCallback_t c
  */
 void deinitDac(void)
 {
+#if SOC_DAC_SUPPORTED
     if (dac_handle)
     {
         /* Stop the DAC */
@@ -134,6 +143,7 @@ void deinitDac(void)
         /* NULL the callback */
         dacCb = NULL;
     }
+#endif
 }
 
 /**
@@ -157,6 +167,7 @@ void powerUpDac(void)
  */
 void dacStart(void)
 {
+#if SOC_DAC_SUPPORTED
     if (dac_handle && !dacWriting)
     {
         /* Enable and start the continuous channels */
@@ -164,6 +175,7 @@ void dacStart(void)
         ESP_ERROR_CHECK(dac_continuous_start_async_writing(dac_handle));
         dacWriting = true;
     }
+#endif
 }
 
 /**
@@ -171,6 +183,7 @@ void dacStart(void)
  */
 void dacStop(void)
 {
+#if SOC_DAC_SUPPORTED
     if (dac_handle && dacWriting)
     {
         /* Stop and disable the continuous channels */
@@ -178,6 +191,7 @@ void dacStop(void)
         ESP_ERROR_CHECK(dac_continuous_disable(dac_handle));
         dacWriting = false;
     }
+#endif
 }
 
 /**
@@ -185,6 +199,7 @@ void dacStop(void)
  */
 void dacPoll(void)
 {
+#if SOC_DAC_SUPPORTED
     if (dac_handle && dacIsrQueue && dacWriting)
     {
         /* If there is an event to receive, receive it */
@@ -201,6 +216,7 @@ void dacPoll(void)
             /* assume loaded_bytes == DAC_BUF_SIZE */
         }
     }
+#endif
 }
 
 /**
@@ -210,6 +226,7 @@ void dacPoll(void)
  */
 void setDacShutdown(bool shutdown)
 {
+#if SOC_DAC_SUPPORTED
     if (shutdown)
     {
         dacStop();
@@ -220,4 +237,5 @@ void setDacShutdown(bool shutdown)
         ESP_ERROR_CHECK(gpio_set_level(shdnGpio, 0));
         dacStart();
     }
+#endif
 }
