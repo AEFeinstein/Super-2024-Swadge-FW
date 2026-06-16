@@ -224,6 +224,7 @@
 #include "advanced_usb_control.h"
 #include "shapes.h"
 #include "swadge.h"
+#include "swadge_gpio.h"
 
 #include "factoryTest.h"
 #include "mainMenu.h"
