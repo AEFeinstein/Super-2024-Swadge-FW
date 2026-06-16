@@ -1,84 +1,84 @@
 {
-    "configurations": [
-        {
-            "name": "Linux",
-            "includePath": [
-                "${workspaceFolder}/main/**",
-                "${workspaceFolder}/emulator/**",
-                "${workspaceFolder}/components/**"
-            ],
-            "defines": [
-                "CONFIG_ESP_SYSTEM_PANIC=y",
-                "CONFIG_ESP_SYSTEM_GDBSTUB_RUNTIME=y",
-                "CONFIG_DEBUG_OUTPUT_USB=y",
-                "CONFIG_HARDWARE_PULSE=y",
-                "CONFIG_IDF_TARGET_ESP32S2=y",
-                "SOC_RMT_CHANNELS_PER_GROUP=4",
-                "SOC_TOUCH_SENSOR_NUM=15",
-                "SOC_ULP_SUPPORTED=y",
-                "SOC_PM_SUPPORT_EXT_WAKEUP=y",
-                "SOC_GPIO_SUPPORT_SLP_SWITCH=y",
-                "SOC_TIMER_GROUP_TIMERS_PER_GROUP=2",
-                "SOC_TIMER_GROUPS=2",
-                "SOC_I2C_NUM=2",
-                "SOC_I2C_SUPPORT_SLAVE=y",
-                "SOC_LEDC_CHANNEL_NUM=8",
-                "SOC_UART_NUM=2",
-                "SOC_ADC_DIGI_RESULT_BYTES=2",
-                "CONFIG_ESP_TIMER_SUPPORTS_ISR_DISPATCH_METHOD=0",
-                "CONFIG_LOG_MAXIMUM_LEVEL=3",
-                "CONFIG_GC9307_240x280=y",
-                "CONFIG_TFT_MAX_BRIGHTNESS=200",
-                "CONFIG_TFT_MIN_BRIGHTNESS=10",
-                "CONFIG_NUM_LEDS=6",
-                "configENABLE_FREERTOS_DEBUG_OCDAWARE=1",
-                "_GNU_SOURCE",
-                "IDF_VER=v5.2.5",
-                "ESP_PLATFORM",
-                "_POSIX_READER_WRITER_LOCKS",
-                "CFG_TUSB_MCU=OPT_MCU_ESP32S2",
-                "CONFIG_SOUND_OUTPUT_SPEAKER=y",
-                "CONFIG_FACTORY_TEST_NORMAL=y",
-                "SOC_TOUCH_PAD_THRESHOLD_MAX=0x1FFFFF",
-                "CNFGOGL",
-                "GIT_SHA1=\"89aec51\"",
-                "HAS_XINERAMA=1",
-                "FULL_SCREEN_STEAL_FOCUS=1"
-            ],
-            "compilerPath": "/usr/bin/gcc",
-            "cStandard": "c17",
-            "cppStandard": "gnu++17",
-            "intelliSenseMode": "linux-gcc-x64",
-            "configurationProvider": "ms-vscode.makefile-tools",
-            "browse": {
-                "path": [
-                    "${workspaceFolder}/main/**",
-                    "${workspaceFolder}/emulator/**"
-                ],
-                "limitSymbolsToIncludedHeaders": false
-            }
-        },
-        {
-            "name": "ESP-IDF",
-            "compilerPath": "~/.espressif/tools/xtensa-esp-elf/esp-13.2.0_20230928/xtensa-esp-elf/bin/xtensa-esp32s2-elf-gcc",
-            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
-            "includePath": [
-                "${config:idf.espIdfPath}/components/**",
-                "${config:idf.espIdfPathWin}/components/**",
-                "${workspaceFolder}/main/**",
-                "${workspaceFolder}/components/**"
-            ],
-            "configurationProvider": "ms-vscode.cmake-tools",
-            "browse": {
-                "path": [
-                    "${config:idf.espIdfPath}/components",
-                    "${config:idf.espIdfPathWin}/components",
-                    "${workspaceFolder}/main/**",
-                    "${workspaceFolder}/components/**"
-                ],
-                "limitSymbolsToIncludedHeaders": false
-            }
-        }
-    ],
-    "version": 4
+  "configurations": [
+    {
+      "name": "Linux",
+      "includePath": [
+        "${workspaceFolder}/main/**",
+        "${workspaceFolder}/emulator/**",
+        "${workspaceFolder}/components/**"
+      ],
+      "defines": [
+        "CONFIG_ESP_SYSTEM_PANIC=y",
+        "CONFIG_ESP_SYSTEM_GDBSTUB_RUNTIME=y",
+        "CONFIG_DEBUG_OUTPUT_USB=y",
+        "CONFIG_HARDWARE_PULSE=y",
+        "CONFIG_IDF_TARGET_ESP32S2=y",
+        "SOC_RMT_CHANNELS_PER_GROUP=4",
+        "SOC_TOUCH_SENSOR_NUM=15",
+        "SOC_ULP_SUPPORTED=y",
+        "SOC_PM_SUPPORT_EXT_WAKEUP=y",
+        "SOC_GPIO_SUPPORT_SLP_SWITCH=y",
+        "SOC_TIMER_GROUP_TIMERS_PER_GROUP=2",
+        "SOC_TIMER_GROUPS=2",
+        "SOC_I2C_NUM=2",
+        "SOC_I2C_SUPPORT_SLAVE=y",
+        "SOC_LEDC_CHANNEL_NUM=8",
+        "SOC_UART_NUM=2",
+        "SOC_ADC_DIGI_RESULT_BYTES=2",
+        "CONFIG_ESP_TIMER_SUPPORTS_ISR_DISPATCH_METHOD=0",
+        "CONFIG_LOG_MAXIMUM_LEVEL=3",
+        "CONFIG_GC9307_240x280=y",
+        "CONFIG_TFT_MAX_BRIGHTNESS=200",
+        "CONFIG_TFT_MIN_BRIGHTNESS=10",
+        "CONFIG_NUM_LEDS=6",
+        "configENABLE_FREERTOS_DEBUG_OCDAWARE=1",
+        "_GNU_SOURCE",
+        "IDF_VER=v5.2.5",
+        "ESP_PLATFORM",
+        "_POSIX_READER_WRITER_LOCKS",
+        "CFG_TUSB_MCU=OPT_MCU_ESP32S2",
+        "CONFIG_SOUND_OUTPUT_SPEAKER=y",
+        "CONFIG_FACTORY_TEST_NORMAL=y",
+        "SOC_TOUCH_PAD_THRESHOLD_MAX=0x1FFFFF",
+        "CNFGOGL",
+        "GIT_SHA1=\"89aec51\"",
+        "HAS_XINERAMA=1",
+        "FULL_SCREEN_STEAL_FOCUS=1"
+      ],
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "c17",
+      "cppStandard": "gnu++17",
+      "intelliSenseMode": "linux-gcc-x64",
+      "configurationProvider": "ms-vscode.makefile-tools",
+      "browse": {
+        "path": [
+          "${workspaceFolder}/main/**",
+          "${workspaceFolder}/emulator/**"
+        ],
+        "limitSymbolsToIncludedHeaders": false
+      }
+    },
+    {
+      "name": "ESP-IDF",
+      "compilerPath": "~/.espressif/tools/xtensa-esp-elf/esp-13.2.0_20250707/xtensa-esp-elf/bin/xtensa-esp32s3-elf-gcc",
+      "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+      "includePath": [
+        "${config:idf.espIdfPath}/components/**",
+        "${config:idf.espIdfPathWin}/components/**",
+        "${workspaceFolder}/main/**",
+        "${workspaceFolder}/components/**"
+      ],
+      "configurationProvider": "ms-vscode.cmake-tools",
+      "browse": {
+        "path": [
+          "${config:idf.espIdfPath}/components",
+          "${config:idf.espIdfPathWin}/components",
+          "${workspaceFolder}/main/**",
+          "${workspaceFolder}/components/**"
+        ],
+        "limitSymbolsToIncludedHeaders": false
+      }
+    }
+  ],
+  "version": 4
 }
