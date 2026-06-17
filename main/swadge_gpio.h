@@ -2,6 +2,46 @@
 
 #include <soc/gpio_num.h>
 
+// // Define hardware-specific GPIOs
+// #if defined(CONFIG_HARDWARE_WAVEBIRD) || defined(CONFIG_HARDWARE_GUNSHIP)
+//     #define GPIO_SAO_1 GPIO_NUM_17
+//     #define GPIO_SAO_2 GPIO_NUM_18
+
+//     #define GPIO_BTN_UP    GPIO_NUM_0
+//     #define GPIO_BTN_DOWN  GPIO_NUM_4
+//     #define GPIO_BTN_LEFT  GPIO_NUM_2
+//     #define GPIO_BTN_RIGHT GPIO_NUM_1
+
+// #elif defined(CONFIG_HARDWARE_HOTDOG_PRODUCTION)
+//     #define GPIO_SAO_1 GPIO_NUM_40
+//     #define GPIO_SAO_2 GPIO_NUM_42
+
+//     #define GPIO_BTN_UP    GPIO_NUM_0
+//     #define GPIO_BTN_DOWN  GPIO_NUM_4
+//     #define GPIO_BTN_LEFT  GPIO_NUM_2
+//     #define GPIO_BTN_RIGHT GPIO_NUM_1
+
+// #elif defined(CONFIG_HARDWARE_HOTDOG_PROTO)
+//     #define GPIO_SAO_1 GPIO_NUM_40
+//     #define GPIO_SAO_2 GPIO_NUM_42
+
+//     #define GPIO_BTN_UP    GPIO_NUM_1
+//     #define GPIO_BTN_DOWN  GPIO_NUM_4
+//     #define GPIO_BTN_LEFT  GPIO_NUM_0
+//     #define GPIO_BTN_RIGHT GPIO_NUM_2
+
+// #elif defined(CONFIG_HARDWARE_PULSE)
+//     #define GPIO_SAO_1 GPIO_NUM_42 // Flip SAO GPIOs relative to Hotdog
+//     #define GPIO_SAO_2 GPIO_NUM_40
+
+//     #define GPIO_BTN_UP    GPIO_NUM_0
+//     #define GPIO_BTN_DOWN  GPIO_NUM_4
+//     #define GPIO_BTN_LEFT  GPIO_NUM_2
+//     #define GPIO_BTN_RIGHT GPIO_NUM_1
+// #else
+//     #error "Define what hardware is being built for"
+// #endif
+
 typedef enum
 {
 #if CONFIG_IDF_TARGET_ESP32S2
