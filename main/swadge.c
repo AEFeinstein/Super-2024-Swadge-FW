@@ -242,46 +242,6 @@
     #define RTC_DATA_ATTR
 #endif
 
-// Define hardware-specific GPIOs
-#if defined(CONFIG_HARDWARE_WAVEBIRD) || defined(CONFIG_HARDWARE_GUNSHIP)
-    #define GPIO_SAO_1 GPIO_NUM_17
-    #define GPIO_SAO_2 GPIO_NUM_18
-
-    #define GPIO_BTN_UP    GPIO_NUM_0
-    #define GPIO_BTN_DOWN  GPIO_NUM_4
-    #define GPIO_BTN_LEFT  GPIO_NUM_2
-    #define GPIO_BTN_RIGHT GPIO_NUM_1
-
-#elif defined(CONFIG_HARDWARE_HOTDOG_PRODUCTION)
-    #define GPIO_SAO_1 GPIO_NUM_40
-    #define GPIO_SAO_2 GPIO_NUM_42
-
-    #define GPIO_BTN_UP    GPIO_NUM_0
-    #define GPIO_BTN_DOWN  GPIO_NUM_4
-    #define GPIO_BTN_LEFT  GPIO_NUM_2
-    #define GPIO_BTN_RIGHT GPIO_NUM_1
-
-#elif defined(CONFIG_HARDWARE_HOTDOG_PROTO)
-    #define GPIO_SAO_1 GPIO_NUM_40
-    #define GPIO_SAO_2 GPIO_NUM_42
-
-    #define GPIO_BTN_UP    GPIO_NUM_1
-    #define GPIO_BTN_DOWN  GPIO_NUM_4
-    #define GPIO_BTN_LEFT  GPIO_NUM_0
-    #define GPIO_BTN_RIGHT GPIO_NUM_2
-
-#elif defined(CONFIG_HARDWARE_PULSE)
-    #define GPIO_SAO_1 GPIO_NUM_42 // Flip SAO GPIOs relative to Hotdog
-    #define GPIO_SAO_2 GPIO_NUM_40
-
-    #define GPIO_BTN_UP    GPIO_NUM_0
-    #define GPIO_BTN_DOWN  GPIO_NUM_4
-    #define GPIO_BTN_LEFT  GPIO_NUM_2
-    #define GPIO_BTN_RIGHT GPIO_NUM_1
-#else
-    #error "Define what hardware is being built for"
-#endif
-
 //==============================================================================
 // Variables
 //==============================================================================
@@ -336,7 +296,7 @@ void app_main(void)
 {
 #ifdef CONFIG_DEBUG_OUTPUT_UART_SAO
     // Make sure there isn't a pin conflict
-    if (GPIO_SAO_2 != GPIO_NUM_18)
+    if (GPIO_SAO_B != GPIO_NUM_18)
     {
         // Redirect UART if configured and able
         uart_set_pin(UART_NUM_0, GPIO_SAO_2, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
@@ -416,20 +376,20 @@ void app_main(void)
         GPIO_BTN_DOWN,  // Down
         GPIO_BTN_LEFT,  // Left
         GPIO_BTN_RIGHT, // Right
-        GPIO_NUM_16,    // A
-        GPIO_NUM_15,    // B
-        GPIO_NUM_8,     // Start
-        GPIO_NUM_5      // Select
+        GPIO_BTN_A,    // A
+        GPIO_BTN_B,    // B
+        GPIO_BTN_MENU,     // Start
+        GPIO_BTN_PAUSE,      // Select
     };
     initButtons(pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]));
 
     touch_pad_t touchPads[] = {
-        TOUCH_PAD_NUM9,  // GPIO_NUM_9
-        TOUCH_PAD_NUM10, // GPIO_NUM_10
-        TOUCH_PAD_NUM11, // GPIO_NUM_11
-        TOUCH_PAD_NUM12, // GPIO_NUM_12
-        TOUCH_PAD_NUM13, // GPIO_NUM_13
-        TOUCH_PAD_NUM14, // GPIO_NUM_14
+        GPIO_TOUCH_1,
+        GPIO_TOUCH_2,
+        GPIO_TOUCH_3,
+        GPIO_TOUCH_4,
+        GPIO_TOUCH_5,
+        GPIO_TOUCH_6,
     };
     initTouchPads(touchPads, sizeof(touchPads) / sizeof(touchPads[0]), 0.2f, true);
     // const uint8_t touchRingIdxs[] = {3, 0, 1, 4, 5};
@@ -450,12 +410,12 @@ void app_main(void)
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
-            GPIO_NUM_36,                // sclk
-            GPIO_NUM_37,                // mosi
-            GPIO_NUM_21,                // dc
-            GPIO_NUM_34,                // cs
-            GPIO_NUM_38,                // rst
-            GPIO_NUM_35,                // backlight
+            GPIO_TFT_SCL,                // sclk
+            GPIO_TFT_SDA,                // mosi
+            GPIO_TFT_RS,                // dc
+            GPIO_TFT_CS,                // cs
+            GPIO_TFT_RESET,                // rst
+            GPIO_TFT_ATP,                // backlight
             true,                       // PWM backlight
             LEDC_CHANNEL_2,             // Channel to use for PWM backlight
             LEDC_TIMER_2,               // Timer to use for PWM backlight
@@ -466,15 +426,15 @@ void app_main(void)
     // Initialize the RGB LEDs
     gpio_num_t ledMirrorGpio = GPIO_NUM_NC;
 #ifndef CONFIG_DEBUG_OUTPUT_UART_SAO
-    if (GPIO_SAO_2 != GPIO_NUM_18)
+    if ((int)GPIO_SAO_B != (int)GPIO_NUM_18)
     {
-        ledMirrorGpio = GPIO_SAO_2;
+        ledMirrorGpio = GPIO_SAO_B;
     }
 #endif
 
-    initLeds(GPIO_NUM_39, ledMirrorGpio, getLedBrightnessSetting());
+    initLeds(GPIO_LED, ledMirrorGpio, getLedBrightnessSetting());
 
-    initCh32v003(GPIO_SAO_1);
+    initCh32v003(GPIO_SAO_A);
 
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();
@@ -674,33 +634,33 @@ void app_main(void)
 static void initOptionalPeripherals(void)
 {
     // Init mic if it is used by the mode
-    if (NULL != cSwadgeMode->fnAudioCallback)
-    {
-        setDacShutdown(true);
+//     if (NULL != cSwadgeMode->fnAudioCallback)
+//     {
+//         setDacShutdown(true);
 
-        // Initialize and start the mic as a continuous ADC
-        initMic(GPIO_NUM_7);
-        startMic();
-    }
-    else
-    {
-        setDacShutdown(false);
+//         // Initialize and start the mic as a continuous ADC
+//         initMic(GPIO_NUM_7);
+//         startMic();
+//     }
+//     else
+//     {
+//         setDacShutdown(false);
 
-        // Otherwise initialize the battery monitor as a oneshot ADC
-        initBattmon(GPIO_NUM_6);
+//         // Otherwise initialize the battery monitor as a oneshot ADC
+//         initBattmon(GPIO_NUM_6);
 
-        // Initialize sound output if there is no input
-#if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
-        // Initialize the speaker. The DAC uses the same DMA controller for continuous output,
-        // so it can't be initialized at the same time as the microphone
-        initDac(DAC_CHANNEL_MASK_CH0, // GPIO_NUM_17
-                GPIO_NUM_18, dacCallback);
-        dacStart();
-        initGlobalMidiPlayer();
-#elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
-    #error "Buzzer is no longer supported, get with the times!"
-#endif
-    }
+//         // Initialize sound output if there is no input
+// #if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
+//         // Initialize the speaker. The DAC uses the same DMA controller for continuous output,
+//         // so it can't be initialized at the same time as the microphone
+//         initDac(DAC_CHANNEL_MASK_CH0, // GPIO_NUM_17
+//                 GPIO_NUM_18, dacCallback);
+//         dacStart();
+//         initGlobalMidiPlayer();
+// #elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
+//     #error "Buzzer is no longer supported, get with the times!"
+// #endif
+//     }
 
     // Init esp-now if requested by the mode
     if ((ESP_NOW == cSwadgeMode->wifiMode) || (ESP_NOW_IMMEDIATE == cSwadgeMode->wifiMode))
@@ -712,8 +672,8 @@ static void initOptionalPeripherals(void)
     // Init accelerometer
     if (cSwadgeMode->usesAccelerometer)
     {
-        initAccelerometer(GPIO_NUM_3,  // SDA
-                          GPIO_NUM_41, // SCL
+        initAccelerometer(GPIO_I2C_SDA,  // SDA
+                          GPIO_I2C_SCL, // SCL
                           GPIO_PULLUP_ENABLE);
         accelIntegrate();
     }
@@ -985,18 +945,18 @@ void dacCallback(uint8_t* samples, int16_t len)
  */
 void switchToSpeaker(void)
 {
-    // Stop the microphone
-    stopMic();
-    deinitMic();
+    // // Stop the microphone
+    // stopMic();
+    // deinitMic();
 
-    // Start the speaker
-    initDac(DAC_CHANNEL_MASK_CH0, // GPIO_NUM_17
-            GPIO_NUM_18, dacCallback);
-    setDacShutdown(false);
-    initGlobalMidiPlayer();
+    // // Start the speaker
+    // initDac(DAC_CHANNEL_MASK_CH0, // GPIO_NUM_17
+    //         GPIO_NUM_18, dacCallback);
+    // setDacShutdown(false);
+    // initGlobalMidiPlayer();
 
-    // Start battery monitoring
-    initBattmon(GPIO_NUM_6);
+    // // Start battery monitoring
+    // initBattmon(GPIO_NUM_6);
 }
 
 /**
@@ -1004,21 +964,21 @@ void switchToSpeaker(void)
  */
 void switchToMicrophone(void)
 {
-    // Stop battery monitoring
-    deinitBattmon();
+    // // Stop battery monitoring
+    // deinitBattmon();
 
-    // Stop the speaker
-    globalMidiPlayerStop(true);
-    deinitGlobalMidiPlayer();
-    setDacShutdown(true);
-    deinitDac();
+    // // Stop the speaker
+    // globalMidiPlayerStop(true);
+    // deinitGlobalMidiPlayer();
+    // setDacShutdown(true);
+    // deinitDac();
 
-    // Reset the IIR
-    samp_iir = 0;
+    // // Reset the IIR
+    // samp_iir = 0;
 
-    // Initialize and start the mic as a continuous ADC
-    initMic(GPIO_NUM_7);
-    startMic();
+    // // Initialize and start the mic as a continuous ADC
+    // initMic(GPIO_NUM_7);
+    // startMic();
 }
 
 /**
