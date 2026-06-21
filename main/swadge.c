@@ -241,6 +241,15 @@
     #define RTC_DATA_ATTR
 #endif
 
+//Define battery source
+#define BATTERY_LITHIUM
+//#define BATTERY_ALKALINE
+
+#ifdef BATTERY_LITHIUM
+    #define _HDW_AW32001E_BMS_H_
+    //#define ADD_BMS_HERE
+#endif
+
 // Define hardware-specific GPIOs
 #if defined(CONFIG_HARDWARE_WAVEBIRD) || defined(CONFIG_HARDWARE_GUNSHIP)
     #define GPIO_SAO_1 GPIO_NUM_17
@@ -347,6 +356,14 @@ void app_main(void)
 
     // Read settings from NVS
     readAllSettings();
+
+    #ifdef BMS
+    //init BMS (TODO: is this the right place for this?)
+    initBMS(GPIO_NUM_3,  // SDA
+            GPIO_NUM_41, // SCL
+            GPIO_PULLUP_ENABLE);
+    #endif
+            
 
     // Mark the mode as not initialized yet
     cSwadgeModeInit = false;

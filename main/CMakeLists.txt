@@ -99,6 +99,7 @@ idf_component_register(SRCS "modes/games/atrium/atrium.c"
                                   hdw-temperature
                                   hdw-touch
                                   hdw-usb
+                                  hdw-aw32001e-bms
                                   crashwrap
                     REQUIRES esp_timer
                              spi_flash

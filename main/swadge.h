@@ -190,6 +190,7 @@
 #include "hdw-temperature.h"
 #include "hdw-tft.h"
 #include "hdw-usb.h"
+#include "hdw-aw32001e-bms.h"
 
 // Drawing interfaces
 #include "palette.h"

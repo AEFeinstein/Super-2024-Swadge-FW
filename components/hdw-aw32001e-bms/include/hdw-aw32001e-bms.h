@@ -21,7 +21,7 @@
  * - ESD (electro-static discharge) protection via TVS diodes
  * - Reverse-voltage protection on system output
  * 
- * BMS code is based on <a
+ * BMS code is (loosely) based on <a
  * href="https://github.com/arduino-libraries/Arduino_Nesso_N1">Arduino's Nesso N1 library, which uses this BMS.</a>.
  * 
  *
@@ -29,8 +29,6 @@
  *
  * BMS parameters are set at the first flashing and should not be modified.
  * 
- *
- *
  * \section bms_example Example
  *
  * Set the BMS parameters to:
@@ -38,14 +36,14 @@
  * TODO code;
  * \endcode
  */
-
-#ifndef _HDW_AW32001E_BMS_H_
-#define _HDW_AW32001E_BMS_H_
-
+#pragma once 
 #include <stdint.h>
+#include <stdbool.h>
 #include <esp_err.h>
 #include <hal/gpio_types.h>
 #include <soc/gpio_num.h>
+
+#ifndef _HDW_AW32001E_BMS_H_
 
 /**
  * @brief BMS register addresses
@@ -134,9 +132,9 @@ AW32001Reg AW32001;
     FASTCHARGE_8 = 0,
     FASTCHARGE_16 = 1,
     FASTCHARGE_64 = 7,
-    FASTCHARGE_128 = 15, //default setting, 128mA
+    FASTCHARGE_128 = 15, //default setting
     FASTCHARGE_256 = 31,
-    FASTCHARGE_512 = 63,
+    FASTCHARGE_512 = 63, //recommended swadge setting
   } FastChargeCurrent;
 
 /**
@@ -225,11 +223,10 @@ typedef enum {
 // Functions
 //==============================================================================
 
-  esp_err_t initBMS(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup);
+  bool initBMS(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup);
   static esp_err_t AW32001Set(int dev, int reg, uint8_t val);
   static int GeneralI2CGet(int device, int reg, uint8_t* data, int data_len);
-  esp_err_t setBMS(void);
-  
+  esp_err_t BMSSetRegistersAndReset(void); 
   ChargeStatus getChargeStatus();                               // get charge status
   void enableCharge();                                          // enable charging
  
@@ -252,7 +249,4 @@ typedef enum {
   */
   
   
-
-
-
 #endif 

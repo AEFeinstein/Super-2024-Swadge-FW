@@ -47,7 +47,7 @@ void i2c_delay(int x)
 
 //END Do I need to do this again?
 
-//Uncomment the BMS settings you want to use. If both are uncommented, the SWADGE_BMS_SETTINGS will be used. 
+//Uncomment the BMS settings you want to use. If both are uncommented, conservative, "safe" values will be used. 
 #define DEFAULT_BMS_SETTINGS
 //#define SWADGE_BMS_SETTINGS
 
@@ -108,13 +108,13 @@ static int GeneralI2CGet(int device, int reg, uint8_t* data, int data_len)
  * @param scl The GPIO for the Serial CLock line
  * @param pullup Either \c GPIO_PULLUP_DISABLE if there are external pullup resistors on SDA and SCL or \c
  * GPIO_PULLUP_ENABLE if internal pull-ups should be used
- * @return ESP_OK if the BMS initialized, or a non-zero value if it did not
+ * @return true if the BMS initialized, or false if it did not
  */
-esp_err_t initBMS(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup)
+bool initBMS(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup)
 {
     int i;
     int retry = 0;
-do_retry:
+    do_retry:
     gpio_config_t gsetup = {
         .pin_bit_mask = (1ULL << sda) | (1ULL << scl),
         .mode         = GPIO_MODE_INPUT_OUTPUT,
@@ -174,13 +174,13 @@ do_retry:
             if (retry++ < 10)
                 goto do_retry;
             ESP_LOGI("BMS", "Init failed on 2");
-            return ESP_FAIL;
+            return false;
         }
         ESP_LOGI("BMS", "Check %d", check);
     }
 
     ESP_LOGI("BMS", "Init Ok");
-    return ESP_OK;
+    return true;
 }
 
 /**
@@ -188,7 +188,7 @@ do_retry:
  * @return ESP_OK if the BMS parameters were set, or a non-zero value if they were not
  */
 
-esp_err_t setBMS(void)
+esp_err_t BMSSetRegistersAndReset(void)
 {
     #ifdef DEFAULT_BMS_SETTINGS
     // default settings from datasheet
@@ -264,21 +264,25 @@ esp_err_t setBMS(void)
                 #ifdef DEFAULT_BMS_SETTINGS
                 val = 0xA3;
                 #else
-                //TODO 
+                //Bit 0 sets battery recharge threshold below VBAT_REG, bit 1 sets VBAT precharge to fast charge threshold, bits 2-7 set battery regulated voltage
+                //default values for these are: VRECH = 200mV (1), VBAT_PRE = 3.0V (1), VBAT_REG = 4.2V (40)
+                val = (1 << 0) | (1 << 1) | (voltage << 2);
                 #endif;
                 break;
             case TIMER_WD:
                 #ifdef DEFAULT_BMS_SETTINGS
                 val = 0x7A;
                 #else
-                //TODO 
+                //Bit 0 sets termination timer enable, bits 1-2 set fast charge time, bit 3 sets safety timer enable, bit 4 sets termination enable, bit 5-6 sets the watchdog time, bit 7 sets watchdog control in discharge mode
+                // default values for these are: termination timer enable (0), fast charge time 5hrs (1), safety timer enabled (1), termination enabled (1), watchdog time 160s (3), watchdog enabled in discharge mode (0)
+                val = (0 << 0) | (1 << 1) | (1 << 3) | (1 << 4) | (3 << 5) | (0 << 7);
                 #endif;
                 break;
             case MAIN_CTRL: 
                 #ifdef DEFAULT_BMS_SETTINGS
                 val = 0xC0;
                 #else
-                //TODO 
+                //Bit
                 #endif;
                 break;
             case SYS_CTRL:
@@ -298,6 +302,9 @@ esp_err_t setBMS(void)
     val = 0;
         
     }
+
+    //TODO reset
+
     return r == 0 ? ESP_OK : ESP_FAIL;
 
     
