@@ -227,8 +227,8 @@ typedef enum {
   static esp_err_t AW32001Set(int dev, int reg, uint8_t val);
   static int GeneralI2CGet(int device, int reg, uint8_t* data, int data_len);
   esp_err_t BMSSetRegistersAndReset(void); 
-  ChargeStatus getChargeStatus();                               // get charge status
-  void enableCharge();                                          // enable charging
+  //ChargeStatus getChargeStatus();                               // get charge status
+  //void enableCharge();                                          // enable charging
  
 
   //currently unused functions taken from the Arduino library:
