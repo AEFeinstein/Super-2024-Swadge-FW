@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 #include <esp_log.h>
+#include <esp_err.h>
 #include <string.h>
 #include "static_i2c.h"
 #include "driver/gpio.h"
@@ -65,10 +66,10 @@ void i2c_delay(int x)
  * @param val The 8-bit value to set the register to.
  * @return ESP_OK if the operation was successful.
  */
-static esp_err_t AW32001Set(int dev, int reg, uint8_t val)
+static esp_err_t AW32001Set(int reg, uint8_t val)
 {
     SendStart();
-    SendByte(dev << 1);
+    SendByte(AW32001_ADDRESS << 1);
     SendByte(reg);
     SendByte(val);
     SendStop();
@@ -76,28 +77,24 @@ static esp_err_t AW32001Set(int dev, int reg, uint8_t val)
 }
 
 /**
- * @brief Read a buffer back from a specific I2C device.
+ * @brief Read the state of the BMS register
  *
- * @param device The 7-bit device address
- * @param reg The 8-bit register # to start at.
- * @param data The buffer to load the data into.
- * @param data_len Number of bytes to read.
- * @return positive number if operation was successful, or esp_err_t if failure.
+ * @param data The buffer to write the BMS register data into.
+ * @param reg The register to read.
+ * @return ESP_OK if the operation was successful.
  */
-static int BMSI2CGet(int device, int reg, uint8_t* data, int data_len)
+static esp_err_t AW32001Get(uint8_t* data, uint8_t reg)
 {
+    
     SendStart();
-    SendByte(device << 1);
+    SendByte(AW32001_ADDRESS << 1);
     SendByte(reg);
-    SendStart();
-    SendByte((device << 1) | 1);
-    int i;
-    for (i = 0; i < data_len; i++)
-    {
-        data[i] = GetByte(i == data_len - 1);
-    }
     SendStop();
-    return data_len;
+    SendStart();
+    SendByte((AW32001_ADDRESS << 1) | 1); //RW bit == 1 for read
+    data = GetByte(0); //don't send ack, we only want this register
+    SendStop();
+    return ESP_OK;
 }
 
 
@@ -151,8 +148,8 @@ bool initBMS(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup)
 
 
     uint8_t who = 0xaa;
-    int r       = BMSI2CGet(AW32001_ADDRESS, CHIP_ID, &who, 1);
-    if (r != 1 || who != 0x49)
+    int r       = AW32001Get(&who, CHIP_ID);
+    if (r != ESP_OK || who != 0x49)
     {
         ESP_LOGW("BMS", "WHOAMI Failed (%02x), %d", who, r);
         if (retry++ < 10)
@@ -307,5 +304,17 @@ esp_err_t BMSSetRegistersAndReset(void)
 
     return r == 0 ? ESP_OK : ESP_FAIL;
 
+    
+}
+
+
+
+    
+
+    
+    
+
+    
+    
     
 }

@@ -48,7 +48,8 @@
 /**
  * @brief BMS register addresses
  */
-typedef enum {
+typedef enum __attribute__((packed))
+{
     INPUT_SRC = 0x00,        //VIN dynamic power management and IIN limit
     POWER_ON_CFG = 0x01,     //BAT disconnect delay time after WD timeout, shipping mode BAT disconnect, HIZ enable, charge enable, UVLO BAT threshold
     CHG_CURRENT = 0x02,      //REG and WD reset, charge current setting
@@ -67,7 +68,8 @@ AW32001Reg AW32001;
 /**
  * @brief BMS Charge Status
  */
-  typedef enum {
+  typedef enum __attribute__((packed))
+  {
     NOT_CHARGING,
     PRE_CHARGE,
     CHARGING,
@@ -79,7 +81,8 @@ AW32001Reg AW32001;
  * @brief BMS Under Voltage Lockout (UVLO) thresholds
  */
 
-  typedef enum {
+  typedef enum __attribute__((packed))
+  {
     UVLO_2430mV,
     UVLO_2490mV,
     UVLO_2580mV,
@@ -94,7 +97,8 @@ AW32001Reg AW32001;
  * @brief BMS Junction Temperature Limit (TJ) thresholds
  */
 
-  typedef enum {
+  typedef enum __attribute__((packed))
+  {
     TJ_60C,
     TJ_80C,
     TJ_100C,
@@ -105,7 +109,8 @@ AW32001Reg AW32001;
  * @brief Input Current Limit in mA
  */
 
-  typedef enum {
+  typedef enum __attribute__((packed))
+  {
     INPUTCURRENT_50mA,
     INPUTCURRENT_80mA,
     INPUTCURRENT_110mA,
@@ -128,7 +133,8 @@ AW32001Reg AW32001;
  * @brief Charge Rate Thresholds in mA
  */
 
-  typedef enum {
+  typedef enum __attribute__((packed))
+  {
     FASTCHARGE_8 = 0,
     FASTCHARGE_16 = 1,
     FASTCHARGE_64 = 7,
@@ -141,7 +147,7 @@ AW32001Reg AW32001;
  * @brief Discharge Current Thresholds in mA from BAT to System Output
  */
 
-  typedef enum {
+  typedef enum __attribute__((packed)) {
     DISCHARGE_200mA, //do not use, the Swadge draws approximately 250mA max at 5V input or ~275mA at 4.6V and ~340mA at 3.7V.
     DISCHARGE_400mA,
     DISCHARGE_600mA, //recommended Swadge setting
@@ -164,7 +170,8 @@ AW32001Reg AW32001;
  * @brief Input Voltage Clamp
  */
 
- typedef enum {
+ typedef enum __attribute__((packed))
+ {
     VIN_DPM_3880mV,
     VIN_DPM_3960mV,
     VIN_DPM_4040mV,
@@ -187,7 +194,8 @@ AW32001Reg AW32001;
  * @brief Battery Charge Voltage Threshold in mV
  */
 
- typedef enum {
+ typedef enum __attribute__((packed)) 
+ {
     CHARGEVOLTAGE_3600mV = 0,
     CHARGEVOLTAGE_3750mV = 10,
     CHARGEVOLTAGE_3900mV = 20,
@@ -200,7 +208,8 @@ AW32001Reg AW32001;
   /**
  * @brief System Regulated Output Voltage in mV
  */ 
-typedef enum {
+typedef enum __attribute__((packed)) 
+{
   SYSVOLTAGE_4200,
   SYSVOLTAGE_4250,
   SYSVOLTAGE_4300,
@@ -224,9 +233,9 @@ typedef enum {
 //==============================================================================
 
   bool initBMS(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup);
-  static esp_err_t AW32001Set(int dev, int reg, uint8_t val);
-  static int GeneralI2CGet(int device, int reg, uint8_t* data, int data_len);
-  esp_err_t BMSSetRegistersAndReset(void); 
+  static esp_err_t AW32001Set(int reg, uint8_t val);
+  static esp_err_t AW32001Get(uint8_t* data, uint8_t reg);
+  esp_err_t BMSSetRegistersAndReset(void);
   //ChargeStatus getChargeStatus();                               // get charge status
   //void enableCharge();                                          // enable charging
  
