@@ -63,8 +63,6 @@ typedef enum __attribute__((packed))
     CHIP_ID = 0x0A,          //chip ID
 } AW32001Reg;
 
-AW32001Reg AW32001;
-
 /**
  * @brief BMS Charge Status
  */
@@ -233,6 +231,7 @@ typedef enum __attribute__((packed))
 //==============================================================================
 
   bool initBMS(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup);
+  esp_err_t deinitBMS(void);
   static esp_err_t AW32001Set(int reg, uint8_t val);
   static esp_err_t AW32001Get(uint8_t* data, uint8_t reg);
   esp_err_t BMSSetRegistersAndReset(void);

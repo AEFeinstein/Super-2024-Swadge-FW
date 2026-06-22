@@ -61,7 +61,6 @@ void i2c_delay(int x)
 /**
  * @brief Set a specific register on the AW32001 BMS to a value.
  *
- * @param dev The 7-bit address of the device to set the register to.
  * @param reg The 8-bit register #
  * @param val The 8-bit value to set the register to.
  * @return ESP_OK if the operation was successful.
@@ -85,7 +84,6 @@ static esp_err_t AW32001Set(int reg, uint8_t val)
  */
 static esp_err_t AW32001Get(uint8_t* data, uint8_t reg)
 {
-    
     SendStart();
     SendByte(AW32001_ADDRESS << 1);
     SendByte(reg);
@@ -94,6 +92,8 @@ static esp_err_t AW32001Get(uint8_t* data, uint8_t reg)
     SendByte((AW32001_ADDRESS << 1) | 1); //RW bit == 1 for read
     data = GetByte(0); //don't send ack, we only want this register
     SendStop();
+
+    ESP_LOGI("BMS", "Read BMS Register 0x%02X: 0x%02X", reg, *data);
     return ESP_OK;
 }
 
@@ -159,8 +159,6 @@ bool initBMS(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup)
     }
     ESP_LOGI("BMS", "Init Start");
 
-    setBMS();
-
     for (i = 0; i < 2; i++)
     {
         vTaskDelay(1);
@@ -181,7 +179,17 @@ bool initBMS(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup)
 }
 
 /**
- * @brief Initialize the BMS
+ * @brief Deinit the BMS (nothing to do)
+ *
+ * @return ESP_OK
+ */
+esp_err_t deinitBMS(void)
+{
+    return ESP_OK;
+}
+
+/**
+ * @brief Set Registers on the BMS
  * @return ESP_OK if the BMS parameters were set, or a non-zero value if they were not
  */
 
