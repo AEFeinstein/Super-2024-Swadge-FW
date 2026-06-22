@@ -196,21 +196,29 @@ esp_err_t deinitBMS(void)
 esp_err_t BMSSetRegistersAndReset(void)
 {
     #ifdef DEFAULT_BMS_SETTINGS
-    // default settings from datasheet
+    //do nothing
     #endif
 
     #ifdef SWADGE_BMS_SETTINGS
-    // for later as we learn things
+    uint8_t incurrent = INPUTCURRENT_500mA;
+    uint8_t current = FASTCHARGE_512mA;
+    uint8_t discurrent = DISCHARGE_600mA;
+    uint8_t voltage = CHARGEVOLTAGE_4200mV;
+    uint8_t uvlo = UVLO_3030mV;
+    uint8_t tj = TJ_80C;
+    uint8_t sys_voltage = SYSVOLTAGE_4600mV;
+    uint8_t vin = VIN_DPM_4520mV;
+    uint8_t timeout = 0;
     #endif
 
     #if !defined(DEFAULT_BMS_SETTINGS) && !defined(SWADGE_BMS_SETTINGS)
     uint8_t incurrent = INPUTCURRENT_500mA;
-    uint8_t current = FASTCHARGE_128;
-    uint8_t discurrent = DISCHARGE_2000mA;
+    uint8_t current = FASTCHARGE_128mA;
+    uint8_t discurrent = DISCHARGE_600mA;
     uint8_t voltage = CHARGEVOLTAGE_4200mV;
     uint8_t uvlo = UVLO_3030mV;
     uint8_t tj = TJ_80C;
-    uint8_t sys_voltage = SYSVOLTAGE_4600;
+    uint8_t sys_voltage = SYSVOLTAGE_4600mV;
     uint8_t vin = VIN_DPM_4520mV;
     uint8_t timeout = 0;
     #endif
@@ -302,7 +310,7 @@ esp_err_t BMSSetRegistersAndReset(void)
         }
         
 
-    r |= AW32001Set(AW32001_ADDRESS, i, val);
+    r |= AW32001Set(i, val);
     ESP_LOGI("BMS", "SWADGE BMS REGISTER: 0x%02X written with value: 0x%02X", i, val);
     val = 0;
         
@@ -312,17 +320,5 @@ esp_err_t BMSSetRegistersAndReset(void)
 
     return r == 0 ? ESP_OK : ESP_FAIL;
 
-    
-}
-
-
-
-    
-
-    
-    
-
-    
-    
     
 }

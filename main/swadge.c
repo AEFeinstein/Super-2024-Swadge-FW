@@ -241,7 +241,7 @@
     #define RTC_DATA_ATTR
 #endif
 
-//Define battery source
+//Define battery source, should move to the hardware-specific section eventually TODO
 #define BATTERY_LITHIUM
 //#define BATTERY_ALKALINE
 
@@ -357,13 +357,7 @@ void app_main(void)
     // Read settings from NVS
     readAllSettings();
 
-    #ifdef BMS
-    //init BMS (TODO: is this the right place for this?)
-    initBMS(GPIO_NUM_3,  // SDA
-            GPIO_NUM_41, // SCL
-            GPIO_PULLUP_ENABLE);
-    #endif
-            
+         
 
     // Mark the mode as not initialized yet
     cSwadgeModeInit = false;
@@ -426,6 +420,14 @@ void app_main(void)
     // Init file system
     initCnfs();
 
+
+    #ifdef _HDW_AW32001E_BMS_H_
+    //init BMS (TODO: is this the right place for this?)
+    initBMS(GPIO_NUM_3,  // SDA
+            GPIO_NUM_41, // SCL
+            GPIO_PULLUP_ENABLE);
+    #endif
+    
     // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
         GPIO_BTN_UP,    // Up

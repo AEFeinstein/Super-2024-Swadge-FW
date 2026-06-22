@@ -133,12 +133,12 @@ typedef enum __attribute__((packed))
 
   typedef enum __attribute__((packed))
   {
-    FASTCHARGE_8 = 0,
-    FASTCHARGE_16 = 1,
-    FASTCHARGE_64 = 7,
-    FASTCHARGE_128 = 15, //default setting
-    FASTCHARGE_256 = 31,
-    FASTCHARGE_512 = 63, //recommended swadge setting
+    FASTCHARGE_8mA = 0,
+    FASTCHARGE_16mA = 1,
+    FASTCHARGE_64mA = 7,
+    FASTCHARGE_128mA = 15, //default setting
+    FASTCHARGE_256mA = 31,
+    FASTCHARGE_512mA = 63, //recommended swadge setting
   } FastChargeCurrent;
 
 /**
@@ -208,22 +208,22 @@ typedef enum __attribute__((packed))
  */ 
 typedef enum __attribute__((packed)) 
 {
-  SYSVOLTAGE_4200,
-  SYSVOLTAGE_4250,
-  SYSVOLTAGE_4300,
-  SYSVOLTAGE_4350,
-  SYSVOLTAGE_4400,
-  SYSVOLTAGE_4450,
-  SYSVOLTAGE_4500,
-  SYSVOLTAGE_4550,
-  SYSVOLTAGE_4600,   //default output voltage
-  SYSVOLTAGE_4650,
-  SYSVOLTAGE_4700,
-  SYSVOLTAGE_4750,
-  SYSVOLTAGE_4800,
-  SYSVOLTAGE_4850,
-  SYSVOLTAGE_4900,
-  SYSVOLTAGE_4950,
+  SYSVOLTAGE_4200mV,
+  SYSVOLTAGE_4250mV,
+  SYSVOLTAGE_4300mV,
+  SYSVOLTAGE_4350mV,
+  SYSVOLTAGE_4400mV,
+  SYSVOLTAGE_4450mV,
+  SYSVOLTAGE_4500mV,
+  SYSVOLTAGE_4550mV,
+  SYSVOLTAGE_4600mV,   //default output voltage
+  SYSVOLTAGE_4650mV,
+  SYSVOLTAGE_4700mV,
+  SYSVOLTAGE_4750mV,
+  SYSVOLTAGE_4800mV,
+  SYSVOLTAGE_4850mV,
+  SYSVOLTAGE_4900mV,
+  SYSVOLTAGE_4950mV,
 } SystemRegulatedVoltage;
 
 //==============================================================================
