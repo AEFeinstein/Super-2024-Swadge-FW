@@ -4,13 +4,14 @@
 #include <esp_log.h>
 #include <esp_err.h>
 #include <string.h>
-#include "static_i2c.h"
 #include "driver/gpio.h"
 #include "rom/gpio.h"
 #include "soc/gpio_reg.h"
 #include "soc/gpio_struct.h"
 #include "soc/io_mux_reg.h"
 #include "soc/rtc_cntl_reg.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include "hdw-aw32001e-bms.h"
 
 //==============================================================================
@@ -37,14 +38,21 @@
 #define READ_DSDA ((GPIO.in >> 3) & 1)
 
 // 14 counts (1MHz) works most of the time, but no hurries, let's slow it down to ~800k.
-void i2c_delay(int x)
+static void i2c_delay(int x)
 {
-    int i;
-    for (i = 0; i < 19 * x; i++)
+    for (int i = 0; i < 19 * x; i++)
+    {
         asm volatile("nop");
+    }
 }
+
 #define DELAY1 i2c_delay(1);
 #define DELAY2 i2c_delay(2);
+
+// static_i2c.h uses this macro name to toggle static linkage.
+#define I2CNOSTATIC
+#include "static_i2c.h"
+#undef I2CNOSTATIC
 
 //END Do I need to do this again?
 
@@ -53,6 +61,12 @@ void i2c_delay(int x)
 //#define SWADGE_BMS_SETTINGS
 
 #define AW32001_ADDRESS 0x49
+
+//==============================================================================
+// Function Prototypes
+//==============================================================================
+  
+
 
 //==============================================================================
 // Internal Functions
@@ -65,7 +79,7 @@ void i2c_delay(int x)
  * @param val The 8-bit value to set the register to.
  * @return ESP_OK if the operation was successful.
  */
-static esp_err_t AW32001Set(int reg, uint8_t val)
+esp_err_t AW32001Set(int reg, uint8_t val)
 {
     SendStart();
     SendByte(AW32001_ADDRESS << 1);
@@ -82,7 +96,7 @@ static esp_err_t AW32001Set(int reg, uint8_t val)
  * @param reg The register to read.
  * @return ESP_OK if the operation was successful.
  */
-static esp_err_t AW32001Get(uint8_t* data, uint8_t reg)
+esp_err_t AW32001Get(uint8_t* data, uint8_t reg)
 {
     SendStart();
     SendByte(AW32001_ADDRESS << 1);
@@ -90,7 +104,7 @@ static esp_err_t AW32001Get(uint8_t* data, uint8_t reg)
     SendStop();
     SendStart();
     SendByte((AW32001_ADDRESS << 1) | 1); //RW bit == 1 for read
-    data = GetByte(0); //don't send ack, we only want this register
+    *data = GetByte(0); //don't send ack, we only want this register
     SendStop();
 
     ESP_LOGI("BMS", "Read BMS Register 0x%02X: 0x%02X", reg, *data);
@@ -115,7 +129,7 @@ bool initBMS(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup)
     gpio_config_t gsetup = {
         .pin_bit_mask = (1ULL << sda) | (1ULL << scl),
         .mode         = GPIO_MODE_INPUT_OUTPUT,
-        .pull_up_en   = GPIO_PULLUP_ENABLE,
+        .pull_up_en   = pullup,
     };
 
     gpio_config(&gsetup);
@@ -162,7 +176,7 @@ bool initBMS(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup)
     for (i = 0; i < 2; i++)
     {
         vTaskDelay(1);
-        int check = initBMS();
+        int check = BMSSetRegistersAndReset();
         if (check != ESP_OK)
         {
             ESP_LOGI("BMS", "Init Fault Retry");
@@ -280,7 +294,7 @@ esp_err_t BMSSetRegistersAndReset(void)
                 //Bit 0 sets battery recharge threshold below VBAT_REG, bit 1 sets VBAT precharge to fast charge threshold, bits 2-7 set battery regulated voltage
                 //default values for these are: VRECH = 200mV (1), VBAT_PRE = 3.0V (1), VBAT_REG = 4.2V (40)
                 val = (1 << 0) | (1 << 1) | (voltage << 2);
-                #endif;
+                #endif
                 break;
             case TIMER_WD:
                 #ifdef DEFAULT_BMS_SETTINGS
@@ -289,21 +303,21 @@ esp_err_t BMSSetRegistersAndReset(void)
                 //Bit 0 sets termination timer enable, bits 1-2 set fast charge time, bit 3 sets safety timer enable, bit 4 sets termination enable, bit 5-6 sets the watchdog time, bit 7 sets watchdog control in discharge mode
                 // default values for these are: termination timer enable (0), fast charge time 5hrs (1), safety timer enabled (1), termination enabled (1), watchdog time 160s (3), watchdog enabled in discharge mode (0)
                 val = (0 << 0) | (1 << 1) | (1 << 3) | (1 << 4) | (3 << 5) | (0 << 7);
-                #endif;
+                #endif
                 break;
             case MAIN_CTRL: 
                 #ifdef DEFAULT_BMS_SETTINGS
                 val = 0xC0;
                 #else
                 //Bit
-                #endif;
+                #endif
                 break;
             case SYS_CTRL:
                 #ifdef DEFAULT_BMS_SETTINGS
                 val = 0x38;
                 #else
                 //TODO 
-                #endif;
+                #endif
                 break; 
             default:
                 break;
@@ -319,6 +333,5 @@ esp_err_t BMSSetRegistersAndReset(void)
     //TODO reset
 
     return r == 0 ? ESP_OK : ESP_FAIL;
-
     
 }

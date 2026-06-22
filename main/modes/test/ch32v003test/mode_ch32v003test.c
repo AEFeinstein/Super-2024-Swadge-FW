@@ -9,6 +9,7 @@
 #include "mode_ch32v003test.h"
 #include "mainMenu.h"
 #include "hdw-ch32v003.h"
+#include "hdw-aw32001e-bms.h"
 
 #define MAX_MODES 11
 
@@ -35,6 +36,7 @@ typedef struct
 } ch32v003test_t;
 
 ch32v003test_t* ch32v003test;
+
 
 const char ch32v003testName[] = "Ch32v003test";
 
@@ -217,6 +219,34 @@ void ch32v003testMainLoop(int64_t elapsedUs)
     drawText(ch32v003test->font, 215, buffer, 2, 90);
     sprintf(buffer, "%d", ch32v003test->mode);
     drawText(ch32v003test->font, 215, buffer, 2, 110);
+
+    //BMS test because I am lazy and don't want to write a new mode right now
+    uint8_t data;
+    int r = AW32001Get(&data, CHIP_ID);
+    if (r != ESP_OK || data != 0x49)
+    {
+        sprintf(buffer, "BMS Failed (%02x), %d", data, r);
+        drawText(ch32v003test->font, 215, buffer, 2, 130);
+    }
+    else
+    {
+        sprintf(buffer, "BMS OK (%02x), %d", data, r);
+        drawText(ch32v003test->font, 215, buffer, 2, 130);
+    }
+
+    int r2 = AW32001Get(&data, SYS_STATUS);
+    if (r2 != ESP_OK)
+    {
+        sprintf(buffer, "SYS_STATUS Failed");
+        drawText(ch32v003test->font, 215, buffer, 2, 150);
+    }
+    else
+    {
+        sprintf(buffer, "SYS_STATUS (%02x), %d", data, r2);
+        drawText(ch32v003test->font, 215, buffer, 2, 150);
+    }
+    
+
 
     ch32v003CheckTerminal();
 }

@@ -1,3 +1,3 @@
 idf_component_register(SRCS "hdw-aw32001e-bms.c"
                     INCLUDE_DIRS "include"
-                    REQUIRES "hdw-aw32001e-bms")
+                PRIV_REQUIRES "hdw-imu")

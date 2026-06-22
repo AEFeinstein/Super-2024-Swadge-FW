@@ -427,7 +427,7 @@ void app_main(void)
             GPIO_NUM_41, // SCL
             GPIO_PULLUP_ENABLE);
     #endif
-    
+
     // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
         GPIO_BTN_UP,    // Up
