@@ -16,7 +16,7 @@
 // Defines
 //==============================================================================
 
-//Do I need to do this again? This is done in hw_imu.c.
+//Do I need to do this again? This is done in hw_imu.c. Maybe yes because the imu is not always enabled? The BMS init is called before IMU init in swadge.c
 #define DSCL_OUTPUT                             \
     {                                           \
         GPIO.enable1_w1ts.val = 1 << (41 - 32); \
@@ -84,7 +84,7 @@ static esp_err_t AW32001Set(int dev, int reg, uint8_t val)
  * @param data_len Number of bytes to read.
  * @return positive number if operation was successful, or esp_err_t if failure.
  */
-static int GeneralI2CGet(int device, int reg, uint8_t* data, int data_len)
+static int BMSI2CGet(int device, int reg, uint8_t* data, int data_len)
 {
     SendStart();
     SendByte(device << 1);
@@ -151,7 +151,7 @@ bool initBMS(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup)
 
 
     uint8_t who = 0xaa;
-    int r       = GeneralI2CGet(AW32001_ADDRESS, CHIP_ID, &who, 1);
+    int r       = BMSI2CGet(AW32001_ADDRESS, CHIP_ID, &who, 1);
     if (r != 1 || who != 0x49)
     {
         ESP_LOGW("BMS", "WHOAMI Failed (%02x), %d", who, r);
