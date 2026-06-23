@@ -57,8 +57,8 @@ static void i2c_delay(int x)
 //END Do I need to do this again?
 
 //Uncomment the BMS settings you want to use. If both are uncommented, conservative, "safe" values will be used. 
-#define DEFAULT_BMS_SETTINGS
-//#define SWADGE_BMS_SETTINGS
+//#define DEFAULT_BMS_SETTINGS
+#define SWADGE_BMS_SETTINGS
 
 #define AW32001_ADDRESS 0x49
 
@@ -223,6 +223,9 @@ esp_err_t BMSSetRegistersAndReset(void)
     uint8_t sys_voltage = SYSVOLTAGE_4600mV;
     uint8_t vin = VIN_DPM_4520mV;
     uint8_t timeout = 0;
+    uint8_t enable_therm = 0;
+    uint8_t shipmode = 0;
+
     #endif
 
     #if !defined(DEFAULT_BMS_SETTINGS) && !defined(SWADGE_BMS_SETTINGS)
@@ -235,6 +238,8 @@ esp_err_t BMSSetRegistersAndReset(void)
     uint8_t sys_voltage = SYSVOLTAGE_4600mV;
     uint8_t vin = VIN_DPM_4520mV;
     uint8_t timeout = 0;
+    uint8_t enable_therm = 0;
+    uint8_t shipmode = 0;
     #endif
 
     int r = 0;
@@ -309,14 +314,16 @@ esp_err_t BMSSetRegistersAndReset(void)
                 #ifdef DEFAULT_BMS_SETTINGS
                 val = 0xC0;
                 #else
-                //Bit
+                //Bit 0 enables Battery OVP interrupt control, bit 1 enables ntc int control, bit 2 enables charge status interrupt control, bit 3 enables end of charge interrupt control, bit 4 enables power good interrupt control, bit 5 enables ship mode control, bit 6 enables extended safety timer for PPMF, bit 7 enables thermistor control
+                val = (shipmode << 5) | (enable_therm << 7);
                 #endif
                 break;
             case SYS_CTRL:
                 #ifdef DEFAULT_BMS_SETTINGS
                 val = 0x38;
                 #else
-                //TODO 
+                 //Bits 0-3 set VSYS_REG, Bits 4-5 set TJ_Reg, Bit 6 enables VIN_DPM loop, Bit 7 disables PCB thermistor control
+                val = (sys_voltage << 0) | (tj << 4) | (0 << 6) | (!enable_therm << 7);
                 #endif
                 break; 
             default:

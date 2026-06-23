@@ -37,6 +37,12 @@ typedef struct
 
 ch32v003test_t* ch32v003test;
 
+uint8_t once = 0;
+uint8_t data = 0;
+    char buf[9];
+    char buffer[64];
+
+
 
 const char ch32v003testName[] = "Ch32v003test";
 
@@ -178,8 +184,9 @@ void ch32v003testMainLoop(int64_t elapsedUs)
                     if (ch32v003test->mode < 0)
                     {
                         ch32v003test->mode = MAX_MODES - 1;
+                        
                     }
-
+                    once = 0;
                     ch32v003SelectBitmap(ch32v003test->mode);
                     break;
                 }
@@ -192,8 +199,9 @@ void ch32v003testMainLoop(int64_t elapsedUs)
                     if (ch32v003test->mode >= MAX_MODES)
                     {
                         ch32v003test->mode = 0;
+                    
                     }
-
+                    once = 0;
                     ch32v003SelectBitmap(ch32v003test->mode);
                     break;
                 }
@@ -206,7 +214,6 @@ void ch32v003testMainLoop(int64_t elapsedUs)
 
     ch32v003test->tElapsedUs += elapsedUs;
 
-    char buffer[64];
 
     uint32_t dmdata0 = 0, dmdata1 = 0;
     ch32v003GetReg(4, &dmdata0);
@@ -221,32 +228,30 @@ void ch32v003testMainLoop(int64_t elapsedUs)
     drawText(ch32v003test->font, 215, buffer, 2, 110);
 
     //BMS test because I am lazy and don't want to write a new mode right now
-    uint8_t data;
-    int r = AW32001Get(&data, CHIP_ID);
-    if (r != ESP_OK || data != 0x49)
-    {
-        sprintf(buffer, "BMS Failed (%02x), %d", data, r);
-        drawText(ch32v003test->font, 215, buffer, 2, 130);
+    
+ 
+if (once == 0){
+    AW32001Get(&data, ch32v003test->mode);
+    
+    for (int i = 7; i >= 0; i--) {
+        if (data & (1 << (7-i)))
+            buf[i] = '1';
+        else
+            buf[i] = '0';
     }
-    else
-    {
-        sprintf(buffer, "BMS OK (%02x), %d", data, r);
-        drawText(ch32v003test->font, 215, buffer, 2, 130);
-    }
+    buf[8] = '\0';
 
-    int r2 = AW32001Get(&data, SYS_STATUS);
-    if (r2 != ESP_OK)
-    {
-        sprintf(buffer, "SYS_STATUS Failed");
+    once = 1;
+}
+    
+        sprintf(buffer, "REG: %d", ch32v003test->mode);
+        drawText(ch32v003test->font, 215, buffer, 2, 130);
+        sprintf(buffer, "VAL: %s", buf);
         drawText(ch32v003test->font, 215, buffer, 2, 150);
-    }
-    else
-    {
-        sprintf(buffer, "SYS_STATUS (%02x), %d", data, r2);
-        drawText(ch32v003test->font, 215, buffer, 2, 150);
-    }
+
+
     
 
-
+    
     ch32v003CheckTerminal();
 }
