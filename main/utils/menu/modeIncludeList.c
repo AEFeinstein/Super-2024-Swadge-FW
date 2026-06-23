@@ -19,7 +19,7 @@ swadgeMode_t* const allSwadgeModes[] = {
     &accelTestMode, &atriumMode,   &canvasTestMode, &colorchordMode, &danceMode,          &factoryTestMode,
     &gamepadMode,   &introMode,    &jukeboxMode,    &keebTestMode,   &mainMenuMode,       &modeCh32v003test,
     &modeCredits,   &nameTestMode, &roboRunnerMode, &sonaTestMode,   &swadgePassTestMode, &swsnCreatorMode,
-    &synthMode,     &tCaseMode,    &touchTestMode,  &trophyTestMode, &tunernomeMode,
+    &synthMode,     &tCaseMode,    &touchTestMode,  &trophyTestMode, &tunernomeMode,      &mode_aw32001test,
 };
 
 //==============================================================================
@@ -74,6 +74,7 @@ void modeListAddSecretMenuModes(menu_t* menu)
     addSingleItemToMenu(menu, canvasTestMode.modeName);
     addSingleItemToMenu(menu, sonaTestMode.modeName);
     addSingleItemToMenu(menu, modeCh32v003test.modeName);
+    addSingleItemToMenu(menu, mode_aw32001test.modeName);
 }
 
 int32_t getModeIdx(const swadgeMode_t* mode)

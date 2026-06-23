@@ -104,11 +104,19 @@ esp_err_t AW32001Get(uint8_t* data, uint8_t reg)
     SendStop();
     SendStart();
     SendByte((AW32001_ADDRESS << 1) | 1); //RW bit == 1 for read
-    *data = GetByte(0); //don't send ack, we only want this register
+    *data = GetByte(1); //send nak, we only want this register
     SendStop();
 
     ESP_LOGI("BMS", "Read BMS Register 0x%02X: 0x%02X", reg, *data);
+    //checksum
+    if (reg == CHIP_ID && *data != 0x49)
+    {
+        ESP_LOGE("BMS", "BMS Register 0x%02X returned unexpected value: 0x%02X", reg, *data);
+        return ESP_FAIL;
+    }
+    else{
     return ESP_OK;
+    }
 }
 
 
@@ -219,13 +227,13 @@ esp_err_t BMSSetRegistersAndReset(void)
     uint8_t discurrent = DISCHARGE_600mA;
     uint8_t voltage = CHARGEVOLTAGE_4200mV;
     uint8_t uvlo = UVLO_3030mV;
-    uint8_t tj = TJ_80C;
+    uint8_t tj = TJ_120C;
     uint8_t sys_voltage = SYSVOLTAGE_4600mV;
     uint8_t vin = VIN_DPM_4520mV;
     uint8_t timeout = 0;
     uint8_t enable_therm = 0;
     uint8_t shipmode = 0;
-
+    //todo struct instead of this
     #endif
 
     #if !defined(DEFAULT_BMS_SETTINGS) && !defined(SWADGE_BMS_SETTINGS)
@@ -240,12 +248,13 @@ esp_err_t BMSSetRegistersAndReset(void)
     uint8_t timeout = 0;
     uint8_t enable_therm = 0;
     uint8_t shipmode = 0;
+    //todo struct instead of this
     #endif
 
     int r = 0;
     uint8_t val = 0;
 
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i <= 7; i++)
     {
         if (r != 0)
         {
@@ -271,7 +280,7 @@ esp_err_t BMSSetRegistersAndReset(void)
                 #ifdef DEFAULT_BMS_SETTINGS
                 val = 0xAC;
                 #else
-                val = (uvlo & 0x7) | (1 <<3) | (0 << 4) | (1 << 5) | (2 << 6);
+                val = (uvlo & 0x7) | (0 <<3) | (0 << 4) | (1 << 5) | (2 << 6);
                 #endif
                 break;
             case CHG_CURRENT: 
@@ -315,7 +324,8 @@ esp_err_t BMSSetRegistersAndReset(void)
                 val = 0xC0;
                 #else
                 //Bit 0 enables Battery OVP interrupt control, bit 1 enables ntc int control, bit 2 enables charge status interrupt control, bit 3 enables end of charge interrupt control, bit 4 enables power good interrupt control, bit 5 enables ship mode control, bit 6 enables extended safety timer for PPMF, bit 7 enables thermistor control
-                val = (shipmode << 5) | (enable_therm << 7);
+                //default values for these are: OVP int enabled (0), NTC int enabled (0), charge status int enabled (0), end of charge int enabled (0), power good int enabled (0), ship mode control disabled (0), extended safety timer for PPMF enabled (1), thermistor control enabled (1)
+                val = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (shipmode << 5) | (1 << 6) | (enable_therm << 7);
                 #endif
                 break;
             case SYS_CTRL:
