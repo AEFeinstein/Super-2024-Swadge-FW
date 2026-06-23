@@ -104,6 +104,15 @@ void aw32001testEnterMode(void)
     // Turn off LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
     setLeds(leds, CONFIG_NUM_LEDS);
+
+    //Turn on LEDS full brightness because we're trying to stress the BMS
+    for (int i = 0; i < CONFIG_NUM_LEDS; i++)
+    {
+        leds[i].r = 255;
+        leds[i].g = 255;
+        leds[i].b = 255;
+    }
+    setLeds(leds, CONFIG_NUM_LEDS);
 }
 
 /**
@@ -200,7 +209,8 @@ void aw32001testMainLoop(int64_t elapsedUs)
         sprintf(aw32001test->buffer, "VAL: %s", aw32001test->buf);
         drawText(aw32001test->font, 215, aw32001test->buffer, 2, 90);
 
-        //expected values
+        //expected values, this is verbose because Emily can't read otherwise
+
         switch (aw32001test->mode)
         {
             case INPUT_SRC:  

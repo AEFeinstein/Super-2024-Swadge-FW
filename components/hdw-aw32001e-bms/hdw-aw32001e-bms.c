@@ -316,7 +316,7 @@ esp_err_t BMSSetRegistersAndReset(void)
                 #else
                 //Bit 0 sets termination timer enable, bits 1-2 set fast charge time, bit 3 sets safety timer enable, bit 4 sets termination enable, bit 5-6 sets the watchdog time, bit 7 sets watchdog control in discharge mode
                 // default values for these are: termination timer enable (0), fast charge time 5hrs (1), safety timer enabled (1), termination enabled (1), watchdog time 160s (3), watchdog enabled in discharge mode (0)
-                val = (0 << 0) | (1 << 1) | (1 << 3) | (1 << 4) | (3 << 5) | (0 << 7);
+                val = (0 << 0) | (1 << 1) | (1 << 3) | (1 << 4) | (timeout << 5) | (0 << 7);
                 #endif
                 break;
             case MAIN_CTRL: 
