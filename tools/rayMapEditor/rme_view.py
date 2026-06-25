@@ -222,103 +222,103 @@ class view:
 
         # Load all textures
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_FLOOR, '../../assets/ray/env/BASE/BG_BASE_FLOOR.png')
+                         tileType.BG_FLOOR, '../../assets/magtroid/env/BASE/BG_BASE_FLOOR.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_FLOOR_WATER, '../../assets/ray/env/BG_FLOOR_WATER.png')
+                         tileType.BG_FLOOR_WATER, '../../assets/magtroid/env/BG_FLOOR_WATER.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_FLOOR_LAVA, '../../assets/ray/env/BG_FLOOR_LAVA.png')
+                         tileType.BG_FLOOR_LAVA, '../../assets/magtroid/env/BG_FLOOR_LAVA.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_FLOOR_HEAL, '../../assets/ray/env/BG_FLOOR_HEAL.png')
+                         tileType.BG_FLOOR_HEAL, '../../assets/magtroid/env/BG_FLOOR_HEAL.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_1, '../../assets/ray/env/BASE/BG_BASE_WALL_1.png')
+                         tileType.BG_WALL_1, '../../assets/magtroid/env/BASE/BG_BASE_WALL_1.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_2, '../../assets/ray/env/BASE/BG_BASE_WALL_2.png')
+                         tileType.BG_WALL_2, '../../assets/magtroid/env/BASE/BG_BASE_WALL_2.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_3, '../../assets/ray/env/BASE/BG_BASE_WALL_3.png')
+                         tileType.BG_WALL_3, '../../assets/magtroid/env/BASE/BG_BASE_WALL_3.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_4, '../../assets/ray/env/BASE/BG_BASE_WALL_4.png')
+                         tileType.BG_WALL_4, '../../assets/magtroid/env/BASE/BG_BASE_WALL_4.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_5, '../../assets/ray/env/BASE/BG_BASE_WALL_5.png')
+                         tileType.BG_WALL_5, '../../assets/magtroid/env/BASE/BG_BASE_WALL_5.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR, '../../assets/ray/doors/BG_DOOR.png')
+                         tileType.BG_DOOR, '../../assets/magtroid/doors/BG_DOOR.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR_CHARGE, '../../assets/ray/doors/BG_DOOR_CHARGE.png')
+                         tileType.BG_DOOR_CHARGE, '../../assets/magtroid/doors/BG_DOOR_CHARGE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR_MISSILE, '../../assets/ray/doors/BG_DOOR_MISSILE.png')
+                         tileType.BG_DOOR_MISSILE, '../../assets/magtroid/doors/BG_DOOR_MISSILE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR_ICE, '../../assets/ray/doors/BG_DOOR_ICE.png')
+                         tileType.BG_DOOR_ICE, '../../assets/magtroid/doors/BG_DOOR_ICE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR_XRAY, '../../assets/ray/doors/BG_DOOR_XRAY.png')
+                         tileType.BG_DOOR_XRAY, '../../assets/magtroid/doors/BG_DOOR_XRAY.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR_SCRIPT, '../../assets/ray/doors/BG_DOOR_SCRIPT.png')
+                         tileType.BG_DOOR_SCRIPT, '../../assets/magtroid/doors/BG_DOOR_SCRIPT.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR_KEY_A, '../../assets/ray/doors/BG_DOOR_KEY_A.png')
+                         tileType.BG_DOOR_KEY_A, '../../assets/magtroid/doors/BG_DOOR_KEY_A.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR_KEY_B, '../../assets/ray/doors/BG_DOOR_KEY_B.png')
+                         tileType.BG_DOOR_KEY_B, '../../assets/magtroid/doors/BG_DOOR_KEY_B.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR_KEY_C, '../../assets/ray/doors/BG_DOOR_KEY_C.png')
+                         tileType.BG_DOOR_KEY_C, '../../assets/magtroid/doors/BG_DOOR_KEY_C.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR_ARTIFACT, '../../assets/ray/doors/BG_DOOR_ARTIFACT.png')
+                         tileType.BG_DOOR_ARTIFACT, '../../assets/magtroid/doors/BG_DOOR_ARTIFACT.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.OBJ_ENEMY_START_POINT, 'imgs/OBJ_ENEMY_START_POINT.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_NORMAL, '../../assets/ray/enemies/NORMAL/E_NORMAL_WALK_0_0.png')
+                         tileType.OBJ_ENEMY_NORMAL, '../../assets/magtroid/enemies/NORMAL/E_NORMAL_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_STRONG, '../../assets/ray/enemies/STRONG/E_STRONG_WALK_0_0.png')
+                         tileType.OBJ_ENEMY_STRONG, '../../assets/magtroid/enemies/STRONG/E_STRONG_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_ARMORED, '../../assets/ray/enemies/ARMORED/E_ARMORED_WALK_0_0.png')
+                         tileType.OBJ_ENEMY_ARMORED, '../../assets/magtroid/enemies/ARMORED/E_ARMORED_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_FLAMING, '../../assets/ray/enemies/FLAMING/E_FLAMING_WALK_0_0.png')
+                         tileType.OBJ_ENEMY_FLAMING, '../../assets/magtroid/enemies/FLAMING/E_FLAMING_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_HIDDEN, '../../assets/ray/enemies/HIDDEN/E_HIDDEN_WALK_0_0.png')
+                         tileType.OBJ_ENEMY_HIDDEN, '../../assets/magtroid/enemies/HIDDEN/E_HIDDEN_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_BOSS, '../../assets/ray/enemies/BOSS/E_BOSS_WALK_0_0.png')
+                         tileType.OBJ_ENEMY_BOSS, '../../assets/magtroid/enemies/BOSS/E_BOSS_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_BEAM, '../../assets/ray/items/OBJ_ITEM_BEAM.png')
+                         tileType.OBJ_ITEM_BEAM, '../../assets/magtroid/items/OBJ_ITEM_BEAM.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_CHARGE_BEAM, '../../assets/ray/items/OBJ_ITEM_CHARGE_BEAM.png')
+                         tileType.OBJ_ITEM_CHARGE_BEAM, '../../assets/magtroid/items/OBJ_ITEM_CHARGE_BEAM.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_MISSILE, '../../assets/ray/items/OBJ_ITEM_MISSILE.png')
+                         tileType.OBJ_ITEM_MISSILE, '../../assets/magtroid/items/OBJ_ITEM_MISSILE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_ICE, '../../assets/ray/items/OBJ_ITEM_ICE.png')
+                         tileType.OBJ_ITEM_ICE, '../../assets/magtroid/items/OBJ_ITEM_ICE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_XRAY, '../../assets/ray/items/OBJ_ITEM_XRAY.png')
+                         tileType.OBJ_ITEM_XRAY, '../../assets/magtroid/items/OBJ_ITEM_XRAY.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_SUIT_WATER, '../../assets/ray/items/OBJ_ITEM_SUIT_WATER.png')
+                         tileType.OBJ_ITEM_SUIT_WATER, '../../assets/magtroid/items/OBJ_ITEM_SUIT_WATER.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_SUIT_LAVA, '../../assets/ray/items/OBJ_ITEM_SUIT_LAVA.png')
+                         tileType.OBJ_ITEM_SUIT_LAVA, '../../assets/magtroid/items/OBJ_ITEM_SUIT_LAVA.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_ENERGY_TANK, '../../assets/ray/items/OBJ_ITEM_ENERGY_TANK.png')
+                         tileType.OBJ_ITEM_ENERGY_TANK, '../../assets/magtroid/items/OBJ_ITEM_ENERGY_TANK.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_KEY_A, '../../assets/ray/items/OBJ_ITEM_KEY_A.png')
+                         tileType.OBJ_ITEM_KEY_A, '../../assets/magtroid/items/OBJ_ITEM_KEY_A.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_KEY_B, '../../assets/ray/items/OBJ_ITEM_KEY_B.png')
+                         tileType.OBJ_ITEM_KEY_B, '../../assets/magtroid/items/OBJ_ITEM_KEY_B.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_KEY_C, '../../assets/ray/items/OBJ_ITEM_KEY_C.png')
+                         tileType.OBJ_ITEM_KEY_C, '../../assets/magtroid/items/OBJ_ITEM_KEY_C.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_ARTIFACT, '../../assets/ray/items/OBJ_ITEM_ARTIFACT.png')
+                         tileType.OBJ_ITEM_ARTIFACT, '../../assets/magtroid/items/OBJ_ITEM_ARTIFACT.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_PICKUP_ENERGY, '../../assets/ray/items/OBJ_ITEM_PICKUP_ENERGY.png')
+                         tileType.OBJ_ITEM_PICKUP_ENERGY, '../../assets/magtroid/items/OBJ_ITEM_PICKUP_ENERGY.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_PICKUP_MISSILE,
-                         '../../assets/ray/items/OBJ_ITEM_PICKUP_MISSILE.png')
+                         '../../assets/magtroid/items/OBJ_ITEM_PICKUP_MISSILE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_SCENERY_TERMINAL, '../../assets/ray/scenery/OBJ_SCENERY_TERMINAL.png')
+                         tileType.OBJ_SCENERY_TERMINAL, '../../assets/magtroid/scenery/OBJ_SCENERY_TERMINAL.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_SCENERY_PORTAL, '../../assets/ray/scenery/OBJ_SCENERY_PORTAL.png')
+                         tileType.OBJ_SCENERY_PORTAL, '../../assets/magtroid/scenery/OBJ_SCENERY_PORTAL.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_SCENERY_F1, '../../assets/ray/friends/OBJ_SCENERY_F1.png')
+                         tileType.OBJ_SCENERY_F1, '../../assets/magtroid/friends/OBJ_SCENERY_F1.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_SCENERY_F2, '../../assets/ray/friends/OBJ_SCENERY_F2.png')
+                         tileType.OBJ_SCENERY_F2, '../../assets/magtroid/friends/OBJ_SCENERY_F2.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_SCENERY_F3, '../../assets/ray/friends/OBJ_SCENERY_F3.png')
+                         tileType.OBJ_SCENERY_F3, '../../assets/magtroid/friends/OBJ_SCENERY_F3.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_SCENERY_F4, '../../assets/ray/friends/OBJ_SCENERY_F4.png')
+                         tileType.OBJ_SCENERY_F4, '../../assets/magtroid/friends/OBJ_SCENERY_F4.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_SCENERY_F5, '../../assets/ray/friends/OBJ_SCENERY_F5.png')
+                         tileType.OBJ_SCENERY_F5, '../../assets/magtroid/friends/OBJ_SCENERY_F5.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_SCENERY_F6, '../../assets/ray/friends/OBJ_SCENERY_F6.png')
+                         tileType.OBJ_SCENERY_F6, '../../assets/magtroid/friends/OBJ_SCENERY_F6.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_SCENERY_F7, '../../assets/ray/friends/OBJ_SCENERY_F7.png')
+                         tileType.OBJ_SCENERY_F7, '../../assets/magtroid/friends/OBJ_SCENERY_F7.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.DELETE, 'imgs/DELETE.png')
 
