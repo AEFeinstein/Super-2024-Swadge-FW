@@ -52,6 +52,7 @@
 #include "trophyCase.h"
 #include "trophyTest.h"
 #include "tunernome.h"
+#include "bombadeetle.h"
 
 //==============================================================================
 // Function Prototypes
