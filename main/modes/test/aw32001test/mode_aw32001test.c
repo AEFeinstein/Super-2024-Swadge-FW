@@ -8,7 +8,7 @@
 #include "swadge.h"
 #include "mode_aw32001test.h"
 #include "mainMenu.h"
-#include "hdw-aw32001e-bms.h"
+
 
 #define REGS 11
 
@@ -105,14 +105,6 @@ void aw32001testEnterMode(void)
     led_t leds[CONFIG_NUM_LEDS] = {0};
     setLeds(leds, CONFIG_NUM_LEDS);
 
-    //Turn on LEDS full brightness because we're trying to stress the BMS
-    for (int i = 0; i < CONFIG_NUM_LEDS; i++)
-    {
-        leds[i].r = 255;
-        leds[i].g = 255;
-        leds[i].b = 255;
-    }
-    setLeds(leds, CONFIG_NUM_LEDS);
 }
 
 /**
@@ -262,8 +254,8 @@ void aw32001testMainLoop(int64_t elapsedUs)
                 aw32001test->val = 0x7A;
                 #else
                 //Bit 0 sets termination timer enable, bits 1-2 set fast charge time, bit 3 sets safety timer enable, bit 4 sets termination enable, bit 5-6 sets the watchdog time, bit 7 sets watchdog control in discharge mode
-                // default values for these are: termination timer enable (0), fast charge time 5hrs (1), safety timer enabled (1), termination enabled (1), watchdog time 160s (3), watchdog enabled in discharge mode (0)
-                aw32001test->val = (0 << 0) | (1 << 1) | (1 << 3) | (1 << 4) | (3 << 5) | (0 << 7);
+                // set values for these are: termination timer disable (0), fast charge time 12hrs (3), safety timer enabled (1), termination enabled (1), watchdog time 160s (3), watchdog enabled in discharge mode (0)
+                aw32001test->val = (0 << 0) | (3 << 2) | (0 << 3) | (1 << 4) | (timeout << 5) | (0 << 7);
                 #endif
                 break;
             case MAIN_CTRL: 
@@ -290,7 +282,13 @@ void aw32001testMainLoop(int64_t elapsedUs)
                 break;
             case FAULT_STATUS:
                 //default values for these are: all faults cleared (0)
-                aw32001test->val = 0x00;
+                bool charge_state = getChargeState();
+                if (charge_state) {
+                    aw32001test->val = 0x00;
+                } else {
+                    aw32001test->val = (1 << 5); // Set the expected status bit to indicate a fault on the STMR due to no charge
+                }
+                
                 break;
             case CHIP_ID:
                 aw32001test->val = 0x49;

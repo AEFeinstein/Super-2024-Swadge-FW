@@ -235,27 +235,8 @@ typedef enum __attribute__((packed))
   esp_err_t AW32001Set(int reg, uint8_t val);
   esp_err_t AW32001Get(uint8_t* data, uint8_t reg);
   esp_err_t BMSSetRegistersAndReset(void);
-  
-  //ChargeStatus getChargeStatus();                               // get charge status
-  //void enableCharge();                                          // enable charging
- 
+  bool getChargeState(void);
+  void setHiZ(bool enable);
+  void setShipMode(bool en);
 
-  //currently unused functions taken from the Arduino library:
-  
-  /*
-  void setVinDPMVoltage(SystemRegulatedVoltage voltage);        // set input voltage limit
-  void setIinLimitCurrent(FastChargeCurrent current);           // set input current limit, 50mA ~ 500mA(step 30mA, default 500mA)
-  void setBatUVLO(UnderVoltageLockout uvlo);                    // set battery under voltage lockout(2430mV, 2490mV, 2580mV, 2670mV, 2760mV, 2850mV, 2940mV, 3030mV)
-  void setChargeCurrent(FastChargeCurrent current);             // set charging current, 8mA ~ 456mA(step 8mA, default 128mA)
-  void setDischargeCurrent(DischargeCurrent current);           // set discharging current, 200mA ~ 3200mA(step 200mA, default 2000mA)
-  void setChargeVoltage(ChargeVoltageThreshold voltage);        // set charging voltage, 3600mV ~ 4545mV(step 15mV, default 4200mV)
-  void setWatchdogTimer(uint8_t sec);                           // set charge watchdog timeout(0s, 40s, 80s, 160s, default 160s, 0 to disable)
-  void feedWatchdog();                                          // feed watchdog timer
-  void setThermistorControl(bool en);                           // set thermistor and PCB OTP mode (default enable NTC and enable PCB OTP)
-  void setTJLimit(JunctionTemperatureLimit tj);                 // set junction temperature limit (default 120C)
-  void setShipMode(bool en);                                    // set ship mode (default disable ship mode)
-  void setHiZ(bool enable);                                     // set Hi-Z mode, true: USB -x-> SYS, false: USB -> SYS
-  */
-  
-  
 #endif 

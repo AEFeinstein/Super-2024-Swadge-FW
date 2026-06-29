@@ -202,7 +202,6 @@ bool initBMS(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup)
 
 /**
  * @brief Deinit the BMS (nothing to do)
- *
  * @return ESP_OK
  */
 esp_err_t deinitBMS(void)
@@ -214,7 +213,6 @@ esp_err_t deinitBMS(void)
  * @brief Set Registers on the BMS
  * @return ESP_OK if the BMS parameters were set, or a non-zero value if they were not
  */
-
 esp_err_t BMSSetRegistersAndReset(void)
 {
     #ifdef DEFAULT_BMS_SETTINGS
@@ -276,7 +274,7 @@ esp_err_t BMSSetRegistersAndReset(void)
                 break;
             case POWER_ON_CFG:  
                 //Bits 0-2 set VBAT_UVLO, bit 3 sets charge enable, bit 4 sets HIZ mode, bit 5 sets battery disconnect interrupt time for reset, bits 6-7 sets power-on after reset delay time
-                //default values for these are: UVLO_2760mV, charge disabled (1), HIZ disabled (0), 4s (1), 16 (2) 
+                //default values for these are: UVLO_2760mV, charge disabled (1), HIZ disabled (0), 4s (1), 16 (2)
                 #ifdef DEFAULT_BMS_SETTINGS
                 val = 0xAC;
                 #else
@@ -315,8 +313,8 @@ esp_err_t BMSSetRegistersAndReset(void)
                 val = 0x7A;
                 #else
                 //Bit 0 sets termination timer enable, bits 1-2 set fast charge time, bit 3 sets safety timer enable, bit 4 sets termination enable, bit 5-6 sets the watchdog time, bit 7 sets watchdog control in discharge mode
-                // default values for these are: termination timer enable (0), fast charge time 5hrs (1), safety timer enabled (1), termination enabled (1), watchdog time 160s (3), watchdog enabled in discharge mode (0)
-                val = (0 << 0) | (1 << 1) | (1 << 3) | (1 << 4) | (timeout << 5) | (0 << 7);
+                // default values for these are: termination timer enable (0), fast charge time 8hrs (2), safety timer enabled (1), termination enabled (1), watchdog time 160s (3), watchdog enabled in discharge mode (0)
+                val = (0 << 0) | (3 << 2) | (0 << 3) | (1 << 4) | (timeout << 5) | (0 << 7);
                 #endif
                 break;
             case MAIN_CTRL: 
@@ -346,9 +344,51 @@ esp_err_t BMSSetRegistersAndReset(void)
     val = 0;
         
     }
-
-    //TODO reset
+    
 
     return r == 0 ? ESP_OK : ESP_FAIL;
     
+}
+
+/**
+ * @brief Get Charge State of Battery
+ * @return TRUE if battery is charging, FALSE if the battery is not charging
+ */
+bool getChargeState(void)
+{
+    uint8_t val = 0;
+    if (AW32001Get(&val, SYS_STATUS) != ESP_OK)
+    {
+        ESP_LOGE("BMS", "Failed to read SYS_STATUS register");
+        return false;
+    }
+    //get bits 3-4 for charge status, if 00 or 11 then not charging
+    uint8_t charge_status = (val >> 3) & 0x03;
+    if (charge_status == NOT_CHARGING || charge_status == FULL_CHARGE) //if not charging or done charging
+    {
+        return false;
+    }
+    else if (charge_status == CHARGING || charge_status == PRE_CHARGE)
+    {
+        return true;
+    }
+    else
+    {
+        ESP_LOGE("BMS", "Unexpected charge status: %d", charge_status);
+        return false;
+    }
+
+}
+
+/**
+ * @brief set ship mode after elecrow flashing
+ * @return nothing
+ */
+void setShipMode(bool enable)
+{
+
+   if (!AW32001Set(0xC, 0x8) && !AW32001Set(MAIN_CTRL, 0x40))
+   {
+       ESP_LOGE("BMS", "Failed to set ship mode");
+   }
 }
