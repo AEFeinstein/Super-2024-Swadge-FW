@@ -563,6 +563,7 @@ typedef struct
     int32_t mapId;              ///< The ID of the current map
     bool mapsVisited[NUM_MAPS]; ///< Booleans for each map visited
     rayInventory_t i;           ///< All the players items
+    int32_t dirAngle;
 } rayPlayer_t;
 
 /**
