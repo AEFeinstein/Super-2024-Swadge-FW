@@ -19,6 +19,8 @@ class clickMode(Enum):
     NORMAL_EDIT = 1
     SET_SPAWN_TRIGGER_ZONE = 2
     SET_ENEMIES = 3
+    SET_CAMERA_TRIGGER_ZONE = 4
+    SET_CAMERA_FOCUS = 5
 
 
 class CustomText(tk.Text):
@@ -109,7 +111,10 @@ class view:
         self.scriptSpawn: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Set E.Triggers", font=fontStyle, background=self.buttonColor,
                                                 foreground=self.buttonFontColor, activebackground=self.buttonPressedColor, activeforeground=self.buttonFontColor, bd=0,
                                                 command=self.clickScriptSpawn)
-        self.scriptSpawnState: clickMode = clickMode.NORMAL_EDIT
+        self.scriptCamera: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Set C.Triggers", font=fontStyle, background=self.buttonColor,
+                                                foreground=self.buttonFontColor, activebackground=self.buttonPressedColor, activeforeground=self.buttonFontColor, bd=0,
+                                                command=self.clickScriptCamera)
+        self.scriptState: clickMode = clickMode.NORMAL_EDIT
         self.exitButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Exit", font=fontStyle, background=self.buttonColor,
                                                foreground=self.buttonFontColor, activebackground=self.buttonPressedColor, activeforeground=self.buttonFontColor, bd=0,
                                                command=self.clickExit)
@@ -155,8 +160,10 @@ class view:
                             padx=padding, pady=padding)
         self.scriptSpawn.grid(column=4, row=0, sticky=tk.NW,
                               padx=padding, pady=padding)
+        self.scriptCamera.grid(column=5, row=0, sticky=tk.NW,
+                              padx=padding, pady=padding)
         # Place this button in the top right
-        self.exitButton.grid(column=5, row=0, sticky=tk.NE,
+        self.exitButton.grid(column=6, row=0, sticky=tk.NE,
                              padx=padding, pady=padding)
 
         # Configure button column weights
@@ -164,7 +171,8 @@ class view:
         self.buttonFrame.columnconfigure(1, weight=0)
         self.buttonFrame.columnconfigure(2, weight=0)
         self.buttonFrame.columnconfigure(3, weight=0)
-        self.buttonFrame.columnconfigure(4, weight=1)
+        self.buttonFrame.columnconfigure(4, weight=0)
+        self.buttonFrame.columnconfigure(5, weight=1)
 
         # Place the palette and bind events
         self.paletteCanvas.grid(column=0, row=1, sticky=(
@@ -407,7 +415,7 @@ class view:
         x: int = self.mapCanvas.canvasx(event.x)
         y: int = self.mapCanvas.canvasy(event.y)
         self.c.leftClickMap(int(x / self.mapCellSize),
-                            int(y / self.mapCellSize), self.scriptSpawnState)
+                            int(y / self.mapCellSize), self.scriptState)
 
     def mapRightClick(self, event: tk.Event):
         self.isMapRightClicked = True
@@ -429,7 +437,7 @@ class view:
             x: int = self.mapCanvas.canvasx(event.x)
             y: int = self.mapCanvas.canvasy(event.y)
             self.c.moveMouseMap(int(x / self.mapCellSize),
-                                int(y / self.mapCellSize), self.scriptSpawnState)
+                                int(y / self.mapCellSize), self.scriptState)
 
     def mapMouseWheel(self, event: tk.Event):
         if (4 == event.num) or (event.delta < 0):
@@ -530,6 +538,27 @@ class view:
                 hOffset = int((self.mapCellSize - imgWidth) / 2)
                 self.scriptRects.append(self.mapCanvas.create_image(
                     (spawn.x * self.mapCellSize) + hOffset, (spawn.y * self.mapCellSize), image=self.texMapMap[spawn.type], anchor=tk.NW))
+
+        # If the camera script is being built
+        if self.m.cameraScript is not None:
+            # Highlight the trigger cells
+            for cell in self.m.cameraScript.getIfCells():
+                if cell is not None:
+                    self.scriptRects.append(self.mapCanvas.create_rectangle(
+                        (cell[0] * self.mapCellSize),
+                        (cell[1] * self.mapCellSize),
+                        ((cell[0] + 1) * self.mapCellSize),
+                        ((cell[1] + 1) * self.mapCellSize),
+                        outline='blue', width=4))
+            # Draw the focus
+            for cell in self.m.cameraScript.getThenCells():
+                if cell is not None:
+                    self.scriptRects.append(self.mapCanvas.create_rectangle(
+                        (cell[0] * self.mapCellSize),
+                        (cell[1] * self.mapCellSize),
+                        ((cell[0] + 1) * self.mapCellSize),
+                        ((cell[1] + 1) * self.mapCellSize),
+                        outline='yellow', width=4))
 
     def scriptTextChanged(self, event: tk.Event):
 
@@ -730,23 +759,43 @@ class view:
                 validInput = False
 
     def clickScriptSpawn(self):
-        if clickMode.NORMAL_EDIT == self.scriptSpawnState:
-            self.scriptSpawnState = clickMode.SET_SPAWN_TRIGGER_ZONE
+        if clickMode.NORMAL_EDIT == self.scriptState:
+            self.scriptState = clickMode.SET_SPAWN_TRIGGER_ZONE
             self.scriptSpawn.config(text="Set Enemies")
             self.scriptSpawn.config(background='green')
             self.scriptSpawn.config(activebackground='green')
-            self.m.startScriptCreation()
-        elif clickMode.SET_SPAWN_TRIGGER_ZONE == self.scriptSpawnState:
-            self.scriptSpawnState = clickMode.SET_ENEMIES
+            self.m.startEnemyScriptCreation()
+        elif clickMode.SET_SPAWN_TRIGGER_ZONE == self.scriptState:
+            self.scriptState = clickMode.SET_ENEMIES
             self.scriptSpawn.config(text="Finish Script")
             self.scriptSpawn.config(background='red')
             self.scriptSpawn.config(activebackground='red')
-        elif clickMode.SET_ENEMIES == self.scriptSpawnState:
-            self.scriptSpawnState = clickMode.NORMAL_EDIT
+        elif clickMode.SET_ENEMIES == self.scriptState:
+            self.scriptState = clickMode.NORMAL_EDIT
             self.scriptSpawn.config(text="Set E.Triggers")
             self.scriptSpawn.config(background=self.buttonColor)
             self.scriptSpawn.config(activebackground=self.buttonPressedColor)
-            self.m.finishScriptCreation()
+            self.m.finishEnemyScriptCreation()
+
+    def clickScriptCamera(self):
+        if clickMode.NORMAL_EDIT == self.scriptState:
+            self.scriptState = clickMode.SET_CAMERA_TRIGGER_ZONE
+            self.scriptCamera.config(text="Set Camera")
+            self.scriptCamera.config(background='green')
+            self.scriptCamera.config(activebackground='green')
+            self.m.startCameraScriptCreation()
+        elif clickMode.SET_CAMERA_TRIGGER_ZONE == self.scriptState:
+            self.scriptState = clickMode.SET_CAMERA_FOCUS
+            self.scriptCamera.config(text="Finish Script")
+            self.scriptCamera.config(background='red')
+            self.scriptCamera.config(activebackground='red')
+        elif clickMode.SET_CAMERA_FOCUS == self.scriptState:
+            self.scriptState = clickMode.NORMAL_EDIT
+            self.scriptCamera.config(text="Set C.Triggers")
+            self.scriptCamera.config(background=self.buttonColor)
+            self.scriptCamera.config(activebackground=self.buttonPressedColor)
+            self.m.finishCameraScriptCreation()
+        pass
 
     def clickExit(self):
         if self.currentFilePath is not None:
