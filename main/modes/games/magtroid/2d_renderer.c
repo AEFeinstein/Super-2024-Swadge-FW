@@ -68,5 +68,5 @@ void drawForeground2d(ray_t* ray)
         }
     }
 
-    drawWsgSimple(&ray->cho_portrait, (ray->p.posX / 16) - camX - 8, (ray->p.posY / 16) - camY - 8);
+    drawWsg(&ray->cho_portrait, (ray->p.posX / 16) - camX - 8, (ray->p.posY / 16) - camY - 8, false, false, ray->p.dirAngle);
 }
