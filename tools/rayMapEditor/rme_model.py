@@ -14,6 +14,7 @@ class model:
         self.currentId: int = 0
         self.usedIds: list[int] = []
         self.enemyScript = None
+        self.cameraScript = None
 
     def setView(self, v):
         from rme_view import view
@@ -212,10 +213,10 @@ class model:
         # Everything loaded
         return True
 
-    def startScriptCreation(self):
+    def startEnemyScriptCreation(self):
         self.enemyScript: rme_script = rme_script()
 
-    def addTileTriggerToScript(self, x: int, y: int, delete: bool):
+    def addTileTriggerToEnemyScript(self, x: int, y: int, delete: bool):
         self.enemyScript.addTileTrigger(x, y, delete)
         self.v.highlightScriptCells()
 
@@ -235,7 +236,7 @@ class model:
                 self.enemyScript.addEnemy(x, y, self.getNextId(), eType)
         self.v.highlightScriptCells()
 
-    def finishScriptCreation(self):
+    def finishEnemyScriptCreation(self):
         if self.enemyScript.isValid() and 0 < len(self.enemyScript.getIfCells()) and 0 < len(self.enemyScript.getThenSpawns()):
             self.scripts.append(self.enemyScript)
             self.enemyScript = None
@@ -245,3 +246,22 @@ class model:
             for sp in self.enemyScript.getThenSpawns():
                 self.usedIds.remove(sp.id)
             self.enemyScript = None
+
+    def startCameraScriptCreation(self):
+        self.cameraScript: rme_script = rme_script(isCamera=True)
+
+    def addTileTriggerToCameraScript(self, x: int, y: int, delete: bool):
+        self.cameraScript.addTileTrigger(x, y, delete)
+        self.v.highlightScriptCells()
+
+    def addCameraToScript(self, x: int, y: int, eType: tileType):
+        self.cameraScript.setCamera(x, y)
+        self.v.highlightScriptCells()
+
+    def finishCameraScriptCreation(self):
+        if self.cameraScript.isValid() and 0 < len(self.cameraScript.getIfCells()) and 0 < len(self.cameraScript.getThenCells()):
+            self.scripts.append(self.cameraScript)
+            self.cameraScript = None
+            self.v.reloadScriptText()
+        else:
+            self.cameraScript = None
