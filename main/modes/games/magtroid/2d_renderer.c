@@ -1,5 +1,10 @@
+#include "fp_math.h"
 #include "2d_renderer.h"
 #include "ray_tex_manager.h"
+
+#define CELL_SIZE 20
+
+#define TO_PX(x) ((CELL_SIZE * (x)) / 256)
 
 void drawBackground2d(ray_t* ray, int32_t firstRow, int32_t lastRow)
 {
@@ -16,15 +21,16 @@ void drawCommonList(ray_t* ray, list_t* list, int camX, int camY)
     while (node)
     {
         rayObjCommon_t* obj = node->val;
-        drawWsgSimple(obj->sprite, (obj->posX / 16) - camX - 8, obj->posY / 16 - camY - 8);
+        drawWsgSimple(obj->sprite, TO_PX(obj->posX) - camX - (CELL_SIZE / 2),
+                      TO_PX(obj->posY) - camY - (CELL_SIZE / 2));
         node = node->next;
     }
 }
 
 void drawForeground2d(ray_t* ray)
 {
-    int camX = (ray->p.posX / 16) - (TFT_WIDTH / 2);
-    int camY = (ray->p.posY / 16) - (TFT_HEIGHT / 2);
+    int camX = TO_PX(ray->p.posX) - (TFT_WIDTH / 2);
+    int camY = TO_PX(ray->p.posY) - (TFT_HEIGHT / 2);
 
     for (int mapY = 0; mapY < ray->map.h; mapY++)
     {
@@ -51,7 +57,7 @@ void drawForeground2d(ray_t* ray)
                 texture = &ray->envTex[ray->p.mapId % NUM_ENVS][TX_FLOOR];
             }
 
-            drawWsgSimple(texture, mapX * 16 - camX, mapY * 16 - camY);
+            drawWsgTile(texture, mapX * CELL_SIZE - camX, mapY * CELL_SIZE - camY);
         }
     }
 
@@ -64,9 +70,10 @@ void drawForeground2d(ray_t* ray)
         rayObjCommon_t* obj = &ray->bullets[bIdx].c;
         if (obj->type & BULLET)
         {
-            drawWsgSimple(obj->sprite, (obj->posX / 16) - camX, obj->posY / 16 - camY);
+            drawWsgSimple(obj->sprite, TO_PX(obj->posX) - camX, TO_PX(obj->posY) - camY);
         }
     }
 
-    drawWsg(&ray->cho_portrait, (ray->p.posX / 16) - camX - 8, (ray->p.posY / 16) - camY - 8, false, false, ray->p.dirAngle);
+    drawWsg(&ray->cho_portrait, TO_PX(ray->p.posX) - camX - (CELL_SIZE / 2),
+            TO_PX(ray->p.posY) - camY - (CELL_SIZE / 2), false, false, ray->p.dirAngle);
 }
