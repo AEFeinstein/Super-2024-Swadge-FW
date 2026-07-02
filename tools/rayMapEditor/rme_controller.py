@@ -20,7 +20,7 @@ class controller:
 
     def leftClickMap(self, x, y, mode: clickMode):
         type: tileType = self.m.getSelectedTileType()
-        if None == type and clickMode.SET_SPAWN_TRIGGER_ZONE != mode:
+        if None == type and (clickMode.SET_SPAWN_TRIGGER_ZONE != mode) and (clickMode.SET_CAMERA_TRIGGER_ZONE != mode) and (clickMode.SET_CAMERA_FOCUS != mode):
             return
         self.isMapLeftClicked = True
 
@@ -30,10 +30,15 @@ class controller:
             else:
                 self.m.setMapTileBg(x, y, type)
         elif clickMode.SET_SPAWN_TRIGGER_ZONE == mode:
-            self.m.addTileTriggerToScript(x, y, (tileType.DELETE == type))
+            self.m.addTileTriggerToEnemyScript(x, y, (tileType.DELETE == type))
         elif clickMode.SET_ENEMIES == mode:
             if ((type.value & 0xE0) == (OBJ | ENEMY)) or (tileType.DELETE == type):
                 self.m.addEnemyToScript(x, y, type)
+        elif clickMode.SET_CAMERA_TRIGGER_ZONE == mode:
+            self.m.addTileTriggerToCameraScript(x, y, (tileType.DELETE == type))
+        elif clickMode.SET_CAMERA_FOCUS == mode:
+            self.m.addCameraToScript(x, y, type)
+
 
     def releaseClick(self):
         self.isMapLeftClicked = False

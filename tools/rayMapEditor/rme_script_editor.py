@@ -33,6 +33,7 @@ class thenOpType(Enum):
     DIALOG = 11
     WARP = 12
     WIN = 13
+    CAMERA = 14
 
 
 class orderType(Enum):
@@ -64,9 +65,9 @@ class spawn:
 class rme_scriptSplitter:
 
     def __init__(self) -> None:
-        argsRegex: str = '(\([^\(\)]*\))'
+        argsRegex: str = r'(\([^\(\)]*\))'
 
-        regex = 'IF\s+('
+        regex = r'IF\s+('
 
         first = False
         for ifOp in ifOpType.__members__.items():
@@ -76,9 +77,9 @@ class rme_scriptSplitter:
                 regex = regex + '|'
             regex = regex + ifOp[0]
 
-        regex = regex + ')\s*'
+        regex = regex + r')\s*'
         regex = regex + argsRegex
-        regex = regex + '\s+THEN\s+('
+        regex = regex + r'\s+THEN\s+('
 
         first = False
         for thenOp in thenOpType.__members__.items():
@@ -87,7 +88,7 @@ class rme_scriptSplitter:
             else:
                 regex = regex + '|'
             regex = regex + thenOp[0]
-        regex = regex + ')\s*'
+        regex = regex + r')\s*'
         regex = regex + argsRegex
 
         self.pattern: re.Pattern = re.compile(regex, flags=re.IGNORECASE)
@@ -101,7 +102,7 @@ class rme_scriptSplitter:
 
 
 class rme_script:
-    def __init__(self, bytes: bytearray = None, string: str = None, splitter: rme_scriptSplitter = None) -> None:
+    def __init__(self, bytes: bytearray = None, string: str = None, splitter: rme_scriptSplitter = None, isCamera: bool = False) -> None:
         # Add members
         self.resetScript()
         # Parse depending on what args we get
@@ -121,8 +122,12 @@ class rme_script:
             self.ifArgs[kOrder] = orderType.ANY_ORDER
             self.ifArgs[kOneTime] = oneTimeType.ALWAYS
             self.ifArgs[kCells] = []
-            self.thenOp = thenOpType.SPAWN
-            self.thenArgs[kSpawns] = []
+            if isCamera:
+                self.thenOp = thenOpType.CAMERA
+                self.thenArgs[kCell] = [0, 0]
+            else:
+                self.thenOp = thenOpType.SPAWN
+                self.thenArgs[kSpawns] = []
         pass
 
     def __parseArgs(self, args: str) -> list[str]:
@@ -323,6 +328,13 @@ class rme_script:
                 # No arguments
                 pass
 
+            elif thenOpType.CAMERA == self.thenOp:
+                # Parse the args
+                self.thenArgs[kCell] = self.__parseCell(argParts[0])
+                # Validate the args
+                if (self.thenArgs[kCell] is None):
+                    return False
+
             else:
                 self.resetScript()
                 return False
@@ -508,6 +520,10 @@ class rme_script:
         elif thenOpType.WIN == self.thenOp:
             # No args
             pass
+        elif thenOpType.CAMERA == self.thenOp:
+            # Read the cell
+            self.thenArgs[kCell] = [bytes[idx], bytes[idx + 1]]
+            idx = idx + 2
         else:
             self.resetScript()
             return
@@ -581,3 +597,6 @@ class rme_script:
             if newEnemy not in self.thenArgs[kSpawns]:
                 self.thenArgs[kSpawns].append(newEnemy)
         return -1
+
+    def setCamera(self, x:int, y:int):
+        self.thenArgs[kCell] = [x, y]

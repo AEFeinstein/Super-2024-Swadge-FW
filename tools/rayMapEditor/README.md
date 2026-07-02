@@ -61,6 +61,7 @@ These are the actions that occur when a script is triggered
 | DIALOG    | 11    | TEXT        | Display the text in a dialog window                                                                                                       |
 | WARP      | 12    | MAP, CELL   | Warp the player to the given cell                                                                                                         |
 | WIN       | 13    |             | Beat the game                                                                                                                             |
+| CAMERA    | 14    | CELL        | Center the camera on the given cell                                                                                                       |
 
 ### Script Element Syntax
 
