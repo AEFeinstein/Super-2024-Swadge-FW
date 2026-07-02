@@ -183,231 +183,51 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
         {
             if (evt.down)
             {
-                // Set strafe to true
-                ray->isStrafing = true;
-                // If there is a centered sprite
-                if (centeredEnemy)
-                {
-                    // Lock onto it
-                    ray->targetedObj = centeredEnemy;
-                }
-            }
-            else
-            {
-                // Set strafe to false
-                ray->isStrafing  = false;
-                ray->targetedObj = NULL;
+                // Sword swing
             }
         }
         // The A button shoots. Make sure there is a gun
-        else if ((LO_NONE != ray->p.loadout) && (PB_A == evt.button))
+        else if (PB_A == evt.button)
         {
-            // What, if any, bullet to fire
-            rayMapCellType_t bullet = EMPTY;
-
             if (evt.down)
             {
-                if (0 >= ray->playerShotCooldown)
-                {
-                    // A was pressed
-                    // Check ammo for the missile loadout
-                    if (LO_MISSILE == ray->p.loadout)
-                    {
-                        if (0 < ray->p.i.numMissiles)
-                        {
-                            // Decrement missile count
-                            ray->p.i.numMissiles--;
-                            // Fire a missile
-                            bullet = OBJ_BULLET_MISSILE;
-                        }
-                    }
-                    else
-                    {
-                        // Start charging if applicable
-                        if (LO_NORMAL == ray->p.loadout && ray->p.i.chargePowerUp)
-                        {
-                            // Start charging
-                            ray->chargeTimer = 1;
-                        }
-
-                        // Fire according to loadout
-                        const rayMapCellType_t bulletMap[NUM_LOADOUTS] = {
-                            EMPTY,
-                            OBJ_BULLET_NORMAL,  ///< Normal loadout
-                            OBJ_BULLET_MISSILE, ///< Missile loadout
-                            OBJ_BULLET_ICE,     ///< Ice beam loadout
-                            OBJ_BULLET_XRAY     ///< X-Ray loadout
-                        };
-                        bullet = bulletMap[ray->p.loadout];
-                    }
-                }
-            }
-            else
-            {
-                // A was released, check if the beam is charged
-                if (ray->chargeTimer >= CHARGE_TIME_US)
-                {
-                    // Shoot charge beam
-                    bullet = OBJ_BULLET_CHARGE;
-                }
-                ray->chargeTimer = 0;
-            }
-
-            // If there is a bullet to fire
-            if (EMPTY != bullet)
-            {
-                // Fire a shot
-                rayCreateBullet(ray, bullet, pPosX, pPosY, pDirX, pDirY, true);
-
-                // Play SFX depending on bullet
-                switch (bullet)
-                {
-                    case OBJ_BULLET_CHARGE:
-                    {
-                        // Allow charging a shot immediately after releasing a charge
-                        ray->playerShotCooldown = 0;
-                        globalMidiPlayerPlaySong(&ray->sfx_p_charge, MIDI_SFX);
-                        break;
-                    }
-                    case OBJ_BULLET_MISSILE:
-                    {
-                        ray->playerShotCooldown = 240000;
-                        globalMidiPlayerPlaySong(&ray->sfx_p_missile, MIDI_SFX);
-                        break;
-                    }
-                    case OBJ_BULLET_ICE:
-                    {
-                        ray->playerShotCooldown = 480000;
-                        globalMidiPlayerPlaySong(&ray->sfx_p_ice, MIDI_SFX);
-                        break;
-                    }
-                    case OBJ_BULLET_XRAY:
-                    {
-                        ray->playerShotCooldown = 240000;
-                        globalMidiPlayerPlaySong(&ray->sfx_p_xray, MIDI_SFX);
-                        break;
-                    }
-                    case OBJ_BULLET_NORMAL:
-                    default:
-                    {
-                        if (ray->chargeTimer > 120000)
-                        {
-                            ray->playerShotCooldown = 0;
-                        }
-                        else
-                        {
-                            ray->playerShotCooldown = 120000 - ray->chargeTimer;
-                        }
-                        globalMidiPlayerPlaySong(&ray->sfx_p_shoot, MIDI_SFX);
-                        break;
-                    }
-                }
+                // Jump
             }
         }
     }
-
-    // Count down shot cooldown
-    if (0 < ray->playerShotCooldown)
-    {
-        ray->playerShotCooldown -= elapsedUs;
-    }
-
-    // If charging the beam
-    if (0 < ray->chargeTimer && ray->chargeTimer <= CHARGE_TIME_US)
-    {
-        // Accumulate the timer
-        ray->chargeTimer += elapsedUs;
-    }
-
-    // If the player is in water without the water suit
-    bool isInWater = (!ray->p.i.waterSuit) && (BG_FLOOR_WATER == ray->map.tiles[FROM_FX(pPosX)][FROM_FX(pPosY)].type);
 
     // Find move distances
     q24_8 deltaX = 0;
     q24_8 deltaY = 0;
 
-    // Strafing is either locked or unlocked
-    if (ray->isStrafing)
-    {
-        if (NULL != ray->targetedObj)
-        {
-            // lock on the target before moving
-            pDirX = ray->targetedObj->posX - pPosX;
-            pDirY = ray->targetedObj->posY - pPosY;
-            fastNormVec(&pDirX, &pDirY);
-        }
-
-        if (ray->btnState & PB_RIGHT)
-        {
-            // Strafe right
-            deltaX -= pDirY;
-            deltaY += pDirX;
-        }
-        else if (ray->btnState & PB_LEFT)
-        {
-            // Strafe left
-            deltaX += pDirY;
-            deltaY -= pDirX;
-        }
-    }
-    else
-    {
-        if (ray->btnState & (PB_RIGHT | PB_LEFT))
-        {
-            // Assume rightward rotation, 1 degree every 8000uS
-            int32_t rotateDeg = 0;
-            ray->pRotationTimer -= elapsedUs;
-            while (0 >= ray->pRotationTimer)
-            {
-                ray->pRotationTimer += 8000;
-                rotateDeg++;
-            }
-
-            if (0 != rotateDeg)
-            {
-                if (ray->btnState & PB_LEFT)
-                {
-                    // Rotate left, reverse direction
-                    rotateDeg = 360 - rotateDeg;
-                }
-
-                // Do trig functions, only once
-                int32_t sinVal = getSin1024(rotateDeg);
-                int32_t cosVal = getCos1024(rotateDeg);
-                // Find the rotated X and Y vectors
-                q24_8 newX = (pDirX * cosVal) - (pDirY * sinVal);
-                q24_8 newY = (pDirX * sinVal) + (pDirY * cosVal);
-                // Normalize the vector
-                fastNormVec(&newX, &newY);
-
-                // Save new direction vector
-                ray->p.dirX = newX;
-                ray->p.dirY = newY;
-
-                // Recompute the camera plane, orthogonal to the direction vector and scaled to 2/3
-                ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
-                ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
-
-                // Also update the local copy
-                pDirX = newX;
-                pDirY = newY;
-            }
-        }
-    }
-
     // If the up button is held
     if (ray->btnState & PB_UP)
     {
         // Move forward
-        deltaX += pDirX;
-        deltaY += pDirY;
+        deltaY -= 1;
+        ray->p.dirAngle = 0;
     }
     // Else if the down button is held
     else if (ray->btnState & PB_DOWN)
     {
         // Move backwards
-        deltaX -= pDirX;
-        deltaY -= pDirY;
+        deltaY += 1;
+        ray->p.dirAngle = 180;
+    }
+
+    // If the left button is held
+    if (ray->btnState & PB_LEFT)
+    {
+        // Move left
+        deltaX -= 1;
+        ray->p.dirAngle = 270;
+    }
+    // Else if the right button is held
+    else if (ray->btnState & PB_RIGHT)
+    {
+        // Move backwards
+        deltaX += 1;
+        ray->p.dirAngle = 90;
     }
 
     // If there is movement
@@ -424,35 +244,52 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
         deltaX = (int32_t)(deltaX * elapsedUs) / (int32_t)(40000 * 6);
         deltaY = (int32_t)(deltaY * elapsedUs) / (int32_t)(40000 * 6);
 
-        // If the player is in water
-        if (isInWater)
-        {
-            // Slow down movement by a 8x
-            deltaX /= 8;
-            deltaY /= 8;
-        }
-
         // Boundary checks are longer than the move dist to not get right up on the wall
-        q24_8 boundaryCheckX = (2 * normX) / 3;
-        q24_8 boundaryCheckY = (2 * normY) / 3;
+        q24_8 boundaryCheckX = normX / 2;
+        q24_8 boundaryCheckY = normY / 2;
 
         // Save the old cell to check for crossing cell boundaries
         int16_t oldCellX = FROM_FX(pPosX);
         int16_t oldCellY = FROM_FX(pPosY);
 
-        // Move forwards if no wall in front of you
-        if (isPassableCell(&ray->map.tiles[FROM_FX(pPosX + boundaryCheckX)][FROM_FX(pPosY)]))
+        q24_8 pBoundaryX = pPosX;
+        if (deltaX < 0)
         {
-            ray->p.posX += deltaX;
-            // Update local copy
-            pPosX = ray->p.posX;
+            pBoundaryX += (deltaX - TO_FX_FRAC(1, 2));
+        }
+        else if (deltaX > 0)
+        {
+            pBoundaryX += (deltaX + TO_FX_FRAC(1, 2));
         }
 
-        if (isPassableCell(&ray->map.tiles[FROM_FX(pPosX)][FROM_FX(pPosY + boundaryCheckY)]))
+        if (deltaX)
         {
-            ray->p.posY += deltaY;
-            // Update local copy
-            pPosY = ray->p.posY;
+            if (isPassableCell(&ray->map.tiles[FROM_FX(pBoundaryX)][FROM_FX(pPosY + TO_FX_FRAC(1, 2))])
+                && isPassableCell(&ray->map.tiles[FROM_FX(pBoundaryX)][FROM_FX(pPosY - TO_FX_FRAC(1, 2))]))
+            {
+                ray->p.posX += deltaX;
+                pPosX += deltaX;
+            }
+        }
+
+        q24_8 pBoundaryY = pPosY;
+        if (deltaY < 0)
+        {
+            pBoundaryY += (deltaY - TO_FX_FRAC(1, 2));
+        }
+        else if (deltaY > 0)
+        {
+            pBoundaryY += (deltaY + TO_FX_FRAC(1, 2));
+        }
+
+        if (deltaY)
+        {
+            if (isPassableCell(&ray->map.tiles[FROM_FX(pPosX + TO_FX_FRAC(1, 2))][FROM_FX(pBoundaryY)])
+                && isPassableCell(&ray->map.tiles[FROM_FX(pPosX - TO_FX_FRAC(1, 2))][FROM_FX(pBoundaryY)]))
+            {
+                ray->p.posY += deltaY;
+                pPosY += deltaY;
+            }
         }
 
         // Get the new cell to check for crossing cell boundaries
@@ -468,23 +305,6 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
             // Check scripts when entering cells
             checkScriptEnter(ray, newCellX, newCellY);
         }
-    }
-
-    // Finally, if there is a targeted object, orient towards it
-    if (ray->targetedObj)
-    {
-        // Re-lock on the target
-        pDirX = ray->targetedObj->posX - pPosX;
-        pDirY = ray->targetedObj->posY - pPosY;
-        fastNormVec(&pDirX, &pDirY);
-
-        // Set the player's direction
-        ray->p.dirX = pDirX;
-        ray->p.dirY = pDirY;
-
-        // Recompute the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
-        ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
-        ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
     }
 }
 
