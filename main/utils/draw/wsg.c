@@ -449,7 +449,7 @@ void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff)
  */
 void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff)
 {
-    if (xOff > TFT_WIDTH)
+    if (xOff > TFT_WIDTH || xOff + wsg->w < 0 || yOff > TFT_HEIGHT || yOff + wsg->h < 0)
     {
         return;
     }
