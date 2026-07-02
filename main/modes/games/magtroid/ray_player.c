@@ -157,8 +157,6 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
     // For convenience
     q24_8 pPosX = ray->p.posX;
     q24_8 pPosY = ray->p.posY;
-    q24_8 pDirX = ray->p.dirX;
-    q24_8 pDirY = ray->p.dirY;
 
     // Check all queued button events
     buttonEvt_t evt;
@@ -183,7 +181,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
         {
             if (evt.down)
             {
-                // Sword swing
+                // TODO Sword swing
             }
         }
         // The A button shoots. Make sure there is a gun
@@ -191,7 +189,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
         {
             if (evt.down)
             {
-                // Jump
+                // TODO Jump
             }
         }
     }
@@ -205,14 +203,14 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
     {
         // Move forward
         deltaY -= 1;
-        ray->p.dirAngle = 0;
+        ray->p.dirAngle = 180;
     }
     // Else if the down button is held
     else if (ray->btnState & PB_DOWN)
     {
         // Move backwards
         deltaY += 1;
-        ray->p.dirAngle = 180;
+        ray->p.dirAngle = 0;
     }
 
     // If the left button is held
@@ -220,14 +218,14 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
     {
         // Move left
         deltaX -= 1;
-        ray->p.dirAngle = 270;
+        ray->p.dirAngle = 90;
     }
     // Else if the right button is held
     else if (ray->btnState & PB_RIGHT)
     {
         // Move backwards
         deltaX += 1;
-        ray->p.dirAngle = 90;
+        ray->p.dirAngle = 270;
     }
 
     // If there is movement
@@ -236,56 +234,55 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
         // Normalize deltaX and deltaY before scaling with elapsedUs
         fastNormVec(&deltaX, &deltaY);
 
-        // Save normalized vector before scaling for boundary checks later
-        q24_8 normX = deltaX;
-        q24_8 normY = deltaY;
-
         // Should move 1/6 units every 40000uS
         deltaX = (int32_t)(deltaX * elapsedUs) / (int32_t)(40000 * 6);
         deltaY = (int32_t)(deltaY * elapsedUs) / (int32_t)(40000 * 6);
-
-        // Boundary checks are longer than the move dist to not get right up on the wall
-        q24_8 boundaryCheckX = normX / 2;
-        q24_8 boundaryCheckY = normY / 2;
 
         // Save the old cell to check for crossing cell boundaries
         int16_t oldCellX = FROM_FX(pPosX);
         int16_t oldCellY = FROM_FX(pPosY);
 
-        q24_8 pBoundaryX = pPosX;
-        if (deltaX < 0)
-        {
-            pBoundaryX += (deltaX - TO_FX_FRAC(1, 2));
-        }
-        else if (deltaX > 0)
-        {
-            pBoundaryX += (deltaX + TO_FX_FRAC(1, 2));
-        }
+        // A little less than half the width of the player, for boundary checks
+        q24_8 pHalfWidth = TO_FX_FRAC(7, 16);
 
+        // Check movement in the X direction first
         if (deltaX)
         {
-            if (isPassableCell(&ray->map.tiles[FROM_FX(pBoundaryX)][FROM_FX(pPosY + TO_FX_FRAC(1, 2))])
-                && isPassableCell(&ray->map.tiles[FROM_FX(pBoundaryX)][FROM_FX(pPosY - TO_FX_FRAC(1, 2))]))
+            q24_8 pBoundaryX = pPosX;
+            if (deltaX < 0)
+            {
+                pBoundaryX += (deltaX - pHalfWidth);
+            }
+            else
+            {
+                pBoundaryX += (deltaX + pHalfWidth);
+            }
+
+            // Check top and bottom corners of the player's bounding box for wall collisions
+            if (isPassableCell(&ray->map.tiles[FROM_FX(pBoundaryX)][FROM_FX(pPosY + pHalfWidth)])
+                && isPassableCell(&ray->map.tiles[FROM_FX(pBoundaryX)][FROM_FX(pPosY - pHalfWidth)]))
             {
                 ray->p.posX += deltaX;
                 pPosX += deltaX;
             }
         }
 
-        q24_8 pBoundaryY = pPosY;
-        if (deltaY < 0)
-        {
-            pBoundaryY += (deltaY - TO_FX_FRAC(1, 2));
-        }
-        else if (deltaY > 0)
-        {
-            pBoundaryY += (deltaY + TO_FX_FRAC(1, 2));
-        }
-
+        // Then check movement in the Y direction
         if (deltaY)
         {
-            if (isPassableCell(&ray->map.tiles[FROM_FX(pPosX + TO_FX_FRAC(1, 2))][FROM_FX(pBoundaryY)])
-                && isPassableCell(&ray->map.tiles[FROM_FX(pPosX - TO_FX_FRAC(1, 2))][FROM_FX(pBoundaryY)]))
+            q24_8 pBoundaryY = pPosY;
+            if (deltaY < 0)
+            {
+                pBoundaryY += (deltaY - pHalfWidth);
+            }
+            else
+            {
+                pBoundaryY += (deltaY + pHalfWidth);
+            }
+
+            // Check left and right corners of the player's bounding box for wall collisions
+            if (isPassableCell(&ray->map.tiles[FROM_FX(pPosX + pHalfWidth)][FROM_FX(pBoundaryY)])
+                && isPassableCell(&ray->map.tiles[FROM_FX(pPosX - pHalfWidth)][FROM_FX(pBoundaryY)]))
             {
                 ray->p.posY += deltaY;
                 pPosY += deltaY;
