@@ -178,6 +178,12 @@ void loadScripts(ray_t* ray, const uint8_t* fileData, uint32_t fileSize, uint32_
                 // No args
                 break;
             }
+            case CAMERA:
+            {
+                // [CELL]
+                newScript->thenArgs.cell.x = fileData[fileIdx++];
+                newScript->thenArgs.cell.y = fileData[fileIdx++];
+            }
         }
 
         // Add script to the list
@@ -272,6 +278,7 @@ static void freeScript(rayScript_t* script)
         }
         case WARP:
         case WIN:
+        case CAMERA:
         {
             // Nothing allocated
             break;
@@ -877,6 +884,12 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
             }
             // Jump to credits! This is either immediate or after the aforementioned dialog
             ray->shouldShowCredits = true;
+            break;
+        }
+        case CAMERA:
+        {
+            ray->camera.x = (CELL_SIZE * script->thenArgs.cell.x) - (TFT_WIDTH / 2);
+            ray->camera.y = (CELL_SIZE * script->thenArgs.cell.y) - (TFT_HEIGHT / 2);
             break;
         }
     }

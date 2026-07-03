@@ -2,8 +2,6 @@
 #include "2d_renderer.h"
 #include "ray_tex_manager.h"
 
-#define CELL_SIZE 20
-
 #define TO_PX(x) ((CELL_SIZE * (x)) / 256)
 
 void drawBackground2d(ray_t* ray, int32_t firstRow, int32_t lastRow)
@@ -29,8 +27,8 @@ void drawCommonList(ray_t* ray, list_t* list, int camX, int camY)
 
 void drawForeground2d(ray_t* ray)
 {
-    int camX = TO_PX(ray->p.posX) - (TFT_WIDTH / 2);
-    int camY = TO_PX(ray->p.posY) - (TFT_HEIGHT / 2);
+    int32_t camX = ray->camera.x;
+    int32_t camY = ray->camera.y;
 
     for (int mapY = 0; mapY < ray->map.h; mapY++)
     {

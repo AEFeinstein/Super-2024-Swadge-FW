@@ -84,6 +84,9 @@
 #define BULLET  0x40
 #define SCENERY 0x60
 
+// The pixel size of each cell
+#define CELL_SIZE 20
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -278,6 +281,7 @@ typedef enum
     DIALOG  = 11, ///< Show a dialog box
     WARP    = 12, ///< Warp to a location on a map
     WIN     = 13, ///< Win the game
+    CAMERA  = 14, ///< Move the camera
 } thenOp_t;
 
 /**
@@ -440,6 +444,9 @@ typedef struct
             uint8_t mapId;           ///< The map ID to warp to
             rayMapCoordinates_t pos; ///< The position to warp to
         } warpDest;
+
+        /// A single cell
+        rayMapCoordinates_t cell;
     } thenArgs;
 
 } rayScript_t;
@@ -581,6 +588,7 @@ typedef struct
 
     rayMap_t map;      ///< The loaded map
     int32_t doorTimer; ///< A timer used to open doors
+    vec_t camera;
 
     rayPlayer_t p; ///< All the player's state, loaded from NVM
 

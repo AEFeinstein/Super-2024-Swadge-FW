@@ -596,6 +596,9 @@ void rayStartGame(void)
 
     // Set the initial screen
     raySwitchToScreen(RAY_GAME);
+
+    // Check script from entering the initial cell
+    checkScriptEnter(ray, FROM_FX(pStartX), FROM_FX(pStartY));
 }
 
 /**
