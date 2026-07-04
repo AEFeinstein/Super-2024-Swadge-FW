@@ -409,40 +409,43 @@ static void rayMainLoop(int64_t elapsedUs)
             // Run timers for head-bob, doors, etc.
             runEnvTimers(ray, elapsedUs);
 
-            // Check buttons for the player and move player accordingly
-            rayPlayerCheckButtons(ray, centeredEnemy, elapsedUs);
-
-            // Check the joystick for the player and update loadout accordingly
-            rayPlayerCheckJoystick(ray, elapsedUs);
-
-            // Check for floor effects
-            rayPlayerCheckFloorEffect(ray, elapsedUs);
-
-            // Move objects including enemies and bullets
-            moveRayObjects(ray, elapsedUs);
-
-            // Check for collisions between the moved player, enemies, and bullets
-            checkRayCollisions(ray);
-
-            // Check for time-based scripts
-            checkScriptTime(ray, elapsedUs);
-
-            // If the warp timer is active
-            if (ray->warpTimerUs > 0)
+            // Only run this code when the camera is settled
+            if (ray->camera.x == ray->cameraTarget.x && ray->camera.y == ray->cameraTarget.y)
             {
-                // Switch to showing the warp screen
-                raySwitchToScreen(RAY_WARP_SCREEN);
-                // Do the warp in the background
-                warpToDestination(ray);
-            }
-            // Show credits if it's in the game state and it should
-            // It may switch to the dialog state while credits are pending
-            else if ((RAY_GAME == ray->screen) && (ray->shouldShowCredits))
-            {
-                ray->shouldShowCredits = false;
-                rayShowCredits(ray);
-            }
+                // Check buttons for the player and move player accordingly
+                rayPlayerCheckButtons(ray, centeredEnemy, elapsedUs);
 
+                // Check the joystick for the player and update loadout accordingly
+                rayPlayerCheckJoystick(ray, elapsedUs);
+
+                // Check for floor effects
+                rayPlayerCheckFloorEffect(ray, elapsedUs);
+
+                // Move objects including enemies and bullets
+                moveRayObjects(ray, elapsedUs);
+
+                // Check for collisions between the moved player, enemies, and bullets
+                checkRayCollisions(ray);
+
+                // Check for time-based scripts
+                checkScriptTime(ray, elapsedUs);
+
+                // If the warp timer is active
+                if (ray->warpTimerUs > 0)
+                {
+                    // Switch to showing the warp screen
+                    raySwitchToScreen(RAY_WARP_SCREEN);
+                    // Do the warp in the background
+                    warpToDestination(ray);
+                }
+                // Show credits if it's in the game state and it should
+                // It may switch to the dialog state while credits are pending
+                else if ((RAY_GAME == ray->screen) && (ray->shouldShowCredits))
+                {
+                    ray->shouldShowCredits = false;
+                    rayShowCredits(ray);
+                }
+            }
             break;
         }
         case RAY_DIALOG:
