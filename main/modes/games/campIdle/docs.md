@@ -23,10 +23,11 @@ Endless mode gives you a amount of days survived and time taken, and players can
     - [ ] Weapons/Attack anims
     - [ ] Character
     - [ ] Shields
-  - [ ] Items
-    - [ ] Food
-    - [ ] Foraged
-    - [ ] Crafted
+  - [x] Items
+    - [x] Food
+    - [x] Foraged
+    - [x] Crafted
+    - [x] Healing
   - [ ] Monsters
     - [ ] Idle
     - [ ] Attack
@@ -201,7 +202,7 @@ Types and effects
 Crafting stations
 | Station | Required resources | Usage |
 | ------- | ------------------ | ----- |
-| Crystal Polisher | 20 Stone/10 Grit | Polishes magical crystals | 
+| Crystal Polisher | 20 Stone/10 Diamond Powder | Polishes magical crystals | 
 | Heartmaker | 10 Polished Crystals/10 Cloth/3 Rope | Creates Healing hearts |
 | Magic Workbench | 4 Polished Crystals/4 Logs | Allows crafting of magical items |
 | Smasher | 10 Rocks/10 Sticks/5 gears | Crushes items | 
@@ -251,23 +252,21 @@ Scavenged materials:
 | Uncured Hides | N/A | Large | 7 | All |
 | Vines | N/A | Medium | 5 | Jungle |
 | Tar | 20 | Medium | 5 | Swamp |
-| Twigs | 1 | Small | 1 | Forest |
 
 ### Crafted materials
 
 Crafted materials
 | Material | Made from | Required crafting stations |
 | -------- | --------- | -------------------------- |
-| Beeswax | 1 Beehive (makes 5) | None | 
 | Cloth | 10 cotton | Weaver |
 | Cut blocks | 4 Stone | Stone Cutter |
+| Diamond | 10 Rock | Smasher |
 | Diamond Powder | 1 Diamonds | Smasher |
 | Gears | 8 Sticks/5 Resin | Workbench |
-| Grit | 1 Diamond Powder | Smasher |
 | Iron | 1 Iron Ore/1 Coal | Smelter |
 | Pelts | 1 Uncured Hide | Tanning Rack |
-| Polished Blocks | 1 Cut Stone/1 Grit | Crystal Polisher |
-| Polished Crystal | 1 Crystal/1 Grit | Crystal Polisher |
+| Polished Blocks | 1 Cut Stone/1 Diamond Powder | Crystal Polisher |
+| Polished Crystal | 1 Crystal/1 Diamond Powder | Crystal Polisher |
 | Rope | 2 Vines | None |
 | Salt | 0.25 Rock Salt | Smasher |
 | String | Dried grasses | None |
@@ -321,10 +320,10 @@ Crafted materials
 | Pointy Stick | 1-3 | 3 Sticks | None | Tap on Swipe bar 2 | Ground/Close air | 
 | Knife | 3-5 | 5 Rock/2 Sticks | None | Swipe down on Swipe bar 2 | Ground |
 | Machete | 10-14 | 5 Iron/2 Sticks | Allows for going into Jungle | Swipe toward enemies on swipe bar 1 | Ground |
-| Bow | 10-18 | 7 Sticks/3 Rope | None | Hold down Swipe bar 2 for 0.5 seconds | Air |
+| Bow | 10-18 | 7 Sticks/3 String | None | Hold down Swipe bar 2 for 0.5 seconds | Air |
 | Sword | 15-20 | 20 Iron/6 Cloth | None | Swipe toward enemies on swipe bar 1 | Ground |
 | Hero's Sword | 25-32 | 5 Crystals/20 Iron/10 Cloth | Hits all ground enemies every three seconds | Swipe toward enemies on swipe bar 1 | Ground |
-| Mage Bow | 25-32 | 3 Crystals/10 Rope/5 Sticks | Hits three targets at once | Hold down Swipe bar 2 for 0.5 seconds | Air |
+| Mage Bow | 25-32 | 3 Crystals/10 String/5 Sticks | Hits three targets at once | Hold down Swipe bar 2 for 0.5 seconds | Air |
 
 Shield provide a bonus amount of HP called SHP and break when it reaches 0
 
@@ -342,20 +341,9 @@ Use Healing by swiping toward the character on slide bar 1
 | ---- | ------ | --------- |
 | Healing Powder | +30 HP | 4 dried grasses | 
 | Bandages | +50 HP | 3 Large Leaves/1 Beeswax |
-| Healing Poultice | + 35 HP | 3 Rock salt/5 Berries/1 Mystery Meat |
+| Healing Poultice | +35 HP | 3 Rock salt/5 Berries/1 Mystery Meat/2 Cloth |
 | Potion | +100 HP | 2 Pickles/2 Energy Drinks | 
 | Healing Hearts | +75 HP | Every 30s from machine |
-
-# Misc - Unset
-
-Idle Activities:
-- Forage - Provide a zone, continues to work until woken back up 
-- Craft - Provide a queue, will work until woken up or run out of queue
-
-## Characters
-
-- Link Expy
-- Zelda Expy
 
 ## Trophies
 
