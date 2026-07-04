@@ -6,7 +6,7 @@ static void campEnterMode(void);
 static void campExitMode(void);
 static void campMainLoop(int64_t elapsedUs);
  
-swadgeMode_t roboRunnerMode = {
+swadgeMode_t campIdleMode = {
     .modeName                 = campModeName,
     .wifiMode                 = NO_WIFI,
     .overrideUsb              = false,
