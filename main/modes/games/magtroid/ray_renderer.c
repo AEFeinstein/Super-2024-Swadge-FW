@@ -1234,6 +1234,25 @@ void drawHud(ray_t* ray)
  */
 void runEnvTimers(ray_t* ray, uint32_t elapsedUs)
 {
+    RUN_TIMER_EVERY(ray->cameraTimer, (1000000 / TFT_WIDTH), elapsedUs, {
+        if (ray->camera.x < ray->cameraTarget.x)
+        {
+            ray->camera.x++;
+        }
+        else if (ray->camera.x > ray->cameraTarget.x)
+        {
+            ray->camera.x--;
+        }
+
+        if (ray->camera.y < ray->cameraTarget.y)
+        {
+            ray->camera.y++;
+        }
+        else if (ray->camera.y > ray->cameraTarget.y)
+        {
+            ray->camera.y--;
+        }
+    });
     // Run a timer for head bob
     ray->bobTimer += elapsedUs;
     while (ray->bobTimer > 2500)

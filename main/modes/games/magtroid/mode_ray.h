@@ -589,6 +589,8 @@ typedef struct
     rayMap_t map;      ///< The loaded map
     int32_t doorTimer; ///< A timer used to open doors
     vec_t camera;
+    vec_t cameraTarget;
+    int32_t cameraTimer;
 
     rayPlayer_t p; ///< All the player's state, loaded from NVM
 

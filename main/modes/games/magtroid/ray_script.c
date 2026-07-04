@@ -888,8 +888,15 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         }
         case CAMERA:
         {
-            ray->camera.x = (CELL_SIZE * script->thenArgs.cell.x) - (TFT_WIDTH / 2);
-            ray->camera.y = (CELL_SIZE * script->thenArgs.cell.y) - (TFT_HEIGHT / 2);
+            // Always set the target
+            ray->cameraTarget.x = (CELL_SIZE * script->thenArgs.cell.x) - (TFT_WIDTH / 2);
+            ray->cameraTarget.y = (CELL_SIZE * (script->thenArgs.cell.y + 1)) - (TFT_WIDTH / 2);
+
+            // Also set the actual camera if it's uninitialized
+            if (ray->camera.x < 0 && ray->camera.y < 0)
+            {
+                ray->camera = ray->cameraTarget;
+            }
             break;
         }
     }
