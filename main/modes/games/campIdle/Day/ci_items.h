@@ -24,9 +24,7 @@ typedef struct
 
 typedef struct 
 {
-    ci_invItem_t* food; // Includes bad food
-    ci_invItem_t* healing;
-    ci_invItem_t* items;
+    ci_invItem_t* inventory;
 } ci_inventory_t;
 
 //==============================================================================
