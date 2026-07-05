@@ -32,7 +32,7 @@
 #include "accelTest.h"
 #include "atrium.h"
 #include "canvas.h"
-#include "campIdle.h"
+#include "ci_campIdle.h"
 #include "colorchord.h"
 #include "dance.h"
 #include "factoryTest.h"

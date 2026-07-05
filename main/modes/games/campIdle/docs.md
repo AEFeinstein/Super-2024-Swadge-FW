@@ -236,17 +236,17 @@ Scavenged materials:
 | -------- | ---- | ---- | ------ | --------- |
 | Bamboo | 1 | Medium | 3 | Jungle |
 | Beehive | N/A | Medium | 5 | Forest |
-| Birch Bark | 10 | Small | 2 | Swamp
+| Birch Bark | 10 | Small | 2 | Swamp |
 | Coal | 50 | Medium | 8 | Mountain |
 | Crystal | 255 | Small | 3 | Magical Forest |
 | Dried Grasses | 1 | Small | 2 | Forest |
 | Iron Ore | N/A | Medium | 10 | Mountain |
 | Large Leaves | 2 | Medium | 5 | Forest, Jungle |
+| Latex | N/A | Small | 2 | Forest |
 | Logs | 50 | Large | 20 | Forest, Jungle, Swamp |
 | Resin | N/A | Small | 2 | Forest, Jungle |
-| Rocks | N/A | Small | 4 | All |
+| Rocks | N/A | Medium | 8 | All |
 | Rock Salt | N/A | Medium | 4 | Mountain |
-| Rubber | N/A | Small | 2 | Forest |
 | Spiderweb | N/A | Small | 1 | Forest, Jungle, Swamp |
 | Sticks | 5 | Small | 2 | Forest, Jungle, Swamp |
 | Uncured Hides | N/A | Large | 7 | All |
@@ -276,7 +276,6 @@ Crafted materials
 | Food | Food value | Location | Size | Weight | Extra |
 | ---- | ---------- | -------- | ---- | ------ | ----- |
 | Apples | 5 | Forest | Small | 1 | None |
-| Aspecific Pan Pizza | 30 | Mountain | Small | 2 | None |
 | Beans (Canned) | 100 | Magical Forest | Small | 4 | None |
 | Berries | 5 | Forest | Small | 1 | None |
 | Donuts | 10 | Swamp | Small | 2 | None |
@@ -285,23 +284,24 @@ Crafted materials
 | MRE | 50 | Mountain | Small | 6 | None |
 | Mushrooms | 20 | Forest, Jungle | Small | 2 | None |
 | Mystery Meat | 30 | Jungle | Medium | 8 | None |
-| Roast Turkey | 40 | Mountain | Medium | 10 | None |
-| Squeezy Peanut Butter | 5 | Jungle | Small | 3 | None |
-| String Cheese | 20 | Swamp | Small | 1 | Only available between 2-4 AM |
-| Tasteful Noods | 35 | Swamp | Medium | 3 | None |
+| Pan Pizza | 30 | Mountain | Small | 2 | None |
 | Pickles | 30 | Jungle | Small | 5 | None |
 | Protein Powder | 10 | Magical Forest | Medium | 6 | None |
 | Pudding | 60 | Magical Forest | Small | 3 | None |
+| Roast Turkey | 40 | Mountain | Medium | 10 | None |
+| Squeezy Peanut Butter | 5 | Jungle | Small | 1 | None |
+| String Cheese | 20 | Swamp | Small | 1 | Only available between 2-4 AM |
+| Tasteful Noods | 35 | Swamp | Medium | 3 | None |
 
 | Bad Food | Food value | Location | Size | Weight |
 | -------- | ---------- | -------- | ---- | ------ |
 | Floor Pizza | -10 | Magical Forest | Medium | 3 |
 | Furry Juice | -30 | Swamp | Small | 1 |
-| I Can't Believe It's Not Margarine | -50 | Forest | Small | 2 |
+| I Can't Believe It's Not Margarine | -50 | Jungle | Small | 2 |
 | Malort | -50 | Mountain | Medium | 7 |
 | Pilk | -30 | Swamp | Medium | 4 |
 | Raver Sweat | -20 | Mountain | Small | 1 |
-| Squirrel Nuts | -40 | Forest | Small | 1 |
+| Squirrel Nuts | -10 | Jungle | Small | 1 |
 | Your Parent's Lingering Affection | -1 | Magical Forest | Small | 10 |
 
 ### Tools
