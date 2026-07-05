@@ -104,4 +104,4 @@ extern const ci_itemDataList ci_itemList;
 // Functions
 //==============================================================================
 
-int getArrayLength(ci_itemTypes_t type);
+int ci_getArrayLength(ci_itemTypes_t type);
