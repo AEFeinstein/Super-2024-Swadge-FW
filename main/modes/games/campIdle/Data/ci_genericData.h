@@ -8,5 +8,6 @@ typedef enum
     CI_JUNGLE,
     CI_M_FOREST,
     CI_LOCATION_COUNT,
+    CI_NONE,
     CI_ALL,
 } ci_locations_t;

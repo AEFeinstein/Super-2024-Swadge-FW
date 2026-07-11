@@ -49,19 +49,11 @@ typedef struct
 
 typedef struct
 {
-    cnfsFileIdx_t image;
-    ci_itemTypes_t type;
-    const char* title;
-    const char* desc;
-} ci_craftedItem_t;
-
-typedef struct
-{
     const ci_item_t* badFood;
-    const ci_craftedItem_t* crafted;
+    const ci_item_t* crafted;
     const ci_item_t* food;
     const ci_item_t* foraged;
-    const ci_craftedItem_t* healing;
+    const ci_item_t* healing;
 } ci_itemDataList;
 
 //==============================================================================
@@ -78,7 +70,7 @@ extern const char* const cTitles[];
 
 extern const char* const cDescriptions[];
 
-extern const ci_craftedItem_t ci_craftedData[];
+extern const ci_item_t ci_craftedData[];
 
 extern const char* const fTitles[];
 
@@ -96,7 +88,7 @@ extern const char* const hTitles[];
 
 extern const char* const hDescriptions[];
 
-extern const ci_craftedItem_t ci_healingData[];
+extern const ci_item_t ci_healingData[];
 
 extern const ci_itemDataList ci_itemList;
 
