@@ -11,6 +11,7 @@
 
 // CI
 #include "ci_itemData.h"
+#include "wsg.h"
 
 //==============================================================================
 // Structs
@@ -18,12 +19,14 @@
 
 typedef struct 
 {
-    ci_item_t item;
+    const ci_item_t* item;
     int qty;
+    bool discovered;
 } ci_invItem_t;
 
 typedef struct 
 {
+    wsg_t* testImage;
     ci_invItem_t* inventory;
 } ci_inventory_t;
 

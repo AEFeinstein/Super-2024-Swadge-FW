@@ -124,76 +124,88 @@ const char* const cDescriptions[] = {
     "If you could dye it red, you might find something important",
 };
 
-const ci_craftedItem_t ci_craftedData[] = {
+const ci_item_t ci_craftedData[] = {
     {
         .image = CI_CLOTH_WSG,
         .type  = CI_CRAFTED,
+        .loc = CI_NONE,
         .title = cTitles[0],
         .desc  = cDescriptions[0],
     },
     {
         .image = CI_CUT_ROCK_WSG,
         .type  = CI_CRAFTED,
+        .loc = CI_NONE,
         .title = cTitles[1],
         .desc  = cDescriptions[1],
     },
     {
         .image = CI_DIAMOND_WSG,
         .type  = CI_CRAFTED,
+        .loc = CI_NONE,
         .title = cTitles[2],
         .desc  = cDescriptions[2],
     },
     {
         .image = CI_DIAMOND_POWDER_WSG,
         .type  = CI_CRAFTED,
+        .loc = CI_NONE,
         .title = cTitles[3],
         .desc  = cDescriptions[3],
     },
     {
         .image = CI_GEAR_WSG,
         .type  = CI_CRAFTED,
+        .loc = CI_NONE,
         .title = cTitles[4],
         .desc  = cDescriptions[4],
     },
     {
         .image = CI_IRON_WSG,
         .type  = CI_CRAFTED,
+        .loc = CI_NONE,
         .title = cTitles[5],
         .desc  = cDescriptions[5],
     },
     {
         .image = CI_HIDE_WSG,
         .type  = CI_CRAFTED,
+        .loc = CI_NONE,
         .title = cTitles[6],
         .desc  = cDescriptions[6],
     },
     {
         .image = CI_POLISHED_ROCK_WSG,
         .type  = CI_CRAFTED,
+        .loc = CI_NONE,
         .title = cTitles[7],
         .desc  = cDescriptions[7],
     },
     {
         .image = CI_POLISHED_CRYSTAL_WSG,
         .type  = CI_CRAFTED,
+        .loc = CI_NONE,
         .title = cTitles[8],
         .desc  = cDescriptions[8],
     },
     {
         .image = CI_ROPE_WSG,
         .type  = CI_CRAFTED,
+        .loc = CI_NONE,
         .title = cTitles[9],
         .desc  = cDescriptions[9],
     },
     {
         .image = CI_SALT_WSG,
         .type  = CI_CRAFTED,
+        .loc = CI_NONE,
         .title = cTitles[10],
         .desc  = cDescriptions[10],
     },
     {
         .image = CI_STRING_WSG,
         .type  = CI_CRAFTED,
+        .loc = CI_NONE,
         .title = cTitles[11],
         .desc  = cDescriptions[11],
     },
@@ -623,34 +635,39 @@ const char* const hDescriptions[] = {
     "Legend says these could be ripped out of monsters once upon a time",
 };
 
-const ci_craftedItem_t ci_healingData[] = {
+const ci_item_t ci_healingData[] = {
     {
         .image = CI_HEALING_POWDER_WSG,
         .type  = CI_HEALING,
+        .loc = CI_NONE,
         .title = fdTitles[0],
         .desc  = fdDescriptions[0],
     },
     {
         .image = CI_BANDAGES_WSG,
         .type  = CI_HEALING,
+        .loc = CI_NONE,
         .title = fdTitles[1],
         .desc  = fdDescriptions[1],
     },
     {
         .image = CI_POULTICE_WSG,
         .type  = CI_HEALING,
+        .loc = CI_NONE,
         .title = fdTitles[2],
         .desc  = fdDescriptions[2],
     },
     {
         .image = CI_HEALING_POTION_WSG,
         .type  = CI_HEALING,
+        .loc = CI_NONE,
         .title = fdTitles[3],
         .desc  = fdDescriptions[3],
     },
     {
         .image = CI_HEART_WSG,
         .type  = CI_HEALING,
+        .loc = CI_NONE,
         .title = fdTitles[4],
         .desc  = fdDescriptions[4],
     },
@@ -670,7 +687,7 @@ const ci_itemDataList ci_itemList = {
 
 int ci_getArrayLength(ci_itemTypes_t type)
 {
-    switch (type)
+    switch (type)  
     {
         case CI_BAD_FOOD:
         {
