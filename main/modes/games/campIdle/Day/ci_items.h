@@ -26,8 +26,7 @@ typedef struct
 
 typedef struct 
 {
-    wsg_t* testImage;
-    ci_invItem_t* inventory;
+    ci_invItem_t* itemList;
 } ci_inventory_t;
 
 //==============================================================================
@@ -39,13 +38,13 @@ typedef struct
 void ci_initInv(ci_inventory_t* inv);
 
 // Free Inventory
-void ci_freeInv();
+void ci_deInitInv(ci_inventory_t* inv);
 
 // Load inventory from NVS
-void ci_loadInv();
+void ci_loadInv(ci_inventory_t* inv);
 
 // Save inventory to NVS
-void ci_saveInv();
+void ci_saveInv(ci_inventory_t* inv);
 
 // Add or remove items
 void ci_addToInv(ci_item_t* item, int qty);
