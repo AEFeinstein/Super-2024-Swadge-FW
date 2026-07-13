@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 
+#include "geometry.h"
 #include "ray_object.h"
 #include "ray_tex_manager.h"
 #include "ray_renderer.h"
@@ -331,6 +332,8 @@ void checkRayCollisions(ray_t* ray)
         }
     }
 
+    line_t sword = rayGetSwordLineSegment(ray);
+
     // Check if a bullet touches an enemy
     currentNode = ray->enemies.first;
     while (currentNode != NULL)
@@ -352,6 +355,20 @@ void checkRayCollisions(ray_t* ray)
                     // De-allocate the bullet
                     bullet->c.id = -1;
                 }
+            }
+        }
+
+        // If a sword is being swung
+        if (ray->p.swordTimerUs > 0)
+        {
+            // Get the enemy bounding box
+            rectangle_t bb = rayGetEnemyBoundingBox(enemy);
+            // Check for a collision between bounding box and sword
+            if (rectLineIntersection(bb, sword, NULL))
+            {
+                printf("HIT!!\n");
+                // TODO only count once
+                rayEnemyGetShot(ray, enemy, OBJ_BULLET_NORMAL);
             }
         }
 

@@ -539,3 +539,22 @@ void switchEnemiesToXray(ray_t* ray, bool isXray)
         currentNode = currentNode->next;
     }
 }
+
+/**
+ * @brief TODO doc
+ *
+ * @param enemy
+ * @return rectangle_t
+ */
+rectangle_t rayGetEnemyBoundingBox(rayEnemy_t* enemy)
+{
+    rectangle_t bb = {
+        .pos = {
+            .x = enemy->c.posX - TO_FX(enemy->c.sprite->w) / (2 * CELL_SIZE),
+            .y = enemy->c.posY - TO_FX(enemy->c.sprite->h) / (2 * CELL_SIZE),
+        },
+        .height = TO_FX(enemy->c.sprite->h) / CELL_SIZE,
+        .width = TO_FX(enemy->c.sprite->w) / CELL_SIZE,
+    };
+    return bb;
+}
