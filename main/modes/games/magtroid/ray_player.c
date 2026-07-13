@@ -14,6 +14,9 @@
 #include "ray_enemy.h"
 #include "ray_dialog.h"
 
+#define SWORD_SWING_TIME  200000
+#define SWORD_SWING_ANGLE 120
+
 //==============================================================================
 // Const data
 //==============================================================================
@@ -179,9 +182,11 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
         // The B button toggles strafing
         else if (PB_B == evt.button)
         {
-            if (evt.down)
+            if (evt.down && ray->p.swordTimerUs <= 0)
             {
-                // TODO Sword swing
+                // Start a sword swing
+                ray->p.swordAngle   = ray->p.dirAngle;
+                ray->p.swordTimerUs = SWORD_SWING_TIME;
             }
         }
         // The A button shoots. Make sure there is a gun
@@ -190,6 +195,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
             if (evt.down)
             {
                 // TODO Jump
+                printf("JUMP!\n");
             }
         }
     }
@@ -301,6 +307,18 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
 
             // Check scripts when entering cells
             checkScriptEnter(ray, newCellX, newCellY);
+        }
+    }
+
+    // Run the sword timer
+    if (ray->p.swordTimerUs > 0)
+    {
+        ray->p.swordTimerUs -= elapsedUs;
+        // 90 degrees in 250000us
+        ray->p.swordAngle += (SWORD_SWING_ANGLE * elapsedUs) / SWORD_SWING_TIME;
+        if (ray->p.swordAngle >= 360)
+        {
+            ray->p.swordAngle -= 360;
         }
     }
 }
@@ -699,4 +717,25 @@ void rayPlayerDecrementHealth(ray_t* ray, int32_t health)
         // Never go over the max health
         ray->p.i.health = ray->p.i.maxHealth;
     }
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param ray
+ */
+line_t rayGetSwordLineSegment(ray_t* ray)
+{
+    line_t sword = {
+        .p1.x = ray->p.posX,
+        .p1.y = ray->p.posY,
+        .p2.x = ray->p.posX,
+        .p2.y = ray->p.posY,
+    };
+    if (ray->p.swordTimerUs > 0)
+    {
+        sword.p2.x += getCos1024(ray->p.swordAngle) / 4;
+        sword.p2.y += getSin1024(ray->p.swordAngle) / 4;
+    }
+    return sword;
 }
