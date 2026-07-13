@@ -11,5 +11,6 @@ void rayPlayerCheckFloorEffect(ray_t* ray, uint32_t elapsedUs);
 void raySavePlayer(ray_t* ray);
 void raySaveVisitedTiles(ray_t* ray);
 void rayPlayerDecrementHealth(ray_t* ray, int32_t health);
+line_t rayGetSwordLineSegment(ray_t* ray);
 
 #endif
