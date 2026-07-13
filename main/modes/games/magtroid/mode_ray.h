@@ -571,6 +571,9 @@ typedef struct
     bool mapsVisited[NUM_MAPS]; ///< Booleans for each map visited
     rayInventory_t i;           ///< All the players items
     int32_t dirAngle;
+
+    int32_t swordAngle;
+    int32_t swordTimerUs;
 } rayPlayer_t;
 
 /**
