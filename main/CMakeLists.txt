@@ -1,4 +1,5 @@
 idf_component_register(SRCS "modes/games/atrium/atrium.c"
+                            "modes/games/magtroid/2d_renderer.c"
                             "modes/games/magtroid/enemies/ray_enemy_armored.c"
                             "modes/games/magtroid/enemies/ray_enemy_boss.c"
                             "modes/games/magtroid/enemies/ray_enemy.c"
