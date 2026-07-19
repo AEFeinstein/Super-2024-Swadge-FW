@@ -504,6 +504,8 @@ typedef struct
     rayObjCommon_t c; ///< Common object properties
     q24_8 velX;       ///< The X velocity of this bullet
     q24_8 velY;       ///< The Y velocity of this bullet
+    q24_8 accX;       ///< The X acceleration of this bullet
+    q24_8 accY;       ///< The Y acceleration of this bullet
 } rayBullet_t;
 
 /**
@@ -570,10 +572,17 @@ typedef struct
     int32_t mapId;              ///< The ID of the current map
     bool mapsVisited[NUM_MAPS]; ///< Booleans for each map visited
     rayInventory_t i;           ///< All the players items
-    int32_t dirAngle;
 
     int32_t swordAngle;
     int32_t swordTimerUs;
+
+    struct touchState
+    {
+        int32_t initialTouchPos;
+        int32_t lastTouchPos;
+        bool drawingBow;
+        bool settingBomb;
+    } ts;
 } rayPlayer_t;
 
 /**

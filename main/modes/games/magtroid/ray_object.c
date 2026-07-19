@@ -32,10 +32,12 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs);
  * @param posY The X position of the spawner. Bullet will be positioned slightly in front of the given position
  * @param velX The X velocity of the bullet
  * @param velY The Y velocity of the bullet
+ * @param accX The X acceleration of the bullet
+ * @param accY The Y acceleration of the bullet
  * @param isPlayer true if this is the player's shot, false if it is an enemy's shot
  */
 void rayCreateBullet(ray_t* ray, rayMapCellType_t bulletType, q24_8 posX, q24_8 posY, q24_8 velX, q24_8 velY,
-                     bool isPlayer)
+                     q24_8 accX, q24_8 accY, bool isPlayer)
 {
     // Iterate over the bullet list, finding a new slot
     for (uint32_t newIdx = 0; newIdx < MAX_RAY_BULLETS; newIdx++)
@@ -55,15 +57,19 @@ void rayCreateBullet(ray_t* ray, rayMapCellType_t bulletType, q24_8 posX, q24_8 
             wsg_t* texture      = getTexByType(ray, bulletType);
             newBullet->c.sprite = texture;
             // Width is based on the texture width as a fraction of a cell
-            newBullet->c.radius = TO_FX_FRAC(texture->w, 2 * TEX_WIDTH);
+            newBullet->c.radius = TO_FX_FRAC(texture->w, 2 * CELL_SIZE);
 
-            // Spawn it slightly in front of the shooter's position
-            newBullet->c.posX = posX + (velX / 4);
-            newBullet->c.posY = posY + (velY / 4);
+            // Spawn it at the given position
+            newBullet->c.posX = posX;
+            newBullet->c.posY = posY;
 
             // Set the velocity
             newBullet->velX = velX;
             newBullet->velY = velY;
+
+            // Set the velocity
+            newBullet->accX = accX;
+            newBullet->accY = accY;
 
             // All done
             return;
@@ -101,9 +107,41 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
         rayBullet_t* obj = &(ray->bullets[i]);
         if (-1 != obj->c.id)
         {
-            // Update the bullet's position. 100000 was picked out of a hat!
-            obj->c.posX += (obj->velX * (int32_t)elapsedUs) / 100000;
-            obj->c.posY += (obj->velY * (int32_t)elapsedUs) / 100000;
+            // Save old velocity to check if the bullet stopped
+            int32_t oldVelX = obj->velX;
+            int32_t oldVelY = obj->velY;
+
+            // Update the bullet's acceleration. (1 << 22) feels right
+            obj->velX += (obj->accX * (int32_t)elapsedUs) / (1 << 22);
+            obj->velY += (obj->accY * (int32_t)elapsedUs) / (1 << 22);
+
+            // If the sign flipped, zero acceleration and velocity
+            if ((oldVelX ^ obj->velX) < 0)
+            {
+                obj->velX = 0;
+                obj->accX = 0;
+            }
+
+            if ((oldVelY ^ obj->velY) < 0)
+            {
+                obj->velY = 0;
+                obj->accY = 0;
+            }
+
+            // If the object stopped
+            if (0 == obj->velX && 0 == obj->velY)
+            {
+                // Destroy this bullet
+                memset(obj, 0, sizeof(rayBullet_t));
+                obj->c.id = -1;
+
+                // Continue to the next
+                continue;
+            }
+
+            // Update the bullet's position. (1 << 16) feels about right
+            obj->c.posX += (obj->velX * (int32_t)elapsedUs) / (1 << 16);
+            obj->c.posY += (obj->velY * (int32_t)elapsedUs) / (1 << 16);
 
             // Get the cell the bullet is in now
             rayMapCell_t* cell = &ray->map.tiles[FROM_FX(obj->c.posX)][FROM_FX(obj->c.posY)];
@@ -240,7 +278,7 @@ void checkRayCollisions(ray_t* ray)
     rayObjCommon_t player = {
         .posX   = ray->p.posX,
         .posY   = ray->p.posY,
-        .radius = TO_FX_FRAC(32, 2 * TEX_WIDTH),
+        .radius = TO_FX_FRAC(32, 2 * CELL_SIZE),
     };
 
     // Check if a bullet touches a player
