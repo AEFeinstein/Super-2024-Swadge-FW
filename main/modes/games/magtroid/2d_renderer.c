@@ -21,9 +21,9 @@ void drawCommonList(ray_t* ray, list_t* list, int camX, int camY, bool drawBB)
     while (node)
     {
         rayObjCommon_t* obj = node->val;
-        drawWsgSimple(obj->sprite,                               //
-                      TO_PX(obj->posX) - camX - (CELL_SIZE / 2), //
-                      TO_PX(obj->posY) - camY - (CELL_SIZE / 2));
+        drawWsgSimple(obj->sprite,                                    //
+                      TO_PX(obj->posX) - camX - (obj->sprite->w / 2), //
+                      TO_PX(obj->posY) - camY - (obj->sprite->h / 2));
 
         if (drawBB)
         {
@@ -80,12 +80,17 @@ void drawForeground2d(ray_t* ray)
         rayObjCommon_t* obj = &ray->bullets[bIdx].c;
         if (obj->type & BULLET && obj->id >= 0)
         {
-            drawWsgSimple(obj->sprite, TO_PX(obj->posX) - camX, TO_PX(obj->posY) - camY);
+            drawWsg(obj->sprite,                                    //
+                    TO_PX(obj->posX) - camX - (obj->sprite->w / 2), //
+                    TO_PX(obj->posY) - camY - (obj->sprite->h / 2), false, false,
+                    rayGetEightWayAngle(ray->bullets[bIdx].velX, ray->bullets[bIdx].velY));
         }
     }
 
-    drawWsg(&ray->cho_portrait, TO_PX(ray->p.posX) - camX - (CELL_SIZE / 2),
-            TO_PX(ray->p.posY) - camY - (CELL_SIZE / 2), false, false, ray->p.dirAngle);
+    drawWsg(&ray->cho_portrait,                                    //
+            TO_PX(ray->p.posX) - camX - (ray->cho_portrait.w / 2), //
+            TO_PX(ray->p.posY) - camY - (ray->cho_portrait.h / 2), //
+            false, false, rayGetEightWayAngle(ray->p.dirX, ray->p.dirY));
 
     if (ray->p.swordTimerUs > 0)
     {

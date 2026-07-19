@@ -285,7 +285,7 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
     // Set initial common state
     newObj->c.posX           = x;
     newObj->c.posY           = y;
-    newObj->c.radius         = TO_FX_FRAC(newObj->c.sprite->w, 2 * TEX_WIDTH);
+    newObj->c.radius         = TO_FX_FRAC(newObj->c.sprite->w, 2 * CELL_SIZE);
     newObj->c.spriteMirrored = false;
 
     // Add it to the linked list
@@ -319,7 +319,7 @@ void rayCreateCommonObj(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, 
     // Set spatial values
     newObj->posX   = x;
     newObj->posY   = y;
-    newObj->radius = TO_FX_FRAC(newObj->sprite->w, 2 * TEX_WIDTH);
+    newObj->radius = TO_FX_FRAC(newObj->sprite->w, 2 * CELL_SIZE);
 
     // Add it to the linked list
     if ((type & 0x60) == ITEM)

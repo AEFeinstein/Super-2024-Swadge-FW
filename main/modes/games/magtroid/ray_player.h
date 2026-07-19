@@ -12,5 +12,6 @@ void raySavePlayer(ray_t* ray);
 void raySaveVisitedTiles(ray_t* ray);
 void rayPlayerDecrementHealth(ray_t* ray, int32_t health);
 line_t rayGetSwordLineSegment(ray_t* ray);
+int32_t rayGetEightWayAngle(int16_t x, int16_t y);
 
 #endif

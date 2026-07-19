@@ -18,6 +18,9 @@
 // Half width of the lock zone when locking on enemies
 #define LOCK_ZONE 16
 
+#define TEX_WIDTH  64
+#define TEX_HEIGHT 64
+
 //==============================================================================
 // Structs
 //==============================================================================
