@@ -124,6 +124,10 @@ bool initializePlayer(ray_t* ray)
     // Always reload with full health
     ray->p.i.health = ray->p.i.maxHealth;
 
+    // Initial touch state is negative
+    ray->p.ts.initialTouchPos = -1;
+    ray->p.ts.lastTouchPos    = -1;
+
     return initFromScratch;
 }
 
@@ -185,7 +189,12 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
             if (evt.down && ray->p.swordTimerUs <= 0)
             {
                 // Start a sword swing
-                ray->p.swordAngle   = ray->p.dirAngle;
+                ray->p.swordAngle = rayGetEightWayAngle(ray->p.dirX, ray->p.dirY);
+                ray->p.swordAngle -= 90;
+                if (ray->p.swordAngle < 0)
+                {
+                    ray->p.swordAngle += 360;
+                }
                 ray->p.swordTimerUs = SWORD_SWING_TIME;
             }
         }
@@ -209,14 +218,12 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
     {
         // Move forward
         deltaY -= 1;
-        ray->p.dirAngle = 180;
     }
     // Else if the down button is held
     else if (ray->btnState & PB_DOWN)
     {
         // Move backwards
         deltaY += 1;
-        ray->p.dirAngle = 0;
     }
 
     // If the left button is held
@@ -224,14 +231,12 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
     {
         // Move left
         deltaX -= 1;
-        ray->p.dirAngle = 90;
     }
     // Else if the right button is held
     else if (ray->btnState & PB_RIGHT)
     {
         // Move backwards
         deltaX += 1;
-        ray->p.dirAngle = 270;
     }
 
     // If there is movement
@@ -239,6 +244,8 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
     {
         // Normalize deltaX and deltaY before scaling with elapsedUs
         fastNormVec(&deltaX, &deltaY);
+        ray->p.dirX = deltaX;
+        ray->p.dirY = deltaY;
 
         // Should move 1/6 units every 40000uS
         deltaX = (int32_t)(deltaX * elapsedUs) / (int32_t)(40000 * 6);
@@ -314,7 +321,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
     if (ray->p.swordTimerUs > 0)
     {
         ray->p.swordTimerUs -= elapsedUs;
-        // 90 degrees in 250000us
+        // SWORD_SWING_ANGLE degrees in SWORD_SWING_TIME us
         ray->p.swordAngle += (SWORD_SWING_ANGLE * elapsedUs) / SWORD_SWING_TIME;
         if (ray->p.swordAngle >= 360)
         {
@@ -331,90 +338,73 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
  */
 void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
 {
-    // Check if the touch area is touched, and print values if it is
-    int32_t phi, r, intensity;
-    if (getTouchJoystick(&phi, &r, &intensity))
-    {
-        // If there isn't a loadout change in progress
-        if (ray->loadoutChangeTimer == 0)
-        {
-            // Get the zones from the touchpad
-            touchJoystick_t tj = getTouchJoystickZones(phi, r, true, false);
-            if (!(tj & TB_CENTER))
-            {
-                // Get the loadout touched
-                rayLoadout_t nextLoadout = ray->p.loadout;
-                if ((tj & TB_UP) && (ray->p.i.beamLoadOut))
-                {
-                    nextLoadout = LO_NORMAL;
-                }
-                else if ((tj & TB_RIGHT) && (ray->p.i.missileLoadOut))
-                {
-                    nextLoadout = LO_MISSILE;
-                }
-                else if ((tj & TB_LEFT) && (ray->p.i.iceLoadOut))
-                {
-                    nextLoadout = LO_ICE;
-                }
-                else if ((tj & TB_DOWN) && (ray->p.i.xrayLoadOut))
-                {
-                    nextLoadout = LO_XRAY;
-                }
+    linearTouch_t touches[2] = {0};
+    getTouchLinear(touches, ARRAY_SIZE(touches));
+    const linearTouch_t* rTouch = &touches[1];
 
-                // If a new loadout was touched
-                if (ray->p.loadout != nextLoadout)
-                {
-                    // Start a timer to switch to the next loadout
-                    ray->loadoutChangeTimer = LOADOUT_TIMER_US;
-                    ray->nextLoadout        = nextLoadout;
-                }
+    struct touchState* ts = &ray->p.ts;
+
+    if (rTouch->touched)
+    {
+        // Save initial position if not set
+        if (ts->initialTouchPos < 0)
+        {
+            ts->initialTouchPos = rTouch->position;
+        }
+
+        // Save last touch
+        ts->lastTouchPos = rTouch->position;
+
+        // Calculate the distance between inital and curren touches
+        int32_t touchDelta = rTouch->position - ts->initialTouchPos;
+
+        // Check if the touch has dragged far enough to start drawing a bow or setting a bomb
+        const int32_t touchLimit = 1024 / 5;
+        if (touchDelta > touchLimit)
+        {
+            if (!ts->drawingBow)
+            {
+                ts->drawingBow = true;
+            }
+        }
+        else if (touchDelta < -touchLimit)
+        {
+            if (!ts->settingBomb)
+            {
+                printf("Setting bomb\n");
+                ts->settingBomb = true;
             }
         }
     }
-    else
+    else if (ts->initialTouchPos >= 0)
     {
-        // Button Not touched. If this was during a loadout change, cancel it
-        if ((ray->nextLoadout != ray->p.loadout) && !ray->forceLoadoutSwap)
+        // Touch has been released
+        int32_t touchDelta = ts->lastTouchPos - ts->initialTouchPos;
+        touchDelta         = ABS(touchDelta);
+
+        // fire!
+        if (ts->drawingBow)
         {
-            // Reset the timer to bring the gun up and set the next loadout to the current one
-            ray->loadoutChangeTimer = LOADOUT_TIMER_US - ray->loadoutChangeTimer;
-            ray->nextLoadout        = ray->p.loadout;
+            ts->drawingBow = false;
+
+            // TODO scale by touch delta
+            q24_8 velX = ray->p.dirX;
+            q24_8 velY = ray->p.dirY;
+
+            velX = (velX * touchDelta) / 1024;
+            velY = (velY * touchDelta) / 1024;
+            rayCreateBullet(ray, OBJ_BULLET_NORMAL, ray->p.posX, ray->p.posY, velX, velY, -ray->p.dirX, -ray->p.dirY,
+                            true);
         }
-    }
-
-    // If a loadout change is in progress
-    if (ray->loadoutChangeTimer)
-    {
-        // Decrement the timer
-        ray->loadoutChangeTimer -= elapsedUs;
-
-        // If the timer elapsed
-        if (ray->loadoutChangeTimer <= 0)
+        else if (ts->settingBomb)
         {
-            if (ray->p.loadout != ray->nextLoadout)
-            {
-                // If swapping to or from XRAY, also swap hidden enemy sprites
-                if (LO_XRAY == ray->nextLoadout)
-                {
-                    switchEnemiesToXray(ray, true);
-                }
-                else if (LO_XRAY == ray->p.loadout)
-                {
-                    switchEnemiesToXray(ray, false);
-                }
-
-                // Swap the loadout
-                ray->p.loadout = ray->nextLoadout;
-                // Set the timer for the load in
-                ray->loadoutChangeTimer = LOADOUT_TIMER_US;
-            }
-            else
-            {
-                // All done swapping
-                ray->loadoutChangeTimer = 0;
-                ray->forceLoadoutSwap   = false;
-            }
+            printf("BOOM %d\n", touchDelta);
+            ts->settingBomb = false;
         }
+
+        // Reset variables
+        ts->initialTouchPos = -1;
+        ts->lastTouchPos    = -1;
     }
 }
 
@@ -734,8 +724,69 @@ line_t rayGetSwordLineSegment(ray_t* ray)
     };
     if (ray->p.swordTimerUs > 0)
     {
-        sword.p2.x += getCos1024(ray->p.swordAngle) / 4;
-        sword.p2.y += getSin1024(ray->p.swordAngle) / 4;
+        sword.p2.x += getSin1024(ray->p.swordAngle) / 4;
+        sword.p2.y += -getCos1024(ray->p.swordAngle) / 4;
     }
     return sword;
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param ray
+ * @return int32_t
+ */
+int32_t rayGetEightWayAngle(int16_t x, int16_t y)
+{
+    int32_t angle = 0;
+    if (y < 0)
+    {
+        if (x < 0)
+        {
+            // Up Left
+            angle = 45 * 7;
+        }
+        else if (x > 0)
+        {
+            // Up Right
+            angle = 45 * 1;
+        }
+        else
+        {
+            // Up
+            angle = 45 * 0;
+        }
+    }
+    else if (y > 0)
+    {
+        if (x < 0)
+        {
+            // Down Left
+            angle = 45 * 5;
+        }
+        else if (x > 0)
+        {
+            // Down Right
+            angle = 45 * 3;
+        }
+        else
+        {
+            // Down
+            angle = 45 * 4;
+        }
+    }
+    else
+    {
+        if (x < 0)
+        {
+            // Left
+            angle = 45 * 6;
+        }
+        else if (x > 0)
+        {
+            // Right
+            angle = 45 * 2;
+        }
+    }
+    return angle;
 }
