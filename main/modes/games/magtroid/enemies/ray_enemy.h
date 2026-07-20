@@ -17,4 +17,3 @@ bool rayEnemyTransitionState(ray_t* ray, rayEnemy_t* enemy, rayEnemyState_t newS
 void switchEnemiesToXray(ray_t* ray, bool isXray);
 int32_t getTimerForEnemy(rayEnemy_t* enemy, rayEnemyTimerType_t type);
 rayMapCellType_t getBulletForEnemy(rayEnemy_t* enemy);
-rectangle_t rayGetEnemyBoundingBox(rayEnemy_t* enemy);
