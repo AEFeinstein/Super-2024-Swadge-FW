@@ -15,7 +15,7 @@ void drawBackground2d(ray_t* ray, int32_t firstRow, int32_t lastRow)
     }
 }
 
-void drawCommonList(ray_t* ray, list_t* list, int camX, int camY, bool drawBB)
+void drawCommonList(ray_t* ray, list_t* list, int camX, int camY, paletteColor_t bbColor)
 {
     node_t* node = list->first;
     while (node)
@@ -25,13 +25,13 @@ void drawCommonList(ray_t* ray, list_t* list, int camX, int camY, bool drawBB)
                       TO_PX(obj->posX) - camX - (obj->sprite->w / 2), //
                       TO_PX(obj->posY) - camY - (obj->sprite->h / 2));
 
-        if (drawBB)
+        if (cTransparent != bbColor)
         {
-            rectangle_t bb = rayGetEnemyBoundingBox(node->val);
+            rectangle_t bb = rayGetObjBB(node->val);
             drawRect(TO_PX(bb.pos.x) - camX,            //
                      TO_PX(bb.pos.y) - camY,            //
                      TO_PX(bb.pos.x + bb.width) - camX, //
-                     TO_PX(bb.pos.y + bb.height) - camY, c005);
+                     TO_PX(bb.pos.y + bb.height) - camY, bbColor);
         }
         node = node->next;
     }
@@ -71,9 +71,9 @@ void drawForeground2d(ray_t* ray)
         }
     }
 
-    drawCommonList(ray, &ray->enemies, camX, camY, true);
-    drawCommonList(ray, &ray->scenery, camX, camY, false);
-    drawCommonList(ray, &ray->items, camX, camY, false);
+    drawCommonList(ray, &ray->enemies, camX, camY, c500);
+    drawCommonList(ray, &ray->scenery, camX, camY, c050);
+    drawCommonList(ray, &ray->items, camX, camY, c550);
 
     for (int bIdx = 0; bIdx < MAX_RAY_BULLETS; bIdx++)
     {
@@ -86,10 +86,16 @@ void drawForeground2d(ray_t* ray)
                     rayGetEightWayAngle(ray->bullets[bIdx].velX, ray->bullets[bIdx].velY));
 
             // Stand in for an explosion
-            if (ray->bullets[bIdx].fuseUs > 0 && ray->bullets[bIdx].c.radius > 0)
+            if (ray->bullets[bIdx].fuseUs > 0 && ray->bullets[bIdx].c.bound.radius > 0)
             {
-                drawCircleFilled(TO_PX(obj->posX) - camX, TO_PX(obj->posY) - camY, TO_PX(obj->radius), c530);
+                drawCircleFilled(TO_PX(obj->posX) - camX, TO_PX(obj->posY) - camY, TO_PX(obj->bound.radius), c530);
             }
+
+            rectangle_t bb = rayGetObjBB(obj);
+            drawRect(TO_PX(bb.pos.x) - camX,            //
+                     TO_PX(bb.pos.y) - camY,            //
+                     TO_PX(bb.pos.x + bb.width) - camX, //
+                     TO_PX(bb.pos.y + bb.height) - camY, c505);
         }
     }
 
