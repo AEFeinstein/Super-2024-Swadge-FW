@@ -84,6 +84,12 @@ void drawForeground2d(ray_t* ray)
                     TO_PX(obj->posX) - camX - (obj->sprite->w / 2), //
                     TO_PX(obj->posY) - camY - (obj->sprite->h / 2), false, false,
                     rayGetEightWayAngle(ray->bullets[bIdx].velX, ray->bullets[bIdx].velY));
+
+            // Stand in for an explosion
+            if (ray->bullets[bIdx].fuseUs > 0 && ray->bullets[bIdx].c.radius > 0)
+            {
+                drawCircleFilled(TO_PX(obj->posX) - camX, TO_PX(obj->posY) - camY, TO_PX(obj->radius), c530);
+            }
         }
     }
 

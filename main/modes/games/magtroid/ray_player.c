@@ -394,12 +394,18 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
             velX = (velX * touchDelta) / 1024;
             velY = (velY * touchDelta) / 1024;
             rayCreateBullet(ray, OBJ_BULLET_NORMAL, ray->p.posX, ray->p.posY, velX, velY, -ray->p.dirX, -ray->p.dirY,
-                            true);
+                            -1, true);
         }
         else if (ts->settingBomb)
         {
-            printf("BOOM %d\n", touchDelta);
             ts->settingBomb = false;
+
+            // 64 bit to prevent saturation
+            int32_t fuseUs = (touchDelta * (int64_t)4000000) / 1024;
+
+            // Spawn the bomb slightly in front of the player
+            rayCreateBullet(ray, OBJ_BULLET_MISSILE, ray->p.posX + (ray->p.dirX / 2), ray->p.posY + (ray->p.dirY / 2),
+                            0, 0, 0, 0, fuseUs, true);
         }
 
         // Reset variables

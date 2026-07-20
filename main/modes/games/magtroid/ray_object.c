@@ -34,10 +34,11 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs);
  * @param velY The Y velocity of the bullet
  * @param accX The X acceleration of the bullet
  * @param accY The Y acceleration of the bullet
+ * @param fuseUs The time before the bomb explodes, in microseconds, or negative to ignore
  * @param isPlayer true if this is the player's shot, false if it is an enemy's shot
  */
 void rayCreateBullet(ray_t* ray, rayMapCellType_t bulletType, q24_8 posX, q24_8 posY, q24_8 velX, q24_8 velY,
-                     q24_8 accX, q24_8 accY, bool isPlayer)
+                     q24_8 accX, q24_8 accY, int32_t fuseUs, bool isPlayer)
 {
     // Iterate over the bullet list, finding a new slot
     for (uint32_t newIdx = 0; newIdx < MAX_RAY_BULLETS; newIdx++)
@@ -56,8 +57,16 @@ void rayCreateBullet(ray_t* ray, rayMapCellType_t bulletType, q24_8 posX, q24_8 
             // Set the texture
             wsg_t* texture      = getTexByType(ray, bulletType);
             newBullet->c.sprite = texture;
-            // Width is based on the texture width as a fraction of a cell
-            newBullet->c.radius = TO_FX_FRAC(texture->w, 2 * CELL_SIZE);
+            if (OBJ_BULLET_MISSILE == bulletType)
+            {
+                // Bombs start with a negative radius to not collide with enemies
+                newBullet->c.radius = -1;
+            }
+            else
+            {
+                // Width is based on the texture width as a fraction of a cell
+                newBullet->c.radius = TO_FX_FRAC(texture->w, 2 * CELL_SIZE);
+            }
 
             // Spawn it at the given position
             newBullet->c.posX = posX;
@@ -70,6 +79,9 @@ void rayCreateBullet(ray_t* ray, rayMapCellType_t bulletType, q24_8 posX, q24_8 
             // Set the velocity
             newBullet->accX = accX;
             newBullet->accY = accY;
+
+            // Set the fuse
+            newBullet->fuseUs = fuseUs;
 
             // All done
             return;
@@ -128,8 +140,8 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
                 obj->accY = 0;
             }
 
-            // If the object stopped
-            if (0 == obj->velX && 0 == obj->velY)
+            // If the object stopped and there is no fuse
+            if (obj->fuseUs < 0 && 0 == obj->velX && 0 == obj->velY)
             {
                 // Destroy this bullet
                 memset(obj, 0, sizeof(rayBullet_t));
@@ -142,6 +154,34 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
             // Update the bullet's position. (1 << 16) feels about right
             obj->c.posX += (obj->velX * (int32_t)elapsedUs) / (1 << 16);
             obj->c.posY += (obj->velY * (int32_t)elapsedUs) / (1 << 16);
+
+            // If there is a fuse
+            if (obj->fuseUs >= 0)
+            {
+                // Decrement the fuse
+                obj->fuseUs -= elapsedUs;
+
+                // If the fuse elapsed
+                if (obj->fuseUs < 0)
+                {
+                    // If the radius is negative
+                    if (obj->c.radius < 0)
+                    {
+                        // Explode by setting a positive radius
+                        obj->fuseUs   = 100000;
+                        obj->c.radius = TO_FX(1);
+                    }
+                    else
+                    {
+                        // Explosion timeout, destroy this bullet
+                        memset(obj, 0, sizeof(rayBullet_t));
+                        obj->c.id = -1;
+
+                        // Continue to the next
+                        continue;
+                    }
+                }
+            }
 
             // Get the cell the bullet is in now
             rayMapCell_t* cell = &ray->map.tiles[FROM_FX(obj->c.posX)][FROM_FX(obj->c.posY)];
@@ -383,15 +423,21 @@ void checkRayCollisions(ray_t* ray)
         for (uint16_t bIdx = 0; bIdx < MAX_RAY_BULLETS; bIdx++)
         {
             rayBullet_t* bullet = &ray->bullets[bIdx];
-            if (1 == bullet->c.id)
+            if (1 == bullet->c.id && bullet->c.radius > 0)
             {
                 // A player's bullet
                 if (objectsIntersect(&enemy->c, &bullet->c))
                 {
                     // Decrease HP based on the shot and enemy type
                     rayEnemyGetShot(ray, enemy, bullet->c.type);
-                    // De-allocate the bullet
-                    bullet->c.id = -1;
+
+                    // TODO enemies need i-frames to avoid being hit twice from explosions that don't immediately
+                    // de-spawn (and sword)
+                    if (bullet->fuseUs < 0)
+                    {
+                        // De-allocate the bullet
+                        bullet->c.id = -1;
+                    }
                 }
             }
         }
