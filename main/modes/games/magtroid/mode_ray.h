@@ -506,6 +506,7 @@ typedef struct
     q24_8 velY;       ///< The Y velocity of this bullet
     q24_8 accX;       ///< The X acceleration of this bullet
     q24_8 accY;       ///< The Y acceleration of this bullet
+    int32_t fuseUs;   ///< The fuse timer for a bomb
 } rayBullet_t;
 
 /**
