@@ -490,12 +490,13 @@ static bool animateEnemy(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
                 q24_8 xDiff = SUB_FX(ray->p.posX, enemy->c.posX);
                 q24_8 yDiff = SUB_FX(ray->p.posY, enemy->c.posY);
                 fastNormVec(&xDiff, &yDiff);
-                rayCreateBullet(ray, getBulletForEnemy(enemy), enemy->c.posX, enemy->c.posY, xDiff, yDiff, false);
+                rayCreateBullet(ray, getBulletForEnemy(enemy), enemy->c.posX, enemy->c.posY, xDiff, yDiff, 0, 0, -1,
+                                false);
                 if (OBJ_ENEMY_BOSS == enemy->c.type)
                 {
                     // double bullets for the boss
                     rayCreateBullet(ray, getBulletForEnemy(enemy), enemy->c.posX, enemy->c.posY, (xDiff * 3) / 4,
-                                    (yDiff * 3) / 4, false);
+                                    (yDiff * 3) / 4, 0, 0, -1, false);
                 }
             }
         }
