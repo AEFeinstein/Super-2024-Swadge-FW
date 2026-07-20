@@ -487,10 +487,18 @@ typedef struct
  */
 typedef struct
 {
-    wsg_t* sprite;         ///< The current sprite for this object
-    q24_8 posX;            ///< The X position of this object
-    q24_8 posY;            ///< The Y position of this object
-    q24_8 radius;          ///< The radius of this object
+    wsg_t* sprite; ///< The current sprite for this object
+    q24_8 posX;    ///< The X position of this object
+    q24_8 posY;    ///< The Y position of this object
+    union
+    {
+        q24_8 radius; ///< The radius of this object
+        struct
+        {
+            q24_8 w; ///< Bounding box width
+            q24_8 h; ///< Bounding box height (must be negative when using radius instead of box)
+        } box;
+    } bound;
     rayMapCellType_t type; ///< The object's type
     int32_t id;            ///< This object's ID
     bool spriteMirrored;   ///< Whether or not the sprite should be drawn mirrored

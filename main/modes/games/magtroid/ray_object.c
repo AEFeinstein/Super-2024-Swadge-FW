@@ -60,12 +60,14 @@ void rayCreateBullet(ray_t* ray, rayMapCellType_t bulletType, q24_8 posX, q24_8 
             if (OBJ_BULLET_MISSILE == bulletType)
             {
                 // Bombs start with a negative radius to not collide with enemies
-                newBullet->c.radius = -1;
+                newBullet->c.bound.radius = -1;
             }
             else
             {
                 // Width is based on the texture width as a fraction of a cell
-                newBullet->c.radius = TO_FX_FRAC(texture->w, 2 * CELL_SIZE);
+                newBullet->c.bound.box.w = TO_FX_FRAC(newBullet->c.sprite->w, CELL_SIZE);
+                newBullet->c.bound.box.h = TO_FX_FRAC(newBullet->c.sprite->h, CELL_SIZE);
+                // Don't set radius
             }
 
             // Spawn it at the given position
@@ -165,11 +167,11 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
                 if (obj->fuseUs < 0)
                 {
                     // If the radius is negative
-                    if (obj->c.radius < 0)
+                    if (obj->c.bound.radius < 0)
                     {
                         // Explode by setting a positive radius
-                        obj->fuseUs   = 100000;
-                        obj->c.radius = TO_FX(1);
+                        obj->fuseUs         = 100000;
+                        obj->c.bound.radius = TO_FX(1);
                     }
                     else
                     {
@@ -293,6 +295,23 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
 }
 
 /**
+ * @brief Get the bounding box for an object
+ *
+ * @param obj
+ * @return rectangle_t
+ */
+rectangle_t rayGetObjBB(const rayObjCommon_t* obj)
+{
+    rectangle_t bb = {
+        .pos.x  = obj->posX - (obj->bound.box.w / 2),
+        .pos.y  = obj->posY - (obj->bound.box.h / 2),
+        .width  = obj->bound.box.w,
+        .height = obj->bound.box.h,
+    };
+    return bb;
+}
+
+/**
  * @brief Check if two ::rayObjCommon_t intersect
  *
  * @param obj1 The first rayObjCommon_t to check for intersection
@@ -301,10 +320,7 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
  */
 static bool objectsIntersect(const rayObjCommon_t* obj1, const rayObjCommon_t* obj2)
 {
-    q24_8 deltaX    = (obj2->posX - obj1->posX);
-    q24_8 deltaY    = (obj2->posY - obj1->posY);
-    q24_8 radiusSum = (obj1->radius + obj2->radius);
-    return (deltaX * deltaX) + (deltaY * deltaY) < (radiusSum * radiusSum);
+    return rectRectIntersection(rayGetObjBB(obj1), rayGetObjBB(obj2), NULL);
 }
 
 /**
@@ -316,9 +332,10 @@ void checkRayCollisions(ray_t* ray)
 {
     // Create a 'player' for collision comparison
     rayObjCommon_t player = {
-        .posX   = ray->p.posX,
-        .posY   = ray->p.posY,
-        .radius = TO_FX_FRAC(32, 2 * CELL_SIZE),
+        .posX        = ray->p.posX,
+        .posY        = ray->p.posY,
+        .bound.box.w = TO_FX(1), // TODO measure player sprite
+        .bound.box.h = TO_FX(1),
     };
 
     // Check if a bullet touches a player
@@ -423,7 +440,7 @@ void checkRayCollisions(ray_t* ray)
         for (uint16_t bIdx = 0; bIdx < MAX_RAY_BULLETS; bIdx++)
         {
             rayBullet_t* bullet = &ray->bullets[bIdx];
-            if (1 == bullet->c.id && bullet->c.radius > 0)
+            if (1 == bullet->c.id && bullet->c.bound.radius > 0)
             {
                 // A player's bullet
                 if (objectsIntersect(&enemy->c, &bullet->c))
@@ -446,9 +463,8 @@ void checkRayCollisions(ray_t* ray)
         if (ray->p.swordTimerUs > 0)
         {
             // Get the enemy bounding box
-            rectangle_t bb = rayGetEnemyBoundingBox(enemy);
             // Check for a collision between bounding box and sword
-            if (rectLineIntersection(bb, sword, NULL))
+            if (rectLineIntersection(rayGetObjBB(&enemy->c), sword, NULL))
             {
                 printf("HIT!!\n");
                 // TODO only count once
