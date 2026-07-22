@@ -263,58 +263,28 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
             .height = TO_FX_FRAC(14, 16),
         };
 
-        // Check movement in the X direction first
-        if (deltaX)
+        // If the player's new location doesn't fit
+        if (!rayBoundingBoxFitsInMap(ray, movedBoundingBox))
         {
-            q24_8 pBoundaryX;
-            if (deltaX < 0)
-            {
-                pBoundaryX = FROM_FX(movedBoundingBox.pos.x);
-            }
-            else
-            {
-                pBoundaryX = FROM_FX(movedBoundingBox.pos.x + movedBoundingBox.width);
-            }
+            // Stop movement
+            deltaX = 0;
+            deltaY = 0;
 
-            // Check top and bottom corners of the player's bounding box for wall collisions
-            if (!isPassableCell(&ray->map.tiles[pBoundaryX][FROM_FX(movedBoundingBox.pos.y)])
-                || !isPassableCell(
-                    &ray->map.tiles[pBoundaryX][FROM_FX(movedBoundingBox.pos.y + movedBoundingBox.height)]))
-            {
-                deltaX = 0;
-            }
+            // TODO allow axis aligned movement when the input is diagonal on a wall?
         }
 
-        // Then check movement in the Y direction
-        if (deltaY)
-        {
-            int32_t pBoundaryY;
-            if (deltaY < 0)
-            {
-                pBoundaryY = FROM_FX(movedBoundingBox.pos.y);
-            }
-            else
-            {
-                pBoundaryY = FROM_FX(movedBoundingBox.pos.y + movedBoundingBox.height);
-            }
-
-            // Check left and right corners of the player's bounding box for wall collisions
-            if (!isPassableCell(&ray->map.tiles[FROM_FX(movedBoundingBox.pos.x)][pBoundaryY])
-                || !isPassableCell(
-                    &ray->map.tiles[FROM_FX(movedBoundingBox.pos.x + movedBoundingBox.width)][pBoundaryY]))
-            {
-                deltaY = 0;
-            }
-        }
-
+        // Check for collisions with all enemies in the new location
         node_t* eNode = ray->enemies.first;
         while (eNode)
         {
             rayEnemy_t* e = eNode->val;
+
+            // If the player collides with an immovable enemy (i.e. a box on a wall) this will stop movement
             rayEnemyCheckCollision(ray, e, movedBoundingBox, &deltaX, &deltaY);
             eNode = eNode->next;
         }
 
+        // Update location with allowed movement
         ray->p.posX += deltaX;
         ray->p.posY += deltaY;
 
