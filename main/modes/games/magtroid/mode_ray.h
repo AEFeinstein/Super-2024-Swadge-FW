@@ -132,6 +132,7 @@ typedef enum __attribute__((packed))
     OBJ_ENEMY_FLAMING     = (OBJ | ENEMY | 5),
     OBJ_ENEMY_HIDDEN      = (OBJ | ENEMY | 6),
     OBJ_ENEMY_BOSS        = (OBJ | ENEMY | 7),
+    OBJ_ENEMY_BOX         = (OBJ | ENEMY | 8),
     // Power-ups
     OBJ_ITEM_BEAM        = (OBJ | ITEM | 1),
     OBJ_ITEM_CHARGE_BEAM = (OBJ | ITEM | 2),
@@ -667,6 +668,7 @@ typedef struct
     wsg_t enemyTex[NUM_ENEMIES][E_NUM_STATES][NUM_ANIM_FRAMES]; ///< The enemy textures
     wsg_t hiddenXRTex[E_NUM_STATES][NUM_ANIM_FRAMES];           ///< The textures for X-Ray hidden enemies
     wsg_t bossTex[NUM_BOSS_STATES - 1][E_NUM_STATES][NUM_ANIM_FRAMES]; ///< The textures for the boss
+    wsg_t block;
 
     font_t ibm;     ///< A font to draw the HUD
     font_t logbook; ///< A font to draw the menu

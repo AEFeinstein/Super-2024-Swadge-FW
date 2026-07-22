@@ -282,6 +282,8 @@ class view:
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.OBJ_ENEMY_BOSS, '../../assets/magtroid/enemies/BOSS/E_BOSS_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ENEMY_BOX, '../../assets/magtroid/enemies/block.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.OBJ_ITEM_BEAM, '../../assets/magtroid/items/OBJ_ITEM_BEAM.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.OBJ_ITEM_CHARGE_BEAM, '../../assets/magtroid/items/OBJ_ITEM_CHARGE_BEAM.png')
