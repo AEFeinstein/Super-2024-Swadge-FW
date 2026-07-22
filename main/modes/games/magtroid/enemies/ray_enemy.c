@@ -10,6 +10,7 @@
 #include "ray_enemy_flaming.h"
 #include "ray_enemy_hidden.h"
 #include "ray_enemy_boss.h"
+#include "ray_enemy_block.h"
 
 //==============================================================================
 // Typedefs
@@ -18,12 +19,15 @@
 typedef void (*rayEnemyMove_t)(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs);
 typedef int32_t (*rayEnemyGetTimer_t)(rayEnemy_t* enemy, rayEnemyTimerType_t type);
 typedef rayMapCellType_t (*rayEnemyGetBullet_t)(rayEnemy_t* enemy);
+typedef void (*rayEnemyCheckCollision_t)(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX,
+                                         q24_8* deltaY);
 
 typedef struct ray_enemy
 {
     rayEnemyMove_t move;
     rayEnemyGetTimer_t getTimer;
     rayEnemyGetBullet_t getBullet;
+    rayEnemyCheckCollision_t checkPlayerCollision;
 } enemyFuncs_t;
 
 //==============================================================================
@@ -37,39 +41,52 @@ typedef struct ray_enemy
 static const enemyFuncs_t enemyFuncs[] = {
     {
         // OBJ_ENEMY_NORMAL
-        .move      = rayEnemyNormalMove,
-        .getTimer  = rayEnemyNormalGetTimer,
-        .getBullet = rayEnemyNormalGetBullet,
+        .move                 = rayEnemyNormalMove,
+        .getTimer             = rayEnemyNormalGetTimer,
+        .getBullet            = rayEnemyNormalGetBullet,
+        .checkPlayerCollision = NULL,
     },
     {
         // OBJ_ENEMY_STRONG
-        .move      = rayEnemyStrongMove,
-        .getTimer  = rayEnemyStrongGetTimer,
-        .getBullet = rayEnemyStrongGetBullet,
+        .move                 = rayEnemyStrongMove,
+        .getTimer             = rayEnemyStrongGetTimer,
+        .getBullet            = rayEnemyStrongGetBullet,
+        .checkPlayerCollision = NULL,
     },
     {
         // OBJ_ENEMY_ARMORED
-        .move      = rayEnemyArmoredMove,
-        .getTimer  = rayEnemyArmoredGetTimer,
-        .getBullet = rayEnemyArmoredGetBullet,
+        .move                 = rayEnemyArmoredMove,
+        .getTimer             = rayEnemyArmoredGetTimer,
+        .getBullet            = rayEnemyArmoredGetBullet,
+        .checkPlayerCollision = NULL,
     },
     {
         // OBJ_ENEMY_FLAMING
-        .move      = rayEnemyFlamingMove,
-        .getTimer  = rayEnemyFlamingGetTimer,
-        .getBullet = rayEnemyFlamingGetBullet,
+        .move                 = rayEnemyFlamingMove,
+        .getTimer             = rayEnemyFlamingGetTimer,
+        .getBullet            = rayEnemyFlamingGetBullet,
+        .checkPlayerCollision = NULL,
     },
     {
         // OBJ_ENEMY_HIDDEN
-        .move      = rayEnemyHiddenMove,
-        .getTimer  = rayEnemyHiddenGetTimer,
-        .getBullet = rayEnemyHiddenGetBullet,
+        .move                 = rayEnemyHiddenMove,
+        .getTimer             = rayEnemyHiddenGetTimer,
+        .getBullet            = rayEnemyHiddenGetBullet,
+        .checkPlayerCollision = NULL,
     },
     {
         // OBJ_ENEMY_BOSS
-        .move      = rayEnemyBossMove,
-        .getTimer  = rayEnemyBossGetTimer,
-        .getBullet = rayEnemyBossGetBullet,
+        .move                 = rayEnemyBossMove,
+        .getTimer             = rayEnemyBossGetTimer,
+        .getBullet            = rayEnemyBossGetBullet,
+        .checkPlayerCollision = NULL,
+    },
+    {
+        // OBJ_ENEMY_BOX
+        .move                 = NULL,
+        .getTimer             = NULL,
+        .getBullet            = NULL,
+        .checkPlayerCollision = rayEnemyBlockCheckPlayerCollision,
     },
 };
 
@@ -109,6 +126,12 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
     {
         // Get a pointer from the linked list
         rayEnemy_t* enemy = ((rayEnemy_t*)currentNode->val);
+
+        if (!enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].move)
+        {
+            currentNode = currentNode->next;
+            continue;
+        }
 
         // If this enemy is warping in
         if (0 < enemy->warpTimer)
@@ -275,7 +298,11 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
  */
 int32_t getTimerForEnemy(rayEnemy_t* enemy, rayEnemyTimerType_t type)
 {
-    return enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getTimer(enemy, type);
+    if (enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getTimer)
+    {
+        return enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getTimer(enemy, type);
+    }
+    return 0;
 }
 
 /**
@@ -286,7 +313,11 @@ int32_t getTimerForEnemy(rayEnemy_t* enemy, rayEnemyTimerType_t type)
  */
 rayMapCellType_t getBulletForEnemy(rayEnemy_t* enemy)
 {
-    return enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getBullet(enemy);
+    if (enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getBullet)
+    {
+        return enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getBullet(enemy);
+    }
+    return EMPTY;
 }
 
 /**
@@ -538,5 +569,13 @@ void switchEnemiesToXray(ray_t* ray, bool isXray)
 
         // Iterate to the next node
         currentNode = currentNode->next;
+    }
+}
+
+void rayEnemyCheckCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY)
+{
+    if (enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].checkPlayerCollision)
+    {
+        enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].checkPlayerCollision(ray, enemy, player, deltaX, deltaY);
     }
 }
