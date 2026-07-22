@@ -511,3 +511,26 @@ void checkRayCollisions(ray_t* ray)
         currentNode = currentNode->next;
     }
 }
+
+/**
+ * @brief TODO
+ *
+ * @param ray
+ * @param bb
+ * @return true
+ * @return false
+ */
+bool rayBoundingBoxFitsInMap(ray_t* ray, rectangle_t bb)
+{
+    // Find the cells for the four corners of the bounding box
+    int32_t x1 = FROM_FX(bb.pos.x);
+    int32_t x2 = FROM_FX(bb.pos.x + bb.width);
+    int32_t y1 = FROM_FX(bb.pos.y);
+    int32_t y2 = FROM_FX(bb.pos.y + bb.height);
+
+    // Check if each corner is in a passable cell
+    return isPassableCell(&ray->map.tiles[x1][y1]) && //
+           isPassableCell(&ray->map.tiles[x1][y2]) && //
+           isPassableCell(&ray->map.tiles[x2][y1]) && //
+           isPassableCell(&ray->map.tiles[x2][y2]);
+}
