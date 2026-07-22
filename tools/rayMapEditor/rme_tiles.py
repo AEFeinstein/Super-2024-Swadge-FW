@@ -50,6 +50,7 @@ class tileType(Enum):
     OBJ_ENEMY_FLAMING     = (OBJ | ENEMY | 5)
     OBJ_ENEMY_HIDDEN      = (OBJ | ENEMY | 6)
     OBJ_ENEMY_BOSS        = (OBJ | ENEMY | 7)
+    OBJ_ENEMY_BOX         = (OBJ | ENEMY | 8)
     # Power-ups
     OBJ_ITEM_BEAM        = (OBJ | ITEM | 1)
     OBJ_ITEM_CHARGE_BEAM = (OBJ | ITEM | 2)
@@ -124,6 +125,7 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ENEMY_FLAMING,
         tileType.OBJ_ENEMY_HIDDEN,
         tileType.OBJ_ENEMY_BOSS,
+        tileType.OBJ_ENEMY_BOX,
         tileType.OBJ_ITEM_PICKUP_ENERGY,
         tileType.OBJ_ITEM_PICKUP_MISSILE,
         tileType.OBJ_ITEM_KEY_A,
