@@ -161,10 +161,6 @@ void raySaveVisitedTiles(ray_t* ray)
  */
 void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t elapsedUs)
 {
-    // For convenience
-    q24_8 pPosX = ray->p.posX;
-    q24_8 pPosY = ray->p.posY;
-
     // Check all queued button events
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
@@ -252,55 +248,75 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
         deltaY = (int32_t)(deltaY * elapsedUs) / (int32_t)(40000 * 6);
 
         // Save the old cell to check for crossing cell boundaries
-        int16_t oldCellX = FROM_FX(pPosX);
-        int16_t oldCellY = FROM_FX(pPosY);
+        int16_t oldCellX = FROM_FX(ray->p.posX);
+        int16_t oldCellY = FROM_FX(ray->p.posY);
 
         // A little less than half the width of the player, for boundary checks
-        q24_8 pHalfWidth = TO_FX_FRAC(7, 16);
+        // TODO use actual player hitbox
+        // q24_8 pHalfWidth = TO_FX_FRAC(7, 16);
+
+        // TODO use actual player dimensions
+        rectangle_t movedBoundingBox = {
+            .pos.x  = ray->p.posX - TO_FX_FRAC(7, 16) + deltaX,
+            .pos.y  = ray->p.posY - TO_FX_FRAC(7, 16) + deltaY,
+            .width  = TO_FX_FRAC(14, 16),
+            .height = TO_FX_FRAC(14, 16),
+        };
 
         // Check movement in the X direction first
         if (deltaX)
         {
-            q24_8 pBoundaryX = pPosX;
+            q24_8 pBoundaryX;
             if (deltaX < 0)
             {
-                pBoundaryX += (deltaX - pHalfWidth);
+                pBoundaryX = FROM_FX(movedBoundingBox.pos.x);
             }
             else
             {
-                pBoundaryX += (deltaX + pHalfWidth);
+                pBoundaryX = FROM_FX(movedBoundingBox.pos.x + movedBoundingBox.width);
             }
 
             // Check top and bottom corners of the player's bounding box for wall collisions
-            if (isPassableCell(&ray->map.tiles[FROM_FX(pBoundaryX)][FROM_FX(pPosY + pHalfWidth)])
-                && isPassableCell(&ray->map.tiles[FROM_FX(pBoundaryX)][FROM_FX(pPosY - pHalfWidth)]))
+            if (!isPassableCell(&ray->map.tiles[pBoundaryX][FROM_FX(movedBoundingBox.pos.y)])
+                || !isPassableCell(
+                    &ray->map.tiles[pBoundaryX][FROM_FX(movedBoundingBox.pos.y + movedBoundingBox.height)]))
             {
-                ray->p.posX += deltaX;
-                pPosX += deltaX;
+                deltaX = 0;
             }
         }
 
         // Then check movement in the Y direction
         if (deltaY)
         {
-            q24_8 pBoundaryY = pPosY;
+            int32_t pBoundaryY;
             if (deltaY < 0)
             {
-                pBoundaryY += (deltaY - pHalfWidth);
+                pBoundaryY = FROM_FX(movedBoundingBox.pos.y);
             }
             else
             {
-                pBoundaryY += (deltaY + pHalfWidth);
+                pBoundaryY = FROM_FX(movedBoundingBox.pos.y + movedBoundingBox.height);
             }
 
             // Check left and right corners of the player's bounding box for wall collisions
-            if (isPassableCell(&ray->map.tiles[FROM_FX(pPosX + pHalfWidth)][FROM_FX(pBoundaryY)])
-                && isPassableCell(&ray->map.tiles[FROM_FX(pPosX - pHalfWidth)][FROM_FX(pBoundaryY)]))
+            if (!isPassableCell(&ray->map.tiles[FROM_FX(movedBoundingBox.pos.x)][pBoundaryY])
+                || !isPassableCell(
+                    &ray->map.tiles[FROM_FX(movedBoundingBox.pos.x + movedBoundingBox.width)][pBoundaryY]))
             {
-                ray->p.posY += deltaY;
-                pPosY += deltaY;
+                deltaY = 0;
             }
         }
+
+        node_t* eNode = ray->enemies.first;
+        while (eNode)
+        {
+            rayEnemy_t* e = eNode->val;
+            rayEnemyCheckCollision(ray, e, movedBoundingBox, &deltaX, &deltaY);
+            eNode = eNode->next;
+        }
+
+        ray->p.posX += deltaX;
+        ray->p.posY += deltaY;
 
         // Get the new cell to check for crossing cell boundaries
         int16_t newCellX = FROM_FX(ray->p.posX);
