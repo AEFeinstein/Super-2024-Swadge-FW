@@ -8,5 +8,6 @@ void rayCreateBullet(ray_t* ray, rayMapCellType_t bulletType, q24_8 posX, q24_8 
 void moveRayObjects(ray_t* ray, uint32_t elapsedUs);
 void checkRayCollisions(ray_t* ray);
 rectangle_t rayGetObjBB(const rayObjCommon_t* obj);
+bool rayBoundingBoxFitsInMap(ray_t* ray, rectangle_t bb);
 
 #endif
