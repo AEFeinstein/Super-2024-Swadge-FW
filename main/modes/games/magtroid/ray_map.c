@@ -268,7 +268,11 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
     newObj->behaviorTimer = esp_random() % 1000000;
     newObj->shootTimer    = getTimerForEnemy(newObj, SHOT);
     newObj->blockTimer    = getTimerForEnemy(newObj, BLOCK);
-    if ((OBJ_ENEMY_HIDDEN == type) && (LO_XRAY == ray->p.loadout))
+    if (OBJ_ENEMY_BOX == type)
+    {
+        newObj->c.sprite = &ray->block;
+    }
+    else if ((OBJ_ENEMY_HIDDEN == type) && (LO_XRAY == ray->p.loadout))
     {
         newObj->sprites = &ray->hiddenXRTex;
     }
@@ -280,8 +284,10 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
 
     // This sets state, animTimer, animTimerLimit, animFrame, and c.sprite
     newObj->state = E_WALKING_2;
-    rayEnemyTransitionState(ray, newObj, E_WALKING_1);
-
+    if (OBJ_ENEMY_BOX != type)
+    {
+        rayEnemyTransitionState(ray, newObj, E_WALKING_1);
+    }
     // Set initial common state
     newObj->c.posX        = x;
     newObj->c.posY        = y;
