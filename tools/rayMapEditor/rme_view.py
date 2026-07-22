@@ -71,6 +71,7 @@ class view:
         self.paletteHighlightRect: int = -1
 
         self.scriptRects = []
+        self.gridLines = []
 
         frameBgColor: str = '#181818'
         elemBgColor: str = '#1F1F1F'
@@ -618,6 +619,18 @@ class view:
         for x in range(self.m.getMapWidth()):
             for y in range(self.m.getMapHeight()):
                 self.drawMapCell(x, y)
+
+        # Clear old grid lines
+        while 0 != len(self.gridLines):
+            line = self.gridLines.pop()
+            self.mapCanvas.delete(line)
+
+        # Draw room grid lines on the map
+        for x in range(0, self.m.getMapWidth(), 14):
+            self.gridLines.append(self.mapCanvas.create_line(x * self.mapCellSize, 0, x * self.mapCellSize, self.mapCellSize * self.m.getMapHeight(), fill='yellow'));
+
+        for y in range(0, self.m.getMapHeight(), 12):
+            self.gridLines.append(self.mapCanvas.create_line(0, y * self.mapCellSize, self.m.getMapWidth() * self.mapCellSize, y * self.mapCellSize, fill='yellow'));
 
         # Clear highlight from old cell
         self.mapCanvas.delete(self.highlightRect)
