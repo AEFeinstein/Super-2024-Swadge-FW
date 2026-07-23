@@ -386,21 +386,73 @@ class view:
         self.redraw()
 
     def key_press(self, e: Event):
-        # Keyboard shortcut, Ctrl+E is the same as the script button
-        if (e.state == 20) and (e.keycode == 26):
-            self.clickScriptSpawn()
+        SHIFT_MASK = 0x01
+        CTRL_MASK = 0x04
+        ALT_MASK = 0x08
+        SUPER_MASK = 0x40
+
+        # ctrl+o opens
+        if (e.state == CTRL_MASK) and (e.keycode == 32):
+            self.clickLoad()
         # ctrl+S saves
-        if (e.state == 20) and (e.keycode == 39):
+        if (e.state == CTRL_MASK) and (e.keycode == 39):
             self.clickSave()
         # ctrl+shift+S save as
-        if (e.state == 21) and (e.keycode == 39):
+        if (e.state == (CTRL_MASK | SHIFT_MASK)) and (e.keycode == 39):
             self.clickSaveAs()
-        # ctrl+o opens
-        if (e.state == 20) and (e.keycode == 32):
-            self.clickLoad()
         # ctrl+r resize
-        if (e.state == 20) and (e.keycode == 27):
+        if (e.state == CTRL_MASK) and (e.keycode == 27):
             self.clickResizeMap()
+
+        # ctrl+e is the same as the script button
+        if (e.state == CTRL_MASK) and (e.keycode == 26):
+            self.clickScriptSpawn()
+        # ctrl+c is the same as the script button
+        if (e.state == CTRL_MASK) and (e.keycode == 54):
+            self.clickScriptCamera()
+
+        # ctrl+= zooms in
+        if (e.state == CTRL_MASK and e.keycode == 20):
+            tke  = tk.Event()
+            tke.num = 5
+            tke.delta = 1
+            self.mapMouseWheel(tke)
+        # ctrl+- zooms out
+        if (e.state == CTRL_MASK and e.keycode == 21):
+            tke  = tk.Event()
+            tke.num = 4
+            tke.delta = 1
+            self.mapMouseWheel(tke)
+
+        # Arrow keys move the map
+        mTKe  = tk.Event()
+        mTKe.x = 0
+        mTKe.y = 0
+        if 0 == e.state and e.keycode == 111:
+            self.mapMiddleClick(mTKe)
+            mTKe.x = 0
+            mTKe.y = 20
+            self.mapMouseMotion(mTKe)
+            self.clickRelease(mTKe)
+        if 0 == e.state and e.keycode == 116:
+            self.mapMiddleClick(mTKe)
+            mTKe.x = 0
+            mTKe.y = -20
+            self.mapMouseMotion(mTKe)
+            self.clickRelease(mTKe)
+        if 0 == e.state and e.keycode == 113:
+            self.mapMiddleClick(mTKe)
+            mTKe.x = 20
+            mTKe.y = 0
+            self.mapMouseMotion(mTKe)
+            self.clickRelease(mTKe)
+        if 0 == e.state and e.keycode == 114:
+            self.mapMiddleClick(mTKe)
+            mTKe.x = -20
+            mTKe.y = 0
+            self.mapMouseMotion(mTKe)
+            self.clickRelease(mTKe)
+        
 
     def paletteLeftClick(self, event: tk.Event):
         x: int = self.paletteCanvas.canvasx(event.x)
