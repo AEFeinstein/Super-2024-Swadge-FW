@@ -38,6 +38,8 @@
 
 #define BOMBADEETLE_FRAMECOUNT       4
 #define BOMBADEETLE_COUNT            100
+#define COLOR_BOMBLUE                c225
+
 
 
 
@@ -121,7 +123,7 @@ swadgeMode_t bombadeetleMode = {
     .overrideUsb                = false,
     .usesAccelerometer          = false,
     .usesThermometer            = false,
-    .overrideSelectBtn          = true,
+    .overrideSelectBtn          = false,
     .fnEnterMode                = bombadeetleEnterMode,
     .fnExitMode                 = bombadeetleExitMode,
     .fnMainLoop                 = bombadeetleMainLoop,
@@ -554,22 +556,30 @@ static void bombadeetleMainLoop(int64_t elapsedUs)
                         if (evt.button & PB_DOWN && bombadeetle->mapFile.down)
                         {
                             bombadeetle->mapFile.down--;
-                            bombadeetle->grid[gridIndex] = DIRECTION_S;                       
+                            bombadeetle->grid[gridIndex] = DIRECTION_S;   
+                            
+                            bombadeetle->building = false;                    
                         }
                         else if (evt.button & PB_UP && bombadeetle->mapFile.up)
                         {
                             bombadeetle->mapFile.up--;
                             bombadeetle->grid[gridIndex] = DIRECTION_N;
+                            
+                            bombadeetle->building = false;
                         }
                         else if (evt.button & PB_LEFT && bombadeetle->mapFile.left)
                         {
                             bombadeetle->grid[gridIndex] = DIRECTION_W;
                             bombadeetle->mapFile.left--;
+                            
+                            bombadeetle->building = false;
                         }
                         else if (evt.button & PB_RIGHT && bombadeetle->mapFile.right)
                         {
                             bombadeetle->grid[gridIndex] = DIRECTION_E;
                             bombadeetle->mapFile.right--;
+                            
+                            bombadeetle->building = false;
                         }
                     }
                     else {
@@ -595,38 +605,45 @@ static void bombadeetleMainLoop(int64_t elapsedUs)
                     }
 
                     if (evt.button & PB_B && !bombadeetle->building)
-                    {
-                        switch (bombadeetle->grid[gridIndex])
-                        {
-                            case DIRECTION_N:
-                                bombadeetle->mapFile.up++;
-                                break;
-                            case DIRECTION_S:
-                                bombadeetle->mapFile.down++;
-                                break;
-                                
-                            case DIRECTION_E:
-                                bombadeetle->mapFile.right++;
-                                break;
-                                
-                            case DIRECTION_W:
-                                bombadeetle->mapFile.left++;
-                                break;
-                        }
-                        bombadeetle->grid[gridIndex] = 0;
-                    }
-
-                    if (evt.button & PB_START)
-                    {
+                    {                        
                         bombadeetle->state = STATE_RUNNING;
                     }
+
                 }
                 
                 if (evt.button & PB_A)
                 {
                     if (evt.down)
                     {
-                        bombadeetle->building = true;
+                        switch (bombadeetle->grid[gridIndex])
+                        {
+                            case DIRECTION_N:
+                                bombadeetle->mapFile.up++;
+                                bombadeetle->building = false;                               
+                                bombadeetle->grid[gridIndex] = 0;   
+                                break;
+                            case DIRECTION_S:
+                                bombadeetle->mapFile.down++;
+                                bombadeetle->building = false;                               
+                                bombadeetle->grid[gridIndex] = 0;   
+                                break;
+                                
+                            case DIRECTION_E:
+                                bombadeetle->mapFile.right++;
+                                bombadeetle->building = false;                               
+                                bombadeetle->grid[gridIndex] = 0;   
+                                break;
+                                
+                            case DIRECTION_W:
+                                bombadeetle->mapFile.left++;
+                                bombadeetle->building = false;                                
+                                bombadeetle->grid[gridIndex] = 0;   
+                                break;
+                            default:
+                                bombadeetle->building = true;
+                                break;
+
+                        }
                         ESP_LOGI(TAG, "A button!");
                     }
                     else
@@ -860,27 +877,39 @@ static void bombadeetleMainLoop(int64_t elapsedUs)
     drawWsgSimple(&bombadeetle->tools, 2, 31);
 
     char buffer[32];
-    sprintf(buffer,  "%d" , bombadeetle->mapFile.right );
-    drawText(&bombadeetle->mainFont, 112, buffer, 16,70);
+    if (bombadeetle->mapFile.right > 0)
+    {
+        sprintf(buffer,  "%d" , bombadeetle->mapFile.right );
+        drawText(&bombadeetle->mainFont, COLOR_BOMBLUE, buffer, 16,70);
+    }
     
-    sprintf(buffer,  "%d" , bombadeetle->mapFile.left );
-    drawText(&bombadeetle->mainFont, 112, buffer, 16,105);
+    if (bombadeetle->mapFile.left > 0)
+    {
+        sprintf(buffer,  "%d" , bombadeetle->mapFile.left );
+        drawText(&bombadeetle->mainFont, COLOR_BOMBLUE, buffer, 16,105);
+    }
     
-    sprintf(buffer,  "%d" , bombadeetle->mapFile.down );
-    drawText(&bombadeetle->mainFont, 112, buffer, 16,140);
+    if (bombadeetle->mapFile.down > 0)
+    {
+        sprintf(buffer,  "%d" , bombadeetle->mapFile.down );
+        drawText(&bombadeetle->mainFont, COLOR_BOMBLUE, buffer, 16,140);
+    }
     
-    sprintf(buffer,  "%d" , bombadeetle->mapFile.up );
-    drawText(&bombadeetle->mainFont, 112, buffer, 16,175);
+    if (bombadeetle->mapFile.up > 0)
+    {
+        sprintf(buffer,  "%d" , bombadeetle->mapFile.up );
+        drawText(&bombadeetle->mainFont, COLOR_BOMBLUE, buffer, 16,175);
+    }
 
     drawWsgSimple(&bombadeetle->levelNameBackground, BG_LEVELNAME_X, BG_LEVELNAME_Y);
-    drawText(&bombadeetle->mainFont, 112, bombadeetle->mapFile.name, BG_LEVELNAME_X + 10, BG_LEVELNAME_Y + 8);
+    drawText(&bombadeetle->mainFont, c225, bombadeetle->mapFile.name, BG_LEVELNAME_X + 10, BG_LEVELNAME_Y + 8);
     
     
     if (bombadeetle->state == STATE_PLACING) 
     {
         if (bombadeetle->building)
         {
-            drawWsgSimple(&bombadeetle->acursor[bombadeetleCursorFrames[bombadeetle->cursorFrame]], OFFSETMAP_X + (bombadeetle->cursorX * TILESIZE) - 2, OFFSETMAP_Y + (bombadeetle->cursorY * TILESIZE) - 2);
+            drawWsgSimple(&bombadeetle->acursor[bombadeetleCursorFrames[bombadeetle->cursorFrame]], OFFSETMAP_X + (bombadeetle->cursorX * TILESIZE) - 4, OFFSETMAP_Y + (bombadeetle->cursorY * TILESIZE) - 4);
         }
         else
         {
