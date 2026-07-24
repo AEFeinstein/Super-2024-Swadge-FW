@@ -102,8 +102,9 @@ bool process_font(processorInput_t* arg)
     putc(h - 2, fp);
 
     /* Start scanning the PNG for charcters */
-    int charStartX = 0;
-    int charEndX   = 0;
+    int charStartX      = 0;
+    int charEndX        = 0;
+    bool isCountingChar = false;
     for (int x = 0; x < w; x++)
     {
         switch (0xFFFFFF & getPx(data, w, x, h - 1))
@@ -111,16 +112,21 @@ bool process_font(processorInput_t* arg)
             case 0:
             {
                 /* black px */
-                charEndX = x;
+                charEndX       = x;
+                isCountingChar = true;
                 break;
             }
             default:
             {
                 /* white px (not black) */
-                appendCharToFile(fp, data, w, h, charStartX, charEndX);
-                charsWritten++;
-                charStartX = x + 1;
-                charEndX   = x + 1;
+                if (isCountingChar)
+                {
+                    appendCharToFile(fp, data, w, h, charStartX, charEndX);
+                    charsWritten++;
+                }
+                charStartX     = x + 1;
+                charEndX       = x + 1;
+                isCountingChar = false;
                 break;
             }
         }
