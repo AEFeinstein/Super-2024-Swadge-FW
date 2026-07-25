@@ -3,6 +3,8 @@
 //==============================================================================
 #include "bombadeetle.h"
 #include "cnfs_image.h"
+#include "fs_font.h"
+#include "fs_wsg.h"
 #include "hdw-btn.h"
 #include "shapes.h"
 #include "wsg.h"
@@ -29,8 +31,9 @@
 #define WALL_S                      2
 #define WALL_E                      4
 #define WALL_N                      8
-#define HOLE                        16
+#define TELEPORT                    16
 #define GOAL                        32
+#define HOLE                        64
 
 
 #define DIRECTION_NONE                    0
@@ -67,12 +70,6 @@ typedef enum
 
 } bombState_t;
 
-typedef enum
-{
-    NOTHOLDING,
-    HOLDING,
-} bombCursorState_t;
-
 static const cnfsFileIdx_t bombadeetleTiles[] ={
     BOMB_TILE_001_WSG, BOMB_TILE_002_WSG
 };
@@ -106,7 +103,11 @@ static const cnfsFileIdx_t bombadeetleGoal[] = {
 };
 
 static const cnfsFileIdx_t bombadeetleLevels[] = {
-    BOMB_ONE_BIN, BOMB_HELLO_BIN, BOMB_CREPUSCULAR_BIN
+    BOMB_ONE_BIN, BOMB_HELLO_BIN, BOMB_NOHOLES_BIN, BOMB_MAG_1_BIN, BOMB_CREPUSCULAR_BIN,BOMB_MOWWOW_BIN 
+};
+
+static const cnfsFileIdx_t bombadeetleTeleporter[] = {
+    BOMB_TELEPORT_1_WSG, BOMB_TELEPORT_2_WSG, BOMB_TELEPORT_3_WSG, BOMB_TELEPORT_4_WSG, BOMB_TELEPORT_5_WSG, BOMB_TELEPORT_6_WSG,
 };
 
 static const int bombadeetleCursorFrames[] ={
@@ -199,11 +200,13 @@ typedef struct
     wsg_t* walls;
     wsg_t* bombadeetleSprites;
     wsg_t* shloogSprites;
+    wsg_t* teleporterSprites;
     wsg_t* goal;
     wsg_t success;
     wsg_t levelNameBackground;
     wsg_t tools;
     wsg_t collisionSprite;
+    wsg_t holeSprite;
 
     bool building;
     bool goalAnimating;
@@ -217,6 +220,8 @@ typedef struct
     int8_t goalFrame;
     int16_t goalTime;
     int8_t goalCount;
+
+    int8_t teleporterFrame;
 
     int8_t levelIndex;
     int8_t levelMax;
@@ -261,6 +266,7 @@ static void bombadeetleEnterMode()
     bombadeetle->successTime = 0;
     bombadeetle->collisionX = -1;
     bombadeetle->collisionY = -1;
+    bombadeetle->teleporterFrame = 0;
 
     bombadeetle->cursorMoveTime = 0;
 
@@ -269,12 +275,13 @@ static void bombadeetleEnterMode()
     
     //Load from disk to see what the current level max is
     bombadeetle->levelMax = 0;
-    bombadeetle->levelIndex = 0;
+    bombadeetle->levelIndex = 2;
 
     loadWsg(BOMB_SUCCESS_WSG, &bombadeetle->success, true);
     loadWsg(BOMB_LEVEL_NAME_WSG, &bombadeetle->levelNameBackground, true);
     loadWsg(BOMB_TOOLS_WSG, &bombadeetle->tools, true);
     loadWsg(BOMB_COLLISION_WSG, &bombadeetle->collisionSprite,true);
+    loadWsg(BOMB_HOLE_WSG, &bombadeetle->holeSprite, true);
 
     bombadeetle->background.tiles = heap_caps_calloc(ARRAY_SIZE(bombadeetleTiles), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(bombadeetleTiles); idx++)
@@ -286,6 +293,12 @@ static void bombadeetleEnterMode()
     for (int idx = 0; idx < ARRAY_SIZE(bombadeetleArrows); idx++)
     {
         loadWsg(bombadeetleArrows[idx], &bombadeetle->arrows[idx], true);
+    }
+
+    bombadeetle->teleporterSprites = heap_caps_calloc(ARRAY_SIZE(bombadeetleTeleporter), sizeof(wsg_t), MALLOC_CAP_8BIT);
+    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleTeleporter); idx++)
+    {
+        loadWsg(bombadeetleTeleporter[idx], &bombadeetle->teleporterSprites[idx], true);
     }
 
     bombadeetle->cursor = heap_caps_calloc(ARRAY_SIZE(bombadeetleCursor), sizeof(wsg_t), MALLOC_CAP_8BIT);
@@ -358,12 +371,13 @@ static void bombadeetleEnterMode()
 }
 static void bombadeetleCheckBombadeetles(bool update)
 {
-    ESP_LOGI(TAG, "%d %d", bombadeetle->bombadeetles[0].locX, bombadeetle->bombadeetles[0].locY);
-    
+    int8_t checkTile;
+
     for(int idx = 0; idx < BOMBADEETLE_COUNT; idx++)
     {
         if (bombadeetle->bombadeetles[idx].direction == DIRECTION_NONE) continue;
         if (bombadeetle->bombadeetles[idx].direction == GOAL) continue;
+
 
         if (update)
         {
@@ -411,11 +425,42 @@ static void bombadeetleCheckBombadeetles(bool update)
             break;
         }
         
-
+        checkTile = (bombadeetle->bombadeetles[idx].tileX) + (bombadeetle->bombadeetles[idx].tileY * GRIDWIDTH);
         //Check if on arrow tile
-        if (bombadeetle->grid[(bombadeetle->bombadeetles[idx].tileX) + (bombadeetle->bombadeetles[idx].tileY * GRIDWIDTH)] != DIRECTION_NONE)
+        if (bombadeetle->grid[checkTile] != DIRECTION_NONE)
         {
-            bombadeetle->bombadeetles[idx].direction = bombadeetle->grid[(bombadeetle->bombadeetles[idx].tileX) + (bombadeetle->bombadeetles[idx].tileY * GRIDWIDTH)];
+            bombadeetle->bombadeetles[idx].direction = bombadeetle->grid[checkTile];
+        }
+
+        
+        //Check if on hole tile
+        if (bombadeetle->map[checkTile] & HOLE)
+        {
+            ESP_LOGI(TAG, "OMG! HOLE!");
+             bombadeetle->state = STATE_COLLISION;
+
+            bombadeetle->collisionX = bombadeetle->bombadeetles[idx].locX;
+            bombadeetle->collisionY = bombadeetle->bombadeetles[idx].locY;
+            bombadeetle->bombadeetles[idx].direction = DIRECTION_NONE;
+            
+        }
+
+        
+        //Check if on teleport tile
+        if (bombadeetle->map[checkTile] & TELEPORT && update)
+        {
+            ESP_LOGI(TAG, "OMG! TELEPORT!");
+            for (int ndx = 1; ndx < 108; ndx++)
+            {
+                if (bombadeetle->map[(checkTile + ndx) % 108] & TELEPORT)
+                {
+                    bombadeetle->bombadeetles[idx].tileX = ((checkTile + ndx) % 108) % GRIDWIDTH;
+                    bombadeetle->bombadeetles[idx].tileY = ((checkTile + ndx) % 108) / GRIDWIDTH;
+                    ESP_LOGI(TAG, "TELEPORT FOUND! %d %d", checkTile, (checkTile + ndx)%108);
+
+                    break;
+                }
+            }            
         }
         
         //Check direction
@@ -537,8 +582,6 @@ static void bombadeetleCheckShloogs(bool update)
         else if (bombadeetleMove(tile, bombadeetleRight(bombadeetle->shloogs[idx].direction)))
         {
             bombadeetle->shloogs[idx].direction = bombadeetleRight(bombadeetle->shloogs[idx].direction);
-            ESP_LOGI(TAG, "Turn right %d,%d %d", bombadeetle->shloogs[idx].tileX, bombadeetle->shloogs[idx].tileY, bombadeetle->shloogs[idx].direction);
-            //bombadeetle->paused = true;
         }
         else if (bombadeetleMove(tile, bombadeetleLeft(bombadeetle->shloogs[idx].direction)))
         {
@@ -663,7 +706,6 @@ static void bombadeetleImportMap(int64_t index)
        bombadeetle->mapFile.shloogSpawn[idx - offset] = levelFile[idx];
     }
 
-    ESP_LOGI(TAG, "Spaw %d %d", levelFile[offset + 27], bombadeetle->mapFile.shloogSpawn[27]);
     offset += 108;
     
     bombadeetle->mapFile.left = levelFile[offset+ 0];
@@ -792,6 +834,9 @@ static void bombadeetleMainLoop(int64_t elapsedUs)
         bombadeetle->cursorTime -= ANIMATIONSPEED;
         bombadeetle->cursorFrame ++;
         bombadeetle->cursorFrame %=4;
+
+        bombadeetle->teleporterFrame++;
+        bombadeetle->teleporterFrame %= ARRAY_SIZE(bombadeetleTeleporter);
         
         for(int i = 0; i < BOMBADEETLE_COUNT; i++)
         {
@@ -938,7 +983,7 @@ static void bombadeetleMainLoop(int64_t elapsedUs)
                         bombadeetleCheckShloogs(false);
                         bombadeetleCheckBombadeetles(false);
 
-                        ESP_LOGI(TAG, "%d %d", bombadeetle->bombadeetles[0].locX, bombadeetle->bombadeetles[0].tileX * TILESIZE);
+                        
                     }
 
                 }
@@ -1127,6 +1172,23 @@ static void bombadeetleDrawGame()
         for (int x = 0; x < GRIDWIDTH; x++)
         {
             tileIndex = (y * GRIDWIDTH)+ x;
+            
+            if (bombadeetle->map[tileIndex] & GOAL)
+            {
+                drawWsgSimple(&bombadeetle->goal[bombadeetleGoalAnimation[bombadeetle->goalFrame]],OFFSETMAP_X + (x * TILESIZE), OFFSETMAP_Y + (y * TILESIZE));
+            }
+
+            if (bombadeetle->map[tileIndex] & HOLE)
+            {
+                drawWsgSimple(&bombadeetle->holeSprite, OFFSETMAP_X + (x * TILESIZE), OFFSETMAP_Y + (y * TILESIZE));
+            }
+
+            
+            if (bombadeetle->map[tileIndex] & TELEPORT)
+            {
+                drawWsgSimple(&bombadeetle->teleporterSprites[bombadeetle->teleporterFrame], OFFSETMAP_X + (x * TILESIZE), OFFSETMAP_Y + (y * TILESIZE));
+            }
+
             if (y == 0)
             {
                 drawWsgSimple(&bombadeetle->walls[1], OFFSETMAP_X + (x * TILESIZE) - 2,  OFFSETMAP_Y + (y * TILESIZE) - 2);
@@ -1151,10 +1213,6 @@ static void bombadeetleDrawGame()
                 // drawRectFilled(OFFSETMAP_X + (x * TILESIZE) , OFFSETMAP_Y + ((y+1) * TILESIZE) - 2, OFFSETMAP_X + ((x+1) * TILESIZE), OFFSETMAP_Y + ((y+1) * TILESIZE) + 2, c505);
             }
             
-            if (bombadeetle->map[tileIndex] & GOAL)
-            {
-                drawWsgSimple(&bombadeetle->goal[bombadeetleGoalAnimation[bombadeetle->goalFrame]],OFFSETMAP_X + (x * TILESIZE), OFFSETMAP_Y + (y * TILESIZE));
-            }
         }
     }
     //
@@ -1267,5 +1325,73 @@ static void bombadeetleDrawGame()
 
 static void bombadeetleExitMode()
 {
+    freeFont(&bombadeetle->mainFont);
+    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleShloogSprite); idx++)
+    {
+        freeWsg( &bombadeetle->shloogSprites[idx]);
+    }
+
+    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleGoal); idx++)
+    {
+        freeWsg(&bombadeetle->goal[idx]);
+    }
+       
+    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleBombadeetleSprite); idx++)
+    {
+        freeWsg( &bombadeetle->bombadeetleSprites[idx]);
+    }
+    
+     for (int idx = 0; idx < ARRAY_SIZE(bombadeetleWall); idx++)
+    {
+        freeWsg( &bombadeetle->walls[idx]);
+    }
+
+    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleActiveCursor); idx++)
+    {
+        freeWsg(&bombadeetle->acursor[idx]);
+    }
+
+    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleCursor); idx++)
+    {
+        freeWsg( &bombadeetle->cursor[idx]);
+    }
+
+    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleTeleporter); idx++)
+    {
+        freeWsg( &bombadeetle->teleporterSprites[idx]);
+    }
+
+    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleArrows); idx++)
+    {
+        freeWsg( &bombadeetle->arrows[idx]);
+    }
+
+    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleTiles); idx++)
+    {
+        freeWsg(&bombadeetle->background.tiles[idx]);
+    }
+    
+    freeWsg(bombadeetle->shloogSprites);
+    freeWsg(bombadeetle->goal);
+    freeWsg(bombadeetle->bombadeetleSprites);
+    freeWsg(bombadeetle->walls);
+    freeWsg(bombadeetle->acursor);
+    freeWsg(bombadeetle->cursor);
+    freeWsg(bombadeetle->teleporterSprites);
+    freeWsg(bombadeetle->arrows);
+    freeWsg(bombadeetle->background.tiles);
+
+    freeWsg( &bombadeetle->success);
+    freeWsg( &bombadeetle->levelNameBackground);
+    freeWsg( &bombadeetle->tools);
+    freeWsg( &bombadeetle->collisionSprite);
+    freeWsg( &bombadeetle->holeSprite);
+
+    heap_caps_free(bombadeetle->bombadeetles);
+    heap_caps_free(bombadeetle->shloogs);
+
+    heap_caps_free(bombadeetle);
+   
+    
     heap_caps_free(bombadeetle);
 }
