@@ -6,6 +6,7 @@
 #include "fs_font.h"
 #include "fs_wsg.h"
 #include "hdw-btn.h"
+#include "palette.h"
 #include "shapes.h"
 #include "wsg.h"
 #include <ctype.h>
@@ -16,7 +17,10 @@
 #define TAG                         "BOMBADEETLE"
 #define OFFSETMAP_X                 44
 #define OFFSETMAP_Y                 10
+#define OFFSETSELECTBUTTON_X        42
+#define OFFSETSELECTBUTTON_Y        72
 #define ANIMATIONSPEED              125
+#define CURSORSPEED                 125
 #define SHLOOG_MOVE_TIME            40
 #define BOMBADEETLE_MOVE_TIME       25
 #define MOVETIME                    75
@@ -63,6 +67,7 @@ const char bombadeetleModeName[] = "Bombadeetle";
 typedef enum
 {
     MENU,
+    STATE_STAGESELECT,
     STATE_PLACING,
     STATE_RUNNING,
     STATE_COLLISION,
@@ -103,11 +108,11 @@ static const cnfsFileIdx_t bombadeetleGoal[] = {
 };
 
 static const cnfsFileIdx_t bombadeetleLevels[] = {
-    BOMB_ONE_BIN, BOMB_HELLO_BIN, BOMB_NOHOLES_BIN, BOMB_MAG_1_BIN, BOMB_CREPUSCULAR_BIN,BOMB_MOWWOW_BIN 
+    BOMB_ONE_BIN, BOMB_HELLO_BIN, BOMB_NOHOLES_BIN, BOMB_MAG_1_BIN, BOMB_CREPUSCULAR_BIN,BOMB_MOWWOW_BIN , BOMB_JERO_BIN,
 };
 
 static const cnfsFileIdx_t bombadeetleTeleporter[] = {
-    BOMB_TELEPORT_1_WSG, BOMB_TELEPORT_2_WSG, BOMB_TELEPORT_3_WSG, BOMB_TELEPORT_4_WSG, BOMB_TELEPORT_5_WSG, BOMB_TELEPORT_6_WSG,
+     BOMB_TELEPORT_1_WSG, BOMB_TELEPORT_2_WSG, BOMB_TELEPORT_3_WSG, BOMB_TELEPORT_4_WSG, BOMB_TELEPORT_5_WSG, BOMB_TELEPORT_6_WSG,
 };
 
 static const int bombadeetleCursorFrames[] ={
@@ -133,7 +138,13 @@ static int bombadeetleLeft(int direction);
 static int bombadeetleTurnAround(int direction);
 static void bombadeetleCheckShloogs(bool update);
 static void bombadeetleCheckBombadeetles(bool update);
+static void bombadeetleDrawBackground();
 static void bombadeetleDrawGame();
+static void bombadeetleDrawSelect();
+static void bombadeetleGameLoop(int64_t elapsedUs);
+static void bombadeetleStageSelectLoop(int64_t elapsedUs);
+
+
 
 
 
@@ -202,7 +213,11 @@ typedef struct
     wsg_t* shloogSprites;
     wsg_t* teleporterSprites;
     wsg_t* goal;
+    wsg_t backgroundTile;
     wsg_t success;
+    wsg_t stageSelect;
+    wsg_t stageSelectButton;
+    wsg_t stageActiveSelectButton;
     wsg_t levelNameBackground;
     wsg_t tools;
     wsg_t collisionSprite;
@@ -221,16 +236,22 @@ typedef struct
     int16_t goalTime;
     int8_t goalCount;
 
+    int16_t animationTime;
+
     int8_t teleporterFrame;
 
     int8_t levelIndex;
     int8_t levelMax;
+
+    int8_t backgroundOffset;
 
     int16_t successTime;
 
     int16_t collisionX;
     int16_t collisionY;
 
+    int8_t stageSelectIndex;
+    int8_t stageSelectPageIndex;
     
     int8_t bombadeetleMoveAmount;
     int8_t shloogMoveAmount;
@@ -267,22 +288,31 @@ static void bombadeetleEnterMode()
     bombadeetle->collisionX = -1;
     bombadeetle->collisionY = -1;
     bombadeetle->teleporterFrame = 0;
+    bombadeetle->backgroundOffset = 0;
+    bombadeetle->stageSelectIndex = 0;
 
     bombadeetle->cursorMoveTime = 0;
+
+    bombadeetle->state = STATE_STAGESELECT;
 
     bombadeetle->bombadeetles = (bombadeetleEntity_t*)heap_caps_calloc(BOMBADEETLE_COUNT, sizeof(bombadeetleEntity_t), MALLOC_CAP_8BIT);
     bombadeetle->shloogs = (bombadeetleEntity_t*)heap_caps_calloc(SHLOOG_MAX_COUNT, sizeof(bombadeetleEntity_t), MALLOC_CAP_8BIT);
     
     //Load from disk to see what the current level max is
     bombadeetle->levelMax = 0;
-    bombadeetle->levelIndex = 2;
+    bombadeetle->levelIndex = 0;
 
     loadWsg(BOMB_SUCCESS_WSG, &bombadeetle->success, true);
+    loadWsg(BOMB_STAGE_SELECT_BACKGROUND_WSG, &bombadeetle->stageSelect, true);
+    loadWsg(BOMB_STAGE_SELECT_INDEX_BUTTON_WSG, &bombadeetle->stageSelectButton, true);
+    loadWsg(BOMB_STAGE_SELECT_INDEX_ACTIVE_BUTTON_WSG, &bombadeetle->stageActiveSelectButton, true);
+
+
     loadWsg(BOMB_LEVEL_NAME_WSG, &bombadeetle->levelNameBackground, true);
     loadWsg(BOMB_TOOLS_WSG, &bombadeetle->tools, true);
     loadWsg(BOMB_COLLISION_WSG, &bombadeetle->collisionSprite,true);
     loadWsg(BOMB_HOLE_WSG, &bombadeetle->holeSprite, true);
-
+    loadWsg(BOMB_BACKGROUND_WSG, &bombadeetle->backgroundTile, true);
     bombadeetle->background.tiles = heap_caps_calloc(ARRAY_SIZE(bombadeetleTiles), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(bombadeetleTiles); idx++)
     {
@@ -364,11 +394,9 @@ static void bombadeetleEnterMode()
             bombadeetle->map[idx] |= WALL_S;
         }
     }
-
-
-    bombadeetleImportMap(bombadeetle->levelIndex);
-    bombadeetleLoadMap();
 }
+
+
 static void bombadeetleCheckBombadeetles(bool update)
 {
     int8_t checkTile;
@@ -819,6 +847,119 @@ static int bombadeetleTurnAround(int direction)
 
 static void bombadeetleMainLoop(int64_t elapsedUs)
 {
+    switch (bombadeetle->state)
+    {
+        case STATE_STAGESELECT:
+            bombadeetleStageSelectLoop(elapsedUs);
+            break;
+        default:
+            bombadeetleGameLoop(elapsedUs);
+            break;
+    }
+
+}
+
+static void bombadeetleStageSelectLoop(int64_t elapsedUs)
+{
+    
+    buttonEvt_t evt;
+    int16_t tick = elapsedUs / 1000;
+    //animationTime
+
+    
+    bombadeetle->animationTime += tick;
+    if (bombadeetle->animationTime > ANIMATIONSPEED)
+    {
+        bombadeetle->animationTime -= ANIMATIONSPEED;
+
+        bombadeetle->backgroundOffset++;
+        bombadeetle->backgroundOffset %=16;        
+    }
+    
+    while(checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down)
+        {
+            if (evt.button & PB_DOWN)
+            {
+                
+                bombadeetle->stageSelectIndex += 5;
+                if (bombadeetle->stageSelectIndex >= 20)
+                {
+                    bombadeetle->stageSelectIndex %= 20;
+                }
+            }
+
+            if (evt.button & PB_UP)
+            {
+               
+                bombadeetle->stageSelectIndex -= 5;
+
+                if (bombadeetle->stageSelectIndex < 0)
+                {
+                    bombadeetle->stageSelectIndex += 20;
+                }
+            
+            }
+
+            if (evt.button & PB_LEFT)
+            {
+                if (bombadeetle->stageSelectIndex % 5 != 0)
+                {
+                    bombadeetle->stageSelectIndex--;
+                }
+                else
+                {
+                    bombadeetle->stageSelectIndex += 4;
+                }
+
+            }
+
+            if (evt.button & PB_RIGHT)
+            {
+                if (bombadeetle->stageSelectIndex % 5 != 4)
+                {
+                    bombadeetle->stageSelectIndex++;
+                }
+                else
+                {
+                    bombadeetle->stageSelectIndex -= 4;
+                }
+            }
+
+            if (evt.button & PB_A)
+            {
+                bombadeetle->levelIndex = bombadeetle->stageSelectIndex + (bombadeetle->stageSelectPageIndex * 20);
+                bombadeetle->state = STATE_PLACING;
+                bombadeetleImportMap(bombadeetle->levelIndex);
+                bombadeetleLoadMap();
+
+            }
+
+
+            if (bombadeetle->stageSelectIndex + (bombadeetle->stageSelectPageIndex * 20) >= bombadeetle->levelMax)
+            {
+                ESP_LOGI(TAG, "FIXED %d %d", bombadeetle->stageSelectIndex , (bombadeetle->levelMax - 1) % 20);
+                bombadeetle->stageSelectIndex = (bombadeetle->levelMax) % 20;
+
+                if (bombadeetle->stageSelectIndex < 0) bombadeetle->stageSelectIndex = 0;
+
+            }
+
+            if (bombadeetle->stageSelectIndex + (bombadeetle->stageSelectPageIndex * 20) >= ARRAY_SIZE(bombadeetleLevels))
+            {
+                bombadeetle->stageSelectIndex = (ARRAY_SIZE(bombadeetleLevels)-1) % 20;
+            }
+
+        }
+    }
+    
+
+    bombadeetleDrawSelect();
+}
+
+static void bombadeetleGameLoop(int64_t elapsedUs)
+{
     buttonEvt_t evt;
     int16_t tick = elapsedUs / 1000;
     int8_t gridIndex = bombadeetle->cursorX + (bombadeetle->cursorY * GRIDWIDTH);
@@ -828,13 +969,14 @@ static void bombadeetleMainLoop(int64_t elapsedUs)
 
     if (bombadeetle->paused) return;
 
-    bombadeetle->cursorTime += tick;
-    if (bombadeetle->cursorTime > ANIMATIONSPEED)
+    bombadeetle->animationTime += tick;
+    if (bombadeetle->animationTime > ANIMATIONSPEED)
     {
-        bombadeetle->cursorTime -= ANIMATIONSPEED;
-        bombadeetle->cursorFrame ++;
-        bombadeetle->cursorFrame %=4;
+        bombadeetle->animationTime -= ANIMATIONSPEED;
 
+        bombadeetle->backgroundOffset++;
+        bombadeetle->backgroundOffset %=16;
+        
         bombadeetle->teleporterFrame++;
         bombadeetle->teleporterFrame %= ARRAY_SIZE(bombadeetleTeleporter);
         
@@ -855,6 +997,15 @@ static void bombadeetleMainLoop(int64_t elapsedUs)
                 bombadeetle->shloogs[i].frame %= BOMBADEETLE_FRAMECOUNT;
             }
         }
+    }
+    
+    bombadeetle->cursorTime += tick;
+    if (bombadeetle->cursorTime > CURSORSPEED)
+    {
+
+        bombadeetle->cursorTime -= CURSORSPEED;
+        bombadeetle->cursorFrame ++;
+        bombadeetle->cursorFrame %=4;
     }
 
     if (bombadeetle->cursorMoveTime > 0)
@@ -881,22 +1032,22 @@ static void bombadeetleMainLoop(int64_t elapsedUs)
                         {
 
                             //Next map
-                            bombadeetle->levelIndex++;
                             
                             if (bombadeetle->levelIndex >= ARRAY_SIZE(bombadeetleLevels))
                             {
                                 bombadeetle->levelIndex = ARRAY_SIZE(bombadeetleLevels ) - 1;
                             }
                             
-                            if (bombadeetle->levelIndex > bombadeetle->levelMax)
-                            {
-                                bombadeetle->levelMax = bombadeetle->levelIndex;
-                                //Save max level
-                            }
                             
                             bombadeetleImportMap(bombadeetle->levelIndex);
                             bombadeetleLoadMap();
                         }
+                    }
+
+                    if (evt.button & PB_B)
+                    {
+                        //Reset map
+                        bombadeetle->state = STATE_STAGESELECT;
                     }
                 }
             }
@@ -1021,13 +1172,11 @@ static void bombadeetleMainLoop(int64_t elapsedUs)
                                 break;
 
                         }
-                        ESP_LOGI(TAG, "A button!");
+                        
                     }
                     else
                     {
                         bombadeetle->building = false;
-
-                        ESP_LOGI(TAG, "NO A button!");
                     }
                 }
             }
@@ -1112,7 +1261,16 @@ static void bombadeetleMainLoop(int64_t elapsedUs)
         {
             ESP_LOGI(TAG, "WIN!");
             bombadeetle->state = STATE_WIN;
+            
+            bombadeetle->levelIndex++;
             bombadeetle->successTime = 0;
+            
+            if (bombadeetle->levelIndex > bombadeetle->levelMax)
+            {
+                bombadeetle->levelMax = bombadeetle->levelIndex;
+                //Save max level
+            }
+
         }
 
     }
@@ -1146,11 +1304,72 @@ static void bombadeetleMainLoop(int64_t elapsedUs)
     bombadeetleDrawGame();
 }
 
+static void bombadeetleDrawBackground()
+{
+    //Drawing has to be the last thing in the stack
+    for(int x = -1; x < 19; x++)
+    {
+        for (int y = -1; y < 17; y++)
+        {
+            drawWsgSimple(&bombadeetle->backgroundTile , (x * 16)+ bombadeetle->backgroundOffset, (y * 16) + bombadeetle->backgroundOffset);
+        }
+
+    }
+
+}
+
+static void bombadeetleDrawSelect()
+{
+    
+    bombadeetleDrawBackground();
+
+    
+    drawWsgSimple(&bombadeetle->stageSelect, 15, 14);
+    
+    char buffer[32];
+    int displayIndex = 0;
+    int maxLevels = ARRAY_SIZE(bombadeetleLevels);
+    
+    for (int8_t idx = 0; idx < 20; idx++)
+    {
+        //stageActiveSelectButton
+        displayIndex = (idx + (bombadeetle->stageSelectPageIndex * 20)) + 1;
+
+        if (displayIndex > maxLevels) continue;
+        if (displayIndex - 1 > bombadeetle->levelMax) 
+        {
+            break;
+        }
+
+        if (idx == bombadeetle->stageSelectIndex)
+        {
+            drawWsgSimple(&bombadeetle->stageActiveSelectButton, OFFSETSELECTBUTTON_X + ((idx % 5) * 42), OFFSETSELECTBUTTON_Y + ((idx / 5) * 32));
+        }
+        else
+        {
+            drawWsgSimple(&bombadeetle->stageSelectButton, OFFSETSELECTBUTTON_X + ((idx % 5) * 42), OFFSETSELECTBUTTON_Y + ((idx / 5) * 32));
+        }
+        
+        if (displayIndex < 10)
+        {
+            sprintf(buffer,  "0%d" , displayIndex);
+        }
+        else
+        {
+            sprintf(buffer,  "%d" , displayIndex);
+        }
+
+        drawText(&bombadeetle->mainFont, c555, buffer, OFFSETSELECTBUTTON_X + ((idx % 5) * 42) + 10, OFFSETSELECTBUTTON_Y + ((idx / 5) * 32) + 5);
+    }
+}
+
 static void bombadeetleDrawGame()
 {
+
     int tileIndex = 0;
-    //Drawing has to be the last thing in the stack
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c112);
+    bombadeetleDrawBackground();
+
+    //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c112);
 
     for (int y = 0; y < GRIDHEIGHT; y++)
     {
@@ -1380,7 +1599,8 @@ static void bombadeetleExitMode()
     freeWsg(bombadeetle->teleporterSprites);
     freeWsg(bombadeetle->arrows);
     freeWsg(bombadeetle->background.tiles);
-
+    
+    freeWsg(&bombadeetle->backgroundTile);
     freeWsg( &bombadeetle->success);
     freeWsg( &bombadeetle->levelNameBackground);
     freeWsg( &bombadeetle->tools);
@@ -1393,5 +1613,4 @@ static void bombadeetleExitMode()
     heap_caps_free(bombadeetle);
    
     
-    heap_caps_free(bombadeetle);
 }
