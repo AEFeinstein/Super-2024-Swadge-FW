@@ -10,6 +10,7 @@
 #include "shapes.h"
 #include "wsg.h"
 #include <ctype.h>
+#include <stdbool.h>
 
 //==============================================================================
 // Defines
@@ -21,10 +22,13 @@
 #define OFFSETSELECTBUTTON_Y        72
 #define ANIMATIONSPEED              125
 #define CURSORSPEED                 125
+#define GAME_MOVE_TIME              1
 #define SHLOOG_MOVE_TIME            40
 #define BOMBADEETLE_MOVE_TIME       25
 #define MOVETIME                    75
 #define TILESIZE                    16
+
+#define DEFAULT_MOVE_AMOUNT         4
 
 #define GRIDHEIGHT                  9
 #define GRIDWIDTH                   12
@@ -258,8 +262,9 @@ typedef struct
     font_t mainFont;
 
     int16_t cursorMoveTime;
-    int16_t bombadeetleMoveTime;
-    int16_t shloogMoveTime;
+    int16_t gameMoveTime;
+    int8_t gameMoveTick;
+    int8_t gameSpeed;
 
     int8_t grid[GRIDHEIGHT * GRIDWIDTH]; // I don't like this.
     int8_t map[GRIDHEIGHT * GRIDWIDTH];
@@ -290,7 +295,9 @@ static void bombadeetleEnterMode()
     bombadeetle->teleporterFrame = 0;
     bombadeetle->backgroundOffset = 0;
     bombadeetle->stageSelectIndex = 0;
-
+    
+    
+    bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT;
     bombadeetle->cursorMoveTime = 0;
 
     bombadeetle->state = STATE_STAGESELECT;
@@ -299,8 +306,8 @@ static void bombadeetleEnterMode()
     bombadeetle->shloogs = (bombadeetleEntity_t*)heap_caps_calloc(SHLOOG_MAX_COUNT, sizeof(bombadeetleEntity_t), MALLOC_CAP_8BIT);
     
     //Load from disk to see what the current level max is
-    bombadeetle->levelMax = 0;
-    bombadeetle->levelIndex = 0;
+    bombadeetle->levelMax = 3;
+    bombadeetle->levelIndex = 3;
 
     loadWsg(BOMB_SUCCESS_WSG, &bombadeetle->success, true);
     loadWsg(BOMB_STAGE_SELECT_BACKGROUND_WSG, &bombadeetle->stageSelect, true);
@@ -405,7 +412,6 @@ static void bombadeetleCheckBombadeetles(bool update)
     {
         if (bombadeetle->bombadeetles[idx].direction == DIRECTION_NONE) continue;
         if (bombadeetle->bombadeetles[idx].direction == GOAL) continue;
-
 
         if (update)
         {
@@ -750,12 +756,12 @@ static void bombadeetleLoadMap()
     int tileIndex = 0;
     
     bombadeetle->state = STATE_PLACING;    
-    bombadeetle->bombadeetleMoveTime = 0;
-    bombadeetle->shloogMoveTime = 0;
+    bombadeetle->gameMoveTime = 0;
     bombadeetle->bombadeetleMoveAmount = 0;
     bombadeetle->goalCount = 0;
     bombadeetle->goalAnimating = false;
-    
+    bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT;
+
     bombadeetle->collisionX = -1;
     bombadeetle->collisionY = -1;
 
@@ -863,8 +869,9 @@ static void bombadeetleStageSelectLoop(int64_t elapsedUs)
 {
     
     buttonEvt_t evt;
-    int16_t tick = elapsedUs / 1000;
-    //animationTime
+     int16_t tick = elapsedUs / 1000;
+    
+     //animationTime
 
     
     bombadeetle->animationTime += tick;
@@ -1069,6 +1076,24 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                     }
                 }
             }
+
+            linearTouch_t touches[2] = {0};
+            getTouchLinear(touches, ARRAY_SIZE(touches));
+            for (uint8_t tIdx = 0; tIdx < ARRAY_SIZE(touches); tIdx++)
+            {
+                if (touches[tIdx].touched && tIdx == 0)
+                {
+
+                    int speed = touches[tIdx].position / 125;
+                    if (speed % 2 == 1) speed--;
+
+                    if (speed < 2) speed = 2;
+                    if (speed > 8) speed = 8;
+                    ESP_LOGI(TAG, "Game speed %d", speed);
+                    bombadeetle->gameSpeed = speed;
+
+                }
+            }
         case STATE_PLACING:
             while(checkButtonQueueWrapper(&evt))
             {
@@ -1199,38 +1224,43 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
     }
     
     //Level updating
-
     if (bombadeetle->state == STATE_RUNNING)
     {
-        bombadeetle->bombadeetleMoveTime += tick;
-        if (bombadeetle->bombadeetleMoveTime > BOMBADEETLE_MOVE_TIME)
-        {
-            bombadeetle->bombadeetleMoveTime -= BOMBADEETLE_MOVE_TIME;
-            bombadeetle->bombadeetleMoveAmount += 4;
-            if (bombadeetle->bombadeetleMoveAmount >= TILESIZE)
-            {
-                bombadeetle->bombadeetleMoveAmount = 0;
-                bombadeetleUpdate = true;
-            }
-        } 
+        bombadeetle->gameMoveTime += tick;
 
-        bombadeetle->shloogMoveTime += tick;
-        if (bombadeetle->shloogMoveTime > SHLOOG_MOVE_TIME)
+        while (bombadeetle->gameMoveTime >= GAME_MOVE_TIME)
         {
-            bombadeetle->shloogMoveTime -= SHLOOG_MOVE_TIME;
-            bombadeetle->shloogMoveAmount += 4;
-            
-            if (bombadeetle->shloogMoveAmount >= TILESIZE)
+            bombadeetle->gameMoveTime -= GAME_MOVE_TIME;
+            bombadeetle->gameMoveTick++;
+            bombadeetle->gameMoveTick %= 200;
+            shloogUpdate = false;
+            bombadeetleUpdate = false;
+
+            if (bombadeetle->gameMoveTime % BOMBADEETLE_MOVE_TIME == 0)
             {
-                bombadeetle->shloogMoveAmount = 0;
-                shloogUpdate = true;
+                bombadeetle->bombadeetleMoveAmount += bombadeetle->gameSpeed;
+                if (bombadeetle->bombadeetleMoveAmount >= TILESIZE)
+                {
+                    bombadeetle->bombadeetleMoveAmount = 0;
+                    bombadeetleUpdate = true;
+                }
             }
 
-        }
+            if (bombadeetle->gameMoveTime % SHLOOG_MOVE_TIME == 0)
+            {
+                bombadeetle->shloogMoveAmount += bombadeetle->gameSpeed;
+                            
+                if (bombadeetle->shloogMoveAmount >= TILESIZE)
+                {
+                    bombadeetle->shloogMoveAmount = 0;
+                    shloogUpdate = true;
+                }
+            }            
 
-        bombadeetleCheckBombadeetles(bombadeetleUpdate);
-        bombadeetleCheckShloogs(shloogUpdate);
-        
+            bombadeetleCheckBombadeetles(bombadeetleUpdate);
+            bombadeetleCheckShloogs(shloogUpdate);
+
+        }        
 
         if (bombadeetle->goalAnimating)
         {
