@@ -99,10 +99,17 @@ void drawForeground2d(ray_t* ray)
         }
     }
 
-    drawWsg(&ray->cho_portrait,                                    //
-            TO_PX(ray->p.posX) - camX - (ray->cho_portrait.w / 2), //
-            TO_PX(ray->p.posY) - camY - (ray->cho_portrait.h / 2), //
-            false, false, rayGetEightWayAngle(ray->p.dirX, ray->p.dirY));
+    int16_t pSpriteX = TO_PX(ray->p.posX) - camX - (ray->cho_portrait.w / 2);
+    int16_t pSpriteY = TO_PX(ray->p.posY) - camY - (ray->cho_portrait.h / 2);
+    if (ray->p.jumpPos || ray->p.jumpVel)
+    {
+        int16_t spriteRadius = (ray->cho_portrait.w / 2);
+        drawEllipseFilled(pSpriteX + spriteRadius, pSpriteY + ray->cho_portrait.h, spriteRadius, spriteRadius / 2,
+                          c111);
+    }
+
+    drawWsg(&ray->cho_portrait, pSpriteX, pSpriteY + TO_PX(ray->p.jumpPos), false, false,
+            rayGetEightWayAngle(ray->p.dirX, ray->p.dirY));
 
     if (ray->p.swordTimerUs > 0)
     {
