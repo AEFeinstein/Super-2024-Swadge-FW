@@ -593,6 +593,9 @@ typedef struct
         bool drawingBow;
         bool settingBomb;
     } ts;
+
+    q24_8 jumpPos;
+    q24_8 jumpVel;
 } rayPlayer_t;
 
 /**
