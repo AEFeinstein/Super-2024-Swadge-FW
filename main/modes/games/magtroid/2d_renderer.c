@@ -8,47 +8,32 @@
 
 void drawBackground2d(ray_t* ray, int32_t firstRow, int32_t lastRow)
 {
-    paletteColor_t* fb = getPxTftFramebuffer();
+    // Get the framebuffer at this row
+    paletteColor_t* fb = getPxTftFramebuffer() + (TFT_WIDTH * firstRow);
+
+    // Find the row and offset into the texture to start at
+    int32_t mapY       = (ray->camera.y + firstRow) / CELL_SIZE;
+    int32_t texOffsetY = (ray->camera.y + firstRow) % CELL_SIZE;
+
+    // Find the column and offset into the texture to start at
+    int32_t iMapX       = (ray->camera.x) / CELL_SIZE;
+    int32_t iTexOffsetX = (ray->camera.x) % CELL_SIZE;
+    int32_t iCopySize   = CELL_SIZE - iTexOffsetX;
+
+    // For each pixel row in this update
     for (uint32_t y = firstRow; y < lastRow; y++)
     {
-        memset(&fb[y * TFT_WIDTH], c000, sizeof(paletteColor_t) * TFT_WIDTH);
-    }
-}
+        // Reset for this row
+        int32_t mapX       = iMapX;
+        int32_t texOffsetX = iTexOffsetX;
+        int32_t copySize   = iCopySize;
 
-void drawCommonList(ray_t* ray, list_t* list, int camX, int camY, paletteColor_t bbColor)
-{
-    node_t* node = list->first;
-    while (node)
-    {
-        rayObjCommon_t* obj = node->val;
-        drawWsgSimple(obj->sprite,                                    //
-                      TO_PX(obj->posX) - camX - (obj->sprite->w / 2), //
-                      TO_PX(obj->posY) - camY - (obj->sprite->h / 2));
-
-        if (cTransparent != bbColor)
+        // For the entire row, in CELL_SIZE steps
+        for (int32_t x = 0; x < TFT_WIDTH; /* x updated in the loop */)
         {
-            rectangle_t bb = rayGetObjBB(node->val);
-            drawRect(TO_PX(bb.pos.x) - camX,            //
-                     TO_PX(bb.pos.y) - camY,            //
-                     TO_PX(bb.pos.x + bb.width) - camX, //
-                     TO_PX(bb.pos.y + bb.height) - camY, bbColor);
-        }
-        node = node->next;
-    }
-}
-
-void drawForeground2d(ray_t* ray)
-{
-    int32_t camX = ray->camera.x;
-    int32_t camY = ray->camera.y;
-
-    for (int mapY = 0; mapY < ray->map.h; mapY++)
-    {
-        for (int mapX = 0; mapX < ray->map.w; mapX++)
-        {
-            // Get the next cell texture
+            // Get this cell type and the texture for it
             rayMapCellType_t type = ray->map.tiles[mapX][mapY].type;
-            wsg_t* texture;
+            const wsg_t* texture;
 
             // These are generic
             if ((BG_FLOOR_LAVA == type) || (BG_FLOOR_WATER == type) || (BG_FLOOR_HEAL == type)
@@ -67,9 +52,73 @@ void drawForeground2d(ray_t* ray)
                 texture = &ray->envTex[ray->p.mapId % NUM_ENVS][TX_FLOOR];
             }
 
-            drawWsgTile(texture, mapX * CELL_SIZE - camX, mapY * CELL_SIZE - camY);
+            // Copy one row from the texture to the framebuffer
+            memcpy(fb, &texture->px[CELL_SIZE * texOffsetY + texOffsetX], copySize);
+
+            // Advance the framebuffer
+            fb += copySize;
+
+            // Advance the row pixel
+            x += copySize;
+
+            // Set the texture offset and copy size for the next
+            texOffsetX = 0;
+            copySize   = CELL_SIZE;
+
+            // Make sure it doesn't go out of bounds
+            if (x + copySize > TFT_WIDTH)
+            {
+                copySize = TFT_WIDTH - x;
+            }
+
+            // Iterate cell
+            mapX++;
+        }
+
+        // Iterate the texture offset for each row
+        texOffsetY++;
+        if (texOffsetY >= CELL_SIZE)
+        {
+            // Advance to the next cell
+            mapY++;
+            texOffsetY = 0;
         }
     }
+}
+
+void drawCommonList(ray_t* ray, list_t* list, int camX, int camY, paletteColor_t bbColor)
+{
+    node_t* node = list->first;
+    while (node)
+    {
+        rayObjCommon_t* obj = node->val;
+        drawWsgSimple(obj->sprite,                                    //
+                      TO_PX(obj->posX) - camX - (obj->sprite->w / 2), //
+                      TO_PX(obj->posY) - camY - (obj->sprite->h / 2));
+
+        if (cTransparent != bbColor)
+        {
+            if (obj->bound.box.h)
+            {
+                rectangle_t bb = rayGetObjBB(obj);
+                drawRect(TO_PX(bb.pos.x) - camX,            //
+                         TO_PX(bb.pos.y) - camY,            //
+                         TO_PX(bb.pos.x + bb.width) - camX, //
+                         TO_PX(bb.pos.y + bb.height) - camY, bbColor);
+            }
+            else
+            {
+                drawCircle(TO_PX(obj->posX), TO_PX(obj->posY), obj->bound.radius, bbColor);
+            }
+        }
+        node = node->next;
+    }
+}
+
+void drawForeground2d(ray_t* ray)
+{
+    int32_t camX = ray->camera.x;
+    int32_t camY = ray->camera.y;
 
     drawCommonList(ray, &ray->enemies, camX, camY, c500);
     drawCommonList(ray, &ray->scenery, camX, camY, c050);
@@ -91,11 +140,18 @@ void drawForeground2d(ray_t* ray)
                 drawCircleFilled(TO_PX(obj->posX) - camX, TO_PX(obj->posY) - camY, TO_PX(obj->bound.radius), c530);
             }
 
-            rectangle_t bb = rayGetObjBB(obj);
-            drawRect(TO_PX(bb.pos.x) - camX,            //
-                     TO_PX(bb.pos.y) - camY,            //
-                     TO_PX(bb.pos.x + bb.width) - camX, //
-                     TO_PX(bb.pos.y + bb.height) - camY, c505);
+            if (obj->bound.box.h)
+            {
+                rectangle_t bb = rayGetObjBB(obj);
+                drawRect(TO_PX(bb.pos.x) - camX,            //
+                         TO_PX(bb.pos.y) - camY,            //
+                         TO_PX(bb.pos.x + bb.width) - camX, //
+                         TO_PX(bb.pos.y + bb.height) - camY, c505);
+            }
+            else
+            {
+                drawCircle(TO_PX(obj->posX) - camX, TO_PX(obj->posY) - camY, obj->bound.radius, c505);
+            }
         }
     }
 
