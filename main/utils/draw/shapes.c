@@ -1103,6 +1103,82 @@ void drawEllipse(int xm, int ym, int a, int b, paletteColor_t col)
 }
 
 /**
+ * @brief Draw a filled ellipse
+ *
+ * @param xm The X coordinate of the center of the ellipse
+ * @param ym The Y coordinate of the center of the ellipse
+ * @param a The X radius of the ellipse
+ * @param b The Y radius of the ellipse
+ * @param col The color to draw
+ */
+void drawEllipseFilled(int xm, int ym, int a, int b, paletteColor_t col)
+{
+    paletteColor_t* fb = getPxTftFramebuffer();
+    bool skipDraw      = false;
+
+    long x = -a, y = 0;                      /* II. quadrant from bottom left to top right */
+    long e2 = b, dx = (1 + 2 * x) * e2 * e2; /* error increment  */
+    long dy = x * x, err = dx + dy;          /* error of 1.step */
+
+    do
+    {
+        // Only fill a new row when Y changes
+        if (!skipDraw)
+        {
+            // Find where X starts and ends on this row, clamped to the display
+            int xMin   = xm + x;
+            xMin       = CLAMP(xMin, 0, TFT_WIDTH);
+            int xMax   = xm - x;
+            xMax       = CLAMP(xMax, 0, TFT_WIDTH);
+            int xWidth = xMax - xMin;
+
+            // Fill a row of the lower half of the circle, if on screen
+            int ymp = (ym + y);
+            if (0 <= ymp && ymp < TFT_HEIGHT)
+            {
+                memset(&fb[TFT_WIDTH * ymp + xMin], col, xWidth);
+            }
+
+            // Fill a row of the upper half of the circle, if on screen
+            int ymn = (ym - y);
+            if (0 <= ymn && ymn < TFT_HEIGHT)
+            {
+                memset(&fb[TFT_WIDTH * ymn + xMin], col, xWidth);
+            }
+        }
+        else
+        {
+            skipDraw = false;
+        }
+
+        e2 = 2 * err;
+
+        if (e2 >= dx)
+        {
+            x++;
+            err += dx += 2 * (long)b * b;
+        } /* x step */
+
+        if (e2 <= dy)
+        {
+            y++;
+            err += dy += 2 * (long)a * a;
+        } /* y step */
+        else
+        {
+            skipDraw = true;
+        }
+    } while (x <= 0);
+
+    /* too early stop for flat ellipses with a=1, */
+    if (y < b)
+    {
+        /* -> finish tip of ellipse */
+        drawLineFast(xm, ym - b, xm, ym + b, col);
+    }
+}
+
+/**
  * @brief Helper function to draw the outline of a circle with translation and scaling
  *
  * @param xm The X coordinate of the center of the circle
