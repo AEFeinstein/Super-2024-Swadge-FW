@@ -199,8 +199,11 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
         {
             if (evt.down)
             {
-                // TODO Jump
-                printf("JUMP!\n");
+                // If not already jumping, add an impulse to jump
+                if (!rayPlayerIsJumping(ray))
+                {
+                    ray->p.jumpVel = -TO_FX_FRAC(5, 8);
+                }
             }
         }
     }
@@ -314,6 +317,22 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
             ray->p.swordAngle -= 360;
         }
     }
+
+    // Run the jump physics
+    if (rayPlayerIsJumping(ray))
+    {
+        // Gravity is just fixed positive acceleration
+        ray->p.jumpVel += ((int32_t)elapsedUs) / (1 << 11);
+        ray->p.jumpPos += (ray->p.jumpVel * (int32_t)elapsedUs) / (1 << 16);
+
+        // If the jump is back where it started
+        if (ray->p.jumpPos >= 0)
+        {
+            // Finish the jump by zeroing variables
+            ray->p.jumpVel = TO_FX(0);
+            ray->p.jumpPos = TO_FX(0);
+        }
+    }
 }
 
 /**
@@ -324,6 +343,12 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
  */
 void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
 {
+    // Don't check for touches while jumping
+    if (rayPlayerIsJumping(ray))
+    {
+        return;
+    }
+
     linearTouch_t touches[2] = {0};
     getTouchLinear(touches, ARRAY_SIZE(touches));
     const linearTouch_t* rTouch = &touches[1];
@@ -710,9 +735,9 @@ line_t rayGetSwordLineSegment(ray_t* ray)
 {
     line_t sword = {
         .p1.x = ray->p.posX,
-        .p1.y = ray->p.posY,
+        .p1.y = ray->p.posY + ray->p.jumpPos,
         .p2.x = ray->p.posX,
-        .p2.y = ray->p.posY,
+        .p2.y = ray->p.posY + ray->p.jumpPos,
     };
     if (ray->p.swordTimerUs > 0)
     {
@@ -781,4 +806,16 @@ int32_t rayGetEightWayAngle(int16_t x, int16_t y)
         }
     }
     return angle;
+}
+
+/**
+ * @brief Return true if the player is jumping, false otherwise
+ *
+ * @param ray
+ * @return true
+ * @return false
+ */
+bool rayPlayerIsJumping(ray_t* ray)
+{
+    return ray->p.jumpPos || ray->p.jumpVel;
 }
