@@ -15,7 +15,7 @@ def note_name(num):
         octave = semitones // 12
         return f"{note}{octave}"
 
-def note_symbol(num):
+def note_freq_symbol(num):
     semitones = (num - A0)
     note = note_names[semitones % 12]
     octave = semitones // 12
@@ -50,7 +50,7 @@ def gen_note_table():
         #f = 440 * 2**((n-A4)/12)
         actual, f = calc_pitch_float(n)
         name = note_name(n)
-        symbol = note_symbol(n)
+        symbol = note_freq_symbol(n)
         pad = " " * (5 - len(str(int(f))))
         error = ((actual / 256.0) - f) / f * 100
         olderror = (round(f) - f) / f * 100
@@ -112,15 +112,16 @@ def gen_dither_table():
     print()
     print("};")
 
-gen_note_table()
-print()
+if __name__ == "__main__":
+    gen_note_table()
+    print()
 
-gen_bend_table()
-print()
+    gen_bend_table()
+    print()
 
-print("#ifdef OSC_DITHER")
-gen_dither_table()
-print("#endif")
+    print("#ifdef OSC_DITHER")
+    gen_dither_table()
+    print("#endif")
 
-#print(f"Max error: {maxerr} on note {maxerrnote}")
-#print(sorted(note_errs))
+    #print(f"Max error: {maxerr} on note {maxerrnote}")
+    #print(sorted(note_errs))
