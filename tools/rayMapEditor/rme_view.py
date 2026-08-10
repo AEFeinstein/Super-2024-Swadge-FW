@@ -230,7 +230,7 @@ class view:
         self.texMapMap: Mapping[tileType, ImageTk.PhotoImage] = {}
 
         # Load all textures
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_FLOOR_0, '../../assets/magtroid/env/BASE/BG_BASE_FLOOR.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_FLOOR_0, 'imgs/DELETE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_FLOOR_1, '../../assets/magtroid/env/BASE/BG_BASE_FLOOR.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_FLOOR_2, '../../assets/magtroid/env/BASE/BG_BASE_FLOOR.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_FLOOR_3, '../../assets/magtroid/env/BASE/BG_BASE_FLOOR.png')
@@ -263,12 +263,12 @@ class view:
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_FLOOR_30, '../../assets/magtroid/env/BASE/BG_BASE_FLOOR.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_FLOOR_31, '../../assets/magtroid/env/BASE/BG_BASE_FLOOR.png')
 
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_0, '../../assets/magtroid/env/BASE/BG_BASE_WALL_1.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_0, 'imgs/DELETE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_1, '../../assets/magtroid/env/BASE/BG_BASE_WALL_1.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_2, '../../assets/magtroid/env/BASE/BG_BASE_WALL_1.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_3, '../../assets/magtroid/env/BASE/BG_BASE_WALL_1.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_4, '../../assets/magtroid/env/BASE/BG_BASE_WALL_1.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_5, '../../assets/magtroid/env/BASE/BG_BASE_WALL_1.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_2, '../../assets/magtroid/env/BASE/BG_BASE_WALL_2.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_3, '../../assets/magtroid/env/BASE/BG_BASE_WALL_3.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_4, '../../assets/magtroid/env/BASE/BG_BASE_WALL_4.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_5, '../../assets/magtroid/env/BASE/BG_BASE_WALL_5.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_6, '../../assets/magtroid/env/BASE/BG_BASE_WALL_1.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_7, '../../assets/magtroid/env/BASE/BG_BASE_WALL_1.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_8, '../../assets/magtroid/env/BASE/BG_BASE_WALL_1.png')
