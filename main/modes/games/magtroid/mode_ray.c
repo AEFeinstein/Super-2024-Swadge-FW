@@ -6,7 +6,6 @@
 #include "mainMenu.h"
 #include "mode_ray.h"
 #include "ray_map.h"
-#include "ray_renderer.h"
 #include "ray_object.h"
 #include "ray_tex_manager.h"
 #include "ray_player.h"
@@ -407,7 +406,7 @@ static void rayMainLoop(int64_t elapsedUs)
 #endif
 
             // Run timers for head-bob, doors, etc.
-            runEnvTimers(ray, elapsedUs);
+            // runEnvTimers(ray, elapsedUs);
 
             // Only run this code when the camera is settled
             if (ray->camera.x == ray->cameraTarget.x && ray->camera.y == ray->cameraTarget.y)
