@@ -5,7 +5,6 @@
 #include "geometry.h"
 #include "ray_object.h"
 #include "ray_tex_manager.h"
-#include "ray_renderer.h"
 #include "ray_map.h"
 #include "ray_player.h"
 #include "ray_dialog.h"
