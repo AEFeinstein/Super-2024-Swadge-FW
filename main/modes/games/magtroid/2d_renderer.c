@@ -6,6 +6,8 @@
 
 #define TO_PX(x) ((CELL_SIZE * (x)) / 256)
 
+void drawCommonList(ray_t* ray, list_t* list, int camX, int camY, paletteColor_t bbColor);
+
 void drawBackground2d(ray_t* ray, int32_t firstRow, int32_t lastRow)
 {
     // Get the framebuffer at this row
@@ -33,24 +35,7 @@ void drawBackground2d(ray_t* ray, int32_t firstRow, int32_t lastRow)
         {
             // Get this cell type and the texture for it
             rayMapCellType_t type = ray->map.tiles[mapX][mapY].type;
-            const wsg_t* texture;
-
-            // These are generic
-            if ((BG_FLOOR_LAVA == type) || (BG_FLOOR_WATER == type) || (BG_FLOOR_HEAL == type)
-                || (BG_DOOR <= type && type <= BG_DOOR_ARTIFACT))
-            {
-                texture = getTexByType(ray, type);
-            }
-            // These are environment specific
-            else if (BG_WALL_1 <= type && type <= BG_WALL_5)
-            {
-                texture = &ray->envTex[ray->p.mapId % NUM_ENVS][type - BG_WALL_1];
-            }
-            // Floor is also environment specific
-            else
-            {
-                texture = &ray->envTex[ray->p.mapId % NUM_ENVS][TX_FLOOR];
-            }
+            const wsg_t* texture  = getTexByType(ray, type);
 
             // Copy one row from the texture to the framebuffer
             memcpy(fb, &texture->px[CELL_SIZE * texOffsetY + texOffsetX], copySize);
@@ -155,16 +140,15 @@ void drawForeground2d(ray_t* ray)
         }
     }
 
-    int16_t pSpriteX = TO_PX(ray->p.posX) - camX - (ray->cho_portrait.w / 2);
-    int16_t pSpriteY = TO_PX(ray->p.posY) - camY - (ray->cho_portrait.h / 2);
+    int16_t pSpriteX = TO_PX(ray->p.posX) - camX - (ray->p.sprite->w / 2);
+    int16_t pSpriteY = TO_PX(ray->p.posY) - camY - (ray->p.sprite->h / 2);
     if (ray->p.jumpPos || ray->p.jumpVel)
     {
-        int16_t spriteRadius = (ray->cho_portrait.w / 2);
-        drawEllipseFilled(pSpriteX + spriteRadius, pSpriteY + ray->cho_portrait.h, spriteRadius, spriteRadius / 2,
-                          c111);
+        int16_t spriteRadius = (ray->p.sprite->w / 2);
+        drawEllipseFilled(pSpriteX + spriteRadius, pSpriteY + ray->p.sprite->h, spriteRadius, spriteRadius / 2, c111);
     }
 
-    drawWsg(&ray->cho_portrait, pSpriteX, pSpriteY + TO_PX(ray->p.jumpPos), false, false,
+    drawWsg(ray->p.sprite, pSpriteX, pSpriteY + TO_PX(ray->p.jumpPos), false, false,
             rayGetEightWayAngle(ray->p.dirX, ray->p.dirY));
 
     if (ray->p.swordTimerUs > 0)

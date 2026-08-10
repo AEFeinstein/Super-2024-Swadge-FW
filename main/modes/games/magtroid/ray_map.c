@@ -13,7 +13,6 @@
 #include "heatshrink_helper.h"
 #include "ray_map.h"
 #include "ray_tex_manager.h"
-#include "ray_renderer.h"
 #include "ray_script.h"
 #include "ray_enemy.h"
 
@@ -227,8 +226,8 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
     }
 
     // Set the camera to be overwritten by the script
-    ray->camera.x = -1;
-    ray->camera.y = -1;
+    ray->camera.x = 0;
+    ray->camera.y = 0;
 
     // Reset script timers
     ray->scriptTimer       = 0;
@@ -262,32 +261,24 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
     newObj->c.type = type;
     newObj->c.id   = id;
 
-    // Set initial enemy state
-    newObj->health        = 100;
-    newObj->behavior      = DOING_NOTHING;
-    newObj->behaviorTimer = esp_random() % 1000000;
-    newObj->shootTimer    = getTimerForEnemy(newObj, SHOT);
-    newObj->blockTimer    = getTimerForEnemy(newObj, BLOCK);
-    if (OBJ_ENEMY_BOX == type)
+    // TODO set function pointers
+    switch (type)
     {
-        newObj->c.sprite = &ray->block;
+        case OBJ_ENEMY_BOX:
+        {
+            newObj->c.sprite = loadTexture(ray, BLOCK_WSG, OBJ_ENEMY_BOX);
+            break;
+        }
+        default:
+        {
+            // Unknown enemy
+            heap_caps_free(newObj);
+            return;
+        }
     }
-    else if ((OBJ_ENEMY_HIDDEN == type) && (LO_XRAY == ray->p.loadout))
-    {
-        newObj->sprites = &ray->hiddenXRTex;
-    }
-    else
-    {
-        newObj->sprites = &ray->enemyTex[type - OBJ_ENEMY_NORMAL];
-    }
-    newObj->warpTimer = E_WARP_TIME;
 
-    // This sets state, animTimer, animTimerLimit, animFrame, and c.sprite
-    newObj->state = E_WALKING_2;
-    if (OBJ_ENEMY_BOX != type)
-    {
-        rayEnemyTransitionState(ray, newObj, E_WALKING_1);
-    }
+    // TODO call enemy initializer
+
     // Set initial common state
     newObj->c.posX        = x;
     newObj->c.posY        = y;
@@ -296,14 +287,11 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
     // Don't set radius
     newObj->c.spriteMirrored = false;
 
+    // Set initial enemy state
+    newObj->health = 100;
+
     // Add it to the linked list
     push(&ray->enemies, newObj);
-
-    // If the boss was spawned, play the theme
-    if (OBJ_ENEMY_BOSS == type)
-    {
-        globalMidiPlayerPlaySong(&ray->songs[6], MIDI_BGM);
-    }
 }
 
 /**

@@ -13,6 +13,7 @@
 #include "ray_death_screen.h"
 #include "ray_enemy.h"
 #include "ray_dialog.h"
+#include "ray_tex_manager.h"
 
 #define SWORD_SWING_TIME  200000
 #define SWORD_SWING_ANGLE 120
@@ -86,15 +87,11 @@ bool initializePlayer(ray_t* ray)
         // Set damage multiplier to 1;
         ray->p.i.damageMult = 1;
     }
-    else
-    {
-        // If there is no loadout but the player has the beam
-        if ((LO_NONE == ray->p.loadout) && (ray->p.i.beamLoadOut))
-        {
-            // Set the beam loadout
-            ray->p.loadout = LO_NORMAL;
-        }
-    }
+
+    // Load sprites
+    ray->p.sprite = loadTexture(ray, HYUT_WSG, EMPTY);
+    loadTexture(ray, OBJ_BULLET_NORMAL_WSG, OBJ_BULLET_NORMAL);
+    loadTexture(ray, OBJ_BULLET_MISSILE_WSG, OBJ_BULLET_MISSILE);
 
     // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
     ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
@@ -115,11 +112,6 @@ bool initializePlayer(ray_t* ray)
             }
         }
     }
-
-    // Set the next loadout to current, to not swap
-    ray->nextLoadout        = ray->p.loadout;
-    ray->loadoutChangeTimer = 0;
-    ray->forceLoadoutSwap   = 0;
 
     // Always reload with full health
     ray->p.i.health = ray->p.i.maxHealth;
@@ -174,9 +166,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
             // Show the pause menu
             rayShowPause(ray);
             // Cancel any charges
-            ray->chargeTimer        = 0;
-            ray->loadoutChangeTimer = 0;
-            ray->forceLoadoutSwap   = false;
+            ray->chargeTimer = 0;
             return;
         }
         // The B button toggles strafing
@@ -445,40 +435,21 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
         case OBJ_ITEM_BEAM:
         {
             inventory->beamLoadOut = true;
-            // Switch to the normal loadout
-            ray->loadoutChangeTimer = LOADOUT_TIMER_US;
-            ray->nextLoadout        = LO_NORMAL;
-            ray->forceLoadoutSwap   = true;
             break;
         }
         case OBJ_ITEM_CHARGE_BEAM:
         {
             inventory->chargePowerUp = true;
-            if (LO_NORMAL != ray->p.loadout)
-            {
-                // Switch to the normal loadout
-                ray->loadoutChangeTimer = LOADOUT_TIMER_US;
-                ray->nextLoadout        = LO_NORMAL;
-                ray->forceLoadoutSwap   = true;
-            }
             break;
         }
         case OBJ_ITEM_ICE:
         {
             inventory->iceLoadOut = true;
-            // Switch to the ice loadout
-            ray->loadoutChangeTimer = LOADOUT_TIMER_US;
-            ray->nextLoadout        = LO_ICE;
-            ray->forceLoadoutSwap   = true;
             break;
         }
         case OBJ_ITEM_XRAY:
         {
             inventory->xrayLoadOut = true;
-            // Switch to the xray loadout
-            ray->loadoutChangeTimer = LOADOUT_TIMER_US;
-            ray->nextLoadout        = LO_XRAY;
-            ray->forceLoadoutSwap   = true;
             break;
         }
         case OBJ_ITEM_SUIT_WATER:
@@ -503,10 +474,6 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
                     {
                         // Picking up any missiles enables the loadout
                         inventory->missileLoadOut = true;
-                        // Switch to the missile loadout
-                        ray->loadoutChangeTimer = LOADOUT_TIMER_US;
-                        ray->nextLoadout        = LO_MISSILE;
-                        ray->forceLoadoutSwap   = true;
                     }
                     // Add five missiles
                     inventory->numMissiles += 5;

@@ -4,103 +4,7 @@
 
 #include "ray_script.h"
 #include "ray_enemy.h"
-#include "ray_enemy_normal.h"
-#include "ray_enemy_strong.h"
-#include "ray_enemy_armored.h"
-#include "ray_enemy_flaming.h"
-#include "ray_enemy_hidden.h"
-#include "ray_enemy_boss.h"
 #include "ray_enemy_block.h"
-
-//==============================================================================
-// Typedefs
-//==============================================================================
-
-typedef void (*rayEnemyMove_t)(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs);
-typedef int32_t (*rayEnemyGetTimer_t)(rayEnemy_t* enemy, rayEnemyTimerType_t type);
-typedef rayMapCellType_t (*rayEnemyGetBullet_t)(rayEnemy_t* enemy);
-typedef void (*rayEnemyCheckCollision_t)(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX,
-                                         q24_8* deltaY);
-
-typedef struct ray_enemy
-{
-    rayEnemyMove_t move;
-    rayEnemyGetTimer_t getTimer;
-    rayEnemyGetBullet_t getBullet;
-    rayEnemyCheckCollision_t checkPlayerCollision;
-} enemyFuncs_t;
-
-//==============================================================================
-// Const data
-//==============================================================================
-
-/**
- * @brief Functions to call for each enemy type
- * Must be in order OBJ_ENEMY_NORMAL -> OBJ_ENEMY_BOSS
- */
-static const enemyFuncs_t enemyFuncs[] = {
-    {
-        // OBJ_ENEMY_NORMAL
-        .move                 = rayEnemyNormalMove,
-        .getTimer             = rayEnemyNormalGetTimer,
-        .getBullet            = rayEnemyNormalGetBullet,
-        .checkPlayerCollision = NULL,
-    },
-    {
-        // OBJ_ENEMY_STRONG
-        .move                 = rayEnemyStrongMove,
-        .getTimer             = rayEnemyStrongGetTimer,
-        .getBullet            = rayEnemyStrongGetBullet,
-        .checkPlayerCollision = NULL,
-    },
-    {
-        // OBJ_ENEMY_ARMORED
-        .move                 = rayEnemyArmoredMove,
-        .getTimer             = rayEnemyArmoredGetTimer,
-        .getBullet            = rayEnemyArmoredGetBullet,
-        .checkPlayerCollision = NULL,
-    },
-    {
-        // OBJ_ENEMY_FLAMING
-        .move                 = rayEnemyFlamingMove,
-        .getTimer             = rayEnemyFlamingGetTimer,
-        .getBullet            = rayEnemyFlamingGetBullet,
-        .checkPlayerCollision = NULL,
-    },
-    {
-        // OBJ_ENEMY_HIDDEN
-        .move                 = rayEnemyHiddenMove,
-        .getTimer             = rayEnemyHiddenGetTimer,
-        .getBullet            = rayEnemyHiddenGetBullet,
-        .checkPlayerCollision = NULL,
-    },
-    {
-        // OBJ_ENEMY_BOSS
-        .move                 = rayEnemyBossMove,
-        .getTimer             = rayEnemyBossGetTimer,
-        .getBullet            = rayEnemyBossGetBullet,
-        .checkPlayerCollision = NULL,
-    },
-    {
-        // OBJ_ENEMY_BOX
-        .move                 = NULL,
-        .getTimer             = NULL,
-        .getBullet            = NULL,
-        .checkPlayerCollision = rayEnemyBlockCheckPlayerCollision,
-    },
-};
-
-// clang-format off
-/** @brief Table of damage taken per enemy, per bullet, BOSS is not in here */
-static const uint32_t eDamageTable[5][5] = {
-    // OBJ_BULLET_NORMAL, OBJ_BULLET_CHARGE, OBJ_BULLET_ICE, OBJ_BULLET_MISSILE, OBJ_BULLET_XRAY
-    {  25,                100,               34,             100,                25,}, // OBJ_ENEMY_NORMAL
-    {  10,                100,               34,              50,                25,}, // OBJ_ENEMY_STRONG
-    {  10,                 50,               25,             100,                25,}, // OBJ_ENEMY_ARMORED
-    {  10,                 34,               50,              25,                25,}, // OBJ_ENEMY_FLAMING
-    {  0,                   0,                0,               0,                50,}, // OBJ_ENEMY_HIDDEN
-};
-// clang-format on
 
 //==============================================================================
 // Function Prototypes
@@ -127,153 +31,53 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
         // Get a pointer from the linked list
         rayEnemy_t* enemy = ((rayEnemy_t*)currentNode->val);
 
-        if (!enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].move)
-        {
-            currentNode = currentNode->next;
-            continue;
-        }
-
-        // If this enemy is warping in
-        if (0 < enemy->warpTimer)
-        {
-            // Run down the warp timer
-            enemy->warpTimer -= elapsedUs;
-            // Iterate to the next node and continue
-            currentNode = currentNode->next;
-            continue;
-        }
-
-        // Copy the elapsed time in case the enemy is frozen
-        uint32_t eElapsedUs = elapsedUs;
-
-        // If the enemy is frozen
-        if (0 < enemy->freezeTimer)
-        {
-            // Decrement the timer
-            enemy->freezeTimer -= eElapsedUs;
-            // Slow time for other timers
-            eElapsedUs /= 3;
-        }
-
-        // Move enemies in the walking state, or if it's a non-dead boss
-        if ((E_WALKING_1 == enemy->state) || (E_WALKING_2 == enemy->state)
-            || ((OBJ_ENEMY_BOSS == enemy->c.type) && (E_DEAD != enemy->state)))
-        {
-            enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].move(ray, enemy, eElapsedUs);
-        }
-
-        // Run other timers if not dead
-        if (E_DEAD != enemy->state)
-        {
-            // Run the shot timer down to zero
-            enemy->shootTimer -= eElapsedUs;
-            if (enemy->shootTimer <= 0)
-            {
-                // Try to transition to shooting
-                if (rayEnemyTransitionState(ray, enemy, E_SHOOTING))
-                {
-                    // If successful, restart the shot timer
-                    enemy->shootTimer = enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getTimer(enemy, SHOT);
-                }
-            }
-
-            // Run the block timer down to zero
-            enemy->blockTimer -= eElapsedUs;
-            if (enemy->blockTimer <= 0)
-            {
-                // Try to transition to blocking
-                if (rayEnemyTransitionState(ray, enemy, E_BLOCKING))
-                {
-                    // If successful, restart the block timer
-                    enemy->blockTimer = enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getTimer(enemy, BLOCK);
-                }
-            }
-
-            if (OBJ_ENEMY_BOSS == enemy->c.type)
-            {
-                // Special boss timer, pick a new weakness every 4s
-                enemy->bossTimer -= elapsedUs;
-                if (enemy->bossTimer <= 0)
-                {
-                    enemy->bossTimer += 4000000;
-
-                    // Pick a new boss state
-                    enemy->bossState
-                        = (enemy->bossState + (1 + esp_random() % (NUM_BOSS_STATES - 1))) % NUM_BOSS_STATES;
-
-                    // Update all sprites the boss uses
-                    if (B_NORMAL == enemy->bossState)
-                    {
-                        enemy->sprites = &ray->enemyTex[OBJ_ENEMY_BOSS - OBJ_ENEMY_NORMAL];
-                    }
-                    else
-                    {
-                        enemy->sprites = &ray->bossTex[enemy->bossState];
-                    }
-                    // Update the current sprite
-                    enemy->c.sprite = &enemy->sprites[0][enemy->state][enemy->animFrame];
-                }
-            }
-
-            // Run the invincible timer down to zero
-            if (0 < enemy->invincibleTimer)
-            {
-                enemy->invincibleTimer -= eElapsedUs;
-            }
-        }
-
-        // Animate the enemy
-        if (animateEnemy(ray, enemy, eElapsedUs))
+        // TODO Call function to move enemies, run timers, update state, pick current sprite
+        if (animateEnemy(ray, enemy, elapsedUs))
         {
             // Enemy was killed
-            checkScriptKill(ray, enemy->c.id, &enemy->sprites[0][E_WALKING_1][0]);
+            // TODO function for portrait
+            checkScriptKill(ray, enemy->c.id, NULL);
 
             // save the next node
             node_t* nextNode = currentNode->next;
 
-            // Remove the lock
-            if (ray->targetedObj == &(enemy->c))
-            {
-                ray->targetedObj = NULL;
-            }
-
-            // Randomly drop a pickup where the enemy was
-            switch (esp_random() % 4)
-            {
-                case 0:
-                {
-                    // 25% health first
-                    if (ray->p.i.health != ray->p.i.maxHealth)
-                    {
-                        rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_ENERGY, 0x100, enemy->c.posX, enemy->c.posY);
-                    }
-                    // Only create if missiles are unlocked and health is at max
-                    else if ((ray->p.i.missileLoadOut) && (ray->p.i.numMissiles != ray->p.i.maxNumMissiles))
-                    {
-                        rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_MISSILE, 0x100, enemy->c.posX, enemy->c.posY);
-                    }
-                    break;
-                }
-                case 1:
-                {
-                    // 25% missiles first, if unlocked
-                    if ((ray->p.i.missileLoadOut) && (ray->p.i.numMissiles != ray->p.i.maxNumMissiles))
-                    {
-                        rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_MISSILE, 0x100, enemy->c.posX, enemy->c.posY);
-                    }
-                    // Only create if missiles are at max
-                    else if (ray->p.i.health != ray->p.i.maxHealth)
-                    {
-                        rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_ENERGY, 0x100, enemy->c.posX, enemy->c.posY);
-                    }
-                    break;
-                }
-                default:
-                {
-                    // No drop
-                    break;
-                }
-            }
+            // TODO call function to randomly drop a pickup
+            // switch (esp_random() % 4)
+            // {
+            //     case 0:
+            //     {
+            //         // 25% health first
+            //         if (ray->p.i.health != ray->p.i.maxHealth)
+            //         {
+            //             rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_ENERGY, 0x100, enemy->c.posX, enemy->c.posY);
+            //         }
+            //         // Only create if missiles are unlocked and health is at max
+            //         else if ((ray->p.i.missileLoadOut) && (ray->p.i.numMissiles != ray->p.i.maxNumMissiles))
+            //         {
+            //             rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_MISSILE, 0x100, enemy->c.posX, enemy->c.posY);
+            //         }
+            //         break;
+            //     }
+            //     case 1:
+            //     {
+            //         // 25% missiles first, if unlocked
+            //         if ((ray->p.i.missileLoadOut) && (ray->p.i.numMissiles != ray->p.i.maxNumMissiles))
+            //         {
+            //             rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_MISSILE, 0x100, enemy->c.posX, enemy->c.posY);
+            //         }
+            //         // Only create if missiles are at max
+            //         else if (ray->p.i.health != ray->p.i.maxHealth)
+            //         {
+            //             rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_ENERGY, 0x100, enemy->c.posX, enemy->c.posY);
+            //         }
+            //         break;
+            //     }
+            //     default:
+            //     {
+            //         // No drop
+            //         break;
+            //     }
+            // }
 
             // Unlink and free
             removeEntry(&ray->enemies, currentNode);
@@ -291,36 +95,6 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
 }
 
 /**
- * @brief Get the next shot timer for an enemy
- *
- * @param enemy The shooting enemy
- * @return int32_t The time in uS until the next shot
- */
-int32_t getTimerForEnemy(rayEnemy_t* enemy, rayEnemyTimerType_t type)
-{
-    if (enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getTimer)
-    {
-        return enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getTimer(enemy, type);
-    }
-    return 0;
-}
-
-/**
- * @brief Get the bullet type for an enemy
- *
- * @param enemy The shooting enemy
- * @return The bullet type
- */
-rayMapCellType_t getBulletForEnemy(rayEnemy_t* enemy)
-{
-    if (enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getBullet)
-    {
-        return enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getBullet(enemy);
-    }
-    return EMPTY;
-}
-
-/**
  * @brief This is called when an enemy is shot. It adds damage based on bullet type, checks scripts, and handles freeing
  * defeated enemies
  *
@@ -330,140 +104,7 @@ rayMapCellType_t getBulletForEnemy(rayEnemy_t* enemy)
  */
 void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
-    int32_t damageDivide = 1;
-    // Don't get shot when blocking or dying
-    if (E_BLOCKING == enemy->state)
-    {
-        if (OBJ_BULLET_MISSILE != bullet)
-        {
-            // Play SFX
-            globalMidiPlayerPlaySong(&ray->sfx_e_block, MIDI_SFX);
-            return;
-        }
-        else
-        {
-            // Missiles break the block, but do half damage
-            damageDivide = 2;
-            rayEnemyTransitionState(ray, enemy, E_WALKING_1);
-        }
-    }
-    else if (E_DEAD == enemy->state)
-    {
-        // No SFX
-        return;
-    }
-
-    // Don't get shot when invincible
-    // Ignore this for now, being invincible when in E_HURT is enough
-    // if (0 < enemy->invincibleTimer)
-    // {
-    //     return;
-    // }
-
-    // Figure out the damage for this shot
-    int32_t damage = 0;
-    if (OBJ_ENEMY_BOSS == enemy->c.type)
-    {
-        damage = rayEnemyBossGetShot(ray, enemy, bullet);
-    }
-    else
-    {
-        damage = eDamageTable[enemy->c.type - OBJ_ENEMY_NORMAL][bullet - OBJ_BULLET_NORMAL];
-    }
-
-    // Apply damage
-    enemy->health -= ((damage * ray->p.i.damageMult) / damageDivide);
-
-    if (enemy->health <= 0)
-    {
-        // Transition to dying
-        rayEnemyTransitionState(ray, enemy, E_DEAD);
-        // Play SFX
-        globalMidiPlayerPlaySong(&ray->sfx_e_dead, MIDI_SFX);
-
-        // Make LEDs green
-        ray->ledHue = 85;
-
-        // If the boss died
-        if (OBJ_ENEMY_BOSS == enemy->c.type)
-        {
-            // Resume normal music
-            globalMidiPlayerPlaySong(&ray->songs[ray->p.mapId], MIDI_BGM);
-        }
-    }
-    // If the enemy took
-    else if (0 < damage)
-    {
-        // Transition to hurt
-        rayEnemyTransitionState(ray, enemy, E_HURT);
-
-        // Don't get stun-locked. Hurt animation is 200000*4, so double that
-        // enemy->invincibleTimer = 200000 * 8;
-
-        // If it was ice damage
-        if (OBJ_BULLET_ICE == bullet)
-        {
-            // Slow it for a moment
-            enemy->freezeTimer = 3200000;
-            // Play SFX
-            globalMidiPlayerPlaySong(&ray->sfx_e_freeze, MIDI_SFX);
-        }
-        else
-        {
-            // Play SFX
-            globalMidiPlayerPlaySong(&ray->sfx_e_damage, MIDI_SFX);
-        }
-
-        // Make LEDs green
-        ray->ledHue = 85;
-    }
-}
-
-/**
- * @brief Transition from the current animation state to the next
- *
- * @param ray The entire game state
- * @param enemy The enemy to transition
- * @param newState The new state to transition to
- * @return true if the transition was allowed, false if it was not
- */
-bool rayEnemyTransitionState(ray_t* ray, rayEnemy_t* enemy, rayEnemyState_t newState)
-{
-    // clang-format off
-    const bool transitionTable[E_NUM_STATES][E_NUM_STATES] = {
-        {false, true,  true,  true,  true,  true }, // E_WALKING_1, don't transition to self
-        {true,  false, true,  true,  true,  true }, // E_WALKING_2, don't transition to self
-        {true,  true,  false, true , false, true }, // E_SHOOTING, transition to E_WALKING or E_HURT
-        {true,  true,  false, false, false, true }, // E_HURT, transition to E_WALKING or E_DEAD
-        {true,  true,  false, false, false, true }, // E_BLOCKING, transition to E_WALKING
-        {false, false, false, false, false, false}  // E_DEAD, don't transition to anything
-    };
-    // clang-format on
-
-    if (transitionTable[enemy->state][newState])
-    {
-        // Switch to the new state
-        enemy->state          = newState;
-        enemy->animTimer      = 0;
-        enemy->animFrame      = 0;
-        enemy->animTimerLimit = 200000;
-        // Pick the sprites
-        enemy->c.sprite = &enemy->sprites[0][newState][0];
-        if ((E_WALKING_1 == newState) || (E_WALKING_2 == newState))
-        {
-            enemy->animTimerLimit = 125000;
-        }
-        else if (E_DEAD == newState)
-        {
-            // Remove the lock
-            if (ray->targetedObj == &(enemy->c))
-            {
-                ray->targetedObj = NULL;
-            }
-        }
-        return true;
-    }
-    return false;
+    // TODO call function when enemy is damaged
 }
 
 /**
@@ -476,106 +117,19 @@ bool rayEnemyTransitionState(ray_t* ray, rayEnemy_t* enemy, rayEnemyState_t newS
  */
 static bool animateEnemy(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 {
-    // Accumulate time
-    enemy->animTimer += elapsedUs;
-    // Check if it's time to transition states
-    if (enemy->animTimer >= enemy->animTimerLimit)
-    {
-        // Decrement timer
-        enemy->animTimer -= enemy->animTimerLimit;
-
-        // Increment to the next frame
-        enemy->animFrame++;
-
-        // If the animation is over
-        if (enemy->animFrame >= NUM_ANIM_FRAMES)
-        {
-            if (E_DEAD == enemy->state)
-            {
-                // Dead, caller unlinks and frees the enemy
-                return true;
-            }
-            else
-            {
-                if (E_WALKING_1 == enemy->state)
-                {
-                    // Return to walking
-                    rayEnemyTransitionState(ray, enemy, E_WALKING_2);
-                }
-                else
-                {
-                    // Return to walking
-                    rayEnemyTransitionState(ray, enemy, E_WALKING_1);
-                }
-            }
-        }
-        else
-        {
-            // Pick the next sprite
-            enemy->c.sprite = &enemy->sprites[0][enemy->state][enemy->animFrame];
-
-            // If this is the 3rd frame of shooting
-            if ((E_SHOOTING == enemy->state) && (2 == enemy->animFrame))
-            {
-                // Spawn a bullet
-                q24_8 xDiff = SUB_FX(ray->p.posX, enemy->c.posX);
-                q24_8 yDiff = SUB_FX(ray->p.posY, enemy->c.posY);
-                fastNormVec(&xDiff, &yDiff);
-                rayCreateBullet(ray, getBulletForEnemy(enemy), enemy->c.posX, enemy->c.posY, xDiff, yDiff, 0, 0, -1,
-                                false);
-                if (OBJ_ENEMY_BOSS == enemy->c.type)
-                {
-                    // double bullets for the boss
-                    rayCreateBullet(ray, getBulletForEnemy(enemy), enemy->c.posX, enemy->c.posY, (xDiff * 3) / 4,
-                                    (yDiff * 3) / 4, 0, 0, -1, false);
-                }
-            }
-        }
-    }
-    return false;
+    return enemy->mainFn(ray, enemy, elapsedUs);
 }
 
 /**
- * @brief Switch sprites for all enemies to the X-Ray alternate
+ * @brief TODO doc
  *
- * @param ray The entire game state
- * @param isXray true to switch to X-Ray sprites, false to switch to normal sprites
+ * @param ray
+ * @param enemy
+ * @param player
+ * @param deltaX
+ * @param deltaY
  */
-void switchEnemiesToXray(ray_t* ray, bool isXray)
-{
-    // Assign each enemy a distance from the player
-    node_t* currentNode = ray->enemies.first;
-    while (currentNode != NULL)
-    {
-        // Get a pointer from the linked list
-        rayEnemy_t* enemy = ((rayEnemy_t*)currentNode->val);
-
-        // If this is a hidden enemy
-        if (OBJ_ENEMY_HIDDEN == enemy->c.type)
-        {
-            // Switch all the sprites
-            if (isXray)
-            {
-                enemy->sprites = &ray->hiddenXRTex;
-            }
-            else
-            {
-                enemy->sprites = &ray->enemyTex[OBJ_ENEMY_HIDDEN - OBJ_ENEMY_NORMAL];
-            }
-
-            // Switch the current sprite
-            enemy->c.sprite = &enemy->sprites[0][enemy->state][enemy->animFrame];
-        }
-
-        // Iterate to the next node
-        currentNode = currentNode->next;
-    }
-}
-
 void rayEnemyCheckCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY)
 {
-    if (enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].checkPlayerCollision)
-    {
-        enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].checkPlayerCollision(ray, enemy, player, deltaX, deltaY);
-    }
+    enemy->collisionFn(ray, enemy, player, deltaX, deltaY);
 }
