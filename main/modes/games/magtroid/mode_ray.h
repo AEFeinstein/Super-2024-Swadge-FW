@@ -46,9 +46,6 @@
 /** The number of bullets tracked at a given point in time */
 #define MAX_RAY_BULLETS 32
 
-/** The number of frames in an animation */
-#define NUM_ANIM_FRAMES 4
-
 /** The time to swap out and swap in a gun, in microseconds */
 #define LOADOUT_TIMER_US (1 << 17)
 
@@ -125,7 +122,8 @@ typedef enum __attribute__((packed))
     BG_DOOR_KEY_C    = (BG | DOOR | 9),
     BG_DOOR_ARTIFACT = (BG | DOOR | 10),
     // Enemies
-    OBJ_ENEMY_START_POINT = (OBJ | ENEMY | 1),
+    OBJ_ENEMY_START_POINT = (OBJ | ENEMY | 0),
+    OBJ_ENEMY_UNKNOWN     = (OBJ | ENEMY | 1),
     OBJ_ENEMY_NORMAL      = (OBJ | ENEMY | 2),
     OBJ_ENEMY_STRONG      = (OBJ | ENEMY | 3),
     OBJ_ENEMY_ARMORED     = (OBJ | ENEMY | 4),
@@ -172,88 +170,6 @@ typedef enum __attribute__((packed))
     OBJ_SCENERY_F6       = (OBJ | SCENERY | 8),
     OBJ_SCENERY_F7       = (OBJ | SCENERY | 9),
 } rayMapCellType_t;
-
-/**
- * @brief Possible enemy states
- */
-typedef enum
-{
-    E_WALKING_1,  ///< The enemy is walking, half cycle
-    E_WALKING_2,  ///< The enemy is walking, the other half
-    E_SHOOTING,   ///< The enemy is shooting (may move while shooting)
-    E_HURT,       ///< The enemy was shot
-    E_BLOCKING,   ///< The enemy is blocking
-    E_DEAD,       ///< The enemy is dead
-    E_NUM_STATES, ///< The number of enemy states
-} rayEnemyState_t;
-
-typedef enum
-{
-    DOING_NOTHING,
-    MOVE_POS_X,
-    MOVE_NEG_X,
-    MOVE_POS_Y,
-    MOVE_NEG_Y,
-    MOVE_STRAFE_L,
-    MOVE_STRAFE_R,
-    MOVE_TOWARDS_PLAYER,
-    MOVE_AWAY_PLAYER,
-    MOVE_NE,
-    MOVE_SE,
-    MOVE_SW,
-    MOVE_NW,
-} rayEnemyBehavior_t;
-
-/**
- * @brief All the possible loadouts
- */
-typedef enum
-{
-    LO_NONE,     ///< No loadout
-    LO_NORMAL,   ///< Normal loadout
-    LO_MISSILE,  ///< Missile loadout
-    LO_ICE,      ///< Ice beam loadout
-    LO_XRAY,     ///< X-Ray loadout
-    NUM_LOADOUTS ///< The number of loadouts
-} rayLoadout_t;
-
-/**
- * @brief All the possible environments
- */
-typedef enum
-{
-    V_BASE,   ///< Sci-fi base / space station
-    V_JUNGLE, ///< Jungle with alien ruins
-    V_CAVE,   ///< Cave with lava
-    NUM_ENVS, ///< The number of environments
-} rayEnv_t;
-
-/**
- * @brief All the possible textures per-environments
- */
-typedef enum
-{
-    TX_WALL_1,     ///< Wall 1
-    TX_WALL_2,     ///< Wall 2
-    TX_WALL_3,     ///< Wall 3
-    TX_WALL_4,     ///< Wall 4
-    TX_WALL_5,     ///< Wall 5
-    TX_FLOOR,      ///< The floor texture
-    TX_CEILING,    ///< The ceiling texture
-    NUM_ENV_TEXES, ///< The number of per-environment textures
-} rayEnvTex_t;
-
-/**
- * @brief All the possible boss states
- */
-typedef enum
-{
-    B_MISSILE,       ///< Weak to missiles
-    B_ICE,           ///< Weak to ice
-    B_XRAY,          ///< Weak to xray
-    B_NORMAL,        ///< Weak to normal
-    NUM_BOSS_STATES, ///< The number of boss states
-} rayBossState_t;
 
 /**
  * @brief Types of events that trigger scripts
@@ -481,7 +397,7 @@ typedef struct
 {
     cnfsFileIdx_t fIdx; ///< The file index of the texture
     wsg_t texture;      ///< An image used as a texture
-} namedTexture_t;
+} loadedTexture_t;
 
 /**
  * @brief Common data for all objects in a map
@@ -518,27 +434,37 @@ typedef struct
     int32_t fuseUs;   ///< The fuse timer for a bomb
 } rayBullet_t;
 
+/*
+// Forward declaration
+struct Node;
+
+// You can now use pointers to struct Node
+void processNode(struct Node* node);
+
+// Full definition later in the file or a separate source file
+struct Node {
+    int id;
+    struct Node* next; // Common use: self-referential structures
+};
+*/
+
+struct rayGame;
+struct rayEnemy;
+
+typedef bool (*rayEnemyMain_t)(struct rayGame* ray, struct rayEnemy* enemy, uint32_t elapsedUs);
+typedef void (*rayEnemyCheckCollision_t)(struct rayGame* ray, struct rayEnemy* enemy, rectangle_t player, q24_8* deltaX,
+                                         q24_8* deltaY);
+
 /**
  * @brief Data for an enemy in the map. It has common data, state tracking, and textures
  */
-typedef struct
+typedef struct rayEnemy
 {
-    rayObjCommon_t c;                                ///< Common object properties
-    int32_t health;                                  ///< The enemy's health
-    rayEnemyState_t state;                           ///< This enemy's current state
-    rayEnemyBehavior_t behavior;                     ///< What the enemy is currently doing
-    int32_t warpTimer;                               ///< A timer for warping in
-    rayBossState_t bossState;                        ///< The current boss state, unused for non-boss
-    int32_t bossTimer;                               ///< A timer for changing bossState, unused for non-boss
-    int32_t behaviorTimer;                           ///< A timer used for this enemy's behaviors
-    int32_t shootTimer;                              ///< A timer used for this enemy's shooting
-    int32_t blockTimer;                              ///< A timer used for this enemy's blocking
-    int32_t invincibleTimer;                         ///< Timer for being invincible
-    int32_t freezeTimer;                             ///< Timer for slowdown after ice beam
-    int32_t animTimer;                               ///< A timer used for this enemy's animations
-    int32_t animTimerLimit;                          ///< The time at which the texture should switch
-    int32_t animFrame;                               ///< The current animation frame
-    wsg_t (*sprites)[E_NUM_STATES][NUM_ANIM_FRAMES]; ///< All of this enemy's sprites
+    rayObjCommon_t c; ///< Common object properties
+    int32_t health;   ///< The enemy's health
+    rayEnemyMain_t mainFn;
+    rayEnemyCheckCollision_t collisionFn;
+    void* state; ///< Enemy specific state
 } rayEnemy_t;
 
 /**
@@ -578,7 +504,6 @@ typedef struct
     q24_8 posY;                 ///< The player's Y position
     q24_8 dirX;                 ///< The player's X direction
     q24_8 dirY;                 ///< The player's Y direction
-    rayLoadout_t loadout;       ///< The player's current loadout
     int32_t mapId;              ///< The ID of the current map
     bool mapsVisited[NUM_MAPS]; ///< Booleans for each map visited
     rayInventory_t i;           ///< All the players items
@@ -596,13 +521,15 @@ typedef struct
 
     q24_8 jumpPos;
     q24_8 jumpVel;
+
+    wsg_t* sprite;
 } rayPlayer_t;
 
 /**
  * @brief The entire game state
  *
  */
-typedef struct
+typedef struct rayGame
 {
     rayScreen_t screen;           ///< The current screen being shown
     rayPauseScreen_t pauseScreen; ///< The current pause screen being shown
@@ -644,10 +571,6 @@ typedef struct
     bool isStrafing;             ///< true if the player is strafing, false if not
     rayObjCommon_t* targetedObj; ///< An object that is locked onto to strafe around
 
-    rayLoadout_t nextLoadout;   ///< The player's next loadout, if touched
-    int32_t loadoutChangeTimer; ///< A timer used for swapping loadouts
-    bool forceLoadoutSwap;      ///< Force the loadout to change without touch input
-
     int32_t floorEffectTimer;   ///< Timer for effects when standing on a tile
     bool playerInLava;          ///< Track if the player is standing in lava
     bool playerInHealth;        ///< Track if the player is standing in a health pad
@@ -660,18 +583,20 @@ typedef struct
     bool gunShakeL;             ///< true if the gun is shaking to the left, false otherwise
     int32_t pRotationTimer;     ///< timer for player rotation
 
-    namedTexture_t* loadedTextures;                             ///< A list of loaded textures
-    uint8_t* typeToIdxMap;                                      ///< A map of rayMapCellType_t to respective textures
-    wsg_t envTex[NUM_ENVS][NUM_ENV_TEXES];                      ///< The environment textures
-    wsg_t guns[NUM_LOADOUTS];                                   ///< Textures for the HUD guns
-    wsg_t cho_portrait;                                         ///< A portrait used for text dialogs
-    wsg_t hw_portrait;                                          ///< A portrait used for text dialogs
-    wsg_t hw_s_portrait;                                        ///< A portrait used for text dialogs
-    wsg_t missileHUDicon;                                       ///< A missile icon drawn in the HUD
-    wsg_t enemyTex[NUM_ENEMIES][E_NUM_STATES][NUM_ANIM_FRAMES]; ///< The enemy textures
-    wsg_t hiddenXRTex[E_NUM_STATES][NUM_ANIM_FRAMES];           ///< The textures for X-Ray hidden enemies
-    wsg_t bossTex[NUM_BOSS_STATES - 1][E_NUM_STATES][NUM_ANIM_FRAMES]; ///< The textures for the boss
-    wsg_t block;
+    // namedTexture_t* loadedTextures;                             ///< A list of loaded textures
+    // uint8_t* typeToIdxMap;                                      ///< A map of rayMapCellType_t to respective textures
+    // wsg_t envTex[NUM_ENVS][NUM_ENV_TEXES];                      ///< The environment textures
+    // wsg_t guns[NUM_LOADOUTS];                                   ///< Textures for the HUD guns
+    // wsg_t cho_portrait;                                         ///< A portrait used for text dialogs
+    // wsg_t hw_portrait;                                          ///< A portrait used for text dialogs
+    // wsg_t hw_s_portrait;                                        ///< A portrait used for text dialogs
+    // wsg_t missileHUDicon;                                       ///< A missile icon drawn in the HUD
+    // wsg_t enemyTex[NUM_ENEMIES][E_NUM_STATES][NUM_ANIM_FRAMES]; ///< The enemy textures
+    // wsg_t hiddenXRTex[E_NUM_STATES][NUM_ANIM_FRAMES];           ///< The textures for X-Ray hidden enemies
+    // wsg_t bossTex[NUM_BOSS_STATES - 1][E_NUM_STATES][NUM_ANIM_FRAMES]; ///< The textures for the boss
+    // wsg_t block;
+    list_t loadedTextures;
+    wsg_t* typeToTexMap[256];
 
     font_t ibm;     ///< A font to draw the HUD
     font_t logbook; ///< A font to draw the menu
