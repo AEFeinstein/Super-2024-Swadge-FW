@@ -13,11 +13,6 @@
 // Defines
 //==============================================================================
 
-/**
- * The maximum number of loaded named textures
- */
-#define MAX_LOADED_TEXTURES 64
-
 /// Helper macro to load textures
 #define LOAD_TEXTURE(r, t) loadTexture(r, t##_WSG, t)
 
@@ -32,346 +27,19 @@
  */
 void loadEnvTextures(ray_t* ray)
 {
-    // Load a portrait for dialogs
-    loadWsg(CHO_PORTRAIT_WSG, &ray->cho_portrait, true);
-    loadWsg(HW_PORTRAIT_WSG, &ray->hw_portrait, true);
-    loadWsg(HW_PORTRAIT_S_WSG, &ray->hw_s_portrait, true);
+    // Background tiles, floor (base only)
+    loadTexture(ray, BG_BASE_FLOOR_WSG, BG_FLOOR);
+    loadTexture(ray, BG_FLOOR_WATER, BG_FLOOR_WATER);
+    loadTexture(ray, BG_FLOOR_LAVA, BG_FLOOR_LAVA);
+    loadTexture(ray, BG_BASE_CEILING_WSG, BG_CEILING);
+    loadTexture(ray, BG_FLOOR_HEAL, BG_FLOOR_HEAL);
 
-    // Load HUD textures
-    loadWsg(GUN_NORMAL_WSG, &ray->guns[LO_NORMAL], true);
-    loadWsg(GUN_MISSILE_WSG, &ray->guns[LO_MISSILE], true);
-    loadWsg(GUN_ICE_WSG, &ray->guns[LO_ICE], true);
-    loadWsg(GUN_XRAY_WSG, &ray->guns[LO_XRAY], true);
-    loadWsg(HUD_MISSILE_WSG, &ray->missileHUDicon, true);
-
-    // Allocate space for the textures
-    ray->loadedTextures = heap_caps_calloc(MAX_LOADED_TEXTURES, sizeof(namedTexture_t), MALLOC_CAP_SPIRAM);
-    for (int idx = 0; idx < MAX_LOADED_TEXTURES; idx++)
-    {
-        ray->loadedTextures[idx].fIdx = CNFS_NUM_FILES;
-    }
-    // Types are 8 bit, non sequential, so allocate a 256 element array. Probably too many
-    ray->typeToIdxMap = heap_caps_calloc(256, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-
-    cnfsFileIdx_t env_texes[NUM_ENVS][NUM_ENV_TEXES] = {
-        // MUST be in the same order as rayEnv_t
-        {
-            // MUST be in the same order as rayEnvTex_t
-            BG_BASE_WALL_1_WSG,
-            BG_BASE_WALL_2_WSG,
-            BG_BASE_WALL_3_WSG,
-            BG_BASE_WALL_4_WSG,
-            BG_BASE_WALL_5_WSG,
-            BG_BASE_FLOOR_WSG,
-            BG_BASE_CEILING_WSG,
-        },
-        {
-            BG_JUNGLE_WALL_1_WSG,
-            BG_JUNGLE_WALL_2_WSG,
-            BG_JUNGLE_WALL_3_WSG,
-            BG_JUNGLE_WALL_4_WSG,
-            BG_JUNGLE_WALL_5_WSG,
-            BG_JUNGLE_FLOOR_WSG,
-            BG_JUNGLE_CEILING_WSG,
-        },
-        {
-            BG_CAVE_WALL_1_WSG,
-            BG_CAVE_WALL_2_WSG,
-            BG_CAVE_WALL_3_WSG,
-            BG_CAVE_WALL_4_WSG,
-            BG_CAVE_WALL_5_WSG,
-            BG_CAVE_FLOOR_WSG,
-            BG_CAVE_CEILING_WSG,
-        },
-    };
-
-    // Load all environment textures
-    for (rayEnv_t e = 0; e < NUM_ENVS; ++e)
-    {
-        for (rayEnvTex_t t = 0; t < NUM_ENV_TEXES; ++t)
-        {
-            loadWsg(env_texes[e][t], &ray->envTex[e][t], true);
-        }
-    }
-
-    // MUST be in teh same order as rayMapCellType_t
-    const char* const enemyTypes[] = {"NORMAL", "STRONG", "ARMORED", "FLAMING", "HIDDEN", "BOSS"};
-    // MUST be int the same order as rayEnemyState_t
-    const char* const enemyAnimations[] = {"WALK_0", "WALK_1", "SHOOT", "HURT", "BLOCK", "DEAD"};
-
-    cnfsFileIdx_t enemyTexs[NUM_ENEMIES][E_NUM_STATES][NUM_ANIM_FRAMES] = {
-        {
-            {
-                E_NORMAL_WALK_0_0_WSG,
-                E_NORMAL_WALK_0_1_WSG,
-                E_NORMAL_WALK_0_2_WSG,
-                E_NORMAL_WALK_0_3_WSG,
-            },
-            {
-                E_NORMAL_WALK_1_0_WSG,
-                E_NORMAL_WALK_1_1_WSG,
-                E_NORMAL_WALK_1_2_WSG,
-                E_NORMAL_WALK_1_3_WSG,
-            },
-            {
-                E_NORMAL_SHOOT_0_WSG,
-                E_NORMAL_SHOOT_1_WSG,
-                E_NORMAL_SHOOT_2_WSG,
-                E_NORMAL_SHOOT_3_WSG,
-            },
-            {
-                E_NORMAL_HURT_0_WSG,
-                E_NORMAL_HURT_1_WSG,
-                E_NORMAL_HURT_2_WSG,
-                E_NORMAL_HURT_3_WSG,
-            },
-            {
-                E_NORMAL_BLOCK_0_WSG,
-                E_NORMAL_BLOCK_1_WSG,
-                E_NORMAL_BLOCK_2_WSG,
-                E_NORMAL_BLOCK_3_WSG,
-            },
-            {
-                E_NORMAL_DEAD_0_WSG,
-                E_NORMAL_DEAD_1_WSG,
-                E_NORMAL_DEAD_2_WSG,
-                E_NORMAL_DEAD_3_WSG,
-            },
-        },
-        {
-            {
-                E_STRONG_WALK_0_0_WSG,
-                E_STRONG_WALK_0_1_WSG,
-                E_STRONG_WALK_0_2_WSG,
-                E_STRONG_WALK_0_3_WSG,
-            },
-            {
-                E_STRONG_WALK_1_0_WSG,
-                E_STRONG_WALK_1_1_WSG,
-                E_STRONG_WALK_1_2_WSG,
-                E_STRONG_WALK_1_3_WSG,
-            },
-            {
-                E_STRONG_SHOOT_0_WSG,
-                E_STRONG_SHOOT_1_WSG,
-                E_STRONG_SHOOT_2_WSG,
-                E_STRONG_SHOOT_3_WSG,
-            },
-            {
-                E_STRONG_HURT_0_WSG,
-                E_STRONG_HURT_1_WSG,
-                E_STRONG_HURT_2_WSG,
-                E_STRONG_HURT_3_WSG,
-            },
-            {
-                E_STRONG_BLOCK_0_WSG,
-                E_STRONG_BLOCK_1_WSG,
-                E_STRONG_BLOCK_2_WSG,
-                E_STRONG_BLOCK_3_WSG,
-            },
-            {
-                E_STRONG_DEAD_0_WSG,
-                E_STRONG_DEAD_1_WSG,
-                E_STRONG_DEAD_2_WSG,
-                E_STRONG_DEAD_3_WSG,
-            },
-        },
-        {
-            {
-                E_ARMORED_WALK_0_0_WSG,
-                E_ARMORED_WALK_0_1_WSG,
-                E_ARMORED_WALK_0_2_WSG,
-                E_ARMORED_WALK_0_3_WSG,
-            },
-            {
-                E_ARMORED_WALK_1_0_WSG,
-                E_ARMORED_WALK_1_1_WSG,
-                E_ARMORED_WALK_1_2_WSG,
-                E_ARMORED_WALK_1_3_WSG,
-            },
-            {
-                E_ARMORED_SHOOT_0_WSG,
-                E_ARMORED_SHOOT_1_WSG,
-                E_ARMORED_SHOOT_2_WSG,
-                E_ARMORED_SHOOT_3_WSG,
-            },
-            {
-                E_ARMORED_HURT_0_WSG,
-                E_ARMORED_HURT_1_WSG,
-                E_ARMORED_HURT_2_WSG,
-                E_ARMORED_HURT_3_WSG,
-            },
-            {
-                E_ARMORED_BLOCK_0_WSG,
-                E_ARMORED_BLOCK_1_WSG,
-                E_ARMORED_BLOCK_2_WSG,
-                E_ARMORED_BLOCK_3_WSG,
-            },
-            {
-                E_ARMORED_DEAD_0_WSG,
-                E_ARMORED_DEAD_1_WSG,
-                E_ARMORED_DEAD_2_WSG,
-                E_ARMORED_DEAD_3_WSG,
-            },
-        },
-        {
-            {
-                E_FLAMING_WALK_0_0_WSG,
-                E_FLAMING_WALK_0_1_WSG,
-                E_FLAMING_WALK_0_2_WSG,
-                E_FLAMING_WALK_0_3_WSG,
-            },
-            {
-                E_FLAMING_WALK_1_0_WSG,
-                E_FLAMING_WALK_1_1_WSG,
-                E_FLAMING_WALK_1_2_WSG,
-                E_FLAMING_WALK_1_3_WSG,
-            },
-            {
-                E_FLAMING_SHOOT_0_WSG,
-                E_FLAMING_SHOOT_1_WSG,
-                E_FLAMING_SHOOT_2_WSG,
-                E_FLAMING_SHOOT_3_WSG,
-            },
-            {
-                E_FLAMING_HURT_0_WSG,
-                E_FLAMING_HURT_1_WSG,
-                E_FLAMING_HURT_2_WSG,
-                E_FLAMING_HURT_3_WSG,
-            },
-            {
-                E_FLAMING_BLOCK_0_WSG,
-                E_FLAMING_BLOCK_1_WSG,
-                E_FLAMING_BLOCK_2_WSG,
-                E_FLAMING_BLOCK_3_WSG,
-            },
-            {
-                E_FLAMING_DEAD_0_WSG,
-                E_FLAMING_DEAD_1_WSG,
-                E_FLAMING_DEAD_2_WSG,
-                E_FLAMING_DEAD_3_WSG,
-            },
-        },
-        {
-            {
-                E_HIDDEN_WALK_0_0_WSG,
-                E_HIDDEN_WALK_0_1_WSG,
-                E_HIDDEN_WALK_0_2_WSG,
-                E_HIDDEN_WALK_0_3_WSG,
-            },
-            {
-                E_HIDDEN_WALK_1_0_WSG,
-                E_HIDDEN_WALK_1_1_WSG,
-                E_HIDDEN_WALK_1_2_WSG,
-                E_HIDDEN_WALK_1_3_WSG,
-            },
-            {
-                E_HIDDEN_SHOOT_0_WSG,
-                E_HIDDEN_SHOOT_1_WSG,
-                E_HIDDEN_SHOOT_2_WSG,
-                E_HIDDEN_SHOOT_3_WSG,
-            },
-            {
-                E_HIDDEN_HURT_0_WSG,
-                E_HIDDEN_HURT_1_WSG,
-                E_HIDDEN_HURT_2_WSG,
-                E_HIDDEN_HURT_3_WSG,
-            },
-            {
-                E_HIDDEN_BLOCK_0_WSG,
-                E_HIDDEN_BLOCK_1_WSG,
-                E_HIDDEN_BLOCK_2_WSG,
-                E_HIDDEN_BLOCK_3_WSG,
-            },
-            {
-                E_HIDDEN_DEAD_0_WSG,
-                E_HIDDEN_DEAD_1_WSG,
-                E_HIDDEN_DEAD_2_WSG,
-                E_HIDDEN_DEAD_3_WSG,
-            },
-        },
-        {
-            {
-                E_BOSS_WALK_0_0_WSG,
-                E_BOSS_WALK_0_1_WSG,
-                E_BOSS_WALK_0_2_WSG,
-                E_BOSS_WALK_0_3_WSG,
-            },
-            {
-                E_BOSS_WALK_1_0_WSG,
-                E_BOSS_WALK_1_1_WSG,
-                E_BOSS_WALK_1_2_WSG,
-                E_BOSS_WALK_1_3_WSG,
-            },
-            {
-                E_BOSS_SHOOT_0_WSG,
-                E_BOSS_SHOOT_1_WSG,
-                E_BOSS_SHOOT_2_WSG,
-                E_BOSS_SHOOT_3_WSG,
-            },
-            {
-                E_BOSS_HURT_0_WSG,
-                E_BOSS_HURT_1_WSG,
-                E_BOSS_HURT_2_WSG,
-                E_BOSS_HURT_3_WSG,
-            },
-            {
-                E_BOSS_BLOCK_0_WSG,
-                E_BOSS_BLOCK_1_WSG,
-                E_BOSS_BLOCK_2_WSG,
-                E_BOSS_BLOCK_3_WSG,
-            },
-            {
-                E_BOSS_DEAD_0_WSG,
-                E_BOSS_DEAD_1_WSG,
-                E_BOSS_DEAD_2_WSG,
-                E_BOSS_DEAD_3_WSG,
-            },
-        },
-    };
-
-    // Load all enemy textures
-    for (int32_t eIdx = 0; eIdx < NUM_ENEMIES; eIdx++)
-    {
-        for (rayEnemyState_t aIdx = 0; aIdx < E_NUM_STATES; aIdx++)
-        {
-            for (int32_t fIdx = 0; fIdx < NUM_ANIM_FRAMES; fIdx++)
-            {
-                loadWsg(enemyTexs[eIdx][aIdx][fIdx], &ray->enemyTex[eIdx][aIdx][fIdx], true);
-
-                // TODO there are not loaded because I am lazy
-                // // Also load alt-textures for the hidden enemy
-                // if (eIdx == (OBJ_ENEMY_HIDDEN - OBJ_ENEMY_NORMAL))
-                // {
-                //     snprintf(fName, sizeof(fName) - 1, "E_%s_%s_%" PRId32 "_X.wsg", enemyTypes[eIdx],
-                //              enemyAnimations[aIdx], fIdx);
-                //     loadWsg(fName, &ray->hiddenXRTex[aIdx][fIdx], true);
-                // }
-                // // Also load alt-textures for the boss
-                // else if (eIdx == (OBJ_ENEMY_BOSS - OBJ_ENEMY_NORMAL))
-                // {
-                //     snprintf(fName, sizeof(fName) - 1, "E_%s_%s_%" PRId32 "_M.wsg", enemyTypes[eIdx],
-                //              enemyAnimations[aIdx], fIdx);
-                //     loadWsg(fName, &ray->bossTex[B_MISSILE][aIdx][fIdx], true);
-
-                //     snprintf(fName, sizeof(fName) - 1, "E_%s_%s_%" PRId32 "_I.wsg", enemyTypes[eIdx],
-                //              enemyAnimations[aIdx], fIdx);
-                //     loadWsg(fName, &ray->bossTex[B_ICE][aIdx][fIdx], true);
-
-                //     snprintf(fName, sizeof(fName) - 1, "E_%s_%s_%" PRId32 "_X.wsg", enemyTypes[eIdx],
-                //              enemyAnimations[aIdx], fIdx);
-                //     loadWsg(fName, &ray->bossTex[B_XRAY][aIdx][fIdx], true);
-                // }
-            }
-        }
-    }
-
-    loadWsg(BLOCK_WSG, &ray->block, true);
-
-    // Special floor tiles
-    LOAD_TEXTURE(ray, BG_FLOOR_WATER);
-    LOAD_TEXTURE(ray, BG_FLOOR_LAVA);
-    LOAD_TEXTURE(ray, BG_FLOOR_HEAL);
+    // Walls (base only)
+    loadTexture(ray, BG_BASE_WALL_1_WSG, BG_WALL_1);
+    loadTexture(ray, BG_BASE_WALL_2_WSG, BG_WALL_2);
+    loadTexture(ray, BG_BASE_WALL_3_WSG, BG_WALL_3);
+    loadTexture(ray, BG_BASE_WALL_4_WSG, BG_WALL_4);
+    loadTexture(ray, BG_BASE_WALL_5_WSG, BG_WALL_5);
 
     // Doors
     LOAD_TEXTURE(ray, BG_DOOR);
@@ -385,46 +53,10 @@ void loadEnvTextures(ray_t* ray)
     LOAD_TEXTURE(ray, BG_DOOR_KEY_C);
     LOAD_TEXTURE(ray, BG_DOOR_ARTIFACT);
 
-    // Items
-    LOAD_TEXTURE(ray, OBJ_ITEM_BEAM);
-    LOAD_TEXTURE(ray, OBJ_ITEM_CHARGE_BEAM);
-    LOAD_TEXTURE(ray, OBJ_ITEM_MISSILE);
-    LOAD_TEXTURE(ray, OBJ_ITEM_ICE);
-    LOAD_TEXTURE(ray, OBJ_ITEM_XRAY);
-    LOAD_TEXTURE(ray, OBJ_ITEM_SUIT_WATER);
-    LOAD_TEXTURE(ray, OBJ_ITEM_SUIT_LAVA);
-    LOAD_TEXTURE(ray, OBJ_ITEM_ENERGY_TANK);
     LOAD_TEXTURE(ray, OBJ_ITEM_KEY_A);
     LOAD_TEXTURE(ray, OBJ_ITEM_KEY_B);
     LOAD_TEXTURE(ray, OBJ_ITEM_KEY_C);
     LOAD_TEXTURE(ray, OBJ_ITEM_ARTIFACT);
-    LOAD_TEXTURE(ray, OBJ_ITEM_PICKUP_ENERGY);
-    LOAD_TEXTURE(ray, OBJ_ITEM_PICKUP_MISSILE);
-
-    // Bullets
-    LOAD_TEXTURE(ray, OBJ_BULLET_NORMAL);
-    LOAD_TEXTURE(ray, OBJ_BULLET_CHARGE);
-    LOAD_TEXTURE(ray, OBJ_BULLET_ICE);
-    LOAD_TEXTURE(ray, OBJ_BULLET_MISSILE);
-    LOAD_TEXTURE(ray, OBJ_BULLET_XRAY);
-    LOAD_TEXTURE(ray, OBJ_BULLET_E_NORMAL);
-    LOAD_TEXTURE(ray, OBJ_BULLET_E_STRONG);
-    LOAD_TEXTURE(ray, OBJ_BULLET_E_ARMOR);
-    LOAD_TEXTURE(ray, OBJ_BULLET_E_FLAMING);
-    LOAD_TEXTURE(ray, OBJ_BULLET_E_HIDDEN);
-
-    // Scenery
-    LOAD_TEXTURE(ray, OBJ_SCENERY_TERMINAL);
-    LOAD_TEXTURE(ray, OBJ_SCENERY_PORTAL);
-
-    // Friends
-    LOAD_TEXTURE(ray, OBJ_SCENERY_F1);
-    LOAD_TEXTURE(ray, OBJ_SCENERY_F2);
-    LOAD_TEXTURE(ray, OBJ_SCENERY_F3);
-    LOAD_TEXTURE(ray, OBJ_SCENERY_F4);
-    LOAD_TEXTURE(ray, OBJ_SCENERY_F5);
-    LOAD_TEXTURE(ray, OBJ_SCENERY_F6);
-    LOAD_TEXTURE(ray, OBJ_SCENERY_F7);
 }
 
 /**
@@ -439,37 +71,34 @@ void loadEnvTextures(ray_t* ray)
 wsg_t* loadTexture(ray_t* ray, cnfsFileIdx_t fIdx, rayMapCellType_t type)
 {
     // Iterate over the loaded textures
-    for (int32_t idx = 0; idx < MAX_LOADED_TEXTURES; idx++)
+    node_t* node = ray->loadedTextures.first;
+    while (node)
     {
-        // Check if the name is NULL
-        if (CNFS_NUM_FILES == ray->loadedTextures[idx].fIdx)
+        loadedTexture_t* lTex = node->val;
+        // Check if the requested texture is already loaded
+        if (lTex->fIdx == fIdx)
         {
-            // If so, we've reached the end and should load this texture
-            if (loadWsg(fIdx, &ray->loadedTextures[idx].texture, true))
-            {
-                // If the texture loads, save the index
-                ray->loadedTextures[idx].fIdx = fIdx;
-            }
-
-            // If this has a type
-            if (EMPTY != type)
-            {
-                // Set up mapping for later
-                ray->typeToIdxMap[type] = idx;
-            }
-
-            // Return the pointer
-            return &ray->loadedTextures[idx].texture;
+            // Return if already loaded
+            return &lTex->texture;
         }
-        else if (fIdx == ray->loadedTextures[idx].fIdx)
-        {
-            // Name matches, so return this loaded texture
-            return &ray->loadedTextures[idx].texture;
-        }
+        node = node->next;
     }
-    // Should be impossible to get here
-    ESP_LOGE("JSON", "Couldn't load texture");
-    return NULL;
+
+    // If we haven't returned a texture, load and save it
+    loadedTexture_t* lTex = heap_caps_calloc(1, sizeof(loadedTexture_t), MALLOC_CAP_SPIRAM);
+    lTex->fIdx            = fIdx;
+    loadWsg(fIdx, &lTex->texture, true);
+    push(&ray->loadedTextures, lTex);
+
+    // If this has a type
+    if (EMPTY != type)
+    {
+        // Set up mapping for later
+        ray->typeToTexMap[type] = &lTex->texture;
+    }
+
+    // Return the texture
+    return &lTex->texture;
 }
 
 /**
@@ -481,7 +110,12 @@ wsg_t* loadTexture(ray_t* ray, cnfsFileIdx_t fIdx, rayMapCellType_t type)
  */
 wsg_t* getTexByType(ray_t* ray, rayMapCellType_t type)
 {
-    return &ray->loadedTextures[ray->typeToIdxMap[type]].texture;
+    if (NULL == ray->typeToTexMap[type])
+    {
+        printf("TEX NOT FOUND %d\n", type);
+        exit(0);
+    }
+    return ray->typeToTexMap[type];
 }
 
 /**
@@ -491,61 +125,10 @@ wsg_t* getTexByType(ray_t* ray, rayMapCellType_t type)
  */
 void freeAllTex(ray_t* ray)
 {
-    freeWsg(&ray->cho_portrait);
-    freeWsg(&ray->hw_portrait);
-    freeWsg(&ray->hw_s_portrait);
-    freeWsg(&ray->guns[LO_NORMAL]);
-    freeWsg(&ray->guns[LO_MISSILE]);
-    freeWsg(&ray->guns[LO_ICE]);
-    freeWsg(&ray->guns[LO_XRAY]);
-    freeWsg(&ray->missileHUDicon);
-
-    // Free all environment textures
-    for (rayEnv_t e = 0; e < NUM_ENVS; e++)
+    while (ray->loadedTextures.length)
     {
-        for (rayEnvTex_t t = 0; t < NUM_ENV_TEXES; t++)
-        {
-            freeWsg(&ray->envTex[e][t]);
-        }
-    }
-
-    // Free all enemy textures
-    for (int32_t eIdx = 0; eIdx < NUM_ENEMIES; eIdx++)
-    {
-        for (int32_t aIdx = 0; aIdx < E_NUM_STATES; aIdx++)
-        {
-            for (int32_t fIdx = 0; fIdx < NUM_ANIM_FRAMES; fIdx++)
-            {
-                freeWsg(&ray->enemyTex[eIdx][aIdx][fIdx]);
-
-                // Also free alt-textures for the hidden enemy
-                if (eIdx == (OBJ_ENEMY_HIDDEN - OBJ_ENEMY_NORMAL))
-                {
-                    freeWsg(&ray->hiddenXRTex[aIdx][fIdx]);
-                }
-                else if (eIdx == (OBJ_ENEMY_BOSS - OBJ_ENEMY_NORMAL))
-                {
-                    freeWsg(&ray->bossTex[B_MISSILE][aIdx][fIdx]);
-                    freeWsg(&ray->bossTex[B_ICE][aIdx][fIdx]);
-                    freeWsg(&ray->bossTex[B_XRAY][aIdx][fIdx]);
-                }
-            }
-        }
-    }
-
-    freeWsg(&ray->block);
-
-    if (ray->loadedTextures)
-    {
-        for (int32_t idx = 0; idx < MAX_LOADED_TEXTURES; idx++)
-        {
-            // Check if the name is NULL
-            if (CNFS_NUM_FILES != ray->loadedTextures[idx].fIdx)
-            {
-                freeWsg(&ray->loadedTextures[idx].texture);
-            }
-        }
-        free(ray->loadedTextures);
-        free(ray->typeToIdxMap);
+        loadedTexture_t* lTex = pop(&ray->loadedTextures);
+        freeWsg(&lTex->texture);
+        heap_caps_free(lTex);
     }
 }
