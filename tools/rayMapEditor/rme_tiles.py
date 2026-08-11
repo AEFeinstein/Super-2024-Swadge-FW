@@ -272,8 +272,6 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_FLOOR_13,
         tileType.BG_FLOOR_14,
         tileType.BG_FLOOR_15,
-    ],
-    [
         tileType.BG_FLOOR_16,
         tileType.BG_FLOOR_17,
         tileType.BG_FLOOR_18,
@@ -308,8 +306,6 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_WALL_13,
         tileType.BG_WALL_14,
         tileType.BG_WALL_15,
-    ],
-    [
         tileType.BG_WALL_16,
         tileType.BG_WALL_17,
         tileType.BG_WALL_18,
@@ -344,8 +340,6 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_DOOR_13,
         tileType.BG_DOOR_14,
         tileType.BG_DOOR_15,
-    ],
-    [
         tileType.BG_DOOR_16,
         tileType.BG_DOOR_17,
         tileType.BG_DOOR_18,
@@ -361,8 +355,8 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_DOOR_28,
         tileType.BG_DOOR_29,
         tileType.BG_DOOR_30,
+        tileType.BG_DOOR_31,
         tileType.DELETE,
-        # tileType.BG_DOOR_31,
         ]
 ]
 
@@ -384,8 +378,6 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ITEM_13,
         tileType.OBJ_ITEM_14,
         tileType.OBJ_ITEM_15,
-    ],
-    [
         tileType.OBJ_ITEM_16,
         tileType.OBJ_ITEM_17,
         tileType.OBJ_ITEM_18,
@@ -420,8 +412,6 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ENEMY_13,
         tileType.OBJ_ENEMY_14,
         tileType.OBJ_ENEMY_15,
-    ],
-    [
         tileType.OBJ_ENEMY_16,
         tileType.OBJ_ENEMY_17,
         tileType.OBJ_ENEMY_18,
@@ -456,8 +446,6 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_SCENERY_13,
         tileType.OBJ_SCENERY_14,
         tileType.OBJ_SCENERY_15,
-    ],
-    [
         tileType.OBJ_SCENERY_16,
         tileType.OBJ_SCENERY_17,
         tileType.OBJ_SCENERY_18,
