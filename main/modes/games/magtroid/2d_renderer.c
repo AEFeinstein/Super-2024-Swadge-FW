@@ -106,7 +106,7 @@ void drawForeground2d(ray_t* ray)
     int32_t camY = ray->camera.y;
 
     drawCommonList(ray, &ray->enemies, camX, camY, c500);
-    drawCommonList(ray, &ray->scenery, camX, camY, c050);
+    drawCommonList(ray, &ray->scenery, camX, camY, cTransparent);
     drawCommonList(ray, &ray->items, camX, camY, c550);
 
     for (int bIdx = 0; bIdx < MAX_RAY_BULLETS; bIdx++)

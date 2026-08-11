@@ -249,65 +249,65 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
                     // Doors are colored based on the type of door
                     switch (type)
                     {
-                        case BG_DOOR:
-                        {
-                            color = c444;
-                            break;
-                        }
-                        case BG_DOOR_CHARGE:
-                        {
-                            color = c404;
-                            break;
-                        }
-                        case BG_DOOR_MISSILE:
-                        {
-                            color = c500;
-                            break;
-                        }
-                        case BG_DOOR_ICE:
-                        {
-                            color = c005;
-                            break;
-                        }
-                        case BG_DOOR_XRAY:
-                        {
-                            // Hide XRAY doors until the player gets the xrayLoadOut
-                            if (ray->p.i.xrayLoadOut)
-                            {
-                                color = c050;
-                            }
-                            else
-                            {
-                                // Wall color
-                                color = c001;
-                            }
-                            break;
-                        }
-                        case BG_DOOR_SCRIPT:
-                        {
-                            color = c222;
-                            break;
-                        }
-                        case BG_DOOR_KEY_A:
-                        {
-                            color = c541;
-                            break;
-                        }
-                        case BG_DOOR_KEY_B:
-                        {
-                            color = c423;
-                            break;
-                        }
-                        case BG_DOOR_KEY_C:
-                        {
-                            color = c234;
-                            break;
-                        }
-                        case BG_DOOR_ARTIFACT:
-                        {
-                            color = c245;
-                            break;
-                        }
+                        // case BG_DOOR:
+                        // {
+                        //     color = c444;
+                        //     break;
+                        // }
+                        // case BG_DOOR_CHARGE:
+                        // {
+                        //     color = c404;
+                        //     break;
+                        // }
+                        // case BG_DOOR_MISSILE:
+                        // {
+                        //     color = c500;
+                        //     break;
+                        // }
+                        // case BG_DOOR_ICE:
+                        // {
+                        //     color = c005;
+                        //     break;
+                        // }
+                        // case BG_DOOR_XRAY:
+                        // {
+                        //     // Hide XRAY doors until the player gets the xrayLoadOut
+                        //     if (ray->p.i.xrayLoadOut)
+                        //     {
+                        //         color = c050;
+                        //     }
+                        //     else
+                        //     {
+                        //         // Wall color
+                        //         color = c001;
+                        //     }
+                        //     break;
+                        // }
+                        // case BG_DOOR_SCRIPT:
+                        // {
+                        //     color = c222;
+                        //     break;
+                        // }
+                        // case BG_DOOR_KEY_A:
+                        // {
+                        //     color = c541;
+                        //     break;
+                        // }
+                        // case BG_DOOR_KEY_B:
+                        // {
+                        //     color = c423;
+                        //     break;
+                        // }
+                        // case BG_DOOR_KEY_C:
+                        // {
+                        //     color = c234;
+                        //     break;
+                        // }
+                        // case BG_DOOR_ARTIFACT:
+                        // {
+                        //     color = c245;
+                        //     break;
+                        // }
                         default:
                         {
                             // Can't reach here
@@ -319,26 +319,26 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
                 {
                     switch (type)
                     {
-                        case BG_FLOOR:
-                        {
-                            color = c111;
-                            break;
-                        }
-                        case BG_FLOOR_LAVA:
-                        {
-                            color = c311;
-                            break;
-                        }
-                        case BG_FLOOR_WATER:
-                        {
-                            color = c113;
-                            break;
-                        }
-                        case BG_FLOOR_HEAL:
-                        {
-                            color = c030;
-                            break;
-                        }
+                        // case BG_FLOOR:
+                        // {
+                        //     color = c111;
+                        //     break;
+                        // }
+                        // case BG_FLOOR_LAVA:
+                        // {
+                        //     color = c311;
+                        //     break;
+                        // }
+                        // case BG_FLOOR_WATER:
+                        // {
+                        //     color = c113;
+                        //     break;
+                        // }
+                        // case BG_FLOOR_HEAL:
+                        // {
+                        //     color = c030;
+                        //     break;
+                        // }
                         default:
                         {
                             // Can't reach here
@@ -365,32 +365,32 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
         rayObjCommon_t* obj = ((rayObjCommon_t*)currentNode->val);
 
         // Look for portals
-        if (OBJ_SCENERY_PORTAL == obj->type)
-        {
-            // Found a portal, look for corresponding script
-            node_t* scriptNode = ray->scripts[TOUCH].first;
-            while (NULL != scriptNode)
-            {
-                rayScript_t* scr = scriptNode->val;
-                // If this is the right script for this object
-                if ((TOUCH == scr->ifOp) && (WARP == scr->thenOp) && (scr->ifArgs.idList.ids[0] == obj->id))
-                {
-                    // And the player has visited the other end of the warp
-                    if (ray->p.mapsVisited[scr->thenArgs.warpDest.mapId])
-                    {
-                        // Draw a number indicating the warp destination
-                        char num[8];
-                        snprintf(num, sizeof(num) - 1, "%1d", scr->thenArgs.warpDest.mapId + 1);
-                        tWidth = textWidth(&ray->ibm, num);
-                        drawText(&ray->ibm, c555, num,
-                                 cellOffX + (cellSize * FROM_FX(obj->posX)) + (cellSize - tWidth) / 2,
-                                 cellOffY + (cellSize * FROM_FX(obj->posY)) + (cellSize - ray->ibm.height) / 2);
-                    }
-                    break;
-                }
-                scriptNode = scriptNode->next;
-            }
-        }
+        // if (OBJ_SCENERY_PORTAL == obj->type)
+        // {
+        //     // Found a portal, look for corresponding script
+        //     node_t* scriptNode = ray->scripts[TOUCH].first;
+        //     while (NULL != scriptNode)
+        //     {
+        //         rayScript_t* scr = scriptNode->val;
+        //         // If this is the right script for this object
+        //         if ((TOUCH == scr->ifOp) && (WARP == scr->thenOp) && (scr->ifArgs.idList.ids[0] == obj->id))
+        //         {
+        //             // And the player has visited the other end of the warp
+        //             if (ray->p.mapsVisited[scr->thenArgs.warpDest.mapId])
+        //             {
+        //                 // Draw a number indicating the warp destination
+        //                 char num[8];
+        //                 snprintf(num, sizeof(num) - 1, "%1d", scr->thenArgs.warpDest.mapId + 1);
+        //                 tWidth = textWidth(&ray->ibm, num);
+        //                 drawText(&ray->ibm, c555, num,
+        //                          cellOffX + (cellSize * FROM_FX(obj->posX)) + (cellSize - tWidth) / 2,
+        //                          cellOffY + (cellSize * FROM_FX(obj->posY)) + (cellSize - ray->ibm.height) / 2);
+        //             }
+        //             break;
+        //         }
+        //         scriptNode = scriptNode->next;
+        //     }
+        // }
 
         // Iterate to the next node
         currentNode = currentNode->next;
@@ -447,9 +447,9 @@ static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
     int16_t warpCoords[NUM_MAPS][NUM_MAP_CORNERS][2];
 
     // A texture to draw after artifacts are acquired
-    wsg_t* artifactWsg = getTexByType(ray, OBJ_ITEM_ARTIFACT);
-    int16_t aAOffX     = (MAP_SIZE - artifactWsg->w) / 2;
-    int16_t aAOffY     = (MAP_SIZE - artifactWsg->h) / 2;
+    // wsg_t* artifactWsg = getTexByType(ray, OBJ_ITEM_ARTIFACT);
+    // int16_t aAOffX     = (MAP_SIZE - artifactWsg->w) / 2;
+    // int16_t aAOffY     = (MAP_SIZE - artifactWsg->h) / 2;
 
     // For all six maps in a 3x2 grid
     for (int16_t mapY = 0; mapY < MAP_ROWS; mapY++)
@@ -473,10 +473,10 @@ static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
                 drawRect(startX, startY, endX, endY, rayMapColors[mapId]);
 
                 // Draw an artifact if was acquired here
-                if (ray->p.i.artifacts[mapId])
-                {
-                    drawWsgSimple(artifactWsg, startX + aAOffX, startY + aAOffY);
-                }
+                // if (ray->p.i.artifacts[mapId])
+                // {
+                //     drawWsgSimple(artifactWsg, startX + aAOffX, startY + aAOffY);
+                // }
 
                 // Draw the name, either above or below the box
                 int16_t tWidth = textWidth(&ray->ibm, rayMapNames[mapId]);
