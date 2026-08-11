@@ -11,6 +11,19 @@ Middle click on the map to drag the whole map around.
 
 Load, save, or 'save as' the current map and scripts with the buttons on the top.
 
+| Key | Action |
+| --- | ------ |
+| `ctrl` + `o` | Open a map |
+| `ctrl` + `s` | Save the map |
+| `ctrl` + `shift` + `s` | Save the map as a different name |
+| `ctrl` + `r` | Resize the map |
+| `ctrl` + `e` | Advance the script spawn helper |
+| `ctrl` + `c` | Advance the script camera helper |
+| `ctrl` + `=` | Zoom the map in |
+| `ctrl` + `-` | Zoom the map out |
+| arrow keys | Move the map around |
+| `shift` + up or down arrow | Scroll the palette up and down |
+
 ## Tiles
 
 A map is a grid of tiles. The map size is configurable, but no larger than 255x255 tiles.
