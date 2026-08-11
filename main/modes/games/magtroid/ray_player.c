@@ -90,8 +90,8 @@ bool initializePlayer(ray_t* ray)
 
     // Load sprites
     ray->p.sprite = loadTexture(ray, HYUT_WSG, EMPTY);
-    loadTexture(ray, OBJ_BULLET_NORMAL_WSG, OBJ_BULLET_NORMAL);
-    loadTexture(ray, OBJ_BULLET_MISSILE_WSG, OBJ_BULLET_MISSILE);
+    loadTexture(ray, OBJ_BULLET_NORMAL_WSG, OBJ_BULLET_ARROW);
+    loadTexture(ray, OBJ_BULLET_MISSILE_WSG, OBJ_BULLET_BOMB);
 
     // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
     ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
@@ -394,8 +394,8 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
 
             velX = (velX * touchDelta) / 1024;
             velY = (velY * touchDelta) / 1024;
-            rayCreateBullet(ray, OBJ_BULLET_NORMAL, ray->p.posX, ray->p.posY, velX, velY, -ray->p.dirX, -ray->p.dirY,
-                            -1, true);
+            rayCreateBullet(ray, OBJ_BULLET_ARROW, ray->p.posX, ray->p.posY, velX, velY, -ray->p.dirX, -ray->p.dirY, -1,
+                            true);
         }
         else if (ts->settingBomb)
         {
@@ -405,8 +405,8 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
             int32_t fuseUs = (touchDelta * (int64_t)4000000) / 1024;
 
             // Spawn the bomb slightly in front of the player
-            rayCreateBullet(ray, OBJ_BULLET_MISSILE, ray->p.posX + (ray->p.dirX / 2), ray->p.posY + (ray->p.dirY / 2),
-                            0, 0, 0, 0, fuseUs, true);
+            rayCreateBullet(ray, OBJ_BULLET_BOMB, ray->p.posX + (ray->p.dirX / 2), ray->p.posY + (ray->p.dirY / 2), 0,
+                            0, 0, 0, fuseUs, true);
         }
 
         // Reset variables
@@ -432,157 +432,157 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
     rayInventory_t* inventory = &ray->p.i;
     switch (type)
     {
-        case OBJ_ITEM_BEAM:
-        {
-            inventory->beamLoadOut = true;
-            break;
-        }
-        case OBJ_ITEM_CHARGE_BEAM:
-        {
-            inventory->chargePowerUp = true;
-            break;
-        }
-        case OBJ_ITEM_ICE:
-        {
-            inventory->iceLoadOut = true;
-            break;
-        }
-        case OBJ_ITEM_XRAY:
-        {
-            inventory->xrayLoadOut = true;
-            break;
-        }
-        case OBJ_ITEM_SUIT_WATER:
-        {
-            inventory->waterSuit = true;
-            break;
-        }
-        case OBJ_ITEM_SUIT_LAVA:
-        {
-            inventory->lavaSuit = true;
-            break;
-        }
-        case OBJ_ITEM_MISSILE:
-        {
-            // Find a slot to save this missile pickup
-            for (int32_t idx = 0; idx < MISSILE_UPGRADES_PER_MAP; idx++)
-            {
-                // The ID of an item can't be -1, so this is free
-                if (-1 == inventory->missilesPickUps[mapId][idx])
-                {
-                    if (!inventory->missileLoadOut)
-                    {
-                        // Picking up any missiles enables the loadout
-                        inventory->missileLoadOut = true;
-                    }
-                    // Add five missiles
-                    inventory->numMissiles += 5;
-                    inventory->maxNumMissiles += 5;
-                    // Cap at 99 missiles
-                    if (inventory->maxNumMissiles > 99)
-                    {
-                        inventory->maxNumMissiles = 99;
-                    }
+        // case OBJ_ITEM_BEAM:
+        // {
+        //     inventory->beamLoadOut = true;
+        //     break;
+        // }
+        // case OBJ_ITEM_CHARGE_BEAM:
+        // {
+        //     inventory->chargePowerUp = true;
+        //     break;
+        // }
+        // case OBJ_ITEM_ICE:
+        // {
+        //     inventory->iceLoadOut = true;
+        //     break;
+        // }
+        // case OBJ_ITEM_XRAY:
+        // {
+        //     inventory->xrayLoadOut = true;
+        //     break;
+        // }
+        // case OBJ_ITEM_SUIT_WATER:
+        // {
+        //     inventory->waterSuit = true;
+        //     break;
+        // }
+        // case OBJ_ITEM_SUIT_LAVA:
+        // {
+        //     inventory->lavaSuit = true;
+        //     break;
+        // }
+        // case OBJ_ITEM_MISSILE:
+        // {
+        //     // Find a slot to save this missile pickup
+        //     for (int32_t idx = 0; idx < MISSILE_UPGRADES_PER_MAP; idx++)
+        //     {
+        //         // The ID of an item can't be -1, so this is free
+        //         if (-1 == inventory->missilesPickUps[mapId][idx])
+        //         {
+        //             if (!inventory->missileLoadOut)
+        //             {
+        //                 // Picking up any missiles enables the loadout
+        //                 inventory->missileLoadOut = true;
+        //             }
+        //             // Add five missiles
+        //             inventory->numMissiles += 5;
+        //             inventory->maxNumMissiles += 5;
+        //             // Cap at 99 missiles
+        //             if (inventory->maxNumMissiles > 99)
+        //             {
+        //                 inventory->maxNumMissiles = 99;
+        //             }
 
-                    // Save the coordinates
-                    inventory->missilesPickUps[mapId][idx] = itemId;
+        //             // Save the coordinates
+        //             inventory->missilesPickUps[mapId][idx] = itemId;
 
-                    // World 3, Missile ID 12 gets special dialog
-                    if (3 == ray->p.mapId && 12 == item->id)
-                    {
-                        rayShowDialog(ray, missileSwimDialog, item->sprite);
-                    }
-                    else
-                    {
-                        // Show random dialog
-                        int32_t dialogIdx = esp_random() % ARRAY_SIZE(missilePickupDialog);
-                        rayShowDialog(ray, missilePickupDialog[dialogIdx], item->sprite);
-                    }
-                    break;
-                }
-            }
-            break;
-        }
-        case OBJ_ITEM_ENERGY_TANK:
-        {
-            // Find a slot to save this health pickup
-            for (int32_t idx = 0; idx < E_TANKS_PER_MAP; idx++)
-            {
-                // The ID of an item can't be -1, so this is free
-                if (-1 == inventory->healthPickUps[mapId][idx])
-                {
-                    // Add max health
-                    inventory->maxHealth += HEALTH_PER_E_TANK;
-                    // Cap the max health
-                    if (inventory->maxHealth > MAX_HEALTH_EVER)
-                    {
-                        inventory->maxHealth = MAX_HEALTH_EVER;
-                    }
+        //             // World 3, Missile ID 12 gets special dialog
+        //             if (3 == ray->p.mapId && 12 == item->id)
+        //             {
+        //                 rayShowDialog(ray, missileSwimDialog, item->sprite);
+        //             }
+        //             else
+        //             {
+        //                 // Show random dialog
+        //                 int32_t dialogIdx = esp_random() % ARRAY_SIZE(missilePickupDialog);
+        //                 rayShowDialog(ray, missilePickupDialog[dialogIdx], item->sprite);
+        //             }
+        //             break;
+        //         }
+        //     }
+        //     break;
+        // }
+        // case OBJ_ITEM_ENERGY_TANK:
+        // {
+        //     // Find a slot to save this health pickup
+        //     for (int32_t idx = 0; idx < E_TANKS_PER_MAP; idx++)
+        //     {
+        //         // The ID of an item can't be -1, so this is free
+        //         if (-1 == inventory->healthPickUps[mapId][idx])
+        //         {
+        //             // Add max health
+        //             inventory->maxHealth += HEALTH_PER_E_TANK;
+        //             // Cap the max health
+        //             if (inventory->maxHealth > MAX_HEALTH_EVER)
+        //             {
+        //                 inventory->maxHealth = MAX_HEALTH_EVER;
+        //             }
 
-                    // Reset health
-                    inventory->health = inventory->maxHealth;
+        //             // Reset health
+        //             inventory->health = inventory->maxHealth;
 
-                    // Save the coordinates
-                    inventory->healthPickUps[mapId][idx] = itemId;
-                    break;
-                }
-            }
-            break;
-        }
-        case OBJ_ITEM_ARTIFACT:
-        {
-            inventory->artifacts[mapId] = true;
+        //             // Save the coordinates
+        //             inventory->healthPickUps[mapId][idx] = itemId;
+        //             break;
+        //         }
+        //     }
+        //     break;
+        // }
+        // case OBJ_ITEM_ARTIFACT:
+        // {
+        //     inventory->artifacts[mapId] = true;
 
-            // Check if all artifacts have been collected
-            bool collected = true;
-            for (int16_t aIdx = 0; aIdx < ARRAY_SIZE(inventory->artifacts); aIdx++)
-            {
-                if (!inventory->artifacts[aIdx])
-                {
-                    collected = false;
-                    break;
-                }
-            }
+        //     // Check if all artifacts have been collected
+        //     bool collected = true;
+        //     for (int16_t aIdx = 0; aIdx < ARRAY_SIZE(inventory->artifacts); aIdx++)
+        //     {
+        //         if (!inventory->artifacts[aIdx])
+        //         {
+        //             collected = false;
+        //             break;
+        //         }
+        //     }
 
-            // If all were collected
-            if (collected)
-            {
-                // Increase damage output by 2
-                inventory->damageMult = 2;
-            }
-            break;
-        }
-        case OBJ_ITEM_PICKUP_ENERGY:
-        {
-            // Transient, add (GAME_START_HEALTH / 2) health, not going over the max
-            inventory->health = MIN(inventory->health + (GAME_START_HEALTH / 2), inventory->maxHealth);
-            // Play SFX
-            globalMidiPlayerPlaySong(&ray->sfx_health, MIDI_SFX);
-            // Don't save after energy
-            saveAfterObtain = false;
-            break;
-        }
-        case OBJ_ITEM_PICKUP_MISSILE:
-        {
-            if (ray->p.i.missileLoadOut)
-            {
-                // Transient, add 5 missiles, not going over the max
-                inventory->numMissiles = MIN(inventory->numMissiles + 5, inventory->maxNumMissiles);
-            }
-            // Play SFX
-            globalMidiPlayerPlaySong(&ray->sfx_health, MIDI_SFX);
-            // Don't save after missile ammo
-            saveAfterObtain = false;
-            break;
-        }
-        case OBJ_ITEM_KEY_A:
-        case OBJ_ITEM_KEY_B:
-        case OBJ_ITEM_KEY_C:
-        {
-            // Pick up a key
-            inventory->keys[ray->p.mapId][type - OBJ_ITEM_KEY_A] = KEY;
-            break;
-        }
+        //     // If all were collected
+        //     if (collected)
+        //     {
+        //         // Increase damage output by 2
+        //         inventory->damageMult = 2;
+        //     }
+        //     break;
+        // }
+        // case OBJ_ITEM_PICKUP_ENERGY:
+        // {
+        //     // Transient, add (GAME_START_HEALTH / 2) health, not going over the max
+        //     inventory->health = MIN(inventory->health + (GAME_START_HEALTH / 2), inventory->maxHealth);
+        //     // Play SFX
+        //     globalMidiPlayerPlaySong(&ray->sfx_health, MIDI_SFX);
+        //     // Don't save after energy
+        //     saveAfterObtain = false;
+        //     break;
+        // }
+        // case OBJ_ITEM_PICKUP_MISSILE:
+        // {
+        //     if (ray->p.i.missileLoadOut)
+        //     {
+        //         // Transient, add 5 missiles, not going over the max
+        //         inventory->numMissiles = MIN(inventory->numMissiles + 5, inventory->maxNumMissiles);
+        //     }
+        //     // Play SFX
+        //     globalMidiPlayerPlaySong(&ray->sfx_health, MIDI_SFX);
+        //     // Don't save after missile ammo
+        //     saveAfterObtain = false;
+        //     break;
+        // }
+        // case OBJ_ITEM_KEY_A:
+        // case OBJ_ITEM_KEY_B:
+        // case OBJ_ITEM_KEY_C:
+        // {
+        //     // Pick up a key
+        //     inventory->keys[ray->p.mapId][type - OBJ_ITEM_KEY_A] = KEY;
+        //     break;
+        // }
         default:
         {
             // Don't care about other types
@@ -611,50 +611,50 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
 void rayPlayerCheckFloorEffect(ray_t* ray, uint32_t elapsedUs)
 {
     // If the player is in lava without the lava suit
-    if ((!ray->p.i.lavaSuit) && (BG_FLOOR_LAVA == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type))
-    {
-        // Run a timer to take lava damage
-        ray->floorEffectTimer += elapsedUs;
-        if (ray->floorEffectTimer <= US_PER_FLOOR_EFFECT)
-        {
-            ray->floorEffectTimer -= US_PER_FLOOR_EFFECT;
-            rayPlayerDecrementHealth(ray, 1);
-        }
+    // if ((!ray->p.i.lavaSuit) && (BG_FLOOR_LAVA == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type))
+    // {
+    //     // Run a timer to take lava damage
+    //     ray->floorEffectTimer += elapsedUs;
+    //     if (ray->floorEffectTimer <= US_PER_FLOOR_EFFECT)
+    //     {
+    //         ray->floorEffectTimer -= US_PER_FLOOR_EFFECT;
+    //         rayPlayerDecrementHealth(ray, 1);
+    //     }
 
-        // If the player is entering lava
-        if (false == ray->playerInLava)
-        {
-            ray->playerInLava = true;
-            // Start looping SFX
-            // ray->sfx_lava_dmg.shouldLoop = true;
-            // globalMidiPlayerPlaySong(&ray->sfx_lava_dmg, MIDI_SFX);
-        }
-    }
-    else if (BG_FLOOR_HEAL == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type)
-    {
-        // Run a timer to heal
-        ray->floorEffectTimer += elapsedUs;
-        if (ray->floorEffectTimer <= US_PER_FLOOR_EFFECT)
-        {
-            ray->floorEffectTimer -= US_PER_FLOOR_EFFECT;
-            rayPlayerDecrementHealth(ray, -1);
-        }
+    //     // If the player is entering lava
+    //     if (false == ray->playerInLava)
+    //     {
+    //         ray->playerInLava = true;
+    //         // Start looping SFX
+    //         // ray->sfx_lava_dmg.shouldLoop = true;
+    //         // globalMidiPlayerPlaySong(&ray->sfx_lava_dmg, MIDI_SFX);
+    //     }
+    // }
+    // else if (BG_FLOOR_HEAL == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type)
+    // {
+    //     // Run a timer to heal
+    //     ray->floorEffectTimer += elapsedUs;
+    //     if (ray->floorEffectTimer <= US_PER_FLOOR_EFFECT)
+    //     {
+    //         ray->floorEffectTimer -= US_PER_FLOOR_EFFECT;
+    //         rayPlayerDecrementHealth(ray, -1);
+    //     }
 
-        if (false == ray->playerInHealth)
-        {
-            ray->playerInHealth = true;
-        }
-    }
-    else if (true == ray->playerInLava)
-    {
-        ray->playerInLava = false;
-        // Stop looping SFX
-        // ray->sfx_lava_dmg.shouldLoop = true;
-    }
-    else if (true == ray->playerInHealth)
-    {
-        ray->playerInHealth = false;
-    }
+    //     if (false == ray->playerInHealth)
+    //     {
+    //         ray->playerInHealth = true;
+    //     }
+    // }
+    // else if (true == ray->playerInLava)
+    // {
+    //     ray->playerInLava = false;
+    //     // Stop looping SFX
+    //     // ray->sfx_lava_dmg.shouldLoop = true;
+    // }
+    // else if (true == ray->playerInHealth)
+    // {
+    //     ray->playerInHealth = false;
+    // }
 }
 
 /**

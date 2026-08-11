@@ -407,6 +407,25 @@ static void rayMainLoop(int64_t elapsedUs)
 
             // Run timers for head-bob, doors, etc.
             // runEnvTimers(ray, elapsedUs);
+            RUN_TIMER_EVERY(ray->cameraTimer, (1000000 / TFT_WIDTH), elapsedUs, {
+                if (ray->camera.x < ray->cameraTarget.x)
+                {
+                    ray->camera.x++;
+                }
+                else if (ray->camera.x > ray->cameraTarget.x)
+                {
+                    ray->camera.x--;
+                }
+
+                if (ray->camera.y < ray->cameraTarget.y)
+                {
+                    ray->camera.y++;
+                }
+                else if (ray->camera.y > ray->cameraTarget.y)
+                {
+                    ray->camera.y--;
+                }
+            });
 
             // Only run this code when the camera is settled
             if (ray->camera.x == ray->cameraTarget.x && ray->camera.y == ray->cameraTarget.y)

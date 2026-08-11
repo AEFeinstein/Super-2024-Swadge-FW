@@ -56,7 +56,7 @@ void rayCreateBullet(ray_t* ray, rayMapCellType_t bulletType, q24_8 posX, q24_8 
             // Set the texture
             wsg_t* texture      = getTexByType(ray, bulletType);
             newBullet->c.sprite = texture;
-            if (OBJ_BULLET_MISSILE == bulletType)
+            if (OBJ_BULLET_BOMB == bulletType)
             {
                 // Bombs start with a negative radius to not collide with enemies
                 newBullet->c.bound.radius = -1;
@@ -208,63 +208,63 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
                             bool opened = false;
                             switch (cell->type)
                             {
-                                case BG_DOOR:
-                                {
-                                    opened = true;
-                                    break;
-                                }
-                                case BG_DOOR_CHARGE:
-                                {
-                                    opened = (OBJ_BULLET_CHARGE == obj->c.type);
-                                    break;
-                                }
-                                case BG_DOOR_MISSILE:
-                                {
-                                    opened = (OBJ_BULLET_MISSILE == obj->c.type);
-                                    break;
-                                }
-                                case BG_DOOR_ICE:
-                                {
-                                    opened = (OBJ_BULLET_ICE == obj->c.type);
-                                    break;
-                                }
-                                case BG_DOOR_XRAY:
-                                {
-                                    opened = (OBJ_BULLET_XRAY == obj->c.type);
-                                    break;
-                                }
-                                case BG_DOOR_SCRIPT:
-                                {
-                                    // Script doors aren't openable by bullets
-                                    break;
-                                }
-                                case BG_DOOR_KEY_A:
-                                case BG_DOOR_KEY_B:
-                                case BG_DOOR_KEY_C:
-                                {
-                                    // Open the door if the player has the appropriate key
-                                    opened = (KEY == ray->p.i.keys[rayMapId][cell->type - BG_DOOR_KEY_A]);
-                                    if (opened)
-                                    {
-                                        // Mark the key as used
-                                        ray->p.i.keys[rayMapId][cell->type - BG_DOOR_KEY_A] = OPEN_KEY;
-                                    }
-                                    break;
-                                }
-                                case BG_DOOR_ARTIFACT:
-                                {
-                                    // Check if all artifacts have been collected
-                                    opened = true;
-                                    for (int16_t aIdx = 0; aIdx < ARRAY_SIZE(ray->p.i.artifacts); aIdx++)
-                                    {
-                                        if (!ray->p.i.artifacts[aIdx])
-                                        {
-                                            opened = false;
-                                            break;
-                                        }
-                                    }
-                                    break;
-                                }
+                                // case BG_DOOR:
+                                // {
+                                //     opened = true;
+                                //     break;
+                                // }
+                                // case BG_DOOR_CHARGE:
+                                // {
+                                //     opened = (OBJ_BULLET_CHARGE == obj->c.type);
+                                //     break;
+                                // }
+                                // case BG_DOOR_MISSILE:
+                                // {
+                                //     opened = (OBJ_BULLET_BOMB == obj->c.type);
+                                //     break;
+                                // }
+                                // case BG_DOOR_ICE:
+                                // {
+                                //     opened = (OBJ_BULLET_ICE == obj->c.type);
+                                //     break;
+                                // }
+                                // case BG_DOOR_XRAY:
+                                // {
+                                //     opened = (OBJ_BULLET_XRAY == obj->c.type);
+                                //     break;
+                                // }
+                                // case BG_DOOR_SCRIPT:
+                                // {
+                                //     // Script doors aren't openable by bullets
+                                //     break;
+                                // }
+                                // case BG_DOOR_KEY_A:
+                                // case BG_DOOR_KEY_B:
+                                // case BG_DOOR_KEY_C:
+                                // {
+                                //     // Open the door if the player has the appropriate key
+                                //     opened = (KEY == ray->p.i.keys[rayMapId][cell->type - BG_DOOR_KEY_A]);
+                                //     if (opened)
+                                //     {
+                                //         // Mark the key as used
+                                //         ray->p.i.keys[rayMapId][cell->type - BG_DOOR_KEY_A] = OPEN_KEY;
+                                //     }
+                                //     break;
+                                // }
+                                // case BG_DOOR_ARTIFACT:
+                                // {
+                                //     // Check if all artifacts have been collected
+                                //     opened = true;
+                                //     for (int16_t aIdx = 0; aIdx < ARRAY_SIZE(ray->p.i.artifacts); aIdx++)
+                                //     {
+                                //         if (!ray->p.i.artifacts[aIdx])
+                                //         {
+                                //             opened = false;
+                                //             break;
+                                //         }
+                                //     }
+                                //     break;
+                                // }
                                 default:
                                 {
                                     // Not a door, somehow
@@ -350,31 +350,31 @@ void checkRayCollisions(ray_t* ray)
                 int32_t dmg = 0;
                 switch (bullet->c.type)
                 {
-                    case OBJ_BULLET_E_NORMAL:
-                    {
-                        dmg = 10;
-                        break;
-                    }
-                    case OBJ_BULLET_E_STRONG:
-                    {
-                        dmg = 15;
-                        break;
-                    }
-                    case OBJ_BULLET_E_ARMOR:
-                    {
-                        dmg = 20;
-                        break;
-                    }
-                    case OBJ_BULLET_E_FLAMING:
-                    {
-                        dmg = 25;
-                        break;
-                    }
-                    case OBJ_BULLET_E_HIDDEN:
-                    {
-                        dmg = 30;
-                        break;
-                    }
+                    // case OBJ_BULLET_E_NORMAL:
+                    // {
+                    //     dmg = 10;
+                    //     break;
+                    // }
+                    // case OBJ_BULLET_E_STRONG:
+                    // {
+                    //     dmg = 15;
+                    //     break;
+                    // }
+                    // case OBJ_BULLET_E_ARMOR:
+                    // {
+                    //     dmg = 20;
+                    //     break;
+                    // }
+                    // case OBJ_BULLET_E_FLAMING:
+                    // {
+                    //     dmg = 25;
+                    //     break;
+                    // }
+                    // case OBJ_BULLET_E_HIDDEN:
+                    // {
+                    //     dmg = 30;
+                    //     break;
+                    // }
                     default:
                     {
                         break;
@@ -467,7 +467,7 @@ void checkRayCollisions(ray_t* ray)
             {
                 printf("HIT!!\n");
                 // TODO only count once
-                rayEnemyGetShot(ray, enemy, OBJ_BULLET_NORMAL);
+                rayEnemyGetShot(ray, enemy, OBJ_BULLET_ARROW);
             }
         }
 
