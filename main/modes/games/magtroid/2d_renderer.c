@@ -140,18 +140,18 @@ void drawForeground2d(ray_t* ray)
         }
     }
 
-    int16_t pSpriteX = TO_PX(ray->p.posX) - camX - (ray->p.sprite->w / 2);
-    int16_t pSpriteY = TO_PX(ray->p.posY) - camY - (ray->p.sprite->h / 2);
-    if (ray->p.jumpPos || ray->p.jumpVel)
+    int16_t pSpriteX = TO_PX(ray->p.posX) - camX - (ray->ps.sprite->w / 2);
+    int16_t pSpriteY = TO_PX(ray->p.posY) - camY - (ray->ps.sprite->h / 2);
+    if (ray->ps.jumpPos || ray->ps.jumpVel)
     {
-        int16_t spriteRadius = (ray->p.sprite->w / 2);
-        drawEllipseFilled(pSpriteX + spriteRadius, pSpriteY + ray->p.sprite->h, spriteRadius, spriteRadius / 2, c111);
+        int16_t spriteRadius = (ray->ps.sprite->w / 2);
+        drawEllipseFilled(pSpriteX + spriteRadius, pSpriteY + ray->ps.sprite->h, spriteRadius, spriteRadius / 2, c111);
     }
 
-    drawWsg(ray->p.sprite, pSpriteX, pSpriteY + TO_PX(ray->p.jumpPos), false, false,
+    drawWsg(ray->ps.sprite, pSpriteX, pSpriteY + TO_PX(ray->ps.jumpPos), false, false,
             rayGetEightWayAngle(ray->p.dirX, ray->p.dirY));
 
-    if (ray->p.swordTimerUs > 0)
+    if (ray->ps.swordTimerUs > 0)
     {
         line_t sword = rayGetSwordLineSegment(ray);
         drawLineFast(TO_PX(sword.p1.x) - camX, //

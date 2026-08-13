@@ -231,38 +231,38 @@ typedef enum __attribute__((packed))
     OBJ_ENEMY_30          = (OBJ | ENEMY | 30),
     OBJ_ENEMY_31          = (OBJ | ENEMY | 31),
     // Item pickups
-    OBJ_ITEM_0  = (OBJ | ITEM | 0),
-    OBJ_ITEM_1  = (OBJ | ITEM | 1),
-    OBJ_ITEM_2  = (OBJ | ITEM | 2),
-    OBJ_ITEM_3  = (OBJ | ITEM | 3),
-    OBJ_ITEM_4  = (OBJ | ITEM | 4),
-    OBJ_ITEM_5  = (OBJ | ITEM | 5),
-    OBJ_ITEM_6  = (OBJ | ITEM | 6),
-    OBJ_ITEM_7  = (OBJ | ITEM | 7),
-    OBJ_ITEM_8  = (OBJ | ITEM | 8),
-    OBJ_ITEM_9  = (OBJ | ITEM | 9),
-    OBJ_ITEM_10 = (OBJ | ITEM | 10),
-    OBJ_ITEM_11 = (OBJ | ITEM | 11),
-    OBJ_ITEM_12 = (OBJ | ITEM | 12),
-    OBJ_ITEM_13 = (OBJ | ITEM | 13),
-    OBJ_ITEM_14 = (OBJ | ITEM | 14),
-    OBJ_ITEM_15 = (OBJ | ITEM | 15),
-    OBJ_ITEM_16 = (OBJ | ITEM | 16),
-    OBJ_ITEM_17 = (OBJ | ITEM | 17),
-    OBJ_ITEM_18 = (OBJ | ITEM | 18),
-    OBJ_ITEM_19 = (OBJ | ITEM | 19),
-    OBJ_ITEM_20 = (OBJ | ITEM | 20),
-    OBJ_ITEM_21 = (OBJ | ITEM | 21),
-    OBJ_ITEM_22 = (OBJ | ITEM | 22),
-    OBJ_ITEM_23 = (OBJ | ITEM | 23),
-    OBJ_ITEM_24 = (OBJ | ITEM | 24),
-    OBJ_ITEM_25 = (OBJ | ITEM | 25),
-    OBJ_ITEM_26 = (OBJ | ITEM | 26),
-    OBJ_ITEM_27 = (OBJ | ITEM | 27),
-    OBJ_ITEM_28 = (OBJ | ITEM | 28),
-    OBJ_ITEM_29 = (OBJ | ITEM | 29),
-    OBJ_ITEM_30 = (OBJ | ITEM | 30),
-    OBJ_ITEM_31 = (OBJ | ITEM | 31),
+    OBJ_ITEM_EWI        = (OBJ | ITEM | 0),
+    OBJ_ITEM_BOMB       = (OBJ | ITEM | 1),
+    OBJ_ITEM_BOOTS      = (OBJ | ITEM | 2),
+    OBJ_ITEM_SHIELD     = (OBJ | ITEM | 3),
+    OBJ_ITEM_BOW        = (OBJ | ITEM | 4),
+    OBJ_ITEM_BOOMERANG  = (OBJ | ITEM | 5),
+    OBJ_ITEM_TURNTABLES = (OBJ | ITEM | 6),
+    OBJ_ITEM_LULLABY    = (OBJ | ITEM | 7),
+    OBJ_ITEM_8          = (OBJ | ITEM | 8),
+    OBJ_ITEM_9          = (OBJ | ITEM | 9),
+    OBJ_ITEM_10         = (OBJ | ITEM | 10),
+    OBJ_ITEM_11         = (OBJ | ITEM | 11),
+    OBJ_ITEM_12         = (OBJ | ITEM | 12),
+    OBJ_ITEM_13         = (OBJ | ITEM | 13),
+    OBJ_ITEM_14         = (OBJ | ITEM | 14),
+    OBJ_ITEM_15         = (OBJ | ITEM | 15),
+    OBJ_ITEM_16         = (OBJ | ITEM | 16),
+    OBJ_ITEM_17         = (OBJ | ITEM | 17),
+    OBJ_ITEM_18         = (OBJ | ITEM | 18),
+    OBJ_ITEM_19         = (OBJ | ITEM | 19),
+    OBJ_ITEM_20         = (OBJ | ITEM | 20),
+    OBJ_ITEM_21         = (OBJ | ITEM | 21),
+    OBJ_ITEM_22         = (OBJ | ITEM | 22),
+    OBJ_ITEM_23         = (OBJ | ITEM | 23),
+    OBJ_ITEM_24         = (OBJ | ITEM | 24),
+    OBJ_ITEM_25         = (OBJ | ITEM | 25),
+    OBJ_ITEM_26         = (OBJ | ITEM | 26),
+    OBJ_ITEM_27         = (OBJ | ITEM | 27),
+    OBJ_ITEM_28         = (OBJ | ITEM | 28),
+    OBJ_ITEM_29         = (OBJ | ITEM | 29),
+    OBJ_ITEM_30         = (OBJ | ITEM | 30),
+    OBJ_ITEM_31         = (OBJ | ITEM | 31),
     // Bullets
     OBJ_BULLET_ARROW = (OBJ | BULLET | 0),
     OBJ_BULLET_BOMB  = (OBJ | BULLET | 1),
@@ -632,27 +632,21 @@ typedef struct rayEnemy
  */
 typedef struct
 {
-    // Persistent pick-ups
-    int32_t missilesPickUps[NUM_MAPS][MISSILE_UPGRADES_PER_MAP]; ///< ID list of acquired missile expansions
-    int32_t healthPickUps[NUM_MAPS][E_TANKS_PER_MAP];            ///< ID list of acquired e.tanks
     // Current status
-    int32_t health;         ///< The player's current health
-    int32_t maxHealth;      ///< The player's current max health.
-    int32_t numMissiles;    ///< The player's current missile count
-    int32_t maxNumMissiles; ///< The player's current max missile count
-    // Persistent beam pickups
-    bool beamLoadOut;    ///< True if the normal beam was acquired
-    bool chargePowerUp;  ///< True if the charge beam was acquired
-    bool missileLoadOut; ///< True if a missile was acquired
-    bool iceLoadOut;     ///< True if the ice loadout was acquired
-    bool xrayLoadOut;    ///< True if the xray loadout was acquired
-    // Persistent suit pickups
-    bool lavaSuit;  ///< True if the lava suit was acquired
-    bool waterSuit; ///< True if the water suit was acquired
-    // Key items
-    bool artifacts[NUM_MAPS];               ///< List of acquired artifacts
+    int32_t health;    ///< The player's current health
+    int32_t maxHealth; ///< The player's current max health.
+    // Persistent keys (TODO)
     rayKeyState_t keys[NUM_MAPS][NUM_KEYS]; ///< The number of small keys the player currently has
-    int32_t damageMult;                     ///< A damage multiplier
+    // Persistent inventory items
+    bool haveEwiOfTime;
+    bool haveBombs;
+    bool haveJumpBoots;
+    bool haveShield;
+    bool haveBow;
+    bool haveBoomerang;
+    bool haveTurntables;
+    bool haveDoriasLullaby;
+    // Persistent pick-ups (TODO heart pieces, ammo upgrades, etc.)
 } rayInventory_t;
 
 /**
@@ -667,7 +661,13 @@ typedef struct
     int32_t mapId;              ///< The ID of the current map
     bool mapsVisited[NUM_MAPS]; ///< Booleans for each map visited
     rayInventory_t i;           ///< All the players items
+} rayPlayer_t;
 
+/**
+ * @brief A struct with all the player information NOT saved to NVM
+ */
+typedef struct
+{
     int32_t swordAngle;
     int32_t swordTimerUs;
 
@@ -683,7 +683,7 @@ typedef struct
     q24_8 jumpVel;
 
     wsg_t* sprite;
-} rayPlayer_t;
+} rayPlayerState_t;
 
 /**
  * @brief The entire game state
@@ -700,11 +700,13 @@ typedef struct rayGame
 
     rayMap_t map;      ///< The loaded map
     int32_t doorTimer; ///< A timer used to open doors
-    vec_t camera;
-    vec_t cameraTarget;
-    int32_t cameraTimer;
 
-    rayPlayer_t p; ///< All the player's state, loaded from NVM
+    vec_t camera;        ///< The position of the 2D camera
+    vec_t cameraTarget;  ///< The target position of the 2D camera
+    int32_t cameraTimer; ///< A timer to move the camera from current to target positions
+
+    rayPlayer_t p;       ///< All the player's state, loaded from NVM
+    rayPlayerState_t ps; ///< All the player's temporary state
 
     int32_t warpDestMapId; ///< The ID of the current map
     q24_8 warpDestPosX;    ///< The player's X position
@@ -718,45 +720,10 @@ typedef struct rayGame
     list_t scenery;                       ///< A list of all scenery (doesn't move, can be shot)
     list_t items;                         ///< A list of all items (doesn't move, can be shot)
 
-    q24_8 planeX; ///< The X camera plane, orthogonal to dir vector
-    q24_8 planeY; ///< The Y camera plane, orthogonal to dir vector
+    uint32_t btnState; ///< The current button state
 
-    q24_8 wallDistBuffer[TFT_WIDTH]; ///< The distance of each vertical strip of pixels, used for sprite casting
-
-    q24_8 posZ;       ///< The Z position, used for head bobbing
-    int32_t bobTimer; ///< A timer used for head bobbing
-    int32_t bobCount; ///< A count used to adjust posZ sinusoidally
-
-    uint32_t btnState;           ///< The current button state
-    bool isStrafing;             ///< true if the player is strafing, false if not
-    rayObjCommon_t* targetedObj; ///< An object that is locked onto to strafe around
-
-    int32_t floorEffectTimer;   ///< Timer for effects when standing on a tile
-    bool playerInLava;          ///< Track if the player is standing in lava
-    bool playerInHealth;        ///< Track if the player is standing in a health pad
-    int32_t lavaTimer;          ///< Timer to blink lava LEDs
-    bool lavaLedBlink;          ///< LED state when showing lava effect
-    int32_t chargeTimer;        ///< Timer to charge shots
-    int32_t playerShotCooldown; ///< Cooldown timer between shots
-    int32_t gunShakeTimer;      ///< Timer to shake the gun when charged
-    int32_t gunShakeX;          ///< Offset to draw gun at when shaking
-    bool gunShakeL;             ///< true if the gun is shaking to the left, false otherwise
-    int32_t pRotationTimer;     ///< timer for player rotation
-
-    // namedTexture_t* loadedTextures;                             ///< A list of loaded textures
-    // uint8_t* typeToIdxMap;                                      ///< A map of rayMapCellType_t to respective textures
-    // wsg_t envTex[NUM_ENVS][NUM_ENV_TEXES];                      ///< The environment textures
-    // wsg_t guns[NUM_LOADOUTS];                                   ///< Textures for the HUD guns
-    // wsg_t cho_portrait;                                         ///< A portrait used for text dialogs
-    // wsg_t hw_portrait;                                          ///< A portrait used for text dialogs
-    // wsg_t hw_s_portrait;                                        ///< A portrait used for text dialogs
-    // wsg_t missileHUDicon;                                       ///< A missile icon drawn in the HUD
-    // wsg_t enemyTex[NUM_ENEMIES][E_NUM_STATES][NUM_ANIM_FRAMES]; ///< The enemy textures
-    // wsg_t hiddenXRTex[E_NUM_STATES][NUM_ANIM_FRAMES];           ///< The textures for X-Ray hidden enemies
-    // wsg_t bossTex[NUM_BOSS_STATES - 1][E_NUM_STATES][NUM_ANIM_FRAMES]; ///< The textures for the boss
-    // wsg_t block;
-    list_t loadedTextures;
-    wsg_t* typeToTexMap[256];
+    list_t loadedTextures;    ///< A list of all currently loaded textures
+    wsg_t* typeToTexMap[256]; ///< A map of rayMapCellType_t to texture
 
     font_t ibm;     ///< A font to draw the HUD
     font_t logbook; ///< A font to draw the menu
@@ -793,10 +760,6 @@ typedef struct rayGame
     midiFile_t sfx_lava_dmg;        ///< SFX when standing in lava
     midiFile_t sfx_health;          ///< SFX when picking up health
     midiFile_t sfx_game_over;       ///< SFX when the game is over
-
-    int32_t itemRotateTimer; ///< A timer to 'rotate' items by scaling the X direction
-    int32_t itemRotateDeg;   ///< The number of degrees all items are 'rotated' by
-    bool itemRotateMirror;   ///< If items should be drawn mirrored
 
     int32_t ledTimer;     ///< A timer to change LED hue
     int32_t ledHue;       ///< The current LED hue
