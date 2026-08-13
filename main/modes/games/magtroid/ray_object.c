@@ -414,11 +414,6 @@ void checkRayCollisions(ray_t* ray)
         // If the prior node should be removed
         if (toRemove)
         {
-            // Remove the lock
-            if (ray->targetedObj == item)
-            {
-                ray->targetedObj = NULL;
-            }
             // Free the item
             free(item);
             // Remove it from the list
@@ -459,7 +454,7 @@ void checkRayCollisions(ray_t* ray)
         }
 
         // If a sword is being swung
-        if (ray->p.swordTimerUs > 0)
+        if (ray->ps.swordTimerUs > 0)
         {
             // Get the enemy bounding box
             // Check for a collision between bounding box and sword
