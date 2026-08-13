@@ -154,14 +154,14 @@ class tileType(Enum):
     OBJ_ENEMY_30 = (OBJ | ENEMY | 30)
     OBJ_ENEMY_31 = (OBJ | ENEMY | 31)
     # Item pickups
-    OBJ_ITEM_0 = (OBJ | ITEM | 0)
-    OBJ_ITEM_1 = (OBJ | ITEM | 1)
-    OBJ_ITEM_2 = (OBJ | ITEM | 2)
-    OBJ_ITEM_3 = (OBJ | ITEM | 3)
-    OBJ_ITEM_4 = (OBJ | ITEM | 4)
-    OBJ_ITEM_5 = (OBJ | ITEM | 5)
-    OBJ_ITEM_6 = (OBJ | ITEM | 6)
-    OBJ_ITEM_7 = (OBJ | ITEM | 7)
+    OBJ_ITEM_EWI        = (OBJ | ITEM | 0)
+    OBJ_ITEM_BOMB       = (OBJ | ITEM | 1)
+    OBJ_ITEM_BOOTS      = (OBJ | ITEM | 2)
+    OBJ_ITEM_SHIELD     = (OBJ | ITEM | 3)
+    OBJ_ITEM_BOW        = (OBJ | ITEM | 4)
+    OBJ_ITEM_BOOMERANG  = (OBJ | ITEM | 5)
+    OBJ_ITEM_TURNTABLES = (OBJ | ITEM | 6)
+    OBJ_ITEM_LULLABY    = (OBJ | ITEM | 7)
     OBJ_ITEM_8 = (OBJ | ITEM | 8)
     OBJ_ITEM_9 = (OBJ | ITEM | 9)
     OBJ_ITEM_10 = (OBJ | ITEM | 10)
@@ -362,14 +362,14 @@ bgTiles: list[list[tileType]] = [
 
 objTiles: list[list[tileType]] = [
     [
-        tileType.OBJ_ITEM_0,
-        tileType.OBJ_ITEM_1,
-        tileType.OBJ_ITEM_2,
-        tileType.OBJ_ITEM_3,
-        tileType.OBJ_ITEM_4,
-        tileType.OBJ_ITEM_5,
-        tileType.OBJ_ITEM_6,
-        tileType.OBJ_ITEM_7,
+        tileType.OBJ_ITEM_EWI,
+        tileType.OBJ_ITEM_BOMB,
+        tileType.OBJ_ITEM_BOOTS,
+        tileType.OBJ_ITEM_SHIELD,
+        tileType.OBJ_ITEM_BOW,
+        tileType.OBJ_ITEM_BOOMERANG,
+        tileType.OBJ_ITEM_TURNTABLES,
+        tileType.OBJ_ITEM_LULLABY,
         tileType.OBJ_ITEM_8,
         tileType.OBJ_ITEM_9,
         tileType.OBJ_ITEM_10,
