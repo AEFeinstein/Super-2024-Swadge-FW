@@ -68,57 +68,23 @@ bool initializePlayer(ray_t* ray)
 
         // Zero the entire inventory
         memset(&ray->p.i, 0, sizeof(ray->p.i));
-        // Set all pickup IDs to -1
-        for (int32_t mapIdx = 0; mapIdx < NUM_MAPS; mapIdx++)
-        {
-            for (int32_t pIdx = 0; pIdx < MISSILE_UPGRADES_PER_MAP; pIdx++)
-            {
-                ray->p.i.missilesPickUps[mapIdx][pIdx] = -1;
-            }
-            for (int32_t pIdx = 0; pIdx < E_TANKS_PER_MAP; pIdx++)
-            {
-                ray->p.i.healthPickUps[mapIdx][pIdx] = -1;
-            }
-        }
+
         // Set initial health
         ray->p.i.maxHealth = GAME_START_HEALTH;
         ray->p.i.health    = GAME_START_HEALTH;
-
-        // Set damage multiplier to 1;
-        ray->p.i.damageMult = 1;
     }
 
     // Load sprites
-    ray->p.sprite = loadTexture(ray, HYUT_WSG, EMPTY);
+    ray->ps.sprite = loadTexture(ray, HYUT_WSG, EMPTY);
     loadTexture(ray, OBJ_BULLET_NORMAL_WSG, OBJ_BULLET_ARROW);
     loadTexture(ray, OBJ_BULLET_MISSILE_WSG, OBJ_BULLET_BOMB);
-
-    // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
-    ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
-    ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
-
-    // Always start with at most ten missiles to not get locked behind doors
-    if (ray->p.i.missileLoadOut)
-    {
-        if (10 > ray->p.i.numMissiles)
-        {
-            if (10 > ray->p.i.maxNumMissiles)
-            {
-                ray->p.i.numMissiles = ray->p.i.maxNumMissiles;
-            }
-            else
-            {
-                ray->p.i.maxNumMissiles = 10;
-            }
-        }
-    }
 
     // Always reload with full health
     ray->p.i.health = ray->p.i.maxHealth;
 
     // Initial touch state is negative
-    ray->p.ts.initialTouchPos = -1;
-    ray->p.ts.lastTouchPos    = -1;
+    ray->ps.ts.initialTouchPos = -1;
+    ray->ps.ts.lastTouchPos    = -1;
 
     return initFromScratch;
 }
@@ -165,34 +131,32 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
         {
             // Show the pause menu
             rayShowPause(ray);
-            // Cancel any charges
-            ray->chargeTimer = 0;
             return;
         }
         // The B button toggles strafing
         else if (PB_B == evt.button)
         {
-            if (evt.down && ray->p.swordTimerUs <= 0)
+            if (ray->p.i.haveEwiOfTime && evt.down && ray->ps.swordTimerUs <= 0)
             {
                 // Start a sword swing
-                ray->p.swordAngle = rayGetEightWayAngle(ray->p.dirX, ray->p.dirY);
-                ray->p.swordAngle -= 90;
-                if (ray->p.swordAngle < 0)
+                ray->ps.swordAngle = rayGetEightWayAngle(ray->p.dirX, ray->p.dirY);
+                ray->ps.swordAngle -= 90;
+                if (ray->ps.swordAngle < 0)
                 {
-                    ray->p.swordAngle += 360;
+                    ray->ps.swordAngle += 360;
                 }
-                ray->p.swordTimerUs = SWORD_SWING_TIME;
+                ray->ps.swordTimerUs = SWORD_SWING_TIME;
             }
         }
         // The A button shoots. Make sure there is a gun
         else if (PB_A == evt.button)
         {
-            if (evt.down)
+            if (ray->p.i.haveJumpBoots && evt.down)
             {
                 // If not already jumping, add an impulse to jump
                 if (!rayPlayerIsJumping(ray))
                 {
-                    ray->p.jumpVel = -TO_FX_FRAC(5, 8);
+                    ray->ps.jumpVel = -TO_FX_FRAC(5, 8);
                 }
             }
         }
@@ -297,14 +261,14 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
     }
 
     // Run the sword timer
-    if (ray->p.swordTimerUs > 0)
+    if (ray->ps.swordTimerUs > 0)
     {
-        ray->p.swordTimerUs -= elapsedUs;
+        ray->ps.swordTimerUs -= elapsedUs;
         // SWORD_SWING_ANGLE degrees in SWORD_SWING_TIME us
-        ray->p.swordAngle += (SWORD_SWING_ANGLE * elapsedUs) / SWORD_SWING_TIME;
-        if (ray->p.swordAngle >= 360)
+        ray->ps.swordAngle += (SWORD_SWING_ANGLE * elapsedUs) / SWORD_SWING_TIME;
+        if (ray->ps.swordAngle >= 360)
         {
-            ray->p.swordAngle -= 360;
+            ray->ps.swordAngle -= 360;
         }
     }
 
@@ -312,15 +276,15 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
     if (rayPlayerIsJumping(ray))
     {
         // Gravity is just fixed positive acceleration
-        ray->p.jumpVel += ((int32_t)elapsedUs) / (1 << 11);
-        ray->p.jumpPos += (ray->p.jumpVel * (int32_t)elapsedUs) / (1 << 16);
+        ray->ps.jumpVel += ((int32_t)elapsedUs) / (1 << 11);
+        ray->ps.jumpPos += (ray->ps.jumpVel * (int32_t)elapsedUs) / (1 << 16);
 
         // If the jump is back where it started
-        if (ray->p.jumpPos >= 0)
+        if (ray->ps.jumpPos >= 0)
         {
             // Finish the jump by zeroing variables
-            ray->p.jumpVel = TO_FX(0);
-            ray->p.jumpPos = TO_FX(0);
+            ray->ps.jumpVel = TO_FX(0);
+            ray->ps.jumpPos = TO_FX(0);
         }
     }
 }
@@ -343,7 +307,7 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
     getTouchLinear(touches, ARRAY_SIZE(touches));
     const linearTouch_t* rTouch = &touches[1];
 
-    struct touchState* ts = &ray->p.ts;
+    struct touchState* ts = &ray->ps.ts;
 
     if (rTouch->touched)
     {
@@ -363,14 +327,14 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
         const int32_t touchLimit = 1024 / 5;
         if (touchDelta > touchLimit)
         {
-            if (!ts->drawingBow)
+            if (ray->p.i.haveBow && !ts->drawingBow)
             {
                 ts->drawingBow = true;
             }
         }
         else if (touchDelta < -touchLimit)
         {
-            if (!ts->settingBomb)
+            if (ray->p.i.haveBombs && !ts->settingBomb)
             {
                 printf("Setting bomb\n");
                 ts->settingBomb = true;
@@ -432,157 +396,47 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
     rayInventory_t* inventory = &ray->p.i;
     switch (type)
     {
-        // case OBJ_ITEM_BEAM:
-        // {
-        //     inventory->beamLoadOut = true;
-        //     break;
-        // }
-        // case OBJ_ITEM_CHARGE_BEAM:
-        // {
-        //     inventory->chargePowerUp = true;
-        //     break;
-        // }
-        // case OBJ_ITEM_ICE:
-        // {
-        //     inventory->iceLoadOut = true;
-        //     break;
-        // }
-        // case OBJ_ITEM_XRAY:
-        // {
-        //     inventory->xrayLoadOut = true;
-        //     break;
-        // }
-        // case OBJ_ITEM_SUIT_WATER:
-        // {
-        //     inventory->waterSuit = true;
-        //     break;
-        // }
-        // case OBJ_ITEM_SUIT_LAVA:
-        // {
-        //     inventory->lavaSuit = true;
-        //     break;
-        // }
-        // case OBJ_ITEM_MISSILE:
-        // {
-        //     // Find a slot to save this missile pickup
-        //     for (int32_t idx = 0; idx < MISSILE_UPGRADES_PER_MAP; idx++)
-        //     {
-        //         // The ID of an item can't be -1, so this is free
-        //         if (-1 == inventory->missilesPickUps[mapId][idx])
-        //         {
-        //             if (!inventory->missileLoadOut)
-        //             {
-        //                 // Picking up any missiles enables the loadout
-        //                 inventory->missileLoadOut = true;
-        //             }
-        //             // Add five missiles
-        //             inventory->numMissiles += 5;
-        //             inventory->maxNumMissiles += 5;
-        //             // Cap at 99 missiles
-        //             if (inventory->maxNumMissiles > 99)
-        //             {
-        //                 inventory->maxNumMissiles = 99;
-        //             }
-
-        //             // Save the coordinates
-        //             inventory->missilesPickUps[mapId][idx] = itemId;
-
-        //             // World 3, Missile ID 12 gets special dialog
-        //             if (3 == ray->p.mapId && 12 == item->id)
-        //             {
-        //                 rayShowDialog(ray, missileSwimDialog, item->sprite);
-        //             }
-        //             else
-        //             {
-        //                 // Show random dialog
-        //                 int32_t dialogIdx = esp_random() % ARRAY_SIZE(missilePickupDialog);
-        //                 rayShowDialog(ray, missilePickupDialog[dialogIdx], item->sprite);
-        //             }
-        //             break;
-        //         }
-        //     }
-        //     break;
-        // }
-        // case OBJ_ITEM_ENERGY_TANK:
-        // {
-        //     // Find a slot to save this health pickup
-        //     for (int32_t idx = 0; idx < E_TANKS_PER_MAP; idx++)
-        //     {
-        //         // The ID of an item can't be -1, so this is free
-        //         if (-1 == inventory->healthPickUps[mapId][idx])
-        //         {
-        //             // Add max health
-        //             inventory->maxHealth += HEALTH_PER_E_TANK;
-        //             // Cap the max health
-        //             if (inventory->maxHealth > MAX_HEALTH_EVER)
-        //             {
-        //                 inventory->maxHealth = MAX_HEALTH_EVER;
-        //             }
-
-        //             // Reset health
-        //             inventory->health = inventory->maxHealth;
-
-        //             // Save the coordinates
-        //             inventory->healthPickUps[mapId][idx] = itemId;
-        //             break;
-        //         }
-        //     }
-        //     break;
-        // }
-        // case OBJ_ITEM_ARTIFACT:
-        // {
-        //     inventory->artifacts[mapId] = true;
-
-        //     // Check if all artifacts have been collected
-        //     bool collected = true;
-        //     for (int16_t aIdx = 0; aIdx < ARRAY_SIZE(inventory->artifacts); aIdx++)
-        //     {
-        //         if (!inventory->artifacts[aIdx])
-        //         {
-        //             collected = false;
-        //             break;
-        //         }
-        //     }
-
-        //     // If all were collected
-        //     if (collected)
-        //     {
-        //         // Increase damage output by 2
-        //         inventory->damageMult = 2;
-        //     }
-        //     break;
-        // }
-        // case OBJ_ITEM_PICKUP_ENERGY:
-        // {
-        //     // Transient, add (GAME_START_HEALTH / 2) health, not going over the max
-        //     inventory->health = MIN(inventory->health + (GAME_START_HEALTH / 2), inventory->maxHealth);
-        //     // Play SFX
-        //     globalMidiPlayerPlaySong(&ray->sfx_health, MIDI_SFX);
-        //     // Don't save after energy
-        //     saveAfterObtain = false;
-        //     break;
-        // }
-        // case OBJ_ITEM_PICKUP_MISSILE:
-        // {
-        //     if (ray->p.i.missileLoadOut)
-        //     {
-        //         // Transient, add 5 missiles, not going over the max
-        //         inventory->numMissiles = MIN(inventory->numMissiles + 5, inventory->maxNumMissiles);
-        //     }
-        //     // Play SFX
-        //     globalMidiPlayerPlaySong(&ray->sfx_health, MIDI_SFX);
-        //     // Don't save after missile ammo
-        //     saveAfterObtain = false;
-        //     break;
-        // }
-        // case OBJ_ITEM_KEY_A:
-        // case OBJ_ITEM_KEY_B:
-        // case OBJ_ITEM_KEY_C:
-        // {
-        //     // Pick up a key
-        //     inventory->keys[ray->p.mapId][type - OBJ_ITEM_KEY_A] = KEY;
-        //     break;
-        // }
+        case OBJ_ITEM_EWI:
+        {
+            inventory->haveEwiOfTime = true;
+            break;
+        }
+        case OBJ_ITEM_BOMB:
+        {
+            inventory->haveBombs = true;
+            break;
+        }
+        case OBJ_ITEM_BOOTS:
+        {
+            inventory->haveJumpBoots = true;
+            break;
+        }
+        case OBJ_ITEM_SHIELD:
+        {
+            inventory->haveShield = true;
+            break;
+        }
+        case OBJ_ITEM_BOW:
+        {
+            inventory->haveBow = true;
+            break;
+        }
+        case OBJ_ITEM_BOOMERANG:
+        {
+            inventory->haveBoomerang = true;
+            break;
+        }
+        case OBJ_ITEM_TURNTABLES:
+        {
+            inventory->haveTurntables = true;
+            break;
+        }
+        case OBJ_ITEM_LULLABY:
+        {
+            inventory->haveDoriasLullaby = true;
+            break;
+        }
+        // TODO hearts, mpoints, keys, heart pieces, ammo
         default:
         {
             // Don't care about other types
@@ -702,14 +556,14 @@ line_t rayGetSwordLineSegment(ray_t* ray)
 {
     line_t sword = {
         .p1.x = ray->p.posX,
-        .p1.y = ray->p.posY + ray->p.jumpPos,
+        .p1.y = ray->p.posY + ray->ps.jumpPos,
         .p2.x = ray->p.posX,
-        .p2.y = ray->p.posY + ray->p.jumpPos,
+        .p2.y = ray->p.posY + ray->ps.jumpPos,
     };
-    if (ray->p.swordTimerUs > 0)
+    if (ray->ps.swordTimerUs > 0)
     {
-        sword.p2.x += getSin1024(ray->p.swordAngle) / 4;
-        sword.p2.y += -getCos1024(ray->p.swordAngle) / 4;
+        sword.p2.x += getSin1024(ray->ps.swordAngle) / 4;
+        sword.p2.y += -getCos1024(ray->ps.swordAngle) / 4;
     }
     return sword;
 }
@@ -784,5 +638,5 @@ int32_t rayGetEightWayAngle(int16_t x, int16_t y)
  */
 bool rayPlayerIsJumping(ray_t* ray)
 {
-    return ray->p.jumpPos || ray->p.jumpVel;
+    return ray->ps.jumpPos || ray->ps.jumpVel;
 }
