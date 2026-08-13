@@ -545,7 +545,7 @@ static void checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y
             if (shouldExecute)
             {
                 // Do it
-                executeScriptEvent(ray, script, ray->p.sprite);
+                executeScriptEvent(ray, script, ray->ps.sprite);
 
                 // If this script is an always script, not a one-time script
                 if (ALWAYS == script->ifArgs.cellList.oneTime)
@@ -634,7 +634,7 @@ void checkScriptTime(ray_t* ray, uint32_t elapsedUs)
                 if (script->ifArgs.time <= ray->secondsSinceStart)
                 {
                     // Do it
-                    executeScriptEvent(ray, script, ray->p.sprite);
+                    executeScriptEvent(ray, script, ray->ps.sprite);
 
                     // Mark it as inactive
                     script->isActive = false;
@@ -830,11 +830,6 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
                             node_t* oldNode = currentNode;
                             // Iterate to the next
                             currentNode = currentNode->next;
-                            // Remove the lock
-                            if (ray->targetedObj == oldNode->val)
-                            {
-                                ray->targetedObj = NULL;
-                            }
                             // Remove the node that was iterated past
                             free(oldNode->val);
                             removeEntry(lists[lIdx], oldNode);

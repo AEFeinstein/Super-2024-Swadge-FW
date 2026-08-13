@@ -111,107 +111,80 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
                     }
                     else
                     {
-                        // TODO Check for persistent health & missile upgrades in the inventory before spawning
                         bool shouldCreate = true;
 
-                        // switch (oType)
-                        // {
-                        //     case OBJ_ITEM_BEAM:
-                        //     {
-                        //         if (inv->beamLoadOut)
-                        //         {
-                        //             shouldCreate = false;
-                        //         }
-                        //         break;
-                        //     }
-                        //     case OBJ_ITEM_CHARGE_BEAM:
-                        //     {
-                        //         if (inv->chargePowerUp)
-                        //         {
-                        //             shouldCreate = false;
-                        //         }
-                        //         break;
-                        //     }
-                        //     case OBJ_ITEM_MISSILE:
-                        //     {
-                        //         for (int16_t idx = 0; idx < MISSILE_UPGRADES_PER_MAP; idx++)
-                        //         {
-                        //             if (id == ray->p.i.missilesPickUps[mapId][idx])
-                        //             {
-                        //                 shouldCreate = false;
-                        //                 break;
-                        //             }
-                        //         }
-                        //         break;
-                        //     }
-                        //     case OBJ_ITEM_ICE:
-                        //     {
-                        //         if (inv->iceLoadOut)
-                        //         {
-                        //             shouldCreate = false;
-                        //         }
-                        //         break;
-                        //     }
-                        //     case OBJ_ITEM_XRAY:
-                        //     {
-                        //         if (inv->xrayLoadOut)
-                        //         {
-                        //             shouldCreate = false;
-                        //         }
-                        //         break;
-                        //     }
-                        //     case OBJ_ITEM_SUIT_WATER:
-                        //     {
-                        //         if (inv->waterSuit)
-                        //         {
-                        //             shouldCreate = false;
-                        //         }
-                        //         break;
-                        //     }
-                        //     case OBJ_ITEM_SUIT_LAVA:
-                        //     {
-                        //         if (inv->lavaSuit)
-                        //         {
-                        //             shouldCreate = false;
-                        //         }
-                        //         break;
-                        //     }
-                        //     case OBJ_ITEM_ENERGY_TANK:
-                        //     {
-                        //         for (int16_t idx = 0; idx < E_TANKS_PER_MAP; idx++)
-                        //         {
-                        //             if (id == ray->p.i.healthPickUps[mapId][idx])
-                        //             {
-                        //                 shouldCreate = false;
-                        //                 break;
-                        //             }
-                        //         }
-                        //         break;
-                        //     }
-                        //     case OBJ_ITEM_KEY_A:
-                        //     case OBJ_ITEM_KEY_B:
-                        //     case OBJ_ITEM_KEY_C:
-                        //     {
-                        //         if (NO_KEY < inv->keys[mapId][oType - OBJ_ITEM_KEY_A])
-                        //         {
-                        //             shouldCreate = false;
-                        //         }
-                        //         break;
-                        //     }
-                        //     case OBJ_ITEM_ARTIFACT:
-                        //     {
-                        //         if (inv->artifacts[mapId])
-                        //         {
-                        //             shouldCreate = false;
-                        //         }
-                        //         break;
-                        //     }
-                        //     default:
-                        //     {
-                        //         // Create all other objects that aren't obtainable
-                        //         break;
-                        //     }
-                        // }
+                        switch (oType)
+                        {
+                            case OBJ_ITEM_EWI:
+                            {
+                                if (inv->haveEwiOfTime)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_BOMB:
+                            {
+                                if (inv->haveBombs)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_BOOTS:
+                            {
+                                if (inv->haveJumpBoots)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_SHIELD:
+                            {
+                                if (inv->haveShield)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_BOW:
+                            {
+                                if (inv->haveBow)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_BOOMERANG:
+                            {
+                                if (inv->haveBoomerang)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_TURNTABLES:
+                            {
+                                if (inv->haveTurntables)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_LULLABY:
+                            {
+                                if (inv->haveDoriasLullaby)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            default:
+                            {
+                                // Create all other objects that aren't obtainable
+                                break;
+                            }
+                        }
 
                         // Create this object if it wasn't already picked up
                         if (shouldCreate)
