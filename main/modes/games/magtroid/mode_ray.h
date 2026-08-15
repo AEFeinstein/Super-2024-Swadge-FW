@@ -671,6 +671,10 @@ typedef struct
     int32_t swordAngle;
     int32_t swordTimerUs;
 
+    int32_t shieldZone;
+    int32_t shieldTimerUs;
+    bool shieldTouched;
+
     struct touchState
     {
         int32_t initialTouchPos;
