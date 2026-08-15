@@ -159,4 +159,16 @@ void drawForeground2d(ray_t* ray)
                      TO_PX(sword.p2.x) - camX, //
                      TO_PX(sword.p2.y) - camY, c550);
     }
+
+    if (ray->ps.shieldTimerUs > 0)
+    {
+        static const paletteColor_t zColors[] = {
+            c500,
+            c150,
+            c045,
+            c305,
+        };
+        drawCircle(TO_PX(ray->p.posX), TO_PX(ray->p.posY + ray->ps.jumpPos), CELL_SIZE / 2,
+                   zColors[ray->ps.shieldZone]);
+    }
 }

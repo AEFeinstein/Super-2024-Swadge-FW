@@ -363,29 +363,9 @@ static void rayMainLoop(int64_t elapsedUs)
         }
         case RAY_GAME:
         {
-            rayObjCommon_t* centeredEnemy = NULL;
-#ifdef FIRST_PERSON
-            // Render everything! This must be done first, to draw over the floor and ceiling,
-            // which were drawn in the background callback, before updating any positions or directions
-            // Draw the walls after floor & ceiling
-            castWalls(ray);
-            // Draw sprites after walls
-            rayEnemy_t* closestEnemy = NULL;
-            centeredEnemy            = castSprites(ray, &closestEnemy);
-            // Draw the HUD after sprites
-            drawHud(ray);
-
-            // Light LEDs, radar to the closest enemy
-            rayLightLeds(ray, closestEnemy, elapsedUs);
-
-#else
-
             drawForeground2d(ray);
 
-#endif
-
-            // Run timers for head-bob, doors, etc.
-            // runEnvTimers(ray, elapsedUs);
+            // Run timers for camera movement
             RUN_TIMER_EVERY(ray->cameraTimer, (1000000 / TFT_WIDTH), elapsedUs, {
                 if (ray->camera.x < ray->cameraTarget.x)
                 {
@@ -410,7 +390,7 @@ static void rayMainLoop(int64_t elapsedUs)
             if (ray->camera.x == ray->cameraTarget.x && ray->camera.y == ray->cameraTarget.y)
             {
                 // Check buttons for the player and move player accordingly
-                rayPlayerCheckButtons(ray, centeredEnemy, elapsedUs);
+                rayPlayerCheckButtons(ray, elapsedUs);
 
                 // Check the joystick for the player and update loadout accordingly
                 rayPlayerCheckJoystick(ray, elapsedUs);
@@ -506,12 +486,7 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         }
         case RAY_GAME:
         {
-#ifdef FIRST_PERSON
-            // Draw a portion of the background
-            castFloorCeiling(ray, y, y + h);
-#else
             drawBackground2d(ray, y, y + h);
-#endif
             break;
         }
         case RAY_WARP_SCREEN:

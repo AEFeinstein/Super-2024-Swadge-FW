@@ -86,6 +86,9 @@ bool initializePlayer(ray_t* ray)
     ray->ps.ts.initialTouchPos = -1;
     ray->ps.ts.lastTouchPos    = -1;
 
+    // Invalid shield zone
+    ray->ps.shieldZone = -1;
+
     return initFromScratch;
 }
 
@@ -114,10 +117,9 @@ void raySaveVisitedTiles(ray_t* ray)
  * @brief Check button inputs for the player. This will move the player and shoot bullets
  *
  * @param ray The entire game state
- * @param centeredEnemy The enemy currently centered in the view, may be NULL
  * @param elapsedUs The elapsed time since this function was last called
  */
-void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t elapsedUs)
+void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
 {
     // Check all queued button events
     buttonEvt_t evt;
@@ -133,7 +135,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
             rayShowPause(ray);
             return;
         }
-        // The B button toggles strafing
+        // The B button swings the sword
         else if (PB_B == evt.button)
         {
             if (ray->p.i.haveEwiOfTime && evt.down && ray->ps.swordTimerUs <= 0)
@@ -146,6 +148,10 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
                     ray->ps.swordAngle += 360;
                 }
                 ray->ps.swordTimerUs = SWORD_SWING_TIME;
+
+                // Cancel any shields
+                ray->ps.shieldTimerUs = 0;
+                ray->ps.shieldZone    = -1;
             }
         }
         // The A button shoots. Make sure there is a gun
@@ -272,6 +278,12 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
         }
     }
 
+    // Run the shield timer
+    if (ray->ps.shieldTimerUs > 0)
+    {
+        ray->ps.shieldTimerUs -= elapsedUs;
+    }
+
     // Run the jump physics
     if (rayPlayerIsJumping(ray))
     {
@@ -305,9 +317,30 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
 
     linearTouch_t touches[2] = {0};
     getTouchLinear(touches, ARRAY_SIZE(touches));
+    const linearTouch_t* lTouch = &touches[0];
     const linearTouch_t* rTouch = &touches[1];
 
     struct touchState* ts = &ray->ps.ts;
+
+    if (ray->p.i.haveShield)
+    {
+        if (lTouch->touched && !ray->ps.shieldTouched)
+        {
+            ray->ps.shieldTouched = true;
+            ray->ps.shieldTimerUs = 500000;
+            ray->ps.shieldZone    = lTouch->position / 256;
+
+            // Cancel any swords
+            ray->ps.swordAngle   = 0;
+            ray->ps.swordTimerUs = 0;
+        }
+        else if (!lTouch->touched && ray->ps.shieldTouched)
+        {
+            ray->ps.shieldTouched = false;
+            ray->ps.shieldTimerUs = 0;
+            ray->ps.shieldZone    = -1;
+        }
+    }
 
     if (rTouch->touched)
     {
