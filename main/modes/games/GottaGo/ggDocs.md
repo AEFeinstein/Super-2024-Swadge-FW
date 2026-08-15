@@ -9,15 +9,23 @@ Puzzle mechanics:
 - Varying quantity of people peeing
 - Varying player character you have to parse (Can wear skirt, be one of 2 heights, etc)
 - Different types of people (Weird, Smelly, wearing a skirt, pants around ankles)
-- Different types of urinals (Wide, skinny, low, out of order, dirty, floor length)
+- Different types of urinals
+  - Two types of flushes (Handle, auto)
+  - 4 failure modes (Broken bowl, cracks, water flowing, Not draining)
+  - 2 Drop pipes (Normal, 2x broken)
+  - 3 Floor pee stains
+  - Out of order sign
+  - Variable height (Slices)
+  - 3 Graffiti
 - Broken dividers/no dividers
 - Chicken out: Use a stall
 
 Other
-- Timer: Faster you decide the higher you social score
+- Timer: Faster you decide the higher you social score. If it runs out you lose.
 - Score: The better your score, the more socially aware your rating
 - Auto-Gen levels: Automatically make more in an endless mode
 - Swadgepass: Send social score to other people
+- Stall use: Get-out-jail-free, earn them over time
 
 Modes:
 - Splash

@@ -13,10 +13,10 @@
 
 // Splash
 #define SPLASH_US          500000
-#define SPLASH_TEXT_Y      200
+#define SPLASH_TEXT_Y      210
 #define SPLASH_TEXT_BUFFER 2
-#define SPLASH_TEXT_X      32
-#define SPLASH_TEXT_Y_2    32
+#define SPLASH_TEXT_X      44
+#define SPLASH_TEXT_Y_2    44
 
 // Bathroom
 #define FLOOR_HEIGHT 40
@@ -33,11 +33,21 @@ static const char* const strings[] = {
 
 // Images
 static const cnfsFileIdx_t splashImages[] = {
-    PIPE_G_WSG, PIPE_O_WSG, PIPE_T_WSG, PIPE_A_WSG, PIPE_EXC_MARK_WSG, VALVE_O_WSG,
+    GG_PIPE_G_WSG, GG_PIPE_O_WSG, GG_PIPE_T_WSG, GG_PIPE_A_WSG, GG_PIPE_EXC_MARK_WSG, GG_VALVE_O_WSG,
 };
-static const cnfsFileIdx_t bathroomImages[] = {
-    BATHROOM_DOOR_WSG,
-    BATHROOM_TILE_WSG,
+static const cnfsFileIdx_t backgroundImages[] = {
+    GG_BATHROOM_DOOR_WSG,
+    GG_BATHROOM_TILE_WSG,
+};
+static const cnfsFileIdx_t toiletImages[] = {
+    GG_FLUSH_HANDLE_WSG,  GG_FLUSH_AUTO_WSG,      GG_TOILET_TOP_WSG,
+    GG_TOILET_STRIP_WSG,  GG_TOILET_BOTTOM_WSG,   GG_TOILET_BOTTOM_BROKEN_WSG,
+    GG_DOWNPIPE_WSG,      GG_DOWNPIPE_BROKEN_WSG, GG_DOWNPIPE_BROKEN_2_WSG,
+    GG_DIVIDER_WSG,       GG_DIVIDER_TOP_WSG,     GG_DIVIDER_BOTTOM_WSG,
+    GG_CRACK_1_WSG,       GG_CRACK_2_WSG,         GG_GRAFFITI_1_WSG,
+    GG_GRAFFITI_2_WSG,    GG_GRAFFITI_3_WSG,      GG_OUT_OF_ORDER_WSG,
+    GG_PLUGGED_DRAIN_WSG, GG_WATER_LEAK_WSG,      GG_PEE_S_WSG,
+    GG_PEE_M_WSG,         GG_PEE_L_WSG,
 };
 
 //==============================================================================
@@ -46,16 +56,43 @@ static const cnfsFileIdx_t bathroomImages[] = {
 
 typedef enum
 {
-    SPLASH,
-    MENU,
-    RULES,
-    GAME,
-    HIGHSCORE,
+    GG_SPLASH,
+    GG_MENU,
+    GG_RULES,
+    GG_GAME,
+    GG_HIGHSCORE,
 } ggState_t;
+
+typedef enum
+{
+    GG_PEE_NONE,
+    GG_PEE_SMALL,
+    GG_PEE_MED,
+    GG_PEE_LARGE,
+} ggPeePool_t;
+
+typedef enum
+{
+    GG_DIV_FULL,
+    GG_DIV_TOP,
+    GG_DIV_BOTTOM,
+    GG_DIV_NONE,
+} ggDivider_t;
 
 //==============================================================================
 // Structs
 //==============================================================================
+
+typedef struct
+{
+    int heightOffFloor;       // Height above floor
+    int height;               // Height of actual unit (default: 35)
+    bool autoFlush;           // Autoflush or manual
+    bool mildBreak;           // Graffiti, Cracks, Water flowing
+    bool hardBreak;           // Drainpipe, Out-Of-Order, Broken Bowl, Not draining
+    ggPeePool_t pp;           // Puddle on the ground (Small, Med, Large)
+    ggDivider_t rightDivider; // Full, top, bottom, none
+} ggToilet_t;
 
 typedef struct
 {
@@ -70,7 +107,8 @@ typedef struct
     wsg_t* splashImgs;
 
     // Bathroom
-    wsg_t* bathroomImages;
+    wsg_t* backgroundImages;
+    wsg_t* toiletImages;
 } ggData_t;
 
 //==============================================================================
@@ -88,6 +126,7 @@ void drawTitle(void);
 
 // Common draw
 void drawBackground(void);
+void drawToilet(ggToilet_t* t, int x, int y);
 
 //==============================================================================
 // Variables
@@ -127,20 +166,30 @@ static void ggEnterMode(void)
     {
         loadWsg(splashImages[idx], &ggd->splashImgs[idx], true);
     }
-    ggd->bathroomImages = heap_caps_calloc(ARRAY_SIZE(bathroomImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
-    for (int idx = 0; idx < ARRAY_SIZE(bathroomImages); idx++)
+    ggd->backgroundImages = heap_caps_calloc(ARRAY_SIZE(backgroundImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
+    for (int idx = 0; idx < ARRAY_SIZE(backgroundImages); idx++)
     {
-        loadWsg(bathroomImages[idx], &ggd->bathroomImages[idx], true);
+        loadWsg(backgroundImages[idx], &ggd->backgroundImages[idx], true);
+    }
+    ggd->toiletImages = heap_caps_calloc(ARRAY_SIZE(toiletImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
+    for (int idx = 0; idx < ARRAY_SIZE(toiletImages); idx++)
+    {
+        loadWsg(toiletImages[idx], &ggd->toiletImages[idx], true);
     }
 }
 
 static void ggExitMode(void)
 {
-    for (int idx = 0; idx < ARRAY_SIZE(bathroomImages); idx++)
+    for (int idx = 0; idx < ARRAY_SIZE(toiletImages); idx++)
     {
-        freeWsg(&ggd->bathroomImages[idx]);
+        freeWsg(&ggd->toiletImages[idx]);
     }
-    free(ggd->bathroomImages);
+    free(ggd->toiletImages);
+    for (int idx = 0; idx < ARRAY_SIZE(backgroundImages); idx++)
+    {
+        freeWsg(&ggd->backgroundImages[idx]);
+    }
+    free(ggd->backgroundImages);
     for (int idx = 0; idx < ARRAY_SIZE(splashImages); idx++)
     {
         freeWsg(&ggd->splashImgs[idx]);
@@ -156,13 +205,13 @@ static void ggMainLoop(int64_t elapsedUs)
     buttonEvt_t evt;
     switch (ggd->state)
     {
-        case SPLASH:
+        case GG_SPLASH:
         {
             while (checkButtonQueueWrapper(&evt))
             {
                 if (evt.button & PB_A && evt.down)
                 {
-                    ggd->state = MENU;
+                    ggd->state = GG_MENU;
                 }
             }
             drawSplash(elapsedUs);
@@ -229,18 +278,22 @@ void drawBackground()
     {
         for (int y = 1; y < TFT_HEIGHT; y++)
         {
-            drawWsgSimple(&ggd->bathroomImages[1], x * ggd->bathroomImages[1].w, y * ggd->bathroomImages[1].h);
+            drawWsgSimple(&ggd->backgroundImages[1], x * ggd->backgroundImages[1].w, y * ggd->backgroundImages[1].h);
         }
     }
     // Roof
-    fillDisplayArea(0, 0, TFT_WIDTH, ggd->bathroomImages[1].h, c222);
-    drawLineFast(0, ggd->bathroomImages[1].h, TFT_WIDTH, ggd->bathroomImages[1].h, c000);
+    fillDisplayArea(0, 0, TFT_WIDTH, ggd->backgroundImages[1].h, c222);
+    drawLineFast(0, ggd->backgroundImages[1].h, TFT_WIDTH, ggd->backgroundImages[1].h, c000);
 
     // Floor
     fillDisplayArea(0, TFT_HEIGHT - FLOOR_HEIGHT, TFT_WIDTH, TFT_HEIGHT, c445);
     drawLineFast(0, TFT_HEIGHT - FLOOR_HEIGHT, TFT_WIDTH, TFT_HEIGHT - FLOOR_HEIGHT, c000);
 
     // Door
-    drawWsgSimple(&ggd->bathroomImages[0], TFT_WIDTH - ggd->bathroomImages[0].w,
-                  TFT_HEIGHT - (ggd->bathroomImages[0].h + FLOOR_HEIGHT));
+    drawWsgSimple(&ggd->backgroundImages[0], TFT_WIDTH - ggd->backgroundImages[0].w,
+                  TFT_HEIGHT - (ggd->backgroundImages[0].h + FLOOR_HEIGHT));
+}
+
+void drawToilet(ggToilet_t* t, int x, int y)
+{
 }
