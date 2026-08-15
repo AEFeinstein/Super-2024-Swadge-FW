@@ -8,8 +8,9 @@ Puzzle mechanics:
 - Varying number of urinals
 - Varying quantity of people peeing
 - Varying player character you have to parse (Can wear skirt, be one of 2 heights, etc)
-- Different types of people (Weird, Smelly, wearing a skirt)
-- Different types of urinals (Wide, skinny, low, out of order, dirty)
+- Different types of people (Weird, Smelly, wearing a skirt, pants around ankles)
+- Different types of urinals (Wide, skinny, low, out of order, dirty, floor length)
+- Broken dividers/no dividers
 - Chicken out: Use a stall
 
 Other
