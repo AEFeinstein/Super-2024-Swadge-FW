@@ -21,6 +21,20 @@
 // Bathroom
 #define FLOOR_HEIGHT 40
 
+// Toilets
+#define MAX_TOILETS 7
+
+// UI
+#define UI_STALL_X       12
+#define UI_STALL_Y       44
+#define UI_X_DIM         12
+#define UI_SPACING       4
+#define UI_BAR_PADDING_X 12
+#define UI_BAR_PADDING_Y 28
+#define UI_BAR_HEIGHT    10
+#define UI_TIMER_X       64
+#define UI_TIMER_Y       5
+
 //==============================================================================
 // Consts
 //==============================================================================
@@ -48,6 +62,9 @@ static const cnfsFileIdx_t toiletImages[] = {
     GG_GRAFFITI_2_WSG,    GG_GRAFFITI_3_WSG,      GG_OUT_OF_ORDER_WSG,
     GG_PLUGGED_DRAIN_WSG, GG_WATER_LEAK_WSG,      GG_PEE_S_WSG,
     GG_PEE_M_WSG,         GG_PEE_L_WSG,
+};
+static const cnfsFileIdx_t uiImages[] = {
+    GG_STALL_ICON_WSG,
 };
 
 //==============================================================================
@@ -85,6 +102,7 @@ typedef enum
 
 typedef struct
 {
+    bool active;              // if urinal is active
     int heightOffFloor;       // Height above floor
     int height;               // Height of actual unit (default: 35)
     bool autoFlush;           // Autoflush or manual
@@ -109,6 +127,13 @@ typedef struct
     // Bathroom
     wsg_t* backgroundImages;
     wsg_t* toiletImages;
+    ggToilet_t toilets[MAX_TOILETS]; // Based on physical width
+
+    // UI
+    wsg_t* uiImages;
+    int64_t loseTimer;
+    int64_t loseTimerMax;
+    int stallUses;
 } ggData_t;
 
 //==============================================================================
@@ -127,6 +152,7 @@ void drawTitle(void);
 // Common draw
 void drawBackground(void);
 void drawToilet(ggToilet_t* t, int x, int y);
+void drawUI(void);
 
 //==============================================================================
 // Variables
@@ -176,10 +202,24 @@ static void ggEnterMode(void)
     {
         loadWsg(toiletImages[idx], &ggd->toiletImages[idx], true);
     }
+    ggd->uiImages = heap_caps_calloc(ARRAY_SIZE(uiImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
+    for (int idx = 0; idx < ARRAY_SIZE(uiImages); idx++)
+    {
+        loadWsg(uiImages[idx], &ggd->uiImages[idx], true);
+    }
+
+    // FIXME: Test values
+    ggd->loseTimerMax = 1000000;
+    ggd->loseTimer    = 333000;
 }
 
 static void ggExitMode(void)
 {
+    for (int idx = 0; idx < ARRAY_SIZE(uiImages); idx++)
+    {
+        freeWsg(&ggd->uiImages[idx]);
+    }
+    free(ggd->uiImages);
     for (int idx = 0; idx < ARRAY_SIZE(toiletImages); idx++)
     {
         freeWsg(&ggd->toiletImages[idx]);
@@ -215,6 +255,7 @@ static void ggMainLoop(int64_t elapsedUs)
                 }
             }
             drawSplash(elapsedUs);
+            drawUI();
             break;
         }
         default:
@@ -296,4 +337,49 @@ void drawBackground()
 
 void drawToilet(ggToilet_t* t, int x, int y)
 {
+    // Flush
+
+    // Top
+
+    // Middle
+
+    // Bottom
+
+    // Drain
+
+    // Aesthetics
+
+    // Divider
+
+    // Puddle
 }
+
+void drawUI()
+{
+    // Stalls icon
+    drawWsgSimple(&ggd->uiImages[0], UI_STALL_X, UI_STALL_Y);
+
+    // "X"
+    int xStart = UI_STALL_X + ggd->uiImages[0].w + UI_SPACING;
+    int yStart = UI_STALL_Y + (ggd->uiImages[0].h - UI_X_DIM) / 2 - 4;
+    drawLineFast(xStart, yStart, xStart + UI_X_DIM, yStart + UI_X_DIM, c000);
+    drawLineFast(xStart + UI_X_DIM, yStart, xStart, yStart + UI_X_DIM, c000);
+
+    // Number of stall uses remaining
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer) - 1, "%i", ggd->stallUses);
+    drawText(&ggd->normalFont, c000, buffer, xStart + UI_X_DIM + UI_SPACING, yStart);
+
+    // Prog bar
+    drawRectFilled(UI_BAR_PADDING_X, UI_BAR_PADDING_Y, TFT_WIDTH - UI_BAR_PADDING_X, UI_BAR_PADDING_Y + UI_BAR_HEIGHT,
+                   c111);
+    drawRectFilled(UI_BAR_PADDING_X + 1, UI_BAR_PADDING_Y + 1,
+                   UI_BAR_PADDING_X + 1
+                       + ((ggd->loseTimer * (TFT_WIDTH - (2 * (UI_BAR_PADDING_X + 1) + 1))) / ggd->loseTimerMax),
+                   UI_BAR_PADDING_Y + UI_BAR_HEIGHT - 1, c440);
+
+    // Timer
+    float time = (ggd->loseTimerMax - ggd->loseTimer) / 1000000.0; // FIXME: Float
+    snprintf(buffer, sizeof(buffer) - 1, "Time left: %.3f", time);
+    drawText(&ggd->normalFont, c550, buffer, UI_TIMER_X, UI_TIMER_Y);
+}  
