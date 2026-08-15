@@ -22,10 +22,15 @@
 #define FLOOR_HEIGHT 40
 
 // Toilets
-#define MAX_TOILETS        7
-#define DIVIDER_X_OFFSET   32
-#define DIVIDER_TOP_OFFSET -24
-#define DIVIDER_BOT_OFFSET 12
+#define MAX_TOILETS         7
+#define DIVIDER_X_OFFSET    32
+#define DIVIDER_TOP_OFFSET  -24
+#define DIVIDER_BOT_OFFSET  12
+#define URINAL_SPACING      41
+#define URINAL_7_SPACING    37
+#define SMALL_URINAL_OFFSET 15
+#define URINAL_HEIGHT       120
+#define URINAL_MAX_WIDTH    259
 
 // UI
 #define UI_STALL_X       12
@@ -150,6 +155,7 @@ typedef struct
     // Bathroom
     wsg_t* backgroundImages;
     wsg_t* toiletImages;
+    int numActive;
     ggToilet_t toilets[MAX_TOILETS]; // Based on physical width
 
     // UI
@@ -169,6 +175,7 @@ static void ggExitMode(void);
 static void ggMainLoop(int64_t elapsedUs);
 
 // Splash
+static void initSplash(void);
 static void drawSplash(int64_t elapsedUs);
 void drawTitle(void);
 
@@ -232,6 +239,9 @@ static void ggEnterMode(void)
         loadWsg(uiImages[idx], &ggd->uiImages[idx], true);
     }
 
+    // Initialize Splash
+    initSplash();
+
     // FIXME: Test values
     ggd->loseTimerMax = 1000000;
     ggd->loseTimer    = 333000;
@@ -293,6 +303,26 @@ static void ggMainLoop(int64_t elapsedUs)
 }
 
 // Splash
+static void initSplash()
+{
+    ggd->numActive               = 7;
+    ggd->toilets[4].waterLeak    = 1;
+    ggd->toilets[1].pluggedDrain = 1;
+    ggd->toilets[0].outOfOrder   = 1;
+    ggd->toilets[2].small        = 1;
+    for (int idx = 0; idx < MAX_TOILETS; idx++)
+    {
+        ggd->toilets[idx].autoFlush   = idx % 2;
+        ggd->toilets[idx].brokenBowl  = (idx >= 5) ? 1 : 0;
+        ggd->toilets[idx].brokenDrain = (idx < 2) ? 1 : 0;
+        ggd->toilets[idx].graffiti    = idx;
+        ggd->toilets[idx].cracks      = idx % 4;
+        ggd->toilets[idx].puddle      = idx % 4;
+        ggd->toilets[idx].divider     = idx % 4;
+        ggd->toilets[idx].height      = 35;
+    }
+}
+
 static void drawSplash(int64_t elapsedUs)
 {
     clearPxTft();
@@ -364,21 +394,14 @@ void drawBackground()
 
 void drawToiletArray()
 {
-    // FIXME: test code
-    ggd->toilets[4].waterLeak    = 1;
-    ggd->toilets[1].pluggedDrain = 1;
-    ggd->toilets[0].outOfOrder   = 1;
-    for (int idx = 0; idx < MAX_TOILETS; idx++)
+    int xStart
+        = (URINAL_MAX_WIDTH - (((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) * ggd->numActive))
+          / 2;
+    for (int idx = 0; idx < ggd->numActive; idx++)
     {
-        ggd->toilets[idx].autoFlush   = idx % 2;
-        ggd->toilets[idx].brokenBowl  = (idx >= 5) ? 1 : 0;
-        ggd->toilets[idx].brokenDrain = (idx < 2) ? 1 : 0;
-        ggd->toilets[idx].graffiti    = idx;
-        ggd->toilets[idx].cracks      = idx % 4;
-        ggd->toilets[idx].puddle      = idx % 4;
-        ggd->toilets[idx].divider     = idx % 4;
-        ggd->toilets[idx].height      = 35;
-        drawToilet(&ggd->toilets[idx], idx * 37, 120);
+        drawToilet(&ggd->toilets[idx],
+                   idx * ((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart,
+                   (ggd->toilets[idx].small == 1) ? URINAL_HEIGHT + SMALL_URINAL_OFFSET : URINAL_HEIGHT);
     }
 }
 
@@ -486,17 +509,20 @@ void drawToilet(ggToilet_t* t, int x, int y)
         case 0:
         default:
         {
-            drawWsgSimple(&ggd->toiletImages[18], x + DIVIDER_X_OFFSET, y + DIVIDER_TOP_OFFSET);
+            int yOff = y + DIVIDER_TOP_OFFSET - ((t->small == 1) ? SMALL_URINAL_OFFSET : 0);
+            drawWsgSimple(&ggd->toiletImages[18], x + DIVIDER_X_OFFSET, yOff);
             break;
         }
         case 1:
         {
-            drawWsgSimple(&ggd->toiletImages[19], x + DIVIDER_X_OFFSET, y + DIVIDER_TOP_OFFSET);
+            int yOff = y + DIVIDER_TOP_OFFSET - ((t->small == 1) ? SMALL_URINAL_OFFSET : 0);
+            drawWsgSimple(&ggd->toiletImages[19], x + DIVIDER_X_OFFSET, yOff);
             break;
         }
         case 2:
         {
-            drawWsgSimple(&ggd->toiletImages[20], x + DIVIDER_X_OFFSET, y + DIVIDER_BOT_OFFSET);
+            int yOff = y + DIVIDER_BOT_OFFSET - ((t->small == 1) ? SMALL_URINAL_OFFSET : 0);
+            drawWsgSimple(&ggd->toiletImages[20], x + DIVIDER_X_OFFSET, yOff);
             break;
         }
         case 3:
