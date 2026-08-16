@@ -32,6 +32,10 @@
 #define URINAL_HEIGHT       120
 #define URINAL_MAX_WIDTH    259
 
+// NPCs
+#define RAND_OFFSET_RANGE 8
+#define LEGS_OFFSET       8
+
 // UI
 #define UI_STALL_X       12
 #define UI_STALL_Y       44
@@ -90,6 +94,33 @@ static const cnfsFileIdx_t toiletImages[] = {
 static const cnfsFileIdx_t uiImages[] = {
     GG_STALL_ICON_WSG,
 };
+static const cnfsFileIdx_t npcImages[] = {
+    GG_UPPER_BOD_WSG,   GG_LEGS_WSG,   GG_FEET_WSG,  GG_STINK_WSG,     GG_SHIRT_WSG,     GG_PANTS_WSG,
+    GG_PANTS_SHORT_WSG, GG_SHORTS_WSG, GG_SKIRT_WSG, GG_ON_GROUND_WSG, GG_UNDERWEAR_WSG,
+};
+
+// Color Arrays
+static const paletteColor_t skinColors[] = {
+    c555, c333, c221, c023, c402, c233, c343,
+};
+static const paletteColor_t shirtColors[] = {
+    c500, c050, c005, c440, c204, c404, c044,
+};
+static const paletteColor_t shirtAccentColors[] = {
+    c400, c040, c004, c330, c103, c303, c033,
+};
+static const paletteColor_t pantsColors[] = {
+    c024, c330, c222, c224, c503, c240, c031,
+};
+static const paletteColor_t pantsAccentColors[] = {
+    c012, c220, c111, c113, c402, c130, c020,
+};
+static const paletteColor_t shoeColors[] = {
+    c210,
+    c000,
+    c111,
+    c300,
+};
 
 //==============================================================================
 // Enums
@@ -100,7 +131,10 @@ typedef enum
     GG_SPLASH,
     GG_MENU,
     GG_RULES,
+    GG_READY,
     GG_GAME,
+    GG_WIN,
+    GG_LOSE,
     GG_HIGHSCORE,
 } ggState_t;
 
@@ -126,6 +160,21 @@ typedef enum
 
 typedef struct
 {
+    int skinColor;
+    int shirtColor;
+    int pantsColor;
+    int shoeColor;
+    uint shirt  : 1;
+    uint pants  : 3;
+    uint stink  : 1;
+    uint active : 1;
+    uint small  : 1;
+    uint shoes  : 1;
+    int randOffset;
+} ggNPC_t;
+
+typedef struct
+{
     int height; // Height of actual unit (default: 35)
     uint autoFlush    : 1;
     uint graffiti     : 3;
@@ -138,6 +187,7 @@ typedef struct
     uint puddle       : 2;
     uint divider      : 2;
     uint small        : 1;
+    ggNPC_t npc;
 } ggToilet_t;
 
 typedef struct
@@ -155,8 +205,10 @@ typedef struct
     // Bathroom
     wsg_t* backgroundImages;
     wsg_t* toiletImages;
+    wsg_t* npcImages;
     int numActive;
     ggToilet_t toilets[MAX_TOILETS]; // Based on physical width
+    wsgPalette_t npcPalette;
 
     // UI
     wsg_t* uiImages;
@@ -183,6 +235,7 @@ void drawTitle(void);
 void drawBackground(void);
 void drawToiletArray(void);
 void drawToilet(ggToilet_t* t, int x, int y);
+void drawNPC(ggToilet_t* t, int x, int y);
 void drawUI(void);
 
 //==============================================================================
@@ -209,9 +262,7 @@ ggData_t* ggd;
 // Main
 static void ggEnterMode(void)
 {
-    // Initialization
     setFrameRateUs(FRAME_RATE_US);
-
     // Loading resources
     ggd = (ggData_t*)heap_caps_calloc(1, sizeof(ggData_t), MALLOC_CAP_8BIT);
     // Font
@@ -238,8 +289,14 @@ static void ggEnterMode(void)
     {
         loadWsg(uiImages[idx], &ggd->uiImages[idx], true);
     }
+    ggd->npcImages = heap_caps_calloc(ARRAY_SIZE(npcImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
+    for (int idx = 0; idx < ARRAY_SIZE(npcImages); idx++)
+    {
+        loadWsg(npcImages[idx], &ggd->npcImages[idx], true);
+    }
 
-    // Initialize Splash
+    // Initialize
+    wsgPaletteReset(&ggd->npcPalette);
     initSplash();
 
     // FIXME: Test values
@@ -249,6 +306,11 @@ static void ggEnterMode(void)
 
 static void ggExitMode(void)
 {
+    for (int idx = 0; idx < ARRAY_SIZE(npcImages); idx++)
+    {
+        freeWsg(&ggd->npcImages[idx]);
+    }
+    free(ggd->npcImages);
     for (int idx = 0; idx < ARRAY_SIZE(uiImages); idx++)
     {
         freeWsg(&ggd->uiImages[idx]);
@@ -289,7 +351,6 @@ static void ggMainLoop(int64_t elapsedUs)
                 }
             }
             drawSplash(elapsedUs);
-            drawUI();
             break;
         }
         default:
@@ -305,6 +366,7 @@ static void ggMainLoop(int64_t elapsedUs)
 // Splash
 static void initSplash()
 {
+    // FIXME: Set to final splash screen values
     ggd->numActive               = 7;
     ggd->toilets[4].waterLeak    = 1;
     ggd->toilets[1].pluggedDrain = 1;
@@ -320,7 +382,22 @@ static void initSplash()
         ggd->toilets[idx].puddle      = idx % 4;
         ggd->toilets[idx].divider     = idx % 4;
         ggd->toilets[idx].height      = 35;
+
+        // NPC
+        ggd->toilets[idx].npc.active     = 0;
+        ggd->toilets[idx].npc.shirt      = 1;
+        ggd->toilets[idx].npc.pants      = idx % 6;
+        ggd->toilets[idx].npc.skinColor  = idx;
+        ggd->toilets[idx].npc.shirtColor = idx;
+        ggd->toilets[idx].npc.pantsColor = idx;
+        ggd->toilets[idx].npc.shoeColor  = idx % ARRAY_SIZE(shoeColors);
+        ggd->toilets[idx].npc.randOffset = 0; // esp_random() % RAND_OFFSET_RANGE;
+        ggd->toilets[idx].npc.shoes      = 1;
     }
+    ggd->toilets[2].npc.shirt = 0;
+    ggd->toilets[6].npc.stink = 1;
+    ggd->toilets[2].npc.small = 1;
+    ggd->toilets[0].npc.shoes = 0;
 }
 
 static void drawSplash(int64_t elapsedUs)
@@ -328,15 +405,8 @@ static void drawSplash(int64_t elapsedUs)
     clearPxTft();
     // Draw background
     drawBackground();
-
     // Draw set pattern of urinals
-    // Set urinals
-    // Draw
     drawToiletArray();
-
-    // Draw some people
-
-    // Draw text
     // Title
     drawTitle();
     // "Press A to start"
@@ -399,9 +469,14 @@ void drawToiletArray()
           / 2;
     for (int idx = 0; idx < ggd->numActive; idx++)
     {
+        // Urinal
         drawToilet(&ggd->toilets[idx],
                    idx * ((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart,
                    (ggd->toilets[idx].small == 1) ? URINAL_HEIGHT + SMALL_URINAL_OFFSET : URINAL_HEIGHT);
+        // NPC
+        drawNPC(&ggd->toilets[idx],
+                idx * ((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart,
+                (ggd->toilets[idx].small == 1) ? URINAL_HEIGHT + SMALL_URINAL_OFFSET : URINAL_HEIGHT);
     }
 }
 
@@ -529,6 +604,102 @@ void drawToilet(ggToilet_t* t, int x, int y)
         {
             break;
         }
+    }
+}
+
+void drawNPC(ggToilet_t* t, int x, int y)
+{
+    // Bail if not active
+    if (!t->npc.active)
+    {
+        return;
+    }
+    // Set palette
+    wsgPaletteSet(&ggd->npcPalette, c555, skinColors[t->npc.skinColor]);
+    wsgPaletteSet(&ggd->npcPalette, c500, shirtColors[t->npc.shirtColor]);
+    wsgPaletteSet(&ggd->npcPalette, c300, shirtAccentColors[t->npc.shirtColor]);
+    wsgPaletteSet(&ggd->npcPalette, c024, pantsColors[t->npc.pantsColor]);
+    wsgPaletteSet(&ggd->npcPalette, c013, pantsAccentColors[t->npc.pantsColor]);
+    if (t->npc.shoes == 1)
+    {
+        wsgPaletteSet(&ggd->npcPalette, c210, shoeColors[t->npc.shoeColor]);
+    }
+    else
+    {
+        wsgPaletteSet(&ggd->npcPalette, c210, skinColors[t->npc.skinColor]);
+    }
+    // Vars
+    int xOff = x - 3;
+    int yOff = y - 20 - ((t->small == 1) ? SMALL_URINAL_OFFSET : 0) + ((t->npc.small == 1) ? ggd->npcImages[1].h : 0)
+               + t->npc.randOffset;
+    // Body
+    drawWsgPaletteSimple(&ggd->npcImages[0], xOff, yOff, &ggd->npcPalette);
+    drawWsgPaletteSimple(&ggd->npcImages[1], xOff + 8, yOff + ggd->npcImages[0].h, &ggd->npcPalette);
+    if (t->npc.small != 1)
+    {
+        drawWsgPaletteSimple(&ggd->npcImages[1], xOff + LEGS_OFFSET, yOff + ggd->npcImages[0].h + ggd->npcImages[1].h,
+                             &ggd->npcPalette);
+        drawWsgPaletteSimple(&ggd->npcImages[2], xOff + LEGS_OFFSET,
+                             yOff + ggd->npcImages[0].h + 2 * ggd->npcImages[1].h, &ggd->npcPalette);
+    }
+    else
+    {
+        drawWsgPaletteSimple(&ggd->npcImages[2], xOff + LEGS_OFFSET, yOff + ggd->npcImages[0].h + ggd->npcImages[1].h,
+                             &ggd->npcPalette);
+    }
+
+    // Shirts
+    if (t->npc.shirt == 1)
+    {
+        drawWsgPaletteSimple(&ggd->npcImages[4], xOff + 1, yOff + 24, &ggd->npcPalette);
+    }
+
+    // Pants
+    switch (t->npc.pants)
+    {
+        case 0:
+        default:
+        {
+            if (t->npc.small)
+            {
+                drawWsgPaletteSimple(&ggd->npcImages[6], x + 6, yOff + ggd->npcImages[0].h - 12, &ggd->npcPalette);
+            }
+            else
+            {
+                drawWsgPaletteSimple(&ggd->npcImages[5], x + 6, yOff + ggd->npcImages[0].h - 12, &ggd->npcPalette);
+            }
+            break;
+        }
+        case 1:
+        {
+            drawWsgPaletteSimple(&ggd->npcImages[7], x + 6, yOff + ggd->npcImages[0].h - 12, &ggd->npcPalette);
+            break;
+        }
+        case 2:
+        {
+            drawWsgPaletteSimple(&ggd->npcImages[8], x - 3, yOff + ggd->npcImages[0].h - 13, &ggd->npcPalette);
+            break;
+        }
+        case 3:
+        {
+            drawWsgPaletteSimple(&ggd->npcImages[9], x - 3, yOff + ggd->npcImages[0].h + 17, &ggd->npcPalette);
+            break;
+        }
+        case 4:
+        {
+            drawWsgPaletteSimple(&ggd->npcImages[10], x + 6, yOff + ggd->npcImages[0].h - 10, &ggd->npcPalette);
+            break;
+        }
+        case 5:
+        {
+            break; // Nothing. Pervert.
+        }
+    }
+
+    // Stink
+    if (t->npc.stink == 1)
+    {
+        drawWsgSimple(&ggd->npcImages[3], x + 8, y - 44);
     }
 }
 

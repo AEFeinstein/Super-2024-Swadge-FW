@@ -8,7 +8,14 @@ Puzzle mechanics:
 - Varying number of urinals
 - Varying quantity of people peeing
 - Varying player character you have to parse (Can wear skirt, be one of 2 heights, etc)
-- Different types of people (Weird, Smelly, wearing a skirt, pants around ankles)
+- Different types of people
+  - Pants around ankles
+  - Regular
+  - Short
+  - Skirt
+  - Undies
+  - Smelly
+  - Naked
 - Different types of urinals
   - Two types of flushes (Handle, auto)
   - 4 failure modes (Broken bowl, cracks, water flowing, Not draining)
