@@ -83,29 +83,31 @@ const char ggModeName[]               = "Gotta Go!";
 static const char* const ggNVSSpace[] = {
     "ggSaves", "maxGames", "avg", "score", "adjScore",
 };
-static const char* const strings[]
-    = {"Press 'A' to start!",
-       "Play!",
-       "Rules",
-       "High Scores",
-       "Quit",
-       "Nice Choice!",
-       "Press any button to advance to next round",
-       "Pee'd yourself",
-       "Press any button to go back to the menu",
-       "ATTENTION",
-       "This game contains 'suggestive themes' and may not be suitable for all audiences. Press A to continue and "
-       "anything else to back out.",
-       "Suggestive themes is a stupid way to put 'this game shows butts.' Saturday morning cartoons shows butts. "
-       "Everyone has one, this isn't going to cause someone to have some sort of awakening or turn your children into "
-       "perverts, it's just some very low pixel count butts. Geting you underwear in a twist over this says more about "
-       "you that you would probably like.",
-       "Ready?",
-       "3",
-       "2",
-       "1!",
-       "Paused",
-       "Press A to continue, B to quit"};
+static const char* const strings[] = {
+    "Press 'A' to start!",
+    "Play!",
+    "Rules",
+    "High Scores",
+    "Quit",
+    "Nice Choice!",
+    "Press any button to advance to next round",
+    "Pee'd yourself",
+    "Press any button to go back to the menu",
+    "ATTENTION",
+    "This game contains 'suggestive themes' and may not be suitable for all audiences. Press A to continue and "
+    "anything else to back out.",
+    "Suggestive themes is a stupid way to put 'this game shows butts.' Saturday morning cartoons shows butts. "
+    "Everyone has one, this isn't going to cause someone to have some sort of awakening or turn your children into "
+    "perverts, it's just some very low pixel count butts. Geting you underwear in a twist over this says more about "
+    "you that you would probably like.",
+    "Ready?",
+    "3",
+    "2",
+    "1!",
+    "Paused",
+    "Press A to continue, B to quit",
+    "High Scores",
+};
 static const char* const rulesText[] = {
     "Rules",
     "Here's the rules book for Gotta Go! The rules should be instinctual for a lot of people, but for those that don't "
@@ -1387,8 +1389,36 @@ static void drawHighScore()
     clearPxTft();
     // Draw background
     drawBackground();
+    // TItle
+    drawText(&ggd->normalFont, c555, strings[18], RULES_X_BORDER, RULES_TITLE_Y);
+    drawText(&ggd->normalFontOutline, c000, strings[18], RULES_X_BORDER, RULES_TITLE_Y);
     // Draw high Scores based on selection page
-    drawText(&ggd->normalFont, c000, "COMING SOON", 48, 48);
+    char buffer[36];
+    int32_t outVal;
+    if (!readNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[1], &outVal))
+    {
+        outVal = 0;
+    }
+    snprintf(buffer, sizeof(buffer) - 1, "Highest number of games won: %d", outVal);
+    drawText(&ggd->smallFont, c000, buffer, RULES_X_BORDER, 60);
+    if (!readNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[2], &outVal))
+    {
+        outVal = 0;
+    }
+    snprintf(buffer, sizeof(buffer) - 1, "Highest adjusted score: %d", outVal);
+    drawText(&ggd->smallFont, c000, buffer, RULES_X_BORDER, 80);
+    if (!readNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[3], &outVal))
+    {
+        outVal = 0;
+    }
+    snprintf(buffer, sizeof(buffer) - 1, "Highest total score: %d", outVal);
+    drawText(&ggd->smallFont, c000, buffer, RULES_X_BORDER, 100);
+    if (!readNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[4], &outVal))
+    {
+        outVal = 0;
+    }
+    snprintf(buffer, sizeof(buffer) - 1, "Highest average: %d", outVal);
+    drawText(&ggd->smallFont, c000, buffer, RULES_X_BORDER, 120);
 }
 
 // Ready

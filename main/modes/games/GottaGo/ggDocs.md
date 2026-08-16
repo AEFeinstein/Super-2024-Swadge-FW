@@ -5,7 +5,7 @@
 - High Pri:
   - [x] Fix game timer
   - [x] Add in difficulty progression/game state
-  - [ ] Fix high score mode
+  - [x] Fix high score mode
   - [x] Update it so using a stall gives you half points
   - [x] Get new stall things after so many missions
   - [x] Reset menu selection
