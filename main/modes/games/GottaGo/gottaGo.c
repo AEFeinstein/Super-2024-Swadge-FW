@@ -713,6 +713,7 @@ static void ggMainLoop(int64_t elapsedUs)
             {
                 if (evt.down)
                 {
+                    ggd->selection = GG_PLAY_GAME;
                     ggd->state = GG_MENU;
                 }
             }
