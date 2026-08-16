@@ -114,15 +114,21 @@ void drawForeground2d(ray_t* ray)
         rayObjCommon_t* obj = &ray->bullets[bIdx].c;
         if (obj->type & BULLET && obj->id >= 0)
         {
+            // Boomerang rotates, otherwise point the sprite in the direction it's traveling
+            int32_t angle = (OBJ_BULLET_BOOMERANG == obj->type)
+                                ? ray->bullets[bIdx].c.spriteRotation
+                                : rayGetEightWayAngle(ray->bullets[bIdx].velX, ray->bullets[bIdx].velY);
             drawWsg(obj->sprite,                                    //
                     TO_PX(obj->posX) - camX - (obj->sprite->w / 2), //
-                    TO_PX(obj->posY) - camY - (obj->sprite->h / 2), false, false,
-                    rayGetEightWayAngle(ray->bullets[bIdx].velX, ray->bullets[bIdx].velY));
+                    TO_PX(obj->posY) - camY - (obj->sprite->h / 2), false, false, angle);
 
-            // Stand in for an explosion
-            if (ray->bullets[bIdx].fuseUs > 0 && ray->bullets[bIdx].c.bound.radius > 0)
+            // Draw a filled circle for a bomb explosions
+            if (OBJ_ITEM_BOMB == obj->type)
             {
-                drawCircleFilled(TO_PX(obj->posX) - camX, TO_PX(obj->posY) - camY, TO_PX(obj->bound.radius), c530);
+                if (ray->bullets[bIdx].fuseUs > 0 && ray->bullets[bIdx].c.bound.radius > 0)
+                {
+                    drawCircleFilled(TO_PX(obj->posX) - camX, TO_PX(obj->posY) - camY, TO_PX(obj->bound.radius), c530);
+                }
             }
 
             if (obj->bound.box.h)
