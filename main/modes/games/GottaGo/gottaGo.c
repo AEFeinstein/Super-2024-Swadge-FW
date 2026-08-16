@@ -32,7 +32,7 @@
 #define RULES_DESC_Y   8
 
 // High scores
-#define HS_PAGES 2
+#define HS_PAGES     2
 #define TIMER_BUFFER 1000000
 
 // Game
@@ -77,7 +77,10 @@
 //==============================================================================
 
 // Text
-const char ggModeName[]            = "Gotta Go!";
+const char ggModeName[]               = "Gotta Go!";
+static const char* const ggNVSSpace[] = {
+    "ggSaves", "maxGames", "avg", "score", "adjScore",
+};
 static const char* const strings[] = {
     "Press 'A' to start!",
     "Play!",
@@ -326,6 +329,7 @@ static void initNPC(ggToilet_t* t, bool active);
 static void gameInit(void);
 static void end(bool lose);
 static void calcToiletScore(int* values);
+static void saveToNVS(void);
 
 // Drawing
 // Warning
@@ -520,7 +524,7 @@ static void ggMainLoop(int64_t elapsedUs)
                                 ggd->timer      = 0;
                                 ggd->score      = 0;
                                 ggd->avgScore   = 0;
-                                ggd->adjScore = 0;
+                                ggd->adjScore   = 0;
                                 ggd->stallInc   = 3;
                                 ggd->stallUses  = 3;
                                 ggd->difficulty = 0;
@@ -820,6 +824,13 @@ static void end(bool lose)
     ggd->adjScore = (ggd->avgScore * ggd->score) / 1000;
 
     // Save to NVS
+    saveToNVS();
+
+    // TODO
+    // - Score
+    // - Average
+    // - Adjusted
+    // - Max num of games
 
     // Move on
     ggd->state = (lose) ? GG_LOSE : GG_WIN;
@@ -961,6 +972,55 @@ static void calcToiletScore(int* values)
     }
     /* ESP_LOGI("GG", "Scores total:\n1: %d\n2: %d\n3: %d\n4: %d\n5: %d\n6: %d\n7: %d\n", values[0], values[1],
        values[2], values[3], values[4], values[5], values[6]); */
+}
+
+static void saveToNVS()
+{
+    int outVal;
+    if (!readNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[1], &outVal))
+    {
+        writeNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[1], ggd->numGames);
+    }
+    else
+    {
+        if (ggd->numGames > outVal)
+        {
+            writeNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[1], ggd->numGames);
+        }
+    }
+    if (!readNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[2], &outVal))
+    {
+        writeNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[2], ggd->avgScore);
+    }
+    else
+    {
+        if (ggd->avgScore > outVal)
+        {
+            writeNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[1], ggd->avgScore);
+        }
+    }
+    if (!readNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[3], &outVal))
+    {
+        writeNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[3], ggd->score);
+    }
+    else
+    {
+        if (ggd->score > outVal)
+        {
+            writeNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[3], ggd->score);
+        }
+    }
+    if (!readNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[4], &outVal))
+    {
+        writeNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[4], ggd->adjScore);
+    }
+    else
+    {
+        if (ggd->adjScore > outVal)
+        {
+            writeNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[4], ggd->adjScore);
+        }
+    }
 }
 
 // Drawing functions
@@ -1458,5 +1518,5 @@ static void drawScores(int x, int y)
     snprintf(buffer, sizeof(buffer) - 1, "Average score: %d.%d", ggd->avgScore / 10, ggd->avgScore % 10);
     drawText(&ggd->smallFont, c000, buffer, x, y + ggd->smallFont.height + 4);
     snprintf(buffer, sizeof(buffer) - 1, "Adjusted score: %d", ggd->adjScore);
-    drawText(&ggd->smallFont, c000, buffer, x, y + 2*(ggd->smallFont.height + 4));
+    drawText(&ggd->smallFont, c000, buffer, x, y + 2 * (ggd->smallFont.height + 4));
 }
