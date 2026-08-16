@@ -264,38 +264,38 @@ typedef enum __attribute__((packed))
     OBJ_ITEM_30         = (OBJ | ITEM | 30),
     OBJ_ITEM_31         = (OBJ | ITEM | 31),
     // Bullets
-    OBJ_BULLET_ARROW = (OBJ | BULLET | 0),
-    OBJ_BULLET_BOMB  = (OBJ | BULLET | 1),
-    OBJ_BULLET_2     = (OBJ | BULLET | 2),
-    OBJ_BULLET_3     = (OBJ | BULLET | 3),
-    OBJ_BULLET_4     = (OBJ | BULLET | 4),
-    OBJ_BULLET_5     = (OBJ | BULLET | 5),
-    OBJ_BULLET_6     = (OBJ | BULLET | 6),
-    OBJ_BULLET_7     = (OBJ | BULLET | 7),
-    OBJ_BULLET_8     = (OBJ | BULLET | 8),
-    OBJ_BULLET_9     = (OBJ | BULLET | 9),
-    OBJ_BULLET_10    = (OBJ | BULLET | 10),
-    OBJ_BULLET_11    = (OBJ | BULLET | 11),
-    OBJ_BULLET_12    = (OBJ | BULLET | 12),
-    OBJ_BULLET_13    = (OBJ | BULLET | 13),
-    OBJ_BULLET_14    = (OBJ | BULLET | 14),
-    OBJ_BULLET_15    = (OBJ | BULLET | 15),
-    OBJ_BULLET_16    = (OBJ | BULLET | 16),
-    OBJ_BULLET_17    = (OBJ | BULLET | 17),
-    OBJ_BULLET_18    = (OBJ | BULLET | 18),
-    OBJ_BULLET_19    = (OBJ | BULLET | 19),
-    OBJ_BULLET_20    = (OBJ | BULLET | 20),
-    OBJ_BULLET_21    = (OBJ | BULLET | 21),
-    OBJ_BULLET_22    = (OBJ | BULLET | 22),
-    OBJ_BULLET_23    = (OBJ | BULLET | 23),
-    OBJ_BULLET_24    = (OBJ | BULLET | 24),
-    OBJ_BULLET_25    = (OBJ | BULLET | 25),
-    OBJ_BULLET_26    = (OBJ | BULLET | 26),
-    OBJ_BULLET_27    = (OBJ | BULLET | 27),
-    OBJ_BULLET_28    = (OBJ | BULLET | 28),
-    OBJ_BULLET_29    = (OBJ | BULLET | 29),
-    OBJ_BULLET_30    = (OBJ | BULLET | 30),
-    OBJ_BULLET_31    = (OBJ | BULLET | 31),
+    OBJ_BULLET_ARROW     = (OBJ | BULLET | 0),
+    OBJ_BULLET_BOMB      = (OBJ | BULLET | 1),
+    OBJ_BULLET_BOOMERANG = (OBJ | BULLET | 2),
+    OBJ_BULLET_3         = (OBJ | BULLET | 3),
+    OBJ_BULLET_4         = (OBJ | BULLET | 4),
+    OBJ_BULLET_5         = (OBJ | BULLET | 5),
+    OBJ_BULLET_6         = (OBJ | BULLET | 6),
+    OBJ_BULLET_7         = (OBJ | BULLET | 7),
+    OBJ_BULLET_8         = (OBJ | BULLET | 8),
+    OBJ_BULLET_9         = (OBJ | BULLET | 9),
+    OBJ_BULLET_10        = (OBJ | BULLET | 10),
+    OBJ_BULLET_11        = (OBJ | BULLET | 11),
+    OBJ_BULLET_12        = (OBJ | BULLET | 12),
+    OBJ_BULLET_13        = (OBJ | BULLET | 13),
+    OBJ_BULLET_14        = (OBJ | BULLET | 14),
+    OBJ_BULLET_15        = (OBJ | BULLET | 15),
+    OBJ_BULLET_16        = (OBJ | BULLET | 16),
+    OBJ_BULLET_17        = (OBJ | BULLET | 17),
+    OBJ_BULLET_18        = (OBJ | BULLET | 18),
+    OBJ_BULLET_19        = (OBJ | BULLET | 19),
+    OBJ_BULLET_20        = (OBJ | BULLET | 20),
+    OBJ_BULLET_21        = (OBJ | BULLET | 21),
+    OBJ_BULLET_22        = (OBJ | BULLET | 22),
+    OBJ_BULLET_23        = (OBJ | BULLET | 23),
+    OBJ_BULLET_24        = (OBJ | BULLET | 24),
+    OBJ_BULLET_25        = (OBJ | BULLET | 25),
+    OBJ_BULLET_26        = (OBJ | BULLET | 26),
+    OBJ_BULLET_27        = (OBJ | BULLET | 27),
+    OBJ_BULLET_28        = (OBJ | BULLET | 28),
+    OBJ_BULLET_29        = (OBJ | BULLET | 29),
+    OBJ_BULLET_30        = (OBJ | BULLET | 30),
+    OBJ_BULLET_31        = (OBJ | BULLET | 31),
     // Scenery
     OBJ_SCENERY_0  = (OBJ | SCENERY | 0),
     OBJ_SCENERY_1  = (OBJ | SCENERY | 1),
@@ -576,9 +576,10 @@ typedef struct
             q24_8 h; ///< Bounding box height (must be negative when using radius instead of box)
         } box;
     } bound;
-    rayMapCellType_t type; ///< The object's type
-    int32_t id;            ///< This object's ID
-    bool spriteMirrored;   ///< Whether or not the sprite should be drawn mirrored
+    rayMapCellType_t type;  ///< The object's type
+    int32_t id;             ///< This object's ID
+    bool spriteMirrored;    ///< Whether or not the sprite should be drawn mirrored
+    int16_t spriteRotation; ///< Degrees rotation
 } rayObjCommon_t;
 
 /**
@@ -592,6 +593,8 @@ typedef struct
     q24_8 accX;       ///< The X acceleration of this bullet
     q24_8 accY;       ///< The Y acceleration of this bullet
     int32_t fuseUs;   ///< The fuse timer for a bomb
+    bool returnToPlayer;
+    int32_t animTimer;
 } rayBullet_t;
 
 /*
