@@ -65,3 +65,4 @@ Score calculation
 
 - Larger wall graffiti
 - More stains on floor
+- Trophies
