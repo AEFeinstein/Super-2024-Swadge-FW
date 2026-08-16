@@ -11,6 +11,7 @@
 
 // Main
 #define FRAME_RATE_US 16667
+#define SECOND 1000000
 
 // Splash
 #define SPLASH_US          500000
@@ -28,7 +29,7 @@
 // Rules
 #define RULES_X_BORDER 32
 #define RULES_TITLE_Y  18
-#define RULES_DESC_Y   28
+#define RULES_DESC_Y   8
 
 // High scores
 #define HS_PAGES 2
@@ -52,7 +53,6 @@
 #define URINAL_DEFAULT_H    35
 
 // NPCs
-#define RAND_OFFSET_RANGE  8
 #define LEGS_OFFSET        8
 #define NPC_HEIGHT_OFFSET  (URINAL_HEIGHT - 100)
 #define NPC_X_OFFSET       3
@@ -76,24 +76,29 @@
 //==============================================================================
 
 // Text
-const char ggModeName[] = "Gotta Go!";
-static const char* const strings[]
-    = {"Press 'A' to start!",
-       "Play!",
-       "Rules",
-       "High Scores",
-       "Quit",
-       "Nice Choice!",
-       "Press any button to advance to next round",
-       "Pee'd yourself",
-       "Press any button to go back to the menu",
-       "ATTENTION",
-       "This game contains 'suggestive themes' and may not be suitable for all audiences. Press A to continue and "
-       "anything else to back out.",
-       "Suggestive themes is a stupid way to put 'this game shows butts.' Saturday morning cartoons shows butts. "
-       "Everyone has one, this isn't going to cause someone to have some sort of awakening or turn your children into "
-       "perverts, it's just some very low pixel count butts. Geting you underwear in a twist over this says more about "
-       "you that you would probably like."};
+const char ggModeName[]            = "Gotta Go!";
+static const char* const strings[] = {
+    "Press 'A' to start!",
+    "Play!",
+    "Rules",
+    "High Scores",
+    "Quit",
+    "Nice Choice!",
+    "Press any button to advance to next round",
+    "Pee'd yourself",
+    "Press any button to go back to the menu",
+    "ATTENTION",
+    "This game contains 'suggestive themes' and may not be suitable for all audiences. Press A to continue and "
+    "anything else to back out.",
+    "Suggestive themes is a stupid way to put 'this game shows butts.' Saturday morning cartoons shows butts. "
+    "Everyone has one, this isn't going to cause someone to have some sort of awakening or turn your children into "
+    "perverts, it's just some very low pixel count butts. Geting you underwear in a twist over this says more about "
+    "you that you would probably like.",
+    "Ready?",
+    "3",
+    "2",
+    "1!",
+};
 static const char* const rulesText[] = {
     "Rules",
     "Here's the rules book for Gotta Go! The rules should be instinctual for a lot of people, but for those that don't "
@@ -113,9 +118,9 @@ static const char* const rulesText[] = {
     "You can use the stall sometimes, but you only have a limit amount of times you can do that. No hogging the "
     "stalls.",
     "Scoring",
-    "You score by two measures: Total score and average score. Total score is used to to show how quick and precise "
-    "you are, whereas average score sows how consistent you are. picking the best available urinal fast is the key to "
-    "getting high scores.",
+    "Score is tracked in three ways: Total score, accuracy, and adjusted score. The total score is an accumulation of "
+    "all the score up to this point. Accuracy score is how close to optimal picks you are. Th adjusted score takes "
+    "your total score and adjusts it by your accuracy to provide a final number that's easy to compare.",
 };
 
 // Images
@@ -152,7 +157,7 @@ static const cnfsFileIdx_t toiletImages[] = {
     GG_PEE_M_WSG,
     GG_PEE_L_WSG,
 };
-static const cnfsFileIdx_t uiImages[]  = {GG_STALL_ICON_WSG, GG_ARROW_WSG, 6};
+static const cnfsFileIdx_t uiImages[]  = {GG_STALL_ICON_WSG, GG_ARROW_WSG};
 static const cnfsFileIdx_t npcImages[] = {
     GG_UPPER_BOD_WSG,   GG_LEGS_WSG,   GG_FEET_WSG,  GG_STINK_WSG,     GG_SHIRT_WSG,     GG_PANTS_WSG,
     GG_PANTS_SHORT_WSG, GG_SHORTS_WSG, GG_SKIRT_WSG, GG_ON_GROUND_WSG, GG_UNDERWEAR_WSG,
@@ -268,26 +273,28 @@ typedef struct
     ggNPC_t npc;
 } ggToilet_t;
 
+// TODO: Reorder
 typedef struct
 {
     // Main
     ggState_t state;
+    int64_t timer;
     font_t normalFont;
     font_t normalFontOutline;
     font_t smallFont;
+    int selection;
 
     // Splash
-    int64_t attractTimer;
     bool splashToggle;
     wsg_t* splashImgs;
 
-    // Menu
-    int selection;
-
     // Game
-    int64_t readyTimer;
     int score;
     int avgScore;
+    int64_t loseTimerMax;
+    int stallUses;
+    int stallInc;
+    int difficulty;
 
     // Bathroom
     wsg_t* backgroundImages;
@@ -299,9 +306,6 @@ typedef struct
 
     // UI
     wsg_t* uiImages;
-    int64_t loseTimer;
-    int64_t loseTimerMax;
-    int stallUses;
 } ggData_t;
 
 //==============================================================================
@@ -316,6 +320,8 @@ static void ggMainLoop(int64_t elapsedUs);
 // Game
 static void clearToilets(void);
 static void initNPC(ggToilet_t* t, bool active);
+static void gameInit(void);
+static void end(bool win);
 
 // Drawing
 // Warning
@@ -330,6 +336,10 @@ static void drawMenu(void);
 static void drawRules(void);
 // High Score
 static void drawHighScore(void);
+// Ready
+static void drawReady(int64_t elapsedUs);
+// Game
+static void drawGame(void);
 // Win
 static void drawWin(void);
 // Lose
@@ -403,12 +413,6 @@ static void ggEnterMode(void)
     // Initialize
     wsgPaletteReset(&ggd->npcPalette);
     ggd->state = GG_WARNING;
-
-    // FIXME: Test values
-    ggd->loseTimerMax = 1000000;
-    ggd->loseTimer    = 333000;
-    ggd->avgScore     = 942;
-    ggd->score        = 432849;
 }
 
 static void ggExitMode(void)
@@ -458,6 +462,10 @@ static void ggMainLoop(int64_t elapsedUs)
                     initSplash();
                     ggd->state = GG_SPLASH;
                 }
+                else if (evt.down)
+                {
+                    switchToSwadgeMode(&mainMenuMode);
+                }
             }
             drawWarning(elapsedUs);
             break;
@@ -505,7 +513,12 @@ static void ggMainLoop(int64_t elapsedUs)
                             case GG_PLAY_GAME:
                             {
                                 ggd->state      = GG_READY;
-                                ggd->readyTimer = 0;
+                                ggd->timer      = 0;
+                                ggd->score      = 0;
+                                ggd->avgScore   = 0;
+                                ggd->stallInc   = 3;
+                                ggd->stallUses  = 3;
+                                ggd->difficulty = 0;
                                 break;
                             }
                             case GG_SHOW_RULES:
@@ -596,22 +609,85 @@ static void ggMainLoop(int64_t elapsedUs)
             while (checkButtonQueueWrapper(&evt))
             {
                 // Allows for backing out of the mode.
+                if (evt.down)
+                {
+                    ggd->timer += SECOND;
+                }
             }
-            ggd->readyTimer += elapsedUs;
-            if (ggd->readyTimer >= READY_TIMEOUT)
+            ggd->timer += elapsedUs;
+            if (ggd->timer >= READY_TIMEOUT)
             {
-                // TODO: initialize game
                 ggd->state = GG_GAME;
+                gameInit();
             }
+            drawReady(elapsedUs);
+            break;
         }
         case GG_GAME:
         {
             while (checkButtonQueueWrapper(&evt))
             {
-                // Allows for backing out of the mode.
+                if (evt.down)
+                {
+                    if (evt.button & PB_A)
+                    {
+                        end(true);
+                    }
+                    else if (evt.button & PB_B)
+                    {
+                        if (ggd->stallUses > 0)
+                        {
+                            ggd->stallUses--;
+                            end(true);
+                        }
+                        else
+                        {
+                            end(false);
+                        }
+                    }
+                    else if (evt.button & PB_LEFT)
+                    {
+                        ggd->selection--;
+                        while (ggd->toilets[ggd->selection].npc.active != 0)
+                        {
+                            ggd->selection--;
+                        }
+                        // Wrap
+                        if (ggd->selection < 0)
+                        {
+                            ggd->selection = ggd->numActive - 1;
+                            while (ggd->toilets[ggd->selection].npc.active != 0)
+                            {
+                                ggd->selection--;
+                            }
+                        }
+                    }
+                    else if (evt.button & PB_RIGHT)
+                    {
+                        ggd->selection++;
+                        while (ggd->toilets[ggd->selection].npc.active != 0)
+                        {
+                            ggd->selection++;
+                        }
+                        // Wrap
+                        if (ggd->selection >= ggd->numActive)
+                        {
+                            ggd->selection = 0;
+                            while (ggd->toilets[ggd->selection].npc.active != 0)
+                            {
+                                ggd->selection++;
+                            }
+                        }
+                    }
+                }
             }
-            // FIXME: Testing
-            ggd->state = GG_LOSE;
+            // Timer
+            ggd->timer+=elapsedUs;
+            if (ggd->timer >= ggd->loseTimerMax)
+            {
+                // LOSE
+            }
+            drawGame();
             break;
         }
         case GG_WIN:
@@ -620,8 +696,8 @@ static void ggMainLoop(int64_t elapsedUs)
             {
                 if (evt.down)
                 {
-                    ggd->state      = GG_READY;
-                    ggd->readyTimer = 0;
+                    ggd->state = GG_READY;
+                    ggd->timer = 0;
                 }
             }
             drawWin();
@@ -691,17 +767,42 @@ static void initNPC(ggToilet_t* t, bool active)
     t->npc.randOffset = 0;
 }
 
+static void gameInit()
+{
+    // Reset vars
+    ggd->timer = 0;
+
+    // Adjust difficulty
+    ggd->difficulty++;
+
+    // Timer
+    ggd->loseTimerMax = 3000000; // FIXME: Need to make it dynamic
+
+    // Set toilet pattern
+    // RULES:
+    // - Spend diff points to add things
+    // - At least 2 options + stall no matter what
+    // - Worse things require more points to use
+}
+
+static void end(bool win)
+{
+    // Compute score
+    // Save to NVS
+    ggd->state = (win) ? GG_WIN : GG_LOSE;
+}
+
 // Drawing functions
 // Warning
 static void drawWarning(int64_t elapsedUs)
 {
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
     drawText(&ggd->normalFont, c500, strings[9], 32, 32);
-    ggd->attractTimer += elapsedUs;
+    ggd->timer += elapsedUs;
     int16_t xOff = 32;
     int16_t yOff = 64;
-    drawTextWordWrap(&ggd->smallFont, c555, strings[(ggd->attractTimer >= 15000000) ? 11 : 10], &xOff, &yOff,
-                     TFT_WIDTH - 32, TFT_HEIGHT);
+    drawTextWordWrap(&ggd->smallFont, c555, strings[(ggd->timer >= 15000000) ? 11 : 10], &xOff, &yOff, TFT_WIDTH - 32,
+                     TFT_HEIGHT);
 }
 
 // Splash
@@ -716,12 +817,14 @@ static void initSplash()
     ggd->toilets[1].npc.active     = 1;
     ggd->toilets[1].npc.skinColor  = 4;
     ggd->toilets[1].npc.shirtColor = 2;
+    ggd->toilets[1].npc.randOffset = 4;
     ggd->toilets[1].npc.pantsColor = 2;
     ggd->toilets[5].npc.active     = 1;
     ggd->toilets[5].npc.skinColor  = 6;
     ggd->toilets[5].npc.shirtColor = 5;
     ggd->toilets[5].npc.pantsColor = 1;
     ggd->toilets[5].npc.pants      = GG_SHORTS;
+    ggd->toilets[1].npc.randOffset = -3;
 }
 
 static void drawSplash(int64_t elapsedUs)
@@ -734,11 +837,11 @@ static void drawSplash(int64_t elapsedUs)
     // Title
     drawTitle();
     // "Press A to start"
-    ggd->attractTimer += elapsedUs;
-    if (ggd->attractTimer >= SPLASH_US)
+    ggd->timer += elapsedUs;
+    if (ggd->timer >= SPLASH_US)
     {
         ggd->splashToggle = !ggd->splashToggle;
-        ggd->attractTimer = 0;
+        ggd->timer        = 0;
     }
     if (!ggd->splashToggle)
     {
@@ -808,6 +911,30 @@ static void drawHighScore()
     drawText(&ggd->normalFont, c000, "COMING SOON", 48, 48);
 }
 
+// Ready
+static void drawReady(int64_t elapsedUs)
+{
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    drawText(&ggd->normalFont, c555, strings[12], (TFT_WIDTH - textWidth(&ggd->normalFont, strings[12])) / 2, 100);
+    drawText(&ggd->normalFont, c555, strings[13], 60, 160);
+    if (ggd->timer >= SECOND)
+    {
+        drawText(&ggd->normalFont, c555, strings[14], 140, 160);
+    }
+    if (ggd->timer >= SECOND * 2)
+    {
+        drawText(&ggd->normalFont, c555, strings[15], 220, 160);
+    }
+}
+
+// Game
+static void drawGame()
+{
+    drawBackground();
+    drawToiletArray();
+    drawUI();
+}
+
 // Win
 static void drawWin()
 {
@@ -822,7 +949,7 @@ static void drawWin()
     // Prompt button press
     int16_t xOff = 32;
     int16_t yOff = 120;
-    drawTextWordWrap(&ggd->smallFont, c000, strings[8], &xOff, &yOff, TFT_WIDTH - 32, TFT_HEIGHT);
+    drawTextWordWrap(&ggd->smallFont, c000, strings[6], &xOff, &yOff, TFT_WIDTH - 32, TFT_HEIGHT);
 }
 
 // Lose
@@ -1135,13 +1262,21 @@ static void drawUI()
                    c111);
     drawRectFilled(UI_BAR_PADDING_X + 1, UI_BAR_PADDING_Y + 1,
                    UI_BAR_PADDING_X + 1
-                       + ((ggd->loseTimer * (TFT_WIDTH - (2 * (UI_BAR_PADDING_X + 1) + 1))) / ggd->loseTimerMax),
+                       + ((ggd->timer * (TFT_WIDTH - (2 * (UI_BAR_PADDING_X + 1) + 1))) / ggd->loseTimerMax),
                    UI_BAR_PADDING_Y + UI_BAR_HEIGHT - 1, c440);
 
     // Timer
-    long timeLeft = ggd->loseTimerMax - ggd->loseTimer;
-    snprintf(buffer, sizeof(buffer) - 1, "Time left: %ld.%03ld", timeLeft / 1000000, (timeLeft % 1000000) / 1000);
+    long timeLeft = ggd->loseTimerMax - ggd->timer;
+    snprintf(buffer, sizeof(buffer) - 1, "Time left: %ld.%03ld", timeLeft / SECOND, (timeLeft % SECOND) / 1000);
     drawText(&ggd->normalFont, c550, buffer, UI_TIMER_X, UI_TIMER_Y);
+
+    // Draw selection
+    xStart
+        = (URINAL_MAX_WIDTH - (((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) * ggd->numActive))
+          / 2;
+    drawWsg(&ggd->uiImages[1],
+            xStart + ggd->selection * ((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING), 60, false,
+            false, 270);
 }
 
 static void drawScores(int x, int y)
