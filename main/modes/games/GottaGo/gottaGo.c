@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include "gottaGo.h"
+#include "mainMenu.h"
 
 //==============================================================================
 // Defines
@@ -200,29 +201,29 @@ typedef struct
     int shirtColor;
     int pantsColor;
     int shoeColor;
-    uint shirt  : 1;
-    uint pants  : 3;
-    uint stink  : 1;
-    uint active : 1;
-    uint small  : 1;
-    uint shoes  : 1;
+    uint8_t shirt  : 1;
+    uint8_t pants  : 3;
+    uint8_t stink  : 1;
+    uint8_t active : 1;
+    uint8_t small  : 1;
+    uint8_t shoes  : 1;
     int randOffset;
 } ggNPC_t;
 
 typedef struct
 {
     int height; // Height of actual unit (default: 35)
-    uint autoFlush    : 1;
-    uint graffiti     : 3;
-    uint cracks       : 2;
-    uint waterLeak    : 1;
-    uint brokenDrain  : 1;
-    uint outOfOrder   : 1;
-    uint brokenBowl   : 1;
-    uint pluggedDrain : 1;
-    uint puddle       : 2;
-    uint divider      : 2;
-    uint small        : 1;
+    uint8_t autoFlush    : 1;
+    uint8_t graffiti     : 3;
+    uint8_t cracks       : 2;
+    uint8_t waterLeak    : 1;
+    uint8_t brokenDrain  : 1;
+    uint8_t outOfOrder   : 1;
+    uint8_t brokenBowl   : 1;
+    uint8_t pluggedDrain : 1;
+    uint8_t puddle       : 2;
+    uint8_t divider      : 2;
+    uint8_t small        : 1;
     ggNPC_t npc;
 } ggToilet_t;
 
@@ -435,6 +436,10 @@ static void ggMainLoop(int64_t elapsedUs)
                                 ggd->selection = 0;
                                 break;
                             }
+                            case 3:
+                            {
+                                switchToSwadgeMode(&mainMenuMode);
+                            }
                             default:
                             {
                                 break;
@@ -592,7 +597,7 @@ void drawRules()
     drawTextWordWrap(&ggd->smallFont, c111, rulesText[ggd->selection * 2 + 1], &xOff, &yOff, TFT_WIDTH - RULES_X_BORDER,
                      TFT_HEIGHT);
     char buffer[32];
-    snprintf(buffer, sizeof(buffer) - 1, "Page %d/%lu", ggd->selection + 1, ARRAY_SIZE(rulesText) / 2);
+    snprintf(buffer, sizeof(buffer) - 1, "Page %d/%d", ggd->selection + 1, (int)ARRAY_SIZE(rulesText) / 2);
     drawText(&ggd->smallFont, c000, buffer, RULES_X_BORDER, TFT_HEIGHT - 32);
 }
 
