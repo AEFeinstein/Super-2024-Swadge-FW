@@ -77,7 +77,7 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
             map->tiles[x][y].type     = fileData[fileIdx++];
             map->tiles[x][y].doorOpen = 0;
             rayMapCellType_t oType    = fileData[fileIdx++];
-            rayMapCellType_t cType    = map->tiles[x][y].type;
+            // rayMapCellType_t cType    = map->tiles[x][y].type;
 
             // TODO Open doors which were already unlocked
             // if ((cType == BG_DOOR_KEY_A && OPEN_KEY == ray->p.i.keys[mapId][0]) || //
