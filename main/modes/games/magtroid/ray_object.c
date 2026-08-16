@@ -124,21 +124,34 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
             int32_t oldVelX = obj->velX;
             int32_t oldVelY = obj->velY;
 
-            // Update the bullet's acceleration. (1 << 22) feels right
-            obj->velX += (obj->accX * (int32_t)elapsedUs) / (1 << 22);
-            obj->velY += (obj->accY * (int32_t)elapsedUs) / (1 << 22);
-
-            // If the sign flipped, zero acceleration and velocity
-            if ((oldVelX ^ obj->velX) < 0)
+            // If the boomerang is returning to the player
+            if (obj->returnToPlayer)
             {
-                obj->velX = 0;
-                obj->accX = 0;
+                // Point the velocity right back at the player
+                obj->velX = (ray->p.posX - obj->c.posX);
+                obj->velY = (ray->p.posY - obj->c.posY);
+                fastNormVec(&obj->velX, &obj->velY);
+                obj->velX /= 2;
+                obj->velY /= 2;
             }
-
-            if ((oldVelY ^ obj->velY) < 0)
+            else
             {
-                obj->velY = 0;
-                obj->accY = 0;
+                // Update the bullet's velocity. (1 << 22) feels right
+                obj->velX += (obj->accX * (int32_t)elapsedUs) / (1 << 22);
+                obj->velY += (obj->accY * (int32_t)elapsedUs) / (1 << 22);
+
+                // If the sign flipped, zero acceleration and velocity
+                if ((oldVelX ^ obj->velX) < 0)
+                {
+                    obj->velX = 0;
+                    obj->accX = 0;
+                }
+
+                if ((oldVelY ^ obj->velY) < 0)
+                {
+                    obj->velY = 0;
+                    obj->accY = 0;
+                }
             }
 
             // If the object stopped and there is no fuse
@@ -165,23 +178,44 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
                 // If the fuse elapsed
                 if (obj->fuseUs < 0)
                 {
-                    // If the radius is negative
-                    if (obj->c.bound.radius < 0)
+                    // If this is a boomerang, return to player
+                    if (OBJ_BULLET_BOOMERANG == obj->c.type)
                     {
-                        // Explode by setting a positive radius
-                        obj->fuseUs         = 100000;
-                        obj->c.bound.radius = TO_FX(1);
+                        obj->returnToPlayer = true;
                     }
-                    else
+                    // If this is a bomb, manage the explosion
+                    else if (OBJ_BULLET_BOMB == obj->c.type)
                     {
-                        // Explosion timeout, destroy this bullet
-                        memset(obj, 0, sizeof(rayBullet_t));
-                        obj->c.id = -1;
+                        // If the radius is negative
+                        if (obj->c.bound.radius < 0)
+                        {
+                            // Explode by setting a positive radius
+                            obj->fuseUs         = 100000;
+                            obj->c.bound.radius = TO_FX(1);
+                        }
+                        else
+                        {
+                            // Explosion timeout, destroy this bullet
+                            memset(obj, 0, sizeof(rayBullet_t));
+                            obj->c.id = -1;
 
-                        // Continue to the next
-                        continue;
+                            // Continue to the next
+                            continue;
+                        }
                     }
                 }
+            }
+
+            // Run an animation timer for this bullet
+            if (OBJ_BULLET_BOOMERANG == obj->c.type)
+            {
+                RUN_TIMER_EVERY(obj->animTimer, 1000000 / 8, elapsedUs, {
+                    obj->c.spriteRotation += 90;
+                    if (360 == obj->c.spriteRotation)
+                    {
+                        obj->c.spriteRotation = 0;
+                    }
+                });
             }
 
             // Get the cell the bullet is in now
@@ -289,6 +323,30 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
                 memset(obj, 0, sizeof(rayBullet_t));
                 obj->c.id = -1;
             }
+
+            // If this is a boomerang returning to the player, destroy it when it reaches the player
+            if (OBJ_BULLET_BOOMERANG == obj->c.type && obj->returnToPlayer)
+            {
+                // Player cell
+                vec_t pCell = {
+                    .x = FROM_FX(ray->p.posX),
+                    .y = FROM_FX(ray->p.posY),
+                };
+
+                // Boomerang cell
+                vec_t objCell = {
+                    .x = FROM_FX(obj->c.posX),
+                    .y = FROM_FX(obj->c.posY),
+                };
+
+                // If they're the same cell
+                if ((pCell.x == objCell.x) && (pCell.y == objCell.y))
+                {
+                    // Destroy this bullet
+                    memset(obj, 0, sizeof(rayBullet_t));
+                    obj->c.id = -1;
+                }
+            }
         }
     }
 }
@@ -383,6 +441,7 @@ void checkRayCollisions(ray_t* ray)
                 // Player got shot, apply damage
                 rayPlayerDecrementHealth(ray, dmg);
                 // De-allocate the bullet
+                memset(bullet, 0, sizeof(rayBullet_t));
                 bullet->c.id = -1;
             }
         }
@@ -447,6 +506,7 @@ void checkRayCollisions(ray_t* ray)
                     if (bullet->fuseUs < 0)
                     {
                         // De-allocate the bullet
+                        memset(bullet, 0, sizeof(rayBullet_t));
                         bullet->c.id = -1;
                     }
                 }
@@ -493,6 +553,7 @@ void checkRayCollisions(ray_t* ray)
                 if (objectsIntersect(scenery, &bullet->c))
                 {
                     // De-allocate the bullet
+                    memset(bullet, 0, sizeof(rayBullet_t));
                     bullet->c.id = -1;
 
                     // Scenery was shot

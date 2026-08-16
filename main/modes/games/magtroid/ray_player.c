@@ -78,6 +78,7 @@ bool initializePlayer(ray_t* ray)
     ray->ps.sprite = loadTexture(ray, HYUT_WSG, EMPTY);
     loadTexture(ray, OBJ_BULLET_NORMAL_WSG, OBJ_BULLET_ARROW);
     loadTexture(ray, OBJ_BULLET_MISSILE_WSG, OBJ_BULLET_BOMB);
+    loadTexture(ray, OBJ_BULLET_BOOMERANG_WSG, OBJ_BULLET_BOOMERANG);
 
     // Always reload with full health
     ray->p.i.health = ray->p.i.maxHealth;
@@ -404,6 +405,27 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
             // Spawn the bomb slightly in front of the player
             rayCreateBullet(ray, OBJ_BULLET_BOMB, ray->p.posX + (ray->p.dirX / 2), ray->p.posY + (ray->p.dirY / 2), 0,
                             0, 0, 0, fuseUs, true);
+        }
+        else if (ray->p.i.haveBoomerang)
+        {
+            // Only allow one boomerang at a time
+            bool boomerangThrown = false;
+            for (int32_t idx = 0; idx < MAX_RAY_BULLETS; idx++)
+            {
+                if (OBJ_BULLET_BOOMERANG == ray->bullets[idx].c.type)
+                {
+                    // Found a boomerang, don't throw another
+                    boomerangThrown = true;
+                    break;
+                }
+            }
+
+            // If there isn't a boomerang, throw one
+            if (!boomerangThrown)
+            {
+                rayCreateBullet(ray, OBJ_BULLET_BOOMERANG, ray->p.posX, ray->p.posY, ray->p.dirX / 2, ray->p.dirY / 2,
+                                0, 0, 1000000, true);
+            }
         }
 
         // Reset variables
