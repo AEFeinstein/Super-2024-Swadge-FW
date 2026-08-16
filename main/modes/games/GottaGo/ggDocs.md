@@ -9,7 +9,7 @@
   - [x] Update it so using a stall gives you half points
   - [x] Get new stall things after so many missions
   - [x] Reset menu selection
-  - [ ] Remove return to swadge functionality
+  - [x] Remove return to swadge functionality
 - Med Pri
   - [ ] Change lose text to be based on loss condition
   - [ ] Pause screen on selection/pop-up symbols to show what's going on

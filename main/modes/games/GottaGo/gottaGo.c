@@ -83,28 +83,29 @@ const char ggModeName[]               = "Gotta Go!";
 static const char* const ggNVSSpace[] = {
     "ggSaves", "maxGames", "avg", "score", "adjScore",
 };
-static const char* const strings[] = {
-    "Press 'A' to start!",
-    "Play!",
-    "Rules",
-    "High Scores",
-    "Quit",
-    "Nice Choice!",
-    "Press any button to advance to next round",
-    "Pee'd yourself",
-    "Press any button to go back to the menu",
-    "ATTENTION",
-    "This game contains 'suggestive themes' and may not be suitable for all audiences. Press A to continue and "
-    "anything else to back out.",
-    "Suggestive themes is a stupid way to put 'this game shows butts.' Saturday morning cartoons shows butts. "
-    "Everyone has one, this isn't going to cause someone to have some sort of awakening or turn your children into "
-    "perverts, it's just some very low pixel count butts. Geting you underwear in a twist over this says more about "
-    "you that you would probably like.",
-    "Ready?",
-    "3",
-    "2",
-    "1!",
-};
+static const char* const strings[]
+    = {"Press 'A' to start!",
+       "Play!",
+       "Rules",
+       "High Scores",
+       "Quit",
+       "Nice Choice!",
+       "Press any button to advance to next round",
+       "Pee'd yourself",
+       "Press any button to go back to the menu",
+       "ATTENTION",
+       "This game contains 'suggestive themes' and may not be suitable for all audiences. Press A to continue and "
+       "anything else to back out.",
+       "Suggestive themes is a stupid way to put 'this game shows butts.' Saturday morning cartoons shows butts. "
+       "Everyone has one, this isn't going to cause someone to have some sort of awakening or turn your children into "
+       "perverts, it's just some very low pixel count butts. Geting you underwear in a twist over this says more about "
+       "you that you would probably like.",
+       "Ready?",
+       "3",
+       "2",
+       "1!",
+       "Paused",
+       "Press A to continue, B to quit"};
 static const char* const rulesText[] = {
     "Rules",
     "Here's the rules book for Gotta Go! The rules should be instinctual for a lot of people, but for those that don't "
@@ -302,6 +303,7 @@ typedef struct
     int stallUses;
     int stallInc;
     int numGames;
+    bool pause;
 
     // Bathroom
     wsg_t* backgroundImages;
@@ -350,6 +352,7 @@ static void drawHighScore(void);
 static void drawReady(int64_t elapsedUs);
 // Game
 static void drawGame(void);
+static void drawPause(void);
 // Win
 static void drawWin(void);
 // Lose
@@ -375,6 +378,7 @@ swadgeMode_t gottaGoMode = {
     .fnEnterMode       = ggEnterMode,
     .fnExitMode        = ggExitMode,
     .fnMainLoop        = ggMainLoop,
+    .overrideSelectBtn = true,
 };
 
 ggData_t* ggd;
@@ -643,15 +647,27 @@ static void ggMainLoop(int64_t elapsedUs)
                 {
                     if (evt.button & PB_A)
                     {
-                        end(ggd->toilets[ggd->selection].brokenBowl == 1
-                                || ggd->toilets[ggd->selection].brokenDrain == 1
-                                || ggd->toilets[ggd->selection].outOfOrder == 1
-                                || ggd->toilets[ggd->selection].pluggedDrain == 1,
-                            false);
+                        if (ggd->pause)
+                        {
+                            ggd->pause = false;
+                        }
+                        else
+                        {
+                            end(ggd->toilets[ggd->selection].brokenBowl == 1
+                                    || ggd->toilets[ggd->selection].brokenDrain == 1
+                                    || ggd->toilets[ggd->selection].outOfOrder == 1
+                                    || ggd->toilets[ggd->selection].pluggedDrain == 1,
+                                false);
+                        }
                     }
                     else if (evt.button & PB_B)
                     {
-                        if (ggd->stallUses > 0)
+                        if (ggd->pause)
+                        {
+                            ggd->pause = false;
+                            end(true, false);
+                        }
+                        else if (ggd->stallUses > 0)
                         {
                             ggd->stallUses--;
                             end(false, true);
@@ -693,15 +709,27 @@ static void ggMainLoop(int64_t elapsedUs)
                             }
                         }
                     }
+                    else if (evt.button & PB_START || evt.button & PB_SELECT)
+                    {
+                        ggd->pause = true;
+                    }
                 }
             }
             // Timer
-            ggd->timer += elapsedUs;
-            if (ggd->timer >= ggd->loseTimerMax)
+            if (ggd->pause)
             {
-                // end(true, false);
+                drawPause();
             }
-            drawGame();
+            else
+            {
+                ggd->timer += elapsedUs;
+                if (ggd->timer >= ggd->loseTimerMax)
+                {
+                    // end(true, false);
+                }
+                drawGame();
+            }
+
             break;
         }
         case GG_WIN:
@@ -1385,6 +1413,15 @@ static void drawGame()
     drawBackground();
     drawToiletArray();
     drawUI();
+}
+
+static void drawPause()
+{
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    drawText(&ggd->normalFont, c555, strings[16], 32, 32);
+    int16_t xOff = 32;
+    int16_t yOff = 64;
+    drawTextWordWrap(&ggd->smallFont, c555, strings[17], &xOff, &yOff, TFT_WIDTH - 32, TFT_HEIGHT);
 }
 
 // Win
