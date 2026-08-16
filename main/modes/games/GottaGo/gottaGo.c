@@ -327,7 +327,7 @@ static void ggMainLoop(int64_t elapsedUs);
 static void clearToilets(void);
 static void initNPC(ggToilet_t* t, bool active);
 static void gameInit(void);
-static void end(bool lose);
+static void end(bool lose, bool wasStall);
 static void calcToiletScore(int* values);
 static void saveToNVS(void);
 
@@ -642,20 +642,21 @@ static void ggMainLoop(int64_t elapsedUs)
                     if (evt.button & PB_A)
                     {
                         end(ggd->toilets[ggd->selection].brokenBowl == 1
-                            || ggd->toilets[ggd->selection].brokenDrain == 1
-                            || ggd->toilets[ggd->selection].outOfOrder == 1
-                            || ggd->toilets[ggd->selection].pluggedDrain == 1);
+                                || ggd->toilets[ggd->selection].brokenDrain == 1
+                                || ggd->toilets[ggd->selection].outOfOrder == 1
+                                || ggd->toilets[ggd->selection].pluggedDrain == 1,
+                            false);
                     }
                     else if (evt.button & PB_B)
                     {
                         if (ggd->stallUses > 0)
                         {
                             ggd->stallUses--;
-                            end(true);
+                            end(false, true);
                         }
                         else
                         {
-                            end(false);
+                            end(true, true);
                         }
                     }
                     else if (evt.button & PB_LEFT)
@@ -795,9 +796,23 @@ static void gameInit()
     }
 }
 
-static void end(bool lose)
+static void end(bool lose, bool wasStall)
 {
+    if (lose)
+    {
+        ggd->state = GG_LOSE;
+        return;
+    }
+    // Inc number of games
     ggd->numGames++;
+    // Determine if the player gets another use of the stall
+    if (ggd->numGames > ggd->stallInc)
+    {
+        ggd->stallUses++;
+        ggd->stallInc *= 2;
+        ggd->stallInc += ggd->stallInc / 2;
+    }
+
     // Compute score for each urinal
     int badness[7] = {0};
     calcToiletScore(badness);
@@ -815,7 +830,15 @@ static void end(bool lose)
         }
     }
     // Calc percentage
-    int perc      = (1000 * (1000 - badness[ggd->selection])) / (1000 - best);
+    int perc = 0;
+    if (wasStall)
+    {
+        perc = 500;
+    }
+    else
+    {
+        perc = (1000 * (1000 - badness[ggd->selection])) / (1000 - best);
+    }
     ggd->avgScore = (ggd->avgScore * (ggd->numGames - 1) + perc) / ggd->numGames;
     // Calc total score
     int timerGrace = MAX(ggd->timer, TIMER_BUFFER);
@@ -827,7 +850,7 @@ static void end(bool lose)
     saveToNVS();
 
     // Move on
-    ggd->state = (lose) ? GG_LOSE : GG_WIN;
+    ggd->state = GG_WIN;
 }
 
 static void calcToiletScore(int* values)
