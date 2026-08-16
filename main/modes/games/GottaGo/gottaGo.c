@@ -101,7 +101,7 @@ static const cnfsFileIdx_t npcImages[] = {
 
 // Color Arrays
 static const paletteColor_t skinColors[] = {
-    c555, c333, c221, c023, c402, c233, c343,
+    c555, c333, c444, c023, c402, c233, c343,
 };
 static const paletteColor_t shirtColors[] = {
     c500, c050, c005, c440, c204, c404, c044,
@@ -384,7 +384,7 @@ static void initSplash()
         ggd->toilets[idx].height      = 35;
 
         // NPC
-        ggd->toilets[idx].npc.active     = 0;
+        ggd->toilets[idx].npc.active     = 1;
         ggd->toilets[idx].npc.shirt      = 1;
         ggd->toilets[idx].npc.pants      = idx % 6;
         ggd->toilets[idx].npc.skinColor  = idx;
@@ -620,6 +620,7 @@ void drawNPC(ggToilet_t* t, int x, int y)
     wsgPaletteSet(&ggd->npcPalette, c300, shirtAccentColors[t->npc.shirtColor]);
     wsgPaletteSet(&ggd->npcPalette, c024, pantsColors[t->npc.pantsColor]);
     wsgPaletteSet(&ggd->npcPalette, c013, pantsAccentColors[t->npc.pantsColor]);
+    wsgPaletteSet(&ggd->npcPalette, c005, c555);
     if (t->npc.shoes == 1)
     {
         wsgPaletteSet(&ggd->npcPalette, c210, shoeColors[t->npc.shoeColor]);
