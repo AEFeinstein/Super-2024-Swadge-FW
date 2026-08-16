@@ -301,7 +301,6 @@ typedef struct
     int64_t loseTimerMax;
     int stallUses;
     int stallInc;
-    int difficulty;
     int numGames;
 
     // Bathroom
@@ -329,6 +328,7 @@ static void ggMainLoop(int64_t elapsedUs);
 static void clearToilets(void);
 static void initNPC(ggToilet_t* t, bool active);
 static void gameInit(void);
+static void initRandomNPC(ggToilet_t* t);
 static void end(bool lose, bool wasStall);
 static void calcToiletScore(int* values);
 static void saveToNVS(void);
@@ -529,7 +529,6 @@ static void ggMainLoop(int64_t elapsedUs)
                                 ggd->adjScore     = 0;
                                 ggd->stallInc     = 3;
                                 ggd->stallUses    = 3;
-                                ggd->difficulty   = 0;
                                 ggd->numGames     = 0;
                                 ggd->loseTimerMax = MAX_TIMER_LEN;
                                 break;
@@ -672,6 +671,10 @@ static void ggMainLoop(int64_t elapsedUs)
                         while (ggd->toilets[ggd->selection].npc.active != 0)
                         {
                             ggd->selection--;
+                            if (ggd->selection < 0)
+                            {
+                                ggd->selection = ggd->numActive - 1;
+                            }
                         }
                     }
                     else if (evt.button & PB_RIGHT)
@@ -684,6 +687,10 @@ static void ggMainLoop(int64_t elapsedUs)
                         while (ggd->toilets[ggd->selection].npc.active != 0)
                         {
                             ggd->selection++;
+                            if (ggd->selection >= ggd->numActive)
+                            {
+                                ggd->selection = 0;
+                            }
                         }
                     }
                 }
@@ -692,7 +699,7 @@ static void ggMainLoop(int64_t elapsedUs)
             ggd->timer += elapsedUs;
             if (ggd->timer >= ggd->loseTimerMax)
             {
-                // end(false);
+                // end(true, false);
             }
             drawGame();
             break;
@@ -749,6 +756,7 @@ static void clearToilets()
         ggd->toilets[idx].divider      = 0;
         ggd->toilets[idx].small        = 0;
         ggd->toilets[idx].height       = URINAL_DEFAULT_H;
+        ggd->toilets[idx].puddle       = GG_PEE_NONE;
         initNPC(&ggd->toilets[idx], 0);
     }
 }
@@ -779,15 +787,177 @@ static void gameInit()
 {
     // Reset vars
     ggd->timer = 0;
-
-    // Adjust difficulty
-    ggd->difficulty++;
-
     // Timer
-    ggd->loseTimerMax -= ggd->loseTimerMax / 27;
-    ESP_LOGE("GG", "Timer %ld\n", ggd->loseTimerMax);
+    ggd->loseTimerMax -= ggd->loseTimerMax / TIMER_CHANGE;
+    // Max number of toilets
+    ggd->numActive = 3 + (esp_random() % (MIN(ggd->numGames / 4, 4) + 1));
+    clearToilets();
+    int points = ggd->numGames;
+    // Attempt to add NPC
+    int maxNPCs = ggd->numActive - 2;
+    for (int idx = 0; idx < maxNPCs; idx++)
+    {
+        if (points < 3)
+        {
+            continue;
+        }
+        else
+        {
+            int chance = esp_random() % 3; // 67/33 chance to appear
+            if (chance != 0)
+            {
+                points -= 3;
+                chance = esp_random() % ggd->numActive;
+                initRandomNPC(&ggd->toilets[chance]);
+            }
+            // Chance to change attributes
+            if (points > 0 && esp_random() % 2 == 0)
+            {
+                points--;
+                switch (esp_random() % 6)
+                {
+                    case 0:
+                    {
+                        ggd->toilets[chance].npc.shirt = 0;
+                        break;
+                    }
+                    case 1:
+                    {
+                        ggd->toilets[chance].npc.pants = GG_NAKED;
+                        break;
+                    }
+                    case 2:
+                    {
+                        ggd->toilets[chance].npc.pants = GG_DOWN;
+                        break;
+                    }
+                    case 3:
+                    {
+                        ggd->toilets[chance].npc.shirt = GG_UNDERWEAR;
+                        break;
+                    }
+                    case 4:
+                    {
+                        ggd->toilets[chance].npc.shoes = 0;
+                        break;
+                    }
+                    case 5:
+                    {
+                        ggd->toilets[chance].npc.stink = 1;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    // Attempt to modify partitions
+    for (int idx = 0; idx < (ggd->numActive / 2); idx++)
+    {
+        if (points > 1 && esp_random() % 3 == 0)
+        {
+            int urinal                   = esp_random() % ggd->numActive;
+            ggd->toilets[urinal].divider = 1 + (esp_random() % 3);
+            if (ggd->toilets[urinal].divider == GG_DIV_NONE)
+            {
+                points--;
+            }
+            points -= 2;
+        }
+    }
+    // Attempt to make puddles
+    for (int idx = 0; idx < (ggd->numActive / 2); idx++)
+    {
+        if (points > 1 && esp_random() % 3 == 0)
+        {
+            ggd->toilets[esp_random() % ggd->numActive].puddle = 1 + (esp_random() % 3);
+            points -= 2;
+        }
+    }
+    // Toilet size
+    if (points > 2)
+    {
+        points--;
+        ggd->toilets[esp_random() % ggd->numActive].small = 1;
+    }
+    if (esp_random() % 100 == 0)
+    {
+        ggd->toilets[esp_random() % ggd->numActive].height += 15;
+    }
+    // Adjust toilets
+    while (points > 0)
+    {
+        if (points >= 2 && esp_random() % 2 == 0)
+        {
+            points -= 2;
+            int urinal = esp_random() % ggd->numActive;
+            switch (esp_random() % 4)
+            {
+                case 0:
+                {
+                    ggd->toilets[urinal].brokenBowl = 1;
+                    break;
+                }
+                case 1:
+                {
+                    ggd->toilets[urinal].brokenDrain = 1;
+                    break;
+                }
+                case 2:
+                {
+                    ggd->toilets[urinal].pluggedDrain = 1;
+                    break;
+                }
+                case 3:
+                {
+                    ggd->toilets[urinal].outOfOrder = 1;
+                    break;
+                }
+            }
+        }
+        else if (esp_random() % 2 == 0)
+        {
+            int urinal = esp_random() % ggd->numActive;
+            int result = esp_random() % 11;
+            switch (result)
+            {
+                default:
+                {
+                    ggd->toilets[urinal].graffiti = result;
+                    break;
+                }
+                case 7:
+                {
+                    ggd->toilets[urinal].waterLeak = 1;
+                    break;
+                }
+                case 8:
+                {
+                    ggd->toilets[urinal].cracks = 1;
+                    break;
+                }
+                case 9:
+                {
+                    ggd->toilets[urinal].cracks = 2;
+                    break;
+                }
+                case 10:
+                {
+                    ggd->toilets[urinal].cracks = 3;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            points -= 2;
+        }
+    }
 
-    // Set toilet pattern
+    // 2 points to add puddle
+
+    // 1 point to have half dividers
+    // 2 points for full removal
+
     // RULES:
     // - Spend diff points to add things
     // - At least 2 options + stall no matter what
@@ -798,6 +968,35 @@ static void gameInit()
     while (ggd->toilets[ggd->selection].npc.active == 1)
     {
         ggd->selection++;
+    }
+}
+
+static void initRandomNPC(ggToilet_t* t)
+{
+    t->npc.active     = 1;
+    t->npc.skinColor  = esp_random() % ARRAY_SIZE(skinColors);
+    t->npc.shirtColor = esp_random() % ARRAY_SIZE(shirtColors);
+    t->npc.pantsColor = esp_random() % ARRAY_SIZE(pantsColors);
+    t->npc.shoeColor  = esp_random() % ARRAY_SIZE(shoeColors);
+    t->npc.randOffset = 8 - (esp_random() % 15);
+    switch (esp_random() % 20)
+    {
+        case 0:
+        {
+            t->npc.pants = GG_SKIRT;
+            break;
+        }
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        {
+            t->npc.pants = GG_SHORTS;
+        }
+        default:
+        {
+            break;
+        }
     }
 }
 
