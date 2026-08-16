@@ -111,7 +111,7 @@ void moveRayObjects(ray_t* ray, uint32_t elapsedUs)
 static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
 {
     // For convenience
-    int32_t rayMapId = ray->p.mapId;
+    // int32_t rayMapId = ray->p.mapId;
 
     // For each bullet slot
     for (uint32_t i = 0; i < MAX_RAY_BULLETS; i++)
