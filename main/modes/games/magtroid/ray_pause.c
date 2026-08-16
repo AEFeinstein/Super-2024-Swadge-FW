@@ -358,43 +358,43 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
     }
 
     // Look through scenery for warp points
-    node_t* currentNode = ray->scenery.first;
-    while (currentNode != NULL)
-    {
-        // Get a pointer from the linked list
-        rayObjCommon_t* obj = ((rayObjCommon_t*)currentNode->val);
+    // node_t* currentNode = ray->scenery.first;
+    // while (currentNode != NULL)
+    // {
+    //     // Get a pointer from the linked list
+    //     rayObjCommon_t* obj = ((rayObjCommon_t*)currentNode->val);
 
-        // Look for portals
-        // if (OBJ_SCENERY_PORTAL == obj->type)
-        // {
-        //     // Found a portal, look for corresponding script
-        //     node_t* scriptNode = ray->scripts[TOUCH].first;
-        //     while (NULL != scriptNode)
-        //     {
-        //         rayScript_t* scr = scriptNode->val;
-        //         // If this is the right script for this object
-        //         if ((TOUCH == scr->ifOp) && (WARP == scr->thenOp) && (scr->ifArgs.idList.ids[0] == obj->id))
-        //         {
-        //             // And the player has visited the other end of the warp
-        //             if (ray->p.mapsVisited[scr->thenArgs.warpDest.mapId])
-        //             {
-        //                 // Draw a number indicating the warp destination
-        //                 char num[8];
-        //                 snprintf(num, sizeof(num) - 1, "%1d", scr->thenArgs.warpDest.mapId + 1);
-        //                 tWidth = textWidth(&ray->ibm, num);
-        //                 drawText(&ray->ibm, c555, num,
-        //                          cellOffX + (cellSize * FROM_FX(obj->posX)) + (cellSize - tWidth) / 2,
-        //                          cellOffY + (cellSize * FROM_FX(obj->posY)) + (cellSize - ray->ibm.height) / 2);
-        //             }
-        //             break;
-        //         }
-        //         scriptNode = scriptNode->next;
-        //     }
-        // }
+    //     // Look for portals
+    //     if (OBJ_SCENERY_PORTAL == obj->type)
+    //     {
+    //         // Found a portal, look for corresponding script
+    //         node_t* scriptNode = ray->scripts[TOUCH].first;
+    //         while (NULL != scriptNode)
+    //         {
+    //             rayScript_t* scr = scriptNode->val;
+    //             // If this is the right script for this object
+    //             if ((TOUCH == scr->ifOp) && (WARP == scr->thenOp) && (scr->ifArgs.idList.ids[0] == obj->id))
+    //             {
+    //                 // And the player has visited the other end of the warp
+    //                 if (ray->p.mapsVisited[scr->thenArgs.warpDest.mapId])
+    //                 {
+    //                     // Draw a number indicating the warp destination
+    //                     char num[8];
+    //                     snprintf(num, sizeof(num) - 1, "%1d", scr->thenArgs.warpDest.mapId + 1);
+    //                     tWidth = textWidth(&ray->ibm, num);
+    //                     drawText(&ray->ibm, c555, num,
+    //                              cellOffX + (cellSize * FROM_FX(obj->posX)) + (cellSize - tWidth) / 2,
+    //                              cellOffY + (cellSize * FROM_FX(obj->posY)) + (cellSize - ray->ibm.height) / 2);
+    //                 }
+    //                 break;
+    //             }
+    //             scriptNode = scriptNode->next;
+    //         }
+    //     }
 
-        // Iterate to the next node
-        currentNode = currentNode->next;
-    }
+    //     // Iterate to the next node
+    //     currentNode = currentNode->next;
+    // }
 
     // The player's location blinks, so draw it when appropriate
     int16_t cX = cellOffX + FROM_FX(cellSize * ray->p.posX);

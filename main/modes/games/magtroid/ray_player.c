@@ -444,7 +444,7 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
 void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
 {
     rayMapCellType_t type = item->type;
-    int32_t itemId        = item->id;
+    // int32_t itemId        = item->id;
 
     // Assume saving after picking up an item
     bool saveAfterObtain      = true;
