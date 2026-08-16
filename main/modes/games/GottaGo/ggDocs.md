@@ -44,6 +44,7 @@ Modes:
 Controls: 
 - Use one of the slide pads or arrow keys to pick a urinal
 - Use A to select
+- Use B to use a stall
 
 ## Scoring
 
@@ -59,3 +60,8 @@ Score calculation
 - Score is how much of the number remains over max value times selection mod
 - If time runs out you pee your pants and lose
 - Given time is based on how far along the player is in sequence
+
+## Stretch
+
+- Larger wall graffiti
+- More stains on floor

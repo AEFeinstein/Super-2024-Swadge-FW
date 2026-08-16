@@ -18,6 +18,16 @@
 #define SPLASH_TEXT_X      44
 #define SPLASH_TEXT_Y_2    44
 
+// Menu
+#define OPTION_SPACING 35
+#define OPTION_BUFFER  20
+#define OPTION_X       32
+
+// Rules
+#define RULES_X_BORDER 32
+#define RULES_TITLE_Y 18
+#define RULES_DESC_Y 28
+
 // Bathroom
 #define FLOOR_HEIGHT 40
 
@@ -29,12 +39,17 @@
 #define URINAL_SPACING      41
 #define URINAL_7_SPACING    37
 #define SMALL_URINAL_OFFSET 15
-#define URINAL_HEIGHT       120
+#define URINAL_HEIGHT       132
 #define URINAL_MAX_WIDTH    259
 
 // NPCs
-#define RAND_OFFSET_RANGE 8
-#define LEGS_OFFSET       8
+#define RAND_OFFSET_RANGE  8
+#define LEGS_OFFSET        8
+#define NPC_HEIGHT_OFFSET  (URINAL_HEIGHT - 100)
+#define NPC_X_OFFSET       3
+#define NPC_PANTS_X_OFFSET 6
+#define NPC_PANTS_X_LARGE  -3
+#define NPC_PANTS_Y_HIKE   -12
 
 // UI
 #define UI_STALL_X       12
@@ -54,7 +69,30 @@
 // Text
 const char ggModeName[]            = "Gotta Go!";
 static const char* const strings[] = {
-    "Press 'A' to start!",
+    "Press 'A' to start!", "Play!", "Rules", "High Scores", "Quit",
+};
+static const char* const rulesText[] = {
+    "Rules",
+    "Here's the rules book for Gotta Go! The rules should be instinctual for a lot of people, but for those that don't "
+    "use urinals on a regular basis, this will help.",
+    "Controls",
+    "Use the left/right arrows to pick a urinal, A to select it, or B to use the stall. There is no pausing!",
+    "How to play",
+    "Once you're ready, you must quickly figure out the most ideal urinal out of the available options. Be quick, your "
+    "bladder is about to burst!",
+    "Urinals",
+    "You always want to use the cleanest urinal. Obviously. Try not to stand in puddles, and if you use one that's out "
+    "of order and increase the mess, expect to be judged.",
+    "People",
+    "People are weird. Try to stay as far away from them as possible. If you have to pick, always pick the most normal "
+    "one. That means not the guy with his pants around his ankles or the guy that smells like onions.",
+    "Stalls",
+    "You can use the stall sometimes, but you only have a limit amount of times you can do that. No hogging the "
+    "stalls.",
+    "Scoring",
+    "You score by two measures: Total score and average score. Total score is used to to show how quick and precise "
+    "you are, whereas average score sows how consistent you are. picking the best available urinal fast is the key to "
+    "getting high scores.",
 };
 
 // Images
@@ -91,9 +129,7 @@ static const cnfsFileIdx_t toiletImages[] = {
     GG_PEE_M_WSG,
     GG_PEE_L_WSG,
 };
-static const cnfsFileIdx_t uiImages[] = {
-    GG_STALL_ICON_WSG,
-};
+static const cnfsFileIdx_t uiImages[]  = {GG_STALL_ICON_WSG, GG_ARROW_WSG, 6};
 static const cnfsFileIdx_t npcImages[] = {
     GG_UPPER_BOD_WSG,   GG_LEGS_WSG,   GG_FEET_WSG,  GG_STINK_WSG,     GG_SHIRT_WSG,     GG_PANTS_WSG,
     GG_PANTS_SHORT_WSG, GG_SHORTS_WSG, GG_SKIRT_WSG, GG_ON_GROUND_WSG, GG_UNDERWEAR_WSG,
@@ -196,11 +232,15 @@ typedef struct
     ggState_t state;
     font_t normalFont;
     font_t normalFontOutline;
+    font_t smallFont;
 
     // Splash
     int64_t attractTimer;
     bool splashToggle;
     wsg_t* splashImgs;
+
+    // Menu
+    int selection;
 
     // Bathroom
     wsg_t* backgroundImages;
@@ -230,6 +270,12 @@ static void ggMainLoop(int64_t elapsedUs);
 static void initSplash(void);
 static void drawSplash(int64_t elapsedUs);
 void drawTitle(void);
+
+// Menu
+void drawMenu(void);
+
+// Rules
+void drawRules(void);
 
 // Common draw
 void drawBackground(void);
@@ -266,8 +312,9 @@ static void ggEnterMode(void)
     // Loading resources
     ggd = (ggData_t*)heap_caps_calloc(1, sizeof(ggData_t), MALLOC_CAP_8BIT);
     // Font
-    loadFont(RADIOSTARS_FONT, &ggd->normalFont, true); // FIXME: Need a better font
+    loadFont(PULSE_AUX_FONT, &ggd->normalFont, true); // FIXME: Need a better font
     makeOutlineFont(&ggd->normalFont, &ggd->normalFontOutline, true);
+    loadFont(OXANIUM_13MED_FONT, &ggd->smallFont, true);
     // Images
     ggd->splashImgs = heap_caps_calloc(ARRAY_SIZE(splashImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(splashImages); idx++)
@@ -331,6 +378,7 @@ static void ggExitMode(void)
         freeWsg(&ggd->splashImgs[idx]);
     }
     free(ggd->splashImgs);
+    freeFont(&ggd->smallFont);
     freeFont(&ggd->normalFontOutline);
     freeFont(&ggd->normalFont);
     free(ggd);
@@ -351,6 +399,80 @@ static void ggMainLoop(int64_t elapsedUs)
                 }
             }
             drawSplash(elapsedUs);
+            break;
+        }
+        case GG_MENU:
+        {
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down)
+                {
+                    if (evt.button & PB_DOWN)
+                    {
+                        ggd->selection++;
+                        ggd->selection %= 4;
+                    }
+                    if (evt.button & PB_UP)
+                    {
+                        ggd->selection--;
+                        if (ggd->selection < 0)
+                        {
+                            ggd->selection = 3;
+                        }
+                    }
+                    if (evt.button & PB_B)
+                    {
+                        ggd->state = GG_SPLASH;
+                    }
+                    if (evt.button & PB_A)
+                    {
+                        // Move to appropriate mode
+                        switch (ggd->selection)
+                        {
+                            case 1:
+                            {
+                                ggd->state     = GG_RULES;
+                                ggd->selection = 0;
+                                break;
+                            }
+                            default:
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            drawMenu();
+            break;
+        }
+        case GG_RULES:
+        {
+            int size = ARRAY_SIZE(rulesText) / 2;
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (!evt.down)
+                {
+                    if (evt.button & PB_RIGHT)
+                    {
+                        ggd->selection++;
+                        ggd->selection %= size;
+                    }
+                    if (evt.button & PB_LEFT)
+                    {
+                        ggd->selection--;
+                        if (ggd->selection < 0)
+                        {
+                            ggd->selection = size - 1;
+                        }
+                    }
+                    if (evt.button & PB_B)
+                    {
+                        ggd->state = GG_SPLASH;
+                    }
+                }
+            }
+            drawRules();
             break;
         }
         default:
@@ -391,7 +513,7 @@ static void initSplash()
         ggd->toilets[idx].npc.shirtColor = idx;
         ggd->toilets[idx].npc.pantsColor = idx;
         ggd->toilets[idx].npc.shoeColor  = idx % ARRAY_SIZE(shoeColors);
-        ggd->toilets[idx].npc.randOffset = 0; // esp_random() % RAND_OFFSET_RANGE;
+        ggd->toilets[idx].npc.randOffset = esp_random() % RAND_OFFSET_RANGE;
         ggd->toilets[idx].npc.shoes      = 1;
     }
     ggd->toilets[2].npc.shirt = 0;
@@ -435,6 +557,43 @@ void drawTitle()
     drawWsgSimple(&ggd->splashImgs[0], SPLASH_TEXT_X + stdSpacing * 6 - 20, SPLASH_TEXT_Y_2);
     drawWsgSimple(&ggd->splashImgs[1], SPLASH_TEXT_X + stdSpacing * 7 - 20, SPLASH_TEXT_Y_2);
     drawWsgSimple(&ggd->splashImgs[4], SPLASH_TEXT_X + stdSpacing * 8 - 20, SPLASH_TEXT_Y_2);
+}
+
+// Menu
+void drawMenu()
+{
+    clearPxTft();
+    // Draw background
+    drawBackground();
+    // Draw options
+    for (int idx = 1; idx < 5; idx++)
+    {
+        drawText(&ggd->normalFont, c555, strings[idx], OPTION_X, OPTION_BUFFER + idx * OPTION_SPACING);
+        drawText(&ggd->normalFontOutline, c000, strings[idx], OPTION_X, OPTION_BUFFER + idx * OPTION_SPACING);
+    }
+    // Draw selection
+    int xOff = OPTION_X + textWidth(&ggd->normalFont, strings[ggd->selection + 1]) + 10;
+    int yOff = OPTION_BUFFER + (ggd->selection + 1) * OPTION_SPACING - 6;
+    drawWsgSimple(&ggd->uiImages[1], xOff, yOff);
+}
+
+// Rules
+void drawRules()
+{
+    clearPxTft();
+    // Draw background
+    drawBackground();
+    // Draw information
+    int16_t xOff = 32;
+    int16_t yOff = 32;
+    drawText(&ggd->normalFont, c555, rulesText[ggd->selection * 2], RULES_X_BORDER, RULES_TITLE_Y);
+    drawText(&ggd->normalFontOutline, c000, rulesText[ggd->selection * 2], RULES_X_BORDER, RULES_TITLE_Y);
+    yOff += RULES_DESC_Y;
+    drawTextWordWrap(&ggd->smallFont, c111, rulesText[ggd->selection * 2 + 1], &xOff, &yOff, TFT_WIDTH - RULES_X_BORDER,
+                     TFT_HEIGHT);
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer) - 1, "Page %d/%lu", ggd->selection + 1, ARRAY_SIZE(rulesText) / 2);
+    drawText(&ggd->smallFont, c000, buffer, RULES_X_BORDER, TFT_HEIGHT - 32);
 }
 
 // Common draw
@@ -630,12 +789,12 @@ void drawNPC(ggToilet_t* t, int x, int y)
         wsgPaletteSet(&ggd->npcPalette, c210, skinColors[t->npc.skinColor]);
     }
     // Vars
-    int xOff = x - 3;
-    int yOff = y - 20 - ((t->small == 1) ? SMALL_URINAL_OFFSET : 0) + ((t->npc.small == 1) ? ggd->npcImages[1].h : 0)
-               + t->npc.randOffset;
+    int xOff = x - NPC_X_OFFSET;
+    int yOff = y - NPC_HEIGHT_OFFSET - ((t->small == 1) ? SMALL_URINAL_OFFSET : 0)
+               + ((t->npc.small == 1) ? ggd->npcImages[1].h : 0) + t->npc.randOffset;
     // Body
     drawWsgPaletteSimple(&ggd->npcImages[0], xOff, yOff, &ggd->npcPalette);
-    drawWsgPaletteSimple(&ggd->npcImages[1], xOff + 8, yOff + ggd->npcImages[0].h, &ggd->npcPalette);
+    drawWsgPaletteSimple(&ggd->npcImages[1], xOff + LEGS_OFFSET, yOff + ggd->npcImages[0].h, &ggd->npcPalette);
     if (t->npc.small != 1)
     {
         drawWsgPaletteSimple(&ggd->npcImages[1], xOff + LEGS_OFFSET, yOff + ggd->npcImages[0].h + ggd->npcImages[1].h,
@@ -648,7 +807,6 @@ void drawNPC(ggToilet_t* t, int x, int y)
         drawWsgPaletteSimple(&ggd->npcImages[2], xOff + LEGS_OFFSET, yOff + ggd->npcImages[0].h + ggd->npcImages[1].h,
                              &ggd->npcPalette);
     }
-
     // Shirts
     if (t->npc.shirt == 1)
     {
@@ -663,32 +821,38 @@ void drawNPC(ggToilet_t* t, int x, int y)
         {
             if (t->npc.small)
             {
-                drawWsgPaletteSimple(&ggd->npcImages[6], x + 6, yOff + ggd->npcImages[0].h - 12, &ggd->npcPalette);
+                drawWsgPaletteSimple(&ggd->npcImages[6], x + NPC_PANTS_X_OFFSET,
+                                     yOff + ggd->npcImages[0].h + NPC_PANTS_Y_HIKE, &ggd->npcPalette);
             }
             else
             {
-                drawWsgPaletteSimple(&ggd->npcImages[5], x + 6, yOff + ggd->npcImages[0].h - 12, &ggd->npcPalette);
+                drawWsgPaletteSimple(&ggd->npcImages[5], x + NPC_PANTS_X_OFFSET,
+                                     yOff + ggd->npcImages[0].h + NPC_PANTS_Y_HIKE, &ggd->npcPalette);
             }
             break;
         }
         case 1:
         {
-            drawWsgPaletteSimple(&ggd->npcImages[7], x + 6, yOff + ggd->npcImages[0].h - 12, &ggd->npcPalette);
+            drawWsgPaletteSimple(&ggd->npcImages[7], x + NPC_PANTS_X_OFFSET,
+                                 yOff + ggd->npcImages[0].h + NPC_PANTS_Y_HIKE, &ggd->npcPalette);
             break;
         }
         case 2:
         {
-            drawWsgPaletteSimple(&ggd->npcImages[8], x - 3, yOff + ggd->npcImages[0].h - 13, &ggd->npcPalette);
+            drawWsgPaletteSimple(&ggd->npcImages[8], x + NPC_PANTS_X_LARGE, yOff + ggd->npcImages[0].h - 13,
+                                 &ggd->npcPalette);
             break;
         }
         case 3:
         {
-            drawWsgPaletteSimple(&ggd->npcImages[9], x - 3, yOff + ggd->npcImages[0].h + 17, &ggd->npcPalette);
+            drawWsgPaletteSimple(&ggd->npcImages[9], x + NPC_PANTS_X_LARGE, yOff + ggd->npcImages[0].h + 17,
+                                 &ggd->npcPalette);
             break;
         }
         case 4:
         {
-            drawWsgPaletteSimple(&ggd->npcImages[10], x + 6, yOff + ggd->npcImages[0].h - 10, &ggd->npcPalette);
+            drawWsgPaletteSimple(&ggd->npcImages[10], x + NPC_PANTS_X_OFFSET, yOff + ggd->npcImages[0].h - 10,
+                                 &ggd->npcPalette);
             break;
         }
         case 5:
