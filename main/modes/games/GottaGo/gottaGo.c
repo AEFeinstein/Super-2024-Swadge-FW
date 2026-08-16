@@ -76,18 +76,24 @@
 //==============================================================================
 
 // Text
-const char ggModeName[]            = "Gotta Go!";
-static const char* const strings[] = {
-    "Press 'A' to start!",
-    "Play!",
-    "Rules",
-    "High Scores",
-    "Quit",
-    "Nice Choice!",
-    "Press any button to advance to next round",
-    "Pee'd yourself",
-    "Press any button to go back to the menu",
-};
+const char ggModeName[] = "Gotta Go!";
+static const char* const strings[]
+    = {"Press 'A' to start!",
+       "Play!",
+       "Rules",
+       "High Scores",
+       "Quit",
+       "Nice Choice!",
+       "Press any button to advance to next round",
+       "Pee'd yourself",
+       "Press any button to go back to the menu",
+       "ATTENTION",
+       "This game contains 'suggestive themes' and may not be suitable for all audiences. Press A to continue and "
+       "anything else to back out.",
+       "Suggestive themes is a stupid way to put 'this game shows butts.' Saturday morning cartoons shows butts. "
+       "Everyone has one, this isn't going to cause someone to have some sort of awakening or turn your children into "
+       "perverts, it's just some very low pixel count butts. Geting you underwear in a twist over this says more about "
+       "you that you would probably like."};
 static const char* const rulesText[] = {
     "Rules",
     "Here's the rules book for Gotta Go! The rules should be instinctual for a lot of people, but for those that don't "
@@ -181,14 +187,7 @@ static const paletteColor_t shoeColors[] = {
 
 typedef enum
 {
-    GG_PLAY_GAME,
-    GG_SHOW_RULES,
-    GG_SHOW_HS,
-    GG_QUIT,
-} ggMenuItems_t;
-
-typedef enum
-{
+    GG_WARNING,
     GG_SPLASH,
     GG_MENU,
     GG_RULES,
@@ -198,6 +197,14 @@ typedef enum
     GG_LOSE,
     GG_HIGHSCORE,
 } ggState_t;
+
+typedef enum
+{
+    GG_PLAY_GAME,
+    GG_SHOW_RULES,
+    GG_SHOW_HS,
+    GG_QUIT,
+} ggMenuItems_t;
 
 typedef enum
 {
@@ -311,6 +318,8 @@ static void clearToilets(void);
 static void initNPC(ggToilet_t* t, bool active);
 
 // Drawing
+// Warning
+static void drawWarning(int64_t elapsedUs);
 // Splash
 static void initSplash(void);
 static void drawSplash(int64_t elapsedUs);
@@ -393,7 +402,7 @@ static void ggEnterMode(void)
 
     // Initialize
     wsgPaletteReset(&ggd->npcPalette);
-    initSplash();
+    ggd->state = GG_WARNING;
 
     // FIXME: Test values
     ggd->loseTimerMax = 1000000;
@@ -440,6 +449,19 @@ static void ggMainLoop(int64_t elapsedUs)
     buttonEvt_t evt;
     switch (ggd->state)
     {
+        case GG_WARNING:
+        {
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down && (evt.button & PB_A))
+                {
+                    initSplash();
+                    ggd->state = GG_SPLASH;
+                }
+            }
+            drawWarning(elapsedUs);
+            break;
+        }
         case GG_SPLASH:
         {
             while (checkButtonQueueWrapper(&evt))
@@ -670,6 +692,18 @@ static void initNPC(ggToilet_t* t, bool active)
 }
 
 // Drawing functions
+// Warning
+static void drawWarning(int64_t elapsedUs)
+{
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    drawText(&ggd->normalFont, c500, strings[9], 32, 32);
+    ggd->attractTimer += elapsedUs;
+    int16_t xOff = 32;
+    int16_t yOff = 64;
+    drawTextWordWrap(&ggd->smallFont, c555, strings[(ggd->attractTimer >= 15000000) ? 11 : 10], &xOff, &yOff,
+                     TFT_WIDTH - 32, TFT_HEIGHT);
+}
+
 // Splash
 static void initSplash()
 {
