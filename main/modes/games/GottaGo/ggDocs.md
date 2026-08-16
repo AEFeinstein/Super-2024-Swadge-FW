@@ -3,7 +3,7 @@
 ## TODO
 
 - High Pri:
-  - [ ] Fix game timer
+  - [x] Fix game timer
   - [ ] Add in difficulty progression/game state
   - [ ] Fix high score mode
   - [x] Update it so using a stall gives you half points

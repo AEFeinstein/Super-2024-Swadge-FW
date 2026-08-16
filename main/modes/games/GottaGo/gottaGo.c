@@ -36,7 +36,9 @@
 #define TIMER_BUFFER 1000000
 
 // Game
-#define READY_TIMEOUT 3000000 // 3 Secs
+#define READY_TIMEOUT 3000000  // 3 Secs
+#define MAX_TIMER_LEN 10000000 // 10 Seconds
+#define TIMER_CHANGE  27       // What fraction of the timer is removed each round
 
 // Bathroom
 #define FLOOR_HEIGHT 40
@@ -520,15 +522,16 @@ static void ggMainLoop(int64_t elapsedUs)
                         {
                             case GG_PLAY_GAME:
                             {
-                                ggd->state      = GG_READY;
-                                ggd->timer      = 0;
-                                ggd->score      = 0;
-                                ggd->avgScore   = 0;
-                                ggd->adjScore   = 0;
-                                ggd->stallInc   = 3;
-                                ggd->stallUses  = 3;
-                                ggd->difficulty = 0;
-                                ggd->numGames   = 0;
+                                ggd->state        = GG_READY;
+                                ggd->timer        = 0;
+                                ggd->score        = 0;
+                                ggd->avgScore     = 0;
+                                ggd->adjScore     = 0;
+                                ggd->stallInc     = 3;
+                                ggd->stallUses    = 3;
+                                ggd->difficulty   = 0;
+                                ggd->numGames     = 0;
+                                ggd->loseTimerMax = MAX_TIMER_LEN;
                                 break;
                             }
                             case GG_SHOW_RULES:
@@ -714,7 +717,7 @@ static void ggMainLoop(int64_t elapsedUs)
                 if (evt.down)
                 {
                     ggd->selection = GG_PLAY_GAME;
-                    ggd->state = GG_MENU;
+                    ggd->state     = GG_MENU;
                 }
             }
             drawLose();
@@ -781,7 +784,8 @@ static void gameInit()
     ggd->difficulty++;
 
     // Timer
-    ggd->loseTimerMax = 3000000; // FIXME: Need to make it dynamic
+    ggd->loseTimerMax -= ggd->loseTimerMax / 27;
+    ESP_LOGE("GG", "Timer %ld\n", ggd->loseTimerMax);
 
     // Set toilet pattern
     // RULES:
