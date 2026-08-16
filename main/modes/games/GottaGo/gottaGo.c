@@ -11,7 +11,7 @@
 
 // Main
 #define FRAME_RATE_US 16667
-#define SECOND 1000000
+#define SECOND        1000000
 
 // Splash
 #define SPLASH_US          500000
@@ -33,6 +33,7 @@
 
 // High scores
 #define HS_PAGES 2
+#define TIMER_BUFFER 1000000
 
 // Game
 #define READY_TIMEOUT 3000000 // 3 Secs
@@ -291,10 +292,12 @@ typedef struct
     // Game
     int score;
     int avgScore;
+    int adjScore;
     int64_t loseTimerMax;
     int stallUses;
     int stallInc;
     int difficulty;
+    int numGames;
 
     // Bathroom
     wsg_t* backgroundImages;
@@ -321,7 +324,8 @@ static void ggMainLoop(int64_t elapsedUs);
 static void clearToilets(void);
 static void initNPC(ggToilet_t* t, bool active);
 static void gameInit(void);
-static void end(bool win);
+static void end(bool lose);
+static void calcToiletScore(int* values);
 
 // Drawing
 // Warning
@@ -516,9 +520,11 @@ static void ggMainLoop(int64_t elapsedUs)
                                 ggd->timer      = 0;
                                 ggd->score      = 0;
                                 ggd->avgScore   = 0;
+                                ggd->adjScore = 0;
                                 ggd->stallInc   = 3;
                                 ggd->stallUses  = 3;
                                 ggd->difficulty = 0;
+                                ggd->numGames   = 0;
                                 break;
                             }
                             case GG_SHOW_RULES:
@@ -631,7 +637,10 @@ static void ggMainLoop(int64_t elapsedUs)
                 {
                     if (evt.button & PB_A)
                     {
-                        end(true);
+                        end(ggd->toilets[ggd->selection].brokenBowl == 1
+                            || ggd->toilets[ggd->selection].brokenDrain == 1
+                            || ggd->toilets[ggd->selection].outOfOrder == 1
+                            || ggd->toilets[ggd->selection].pluggedDrain == 1);
                     }
                     else if (evt.button & PB_B)
                     {
@@ -648,44 +657,34 @@ static void ggMainLoop(int64_t elapsedUs)
                     else if (evt.button & PB_LEFT)
                     {
                         ggd->selection--;
-                        while (ggd->toilets[ggd->selection].npc.active != 0)
-                        {
-                            ggd->selection--;
-                        }
-                        // Wrap
                         if (ggd->selection < 0)
                         {
                             ggd->selection = ggd->numActive - 1;
-                            while (ggd->toilets[ggd->selection].npc.active != 0)
-                            {
-                                ggd->selection--;
-                            }
+                        }
+                        while (ggd->toilets[ggd->selection].npc.active != 0)
+                        {
+                            ggd->selection--;
                         }
                     }
                     else if (evt.button & PB_RIGHT)
                     {
                         ggd->selection++;
-                        while (ggd->toilets[ggd->selection].npc.active != 0)
-                        {
-                            ggd->selection++;
-                        }
-                        // Wrap
                         if (ggd->selection >= ggd->numActive)
                         {
                             ggd->selection = 0;
-                            while (ggd->toilets[ggd->selection].npc.active != 0)
-                            {
-                                ggd->selection++;
-                            }
+                        }
+                        while (ggd->toilets[ggd->selection].npc.active != 0)
+                        {
+                            ggd->selection++;
                         }
                     }
                 }
             }
             // Timer
-            ggd->timer+=elapsedUs;
+            ggd->timer += elapsedUs;
             if (ggd->timer >= ggd->loseTimerMax)
             {
-                // LOSE
+                // end(false);
             }
             drawGame();
             break;
@@ -783,13 +782,185 @@ static void gameInit()
     // - Spend diff points to add things
     // - At least 2 options + stall no matter what
     // - Worse things require more points to use
+
+    // Set selection to a valid option
+    ggd->selection = 0;
+    while (ggd->toilets[ggd->selection].npc.active == 1)
+    {
+        ggd->selection++;
+    }
 }
 
-static void end(bool win)
+static void end(bool lose)
 {
-    // Compute score
+    ggd->numGames++;
+    // Compute score for each urinal
+    int badness[7] = {0};
+    calcToiletScore(badness);
+    // Find best option
+    int best = badness[0];
+    for (int idx = 1; idx < ggd->numActive; idx++)
+    {
+        if (ggd->toilets[idx].npc.active == 1)
+        {
+            continue;
+        }
+        if (best > badness[idx])
+        {
+            best = badness[idx];
+        }
+    }
+    // Calc percentage
+    int perc      = (1000 * (1000 - badness[ggd->selection])) / (1000 - best);
+    ggd->avgScore = (ggd->avgScore * (ggd->numGames - 1) + perc) / ggd->numGames;
+    // Calc total score
+    int timerGrace = MAX(ggd->timer, TIMER_BUFFER);
+    ggd->score += perc * (ggd->loseTimerMax + TIMER_BUFFER - timerGrace) / ggd->loseTimerMax;
+    // Calc adjusted score
+    ggd->adjScore = (ggd->avgScore * ggd->score) / 1000;
+
     // Save to NVS
-    ggd->state = (win) ? GG_WIN : GG_LOSE;
+
+    // Move on
+    ggd->state = (lose) ? GG_LOSE : GG_WIN;
+}
+
+static void calcToiletScore(int* values)
+{
+    // Conditional
+    for (int idx = 0; idx < ggd->numActive; idx++)
+    {
+        // Toilet
+        values[idx] += (ggd->toilets[idx].autoFlush == 1) ? -10 : 0;
+        values[idx] += (ggd->toilets[idx].graffiti > 0) ? 10 : 0;
+        values[idx] += (ggd->toilets[idx].cracks > 0) ? 15 : 0;
+        values[idx] += (ggd->toilets[idx].waterLeak == 1) ? 25 : 0;
+        values[idx] += (ggd->toilets[idx].brokenBowl == 1) ? 35 : 0;
+        values[idx] += (ggd->toilets[idx].brokenDrain == 1) ? 35 : 0;
+        values[idx] += (ggd->toilets[idx].pluggedDrain == 1) ? 45 : 0;
+        values[idx] += (ggd->toilets[idx].outOfOrder == 1) ? 30 : 0;
+        values[idx] += (ggd->toilets[idx].small == 1) ? 50 : 0;
+        // Divider
+        switch (ggd->toilets[idx].divider)
+        {
+            case GG_DIV_FULL:
+            {
+                break;
+            }
+            case GG_DIV_TOP:
+            case GG_DIV_BOTTOM:
+            {
+                values[idx] += 25;
+                break;
+            }
+            case GG_DIV_NONE:
+            {
+                values[idx] += 50;
+                break;
+            }
+        }
+        if (idx != 0)
+        {
+            switch (ggd->toilets[idx - 1].divider)
+            {
+                case GG_DIV_FULL:
+                {
+                    break;
+                }
+                case GG_DIV_TOP:
+                case GG_DIV_BOTTOM:
+                {
+                    values[idx] += 25;
+                    break;
+                }
+                case GG_DIV_NONE:
+                {
+                    values[idx] += 50;
+                    break;
+                }
+            }
+        }
+        // Puddle
+        switch (ggd->toilets[idx].puddle)
+        {
+            case GG_PEE_NONE:
+            {
+                break;
+            }
+            case GG_PEE_SMALL:
+            {
+                values[idx] += 25;
+                break;
+            }
+            case GG_PEE_MED:
+            {
+                values[idx] += 50;
+                break;
+            }
+            case GG_PEE_LARGE:
+            {
+                values[idx] += 75;
+                break;
+            }
+        }
+        // NPC
+        if (ggd->toilets[idx].npc.active == 1)
+        {
+            values[idx] += 150;
+            values[idx] += (ggd->toilets[idx].npc.shirt == 0) ? 20 : 0;
+            values[idx] += (ggd->toilets[idx].npc.shoes == 0) ? 30 : 0;
+            values[idx] += (ggd->toilets[idx].npc.stink == 0) ? 40 : 0;
+
+            // Specific pants
+            switch (ggd->toilets[idx].npc.pants)
+            {
+                case GG_PANTS:
+                case GG_SHORTS:
+                case GG_SKIRT:
+                {
+                    break;
+                }
+                case GG_DOWN:
+                {
+                    values[idx] += 35;
+                    break;
+                }
+                case GG_UNDERWEAR:
+                {
+                    values[idx] += 25;
+                    break;
+                }
+                case GG_NAKED:
+                {
+                    values[idx] += 50;
+                    break;
+                }
+            }
+        }
+    }
+    /* ESP_LOGI("GG", "Scores (conditional):\n1: %d\n2: %d\n3: %d\n4: %d\n5: %d\n6: %d\n7: %d\n", values[0], values[1],
+             values[2], values[3], values[4], values[5], values[6]); */
+    // Positional
+    int temp[7] = {0};
+    for (int i = 0; i < ggd->numActive; i++)
+    {
+        if (i != 0)
+        {
+            temp[i] += values[i - 1];
+        }
+        if (i != ggd->numActive - 1)
+        {
+            temp[i] += values[i + 1];
+        }
+    }
+    /* ESP_LOGI("GG", "Scores (Positional):\n1: %d\n2: %d\n3: %d\n4: %d\n5: %d\n6: %d\n7: %d\n", temp[0], temp[1],
+       temp[2], temp[3], temp[4], temp[5], temp[6]); */
+    for (int i = 0; i < ggd->numActive; i++)
+    {
+        values[i] += temp[i];
+    }
+    /* ESP_LOGI("GG", "Scores total:\n1: %d\n2: %d\n3: %d\n4: %d\n5: %d\n6: %d\n7: %d\n", values[0], values[1],
+       values[2], values[3], values[4], values[5], values[6]); */
 }
 
 // Drawing functions
@@ -948,7 +1119,7 @@ static void drawWin()
     drawScores(32, 80);
     // Prompt button press
     int16_t xOff = 32;
-    int16_t yOff = 120;
+    int16_t yOff = 160;
     drawTextWordWrap(&ggd->smallFont, c000, strings[6], &xOff, &yOff, TFT_WIDTH - 32, TFT_HEIGHT);
 }
 
@@ -965,7 +1136,7 @@ static void drawLose()
     drawScores(32, 80);
     // Prompt button press
     int16_t xOff = 32;
-    int16_t yOff = 120;
+    int16_t yOff = 160;
     drawTextWordWrap(&ggd->smallFont, c000, strings[8], &xOff, &yOff, TFT_WIDTH - 32, TFT_HEIGHT);
 }
 
@@ -1286,4 +1457,6 @@ static void drawScores(int x, int y)
     drawText(&ggd->smallFont, c000, buffer, x, y);
     snprintf(buffer, sizeof(buffer) - 1, "Average score: %d.%d", ggd->avgScore / 10, ggd->avgScore % 10);
     drawText(&ggd->smallFont, c000, buffer, x, y + ggd->smallFont.height + 4);
+    snprintf(buffer, sizeof(buffer) - 1, "Adjusted score: %d", ggd->adjScore);
+    drawText(&ggd->smallFont, c000, buffer, x, y + 2*(ggd->smallFont.height + 4));
 }
