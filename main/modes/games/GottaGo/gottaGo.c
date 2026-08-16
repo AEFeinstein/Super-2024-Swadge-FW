@@ -826,12 +826,6 @@ static void end(bool lose)
     // Save to NVS
     saveToNVS();
 
-    // TODO
-    // - Score
-    // - Average
-    // - Adjusted
-    // - Max num of games
-
     // Move on
     ggd->state = (lose) ? GG_LOSE : GG_WIN;
 }
@@ -1326,7 +1320,6 @@ static void drawToilet(ggToilet_t* t, int x, int y)
         drawWsgSimple(&ggd->toiletImages[14], x + ggd->toiletImages[2].w - (ggd->toiletImages[14].w + 4), y + 8);
     }
     // Water Leak
-    // FIXME: Doesn't work for variable length urinals (Currently works visually for h=35 to h=40)
     if (t->waterLeak == 1)
     {
         drawWsgSimple(&ggd->toiletImages[15], x + 12, y + 4);
