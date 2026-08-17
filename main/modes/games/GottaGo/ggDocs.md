@@ -11,12 +11,11 @@
   - [x] Reset menu selection
   - [x] Remove return to swadge functionality
 - Med Pri
-  - [ ] Change lose text to be based on loss condition
-  - [ ] Pause screen on selection/pop-up symbols to show what's going on
+  - [x] Change lose text to be based on loss condition
+  - [x] Pause screen on selection/pop-up symbols to show what's going on
   - [ ] Add values to swadgepass
   - [ ] Display available swadgepass data
   - [ ] Start selection in the center of the urinals
-  - [ ] Update 
 - Low Pri
   - [ ] Add trophies
   - [ ] Find/make a better font

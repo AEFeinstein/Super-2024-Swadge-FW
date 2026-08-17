@@ -92,7 +92,7 @@ static const char* const strings[] = {
     "Quit",
     "Nice Choice!",
     "Press any button to advance to next round",
-    "Pee'd yourself",
+    "You peed yourself",
     "Press any button to go back to the menu",
     "ATTENTION",
     "This game contains 'suggestive themes' and may not be suitable for all audiences. Press A to continue and "
@@ -108,6 +108,9 @@ static const char* const strings[] = {
     "Paused",
     "Press A to continue, B to quit",
     "High Scores",
+    "You used a Stall.",
+    "You used a broken toilet",
+    "All the stalls are filled",
 };
 static const char* const rulesText[] = {
     "Rules",
@@ -312,6 +315,7 @@ typedef struct
     bool pause;
     bool stallUsed;
     bool lose;
+    bool timeOut;
 
     // Bathroom
     wsg_t* backgroundImages;
@@ -543,6 +547,7 @@ static void ggMainLoop(int64_t elapsedUs)
                                 ggd->stallInc     = 3;
                                 ggd->stallUses    = 3;
                                 ggd->numGames     = 0;
+                                ggd->timeOut      = false;
                                 ggd->loseTimerMax = MAX_TIMER_LEN;
                                 break;
                             }
@@ -748,6 +753,8 @@ static void ggMainLoop(int64_t elapsedUs)
                     ggd->lose      = true;
                     ggd->stallUsed = false;
                     ggd->state     = GG_CHOICE;
+                    ggd->timer     = 0;
+                    ggd->timeOut   = true;
                 }
                 drawGame(true);
             }
@@ -899,7 +906,7 @@ static void gameInit()
                     }
                     case 3:
                     {
-                        ggd->toilets[chance].npc.shirt = GG_UNDERWEAR;
+                        ggd->toilets[chance].npc.pants = GG_UNDERWEAR;
                         break;
                     }
                     case 4:
@@ -1111,7 +1118,7 @@ static void end(bool lose, bool wasStall)
     ggd->avgScore = (ggd->avgScore * (ggd->numGames - 1) + perc) / ggd->numGames;
     // Calc total score
     int timerGrace = MAX(ggd->timer, TIMER_BUFFER);
-    ggd->score += perc * (ggd->loseTimerMax + TIMER_BUFFER - timerGrace) / ggd->loseTimerMax;
+    ggd->score += perc * ((ggd->loseTimerMax + TIMER_BUFFER) - timerGrace) / ggd->loseTimerMax;
     // Calc adjusted score
     ggd->adjScore = (ggd->avgScore * ggd->score) / 1000;
 
@@ -1256,8 +1263,8 @@ static void calcToiletScore(int* values)
     {
         values[i] += temp[i];
     }
-    ESP_LOGI("GG", "Scores total:\n1: %d\n2: %d\n3: %d\n4: %d\n5: %d\n6: %d\n7: %d\n", values[0], values[1], values[2],
-             values[3], values[4], values[5], values[6]);
+    /* ESP_LOGI("GG", "Scores total:\n1: %d\n2: %d\n3: %d\n4: %d\n5: %d\n6: %d\n7: %d\n", values[0], values[1], values[2],
+             values[3], values[4], values[5], values[6]); */
 }
 
 static void saveToNVS()
@@ -1496,9 +1503,11 @@ static void drawSolution()
 {
     int values[7] = {0};
     calcToiletScore(values);
-    int best      = values[0];
-    int bestUIPos = 0;
-    for (int idx = 1; idx < ggd->numActive; idx++)
+    int best          = 1000;
+    int bestUIPos[7]  = {0};
+    int worst         = 0;
+    int worstUIPos[7] = {0};
+    for (int idx = 0; idx < ggd->numActive; idx++)
     {
         if (ggd->toilets[idx].npc.active == 1)
         {
@@ -1506,29 +1515,38 @@ static void drawSolution()
         }
         else
         {
-            if (best < values[idx]
-                && !(ggd->toilets[ggd->selection].brokenBowl == 1 || ggd->toilets[ggd->selection].brokenDrain == 1
-                     || ggd->toilets[ggd->selection].outOfOrder == 1 || ggd->toilets[ggd->selection].pluggedDrain == 1))
+            if (best > values[idx])
             {
-                best      = values[idx];
-                bestUIPos = idx;
+                if (ggd->toilets[ggd->selection].brokenBowl == 1 || ggd->toilets[ggd->selection].brokenDrain == 1
+                    || ggd->toilets[ggd->selection].outOfOrder == 1 || ggd->toilets[ggd->selection].pluggedDrain == 1)
+                {
+                }
+                else
+                {
+                    best = values[idx];
+                    for (int i = 0; i < idx; i++)
+                    {
+                        bestUIPos[i] = 0;
+                    }
+                    bestUIPos[idx] = 1;
+                }
             }
-        }
-    }
-    int worst      = values[0];
-    int worstUIPos = 0;
-    for (int idx = 1; idx < ggd->numActive; idx++)
-    {
-        if (ggd->toilets[idx].npc.active == 1)
-        {
-            continue;
-        }
-        else
-        {
-            if (worst > values[idx])
+            else if (best == values[idx])
             {
-                worst      = values[idx];
-                worstUIPos = idx;
+                bestUIPos[idx] = 1;
+            }
+            if (worst < values[idx])
+            {
+                worst = values[idx];
+                for (int i = 0; i < idx; i++)
+                {
+                    worstUIPos[i] = 0;
+                }
+                worstUIPos[idx] = 1;
+            }
+            else if (worst == values[idx])
+            {
+                worstUIPos[idx] = 1;
             }
         }
     }
@@ -1551,12 +1569,32 @@ static void drawSolution()
     }
     else
     {
-        drawWsgSimpleHalf(
-            &ggd->uiImages[2],
-            bestUIPos * ((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1, 140);
-        drawWsgSimpleHalf(
-            &ggd->uiImages[3],
-            worstUIPos * ((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1, 140);
+        for (int idx = 0; idx < ggd->numActive; idx++)
+        {
+            if (bestUIPos[idx] == 1)
+            {
+                drawWsgSimpleHalf(
+                    &ggd->uiImages[3],
+                    idx * ((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1, 140);
+            }
+            if (worstUIPos[idx] == 1)
+            {
+                drawWsgSimpleHalf(
+                    &ggd->uiImages[2],
+                    idx * ((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1, 140);
+            }
+        }
+    }
+    drawWsg(&ggd->uiImages[1],
+            xStart + ggd->selection * ((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING), 60, false,
+            false, 270);
+    if (ggd->stallUsed)
+    {
+        drawText(&ggd->normalFont, c000, strings[19], (TFT_WIDTH - textWidth(&ggd->normalFont, strings[19])) / 2, 60);
+    }
+    if (ggd->timeOut)
+    {
+        drawText(&ggd->normalFont, c000, strings[7], (TFT_WIDTH - textWidth(&ggd->normalFont, strings[7])) / 2, 60);
     }
 }
 
@@ -1584,8 +1622,19 @@ static void drawLose()
     // Draw background
     drawBackground();
     // Draw text
-    drawText(&ggd->normalFont, c555, strings[7], 32, 44);
-    drawText(&ggd->normalFontOutline, c000, strings[7], 32, 44);
+    int textIdx = 20; // Broken stall
+    if (ggd->timeOut)
+    {
+        textIdx = 7;
+    }
+    else if (ggd->stallUsed)
+    {
+        textIdx = 21;
+    }
+    drawText(&ggd->normalFont, c555, strings[textIdx], (TFT_WIDTH - textWidth(&ggd->normalFont, strings[textIdx])) / 2,
+             44);
+    drawText(&ggd->normalFontOutline, c000, strings[textIdx],
+             (TFT_WIDTH - textWidth(&ggd->normalFont, strings[textIdx])) / 2, 44);
     // Show score
     drawScores(32, 80);
     // Prompt button press
