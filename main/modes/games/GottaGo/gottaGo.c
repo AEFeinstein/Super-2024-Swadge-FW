@@ -53,6 +53,9 @@
 #define MINOR_ISSUE      50
 #define MAJOR_ISSUE      300 // End the game, so low score
 #define SMALL_TOILET     200 // Don't used the ADA toilet you whackjob
+#define STALL_USED       300 // 70%
+#define DEFAULT_SCORE    1000
+#define SCORE_MULTIPLIER 1000
 
 // Bathroom
 #define FLOOR_HEIGHT 40
@@ -325,6 +328,7 @@ typedef struct
     int avgScore;
     int adjScore;
     int64_t loseTimerMax;
+    int64_t saveTimer;
     int stallUses;
     int stallInc;
     int numGames;
@@ -359,7 +363,7 @@ static void clearToilets(void);
 static void initNPC(ggToilet_t* t, bool active);
 static void gameInit(void);
 static void initRandomNPC(ggToilet_t* t);
-static void end(bool lose, bool wasStall);
+static void end();
 static void calcToiletScore(int* value);
 static int calcNPCScore(ggNPC_t* n, int distance);
 static void saveToNVS(void);
@@ -665,6 +669,7 @@ static void ggMainLoop(int64_t elapsedUs)
             if (ggd->timer >= READY_TIMEOUT)
             {
                 ggd->state = GG_GAME;
+                ggd->timer = 0;
                 gameInit();
             }
             drawReady(elapsedUs);
@@ -690,6 +695,7 @@ static void ggMainLoop(int64_t elapsedUs)
                                              || ggd->toilets[ggd->selection].pluggedDrain == 1;
                             ggd->stallUsed = false;
                             ggd->state     = GG_CHOICE;
+                            ggd->saveTimer = ggd->timer;
                             ggd->timer     = 0;
                         }
                     }
@@ -701,6 +707,7 @@ static void ggMainLoop(int64_t elapsedUs)
                             ggd->lose      = true;
                             ggd->stallUsed = false;
                             ggd->state     = GG_CHOICE;
+                            ggd->saveTimer = ggd->timer;
                             ggd->timer     = 0;
                         }
                         else if (ggd->stallUses > 0)
@@ -709,6 +716,7 @@ static void ggMainLoop(int64_t elapsedUs)
                             ggd->lose      = false;
                             ggd->stallUsed = true;
                             ggd->state     = GG_CHOICE;
+                            ggd->saveTimer = ggd->timer;
                             ggd->timer     = 0;
                         }
                         else
@@ -716,6 +724,7 @@ static void ggMainLoop(int64_t elapsedUs)
                             ggd->lose      = true;
                             ggd->stallUsed = true;
                             ggd->state     = GG_CHOICE;
+                            ggd->saveTimer = ggd->timer;
                             ggd->timer     = 0;
                         }
                     }
@@ -821,10 +830,10 @@ static void ggMainLoop(int64_t elapsedUs)
             ggd->timer += elapsedUs;
             if (ggd->timer >= SOLUTION_TIMER)
             {
-                end(ggd->lose, ggd->stallUsed);
+                end();
             }
             drawGame(false);
-            // drawSolution();
+            drawSolution();
             break;
         }
         case GG_WIN:
@@ -1122,9 +1131,9 @@ static void initRandomNPC(ggToilet_t* t)
     }
 }
 
-static void end(bool lose, bool wasStall)
+static void end()
 {
-    if (lose)
+    if (ggd->lose)
     {
         ggd->state = GG_LOSE;
         return;
@@ -1156,17 +1165,17 @@ static void end(bool lose, bool wasStall)
     }
     // Calc percentage
     int perc = 0;
-    if (wasStall)
+    if (ggd->stallUsed)
     {
-        perc = 500;
+        perc = DEFAULT_SCORE - STALL_USED;
     }
     else
     {
-        perc = (1000 * (1000 - badness[ggd->selection])) / (1000 - best);
+        perc = (SCORE_MULTIPLIER * (DEFAULT_SCORE - badness[ggd->selection])) / (DEFAULT_SCORE - best);
     }
     ggd->avgScore = (ggd->avgScore * (ggd->numGames - 1) + perc) / ggd->numGames;
     // Calc total score
-    int timerGrace = MAX(ggd->timer, TIMER_BUFFER);
+    int timerGrace = MAX(ggd->saveTimer, TIMER_BUFFER);
     ggd->score += perc * ((ggd->loseTimerMax + TIMER_BUFFER) - timerGrace) / ggd->loseTimerMax;
     // Calc adjusted score
     ggd->adjScore = (ggd->avgScore * ggd->score) / 1000;
@@ -1379,8 +1388,8 @@ static void calcToiletScore(int* value)
 
 static int calcNPCScore(ggNPC_t* n, int distance)
 {
-    int score = 200;
-    if (n->shirt == 0 || n->pants == GG_NAKED || n->pants == GG_UNDERWEAR || n->pants == GG_DOWN || n->stink == 1)
+    int score = BASE_NPC;
+    if (!n->shirt || n->pants == GG_NAKED || n->pants == GG_UNDERWEAR || n->pants == GG_DOWN || n->stink)
     {
         score += WEIRD_ADJUSTMENT;
     }

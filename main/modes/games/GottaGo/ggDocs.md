@@ -3,11 +3,11 @@
 ## TODO
 
   1. [x] Add auto flush as an option
-  2. [ ] Update scoring mechanics
+  2. [x] Update scoring mechanics
     - [x] Adjust score penalties
-    - [ ] Update calculations
-      - [ ] Change score for using a stall
-      - [ ] Diagnose/fix inability to get perfect scores (<1 sec, correct urinal)
+    - [x] Update calculations
+      - [x] Change score for using a stall
+      - [x] Diagnose/fix inability to get perfect scores (<1 sec, correct urinal)
   3. [ ] Fix touch controls
   4. [ ] Trophies
     - [ ] Beat 25 levels in a row
@@ -27,6 +27,9 @@
     - [ ] Small text font
     - [ ] Large font
     - [ ] Make functions based on current state/overlap drawing routines to cut down on duplication
+    - [ ] Add divider to leftmost toilet when < 7 toilets
+    - [ ] Fix lose text when quitting on purpose
+    - [ ] Add won game display to endcard
   9. [ ] Refactor
     - [ ] Update data struct
     - [ ] Move drawing routines to their own file
