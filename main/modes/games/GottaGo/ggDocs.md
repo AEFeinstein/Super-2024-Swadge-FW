@@ -15,10 +15,12 @@
   - [ ] Pause screen on selection/pop-up symbols to show what's going on
   - [ ] Add values to swadgepass
   - [ ] Display available swadgepass data
+  - [ ] Start selection in the center of the urinals
+  - [ ] Update 
 - Low Pri
   - [ ] Add trophies
   - [ ] Find/make a better font
   - [ ] Re-order data struct
   - [ ] Sounds
   - [ ] Tall toilet mode
-  - [ ] FIx partition image locations
+  - [ ] Fix partition image locations

@@ -36,9 +36,10 @@
 #define TIMER_BUFFER 1000000
 
 // Game
-#define READY_TIMEOUT 3000000  // 3 Secs
-#define MAX_TIMER_LEN 10000000 // 10 Seconds
-#define TIMER_CHANGE  27       // What fraction of the timer is removed each round
+#define READY_TIMEOUT  3000000  // 3 Secs
+#define MAX_TIMER_LEN  10000000 // 10 Seconds
+#define TIMER_CHANGE   27       // What fraction of the timer is removed each round
+#define SOLUTION_TIMER 2000000
 
 // Bathroom
 #define FLOOR_HEIGHT 40
@@ -166,7 +167,9 @@ static const cnfsFileIdx_t toiletImages[] = {
     GG_PEE_M_WSG,
     GG_PEE_L_WSG,
 };
-static const cnfsFileIdx_t uiImages[]  = {GG_STALL_ICON_WSG, GG_ARROW_WSG};
+static const cnfsFileIdx_t uiImages[] = {
+    GG_STALL_ICON_WSG, GG_ARROW_WSG, GG_X_WSG, GG_CHECK_WSG, GG_RING_WSG,
+};
 static const cnfsFileIdx_t npcImages[] = {
     GG_UPPER_BOD_WSG,   GG_LEGS_WSG,   GG_FEET_WSG,  GG_STINK_WSG,     GG_SHIRT_WSG,     GG_PANTS_WSG,
     GG_PANTS_SHORT_WSG, GG_SHORTS_WSG, GG_SKIRT_WSG, GG_ON_GROUND_WSG, GG_UNDERWEAR_WSG,
@@ -207,6 +210,7 @@ typedef enum
     GG_RULES,
     GG_READY,
     GG_GAME,
+    GG_CHOICE,
     GG_WIN,
     GG_LOSE,
     GG_HIGHSCORE,
@@ -306,6 +310,8 @@ typedef struct
     int stallInc;
     int numGames;
     bool pause;
+    bool stallUsed;
+    bool lose;
 
     // Bathroom
     wsg_t* backgroundImages;
@@ -353,8 +359,9 @@ static void drawHighScore(void);
 // Ready
 static void drawReady(int64_t elapsedUs);
 // Game
-static void drawGame(void);
+static void drawGame(bool ui);
 static void drawPause(void);
+static void drawSolution(void);
 // Win
 static void drawWin(void);
 // Lose
@@ -655,28 +662,39 @@ static void ggMainLoop(int64_t elapsedUs)
                         }
                         else
                         {
-                            end(ggd->toilets[ggd->selection].brokenBowl == 1
-                                    || ggd->toilets[ggd->selection].brokenDrain == 1
-                                    || ggd->toilets[ggd->selection].outOfOrder == 1
-                                    || ggd->toilets[ggd->selection].pluggedDrain == 1,
-                                false);
+                            ggd->lose      = ggd->toilets[ggd->selection].brokenBowl == 1
+                                             || ggd->toilets[ggd->selection].brokenDrain == 1
+                                             || ggd->toilets[ggd->selection].outOfOrder == 1
+                                             || ggd->toilets[ggd->selection].pluggedDrain == 1;
+                            ggd->stallUsed = false;
+                            ggd->state     = GG_CHOICE;
+                            ggd->timer     = 0;
                         }
                     }
                     else if (evt.button & PB_B)
                     {
                         if (ggd->pause)
                         {
-                            ggd->pause = false;
-                            end(true, false);
+                            ggd->pause     = false;
+                            ggd->lose      = true;
+                            ggd->stallUsed = false;
+                            ggd->state     = GG_CHOICE;
+                            ggd->timer     = 0;
                         }
                         else if (ggd->stallUses > 0)
                         {
                             ggd->stallUses--;
-                            end(false, true);
+                            ggd->lose      = false;
+                            ggd->stallUsed = true;
+                            ggd->state     = GG_CHOICE;
+                            ggd->timer     = 0;
                         }
                         else
                         {
-                            end(true, true);
+                            ggd->lose      = true;
+                            ggd->stallUsed = true;
+                            ggd->state     = GG_CHOICE;
+                            ggd->timer     = 0;
                         }
                     }
                     else if (evt.button & PB_LEFT)
@@ -727,11 +745,29 @@ static void ggMainLoop(int64_t elapsedUs)
                 ggd->timer += elapsedUs;
                 if (ggd->timer >= ggd->loseTimerMax)
                 {
-                    // end(true, false);
+                    ggd->lose      = true;
+                    ggd->stallUsed = false;
+                    ggd->state     = GG_CHOICE;
                 }
-                drawGame();
+                drawGame(true);
             }
 
+            break;
+        }
+        case GG_CHOICE:
+        {
+            while (checkButtonQueueWrapper(&evt))
+            {
+                // Speed up timer
+                ggd->timer += SECOND;
+            }
+            ggd->timer += elapsedUs;
+            if (ggd->timer >= SOLUTION_TIMER)
+            {
+                end(ggd->lose, ggd->stallUsed);
+            }
+            drawGame(false);
+            drawSolution();
             break;
         }
         case GG_WIN:
@@ -1046,7 +1082,6 @@ static void end(bool lose, bool wasStall)
         ggd->stallInc *= 2;
         ggd->stallInc += ggd->stallInc / 2;
     }
-
     // Compute score for each urinal
     int badness[7] = {0};
     calcToiletScore(badness);
@@ -1221,8 +1256,8 @@ static void calcToiletScore(int* values)
     {
         values[i] += temp[i];
     }
-    /* ESP_LOGI("GG", "Scores total:\n1: %d\n2: %d\n3: %d\n4: %d\n5: %d\n6: %d\n7: %d\n", values[0], values[1],
-       values[2], values[3], values[4], values[5], values[6]); */
+    ESP_LOGI("GG", "Scores total:\n1: %d\n2: %d\n3: %d\n4: %d\n5: %d\n6: %d\n7: %d\n", values[0], values[1], values[2],
+             values[3], values[4], values[5], values[6]);
 }
 
 static void saveToNVS()
@@ -1438,11 +1473,14 @@ static void drawReady(int64_t elapsedUs)
 }
 
 // Game
-static void drawGame()
+static void drawGame(bool ui)
 {
     drawBackground();
     drawToiletArray();
-    drawUI();
+    if (ui)
+    {
+        drawUI();
+    }
 }
 
 static void drawPause()
@@ -1452,6 +1490,74 @@ static void drawPause()
     int16_t xOff = 32;
     int16_t yOff = 64;
     drawTextWordWrap(&ggd->smallFont, c555, strings[17], &xOff, &yOff, TFT_WIDTH - 32, TFT_HEIGHT);
+}
+
+static void drawSolution()
+{
+    int values[7] = {0};
+    calcToiletScore(values);
+    int best      = values[0];
+    int bestUIPos = 0;
+    for (int idx = 1; idx < ggd->numActive; idx++)
+    {
+        if (ggd->toilets[idx].npc.active == 1)
+        {
+            continue;
+        }
+        else
+        {
+            if (best < values[idx]
+                && !(ggd->toilets[ggd->selection].brokenBowl == 1 || ggd->toilets[ggd->selection].brokenDrain == 1
+                     || ggd->toilets[ggd->selection].outOfOrder == 1 || ggd->toilets[ggd->selection].pluggedDrain == 1))
+            {
+                best      = values[idx];
+                bestUIPos = idx;
+            }
+        }
+    }
+    int worst      = values[0];
+    int worstUIPos = 0;
+    for (int idx = 1; idx < ggd->numActive; idx++)
+    {
+        if (ggd->toilets[idx].npc.active == 1)
+        {
+            continue;
+        }
+        else
+        {
+            if (worst > values[idx])
+            {
+                worst      = values[idx];
+                worstUIPos = idx;
+            }
+        }
+    }
+    int xStart
+        = (URINAL_MAX_WIDTH - (((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) * ggd->numActive))
+          / 2;
+    // Draw a check over best, draw an x over worst. If they're equal draw a circle
+    if (best == worst)
+    {
+        for (int idx = 0; idx < ggd->numActive; idx++)
+        {
+            if (ggd->toilets[idx].npc.active)
+            {
+                continue;
+            }
+            drawWsgSimpleHalf(&ggd->uiImages[4],
+                              idx * ((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1,
+                              140);
+        }
+    }
+    else
+    {
+        drawWsgSimpleHalf(
+            &ggd->uiImages[2],
+            bestUIPos * ((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1, 140);
+        drawWsgSimpleHalf(
+            &ggd->uiImages[3],
+            worstUIPos * ((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1, 140);
+    }
 }
 
 // Win
