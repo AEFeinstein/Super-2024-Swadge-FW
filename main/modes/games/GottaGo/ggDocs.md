@@ -15,11 +15,11 @@
   - [x] Pause screen on selection/pop-up symbols to show what's going on
   - [ ] Add values to swadgepass
   - [ ] Display available swadgepass data
-  - [ ] Start selection in the center of the urinals
+  - [x] Start selection in the center of the urinals
 - Low Pri
   - [ ] Add trophies
   - [ ] Find/make a better font
   - [ ] Re-order data struct
   - [ ] Sounds
-  - [ ] Tall toilet mode
   - [ ] Fix partition image locations
+  - [ ] Garlic needs to move with people, not urinal height

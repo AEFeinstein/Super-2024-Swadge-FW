@@ -171,7 +171,7 @@ static const cnfsFileIdx_t toiletImages[] = {
     GG_PEE_L_WSG,
 };
 static const cnfsFileIdx_t uiImages[] = {
-    GG_STALL_ICON_WSG, GG_ARROW_WSG, GG_X_WSG, GG_CHECK_WSG, GG_RING_WSG,
+    GG_STALL_ICON_WSG, GG_ARROW_WSG, GG_X_WSG, GG_CHECK_WSG,
 };
 static const cnfsFileIdx_t npcImages[] = {
     GG_UPPER_BOD_WSG,   GG_LEGS_WSG,   GG_FEET_WSG,  GG_STINK_WSG,     GG_SHIRT_WSG,     GG_PANTS_WSG,
@@ -1026,18 +1026,8 @@ static void gameInit()
         }
     }
 
-    // 2 points to add puddle
-
-    // 1 point to have half dividers
-    // 2 points for full removal
-
-    // RULES:
-    // - Spend diff points to add things
-    // - At least 2 options + stall no matter what
-    // - Worse things require more points to use
-
     // Set selection to a valid option
-    ggd->selection = 0;
+    ggd->selection = ggd->numActive / 2;
     while (ggd->toilets[ggd->selection].npc.active == 1)
     {
         ggd->selection++;
@@ -1263,8 +1253,8 @@ static void calcToiletScore(int* values)
     {
         values[i] += temp[i];
     }
-    /* ESP_LOGI("GG", "Scores total:\n1: %d\n2: %d\n3: %d\n4: %d\n5: %d\n6: %d\n7: %d\n", values[0], values[1], values[2],
-             values[3], values[4], values[5], values[6]); */
+    /* ESP_LOGI("GG", "Scores total:\n1: %d\n2: %d\n3: %d\n4: %d\n5: %d\n6: %d\n7: %d\n", values[0], values[1],
+       values[2], values[3], values[4], values[5], values[6]); */
 }
 
 static void saveToNVS()
@@ -1517,9 +1507,10 @@ static void drawSolution()
         {
             if (best > values[idx])
             {
-                if (ggd->toilets[ggd->selection].brokenBowl == 1 || ggd->toilets[ggd->selection].brokenDrain == 1
-                    || ggd->toilets[ggd->selection].outOfOrder == 1 || ggd->toilets[ggd->selection].pluggedDrain == 1)
+                if (ggd->toilets[idx].brokenBowl == 1 || ggd->toilets[idx].brokenDrain == 1
+                    || ggd->toilets[idx].outOfOrder == 1 || ggd->toilets[idx].pluggedDrain == 1)
                 {
+                    worstUIPos[idx] = 1;
                 }
                 else
                 {
@@ -1553,36 +1544,19 @@ static void drawSolution()
     int xStart
         = (URINAL_MAX_WIDTH - (((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) * ggd->numActive))
           / 2;
-    // Draw a check over best, draw an x over worst. If they're equal draw a circle
-    if (best == worst)
+    for (int idx = 0; idx < ggd->numActive; idx++)
     {
-        for (int idx = 0; idx < ggd->numActive; idx++)
+        if (bestUIPos[idx] == 1)
         {
-            if (ggd->toilets[idx].npc.active)
-            {
-                continue;
-            }
-            drawWsgSimpleHalf(&ggd->uiImages[4],
+            drawWsgSimpleHalf(&ggd->uiImages[3],
                               idx * ((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1,
                               140);
         }
-    }
-    else
-    {
-        for (int idx = 0; idx < ggd->numActive; idx++)
+        if (worstUIPos[idx] == 1 && worstUIPos[idx] != bestUIPos[idx])
         {
-            if (bestUIPos[idx] == 1)
-            {
-                drawWsgSimpleHalf(
-                    &ggd->uiImages[3],
-                    idx * ((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1, 140);
-            }
-            if (worstUIPos[idx] == 1)
-            {
-                drawWsgSimpleHalf(
-                    &ggd->uiImages[2],
-                    idx * ((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1, 140);
-            }
+            drawWsgSimpleHalf(&ggd->uiImages[2],
+                              idx * ((ggd->numActive == MAX_TOILETS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1,
+                              140);
         }
     }
     drawWsg(&ggd->uiImages[1],
