@@ -239,7 +239,12 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
     {
         case OBJ_ENEMY_BOX:
         {
-            newObj->c.sprite = loadTexture(ray, BLOCK_WSG, OBJ_ENEMY_BOX);
+            rayInitEnemyBox(ray, newObj);
+            break;
+        }
+        case OBJ_ENEMY_BUSH:
+        {
+            rayInitEnemyBush(ray, newObj);
             break;
         }
         default:
@@ -259,9 +264,6 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
     newObj->c.bound.box.h = TO_FX_FRAC(newObj->c.sprite->h, CELL_SIZE);
     // Don't set radius
     newObj->c.spriteMirrored = false;
-
-    // Set initial enemy state
-    newObj->health = 100;
 
     // Add it to the linked list
     push(&ray->enemies, newObj);
