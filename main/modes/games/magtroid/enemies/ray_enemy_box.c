@@ -1,7 +1,27 @@
-#include "ray_enemy_block.h"
+#include "ray_enemy_box.h"
 #include "ray_object.h"
+#include "ray_tex_manager.h"
 
-void rayEnemyBlockCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY)
+void rayEnemyBoxCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY);
+
+void rayInitEnemyBox(ray_t* ray, rayEnemy_t* e)
+{
+    // Box has one texture
+    e->c.sprite = loadTexture(ray, OBJ_ENEMY_BOX_WSG, OBJ_ENEMY_BOX);
+
+    // Box has 1hp to not die
+    e->health = 1;
+
+    // No enemy-specific state
+    e->state = NULL;
+
+    // Set function pointers
+    e->mainFn      = NULL;
+    e->collisionFn = rayEnemyBoxCheckPlayerCollision;
+    e->getShotFn   = NULL;
+}
+
+void rayEnemyBoxCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY)
 {
     rectangle_t enemyBB = rayGetObjBB(&enemy->c);
     if (rectRectIntersection(player, enemyBB, NULL))

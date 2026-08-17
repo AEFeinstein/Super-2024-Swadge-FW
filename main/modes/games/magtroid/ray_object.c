@@ -520,9 +520,8 @@ void checkRayCollisions(ray_t* ray)
             // Check for a collision between bounding box and sword
             if (rectLineIntersection(rayGetObjBB(&enemy->c), sword, NULL))
             {
-                printf("HIT!!\n");
                 // TODO only count once
-                rayEnemyGetShot(ray, enemy, OBJ_BULLET_ARROW);
+                rayEnemyGetShot(ray, enemy, OBJ_BULLET_SWORD);
             }
         }
 

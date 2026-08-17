@@ -122,8 +122,8 @@ class tileType(Enum):
     BG_DOOR_31 = (BG | DOOR | 31)
     # Self and Enemies
     OBJ_ENEMY_START_POINT = (OBJ | ENEMY | 0)
-    OBJ_ENEMY_1 = (OBJ | ENEMY | 1)
-    OBJ_ENEMY_2 = (OBJ | ENEMY | 2)
+    OBJ_ENEMY_BOX  = (OBJ | ENEMY | 1)
+    OBJ_ENEMY_BUSH = (OBJ | ENEMY | 2)
     OBJ_ENEMY_3 = (OBJ | ENEMY | 3)
     OBJ_ENEMY_4 = (OBJ | ENEMY | 4)
     OBJ_ENEMY_5 = (OBJ | ENEMY | 5)
@@ -162,11 +162,11 @@ class tileType(Enum):
     OBJ_ITEM_BOOMERANG  = (OBJ | ITEM | 5)
     OBJ_ITEM_TURNTABLES = (OBJ | ITEM | 6)
     OBJ_ITEM_LULLABY    = (OBJ | ITEM | 7)
-    OBJ_ITEM_8 = (OBJ | ITEM | 8)
-    OBJ_ITEM_9 = (OBJ | ITEM | 9)
-    OBJ_ITEM_10 = (OBJ | ITEM | 10)
-    OBJ_ITEM_11 = (OBJ | ITEM | 11)
-    OBJ_ITEM_12 = (OBJ | ITEM | 12)
+    OBJ_ITEM_HEART      = (OBJ | ITEM | 8)
+    OBJ_ITEM_MPOINT_1   = (OBJ | ITEM | 9)
+    OBJ_ITEM_MPOINT_5   = (OBJ | ITEM | 10)
+    OBJ_ITEM_MPOINT_10  = (OBJ | ITEM | 11)
+    OBJ_ITEM_MPOINT_20  = (OBJ | ITEM | 12)
     OBJ_ITEM_13 = (OBJ | ITEM | 13)
     OBJ_ITEM_14 = (OBJ | ITEM | 14)
     OBJ_ITEM_15 = (OBJ | ITEM | 15)
@@ -370,11 +370,11 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ITEM_BOOMERANG,
         tileType.OBJ_ITEM_TURNTABLES,
         tileType.OBJ_ITEM_LULLABY,
-        tileType.OBJ_ITEM_8,
-        tileType.OBJ_ITEM_9,
-        tileType.OBJ_ITEM_10,
-        tileType.OBJ_ITEM_11,
-        tileType.OBJ_ITEM_12,
+        tileType.OBJ_ITEM_HEART,
+        tileType.OBJ_ITEM_MPOINT_1,
+        tileType.OBJ_ITEM_MPOINT_5,
+        tileType.OBJ_ITEM_MPOINT_10,
+        tileType.OBJ_ITEM_MPOINT_20,
         tileType.OBJ_ITEM_13,
         tileType.OBJ_ITEM_14,
         tileType.OBJ_ITEM_15,
@@ -397,8 +397,8 @@ objTiles: list[list[tileType]] = [
     ],
     [
         tileType.OBJ_ENEMY_START_POINT,
-        tileType.OBJ_ENEMY_1,
-        tileType.OBJ_ENEMY_2,
+        tileType.OBJ_ENEMY_BOX,
+        tileType.OBJ_ENEMY_BUSH,
         tileType.OBJ_ENEMY_3,
         tileType.OBJ_ENEMY_4,
         tileType.OBJ_ENEMY_5,

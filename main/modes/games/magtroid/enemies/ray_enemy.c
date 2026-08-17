@@ -4,7 +4,6 @@
 
 #include "ray_script.h"
 #include "ray_enemy.h"
-#include "ray_enemy_block.h"
 
 //==============================================================================
 // Function Prototypes
@@ -41,46 +40,27 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
             // save the next node
             node_t* nextNode = currentNode->next;
 
-            // TODO call function to randomly drop a pickup
-            // switch (esp_random() % 4)
-            // {
-            //     case 0:
-            //     {
-            //         // 25% health first
-            //         if (ray->p.i.health != ray->p.i.maxHealth)
-            //         {
-            //             rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_ENERGY, 0x100, enemy->c.posX, enemy->c.posY);
-            //         }
-            //         // Only create if missiles are unlocked and health is at max
-            //         else if ((ray->p.i.missileLoadOut) && (ray->p.i.numMissiles != ray->p.i.maxNumMissiles))
-            //         {
-            //             rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_MISSILE, 0x100, enemy->c.posX, enemy->c.posY);
-            //         }
-            //         break;
-            //     }
-            //     case 1:
-            //     {
-            //         // 25% missiles first, if unlocked
-            //         if ((ray->p.i.missileLoadOut) && (ray->p.i.numMissiles != ray->p.i.maxNumMissiles))
-            //         {
-            //             rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_MISSILE, 0x100, enemy->c.posX, enemy->c.posY);
-            //         }
-            //         // Only create if missiles are at max
-            //         else if (ray->p.i.health != ray->p.i.maxHealth)
-            //         {
-            //             rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_ENERGY, 0x100, enemy->c.posX, enemy->c.posY);
-            //         }
-            //         break;
-            //     }
-            //     default:
-            //     {
-            //         // No drop
-            //         break;
-            //     }
-            // }
+            // Maybe create an item after death
+            rayMapCellType_t dropType = enemyDropAfterDeath(ray, enemy);
+            switch (dropType)
+            {
+                case OBJ_ITEM_EWI ... OBJ_ITEM_31:
+                {
+                    rayCreateCommonObj(ray, dropType, 0x100, enemy->c.posX, enemy->c.posY);
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
 
             // Unlink and free
             removeEntry(&ray->enemies, currentNode);
+            if (enemy->state)
+            {
+                free(enemy->state);
+            }
             free(enemy);
 
             // Set the next node
@@ -104,7 +84,10 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
  */
 void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
-    // TODO call function when enemy is damaged
+    if (enemy->getShotFn)
+    {
+        enemy->getShotFn(ray, enemy, bullet);
+    }
 }
 
 /**
@@ -117,7 +100,27 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
  */
 static bool animateEnemy(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 {
-    return enemy->mainFn(ray, enemy, elapsedUs);
+    if (enemy->mainFn)
+    {
+        return enemy->mainFn(ray, enemy, elapsedUs);
+    }
+    return false;
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param ray
+ * @param enemy
+ * @return rayMapCellType_t
+ */
+rayMapCellType_t enemyDropAfterDeath(ray_t* ray, rayEnemy_t* enemy)
+{
+    if (enemy->dropAfterDeathFn)
+    {
+        return enemy->dropAfterDeathFn(ray, enemy);
+    }
+    return EMPTY;
 }
 
 /**
@@ -131,5 +134,8 @@ static bool animateEnemy(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
  */
 void rayEnemyCheckCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY)
 {
-    enemy->collisionFn(ray, enemy, player, deltaX, deltaY);
+    if (enemy->collisionFn)
+    {
+        enemy->collisionFn(ray, enemy, player, deltaX, deltaY);
+    }
 }
