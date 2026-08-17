@@ -16,6 +16,7 @@
   - [ ] Add values to swadgepass
   - [ ] Display available swadgepass data
   - [x] Start selection in the center of the urinals
+  - [ ] Alternate control scheme
 - Low Pri
   - [ ] Add trophies
   - [ ] Find/make a better font
@@ -23,3 +24,4 @@
   - [ ] Sounds
   - [ ] Fix partition image locations
   - [ ] Garlic needs to move with people, not urinal height
+  - [ ] Update tutorial

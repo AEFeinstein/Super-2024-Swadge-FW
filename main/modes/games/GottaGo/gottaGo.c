@@ -171,7 +171,10 @@ static const cnfsFileIdx_t toiletImages[] = {
     GG_PEE_L_WSG,
 };
 static const cnfsFileIdx_t uiImages[] = {
-    GG_STALL_ICON_WSG, GG_ARROW_WSG, GG_X_WSG, GG_CHECK_WSG,
+    GG_STALL_ICON_WSG,
+    GG_ARROW_WSG,
+    GG_X_WSG,
+    GG_CHECK_WSG,
 };
 static const cnfsFileIdx_t npcImages[] = {
     GG_UPPER_BOD_WSG,   GG_LEGS_WSG,   GG_FEET_WSG,  GG_STINK_WSG,     GG_SHIRT_WSG,     GG_PANTS_WSG,
@@ -740,6 +743,39 @@ static void ggMainLoop(int64_t elapsedUs)
                     }
                 }
             }
+            // FIXME: Sometimes cannot select rightmost urinal with this method. Needs investigating.
+            /* linearTouch_t touch[2] = {0};
+            getTouchLinear(touch, ARRAY_SIZE(touch));
+            if (touch[0].touched)
+            {
+                int pos = touch[0].position;
+                // bool validPos[7] = {false};
+                int numValid = 0;
+                for (int idx = 0; idx < ggd->numActive; idx++)
+                {
+                    if (!ggd->toilets[idx].npc.active)
+                    {
+                        // validPos[idx] = true;
+                        numValid++;
+                    }
+                }
+                int section    = 1024 / numValid;
+                int option     = pos / section;
+                ggd->selection = 0;
+                while (option > 0)
+                {
+                    ggd->selection++;
+                    while (ggd->toilets[ggd->selection].npc.active != 0)
+                    {
+                        ggd->selection++;
+                    }
+                    option--;
+                }
+                while (ggd->toilets[ggd->selection].npc.active != 0)
+                {
+                    ggd->selection++;
+                }
+            } */
             // Timer
             if (ggd->pause)
             {
