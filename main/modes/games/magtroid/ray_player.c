@@ -70,8 +70,8 @@ bool initializePlayer(ray_t* ray)
         memset(&ray->p.i, 0, sizeof(ray->p.i));
 
         // Set initial health
-        ray->p.i.maxHealth = GAME_START_HEALTH;
-        ray->p.i.health    = GAME_START_HEALTH;
+        ray->p.maxHealth = GAME_START_HEALTH;
+        ray->p.health    = GAME_START_HEALTH;
     }
 
     // Load sprites
@@ -81,7 +81,7 @@ bool initializePlayer(ray_t* ray)
     loadTexture(ray, OBJ_BULLET_BOOMERANG_WSG, OBJ_BULLET_BOOMERANG);
 
     // Always reload with full health
-    ray->p.i.health = ray->p.i.maxHealth;
+    ray->p.health = ray->p.maxHealth;
 
     // Initial touch state is negative
     ray->ps.ts.initialTouchPos = -1;
@@ -491,7 +491,35 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
             inventory->haveDoriasLullaby = true;
             break;
         }
-        // TODO hearts, mpoints, keys, heart pieces, ammo
+        case OBJ_ITEM_HEART:
+        {
+            if (ray->p.health < ray->p.maxHealth)
+            {
+                ray->p.health++;
+            }
+            break;
+        }
+        case OBJ_ITEM_MPOINT_1:
+        {
+            ray->p.mpoints += 1;
+            break;
+        }
+        case OBJ_ITEM_MPOINT_5:
+        {
+            ray->p.mpoints += 5;
+            break;
+        }
+        case OBJ_ITEM_MPOINT_10:
+        {
+            ray->p.mpoints += 10;
+            break;
+        }
+        case OBJ_ITEM_MPOINT_20:
+        {
+            ray->p.mpoints += 20;
+            break;
+        }
+        // TODO keys, heart pieces, ammo
         default:
         {
             // Don't care about other types
@@ -575,7 +603,7 @@ void rayPlayerCheckFloorEffect(ray_t* ray, uint32_t elapsedUs)
 void rayPlayerDecrementHealth(ray_t* ray, int32_t health)
 {
     // Decrement health
-    ray->p.i.health -= health;
+    ray->p.health -= health;
 
     if (health > 0)
     {
@@ -587,7 +615,7 @@ void rayPlayerDecrementHealth(ray_t* ray, int32_t health)
     ray->ledHue = 0;
 
     // Check for death
-    if (0 >= ray->p.i.health)
+    if (0 >= ray->p.health)
     {
         // load the last save
         rayStartGame();
@@ -595,10 +623,10 @@ void rayPlayerDecrementHealth(ray_t* ray, int32_t health)
         // Show the death screen
         rayShowDeathScreen(ray);
     }
-    else if (ray->p.i.health > ray->p.i.maxHealth)
+    else if (ray->p.health > ray->p.maxHealth)
     {
         // Never go over the max health
-        ray->p.i.health = ray->p.i.maxHealth;
+        ray->p.health = ray->p.maxHealth;
     }
 }
 
