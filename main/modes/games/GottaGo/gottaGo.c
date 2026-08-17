@@ -1467,25 +1467,25 @@ static void drawHighScore()
     {
         outVal = 0;
     }
-    snprintf(buffer, sizeof(buffer) - 1, "Highest number of games won: %d", outVal);
+    snprintf(buffer, sizeof(buffer) - 1, "Highest number of games won: %" PRId32, outVal);
     drawText(&ggd->smallFont, c000, buffer, RULES_X_BORDER, 60);
     if (!readNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[2], &outVal))
     {
         outVal = 0;
     }
-    snprintf(buffer, sizeof(buffer) - 1, "Highest adjusted score: %d", outVal);
+    snprintf(buffer, sizeof(buffer) - 1, "Highest adjusted score: %" PRId32, outVal);
     drawText(&ggd->smallFont, c000, buffer, RULES_X_BORDER, 80);
     if (!readNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[3], &outVal))
     {
         outVal = 0;
     }
-    snprintf(buffer, sizeof(buffer) - 1, "Highest total score: %d", outVal);
+    snprintf(buffer, sizeof(buffer) - 1, "Highest total score: %" PRId32, outVal);
     drawText(&ggd->smallFont, c000, buffer, RULES_X_BORDER, 100);
     if (!readNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[4], &outVal))
     {
         outVal = 0;
     }
-    snprintf(buffer, sizeof(buffer) - 1, "Highest average: %d", outVal);
+    snprintf(buffer, sizeof(buffer) - 1, "Highest average: %" PRId32, outVal);
     drawText(&ggd->smallFont, c000, buffer, RULES_X_BORDER, 120);
 }
 
@@ -1800,19 +1800,22 @@ static void drawToilet(ggToilet_t* t, int x, int y)
         default:
         {
             int yOff = y + DIVIDER_TOP_OFFSET - ((t->small == 1) ? SMALL_URINAL_OFFSET : 0);
-            drawWsgSimple(&ggd->toiletImages[18], x + DIVIDER_X_OFFSET, yOff);
+            drawWsgSimple(&ggd->toiletImages[18],
+                          x + ((ggd->numActive == MAX_TOILETS) ? DIVIDER_X_OFFSET : DIVIDER_X_OFFSET + 2), yOff);
             break;
         }
         case GG_DIV_TOP:
         {
             int yOff = y + DIVIDER_TOP_OFFSET - ((t->small == 1) ? SMALL_URINAL_OFFSET : 0);
-            drawWsgSimple(&ggd->toiletImages[19], x + DIVIDER_X_OFFSET, yOff);
+            drawWsgSimple(&ggd->toiletImages[19],
+                          x + ((ggd->numActive == MAX_TOILETS) ? DIVIDER_X_OFFSET : DIVIDER_X_OFFSET + 2), yOff);
             break;
         }
         case GG_DIV_BOTTOM:
         {
             int yOff = y + DIVIDER_BOT_OFFSET - ((t->small == 1) ? SMALL_URINAL_OFFSET : 0);
-            drawWsgSimple(&ggd->toiletImages[20], x + DIVIDER_X_OFFSET, yOff);
+            drawWsgSimple(&ggd->toiletImages[20],
+                          x + ((ggd->numActive == MAX_TOILETS) ? DIVIDER_X_OFFSET : DIVIDER_X_OFFSET + 2), yOff);
             break;
         }
         case GG_DIV_NONE:
@@ -1920,7 +1923,7 @@ static void drawNPC(ggToilet_t* t, int x, int y)
     // Stink
     if (t->npc.stink == 1)
     {
-        drawWsgSimple(&ggd->npcImages[3], x + 8, y - 44);
+        drawWsgSimple(&ggd->npcImages[3], x + 8, yOff - 26);
     }
 }
 
