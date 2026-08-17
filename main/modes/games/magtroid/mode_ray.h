@@ -19,44 +19,21 @@
 #define RAY_BUTTON_LOCKOUT_US 1000000
 
 /** The number of total maps */
-#define NUM_MAPS 6
+#define NUM_MAPS 4
 /** The number of keys per map */
 #define NUM_KEYS 3
-/** The number of missile pickups per map */
-#define MISSILE_UPGRADES_PER_MAP 3
 
 /** The player's starting max health */
-#define GAME_START_HEALTH 100
-/** How much health is gained for each energy tank found */
-#define HEALTH_PER_E_TANK 100
-/** The number of energy tank pickups per map */
-#define E_TANKS_PER_MAP 1
-/** The player's total maximum possible health */
-#define MAX_HEALTH_EVER (GAME_START_HEALTH + (NUM_MAPS * E_TANKS_PER_MAP * HEALTH_PER_E_TANK))
-
-/** The maximum number of missiles possible */
-#define MAX_MISSILES_EVER 99
+#define GAME_START_HEALTH 3
 
 /** Microseconds per effect when standing in lava or on heal */
 #define US_PER_FLOOR_EFFECT 500000
 
-/** Microseconds to charge the charge beam */
-#define CHARGE_TIME_US 1048576
-
 /** The number of bullets tracked at a given point in time */
 #define MAX_RAY_BULLETS 32
 
-/** The time to swap out and swap in a gun, in microseconds */
-#define LOADOUT_TIMER_US (1 << 17),
-
 /** The blink time for pause and dialog items */
 #define BLINK_US 500000
-
-/** The number of distinct enemies */
-#define NUM_ENEMIES (OBJ_ENEMY_BOSS - OBJ_ENEMY_NORMAL + 1),
-
-/** The time in uS for an enemy to warp in*/
-#define E_WARP_TIME 1000000
 
 /**
  * @brief Helper macro to check if a cell is of a given type
@@ -200,7 +177,7 @@ typedef enum __attribute__((packed))
     // Self and Enemies
     OBJ_ENEMY_START_POINT = (OBJ | ENEMY | 0),
     OBJ_ENEMY_BOX         = (OBJ | ENEMY | 1),
-    OBJ_ENEMY_2           = (OBJ | ENEMY | 2),
+    OBJ_ENEMY_BUSH        = (OBJ | ENEMY | 2),
     OBJ_ENEMY_3           = (OBJ | ENEMY | 3),
     OBJ_ENEMY_4           = (OBJ | ENEMY | 4),
     OBJ_ENEMY_5           = (OBJ | ENEMY | 5),
@@ -239,11 +216,11 @@ typedef enum __attribute__((packed))
     OBJ_ITEM_BOOMERANG  = (OBJ | ITEM | 5),
     OBJ_ITEM_TURNTABLES = (OBJ | ITEM | 6),
     OBJ_ITEM_LULLABY    = (OBJ | ITEM | 7),
-    OBJ_ITEM_8          = (OBJ | ITEM | 8),
-    OBJ_ITEM_9          = (OBJ | ITEM | 9),
-    OBJ_ITEM_10         = (OBJ | ITEM | 10),
-    OBJ_ITEM_11         = (OBJ | ITEM | 11),
-    OBJ_ITEM_12         = (OBJ | ITEM | 12),
+    OBJ_ITEM_HEART      = (OBJ | ITEM | 8),
+    OBJ_ITEM_MPOINT_1   = (OBJ | ITEM | 9),
+    OBJ_ITEM_MPOINT_5   = (OBJ | ITEM | 10),
+    OBJ_ITEM_MPOINT_10  = (OBJ | ITEM | 11),
+    OBJ_ITEM_MPOINT_20  = (OBJ | ITEM | 12),
     OBJ_ITEM_13         = (OBJ | ITEM | 13),
     OBJ_ITEM_14         = (OBJ | ITEM | 14),
     OBJ_ITEM_15         = (OBJ | ITEM | 15),
@@ -267,7 +244,7 @@ typedef enum __attribute__((packed))
     OBJ_BULLET_ARROW     = (OBJ | BULLET | 0),
     OBJ_BULLET_BOMB      = (OBJ | BULLET | 1),
     OBJ_BULLET_BOOMERANG = (OBJ | BULLET | 2),
-    OBJ_BULLET_3         = (OBJ | BULLET | 3),
+    OBJ_BULLET_SWORD     = (OBJ | BULLET | 3),
     OBJ_BULLET_4         = (OBJ | BULLET | 4),
     OBJ_BULLET_5         = (OBJ | BULLET | 5),
     OBJ_BULLET_6         = (OBJ | BULLET | 6),
@@ -617,6 +594,8 @@ struct rayEnemy;
 typedef bool (*rayEnemyMain_t)(struct rayGame* ray, struct rayEnemy* enemy, uint32_t elapsedUs);
 typedef void (*rayEnemyCheckCollision_t)(struct rayGame* ray, struct rayEnemy* enemy, rectangle_t player, q24_8* deltaX,
                                          q24_8* deltaY);
+typedef void (*rayEnemyGetShot_t)(struct rayGame* ray, struct rayEnemy* enemy, rayMapCellType_t bullet);
+typedef rayMapCellType_t (*rayEnemyDropAfterDeath_t)(struct rayGame* ray, struct rayEnemy* enemy);
 
 /**
  * @brief Data for an enemy in the map. It has common data, state tracking, and textures
@@ -627,6 +606,8 @@ typedef struct rayEnemy
     int32_t health;   ///< The enemy's health
     rayEnemyMain_t mainFn;
     rayEnemyCheckCollision_t collisionFn;
+    rayEnemyGetShot_t getShotFn;
+    rayEnemyDropAfterDeath_t dropAfterDeathFn;
     void* state; ///< Enemy specific state
 } rayEnemy_t;
 
@@ -635,9 +616,6 @@ typedef struct rayEnemy
  */
 typedef struct
 {
-    // Current status
-    int32_t health;    ///< The player's current health
-    int32_t maxHealth; ///< The player's current max health.
     // Persistent keys (TODO)
     rayKeyState_t keys[NUM_MAPS][NUM_KEYS]; ///< The number of small keys the player currently has
     // Persistent inventory items
@@ -663,7 +641,11 @@ typedef struct
     q24_8 dirY;                 ///< The player's Y direction
     int32_t mapId;              ///< The ID of the current map
     bool mapsVisited[NUM_MAPS]; ///< Booleans for each map visited
-    rayInventory_t i;           ///< All the players items
+    // Current status
+    int32_t health;    ///< The player's current health
+    int32_t maxHealth; ///< The player's current max health.
+    rayInventory_t i;  ///< All the players items
+    uint32_t mpoints;  ///< Currency
 } rayPlayer_t;
 
 /**
