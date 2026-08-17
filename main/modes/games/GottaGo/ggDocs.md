@@ -2,33 +2,39 @@
 
 ## TODO
 
-- High Pri:
-  - [x] Fix game timer
-  - [x] Add in difficulty progression/game state
-  - [x] Fix high score mode
-  - [x] Update it so using a stall gives you half points
-  - [x] Get new stall things after so many missions
-  - [x] Reset menu selection
-  - [x] Remove return to swadge functionality
-  - [ ] Update rule weights to make more sense
-    - [ ] Pee puddles need to be a lot more heavily penalized
-    - [ ] Stink need to be more penalized
-    - [ ] Able to observe NPCs from further away
-    - [ ] Always pick the non-small toilet if possible
-- Med Pri
-  - [x] Change lose text to be based on loss condition
-  - [x] Pause screen on selection/pop-up symbols to show what's going on
-  - [ ] Add values to swadgepass
-  - [ ] Display available swadgepass data
-  - [x] Start selection in the center of the urinals
-  - [ ] Alternate control scheme
-  - [ ] Add trophies
-- Low Pri
-  - [ ] Find/make a better font
-  - [ ] Re-order data struct
-  - [ ] Sounds
-    - [ ] UI
-    - [ ] BGM
-  - [x] Fix partition image locations
-  - [x] Garlic needs to move with people, not urinal height
-  - [ ] Update tutorial
+  1. [x] Add auto flush as an option
+  2. [ ] Update scoring mechanics
+    - [x] Adjust score penalties
+    - [ ] Update calculations
+      - [ ] Change score for using a stall
+      - [ ] Diagnose/fix inability to get perfect scores (<1 sec, correct urinal)
+  3. [ ] Fix touch controls
+  4. [ ] Trophies
+    - [ ] Beat 25 levels in a row
+    - [ ] Beat 50 levels in a row
+    - [ ] Beat 15+ levels with a Average of 100%
+    - [ ] When all Urinals are occupied or Broken, use a Stall to continue
+    - [ ] Attempt to use a stall when there's no uses left
+    - [ ] Pick the worst available option 5x in a row
+    - [ ] Activate helper mode (hidden trophy)
+    - [ ] Find Manifesto (hidden trophy)
+  5. [ ] Swadgepass
+    - [ ] Add to packet
+    - [ ] High Score table
+  6. [ ] Toggle tutorial/helper mode
+  7. [ ] Tutorial update
+  8. [ ] Update visuals
+    - [ ] Small text font
+    - [ ] Large font
+    - [ ] Make functions based on current state/overlap drawing routines to cut down on duplication
+  9. [ ] Refactor
+    - [ ] Update data struct
+    - [ ] Move drawing routines to their own file
+    - [ ] Move all game functions (Score, draw, init, etc) to their own file
+    - [ ] Use references to cut down on stupid
+    - [ ] Rename functions/vars/etc to be less stupid
+  10. Sounds
+    - [ ] BGM (Waiting on theme team)
+    - [ ] SFX
+      - [ ] Move
+      - [ ] Select

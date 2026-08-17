@@ -41,6 +41,19 @@
 #define TIMER_CHANGE   27       // What fraction of the timer is removed each round
 #define SOLUTION_TIMER 2000000
 
+// Scoring
+#define BASE_NPC         200
+#define WEIRD_ADJUSTMENT 100
+#define PUDDLE_SMALL     100
+#define PUDDLE_MEDIUM    200
+#define PUDDLE_LARGE     300
+#define BROKEN_DIVIDER   50
+#define MISSING_DIVIDER  100
+#define AUTOFLUSH        -10
+#define MINOR_ISSUE      50
+#define MAJOR_ISSUE      300 // End the game, so low score
+#define SMALL_TOILET     200 // Don't used the ADA toilet you whackjob
+
 // Bathroom
 #define FLOOR_HEIGHT 40
 
@@ -347,7 +360,8 @@ static void initNPC(ggToilet_t* t, bool active);
 static void gameInit(void);
 static void initRandomNPC(ggToilet_t* t);
 static void end(bool lose, bool wasStall);
-static void calcToiletScore(int* values);
+static void calcToiletScore(int* value);
+static int calcNPCScore(ggNPC_t* n, int distance);
 static void saveToNVS(void);
 
 // Drawing
@@ -810,7 +824,7 @@ static void ggMainLoop(int64_t elapsedUs)
                 end(ggd->lose, ggd->stallUsed);
             }
             drawGame(false);
-            drawSolution();
+            // drawSolution();
             break;
         }
         case GG_WIN:
@@ -902,6 +916,15 @@ static void gameInit()
     ggd->numActive = 3 + (esp_random() % (MIN(ggd->numGames / 4, 4) + 1));
     clearToilets();
     int points = ggd->numGames;
+    // Add points for autoSensor
+    for (int idx = 0; idx < ggd->numActive; idx++)
+    {
+        if (esp_random() % 4 == 0)
+        {
+            points++;
+            ggd->toilets[idx].autoFlush = 1;
+        }
+    }
     // Attempt to add NPC
     int maxNPCs = ggd->numActive - 2;
     for (int idx = 0; idx < maxNPCs; idx++)
@@ -1155,22 +1178,129 @@ static void end(bool lose, bool wasStall)
     ggd->state = GG_WIN;
 }
 
-static void calcToiletScore(int* values)
+static void calcToiletScore(int* value)
 {
-    // Conditional
+    int pick[7]   = {0}; // Score this urinal has due to issues
+    int nextTo[7] = {0}; // nextTo: Score this urinal receives from neighbors
+
+    // NPCs
     for (int idx = 0; idx < ggd->numActive; idx++)
     {
-        // Toilet
-        values[idx] += (ggd->toilets[idx].autoFlush == 1) ? -10 : 0;
-        values[idx] += (ggd->toilets[idx].graffiti > 0) ? 10 : 0;
-        values[idx] += (ggd->toilets[idx].cracks > 0) ? 15 : 0;
-        values[idx] += (ggd->toilets[idx].waterLeak == 1) ? 25 : 0;
-        values[idx] += (ggd->toilets[idx].brokenBowl == 1) ? 35 : 0;
-        values[idx] += (ggd->toilets[idx].brokenDrain == 1) ? 35 : 0;
-        values[idx] += (ggd->toilets[idx].pluggedDrain == 1) ? 45 : 0;
-        values[idx] += (ggd->toilets[idx].outOfOrder == 1) ? 30 : 0;
-        values[idx] += (ggd->toilets[idx].small == 1) ? 50 : 0;
-        // Divider
+        // Leftmost
+        int pos = 1;
+        for (int i = idx - 1; i >= 0; i--)
+        {
+            if (ggd->toilets[i].npc.active)
+            {
+                nextTo[idx] += calcNPCScore(&ggd->toilets[i].npc, pos);
+                break;
+            }
+            else
+            {
+                pos++;
+            }
+        }
+        // Rightmost
+        pos = 1;
+        for (int i = idx + 1; i < ggd->numActive; i++)
+        {
+            if (ggd->toilets[i].npc.active)
+            {
+                nextTo[idx] += calcNPCScore(&ggd->toilets[i].npc, pos);
+                break;
+            }
+            else
+            {
+                pos++;
+            }
+        }
+    }
+    // Puddles
+    for (int idx = 0; idx < ggd->numActive; idx++)
+    {
+        ggToilet_t* t = &ggd->toilets[idx];
+        // Left
+        if (idx < ggd->numActive - 1)
+        {
+            switch (t->puddle)
+            {
+                case GG_PEE_SMALL:
+                {
+                    nextTo[idx + 1] += PUDDLE_SMALL / 2;
+                    break;
+                }
+                case GG_PEE_MED:
+                {
+                    nextTo[idx + 1] += PUDDLE_MEDIUM / 2;
+                    break;
+                }
+                case GG_PEE_LARGE:
+                {
+                    nextTo[idx + 1] += PUDDLE_LARGE / 2;
+                    break;
+                }
+                case GG_PEE_NONE:
+                default:
+                {
+                    break;
+                }
+            }
+        }
+        // Right
+        if (idx > 0)
+        {
+            switch (t->puddle)
+            {
+                case GG_PEE_SMALL:
+                {
+                    nextTo[idx - 1] += PUDDLE_SMALL / 2;
+                    break;
+                }
+                case GG_PEE_MED:
+                {
+                    nextTo[idx - 1] += PUDDLE_MEDIUM / 2;
+                    break;
+                }
+                case GG_PEE_LARGE:
+                {
+                    nextTo[idx - 1] += PUDDLE_LARGE / 2;
+                    break;
+                }
+                case GG_PEE_NONE:
+                default:
+                {
+                    break;
+                }
+            }
+        }
+        // Center
+        switch (t->puddle)
+        {
+            case GG_PEE_SMALL:
+            {
+                pick[idx] += PUDDLE_SMALL;
+                break;
+            }
+            case GG_PEE_MED:
+            {
+                pick[idx] += PUDDLE_MEDIUM;
+                break;
+            }
+            case GG_PEE_LARGE:
+            {
+                pick[idx] += PUDDLE_LARGE;
+                break;
+            }
+            case GG_PEE_NONE:
+            default:
+            {
+                break;
+            }
+        }
+    }
+    // Dividers
+    for (int idx = 0; idx < ggd->numActive; idx++)
+    {
         switch (ggd->toilets[idx].divider)
         {
             case GG_DIV_FULL:
@@ -1180,12 +1310,12 @@ static void calcToiletScore(int* values)
             case GG_DIV_TOP:
             case GG_DIV_BOTTOM:
             {
-                values[idx] += 25;
+                pick[idx] += BROKEN_DIVIDER;
                 break;
             }
             case GG_DIV_NONE:
             {
-                values[idx] += 50;
+                pick[idx] += MISSING_DIVIDER;
                 break;
             }
         }
@@ -1200,97 +1330,61 @@ static void calcToiletScore(int* values)
                 case GG_DIV_TOP:
                 case GG_DIV_BOTTOM:
                 {
-                    values[idx] += 25;
+                    pick[idx] += BROKEN_DIVIDER;
                     break;
                 }
                 case GG_DIV_NONE:
                 {
-                    values[idx] += 50;
+                    pick[idx] += MISSING_DIVIDER;
                     break;
                 }
             }
         }
-        // Puddle
-        switch (ggd->toilets[idx].puddle)
-        {
-            case GG_PEE_NONE:
-            {
-                break;
-            }
-            case GG_PEE_SMALL:
-            {
-                values[idx] += 25;
-                break;
-            }
-            case GG_PEE_MED:
-            {
-                values[idx] += 50;
-                break;
-            }
-            case GG_PEE_LARGE:
-            {
-                values[idx] += 75;
-                break;
-            }
-        }
-        // NPC
-        if (ggd->toilets[idx].npc.active == 1)
-        {
-            values[idx] += 150;
-            values[idx] += (ggd->toilets[idx].npc.shirt == 0) ? 20 : 0;
-            values[idx] += (ggd->toilets[idx].npc.shoes == 0) ? 30 : 0;
-            values[idx] += (ggd->toilets[idx].npc.stink == 0) ? 40 : 0;
+    }
+    // Toilet
+    for (int idx = 0; idx < ggd->numActive; idx++)
+    {
+        // Toilet
+        ggToilet_t* t = &ggd->toilets[idx];
+        // Only if you pick the urinal
+        pick[idx] += (t->autoFlush) ? AUTOFLUSH : 0;
+        pick[idx] += (t->graffiti > 0) ? MINOR_ISSUE : 0;
+        pick[idx] += (t->cracks > 0) ? MINOR_ISSUE : 0;
+        pick[idx] += (t->waterLeak) ? MINOR_ISSUE : 0;
+        pick[idx] += (t->small) ? SMALL_TOILET : 0;
+        pick[idx] += (t->brokenBowl) ? MAJOR_ISSUE : 0;
+        pick[idx] += (t->brokenDrain) ? MAJOR_ISSUE : 0;
+        pick[idx] += (t->outOfOrder) ? MAJOR_ISSUE : 0;
+        pick[idx] += (t->pluggedDrain) ? MAJOR_ISSUE : 0;
 
-            // Specific pants
-            switch (ggd->toilets[idx].npc.pants)
-            {
-                case GG_PANTS:
-                case GG_SHORTS:
-                case GG_SKIRT:
-                {
-                    break;
-                }
-                case GG_DOWN:
-                {
-                    values[idx] += 35;
-                    break;
-                }
-                case GG_UNDERWEAR:
-                {
-                    values[idx] += 25;
-                    break;
-                }
-                case GG_NAKED:
-                {
-                    values[idx] += 50;
-                    break;
-                }
-            }
-        }
-    }
-    /* ESP_LOGI("GG", "Scores (conditional):\n1: %d\n2: %d\n3: %d\n4: %d\n5: %d\n6: %d\n7: %d\n", values[0], values[1],
-             values[2], values[3], values[4], values[5], values[6]); */
-    // Positional
-    int temp[7] = {0};
-    for (int i = 0; i < ggd->numActive; i++)
-    {
-        if (i != 0)
+        // If you're next to the urinal
+        // Urinal to the right
+        if (idx < ggd->numActive - 1 && t->pluggedDrain)
         {
-            temp[i] += values[i - 1];
+            nextTo[idx + 1] = MAJOR_ISSUE / 2;
         }
-        if (i != ggd->numActive - 1)
+
+        // Urinal to the left
+        if (idx > 0 && t->pluggedDrain)
         {
-            temp[i] += values[i + 1];
+            nextTo[idx - 1] = MAJOR_ISSUE / 2;
         }
     }
-    /* ESP_LOGI("GG", "Scores (Positional):\n1: %d\n2: %d\n3: %d\n4: %d\n5: %d\n6: %d\n7: %d\n", temp[0], temp[1],
-       temp[2], temp[3], temp[4], temp[5], temp[6]); */
-    for (int i = 0; i < ggd->numActive; i++)
+    // Save values out
+    for (int idx = 0; idx < ggd->numActive; idx++)
     {
-        values[i] += temp[i];
+        value[idx] = pick[idx] + nextTo[idx];
     }
-    /* ESP_LOGI("GG", "Scores total:\n1: %d\n2: %d\n3: %d\n4: %d\n5: %d\n6: %d\n7: %d\n", values[0], values[1],
-       values[2], values[3], values[4], values[5], values[6]); */
+}
+
+static int calcNPCScore(ggNPC_t* n, int distance)
+{
+    int score = 200;
+    if (n->shirt == 0 || n->pants == GG_NAKED || n->pants == GG_UNDERWEAR || n->pants == GG_DOWN || n->stink == 1)
+    {
+        score += WEIRD_ADJUSTMENT;
+    }
+    return score / distance;
 }
 
 static void saveToNVS()
