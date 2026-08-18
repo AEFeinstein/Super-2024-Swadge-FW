@@ -25,7 +25,6 @@
 #define OPTION_SPACING 35
 #define OPTION_BUFFER  20
 #define OPTION_X       32
-#define MENU_OPTIONS   4
 
 // Rules
 #define RULES_X_BORDER 32
@@ -130,6 +129,12 @@ static const char* const strings[] = {
     "You used a Stall.",
     "You used a broken toilet",
     "All the stalls are filled",
+    "Options",
+    "Activate Helper Mode: ",
+    "Touch entry: ",
+    "Quit",
+    "On",
+    "Off",
 };
 static const char* const rulesText[] = {
     "Rules",
@@ -359,6 +364,7 @@ typedef enum
     GG_SHOW_RULES,
     GG_SHOW_HS,
     GG_QUIT,
+    GG_MENU_OPTIONS
 } ggMenuItems_t;
 
 typedef enum
@@ -433,6 +439,8 @@ typedef struct
     font_t normalFontOutline;
     font_t smallFont;
     int selection;
+    bool helper;
+    bool touch;
 
     // Splash
     bool splashToggle;
@@ -665,14 +673,14 @@ static void ggMainLoop(int64_t elapsedUs)
                     if (evt.button & PB_DOWN)
                     {
                         ggd->selection++;
-                        ggd->selection %= MENU_OPTIONS;
+                        ggd->selection %= GG_MENU_OPTIONS;
                     }
                     if (evt.button & PB_UP)
                     {
                         ggd->selection--;
                         if (ggd->selection < 0)
                         {
-                            ggd->selection = MENU_OPTIONS - 1;
+                            ggd->selection = GG_MENU_OPTIONS - 1;
                         }
                     }
                     if (evt.button & PB_B)
@@ -1006,14 +1014,6 @@ static void ggMainLoop(int64_t elapsedUs)
             drawLose();
             break;
         }
-        default:
-        {
-            while (checkButtonQueueWrapper(&evt))
-            {
-                // Allows for backing out of the mode.
-            }
-            break;
-        }
     }
 }
 
@@ -1344,7 +1344,7 @@ static void end()
         if (perc < TRP_PERC_2)
         {
             ggd->accuracyT2 = 0;
-        } 
+        }
         if (perc < TRP_PERC_3)
         {
             ggd->accuracyT3 = 0;
@@ -1377,7 +1377,9 @@ static void end()
     {
         ggd->worstTrophy++;
         trophyUpdateMilestone(&ggTrophies[9], ggd->worstTrophy, 100);
-    } else {
+    }
+    else
+    {
         ggd->worstTrophy = 0;
     }
 

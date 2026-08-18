@@ -46,6 +46,8 @@
     - [ ] Move all game functions (Score, draw, init, etc) to their own file
     - [ ] Use references to cut down on stupid
     - [ ] Rename functions/vars/etc to be less stupid
+    - [ ] Make everything Enums instead of magic numbers
+    - [ ] Sort strings
   11. Sounds
     - [ ] BGM (Waiting on theme team)
     - [ ] SFX
