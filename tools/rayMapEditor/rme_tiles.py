@@ -22,7 +22,7 @@ class tileType(Enum):
     # Special delete tile
     DELETE = (BG | META | 1)
     # Floor tiles
-    BG_FLOOR_0 = (BG | FLOOR | 0)
+    BG_FLOOR_HOLE = (BG | FLOOR | 0)
     BG_FLOOR_1 = (BG | FLOOR | 1)
     BG_FLOOR_2 = (BG | FLOOR | 2)
     BG_FLOOR_3 = (BG | FLOOR | 3)
@@ -256,7 +256,7 @@ class tileType(Enum):
 
 bgTiles: list[list[tileType]] = [
     [
-        tileType.BG_FLOOR_0,
+        tileType.BG_FLOOR_HOLE,
         tileType.BG_FLOOR_1,
         tileType.BG_FLOOR_2,
         tileType.BG_FLOOR_3,
@@ -468,7 +468,7 @@ objTiles: list[list[tileType]] = [
 
 class tile:
     def __init__(self):
-        self.background: tileType = tileType.BG_FLOOR_0
+        self.background: tileType = tileType.BG_FLOOR_31
         self.object: tileType = tileType.EMPTY
         self.objectId: int = -1
 
