@@ -55,7 +55,10 @@ class CustomText(tk.Text):
 
 class view:
 
-    def __init__(self):
+    def __init__(self, swadge_assets_path: str, editor_imgs_path: str):
+
+        self.swadge_assets_path = swadge_assets_path
+        self.editor_imgs_path = editor_imgs_path
 
         self.currentFilePath: str = None
 
@@ -237,13 +240,13 @@ class view:
             loaded = False
             try:
                 # Find all files ending in .txt recursively
-                for path in Path("../../assets/magtroid/").rglob(f"{tt.name}.png"):
+                for path in Path(self.swadge_assets_path).rglob(f"{tt.name}.png"):
                     self.loadTexture(self.texMapPalette, self.texMapMap, tt, path)
                     loaded = True
                     break
 
                 if not loaded:
-                    for path in Path("imgs/").rglob(f"{tt.name}.png"):
+                    for path in Path(self.editor_imgs_path).rglob(f"{tt.name}.png"):
                         self.loadTexture(self.texMapPalette, self.texMapMap, tt, path)
                         loaded = True
                         break

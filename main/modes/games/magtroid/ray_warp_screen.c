@@ -112,6 +112,10 @@ void warpToDestination(ray_t* ray)
     ray->p.posX = ray->warpDestPosX;
     ray->p.posY = ray->warpDestPosY;
 
+    // Assume the warp target is safe
+    ray->ps.lastGoodCell.x = FROM_FX(ray->p.posX);
+    ray->ps.lastGoodCell.y = FROM_FX(ray->p.posY);
+
     // Initialize player angle
     if (ray->p.posX < TO_FX(ray->map.w) / 2)
     {

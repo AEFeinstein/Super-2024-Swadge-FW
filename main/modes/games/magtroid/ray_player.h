@@ -12,7 +12,8 @@ void raySavePlayer(ray_t* ray);
 void raySaveVisitedTiles(ray_t* ray);
 void rayPlayerDecrementHealth(ray_t* ray, int32_t health);
 line_t rayGetSwordLineSegment(ray_t* ray);
-int32_t rayGetEightWayAngle(int16_t x, int16_t y);
+int32_t rayGetEightWayAngle(q24_8 x, q24_8 y);
+void rayFromEightWayAngle(int32_t angle, q24_8* x, q24_8* y);
 bool rayPlayerIsJumping(ray_t* ray);
 
 #endif
