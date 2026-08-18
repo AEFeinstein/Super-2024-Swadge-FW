@@ -12,7 +12,7 @@
 // Main
 #define FRAME_RATE_US 16667
 #define SECOND        1000000
-#define WARNING_TIMER       (SECOND * 15)
+#define WARNING_TIMER (SECOND * 15)
 
 // Splash
 #define SPLASH_US          500000
@@ -58,10 +58,8 @@
 #define DEFAULT_SCORE    1000
 #define SCORE_MULTIPLIER 1000
 
-// Bathroom
-#define FLOOR_HEIGHT 40
-
 // Toilets
+#define FLOOR_HEIGHT        40
 #define MAX_TOILETS         7
 #define DIVIDER_X_OFFSET    32
 #define DIVIDER_TOP_OFFSET  -24
@@ -91,6 +89,9 @@
 #define UI_BAR_HEIGHT    10
 #define UI_TIMER_X       64
 #define UI_TIMER_Y       5
+
+// Trophies
+#define TRP_PERCENT 1000
 
 //==============================================================================
 // Consts
@@ -434,6 +435,9 @@ typedef struct
     bool lose;
     bool timeOut;
 
+    // Trophies
+    int accuracyTrophy;
+
     // Bathroom
     wsg_t* backgroundImages;
     wsg_t* toiletImages;
@@ -614,7 +618,7 @@ static void ggMainLoop(int64_t elapsedUs)
                 }
             }
             drawWarning(elapsedUs);
-            if(ggd->timer >= WARNING_TIMER)
+            if (ggd->timer >= WARNING_TIMER)
             {
                 trophyUpdate(&ggTrophies[9], 1, true);
             }
@@ -662,16 +666,17 @@ static void ggMainLoop(int64_t elapsedUs)
                         {
                             case GG_PLAY_GAME:
                             {
-                                ggd->state        = GG_READY;
-                                ggd->timer        = 0;
-                                ggd->score        = 0;
-                                ggd->avgScore     = 0;
-                                ggd->adjScore     = 0;
-                                ggd->stallInc     = 3;
-                                ggd->stallUses    = 3;
-                                ggd->numGames     = 0;
-                                ggd->timeOut      = false;
-                                ggd->loseTimerMax = MAX_TIMER_LEN;
+                                ggd->state          = GG_READY;
+                                ggd->timer          = 0;
+                                ggd->score          = 0;
+                                ggd->avgScore       = 0;
+                                ggd->adjScore       = 0;
+                                ggd->stallInc       = 3;
+                                ggd->stallUses      = 3;
+                                ggd->numGames       = 0;
+                                ggd->accuracyTrophy = 0;
+                                ggd->timeOut        = false;
+                                ggd->loseTimerMax   = MAX_TIMER_LEN;
                                 break;
                             }
                             case GG_SHOW_RULES:
@@ -826,14 +831,15 @@ static void ggMainLoop(int64_t elapsedUs)
                             for (int idx = 0; idx < ggd->numActive; idx++)
                             {
                                 ggToilet_t* t = &ggd->toilets[idx];
-                                if (!t->npc.active && !t->brokenBowl && !t->brokenDrain && !t->outOfOrder && !t->pluggedDrain)
+                                if (!t->npc.active && !t->brokenBowl && !t->brokenDrain && !t->outOfOrder
+                                    && !t->pluggedDrain)
                                 {
                                     trophy = true;
-                                } 
+                                }
                             }
                             if (trophy)
                             {
-                            trophyUpdate(&ggTrophies[5], 1, true);
+                                trophyUpdate(&ggTrophies[5], 1, true);
                             }
                         }
                         else
@@ -1215,6 +1221,10 @@ static void gameInit()
     {
         ggd->selection++;
     }
+    if (ggd->selection >= ggd->numActive)
+    {
+        ESP_LOGE("GG", "Selection >= active for some reason");
+    }
 }
 
 static void initRandomNPC(ggToilet_t* t)
@@ -1272,8 +1282,14 @@ static void end()
     int badness[7] = {0};
     calcToiletScore(badness);
     // Find best option
-    int best = badness[0];
-    for (int idx = 1; idx < ggd->numActive; idx++)
+    int start = 0;
+    int best  = 1000;
+    while (ggd->toilets[start].npc.active)
+    {
+        start++;
+    }
+    best = badness[start];
+    for (int idx = start; idx < ggd->numActive; idx++)
     {
         if (ggd->toilets[idx].npc.active == 1)
         {
@@ -1293,6 +1309,10 @@ static void end()
     else
     {
         perc = (SCORE_MULTIPLIER * (DEFAULT_SCORE - badness[ggd->selection])) / (DEFAULT_SCORE - best);
+        if (perc < TRP_PERCENT)
+        {
+            ggd->accuracyTrophy = 0;
+        }
     }
     ggd->avgScore = (ggd->avgScore * (ggd->numGames - 1) + perc) / ggd->numGames;
     // Calc total score
@@ -1300,6 +1320,13 @@ static void end()
     ggd->score += perc * ((ggd->loseTimerMax + TIMER_BUFFER) - timerGrace) / ggd->loseTimerMax;
     // Calc adjusted score
     ggd->adjScore = (ggd->avgScore * ggd->score) / 1000;
+
+    // Trophy
+    if (perc >= TRP_PERCENT && !ggd->stallUsed)
+    {
+        ggd->accuracyTrophy++;
+        trophyUpdateMilestone(&ggTrophies[4], ggd->accuracyTrophy, 33);
+    }
 
     // Save to NVS
     saveToNVS();
@@ -1575,8 +1602,8 @@ static void drawWarning(int64_t elapsedUs)
     ggd->timer += elapsedUs;
     int16_t xOff = 32;
     int16_t yOff = 64;
-    drawTextWordWrap(&ggd->smallFont, c555, strings[(ggd->timer >= WARNING_TIMER) ? 11 : 10], &xOff, &yOff, TFT_WIDTH - 32,
-                     TFT_HEIGHT);
+    drawTextWordWrap(&ggd->smallFont, c555, strings[(ggd->timer >= WARNING_TIMER) ? 11 : 10], &xOff, &yOff,
+                     TFT_WIDTH - 32, TFT_HEIGHT);
 }
 
 // Splash

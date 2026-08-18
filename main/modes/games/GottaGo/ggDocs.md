@@ -13,7 +13,7 @@
     - [x] Beat 10 levels in a row
     - [x] Beat 20 levels in a row
     - [x] Beat 30 levels in a row
-    - [ ] Beat 15+ levels with a Average of 100%
+    - [x] Beat 15+ levels with a Average of 100%
     - [x] When all Urinals are occupied or Broken, use a Stall to continue
     - [x] Attempt to use a stall when there's no uses left
     - [ ] Pick the worst available option 5x in a row
@@ -48,3 +48,7 @@
     - [ ] SFX
       - [ ] Move
       - [ ] Select
+
+## Known Bugs
+- Occasionally, toilets that cannot used are marked with a check
+- Sometimes when num of urinals reduces next round, selection pointer is off the end.
