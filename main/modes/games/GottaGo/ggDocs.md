@@ -14,6 +14,8 @@
     - [x] Beat 20 levels in a row
     - [x] Beat 30 levels in a row
     - [x] Beat 15+ levels with a Average of 100%
+    - [x] Beat 15+ levels with a Average of 99%
+    - [x] Beat 15+ levels with a Average of 95%
     - [x] When all Urinals are occupied or Broken, use a Stall to continue
     - [x] Attempt to use a stall when there's no uses left
     - [ ] Pick the worst available option 5x in a row
@@ -37,6 +39,7 @@
     - [ ] Add divider to leftmost toilet when < 7 toilets
     - [ ] Fix lose text when quitting on purpose
     - [ ] Add won game display to endcard
+    - [ ] Add reminder to drink water to the main menu
   10. [ ] Refactor
     - [ ] Update data struct
     - [ ] Move drawing routines to their own file
@@ -52,3 +55,4 @@
 ## Known Bugs
 - Occasionally, toilets that cannot used are marked with a check
 - Sometimes when num of urinals reduces next round, selection pointer is off the end.
+- Long toilets do not have a penalty applied

@@ -54,7 +54,6 @@
 #define MINOR_ISSUE      50
 #define MAJOR_ISSUE      300 // End the game, so low score
 #define SMALL_TOILET     200 // Don't used the ADA toilet you whackjob
-#define STALL_USED       300 // 70%
 #define DEFAULT_SCORE    1000
 #define SCORE_MULTIPLIER 1000
 
@@ -92,6 +91,8 @@
 
 // Trophies
 #define TRP_PERCENT 1000
+#define TRP_PERC_2  990
+#define TRP_PERC_3  950
 
 //==============================================================================
 // Consts
@@ -225,7 +226,7 @@ static const paletteColor_t shoeColors[] = {
 // Trophies
 const trophyData_t ggTrophies[] = {
     {
-        .title       = "Drank a Bit Too Much",
+        .title       = "Maybe talk to a doctor",
         .description = "Complete 20 rounds of Gotta Go!",
         .image       = GG_20GAMES_WSG,
         .type        = TROPHY_TYPE_ADDITIVE,
@@ -233,7 +234,7 @@ const trophyData_t ggTrophies[] = {
         .maxVal      = 20,
     },
     {
-        .title       = "Got the Basics",
+        .title       = "Drank a Bit Too Much",
         .description = "Beat 10 levels in a row",
         .image       = GG_10ROUNDS_WSG,
         .type        = TROPHY_TYPE_PROGRESS,
@@ -241,7 +242,7 @@ const trophyData_t ggTrophies[] = {
         .maxVal      = 10,
     },
     {
-        .title       = "Really Had To Go",
+        .title       = "Hydrohomie",
         .description = "Beat 20 levels in a row",
         .image       = GG_20ROUNDS_WSG,
         .type        = TROPHY_TYPE_PROGRESS,
@@ -249,7 +250,7 @@ const trophyData_t ggTrophies[] = {
         .maxVal      = 20,
     },
     {
-        .title       = "The Chad of the Urinals",
+        .title       = "Hyperhydrosis",
         .description = "Beat 30 levels in a row",
         .image       = GG_30ROUNDS_WSG,
         .type        = TROPHY_TYPE_PROGRESS,
@@ -257,11 +258,27 @@ const trophyData_t ggTrophies[] = {
         .maxVal      = 30,
     },
     {
-        .title       = "Bathroom Knower",
+        .title       = "Laser beam",
         .description = "Beat 15+ levels with a perfect accuracy",
-        .image       = GG_ONE_HUNDRED_WSG, // FIXME: If adjusting to be 99/95%, make sure to update this
+        .image       = GG_ONE_HUNDRED_WSG,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 15,
+    },
+    {
+        .title       = "Sniper",
+        .description = "Beat 15+ levels with 99+%% accuracy",
+        .image       = GG_NINETY_NINE_WSG,
         .type        = TROPHY_TYPE_PROGRESS,
         .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 15,
+    },
+    {
+        .title       = "Sharpshooter",
+        .description = "Beat 15+ levels with 95+%% accuracy",
+        .image       = GG_NINETY_FIVE_WSG,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 15,
     },
     {
@@ -289,7 +306,7 @@ const trophyData_t ggTrophies[] = {
         .maxVal      = 5,
     },
     {
-        .title       = "Hands Off",
+        .title       = "Aim at the dot",
         .description = "Activate helper mode for the first time",
         .image       = GG_HELPER_MODE_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -437,6 +454,8 @@ typedef struct
 
     // Trophies
     int accuracyTrophy;
+    int accuracyT2;
+    int accuracyT3;
     int worstTrophy;
 
     // Bathroom
@@ -621,7 +640,7 @@ static void ggMainLoop(int64_t elapsedUs)
             drawWarning(elapsedUs);
             if (ggd->timer >= WARNING_TIMER)
             {
-                trophyUpdate(&ggTrophies[9], 1, true);
+                trophyUpdate(&ggTrophies[11], 1, true);
             }
             break;
         }
@@ -676,8 +695,10 @@ static void ggMainLoop(int64_t elapsedUs)
                                 ggd->stallUses      = 3;
                                 ggd->numGames       = 0;
                                 ggd->accuracyTrophy = 0;
-                                ggd->timeOut        = false;
+                                ggd->accuracyT2     = 0;
+                                ggd->accuracyT3     = 0;
                                 ggd->worstTrophy    = 0;
+                                ggd->timeOut        = false;
                                 ggd->loseTimerMax   = MAX_TIMER_LEN;
                                 break;
                             }
@@ -841,7 +862,7 @@ static void ggMainLoop(int64_t elapsedUs)
                             }
                             if (trophy)
                             {
-                                trophyUpdate(&ggTrophies[5], 1, true);
+                                trophyUpdate(&ggTrophies[7], 1, true);
                             }
                         }
                         else
@@ -851,7 +872,7 @@ static void ggMainLoop(int64_t elapsedUs)
                             ggd->state     = GG_CHOICE;
                             ggd->saveTimer = ggd->timer;
                             ggd->timer     = 0;
-                            trophyUpdate(&ggTrophies[6], 1, true);
+                            trophyUpdate(&ggTrophies[8], 1, true);
                         }
                     }
                     else if (evt.button & PB_LEFT)
@@ -1306,7 +1327,7 @@ static void end()
     int perc = 0;
     if (ggd->stallUsed)
     {
-        perc = DEFAULT_SCORE - STALL_USED;
+        perc = DEFAULT_SCORE;
     }
     else
     {
@@ -1328,6 +1349,16 @@ static void end()
     {
         ggd->accuracyTrophy++;
         trophyUpdateMilestone(&ggTrophies[4], ggd->accuracyTrophy, 33);
+    }
+    if (perc >= TRP_PERC_2 && !ggd->stallUsed)
+    {
+        ggd->accuracyTrophy++;
+        trophyUpdateMilestone(&ggTrophies[5], ggd->accuracyTrophy, 33);
+    }
+    if (perc >= TRP_PERC_3 && !ggd->stallUsed)
+    {
+        ggd->accuracyTrophy++;
+        trophyUpdateMilestone(&ggTrophies[6], ggd->accuracyTrophy, 33);
     }
     // 5 worst trophy here
 
