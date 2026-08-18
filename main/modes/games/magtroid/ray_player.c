@@ -90,6 +90,10 @@ bool initializePlayer(ray_t* ray)
     // Invalid shield zone
     ray->ps.shieldZone = -1;
 
+    // Starting cell is a good cell
+    ray->ps.lastGoodCell.x = FROM_FX(ray->p.posX);
+    ray->ps.lastGoodCell.y = FROM_FX(ray->p.posY);
+
     return initFromScratch;
 }
 
@@ -122,6 +126,9 @@ void raySaveVisitedTiles(ray_t* ray)
  */
 void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
 {
+    // Don't accept input or move while falling
+    bool acceptInput = (ray->ps.fallTimerUs <= 0);
+
     // Check all queued button events
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
@@ -136,134 +143,197 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
             rayShowPause(ray);
             return;
         }
-        // The B button swings the sword
-        else if (PB_B == evt.button)
+        else if (acceptInput)
         {
-            if (ray->p.i.haveEwiOfTime && evt.down && ray->ps.swordTimerUs <= 0)
+            // The B button swings the sword
+            if (PB_B == evt.button)
             {
-                // Start a sword swing
-                ray->ps.swordAngle = rayGetEightWayAngle(ray->p.dirX, ray->p.dirY);
-                ray->ps.swordAngle -= 90;
-                if (ray->ps.swordAngle < 0)
+                if (ray->p.i.haveEwiOfTime && evt.down && ray->ps.swordTimerUs <= 0)
                 {
-                    ray->ps.swordAngle += 360;
-                }
-                ray->ps.swordTimerUs = SWORD_SWING_TIME;
+                    // Start a sword swing
+                    ray->ps.swordAngle = rayGetEightWayAngle(ray->p.dirX, ray->p.dirY);
+                    ray->ps.swordAngle -= 90;
+                    if (ray->ps.swordAngle < 0)
+                    {
+                        ray->ps.swordAngle += 360;
+                    }
+                    ray->ps.swordTimerUs = SWORD_SWING_TIME;
 
-                // Cancel any shields
-                ray->ps.shieldTimerUs = 0;
-                ray->ps.shieldZone    = -1;
-            }
-        }
-        // The A button shoots. Make sure there is a gun
-        else if (PB_A == evt.button)
-        {
-            if (ray->p.i.haveJumpBoots && evt.down)
-            {
-                // If not already jumping, add an impulse to jump
-                if (!rayPlayerIsJumping(ray))
-                {
-                    ray->ps.jumpVel = -TO_FX_FRAC(5, 8);
+                    // Cancel any shields
+                    ray->ps.shieldTimerUs = 0;
+                    ray->ps.shieldZone    = -1;
                 }
             }
+            // The A button shoots. Make sure there is a gun
+            else if (PB_A == evt.button)
+            {
+                if (ray->p.i.haveJumpBoots && evt.down)
+                {
+                    // If not already jumping, add an impulse to jump
+                    if (!rayPlayerIsJumping(ray))
+                    {
+                        ray->ps.jumpVel = -TO_FX_FRAC(5, 8);
+                    }
+                }
+            }
         }
     }
 
-    // Find move distances
-    q24_8 deltaX = 0;
-    q24_8 deltaY = 0;
-
-    // If the up button is held
-    if (ray->btnState & PB_UP)
+    if (acceptInput)
     {
-        // Move forward
-        deltaY -= 1;
-    }
-    // Else if the down button is held
-    else if (ray->btnState & PB_DOWN)
-    {
-        // Move backwards
-        deltaY += 1;
-    }
+        // Find move distances
+        q24_8 deltaX = 0;
+        q24_8 deltaY = 0;
 
-    // If the left button is held
-    if (ray->btnState & PB_LEFT)
-    {
-        // Move left
-        deltaX -= 1;
-    }
-    // Else if the right button is held
-    else if (ray->btnState & PB_RIGHT)
-    {
-        // Move backwards
-        deltaX += 1;
-    }
-
-    // If there is movement
-    if (deltaX || deltaY)
-    {
-        // Normalize deltaX and deltaY before scaling with elapsedUs
-        fastNormVec(&deltaX, &deltaY);
-        ray->p.dirX = deltaX;
-        ray->p.dirY = deltaY;
-
-        // Should move 1/6 units every 40000uS
-        deltaX = (int32_t)(deltaX * elapsedUs) / (int32_t)(40000 * 6);
-        deltaY = (int32_t)(deltaY * elapsedUs) / (int32_t)(40000 * 6);
-
-        // Save the old cell to check for crossing cell boundaries
-        int16_t oldCellX = FROM_FX(ray->p.posX);
-        int16_t oldCellY = FROM_FX(ray->p.posY);
-
-        // A little less than half the width of the player, for boundary checks
-        // TODO use actual player hitbox
-        // q24_8 pHalfWidth = TO_FX_FRAC(7, 16);
-
-        // TODO use actual player dimensions
-        rectangle_t movedBoundingBox = {
-            .pos.x  = ray->p.posX - TO_FX_FRAC(7, 16) + deltaX,
-            .pos.y  = ray->p.posY - TO_FX_FRAC(7, 16) + deltaY,
-            .width  = TO_FX_FRAC(14, 16),
-            .height = TO_FX_FRAC(14, 16),
-        };
-
-        // If the player's new location doesn't fit
-        if (!rayBoundingBoxFitsInMap(ray, movedBoundingBox))
+        // If the up button is held
+        if (ray->btnState & PB_UP)
         {
-            // Stop movement
-            deltaX = 0;
-            deltaY = 0;
-
-            // TODO allow axis aligned movement when the input is diagonal on a wall?
+            // Move forward
+            deltaY -= 1;
+        }
+        // Else if the down button is held
+        else if (ray->btnState & PB_DOWN)
+        {
+            // Move backwards
+            deltaY += 1;
         }
 
-        // Check for collisions with all enemies in the new location
-        node_t* eNode = ray->enemies.first;
-        while (eNode)
+        // If the left button is held
+        if (ray->btnState & PB_LEFT)
         {
-            rayEnemy_t* e = eNode->val;
-
-            // If the player collides with an immovable enemy (i.e. a box on a wall) this will stop movement
-            rayEnemyCheckCollision(ray, e, movedBoundingBox, &deltaX, &deltaY);
-            eNode = eNode->next;
+            // Move left
+            deltaX -= 1;
+        }
+        // Else if the right button is held
+        else if (ray->btnState & PB_RIGHT)
+        {
+            // Move backwards
+            deltaX += 1;
         }
 
-        // Update location with allowed movement
-        ray->p.posX += deltaX;
-        ray->p.posY += deltaY;
-
-        // Get the new cell to check for crossing cell boundaries
-        int16_t newCellX = FROM_FX(ray->p.posX);
-        int16_t newCellY = FROM_FX(ray->p.posY);
-
-        // If the cell changed
-        if (oldCellX != newCellX || oldCellY != newCellY)
+        // If there is movement
+        if (deltaX || deltaY)
         {
-            // Mark it on the map
-            markTileVisited(&ray->map, newCellX, newCellY);
+            // Normalize deltaX and deltaY before scaling with elapsedUs
+            fastNormVec(&deltaX, &deltaY);
+            ray->p.dirX = deltaX;
+            ray->p.dirY = deltaY;
 
-            // Check scripts when entering cells
-            checkScriptEnter(ray, newCellX, newCellY);
+            // Should move 1/6 units every 40000uS
+            deltaX = (int32_t)(deltaX * elapsedUs) / (int32_t)(40000 * 6);
+            deltaY = (int32_t)(deltaY * elapsedUs) / (int32_t)(40000 * 6);
+
+            // Save the old cell to check for crossing cell boundaries
+            int16_t oldCellX = FROM_FX(ray->p.posX);
+            int16_t oldCellY = FROM_FX(ray->p.posY);
+
+            // A little less than half the width of the player, for boundary checks
+            // TODO use actual player hitbox
+            // q24_8 pHalfWidth = TO_FX_FRAC(7, 16);
+
+            // TODO use actual player dimensions
+            rectangle_t movedBoundingBox = {
+                .pos.x  = ray->p.posX - TO_FX_FRAC(7, 16) + deltaX,
+                .pos.y  = ray->p.posY - TO_FX_FRAC(7, 16) + deltaY,
+                .width  = TO_FX_FRAC(14, 16),
+                .height = TO_FX_FRAC(14, 16),
+            };
+
+            // If the player's new location doesn't fit
+            if (!rayBoundingBoxFitsInMap(ray, movedBoundingBox))
+            {
+                // Stop movement
+                deltaX = 0;
+                deltaY = 0;
+
+                // TODO allow axis aligned movement when the input is diagonal on a wall?
+            }
+
+            // Check for collisions with all enemies in the new location
+            node_t* eNode = ray->enemies.first;
+            while (eNode)
+            {
+                rayEnemy_t* e = eNode->val;
+
+                // If the player collides with an immovable enemy (i.e. a box on a wall) this will stop movement
+                rayEnemyCheckCollision(ray, e, movedBoundingBox, &deltaX, &deltaY);
+                eNode = eNode->next;
+            }
+
+            // Update location with allowed movement
+            ray->p.posX += deltaX;
+            ray->p.posY += deltaY;
+
+            // Get the new cell to check for crossing cell boundaries
+            int16_t newCellX = FROM_FX(ray->p.posX);
+            int16_t newCellY = FROM_FX(ray->p.posY);
+
+            // If the cell changed
+            if (oldCellX != newCellX || oldCellY != newCellY)
+            {
+                // Mark it on the map
+                markTileVisited(&ray->map, newCellX, newCellY);
+
+                // Check scripts when entering cells
+                checkScriptEnter(ray, newCellX, newCellY);
+
+                // If the player entered a non-hole floor cell, save the location
+                rayMapCellType_t cType = ray->map.tiles[newCellX][newCellY].type;
+                if (CELL_IS_TYPE(cType, BG | FLOOR) && (BG_FLOOR_HOLE != cType))
+                {
+                    ray->ps.lastGoodCell.x = newCellX;
+                    ray->ps.lastGoodCell.y = newCellY;
+                }
+            }
+        }
+    }
+
+    // If the player is on a hole
+    if ((BG_FLOOR_HOLE == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type) &&
+        // And the player isn't jumping
+        !rayPlayerIsJumping(ray) &&
+        // And the player isn't already falling
+        ray->ps.fallTimerUs <= 0)
+    {
+        // Snap to the middle of the hole
+        ray->p.posX = TO_FX(FROM_FX(ray->p.posX)) + TO_FX_FRAC(1, 2);
+        ray->p.posY = TO_FX(FROM_FX(ray->p.posY)) + TO_FX_FRAC(1, 2);
+
+        // Start the fall timer animation
+        ray->ps.fallTimerUs = 2000000;
+
+        // Cancel sword & shields
+        ray->ps.swordTimerUs  = 0;
+        ray->ps.swordAngle    = 0;
+        ray->ps.shieldTimerUs = 0;
+        ray->ps.shieldZone    = -1;
+    }
+
+    // Run the fall timer if active
+    if (ray->ps.fallTimerUs > 0)
+    {
+        ray->ps.fallTimerUs -= elapsedUs;
+
+        // Run animation for sprite rotation animation
+        RUN_TIMER_EVERY(ray->ps.fallRotationTimerUs, 2000000 / 16, elapsedUs, {
+            int32_t angle = rayGetEightWayAngle(ray->p.dirX, ray->p.dirY);
+            angle += 45;
+            if (360 <= angle)
+            {
+                angle -= 360;
+            }
+            rayFromEightWayAngle(angle, &ray->p.dirX, &ray->p.dirY);
+        });
+
+        // If the timer elapsed
+        if (ray->ps.fallTimerUs <= 0)
+        {
+            // Move to the middle of the last known good cell
+            ray->p.posX = TO_FX(ray->ps.lastGoodCell.x) + TO_FX_FRAC(1, 2);
+            ray->p.posY = TO_FX(ray->ps.lastGoodCell.y) + TO_FX_FRAC(1, 2);
+
+            // Decrement health
+            ray->p.health--;
         }
     }
 
@@ -310,8 +380,8 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
  */
 void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
 {
-    // Don't check for touches while jumping
-    if (rayPlayerIsJumping(ray))
+    // Don't check for touches while jumping or falling
+    if (rayPlayerIsJumping(ray) || ray->ps.fallTimerUs > 0)
     {
         return;
     }
@@ -657,7 +727,7 @@ line_t rayGetSwordLineSegment(ray_t* ray)
  * @param ray
  * @return int32_t
  */
-int32_t rayGetEightWayAngle(int16_t x, int16_t y)
+int32_t rayGetEightWayAngle(q24_8 x, q24_8 y)
 {
     int32_t angle = 0;
     if (y < 0)
@@ -710,6 +780,73 @@ int32_t rayGetEightWayAngle(int16_t x, int16_t y)
         }
     }
     return angle;
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param angle
+ * @param x
+ * @param y
+ */
+void rayFromEightWayAngle(int32_t angle, q24_8* x, q24_8* y)
+{
+    switch (angle)
+    {
+        case 0:
+        {
+            *x = 0;
+            *y = -1;
+            break;
+        }
+        case 45:
+        {
+            *x = 1;
+            *y = -1;
+            break;
+        }
+        case 90:
+        {
+            *x = 1;
+            *y = 0;
+            break;
+        }
+        case 135:
+        {
+            *x = 1;
+            *y = 1;
+            break;
+        }
+        case 180:
+        {
+            *x = 0;
+            *y = 1;
+            break;
+        }
+        case 225:
+        {
+            *x = -1;
+            *y = 1;
+            break;
+        }
+        case 270:
+        {
+            *x = -1;
+            *y = 0;
+            break;
+        }
+        case 315:
+        {
+            *x = -1;
+            *y = -1;
+            break;
+        }
+        default:
+        {
+            return;
+        }
+    }
+    fastNormVec(x, y);
 }
 
 /**
