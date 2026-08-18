@@ -3,7 +3,7 @@
  * \section help_pages_design Design Philosophy
  *
  * Help pages can be used to draw multiple pages of multi-line text. This is useful for drawing a help manual for a
- * Swadge mode in a consistent manner. The pages are themed using menuMegaRenderer_t.
+ * Swadge mode in a consistent manner. The pages are themed using menuZorldoRenderer_t.
  *
  * \section help_pages_usage Usage
  *
@@ -34,7 +34,7 @@ static const helpPage_t helpPages[] = {
 // Set up the help screen when entering the mode
 // The menu must be empty
 menu_t* bgMenu                   = initMenu("Mode Name", NULL);
-menuMegaRenderer_t* menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
+menuZorldoRenderer_t* menuRenderer = initMenuZorldoRenderer(NULL, NULL, NULL);
 helpPageVars_t* help             = initHelpScreen(bgMenu, menuRenderer, helpPages, ARRAY_SIZE(helpPages));
 
 
@@ -59,7 +59,7 @@ deinitHelpScreen(help);
 #include <stdint.h>
 #include "hdw-btn.h"
 #include "menu.h"
-#include "menuMegaRenderer.h"
+#include "menuZorldoRenderer.h"
 
 /**
  * @brief A help page consisting of a title and text
@@ -75,15 +75,15 @@ typedef struct
  */
 typedef struct
 {
-    menu_t* bgMenu;                   ///< A menu to render behind the help text. Must not have any entries
-    menuMegaRenderer_t* menuRenderer; ///< A renderer to render the menu with
-    const helpPage_t* pages;          ///< All the help pages
-    int32_t numPages;                 ///< The number of help pages in helpPageVars_t.pages
-    int32_t helpIdx;                  ///< The index of the page currently being displayed
-    int32_t arrowBlinkTimer;          ///< A timer used to blink arrows indicating more pages
+    menu_t* bgMenu;                     ///< A menu to render behind the help text. Must not have any entries
+    menuZorldoRenderer_t* menuRenderer; ///< A renderer to render the menu with
+    const helpPage_t* pages;            ///< All the help pages
+    int32_t numPages;                   ///< The number of help pages in helpPageVars_t.pages
+    int32_t helpIdx;                    ///< The index of the page currently being displayed
+    int32_t arrowBlinkTimer;            ///< A timer used to blink arrows indicating more pages
 } helpPageVars_t;
 
-helpPageVars_t* initHelpScreen(menu_t* bgMenu, menuMegaRenderer_t* menuRenderer, const helpPage_t* pages,
+helpPageVars_t* initHelpScreen(menu_t* bgMenu, menuZorldoRenderer_t* menuRenderer, const helpPage_t* pages,
                                int32_t numPages);
 void deinitHelpScreen(helpPageVars_t* help);
 bool buttonHelp(helpPageVars_t* help, buttonEvt_t* evt);

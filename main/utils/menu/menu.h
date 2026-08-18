@@ -12,8 +12,8 @@
  * entered, or multi-item selections are scrolled, the callback is called.
  *
  * The menu data structure is created and managed in menu.h, but graphical rendering is handled in
- * menuMegaRenderer.h. The separation of data structure and renderer is intentional and makes it easier to render the
- * data structure in a number of styles. As of now, only menuMegaRenderer.h is supplied.
+ * menuZorldoRenderer.h. The separation of data structure and renderer is intentional and makes it easier to render the
+ * data structure in a number of styles. As of now, only menuZorldoRenderer.h is supplied.
  *
  * \section menu_usage Usage
  *
@@ -32,7 +32,7 @@
  * Button events must be passed to the menu with menuButton().
  * These button presses should not be handled elsewhere simultaneously.
  *
- * Menus are drawn with a renderer, such as menuMegaRenderer.h.
+ * Menus are drawn with a renderer, such as menuZorldoRenderer.h.
  *
  * \section menu_example Example
  *
@@ -96,7 +96,7 @@
  *                              ARRAY_SIZE(optionSettingValues), getScreensaverTimeSettingBounds(), 0);
  *
  * // Initialize a renderer
- * menuMegaRenderer_t* renderer = initMenuMegaRenderer(NULL, NULL, NULL);
+ * menuZorldoRenderer_t* renderer = initMenuZorldoRenderer(NULL, NULL, NULL);
  * \endcode
  *
  * Process button events:
@@ -110,7 +110,7 @@
  *
  * Draw the menu from swadgeMode_t.fnMainLoop:
  * \code{.c}
- * drawMenuMega(mainMenu->menu, mainMenu->renderer, elapsedUs);
+ * drawMenuZorldo(mainMenu->menu, mainMenu->renderer, elapsedUs);
  * \endcode
  *
  * Receive menu callbacks:
@@ -127,7 +127,7 @@
  * // Free the menu
  * deinitMenu(menu);
  * // Free the renderer
- * deinitMenuMegaRenderer(renderer);
+ * deinitMenuZorldoRenderer(renderer);
  * \endcode
  */
 

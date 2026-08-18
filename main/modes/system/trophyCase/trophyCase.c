@@ -62,7 +62,7 @@ typedef struct
 
     // Menu items
     menu_t* menu;
-    menuMegaRenderer_t* rnd;
+    menuZorldoRenderer_t* rnd;
 } tCase_t;
 
 //==============================================================================
@@ -131,7 +131,7 @@ static void enterTCase(void)
 {
     tc       = heap_caps_calloc(sizeof(tCase_t), 1, MALLOC_CAP_8BIT);
     tc->menu = initMenu(tCaseModeName, tCaseMenuCb);
-    tc->rnd  = initMenuMegaRenderer(NULL, NULL, NULL);
+    tc->rnd  = initMenuZorldoRenderer(NULL, NULL, NULL);
     addSingleItemToMenu(tc->menu, menuItems[0]);
     // Note, TROPHY_DISPLAY_INCL_HIDDEN is not shown in this list
     settingParam_t caseOptParams = {
@@ -157,7 +157,7 @@ static void enterTCase(void)
 
 static void exitTCase(void)
 {
-    deinitMenuMegaRenderer(tc->rnd);
+    deinitMenuZorldoRenderer(tc->rnd);
     deinitMenu(tc->menu);
     heap_caps_free(tc);
 }
@@ -226,7 +226,7 @@ static void runTCase(int64_t elapsedUs)
                 }
                 tc->menu = menuButton(tc->menu, evt);
             }
-            drawMenuMega(tc->menu, tc->rnd, elapsedUs);
+            drawMenuZorldo(tc->menu, tc->rnd, elapsedUs);
             break;
         }
     }

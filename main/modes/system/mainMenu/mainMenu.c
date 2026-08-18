@@ -17,7 +17,7 @@
 typedef struct
 {
     menu_t* menu;
-    menuMegaRenderer_t* renderer;
+    menuZorldoRenderer_t* renderer;
     midiFile_t fanfare;
 #if defined(SW_VOL_CONTROL)
     midiFile_t jingle;
@@ -135,7 +135,7 @@ const trophyDataList_t menuTrophyData = {
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
 const char mainMenuName[]                       = "Main Menu";
-const char mainMenuTitle[]                      = "Swadge 4.0.0";
+const char mainMenuTitle[]                      = "Swadge";
 static const char mainMenuShowSecretsMenuName[] = "Secrets In Menu: ";
 static const char factoryResetName[]            = "Factory Reset";
 static const char confirmResetName[]            = "! Confirm Reset !";
@@ -267,7 +267,7 @@ static void mainMenuEnterMode(void)
     setShowBattery(mainMenu->menu, true);
 
     // Initialize menu renderer
-    mainMenu->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    mainMenu->renderer = initMenuZorldoRenderer(NULL, NULL, NULL);
 }
 
 /**
@@ -279,7 +279,7 @@ static void mainMenuExitMode(void)
     deinitMenu(mainMenu->menu);
 
     // Deinit renderer
-    deinitMenuMegaRenderer(mainMenu->renderer);
+    deinitMenuZorldoRenderer(mainMenu->renderer);
 
     // Free the song
 #if defined(SW_VOL_CONTROL)
@@ -363,7 +363,7 @@ static void mainMenuMainLoop(int64_t elapsedUs)
 #endif
 
     // Draw the menu
-    drawMenuMega(mainMenu->menu, mainMenu->renderer, elapsedUs);
+    drawMenuZorldo(mainMenu->menu, mainMenu->renderer, elapsedUs);
 
 #if defined(CONFIG_FACTORY_TEST_NORMAL)
 
