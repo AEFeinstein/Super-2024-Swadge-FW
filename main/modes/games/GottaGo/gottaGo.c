@@ -1307,6 +1307,7 @@ static void end()
     // Find best option
     int start = 0;
     int best  = 1000;
+    int worst = 0;
     while (ggd->toilets[start].npc.active)
     {
         start++;
@@ -1322,6 +1323,10 @@ static void end()
         {
             best = badness[idx];
         }
+        if (worst < badness[idx])
+        {
+            worst = badness[idx];
+        }
     }
     // Calc percentage
     int perc = 0;
@@ -1335,6 +1340,14 @@ static void end()
         if (perc < TRP_PERCENT)
         {
             ggd->accuracyTrophy = 0;
+        }
+        if (perc < TRP_PERC_2)
+        {
+            ggd->accuracyT2 = 0;
+        } 
+        if (perc < TRP_PERC_3)
+        {
+            ggd->accuracyT3 = 0;
         }
     }
     ggd->avgScore = (ggd->avgScore * (ggd->numGames - 1) + perc) / ggd->numGames;
@@ -1352,15 +1365,21 @@ static void end()
     }
     if (perc >= TRP_PERC_2 && !ggd->stallUsed)
     {
-        ggd->accuracyTrophy++;
-        trophyUpdateMilestone(&ggTrophies[5], ggd->accuracyTrophy, 33);
+        ggd->accuracyT2++;
+        trophyUpdateMilestone(&ggTrophies[5], ggd->accuracyT2, 33);
     }
     if (perc >= TRP_PERC_3 && !ggd->stallUsed)
     {
-        ggd->accuracyTrophy++;
-        trophyUpdateMilestone(&ggTrophies[6], ggd->accuracyTrophy, 33);
+        ggd->accuracyT3++;
+        trophyUpdateMilestone(&ggTrophies[6], ggd->accuracyT3, 33);
     }
-    // 5 worst trophy here
+    if (badness[ggd->selection] == worst)
+    {
+        ggd->worstTrophy++;
+        trophyUpdateMilestone(&ggTrophies[9], ggd->worstTrophy, 100);
+    } else {
+        ggd->worstTrophy = 0;
+    }
 
     // Save to NVS
     saveToNVS();
