@@ -1,5 +1,31 @@
 # Ray Map Editor
 
+Ray Map Editor is a tile-based map editor for Swadge games. Each tile may have a background (floor, wall, or door) and foreground (enemy, item, or scenery) object.
+
+Ray Map Editor also has a script editor to take actions when conditions are met during gameplay. Scripts can do things like spawn enemies when entering a room, open a door when all enemies are defeated, or other things.
+
+## Usage
+
+```
+usage: ray_map_editor.py [-h] [-a SWADGE_ASSETS_PATH] [-i EDITOR_IMAGES_PATH] [-f FILE]
+
+Tile map editor for Swadge games
+
+options:
+  -h, --help            show this help message and exit
+  -a, --swadge-assets-path SWADGE_ASSETS_PATH
+                        Path to the Swadge assets directory. The default value is "../../assets/magtroid/".
+  -i, --editor-images-path EDITOR_IMAGES_PATH
+                        Path to the Editor images directory. The default value is "./imgs/".
+  -f, --file FILE       The map file to load (optional)
+```
+
+### Example
+
+```bash
+./ray_map_editor.py -a ../../assets/magtroid/ -i ./imgs/ -f ../../assets/magtroid/maps/0.rmd 
+```
+
 ## Controls
 
 Left click on tiles and objects in the palette on the left edge to select them.
@@ -87,49 +113,13 @@ Arguments, arrays, CELLs, and SPAWNs all have different delimiters to make parsi
 | Arrays    | `[a, b, c]`     | May be arrays of CELLs, SPAWNs, or IDs                          |
 | CELL      | `{x. y}`        | Only has x and y components                                     |
 | ID        | `0`             | Integer from 0 to 255                                           |
-| SPAWN     | `{TYPE-ID-x.y}` | `TYPE` is any `tileType` (see below). ID, x, and y are integers |
+| SPAWN     | `{TYPE-ID-x.y}` | `TYPE` is any `tileType` (see [`class tileType`](./rme_tiles.py)). ID, x, and y are integers |
 | AND_OR    | `abc`           | `AND` or `OR`                                                   |
 | ORDER     | `abc`           | `IN_ORDER` or `ANY_ORDER`                                       |
 | ONE_TIME  | `abc`           | `ONCE` or `ALWAYS`                                              |
 | TEXT      | `abc`           | Not quoted, cannot use the characters `(` or `)`                |
 | TIME      | `0`             | Integer from 0 to 2147483647, in seconds                        |
-| MAP       | `0`             | Integer corresponding to the map, 0 to 5                        |
-
-### Tile Types
-
-These are the objects that can be spawned
-
-| Object                    | Notes                                              |
-|---------------------------|----------------------------------------------------|
-| `OBJ_ENEMY_NORMAL`        | Enemy type, weak to normal beam                    |
-| `OBJ_ENEMY_STRONG`        | Enemy type, weak to charge beam                    |
-| `OBJ_ENEMY_ARMORED`       | Enemy type, weak to missile                        |
-| `OBJ_ENEMY_FLAMING`       | Enemy type, weak to ice beam                       |
-| `OBJ_ENEMY_HIDDEN`        | Enemy type, weak to x-ray beam                     |
-| `OBJ_ENEMY_BOSS`          | Boss Enemy                                         |
-| `OBJ_ITEM_BEAM`           | Power-up, normal beam                              |
-| `OBJ_ITEM_CHARGE_BEAM`    | Power-up, charge beam                              |
-| `OBJ_ITEM_MISSILE`        | Power-up, missiles (also missile capacity upgrade) |
-| `OBJ_ITEM_ICE`            | Power-up, ice beam                                 |
-| `OBJ_ITEM_XRAY`           | Power-up, x-ray visor                              |
-| `OBJ_ITEM_SUIT_WATER`     | Power-up, suit, water resistance                   |
-| `OBJ_ITEM_SUIT_LAVA`      | Power-up, suit, lava resistance                    |
-| `OBJ_ITEM_ENERGY_TANK`    | Power-up, energy tank                              |
-| `OBJ_ITEM_KEY_A`          | Access item, key A                                 |
-| `OBJ_ITEM_KEY_B`          | Access item, key B                                 |
-| `OBJ_ITEM_KEY_C`          | Access item, key C                                 |
-| `OBJ_ITEM_ARTIFACT`       | Access item, artifact                              |
-| `OBJ_ITEM_PICKUP_ENERGY`  | Pickup, energy                                     |
-| `OBJ_ITEM_PICKUP_MISSILE` | Pickup, missiles                                   |
-| `OBJ_SCENERY_TERMINAL`    | Scenery, computer terminal                         |
-| `OBJ_SCENERY_PORTAL`      | Scenery, portal                                    |
-| `OBJ_SCENERY_F1`          | Scenery, a friend                                  |
-| `OBJ_SCENERY_F2`          | Scenery, a friend                                  |
-| `OBJ_SCENERY_F3`          | Scenery, a friend                                  |
-| `OBJ_SCENERY_F4`          | Scenery, a friend                                  |
-| `OBJ_SCENERY_F5`          | Scenery, a friend                                  |
-| `OBJ_SCENERY_F6`          | Scenery, a friend                                  |
-| `OBJ_SCENERY_F7`          | Scenery, a friend                                  |
+| MAP       | `0`             | Integer corresponding to the map                                |
 
 ### Script Examples
 

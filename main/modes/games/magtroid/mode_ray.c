@@ -559,6 +559,11 @@ void rayStartGame(void)
         // Set the starting position from the map
         ray->p.posX = pStartX;
         ray->p.posY = pStartY;
+
+        // Assuming the starting position is safe
+        ray->ps.lastGoodCell.x = FROM_FX(ray->p.posX);
+        ray->ps.lastGoodCell.y = FROM_FX(ray->p.posY);
+
         // Save the starting position
         raySavePlayer(ray);
     }
