@@ -486,6 +486,7 @@ typedef struct
 static void ggEnterMode(void);
 static void ggExitMode(void);
 static void ggMainLoop(int64_t elapsedUs);
+static void ggAddToSwadgePass(struct swadgePassPacket* packet);
 
 // Game
 static void clearToilets(void);
@@ -543,6 +544,7 @@ swadgeMode_t gottaGoMode = {
     .fnMainLoop        = ggMainLoop,
     .overrideSelectBtn = true,
     .trophyData        = &ggTrophyDate,
+    .fnAddToSwadgePassPacket = &tets,
 };
 
 ggData_t* ggd;

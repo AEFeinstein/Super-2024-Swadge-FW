@@ -5,6 +5,7 @@
   1. [x] Add auto flush as an option
   2. [x] Update scoring mechanics
     - [x] Adjust score penalties
+    - [ ] Penalize picking center urinals 
     - [x] Update calculations
       - [x] Change score for using a stall
       - [x] Diagnose/fix inability to get perfect scores (<1 sec, correct urinal)
@@ -18,7 +19,7 @@
     - [x] Beat 15+ levels with a Average of 95%
     - [x] When all Urinals are occupied or Broken, use a Stall to continue
     - [x] Attempt to use a stall when there's no uses left
-    - [ ] Pick the worst available option 5x in a row
+    - [x] Pick the worst available option 5x in a row
     - [ ] Activate helper mode (hidden trophy)
     - [x] Find Manifesto (hidden trophy)
     - [x] Play 20 games
@@ -26,6 +27,7 @@
     - [ ] Add to packet
     - [ ] High Score table
   6. [ ] Add settings 
+    - [ ] Update Menu to be generic
     - [ ] Toggle tutorial/helper mode
     - [ ] Toggle touch input
   7. [ ] Tutorial update
@@ -40,6 +42,8 @@
     - [ ] Fix lose text when quitting on purpose
     - [ ] Add won game display to endcard
     - [ ] Add reminder to drink water to the main menu
+    - [ ] Fix shoes to always draw
+    - [ ] Merge win/lose screens, add icons for easier visual distinction
   10. [ ] Refactor
     - [ ] Update data struct
     - [ ] Move drawing routines to their own file
