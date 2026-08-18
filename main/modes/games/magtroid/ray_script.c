@@ -858,6 +858,10 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
                 // Warp within the map
                 ray->p.posX = ADD_FX(TO_FX(script->thenArgs.warpDest.pos.x), TO_FX_FRAC(1, 2));
                 ray->p.posY = ADD_FX(TO_FX(script->thenArgs.warpDest.pos.y), TO_FX_FRAC(1, 2));
+
+                // Assume the warp target is safe
+                ray->ps.lastGoodCell.x = FROM_FX(ray->p.posX);
+                ray->ps.lastGoodCell.y = FROM_FX(ray->p.posY);
             }
             else
             {
