@@ -437,6 +437,7 @@ typedef struct
 
     // Trophies
     int accuracyTrophy;
+    int worstTrophy;
 
     // Bathroom
     wsg_t* backgroundImages;
@@ -676,6 +677,7 @@ static void ggMainLoop(int64_t elapsedUs)
                                 ggd->numGames       = 0;
                                 ggd->accuracyTrophy = 0;
                                 ggd->timeOut        = false;
+                                ggd->worstTrophy    = 0;
                                 ggd->loseTimerMax   = MAX_TIMER_LEN;
                                 break;
                             }
@@ -1327,6 +1329,7 @@ static void end()
         ggd->accuracyTrophy++;
         trophyUpdateMilestone(&ggTrophies[4], ggd->accuracyTrophy, 33);
     }
+    // 5 worst trophy here
 
     // Save to NVS
     saveToNVS();
