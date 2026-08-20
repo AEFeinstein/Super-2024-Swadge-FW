@@ -56,7 +56,7 @@ typedef struct
     uint32_t buttonPressedTimer;
 
     menu_t* menu;
-    menuMegaRenderer_t* menuRenderer;
+    menuZorldoRenderer_t* menuRenderer;
 
     const char** danceNames;
     int32_t* danceVals;
@@ -191,8 +191,8 @@ void danceEnterMode(void)
     espNowPreLightSleep();
 
     danceState->menu         = initMenu(danceName, danceMenuCb);
-    danceState->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
-    setMegaLedsOn(danceState->menuRenderer, false);
+    danceState->menuRenderer = initMenuZorldoRenderer(NULL, NULL);
+    setZorldoLedsOn(danceState->menuRenderer, false);
     // static const paletteColor_t shadowColors[] = {
     //     c430, c431, c442, c543, c554, c555, c554, c543, c442, c431,
     // };
@@ -245,7 +245,7 @@ void danceExitMode(void)
         enableTFTBacklight();
         setTFTBacklightBrightness(getTftBrightnessSetting());
     }
-    deinitMenuMegaRenderer(danceState->menuRenderer);
+    deinitMenuZorldoRenderer(danceState->menuRenderer);
     deinitMenu(danceState->menu);
 
     deinitSwadgePassReceiver();
@@ -295,7 +295,7 @@ void danceMainLoop(int64_t elapsedUs)
             setTFTBacklightBrightness(getTftBrightnessSetting());
             danceState->blankScreen = false;
             // Draw to it
-            drawMenuMega(danceState->menu, danceState->menuRenderer, elapsedUs);
+            drawMenuZorldo(danceState->menu, danceState->menuRenderer, elapsedUs);
 
             // Set the LED eyes. First do a read to nudge it out of deep sleep
             uint32_t var;
@@ -319,7 +319,7 @@ void danceMainLoop(int64_t elapsedUs)
         else
         {
             // Screen is not blank, draw to it
-            drawMenuMega(danceState->menu, danceState->menuRenderer, elapsedUs);
+            drawMenuZorldo(danceState->menu, danceState->menuRenderer, elapsedUs);
 
             // Uncomment to draw a count of SwadgePasses received this session
             // font_t* f = danceState->menuRenderer->menuFont;
