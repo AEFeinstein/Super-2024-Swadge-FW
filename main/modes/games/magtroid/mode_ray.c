@@ -167,7 +167,7 @@ static void rayExitMode(void)
 {
     // Free menu
     deinitMenu(ray->menu);
-    deinitMenuMegaRenderer(ray->renderer);
+    deinitMenuZorldoRenderer(ray->renderer);
 
     // Free map, scripts, enemies, scenery, bullets, etc.
     rayFreeCurrentState(ray);
@@ -358,7 +358,7 @@ static void rayMainLoop(int64_t elapsedUs)
                 }
             }
             // Draw the menu
-            drawMenuMega(ray->menu, ray->renderer, elapsedUs);
+            drawMenuZorldo(ray->menu, ray->renderer, elapsedUs);
             break;
         }
         case RAY_GAME:
@@ -622,7 +622,7 @@ static void rayInitMenu(void)
     // Tear down old menu, if it exists
     if (NULL != ray->renderer)
     {
-        deinitMenuMegaRenderer(ray->renderer);
+        deinitMenuZorldoRenderer(ray->renderer);
     }
     if (NULL != ray->menu)
     {
@@ -647,5 +647,5 @@ static void rayInitMenu(void)
     addSingleItemToMenu(ray->menu, rayExitStr);
 
     // Initialize a renderer
-    ray->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    ray->renderer = initMenuZorldoRenderer(NULL, NULL);
 }
