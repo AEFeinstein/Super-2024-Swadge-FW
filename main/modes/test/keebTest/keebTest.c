@@ -179,7 +179,7 @@ static void keebEnterMode(void)
     addSingleItemToMenu(kbTest->menu, teMenuReset);
 
     // Init renderer
-    kbTest->renderer = initMenuZorldoRenderer(NULL, NULL, NULL);
+    kbTest->renderer = initMenuZorldoRenderer(NULL, NULL);
 
     // Init
     kbTest->state = MENU;

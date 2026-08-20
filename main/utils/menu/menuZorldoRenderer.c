@@ -50,7 +50,7 @@
 // Variables
 //==============================================================================
 
-// Routes through the helmet M, with three extra numbers slapped on the end so the hotdog won't crash.
+// TODO: Figure out LEDs once we have prototype boards
 static const uint8_t ledConveyorOrder[] = {
     1, 0, 2, 3, 5, 4, 6, 7, 8,
 };
@@ -73,14 +73,12 @@ static void setLedsFromBg(menuZorldoRenderer_t* renderer);
  *
  * @param titleFont The font used to draw the title, preferably PIX_ROMANA_FONT. If this is NULL it will be
  * allocated by the renderer in SPIRAM.
- * @param titleFontOutline The outline font used to draw the title. If this is NULL it will be allocated by the renderer
- * in SPIRAM.
  * @param menuFont The font used to draw this menu, preferably MINISHCAP_FONT. If this is NULL it will be
  * allocated by the renderer in SPIRAM.
  * @return A pointer to the menu renderer. This memory is allocated and must be freed with deinitMenuZorldoRenderer()
  * when done
  */
-menuZorldoRenderer_t* initMenuZorldoRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont)
+menuZorldoRenderer_t* initMenuZorldoRenderer(font_t* titleFont, font_t* menuFont)
 {
     menuZorldoRenderer_t* renderer = heap_caps_calloc(1, sizeof(menuZorldoRenderer_t), MALLOC_CAP_SPIRAM);
 
@@ -185,7 +183,7 @@ void deinitMenuZorldoRenderer(menuZorldoRenderer_t* renderer)
 }
 
 /**
- * @brief Set whether or not to draw the sci-fi rectangle background body
+ * @brief Set whether or not to draw the menu background
  *
  * @param renderer The renderer.
  * @param drawBody true to draw the body background, false to skip it
@@ -535,35 +533,38 @@ void drawMenuZorldo(menu_t* menu, menuZorldoRenderer_t* renderer, int64_t elapse
         drawWsg(&renderer->arrowPageUp, 211, 218, false, true, 0);
     }
 
-    // Move Tomi towards the selected item
-    float distance = ABS(renderer->tomiYPos - renderer->tomiYTarget);
-    if (distance >= 0.5)
+    if (renderer->tomiYPos != 0)
     {
-        float delta = MIN(distance, elapsedUs / (700000.0 / distance));
-        if (renderer->tomiYPos > renderer->tomiYTarget)
+        // Move Tomi towards the selected item
+        float distance = ABS(renderer->tomiYPos - renderer->tomiYTarget);
+        if (distance >= 0.5)
         {
-            delta = -delta;
+            float delta = MIN(distance, elapsedUs / (700000.0 / distance));
+            if (renderer->tomiYPos > renderer->tomiYTarget)
+            {
+                delta = -delta;
+            }
+            renderer->tomiYPos += delta;
         }
-        renderer->tomiYPos += delta;
+        else
+        {
+            renderer->tomiYPos = renderer->tomiYTarget;
+        }
+        // Animate Tomi in a figure-8
+        renderer->tomiXDegrees += elapsedUs / 14000.0;
+        renderer->tomiYDegrees += elapsedUs / 7000.0;
+        if (renderer->tomiXDegrees >= 360)
+        {
+            renderer->tomiXDegrees -= 360;
+        }
+        if (renderer->tomiYDegrees >= 360)
+        {
+            renderer->tomiYDegrees -= 360;
+        }
+        float tomiX = getSin1024(renderer->tomiXDegrees) / 50.0;
+        float tomiY = getSin1024(renderer->tomiYDegrees) / 300.0;
+        drawWsgSimple(&renderer->tomi, 175 + tomiX, renderer->tomiYPos + tomiY);
     }
-    else
-    {
-        renderer->tomiYPos = renderer->tomiYTarget;
-    }
-    // Animate Tomi in a figure-8
-    renderer->tomiXDegrees += elapsedUs / 14000.0;
-    renderer->tomiYDegrees += elapsedUs / 7000.0;
-    if (renderer->tomiXDegrees >= 360)
-    {
-        renderer->tomiXDegrees -= 360;
-    }
-    if (renderer->tomiYDegrees >= 360)
-    {
-        renderer->tomiYDegrees -= 360;
-    }
-    float tomiX = getSin1024(renderer->tomiXDegrees) / 50.0;
-    float tomiY = getSin1024(renderer->tomiYDegrees) / 300.0;
-    drawWsgSimple(&renderer->tomi, 175 + tomiX, renderer->tomiYPos + tomiY);
 
     if (menu->showBattery)
     {

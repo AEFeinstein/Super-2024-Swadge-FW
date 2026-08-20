@@ -191,7 +191,7 @@ void danceEnterMode(void)
     espNowPreLightSleep();
 
     danceState->menu         = initMenu(danceName, danceMenuCb);
-    danceState->menuRenderer = initMenuZorldoRenderer(NULL, NULL, NULL);
+    danceState->menuRenderer = initMenuZorldoRenderer(NULL, NULL);
     setZorldoLedsOn(danceState->menuRenderer, false);
     // static const paletteColor_t shadowColors[] = {
     //     c430, c431, c442, c543, c554, c555, c554, c543, c442, c431,

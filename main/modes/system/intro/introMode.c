@@ -504,7 +504,7 @@ static void introEnterMode(void)
     loadWsg(PINKIE_WSG, &iv->icon.sona, true);
 
     iv->bgMenu   = initMenu(startTitle, NULL);
-    iv->renderer = initMenuZorldoRenderer(NULL, NULL, NULL);
+    iv->renderer = initMenuZorldoRenderer(NULL, NULL);
 
     // up
     iv->buttonIcons[0].icon    = &iv->icon.button.up;

@@ -219,7 +219,7 @@ static void enterTrophy()
 
     // Menu
     tt->menu = initMenu(textBlobs[5], trophyMenuCb);
-    tt->rndr = initMenuZorldoRenderer(NULL, NULL, NULL);
+    tt->rndr = initMenuZorldoRenderer(NULL, NULL);
     addSingleItemToMenu(tt->menu, textBlobs[6]);
     addSingleItemToMenu(tt->menu, textBlobs[7]);
     settingParam_t caseOptParams = {

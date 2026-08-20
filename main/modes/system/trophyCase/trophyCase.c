@@ -131,7 +131,7 @@ static void enterTCase(void)
 {
     tc       = heap_caps_calloc(sizeof(tCase_t), 1, MALLOC_CAP_8BIT);
     tc->menu = initMenu(tCaseModeName, tCaseMenuCb);
-    tc->rnd  = initMenuZorldoRenderer(NULL, NULL, NULL);
+    tc->rnd  = initMenuZorldoRenderer(NULL, NULL);
     addSingleItemToMenu(tc->menu, menuItems[0]);
     // Note, TROPHY_DISPLAY_INCL_HIDDEN is not shown in this list
     settingParam_t caseOptParams = {

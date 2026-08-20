@@ -93,7 +93,7 @@ static void swadgePassTestEnterMode(void)
     }
 
     // Initialize renderer
-    spt->renderer = initMenuZorldoRenderer(NULL, NULL, NULL);
+    spt->renderer = initMenuZorldoRenderer(NULL, NULL);
 }
 
 /**

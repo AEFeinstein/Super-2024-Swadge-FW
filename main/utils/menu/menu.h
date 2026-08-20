@@ -96,7 +96,7 @@
  *                              ARRAY_SIZE(optionSettingValues), getScreensaverTimeSettingBounds(), 0);
  *
  * // Initialize a renderer
- * menuZorldoRenderer_t* renderer = initMenuZorldoRenderer(NULL, NULL, NULL);
+ * menuZorldoRenderer_t* renderer = initMenuZorldoRenderer(NULL, NULL);
  * \endcode
  *
  * Process button events:

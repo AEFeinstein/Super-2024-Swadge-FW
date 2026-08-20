@@ -267,7 +267,7 @@ static void mainMenuEnterMode(void)
     setShowBattery(mainMenu->menu, true);
 
     // Initialize menu renderer
-    mainMenu->renderer = initMenuZorldoRenderer(NULL, NULL, NULL);
+    mainMenu->renderer = initMenuZorldoRenderer(NULL, NULL);
 }
 
 /**

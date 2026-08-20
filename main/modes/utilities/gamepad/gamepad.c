@@ -395,7 +395,7 @@ void gamepadEnterMode(void)
     gamepad->menu = endSubMenu(gamepad->menu);
 
     // Initialize menu renderer
-    gamepad->renderer         = initMenuZorldoRenderer(NULL, NULL, NULL);
+    gamepad->renderer         = initMenuZorldoRenderer(NULL, NULL);
     gamepad->renderer->ledsOn = false;
 
     // Set up the IMU

@@ -1563,7 +1563,7 @@ static void synthEnterMode(void)
     sd->wheelTextArea.height = sd->betterFont.height + 2;
 
     // Use smol font for menu items, there might be a lot
-    sd->renderer          = initMenuZorldoRenderer(NULL, NULL, NULL);
+    sd->renderer          = initMenuZorldoRenderer(NULL, NULL);
     sd->wheelMenu         = initWheelMenu(&sd->betterFont, 90, &sd->wheelTextArea);
     sd->wheelMenu->unselR = 16;
 

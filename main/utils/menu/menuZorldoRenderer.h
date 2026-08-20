@@ -83,7 +83,7 @@ typedef struct
     uint16_t bodyHeight; ///< the height of the middle portion of the body, between top and bottom decorated parts
 } menuZorldoRenderer_t;
 
-menuZorldoRenderer_t* initMenuZorldoRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);
+menuZorldoRenderer_t* initMenuZorldoRenderer(font_t* titleFont, font_t* menuFont);
 void deinitMenuZorldoRenderer(menuZorldoRenderer_t* renderer);
 void drawMenuZorldoBody(uint16_t topLeftX, uint16_t topLeftY, menuZorldoRenderer_t* renderer, int64_t elapsedUs);
 void drawMenuZorldo(menu_t* menu, menuZorldoRenderer_t* renderer, int64_t elapsedUs);

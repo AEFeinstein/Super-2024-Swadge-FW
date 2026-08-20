@@ -1025,7 +1025,7 @@ static void swsnResetMenu()
 {
     // Menu
     scd->menu     = initMenu(sonaMenuName, swsnMenuCb);
-    scd->renderer = initMenuZorldoRenderer(NULL, NULL, NULL);
+    scd->renderer = initMenuZorldoRenderer(NULL, NULL);
     scd->menu     = startSubMenu(scd->menu, menuOptions[0]);
     for (int8_t idx = 0; idx < MAX_SWSN_SLOTS; idx++)
     {

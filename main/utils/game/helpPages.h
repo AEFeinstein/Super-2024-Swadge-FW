@@ -34,7 +34,7 @@ static const helpPage_t helpPages[] = {
 // Set up the help screen when entering the mode
 // The menu must be empty
 menu_t* bgMenu                   = initMenu("Mode Name", NULL);
-menuZorldoRenderer_t* menuRenderer = initMenuZorldoRenderer(NULL, NULL, NULL);
+menuZorldoRenderer_t* menuRenderer = initMenuZorldoRenderer(NULL, NULL);
 helpPageVars_t* help             = initHelpScreen(bgMenu, menuRenderer, helpPages, ARRAY_SIZE(helpPages));
 
 
