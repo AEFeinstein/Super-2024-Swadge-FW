@@ -687,9 +687,9 @@ typedef struct rayGame
     rayScreen_t screen;           ///< The current screen being shown
     rayPauseScreen_t pauseScreen; ///< The current pause screen being shown
 
-    menu_t* menu;                 ///< The main menu
-    menuMegaRenderer_t* renderer; ///< Renderer for the menu
-    bool wasReset;                ///< Flag to return to the main menu after wiping NVM
+    menu_t* menu;                   ///< The main menu
+    menuZorldoRenderer_t* renderer; ///< Renderer for the menu
+    bool wasReset;                  ///< Flag to return to the main menu after wiping NVM
 
     rayMap_t map;      ///< The loaded map
     int32_t doorTimer; ///< A timer used to open doors
