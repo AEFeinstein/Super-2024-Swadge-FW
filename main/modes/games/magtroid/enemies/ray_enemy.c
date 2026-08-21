@@ -41,7 +41,7 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
             node_t* nextNode = currentNode->next;
 
             // Maybe create an item after death
-            rayMapCellType_t dropType = enemyDropAfterDeath(ray, enemy);
+            rayMapCellType_t dropType = enemyDropAfterDeath(enemy);
             switch (dropType)
             {
                 case OBJ_ITEM_EWI ... OBJ_ITEM_31:
@@ -114,11 +114,11 @@ static bool animateEnemy(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
  * @param enemy
  * @return rayMapCellType_t
  */
-rayMapCellType_t enemyDropAfterDeath(ray_t* ray, rayEnemy_t* enemy)
+rayMapCellType_t enemyDropAfterDeath(rayEnemy_t* enemy)
 {
     if (enemy->dropAfterDeathFn)
     {
-        return enemy->dropAfterDeathFn(ray, enemy);
+        return enemy->dropAfterDeathFn();
     }
     return EMPTY;
 }
@@ -137,5 +137,49 @@ void rayEnemyCheckCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q
     if (enemy->collisionFn)
     {
         enemy->collisionFn(ray, enemy, player, deltaX, deltaY);
+    }
+}
+
+/**
+ * @brief
+ *
+ * @param ray
+ * @param enemy
+ * @return rayMapCellType_t
+ */
+rayMapCellType_t rayEnemyStandardItemDrop(void)
+{
+    switch ((uint8_t)(esp_random() & 0xFF))
+    {
+        case 0 ... 46:
+        {
+            // 18.5% chance of 1 mpoint
+            return OBJ_ITEM_MPOINT_1;
+        }
+        case 47 ... 55:
+        {
+            // 3.7% chance of 5 mpoint
+            return OBJ_ITEM_MPOINT_5;
+        }
+        case 56 ... 60:
+        {
+            // 1.9% chance of 10 mpoint
+            return OBJ_ITEM_MPOINT_10;
+        }
+        case 61 ... 62:
+        {
+            // 0.9% chance of 20 mpoint
+            return OBJ_ITEM_MPOINT_20;
+        }
+        case 63 ... 127:
+        {
+            // 25% chance of heart
+            return OBJ_ITEM_HEART;
+        }
+        default:
+        {
+            // 50% chance of nothing
+            return EMPTY;
+        }
     }
 }

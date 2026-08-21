@@ -234,17 +234,11 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
     newObj->c.type = type;
     newObj->c.id   = id;
 
-    // TODO set function pointers
     switch (type)
     {
         case OBJ_ENEMY_BOX:
         {
             rayInitEnemyBox(ray, newObj);
-            break;
-        }
-        case OBJ_ENEMY_BUSH:
-        {
-            rayInitEnemyBush(ray, newObj);
             break;
         }
         default:
@@ -254,8 +248,6 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
             return;
         }
     }
-
-    // TODO call enemy initializer
 
     // Set initial common state
     newObj->c.posX        = x;
