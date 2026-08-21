@@ -88,9 +88,9 @@ class tileType(Enum):
     BG_WALL_30 = (BG | WALL | 30)
     BG_WALL_31 = (BG | WALL | 31)
     # Door tiles
-    BG_DOOR_0 = (BG | DOOR | 0)
-    BG_DOOR_1 = (BG | DOOR | 1)
-    BG_DOOR_2 = (BG | DOOR | 2)
+    BG_DOOR_BUSH    = (BG | DOOR | 0)
+    BG_DOOR_CRACK_H = (BG | DOOR | 1)
+    BG_DOOR_CRACK_V = (BG | DOOR | 2)
     BG_DOOR_3 = (BG | DOOR | 3)
     BG_DOOR_4 = (BG | DOOR | 4)
     BG_DOOR_5 = (BG | DOOR | 5)
@@ -123,7 +123,7 @@ class tileType(Enum):
     # Self and Enemies
     OBJ_ENEMY_START_POINT = (OBJ | ENEMY | 0)
     OBJ_ENEMY_BOX  = (OBJ | ENEMY | 1)
-    OBJ_ENEMY_BUSH = (OBJ | ENEMY | 2)
+    OBJ_ENEMY_2 = (OBJ | ENEMY | 2)
     OBJ_ENEMY_3 = (OBJ | ENEMY | 3)
     OBJ_ENEMY_4 = (OBJ | ENEMY | 4)
     OBJ_ENEMY_5 = (OBJ | ENEMY | 5)
@@ -324,9 +324,9 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_WALL_31,
     ],
     [
-        tileType.BG_DOOR_0,
-        tileType.BG_DOOR_1,
-        tileType.BG_DOOR_2,
+        tileType.BG_DOOR_BUSH,
+        tileType.BG_DOOR_CRACK_H,
+        tileType.BG_DOOR_CRACK_V,
         tileType.BG_DOOR_3,
         tileType.BG_DOOR_4,
         tileType.BG_DOOR_5,
@@ -398,7 +398,7 @@ objTiles: list[list[tileType]] = [
     [
         tileType.OBJ_ENEMY_START_POINT,
         tileType.OBJ_ENEMY_BOX,
-        tileType.OBJ_ENEMY_BUSH,
+        tileType.OBJ_ENEMY_2,
         tileType.OBJ_ENEMY_3,
         tileType.OBJ_ENEMY_4,
         tileType.OBJ_ENEMY_5,
