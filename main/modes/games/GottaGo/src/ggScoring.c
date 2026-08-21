@@ -1,13 +1,19 @@
 #include "ggScoring.h"
+#include "ggTrophies.h"
 
 //==============================================================================
 // Defines
 //==============================================================================
 
+// Timer
+#define TIMER_BUFFER (GG_SECOND) ///< Grace period before timer starts to penalize player
+
 // Score values
+#define MAX_SCORE      1000 ///< Default score
+#define MAX_PERCENTAGE 1000 ///< Used to define percentage scale
 // NPC
 #define SCORE_BASE_NPC         200
-#define SCORE_WEIRD_ADJUSTMENT ((SCORE_BASE_NPC * 3) / 2)
+#define SCORE_WEIRD_ADJUSTMENT ((SCORE_BASE_NPC * 3) / 2) ///< 150% score penalty for weirdness
 // Puddle
 #define SCORE_PUDDLE_SMALL  100
 #define SCORE_PUDDLE_MEDIUM 200
@@ -26,14 +32,14 @@
 //==============================================================================
 
 static const char* const ggNVSSpace[] = {
-    "ggSaves", "mGames", "mGamesHS", "acc", "accHS", "score", "scoreHS", "adjScore", "adjScoreHS",
+    "ggSaves", "mLevels", "mLevelsHS", "acc", "accHS", "score", "scoreHS", "adjScore", "adjScoreHS",
 };
 
 //==============================================================================
 // Enums
 //==============================================================================
 
-// Game states
+// Level state
 typedef enum
 {
     GG_PEE_NONE,
@@ -64,8 +70,8 @@ typedef enum
 typedef enum
 {
     GG_NAMESPACE,
-    GG_MAX_GAMES,
-    GG_MAX_GAMES_HS,
+    GG_MAX_LEVELS,
+    GG_MAX_LEVELS_HS,
     GG_MAX_ACC,
     GG_MAX_ACC_HS,
     GG_MAX_SCORE,
@@ -78,27 +84,79 @@ typedef enum
 // Function Declarations
 //==============================================================================
 
-static int calcNPCScore(ggNPC_t* n, int distance);
+/// @brief Calculate the NPC's score
+/// @param npc NPC to evaluate
+/// @param distance How far from a particular urinal
+/// @return Final score this NPC contributes
+static int calcNPCScore(ggNPC_t* npc, int distance);
+
+/// @brief Get the best and worst options set
+/// @param urinals List of urinals to evaluate
+/// @param numActive Number of active urinals
+/// @param urinalScores Array of scores, one for each urinal in order from left to right
+/// @param best Best possible score
+/// @param worst Worst possible score
+static void getBestWorstOption(ggUrinal_t* urinals, int numActive, int* urinalScores, int* best, int* worst);
+
+/// @brief Checks the accuracy and worst trophies. Requires ggd->selection to remain accurate
+/// @param ggd Game Data
+/// @param urinalScores Array of scores, one for each urinal in order from left to right
+/// @param accuracy Current accuracy
+/// @param worst Current worst option value
+static void checkTrophies(ggData_t* ggd, int* urinalScores, int accuracy, int worst);
+
+/// @brief Checks an accuracy Trophy
+/// @param ggd Game Data
+/// @param accuracy Current Accuracy
+/// @param count Current numer of Levels
+/// @param trophyName 
+static void checkAccuracy(ggData_t* ggd, int accuracy, int* count, ggTrophyNames_t trophyName);
 
 //==============================================================================
 // Functions
 //==============================================================================
 
-void ggCalcUrinalScore(ggData_t* ggd, int* value)
+void ggCalcFinalScores(ggData_t* ggd, int* urinalScores, int* best, int* worst)
+{
+    ggCalcUrinalScores(ggd->urinals, ggd->numActive, urinalScores, best, worst);
+
+    // Accuracy
+    int accuracy = 0;
+    if (ggd->stallUsed)
+    { // Using a stall gives you a perfect score
+        accuracy = MAX_SCORE;
+    }
+    else
+    {
+        accuracy = (MAX_SCORE * urinalScores[ggd->selection]) / (MAX_SCORE - *best);
+    }
+    // Average accuracy
+    ggd->accScore = (ggd->accScore * (ggd->numLevels - 1) + accuracy) / ggd->numLevels;
+    // Calc total score
+    ggd->totalScore
+        += accuracy * ((ggd->timeLimit + TIMER_BUFFER) - MAX(ggd->timeRemaining, TIMER_BUFFER)) / ggd->timeLimit;
+    // Calc adjusted score
+    ggd->adjScore = (ggd->accScore * ggd->totalScore) / MAX_PERCENTAGE;
+    // Check if trophies have been triggered
+    checkTrophies(ggd, urinalScores, accuracy, worst);
+    ggSaveFinalToNVS(ggd);
+}
+
+void ggCalcUrinalScores(ggUrinal_t* urinals, int numActive, int* urinalScores, int* best, int* worst)
 {
     int pick[MAX_URINALS]   = {0}; // Score this urinal has due to issues
     int nextTo[MAX_URINALS] = {0}; // nextTo: Score this urinal receives from neighbors
 
     // NPCs
-    for (int idx = 0; idx < ggd->numActive; idx++)
+    for (int idx = 0; idx < numActive; idx++)
     {
         // Leftmost
         int pos = 1;
         for (int i = idx - 1; i >= 0; i--)
         {
-            if (ggd->urinals[i].npc.active)
+            if (urinals[i].npc.active)
             {
-                nextTo[idx] += calcNPCScore(&ggd->urinals[i].npc, pos);
+                nextTo[idx] += calcNPCScore(&urinals[i].npc, pos);
                 break;
             }
             else
@@ -108,11 +166,11 @@ void ggCalcUrinalScore(ggData_t* ggd, int* value)
         }
         // Rightmost
         pos = 1;
-        for (int i = idx + 1; i < ggd->numActive; i++)
+        for (int i = idx + 1; i < numActive; i++)
         {
-            if (ggd->urinals[i].npc.active)
+            if (urinals[i].npc.active)
             {
-                nextTo[idx] += calcNPCScore(&ggd->urinals[i].npc, pos);
+                nextTo[idx] += calcNPCScore(&urinals[i].npc, pos);
                 break;
             }
             else
@@ -122,13 +180,12 @@ void ggCalcUrinalScore(ggData_t* ggd, int* value)
         }
     }
     // Puddles
-    for (int idx = 0; idx < ggd->numActive; idx++)
+    for (int idx = 0; idx < numActive; idx++)
     {
-        ggUrinal_t* urinal = &ggd->urinals[idx];
         // Left
-        if (idx < ggd->numActive - 1)
+        if (idx < numActive - 1)
         {
-            switch (urinal->puddle)
+            switch (urinals[idx].puddle)
             {
                 case GG_PEE_SMALL:
                 {
@@ -155,7 +212,7 @@ void ggCalcUrinalScore(ggData_t* ggd, int* value)
         // Right
         if (idx > 0)
         {
-            switch (urinal->puddle)
+            switch (urinals[idx].puddle)
             {
                 case GG_PEE_SMALL:
                 {
@@ -180,7 +237,7 @@ void ggCalcUrinalScore(ggData_t* ggd, int* value)
             }
         }
         // Center
-        switch (urinal->puddle)
+        switch (urinals[idx].puddle)
         {
             case GG_PEE_SMALL:
             {
@@ -205,9 +262,9 @@ void ggCalcUrinalScore(ggData_t* ggd, int* value)
         }
     }
     // Dividers
-    for (int idx = 0; idx < ggd->numActive; idx++)
+    for (int idx = 0; idx < numActive; idx++)
     {
-        switch (ggd->urinals[idx].divider)
+        switch (urinals[idx].divider)
         {
             case GG_DIV_FULL:
             {
@@ -227,7 +284,7 @@ void ggCalcUrinalScore(ggData_t* ggd, int* value)
         }
         if (idx != 0)
         {
-            switch (ggd->urinals[idx - 1].divider)
+            switch (urinals[idx - 1].divider)
             {
                 case GG_DIV_FULL:
                 {
@@ -248,74 +305,75 @@ void ggCalcUrinalScore(ggData_t* ggd, int* value)
         }
     }
     // Urinals
-    for (int idx = 0; idx < ggd->numActive; idx++)
+    for (int idx = 0; idx < numActive; idx++)
     {
-        // Urinal
-        ggUrinal_t* urinal = &ggd->urinals[idx];
         // Only if you pick the urinal
-        pick[idx] += (urinal->autoFlush) ? SCORE_AUTOFLUSH : 0;
-        pick[idx] += (urinal->graffiti > 0) ? SCORE_MINOR_ISSUE : 0;
-        pick[idx] += (urinal->cracks > 0) ? SCORE_MINOR_ISSUE : 0;
-        pick[idx] += (urinal->waterLeak) ? SCORE_MINOR_ISSUE : 0;
-        pick[idx] += (urinal->brokenBowl) ? SCORE_MAJOR_ISSUE : 0;
-        pick[idx] += (urinal->brokenDrain) ? SCORE_MAJOR_ISSUE : 0;
-        pick[idx] += (urinal->outOfOrder) ? SCORE_MAJOR_ISSUE : 0;
-        pick[idx] += (urinal->pluggedDrain) ? SCORE_MAJOR_ISSUE : 0;
-        pick[idx] += (urinal->small) ? SCORE_SMALL_URINAL : 0;
-        
+        pick[idx] += (urinals[idx].autoFlush) ? SCORE_AUTOFLUSH : 0;
+        pick[idx] += (urinals[idx].graffiti > 0) ? SCORE_MINOR_ISSUE : 0;
+        pick[idx] += (urinals[idx].cracks > 0) ? SCORE_MINOR_ISSUE : 0;
+        pick[idx] += (urinals[idx].waterLeak) ? SCORE_MINOR_ISSUE : 0;
+        pick[idx] += (urinals[idx].brokenBowl) ? SCORE_MAJOR_ISSUE : 0;
+        pick[idx] += (urinals[idx].brokenDrain) ? SCORE_MAJOR_ISSUE : 0;
+        pick[idx] += (urinals[idx].outOfOrder) ? SCORE_MAJOR_ISSUE : 0;
+        pick[idx] += (urinals[idx].pluggedDrain) ? SCORE_MAJOR_ISSUE : 0;
+        pick[idx] += (urinals[idx].small) ? SCORE_SMALL_URINAL : 0;
+
         // If you're next to the urinal
         // Urinal to the right
-        if (idx < ggd->numActive - 1 && urinal->pluggedDrain)
+        if (idx < numActive - 1 && urinals[idx].pluggedDrain)
         {
             nextTo[idx + 1] += SCORE_MAJOR_ISSUE / 2;
         }
         // Urinal to the left
-        if (idx > 0 && urinal->pluggedDrain)
+        if (idx > 0 && urinals[idx].pluggedDrain)
         {
             nextTo[idx - 1] += SCORE_MAJOR_ISSUE / 2;
         }
     }
     // Save values out
-    for (int idx = 0; idx < ggd->numActive; idx++)
+    for (int idx = 0; idx < numActive; idx++)
     {
-        value[idx] = pick[idx] + nextTo[idx];
+        urinalScores[idx] = MAX_SCORE - (pick[idx] + nextTo[idx]);
     }
+    getBestWorstOption(urinals, numActive, urinalScores, best, worst);
 }
+
+// NVS
 
 void ggSaveFinalToNVS(ggData_t* ggd)
 {
     int outVal;
-    if (!readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_GAMES], &outVal))
+    if (!readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_LEVELS], &outVal))
     {
-        writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_GAMES], ggd->numGames);
+        writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_LEVELS], ggd->numLevels);
     }
     else
     {
-        if (ggd->numGames > outVal)
+        if (ggd->numLevels > outVal)
         {
-            writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_GAMES], ggd->numGames);
+            writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_LEVELS], ggd->numLevels);
         }
     }
     if (!readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_ACC], &outVal))
     {
-        writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_ACC], ggd->avgScore);
+        writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_ACC], ggd->accScore);
     }
     else
     {
-        if (ggd->avgScore > outVal)
+        if (ggd->accScore > outVal)
         {
-            writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_ACC], ggd->avgScore);
+            writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_ACC], ggd->accScore);
         }
     }
     if (!readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_SCORE], &outVal))
     {
-        writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_SCORE], ggd->score);
+        writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_SCORE], ggd->totalScore);
     }
     else
     {
-        if (ggd->score > outVal)
+        if (ggd->totalScore > outVal)
         {
-            writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_SCORE], ggd->score);
+            writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_SCORE], ggd->totalScore);
         }
     }
     if (!readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_ADJ_SCORE], &outVal))
@@ -333,13 +391,73 @@ void ggSaveFinalToNVS(ggData_t* ggd)
 
 // Static functions
 
-static int calcNPCScore(ggNPC_t* n, int distance)
+static int calcNPCScore(ggNPC_t* npc, int distance)
 {
     int score = SCORE_BASE_NPC;
     // No Shirt, stinks, has pants around ankles, no pants, or underwear
-    if (!n->shirt || n->pants == GG_NAKED || n->pants == GG_UNDERWEAR || n->pants == GG_DOWN || n->stink)
+    if (!npc->shirt || npc->pants == GG_NAKED || npc->pants == GG_UNDERWEAR || npc->pants == GG_DOWN || npc->stink)
     {
         score += SCORE_WEIRD_ADJUSTMENT;
     }
     return score / distance;
+}
+
+static void getBestWorstOption(ggUrinal_t* urinals, int numActive, int* urinalScores, int* best, int* worst)
+{
+    // Init
+    int start = 0;
+    best      = 0;    // Worst case value
+    worst     = 1000; // Worst case value
+    while (urinals[start].npc.active)
+    { // Best toilet can't be occupied
+        start++;
+    }
+    best = urinalScores[start];
+    // Loop
+    for (int idx = start; idx < numActive; idx++)
+    {
+        if (urinals[idx].npc.active)
+        {
+            continue;
+        }
+        if (best < urinalScores[idx])
+        {
+            best = urinalScores[idx];
+        }
+        if (worst > urinalScores[idx])
+        {
+            worst = urinalScores[idx];
+        }
+    }
+}
+
+static void checkTrophies(ggData_t* ggd, int* urinalScores, int accuracy, int worst)
+{
+    // Reset accuracy trophy trackers if not accurate enough
+    checkAccuracy(ggd, accuracy, ggd->accLevel1, T_OHP);
+    checkAccuracy(ggd, accuracy, ggd->accLevel2, T_NNP);
+    checkAccuracy(ggd, accuracy, ggd->accLevel3, T_NFP);
+
+    if (urinalScores[ggd->selection] == worst)
+    {
+        ggd->numWorst++;
+        trophyUpdateMilestone(&ggTrophies[T_WORST_OPTIONS], ggd->numWorst, MILE_WORST);
+    }
+    else
+    {
+        ggd->numWorst = 0;
+    }
+}
+
+static void checkAccuracy(ggData_t* ggd, int accuracy, int* count, ggTrophyNames_t trophyName)
+{
+    if (accuracy < OHP_SCORE)
+    {
+        count = 0;
+    }
+    if (accuracy >= OHP_SCORE && !ggd->stallUsed)
+    {
+        count++;
+        trophyUpdateMilestone(&ggTrophies[trophyName], count, MILE_ACC);
+    }
 }
