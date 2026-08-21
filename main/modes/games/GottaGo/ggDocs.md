@@ -25,6 +25,7 @@
     - [x] Play 20 games
   5. [ ] Swadgepass
     - [ ] Add to packet
+    - [ ] Pull from packet
     - [ ] High Score table
   6. [ ] Add settings 
     - [ ] Update Menu to be generic
@@ -62,3 +63,6 @@
 - Occasionally, toilets that cannot used are marked with a check
 - Sometimes when num of urinals reduces next round, selection pointer is off the end.
 - Long toilets do not have a penalty applied
+- Puddles overwrite previous penalties
+- End urinals aren't incentivized
+- Odd-order urinals are valued the same as even order
