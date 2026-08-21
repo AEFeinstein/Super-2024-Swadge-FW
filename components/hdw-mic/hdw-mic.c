@@ -144,7 +144,8 @@ uint32_t loopMic(uint16_t* outSamples, uint32_t outSamplesMax)
             for (int i = 0; (i < ret_num) && (samplesRead < outSamplesMax); i += SOC_ADC_DIGI_RESULT_BYTES)
             {
                 // ADC_DIGI_OUTPUT_FORMAT_TYPE1 is specified in continuous_adc_init()
-                *(outSamples++) = ((adc_digi_output_data_t*)(&result[i]))->type1.data;
+                // TODO is this correct for S3??
+                *(outSamples++) = ((adc_digi_output_data_t*)(&result[i]))->type2.data;
                 samplesRead++;
             }
         }

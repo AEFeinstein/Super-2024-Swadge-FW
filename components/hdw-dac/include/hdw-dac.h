@@ -62,6 +62,8 @@
 
 #pragma once
 
+#if defined(CONFIG_SOC_DAC_SUPPORTED)
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -105,3 +107,5 @@ void dacPoll(void);
 void dacStart(void);
 void dacStop(void);
 void setDacShutdown(bool shutdown);
+
+#endif
