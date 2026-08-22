@@ -38,3 +38,23 @@ void gs_drawNothing(gs_entity_t* self)
 }
 
 void gs_drawSkyGradient(gs_entity_t* self)
+{
+    int32_t y;
+    for(int i = 0; i < 35; i++)
+    {
+        int32_t x = i * self->gameData->assets[self->assetIndex].frames[0].w;
+        y = ((self->pos.y - self->gameData->camera.pos.y) >> GS_DECIMAL_BITS)
+            - self->gameData->assets[self->assetIndex].originY;
+        if (self->gray)
+        {
+            drawWsgPalette(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y,
+                        &self->gameData->entityManager.palettes[GS_GRAYSCALE_PALETTE], self->flipped, false, 0);
+        }
+        else
+        {
+            drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped,
+                    false, 0);
+        }
+    }
+    drawRectFilled(0, y + self->gameData->assets[self->assetIndex].frames[0].h, TFT_WIDTH, y + self->gameData->assets[self->assetIndex].frames[0].h + 10, c012);
+}

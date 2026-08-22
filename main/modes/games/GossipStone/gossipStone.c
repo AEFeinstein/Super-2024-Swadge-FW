@@ -210,7 +210,8 @@ static void gs_loadAssets(void)
 
 static void gs_initializeGame(void)
 {
-    gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_SKY_GRADIENT_ASSET, 1, (vec_t){0xFFFF - (0 << GS_DECIMAL_BITS), 0xFFFF - (0 << GS_DECIMAL_BITS)}, gameData);
+    gs_entity_t* skyGradient = gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_SKY_GRADIENT_ASSET, 1, (vec_t){0xFFFF - (0 << GS_DECIMAL_BITS), 0xFFFF + (25 << GS_DECIMAL_BITS)}, gameData);
+    skyGradient->drawFunction = gs_drawSkyGradient;
     gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_HILL_ASSET, 1, (vec_t){0xFFFF - (TFT_WIDTH << (GS_DECIMAL_BITS-1)), 0xFFFF + (102 << GS_DECIMAL_BITS)}, gameData);
     gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_MOON_ASSET, 1, (vec_t){0xFFFF - (90 << GS_DECIMAL_BITS), 0xFFFF - (0 << GS_DECIMAL_BITS)}, gameData);
     gs_createEntity(&gameData->entityManager, 3, GS_LOOPING_ANIMATION, false, GS_GOSSIP_STONE_ASSET, 5, (vec_t){0xFFFF + (11 << GS_DECIMAL_BITS), 0xFFFF + (82 << GS_DECIMAL_BITS)}, gameData);

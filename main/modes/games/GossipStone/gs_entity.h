@@ -52,5 +52,5 @@ void gs_setData(gs_entity_t* self, void* data, gs_dataType_t dataType);
 gs_entity_t* gs_findLastEntityOfType(gs_entity_t* self, gs_dataType_t type);
 void gs_drawAsset(gs_entity_t* self);
 void gs_drawNothing(gs_entity_t* self);
-
+void gs_drawSkyGradient(gs_entity_t* self);
 // main game entities
