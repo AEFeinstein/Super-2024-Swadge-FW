@@ -92,7 +92,10 @@ void gs_updateGossip(gs_entity_t* self)
         data->index               = gs_randomInt(1, data->arr_size - 1);
         data->progress            = 0;
         data->gossipStone->paused = false;
-        gs_recordProgress(self);
+        if (data->gossipTracking)
+        {
+            gs_recordProgress(self);
+        }
     }
 }
 

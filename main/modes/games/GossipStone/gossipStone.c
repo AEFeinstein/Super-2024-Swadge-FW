@@ -280,8 +280,9 @@ bool gs_menuCb(const char* label, bool selected, uint32_t value)
         {
             gameData->ui        = UI_GAME;
             gs_entity_t* gossip = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_DATA);
-            ((gs_gossip_t*)gossip->data)->messageList = gossipList;
-            ((gs_gossip_t*)gossip->data)->arr_size    = GOSSIP_COUNT;
+            ((gs_gossip_t*)gossip->data)->messageList    = gossipList;
+            ((gs_gossip_t*)gossip->data)->arr_size       = GOSSIP_COUNT;
+            ((gs_gossip_t*)gossip->data)->gossipTracking = true;
             // reset a few things because the player may have exited and entered.
             ((gs_gossip_t*)gossip->data)->index    = 0;
             ((gs_gossip_t*)gossip->data)->progress = 0;
@@ -290,8 +291,9 @@ bool gs_menuCb(const char* label, bool selected, uint32_t value)
         {
             gameData->ui        = UI_GAME;
             gs_entity_t* gossip = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_DATA);
-            ((gs_gossip_t*)gossip->data)->messageList = AMAList;
-            ((gs_gossip_t*)gossip->data)->arr_size    = AMA_COUNT;
+            ((gs_gossip_t*)gossip->data)->messageList    = AMAList;
+            ((gs_gossip_t*)gossip->data)->arr_size       = AMA_COUNT;
+            ((gs_gossip_t*)gossip->data)->gossipTracking = false;
             // reset a few things because the player may have exited and entered.
             ((gs_gossip_t*)gossip->data)->index    = 0;
             ((gs_gossip_t*)gossip->data)->progress = 0;
