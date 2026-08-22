@@ -37,3 +37,9 @@ int gs_randomInt(int lowerBound, int upperBound)
 {
     return esp_random() % (upperBound - lowerBound + 1) + lowerBound;
 }
+
+//Use pos 0 to check if the rightmost bit is 1.
+bool gs_checkBit(uint32_t var, uint8_t pos)
+{
+    return (var) & (1<<(pos - 1));
+}

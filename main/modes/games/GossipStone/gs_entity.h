@@ -7,7 +7,8 @@
 #include "gs_entityManager.h"
 #include "gs_typedef.h"
 
-#define TYPING_FRAMES 50
+//how many game frames elapse for each character to type on screen
+#define FRAMES_PER_CHAR 2
 
 //==============================================================================
 // Enums
@@ -54,6 +55,7 @@ typedef struct
     uint16_t index;     //The message being displayed
     uint16_t arr_size;  //The size of the message list
     uint16_t progress;  //From 0 to TYPING_FRAMES the words are typing. If it is TYPING_FRAMES, then shakes are no longer ignored.
+    gs_entity_t* gossipStone; //Reference to make it start and stop animating.
 } gs_gossip_t;
 
 //==============================================================================
@@ -66,4 +68,5 @@ void gs_drawNothing(gs_entity_t* self);
 // GS entities
 void gs_drawSkyGradient(gs_entity_t* self);
 void gs_updateGossip(gs_entity_t* self);
+void gs_recordProgress(gs_entity_t* self);
 void gs_drawGossip(gs_entity_t* self);

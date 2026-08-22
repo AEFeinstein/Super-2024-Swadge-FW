@@ -45,5 +45,3 @@ typedef struct __attribute__((packed))
     wsg_t* frames;     // Can hold 1 or more pointers to wsg's
     bool allocated;    // Whether the frames are allocated.
 } gs_asset_t;
-
-#define NUM_MESSAGES 8

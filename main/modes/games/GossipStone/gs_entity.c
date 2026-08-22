@@ -76,17 +76,40 @@ void gs_drawSkyGradient(gs_entity_t* self)
 void gs_updateGossip(gs_entity_t* self)
 {
     gs_gossip_t* data = (gs_gossip_t*)self->data;
-    if(data->progress < TYPING_FRAMES)
+    if(data->progress < strlen(data->messageList[data->index]) * FRAMES_PER_CHAR)
     {
         data->progress++;
+        if(data->progress == strlen(data->messageList[data->index]) * FRAMES_PER_CHAR)
+        {
+            data->gossipStone->currentAnimationFrame = 0;
+            data->gossipStone->paused = true;
+        }
     }
     //make this check for shake later
     else if (self->gameData->btnDownState && PB_A)
     {
         data->index = gs_randomInt(1, data->arr_size - 1);
         data->progress = 0;
+        data->gossipStone->paused = false;
+        gs_recordProgress(self);
     }
 }
+
+void gs_recordProgress(gs_entity_t* self)
+{
+    gs_gossip_t* data = (gs_gossip_t*)self->data;
+    
+    if(!gs_checkBit(self->gameData->gossipProgress[data->index / 32], data->index % 32))
+    {
+        //set that bit to 1
+        self->gameData->gossipProgress[data->index / 32] |= (1 << data->index % 32);
+        //To do: save it to nvs
+        trophyUpdate(&(*self->gameData->trophyData)[0],
+        trophyGetSavedValue(&(*self->gameData->trophyData)[0]) + 1, true);
+    }
+}
+
+
 
 void gs_drawGossip(gs_entity_t* self)
 {
@@ -94,7 +117,7 @@ void gs_drawGossip(gs_entity_t* self)
     int16_t textX = 18;
     int16_t textY = 30;
 
-    uint16_t typeAmount = (strlen(data->messageList[data->index]) * data->progress) / TYPING_FRAMES;
+    uint16_t typeAmount = data->progress / FRAMES_PER_CHAR;
     char display[typeAmount+5];
     strncpy(display, data->messageList[data->index], typeAmount);
     display[typeAmount] = '\0';

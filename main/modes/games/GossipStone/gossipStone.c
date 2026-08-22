@@ -49,8 +49,8 @@ const trophyData_t gs_trophies[] = {
         .description = "Listen to all the gossip.",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_ADDITIVE,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = NUM_MESSAGES,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = GOSSIP_COUNT,
     },
 };
 
@@ -225,7 +225,7 @@ static void gs_initializeGame(void)
     skyGradient->drawFunction = gs_drawSkyGradient;
     gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_HILL_ASSET, 1, (vec_t){0xFFFF - (TFT_WIDTH << (GS_DECIMAL_BITS-1)), 0xFFFF + (102 << GS_DECIMAL_BITS)}, gameData);
     gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_MOON_ASSET, 1, (vec_t){0xFFFF - (90 << GS_DECIMAL_BITS), 0xFFFF - (0 << GS_DECIMAL_BITS)}, gameData);
-    gs_createEntity(&gameData->entityManager, 3, GS_LOOPING_ANIMATION, false, GS_GOSSIP_STONE_ASSET, 5, (vec_t){0xFFFF + (11 << GS_DECIMAL_BITS), 0xFFFF + (82 << GS_DECIMAL_BITS)}, gameData);
+    gs_entity_t* gossipStone = gs_createEntity(&gameData->entityManager, 3, GS_LOOPING_ANIMATION, false, GS_GOSSIP_STONE_ASSET, 5, (vec_t){0xFFFF + (11 << GS_DECIMAL_BITS), 0xFFFF + (82 << GS_DECIMAL_BITS)}, gameData);
     gs_entity_t* gossip = gs_createEntity(&gameData->entityManager, 0, GS_NO_ANIMATION, true, GS_NO_ASSET, 0, (vec_t){0xffff, 0xffff}, gameData);
     gossip->data        = heap_caps_calloc(1, sizeof(gs_gossip_t), MALLOC_CAP_SPIRAM);
     if (gossip->data != NULL)
@@ -233,6 +233,7 @@ static void gs_initializeGame(void)
         gossip->dataType = GS_GOSSIP_DATA;
         gossip->updateFunction = gs_updateGossip;
         gossip->drawFunction = gs_drawGossip;
+        ((gs_gossip_t*)gossip->data)->gossipStone = gossipStone;
     }
     else{
         // Exit to the main menu
@@ -274,6 +275,7 @@ bool gs_menuCb(const char* label, bool selected, uint32_t value)
             gs_entity_t* gossip = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_DATA);
             ((gs_gossip_t*)gossip->data)->messageList = gossipList;
             ((gs_gossip_t*)gossip->data)->arr_size = GOSSIP_COUNT;
+            //reset a few things because the player may have exited and entered.
             ((gs_gossip_t*)gossip->data)->index = 0;
             ((gs_gossip_t*)gossip->data)->progress = 0;
         }
@@ -283,6 +285,7 @@ bool gs_menuCb(const char* label, bool selected, uint32_t value)
             gs_entity_t* gossip = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_DATA);
             ((gs_gossip_t*)gossip->data)->messageList = AMAList;
             ((gs_gossip_t*)gossip->data)->arr_size = AMA_COUNT;
+            //reset a few things because the player may have exited and entered.
             ((gs_gossip_t*)gossip->data)->index = 0;
             ((gs_gossip_t*)gossip->data)->progress = 0;
         }

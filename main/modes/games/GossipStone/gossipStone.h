@@ -40,6 +40,11 @@ typedef struct gs_gameData_t
     midiFile_t songMidi;
     int32_t headroom; // volume fade from 0x4000 to 0x0
     bool songFading;
+
+    //NVS related
+    //Usage: The second bit of the first number is 1 if the player has seen gossip idx 1. All 1's if they've seen 0 thru 31.
+    //The first bit of the second number is 1 if the player has seen gossip idx 32. The size of the array times 32 is how many messages can be saved.
+    uint32_t gossipProgress[2];
 } gs_gameData_t;
 
 //==============================================================================
