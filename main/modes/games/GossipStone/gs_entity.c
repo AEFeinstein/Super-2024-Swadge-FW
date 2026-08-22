@@ -36,3 +36,5 @@ void gs_drawAsset(gs_entity_t* self)
 void gs_drawNothing(gs_entity_t* self)
 {
 }
+
+void gs_drawSkyGradient(gs_entity_t* self)

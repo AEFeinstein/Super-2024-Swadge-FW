@@ -16,6 +16,10 @@ typedef void (*gs_callbackFunction_t)(gs_entity_t* self);
 
 typedef enum __attribute__((packed))
 {
+    GS_SKY_GRADIENT_ASSET,
+    GS_HILL_ASSET,
+    GS_MOON_ASSET,
+    GS_GOSSIP_STONE_ASSET,
     GS_NO_ASSET, // Keep this one at the end of the enum. Used for entities with no wsgs.
 } gs_assetIdx_t;
 

@@ -29,6 +29,7 @@ static const char gs_AskMeAnythingStr[] = "Ask Me Anything";
 static void gs_enterMode(void);
 static void gs_exitMode(void);
 static void gs_mainLoop(int64_t elapsedUs);
+static void gs_loadAssets(void);
 static void gs_initializeGame(void);
 static void gs_freeAssets(void);
 bool gs_menuCb(const char* label, bool selected, uint32_t value);
@@ -102,7 +103,6 @@ static void gs_enterMode(void)
     // set the camera to the center of positive ints
     gameData->camera.pos
         = (vec_t){0xFFFF - (TFT_WIDTH << (GS_DECIMAL_BITS - 1)), 0xFFFF - (TFT_HEIGHT << (GS_DECIMAL_BITS - 1))};
-    gameData->camera.pos.y -= (57 << GS_DECIMAL_BITS); // Move the camera a bit.
     gs_initializeEntityManager(&gameData->entityManager, gameData);
     gs_setAssetMetaData();
 
@@ -122,6 +122,8 @@ static void gs_enterMode(void)
     gameData->menu = initMenu(gs_ModeName, gs_menuCb);
     addSingleItemToMenu(gameData->menu, gs_GossipStr);
     addSingleItemToMenu(gameData->menu, gs_AskMeAnythingStr);
+
+    gs_loadAssets();
 }
 
 void gs_setAssetMetaData(void)
@@ -197,8 +199,22 @@ static void gs_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
     memset(&frameBuf[(y * TFT_WIDTH) + x], c011, sizeof(paletteColor_t) * w * h);
 }
 
+static void gs_loadAssets(void)
+{
+    gs_loadAsset(SKY_GRADIENT_WSG, 1, &gameData->assets[GS_SKY_GRADIENT_ASSET]);
+    gs_loadAsset(HILL_WSG, 1, &gameData->assets[GS_HILL_ASSET]);
+    gameData->assets[GS_HILL_ASSET].originX = 0;
+    gs_loadAsset(MOON_WSG, 1, &gameData->assets[GS_MOON_ASSET]);
+    gs_loadAsset(GOSSIP_STONE_0_WSG, 3, &gameData->assets[GS_GOSSIP_STONE_ASSET]);
+}
+
 static void gs_initializeGame(void)
 {
+    gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_SKY_GRADIENT_ASSET, 1, (vec_t){0xFFFF - (0 << GS_DECIMAL_BITS), 0xFFFF - (0 << GS_DECIMAL_BITS)}, gameData);
+    gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_HILL_ASSET, 1, (vec_t){0xFFFF - (TFT_WIDTH << (GS_DECIMAL_BITS-1)), 0xFFFF + (102 << GS_DECIMAL_BITS)}, gameData);
+    gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_MOON_ASSET, 1, (vec_t){0xFFFF - (90 << GS_DECIMAL_BITS), 0xFFFF - (0 << GS_DECIMAL_BITS)}, gameData);
+    gs_createEntity(&gameData->entityManager, 3, GS_LOOPING_ANIMATION, false, GS_GOSSIP_STONE_ASSET, 5, (vec_t){0xFFFF + (11 << GS_DECIMAL_BITS), 0xFFFF + (82 << GS_DECIMAL_BITS)}, gameData);
+
 }
 
 static void gs_freeAssets(void)

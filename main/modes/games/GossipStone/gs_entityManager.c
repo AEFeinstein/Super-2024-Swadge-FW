@@ -47,14 +47,27 @@ void gs_loadAsset(cnfsFileIdx_t spriteCnfsIdx, uint8_t num_frames, gs_asset_t* a
         asset->allocated = true;
     }
 
+    uint16_t maxW = 0;
+    uint16_t maxH = 0;
     for (uint8_t frameIdx = 0; frameIdx < num_frames; frameIdx++)
     {
         wsg_t* wsg = &asset->frames[frameIdx];
-        if (0 == wsg->h && 0 == wsg->w)
+        if (0 == wsg->w && 0 == wsg->h)
         {
             loadWsgInplace(spriteCnfsIdx + frameIdx, wsg, true, gs_decodeSpace, gs_hsd);
         }
+        if(wsg->w > maxW)
+        {
+            maxW = wsg->w;
+        }
+        if(wsg->h > maxH)
+        {
+            maxH = wsg->h;
+        }
     }
+
+    asset->originX = maxW >> 1;
+    asset->originY = maxH >> 1;
 }
 
 void gs_freeAsset(gs_asset_t* asset)

@@ -36,6 +36,7 @@
 #include "dance.h"
 #include "factoryTest.h"
 #include "gamepad.h"
+#include "gossipStone.h"
 #include "introMode.h"
 #include "jukebox.h"
 #include "keebTest.h"
