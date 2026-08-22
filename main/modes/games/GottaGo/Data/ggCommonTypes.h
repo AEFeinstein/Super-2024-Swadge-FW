@@ -22,24 +22,84 @@
 
 const char ggModeName[] = "Gotta Go!";
 
+// Color Arrays
+static const paletteColor_t skinColors[] = {
+    c555, c333, c444, c023, c402, c233, c343,
+};
+static const paletteColor_t shirtColors[] = {
+    c500, c050, c005, c440, c204, c404, c044,
+};
+static const paletteColor_t shirtAccentColors[] = {
+    c400, c040, c004, c330, c103, c303, c033,
+};
+static const paletteColor_t pantsColors[] = {
+    c024, c330, c222, c224, c503, c240, c031,
+};
+static const paletteColor_t pantsAccentColors[] = {
+    c012, c220, c111, c113, c402, c130, c020,
+};
+static const paletteColor_t shoeColors[] = {
+    c210,
+    c000,
+    c111,
+    c300,
+};
+
 //==============================================================================
 // Enums
 //==============================================================================
 
-/// @brief Game state
+/// @brief Types of pants
 typedef enum
 {
-    // GG_WARNING,
-    // GG_SPLASH,
-    // GG_MENU,
-    // GG_RULES,
-    // GG_READY,
-    // GG_GAME,
-    // GG_CHOICE,
-    GG_WON,
-    GG_LOST,
-    // GG_HIGHSCORE,
-} ggState_t;
+    GG_PANTS,
+    GG_SHORTS,
+    GG_SKIRT,
+    GG_DOWN,
+    GG_UNDERWEAR,
+    GG_NAKED,
+    GG_PANTS_COUNT
+} ggPants_t;
+
+/// @brief Types of dividers
+typedef enum
+{
+    GG_DIV_FULL,
+    GG_DIV_TOP,
+    GG_DIV_BOTTOM,
+    GG_DIV_NONE,
+    GG_DIV_COUNT
+} ggDivider_t;
+
+/// @brief Types of Puddles
+typedef enum
+{
+    GG_PEE_NONE,
+    GG_PEE_SMALL,
+    GG_PEE_MED,
+    GG_PEE_LARGE,
+    GG_PEE_COUNT
+} ggPeePuddle_t;
+
+/// @brief Types of Cracks
+typedef enum
+{
+    GG_NO_CRACK,
+    GG_CRACK_1,
+    GG_CRACK_2,
+    GG_CRACK_3,
+    GG_CRACK_COUNT
+} ggCracks_t;
+
+/// @brief Types of Major issues
+typedef enum
+{
+    GG_BROKEN_BOWL,
+    GG_BROKEN_DRAIN,
+    GG_PLUGGED,
+    GG_OOO,
+    GG_MAJOR_COUNT
+} ggMajor_t;
 
 //==============================================================================
 // Structs

@@ -39,33 +39,6 @@ static const char* const ggNVSSpace[] = {
 // Enums
 //==============================================================================
 
-// Level state
-typedef enum
-{
-    GG_PEE_NONE,
-    GG_PEE_SMALL,
-    GG_PEE_MED,
-    GG_PEE_LARGE,
-} ggPeePool_t;
-
-typedef enum
-{
-    GG_DIV_FULL,
-    GG_DIV_TOP,
-    GG_DIV_BOTTOM,
-    GG_DIV_NONE,
-} ggDivider_t;
-
-typedef enum
-{
-    GG_PANTS,
-    GG_SHORTS,
-    GG_SKIRT,
-    GG_DOWN,
-    GG_UNDERWEAR,
-    GG_NAKED,
-} ggPants_t;
-
 // NVS Keys
 typedef enum
 {
@@ -84,32 +57,44 @@ typedef enum
 // Function Declarations
 //==============================================================================
 
-/// @brief Calculate the NPC's score
-/// @param npc NPC to evaluate
-/// @param distance How far from a particular urinal
-/// @return Final score this NPC contributes
+/**
+ * @brief Calculate the NPC's score
+ * 
+ * @param npc NPC to evaluate
+ * @param distance How far from a particular urinal
+ * @return int Final score this NPC contributes
+ */
 static int calcNPCScore(ggNPC_t* npc, int distance);
 
-/// @brief Get the best and worst options set
-/// @param urinals List of urinals to evaluate
-/// @param numActive Number of active urinals
-/// @param urinalScores Array of scores, one for each urinal in order from left to right
-/// @param best Best possible score
-/// @param worst Worst possible score
+/**
+ * @brief Get the best and worst options set
+ * 
+ * @param urinals List of urinals to evaluate
+ * @param numActive Number of active urinals
+ * @param urinalScores Array of scores, one for each urinal in order from left to right
+ * @param best Best possible score
+ * @param worst Worst possible score
+ */
 static void getBestWorstOption(ggUrinal_t* urinals, int numActive, int* urinalScores, int* best, int* worst);
 
-/// @brief Checks the accuracy and worst trophies. Requires ggd->selection to remain accurate
-/// @param ggd Game Data
-/// @param urinalScores Array of scores, one for each urinal in order from left to right
-/// @param accuracy Current accuracy
-/// @param worst Current worst option value
+/**
+ * @brief Checks the accuracy and worst trophies. Requires ggd->selection to remain accurate
+ * 
+ * @param ggd Game Data
+ * @param urinalScores Array of scores, one for each urinal in order from left to right
+ * @param accuracy Current accuracy
+ * @param worst Current worst option value
+ */
 static void checkTrophies(ggData_t* ggd, int* urinalScores, int accuracy, int worst);
 
-/// @brief Checks an accuracy Trophy
-/// @param ggd Game Data
-/// @param accuracy Current Accuracy
-/// @param count Current numer of Levels
-/// @param trophyName 
+/**
+ * @brief Checks an accuracy Trophy
+ * 
+ * @param ggd Game Data
+ * @param accuracy Current Accuracy
+ * @param count Current numer of Levels
+ * @param trophyName The trophy to update
+ */
 static void checkAccuracy(ggData_t* ggd, int accuracy, int* count, ggTrophyNames_t trophyName);
 
 //==============================================================================
