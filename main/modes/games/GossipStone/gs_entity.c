@@ -54,15 +54,15 @@ void gs_drawNothing(gs_entity_t* self)
 void gs_drawSkyGradient(gs_entity_t* self)
 {
     int32_t y;
-    for(int i = 0; i < 35; i++)
+    for (int i = 0; i < 35; i++)
     {
         int32_t x = i * self->gameData->assets[self->assetIndex].frames[0].w;
-        y = ((self->pos.y - self->gameData->camera.pos.y) >> GS_DECIMAL_BITS)
-            - self->gameData->assets[self->assetIndex].originY;
+        y         = ((self->pos.y - self->gameData->camera.pos.y) >> GS_DECIMAL_BITS)
+                    - self->gameData->assets[self->assetIndex].originY;
         if (self->gray)
         {
             drawWsgPalette(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y,
-                        &self->gameData->entityManager.palettes[GS_GRAYSCALE_PALETTE], self->flipped, false, 0);
+                           &self->gameData->entityManager.palettes[GS_GRAYSCALE_PALETTE], self->flipped, false, 0);
         }
         else
         {
@@ -70,26 +70,27 @@ void gs_drawSkyGradient(gs_entity_t* self)
                     false, 0);
         }
     }
-    drawRectFilled(0, y + self->gameData->assets[self->assetIndex].frames[0].h, TFT_WIDTH, y + self->gameData->assets[self->assetIndex].frames[0].h + 10, c012);
+    drawRectFilled(0, y + self->gameData->assets[self->assetIndex].frames[0].h, TFT_WIDTH,
+                   y + self->gameData->assets[self->assetIndex].frames[0].h + 10, c012);
 }
 
 void gs_updateGossip(gs_entity_t* self)
 {
     gs_gossip_t* data = (gs_gossip_t*)self->data;
-    if(data->progress < strlen(data->messageList[data->index]) * FRAMES_PER_CHAR)
+    if (data->progress < strlen(data->messageList[data->index]) * FRAMES_PER_CHAR)
     {
         data->progress++;
-        if(data->progress == strlen(data->messageList[data->index]) * FRAMES_PER_CHAR)
+        if (data->progress == strlen(data->messageList[data->index]) * FRAMES_PER_CHAR)
         {
             data->gossipStone->currentAnimationFrame = 0;
-            data->gossipStone->paused = true;
+            data->gossipStone->paused                = true;
         }
     }
-    //make this check for shake later
+    // make this check for shake later
     else if (self->gameData->btnDownState && PB_A)
     {
-        data->index = gs_randomInt(1, data->arr_size - 1);
-        data->progress = 0;
+        data->index               = gs_randomInt(1, data->arr_size - 1);
+        data->progress            = 0;
         data->gossipStone->paused = false;
         gs_recordProgress(self);
     }
@@ -98,33 +99,31 @@ void gs_updateGossip(gs_entity_t* self)
 void gs_recordProgress(gs_entity_t* self)
 {
     gs_gossip_t* data = (gs_gossip_t*)self->data;
-    
-    if(!gs_checkBit(self->gameData->gossipProgress[data->index / 32], data->index % 32))
+
+    if (!gs_checkBit(self->gameData->gossipProgress[data->index / 32], data->index % 32))
     {
-        //set that bit to 1
+        // set that bit to 1
         self->gameData->gossipProgress[data->index / 32] |= (1 << data->index % 32);
-        //To do: save it to nvs
-        trophyUpdate(&(*self->gameData->trophyData)[0],
-        trophyGetSavedValue(&(*self->gameData->trophyData)[0]) + 1, true);
+        // To do: save it to nvs
+        trophyUpdate(&(*self->gameData->trophyData)[0], trophyGetSavedValue(&(*self->gameData->trophyData)[0]) + 1,
+                     true);
     }
 }
-
-
 
 void gs_drawGossip(gs_entity_t* self)
 {
     gs_gossip_t* data = ((gs_gossip_t*)self->data);
-    int16_t textX = 18;
-    int16_t textY = 30;
+    int16_t textX     = 18;
+    int16_t textY     = 30;
 
     uint16_t typeAmount = data->progress / FRAMES_PER_CHAR;
-    char display[typeAmount+5];
+    char display[typeAmount + 5];
     strncpy(display, data->messageList[data->index], typeAmount);
     display[typeAmount] = '\0';
 
-    if(typeAmount > 0)
+    if (typeAmount > 0)
     {
-        drawTextWordWrap(&self->gameData->font_gossip, c445, display, &textX, &textY, TFT_WIDTH-textX,
-            TFT_HEIGHT-textY);
+        drawTextWordWrap(&self->gameData->font_gossip, c445, display, &textX, &textY, TFT_WIDTH - textX,
+                         TFT_HEIGHT - textY);
     }
 }

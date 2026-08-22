@@ -32,14 +32,14 @@ int16_t gs_logRemap(int16_t x)
     return (int16_t)(30000 * factor);
 }
 
-//Both inputs are inclusive
+// Both inputs are inclusive
 int gs_randomInt(int lowerBound, int upperBound)
 {
     return esp_random() % (upperBound - lowerBound + 1) + lowerBound;
 }
 
-//Use pos 0 to check if the rightmost bit is 1.
+// Use pos 0 to check if the rightmost bit is 1.
 bool gs_checkBit(uint32_t var, uint8_t pos)
 {
-    return (var) & (1<<(pos - 1));
+    return (var) & (1 << (pos - 1));
 }

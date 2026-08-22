@@ -1,7 +1,7 @@
 #pragma once
 
 #define GOSSIP_COUNT 6
-#define AMA_COUNT 21
+#define AMA_COUNT    21
 
 //==============================================================================
 // Externs

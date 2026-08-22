@@ -7,7 +7,7 @@
 #include "gs_entityManager.h"
 #include "gs_typedef.h"
 
-//how many game frames elapse for each character to type on screen
+// how many game frames elapse for each character to type on screen
 #define FRAMES_PER_CHAR 2
 
 //==============================================================================
@@ -51,11 +51,12 @@ struct gs_entity_t
 
 typedef struct
 {
-    char **messageList;
-    uint16_t index;     //The message being displayed
-    uint16_t arr_size;  //The size of the message list
-    uint16_t progress;  //From 0 to TYPING_FRAMES the words are typing. If it is TYPING_FRAMES, then shakes are no longer ignored.
-    gs_entity_t* gossipStone; //Reference to make it start and stop animating.
+    char** messageList;
+    uint16_t index;    // The message being displayed
+    uint16_t arr_size; // The size of the message list
+    uint16_t progress; // From 0 to TYPING_FRAMES the words are typing. If it is TYPING_FRAMES, then shakes are no
+                       // longer ignored.
+    gs_entity_t* gossipStone; // Reference to make it start and stop animating.
 } gs_gossip_t;
 
 //==============================================================================

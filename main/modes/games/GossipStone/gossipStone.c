@@ -18,9 +18,9 @@
 //==============================================================================
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-const char gs_ModeName[]  = "Gossip Stone";
-const char gs_trophyNVS[] = "GossipTroph";
-static const char gs_GossipStr[]    = "Gossip";
+const char gs_ModeName[]                = "Gossip Stone";
+const char gs_trophyNVS[]               = "GossipTroph";
+static const char gs_GossipStr[]        = "Gossip";
 static const char gs_AskMeAnythingStr[] = "Ask Me Anything";
 
 //==============================================================================
@@ -76,14 +76,14 @@ swadgeMode_t gossipStoneMode = {
     .overrideSelectBtn = false, // The select/Menu button has a default behavior. If you want to override it,
                                 // you can set this to true but you'll need to re-implement the
                                 // 'return to main menu' behavior.
-    .fnEnterMode              = gs_enterMode, // The enter mode function
-    .fnExitMode               = gs_exitMode,  // The exit mode function
-    .fnMainLoop               = gs_mainLoop,  // The loop function
-    .fnAudioCallback          = NULL,         // If the mode uses the microphone
-    .fnBackgroundDrawCallback = gs_BackgroundDrawCallback,         // Draws a section of the display
-    .fnEspNowRecvCb           = NULL,         // If using Wifi, add the receive function here
-    .fnEspNowSendCb           = NULL,         // If using Wifi, add the send function here
-    .fnAdvancedUSB            = NULL,         // If using advanced USB things_.
+    .fnEnterMode              = gs_enterMode,              // The enter mode function
+    .fnExitMode               = gs_exitMode,               // The exit mode function
+    .fnMainLoop               = gs_mainLoop,               // The loop function
+    .fnAudioCallback          = NULL,                      // If the mode uses the microphone
+    .fnBackgroundDrawCallback = gs_BackgroundDrawCallback, // Draws a section of the display
+    .fnEspNowRecvCb           = NULL,                      // If using Wifi, add the receive function here
+    .fnEspNowSendCb           = NULL,                      // If using Wifi, add the send function here
+    .fnAdvancedUSB            = NULL,                      // If using advanced USB things_.
 };
 
 /// @brief A heatshrink decoder to use for all WSG loads rather than allocate a new one for each WSG
@@ -98,8 +98,8 @@ gs_gameData_t* gameData;
 static void gs_enterMode(void)
 {
     setFrameRateUs(16666);
-    gameData             = (gs_gameData_t*)heap_caps_calloc(1, sizeof(gs_gameData_t), MALLOC_CAP_8BIT);
-    
+    gameData = (gs_gameData_t*)heap_caps_calloc(1, sizeof(gs_gameData_t), MALLOC_CAP_8BIT);
+
     gameData->trophyData = &gs_trophies;
 
     // set the camera to the center of positive ints
@@ -120,13 +120,13 @@ static void gs_enterMode(void)
     gameData->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
 
     // Initialize the main menu
-    gameData->ui = UI_MENU;
+    gameData->ui   = UI_MENU;
     gameData->menu = initMenu(gs_ModeName, gs_menuCb);
     addSingleItemToMenu(gameData->menu, gs_GossipStr);
     addSingleItemToMenu(gameData->menu, gs_AskMeAnythingStr);
 
     gs_loadAssets();
-    
+
     gs_initializeGame();
 }
 
@@ -134,14 +134,13 @@ void gs_setAssetMetaData(void)
 {
 }
 
-
 static void gs_exitMode(void)
 {
     gs_freeAssets();
     gs_freeEntityManager(&gameData->entityManager);
     // Free the fonts
     freeFont(&gameData->font_gossip);
-    //unloadMidiFile(&gameData->songMidi);
+    // unloadMidiFile(&gameData->songMidi);
     heap_caps_free(gameData);
 }
 
@@ -221,25 +220,33 @@ static void gs_loadAssets(void)
 
 static void gs_initializeGame(void)
 {
-    gs_entity_t* skyGradient = gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_SKY_GRADIENT_ASSET, 1, (vec_t){0xFFFF - (0 << GS_DECIMAL_BITS), 0xFFFF + (25 << GS_DECIMAL_BITS)}, gameData);
+    gs_entity_t* skyGradient
+        = gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_SKY_GRADIENT_ASSET, 1,
+                          (vec_t){0xFFFF - (0 << GS_DECIMAL_BITS), 0xFFFF + (25 << GS_DECIMAL_BITS)}, gameData);
     skyGradient->drawFunction = gs_drawSkyGradient;
-    gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_HILL_ASSET, 1, (vec_t){0xFFFF - (TFT_WIDTH << (GS_DECIMAL_BITS-1)), 0xFFFF + (102 << GS_DECIMAL_BITS)}, gameData);
-    gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_MOON_ASSET, 1, (vec_t){0xFFFF - (90 << GS_DECIMAL_BITS), 0xFFFF - (0 << GS_DECIMAL_BITS)}, gameData);
-    gs_entity_t* gossipStone = gs_createEntity(&gameData->entityManager, 3, GS_LOOPING_ANIMATION, false, GS_GOSSIP_STONE_ASSET, 5, (vec_t){0xFFFF + (11 << GS_DECIMAL_BITS), 0xFFFF + (82 << GS_DECIMAL_BITS)}, gameData);
-    gs_entity_t* gossip = gs_createEntity(&gameData->entityManager, 0, GS_NO_ANIMATION, true, GS_NO_ASSET, 0, (vec_t){0xffff, 0xffff}, gameData);
+    gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_HILL_ASSET, 1,
+                    (vec_t){0xFFFF - (TFT_WIDTH << (GS_DECIMAL_BITS - 1)), 0xFFFF + (102 << GS_DECIMAL_BITS)},
+                    gameData);
+    gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_MOON_ASSET, 1,
+                    (vec_t){0xFFFF - (90 << GS_DECIMAL_BITS), 0xFFFF - (0 << GS_DECIMAL_BITS)}, gameData);
+    gs_entity_t* gossipStone
+        = gs_createEntity(&gameData->entityManager, 3, GS_LOOPING_ANIMATION, false, GS_GOSSIP_STONE_ASSET, 5,
+                          (vec_t){0xFFFF + (11 << GS_DECIMAL_BITS), 0xFFFF + (82 << GS_DECIMAL_BITS)}, gameData);
+    gs_entity_t* gossip = gs_createEntity(&gameData->entityManager, 0, GS_NO_ANIMATION, true, GS_NO_ASSET, 0,
+                                          (vec_t){0xffff, 0xffff}, gameData);
     gossip->data        = heap_caps_calloc(1, sizeof(gs_gossip_t), MALLOC_CAP_SPIRAM);
     if (gossip->data != NULL)
     {
-        gossip->dataType = GS_GOSSIP_DATA;
-        gossip->updateFunction = gs_updateGossip;
-        gossip->drawFunction = gs_drawGossip;
+        gossip->dataType                          = GS_GOSSIP_DATA;
+        gossip->updateFunction                    = gs_updateGossip;
+        gossip->drawFunction                      = gs_drawGossip;
         ((gs_gossip_t*)gossip->data)->gossipStone = gossipStone;
     }
-    else{
+    else
+    {
         // Exit to the main menu
         switchToSwadgeMode(&mainMenuMode);
     }
-
 }
 
 static void gs_freeAssets(void)
@@ -271,25 +278,24 @@ bool gs_menuCb(const char* label, bool selected, uint32_t value)
     {
         if (gs_GossipStr == label)
         {
-            gameData->ui = UI_GAME;
+            gameData->ui        = UI_GAME;
             gs_entity_t* gossip = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_DATA);
             ((gs_gossip_t*)gossip->data)->messageList = gossipList;
-            ((gs_gossip_t*)gossip->data)->arr_size = GOSSIP_COUNT;
-            //reset a few things because the player may have exited and entered.
-            ((gs_gossip_t*)gossip->data)->index = 0;
+            ((gs_gossip_t*)gossip->data)->arr_size    = GOSSIP_COUNT;
+            // reset a few things because the player may have exited and entered.
+            ((gs_gossip_t*)gossip->data)->index    = 0;
             ((gs_gossip_t*)gossip->data)->progress = 0;
         }
         else if (gs_AskMeAnythingStr == label)
         {
-            gameData->ui = UI_GAME;
+            gameData->ui        = UI_GAME;
             gs_entity_t* gossip = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_DATA);
             ((gs_gossip_t*)gossip->data)->messageList = AMAList;
-            ((gs_gossip_t*)gossip->data)->arr_size = AMA_COUNT;
-            //reset a few things because the player may have exited and entered.
-            ((gs_gossip_t*)gossip->data)->index = 0;
+            ((gs_gossip_t*)gossip->data)->arr_size    = AMA_COUNT;
+            // reset a few things because the player may have exited and entered.
+            ((gs_gossip_t*)gossip->data)->index    = 0;
             ((gs_gossip_t*)gossip->data)->progress = 0;
         }
     }
     return false;
 }
-

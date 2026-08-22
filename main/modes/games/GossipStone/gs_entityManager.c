@@ -57,11 +57,11 @@ void gs_loadAsset(cnfsFileIdx_t spriteCnfsIdx, uint8_t num_frames, gs_asset_t* a
         {
             loadWsgInplace(spriteCnfsIdx + frameIdx, wsg, true, gs_decodeSpace, gs_hsd);
         }
-        if(wsg->w > maxW)
+        if (wsg->w > maxW)
         {
             maxW = wsg->w;
         }
-        if(wsg->h > maxH)
+        if (wsg->h > maxH)
         {
             maxH = wsg->h;
         }
