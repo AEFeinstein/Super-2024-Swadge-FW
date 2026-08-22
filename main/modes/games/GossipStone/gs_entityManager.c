@@ -4,6 +4,7 @@
 //==============================================================================
 
 #include "gs_entityManager.h"
+#include "mainMenu.h"
 #include "gs_entity.h"
 #include "linked_list.h"
 #include "gs_utility.h"
@@ -198,6 +199,8 @@ gs_entity_t* gs_createEntity(gs_entityManager_t* entityManager, uint8_t numFrame
     gs_entity_t* entity = heap_caps_calloc(1, sizeof(gs_entity_t), MALLOC_CAP_SPIRAM);
     if (entity == NULL)
     {
+        // Exit to the main menu
+        switchToSwadgeMode(&mainMenuMode);
         return NULL;
     }
 

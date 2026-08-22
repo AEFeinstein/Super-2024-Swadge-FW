@@ -32,6 +32,7 @@ int16_t gs_logRemap(int16_t x)
     return (int16_t)(30000 * factor);
 }
 
+//Both inputs are inclusive
 int gs_randomInt(int lowerBound, int upperBound)
 {
     return esp_random() % (upperBound - lowerBound + 1) + lowerBound;

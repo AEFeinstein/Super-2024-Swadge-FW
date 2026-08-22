@@ -15,6 +15,20 @@ void gs_setData(gs_entity_t* self, void* data, gs_dataType_t dataType)
     self->dataType = dataType;
 }
 
+gs_entity_t* gs_findLastEntityOfType(gs_entity_t* self, gs_dataType_t type)
+{
+    node_t* cur = self->gameData->entityManager.entities->last;
+    while (((gs_entity_t*)cur->val)->dataType != type)
+    {
+        cur = cur->prev;
+        if (!cur)
+        {
+            return NULL;
+        }
+    }
+    return (gs_entity_t*)cur->val;
+}
+
 void gs_drawAsset(gs_entity_t* self)
 {
     int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> GS_DECIMAL_BITS)
@@ -57,4 +71,37 @@ void gs_drawSkyGradient(gs_entity_t* self)
         }
     }
     drawRectFilled(0, y + self->gameData->assets[self->assetIndex].frames[0].h, TFT_WIDTH, y + self->gameData->assets[self->assetIndex].frames[0].h + 10, c012);
+}
+
+void gs_updateGossip(gs_entity_t* self)
+{
+    gs_gossip_t* data = (gs_gossip_t*)self->data;
+    if(data->progress < TYPING_FRAMES)
+    {
+        data->progress++;
+    }
+    //make this check for shake later
+    else if (self->gameData->btnDownState && PB_A)
+    {
+        data->index = gs_randomInt(1, data->arr_size - 1);
+        data->progress = 0;
+    }
+}
+
+void gs_drawGossip(gs_entity_t* self)
+{
+    gs_gossip_t* data = ((gs_gossip_t*)self->data);
+    int16_t textX = 18;
+    int16_t textY = 30;
+
+    uint16_t typeAmount = (strlen(data->messageList[data->index]) * data->progress) / TYPING_FRAMES;
+    char display[typeAmount+5];
+    strncpy(display, data->messageList[data->index], typeAmount);
+    display[typeAmount] = '\0';
+
+    if(typeAmount > 0)
+    {
+        drawTextWordWrap(&self->gameData->font_gossip, c445, display, &textX, &textY, TFT_WIDTH-textX,
+            TFT_HEIGHT-textY);
+    }
 }

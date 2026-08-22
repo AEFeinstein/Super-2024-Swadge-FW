@@ -7,6 +7,7 @@
 #include "gs_entity.h"
 #include "gs_entityManager.h"
 #include "hdw-ch32v003.h"
+#include "gs_gossip.h"
 
 //==============================================================================
 // Defines
@@ -96,6 +97,7 @@ gs_gameData_t* gameData;
 
 static void gs_enterMode(void)
 {
+    setFrameRateUs(16666);
     gameData             = (gs_gameData_t*)heap_caps_calloc(1, sizeof(gs_gameData_t), MALLOC_CAP_8BIT);
     
     gameData->trophyData = &gs_trophies;
@@ -124,14 +126,23 @@ static void gs_enterMode(void)
     addSingleItemToMenu(gameData->menu, gs_AskMeAnythingStr);
 
     gs_loadAssets();
+    
+    gs_initializeGame();
 }
 
 void gs_setAssetMetaData(void)
 {
 }
 
+
 static void gs_exitMode(void)
 {
+    gs_freeAssets();
+    gs_freeEntityManager(&gameData->entityManager);
+    // Free the fonts
+    freeFont(&gameData->font_gossip);
+    //unloadMidiFile(&gameData->songMidi);
+    heap_caps_free(gameData);
 }
 
 static void gs_mainLoop(int64_t elapsedUs)
@@ -215,6 +226,18 @@ static void gs_initializeGame(void)
     gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_HILL_ASSET, 1, (vec_t){0xFFFF - (TFT_WIDTH << (GS_DECIMAL_BITS-1)), 0xFFFF + (102 << GS_DECIMAL_BITS)}, gameData);
     gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_MOON_ASSET, 1, (vec_t){0xFFFF - (90 << GS_DECIMAL_BITS), 0xFFFF - (0 << GS_DECIMAL_BITS)}, gameData);
     gs_createEntity(&gameData->entityManager, 3, GS_LOOPING_ANIMATION, false, GS_GOSSIP_STONE_ASSET, 5, (vec_t){0xFFFF + (11 << GS_DECIMAL_BITS), 0xFFFF + (82 << GS_DECIMAL_BITS)}, gameData);
+    gs_entity_t* gossip = gs_createEntity(&gameData->entityManager, 0, GS_NO_ANIMATION, true, GS_NO_ASSET, 0, (vec_t){0xffff, 0xffff}, gameData);
+    gossip->data        = heap_caps_calloc(1, sizeof(gs_gossip_t), MALLOC_CAP_SPIRAM);
+    if (gossip->data != NULL)
+    {
+        gossip->dataType = GS_GOSSIP_DATA;
+        gossip->updateFunction = gs_updateGossip;
+        gossip->drawFunction = gs_drawGossip;
+    }
+    else{
+        // Exit to the main menu
+        switchToSwadgeMode(&mainMenuMode);
+    }
 
 }
 
@@ -248,12 +271,20 @@ bool gs_menuCb(const char* label, bool selected, uint32_t value)
         if (gs_GossipStr == label)
         {
             gameData->ui = UI_GAME;
-            gs_initializeGame();
+            gs_entity_t* gossip = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_DATA);
+            ((gs_gossip_t*)gossip->data)->messageList = gossipList;
+            ((gs_gossip_t*)gossip->data)->arr_size = GOSSIP_COUNT;
+            ((gs_gossip_t*)gossip->data)->index = 0;
+            ((gs_gossip_t*)gossip->data)->progress = 0;
         }
         else if (gs_AskMeAnythingStr == label)
         {
             gameData->ui = UI_GAME;
-            gs_initializeGame();
+            gs_entity_t* gossip = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_DATA);
+            ((gs_gossip_t*)gossip->data)->messageList = AMAList;
+            ((gs_gossip_t*)gossip->data)->arr_size = AMA_COUNT;
+            ((gs_gossip_t*)gossip->data)->index = 0;
+            ((gs_gossip_t*)gossip->data)->progress = 0;
         }
     }
     return false;

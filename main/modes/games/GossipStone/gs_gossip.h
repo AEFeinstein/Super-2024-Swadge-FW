@@ -1,10 +1,11 @@
 #pragma once
 
+#define GOSSIP_COUNT 6
+#define AMA_COUNT 21
+
 //==============================================================================
 // Externs
 //==============================================================================
-extern char gossipIntro[26];
-extern char gossip[5][26];
+extern const char* gossipList[GOSSIP_COUNT];
 
-extern char AMAIntro[78];
-extern char AMA[20][26];
+extern const char* AMAList[AMA_COUNT];

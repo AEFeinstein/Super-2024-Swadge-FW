@@ -7,13 +7,16 @@
 #include "gs_entityManager.h"
 #include "gs_typedef.h"
 
+#define TYPING_FRAMES 50
+
 //==============================================================================
 // Enums
 //==============================================================================
 
 typedef enum
 {
-    gs_NULL_DATA,
+    GS_NULL_DATA,
+    GS_GOSSIP_DATA,
 } gs_dataType_t;
 
 //==============================================================================
@@ -45,6 +48,14 @@ struct gs_entity_t
     gs_gameData_t* gameData;
 };
 
+typedef struct
+{
+    char **messageList;
+    uint16_t index;     //The message being displayed
+    uint16_t arr_size;  //The size of the message list
+    uint16_t progress;  //From 0 to TYPING_FRAMES the words are typing. If it is TYPING_FRAMES, then shakes are no longer ignored.
+} gs_gossip_t;
+
 //==============================================================================
 // Prototypes
 //==============================================================================
@@ -52,5 +63,7 @@ void gs_setData(gs_entity_t* self, void* data, gs_dataType_t dataType);
 gs_entity_t* gs_findLastEntityOfType(gs_entity_t* self, gs_dataType_t type);
 void gs_drawAsset(gs_entity_t* self);
 void gs_drawNothing(gs_entity_t* self);
+// GS entities
 void gs_drawSkyGradient(gs_entity_t* self);
-// main game entities
+void gs_updateGossip(gs_entity_t* self);
+void gs_drawGossip(gs_entity_t* self);
