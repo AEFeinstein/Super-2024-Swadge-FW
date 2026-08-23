@@ -102,3 +102,10 @@ void ggDrawRules(ggData_t* ggd);
  * @param ggd Game data
  */
 void ggDrawHighScore(ggData_t* ggd);
+
+/**
+ * @brief Draws the options menu
+ * 
+ * @param ggd Game data
+ */
+void ggDrawOptions(ggData_t* ggd);

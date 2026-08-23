@@ -33,6 +33,7 @@ typedef enum
     GG_LOST,
     GG_RULES,
     GG_HIGHSCORE,
+    GG_OPTIONS,
 } ggState_t;
 
 /// @brief Trophy names
@@ -104,6 +105,7 @@ typedef enum
     GG_MAJOR_COUNT
 } ggMajor_t;
 
+/// @brief Warning screen text
 typedef enum
 {
     GG_WARNING_TEXT,
@@ -111,6 +113,7 @@ typedef enum
     GG_WARNING_MANI,
 } ggWarningText_t;
 
+/// @brief Level text
 typedef enum
 {
     GG_TEXT_READY,
@@ -128,6 +131,7 @@ typedef enum
     GG_TEXT_INSTR_BAD,
 } ggLevelText_t;
 
+/// @brief Menu text
 typedef enum
 {
     GG_TEXT_MENU_PLAY,
@@ -137,6 +141,7 @@ typedef enum
     GG_TEXT_MENU_COUNT
 } ggMenuText_t;
 
+/// @brief Options text
 typedef enum
 {
     GG_TEXT_OPTIONS_HELPER = GG_TEXT_MENU_COUNT,
@@ -144,6 +149,7 @@ typedef enum
     GG_TEXT_OPTIONS_COUNT
 } ggOptionsText_t;
 
+/// @brief Extras
 typedef enum
 {
     GG_TEXT_QUIT = GG_TEXT_OPTIONS_COUNT,

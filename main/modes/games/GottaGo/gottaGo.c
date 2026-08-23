@@ -158,19 +158,6 @@ const trophyDataList_t ggTrophyDate = {
 };
 
 //==============================================================================
-// Enums
-//==============================================================================
-
-typedef enum
-{
-    GG_PLAY_GAME,
-    GG_SHOW_RULES,
-    GG_SHOW_HS,
-    GG_QUIT,
-    GG_MENU_OPTIONS
-} ggMenuItems_t;
-
-//==============================================================================
 // Functions declarations
 //==============================================================================
 
@@ -188,11 +175,12 @@ static void doGame(int64_t elapsedUs);
 static void doPicked(int64_t elapsedUs);
 static void doRules(void);
 static void doHS(void);
+static void doOptions(void);
 
 // Helpers
 static void initLevel(void);
 static void getTouchInput(void);
-static void handleGameEnd(bool lose, bool stall, int64_t timer);
+static void handleGameEnd(bool lose, bool stall);
 
 /**
  * @brief Checks the accuracy and worst trophies. Requires ggd->selection to remain accurate
@@ -376,15 +364,21 @@ static void ggMainLoop(int64_t elapsedUs)
             {
                 if (evt.down)
                 {
-                    ggd->selection = GG_PLAY_GAME;
+                    ggd->selection = GG_TEXT_MENU_PLAY;
                     ggd->state     = GG_MENU;
                 }
             }
             ggDrawResult(ggd);
             break;
         }
+        case GG_OPTIONS:
+        {
+            doOptions();
+        }
     }
 }
+
+// States
 
 static void doWarning(int64_t elapsedUs)
 {
@@ -454,30 +448,34 @@ static void doMenu()
                 // Move to appropriate mode
                 switch (ggd->selection)
                 {
-                    case GG_PLAY_GAME:
+                    case GG_TEXT_MENU_PLAY:
                     {
                         initLevel();
                         ggd->state = GG_READY;
                         break;
                     }
-                    case GG_SHOW_RULES:
+                    case GG_TEXT_MENU_RULES:
                     {
                         ggd->state     = GG_RULES;
                         ggd->selection = 0;
                         break;
                     }
-                    case GG_SHOW_HS:
+                    case GG_TEXT_MENU_HS:
                     {
                         ggd->state     = GG_HIGHSCORE;
                         ggd->selection = 0;
                         break;
                     }
-                    case GG_QUIT:
+
+                    case GG_TEXT_MENU_OPTIONS:
                     {
-                        switchToSwadgeMode(&mainMenuMode);
+                        ggd->state     = GG_OPTIONS;
+                        ggd->selection = 0;
+                        break;
                     }
                     default:
                     {
+                        switchToSwadgeMode(&mainMenuMode);
                         break;
                     }
                 }
@@ -525,7 +523,7 @@ static void doGame(int64_t elapsedUs)
                     handleGameEnd(ggd->urinals[ggd->selection].brokenBowl || ggd->urinals[ggd->selection].brokenDrain
                                       || ggd->urinals[ggd->selection].outOfOrder
                                       || ggd->urinals[ggd->selection].pluggedDrain,
-                                  false, ggd->timer);
+                                  false);
                 }
             }
             else if (evt.button & PB_B)
@@ -534,11 +532,11 @@ static void doGame(int64_t elapsedUs)
                 if (ggd->pause)
                 {
                     ggd->pause = false;
-                    handleGameEnd(true, false, ggd->timer);
+                    handleGameEnd(true, false);
                 }
                 else if (ggd->stallUses > 0)
                 {
-                    handleGameEnd(false, true, ggd->timer);
+                    handleGameEnd(false, true);
                     // Trophy
                     bool trophy = true;
                     for (int idx = 0; idx < ggd->numActive; idx++)
@@ -556,7 +554,7 @@ static void doGame(int64_t elapsedUs)
                 }
                 else
                 {
-                    handleGameEnd(true, true, ggd->timer);
+                    handleGameEnd(true, true);
                     trophyUpdate(&ggTrophies[T_USE_STALL_BAD], 1, true);
                 }
             }
@@ -611,7 +609,7 @@ static void doGame(int64_t elapsedUs)
         ggd->timer += elapsedUs;
         if (ggd->timer >= ggd->timeLimit)
         {
-            handleGameEnd(true, false, ggd->timer);
+            handleGameEnd(true, false);
         }
         ggDrawLevel(ggd, false);
     }
@@ -673,7 +671,7 @@ static void doRules()
             }
             if (evt.button & PB_B)
             {
-                ggd->selection = GG_SHOW_RULES;
+                ggd->selection = GG_TEXT_MENU_RULES;
                 ggd->state     = GG_MENU;
             }
         }
@@ -701,12 +699,24 @@ static void doHS()
         }
         if (evt.button & PB_B)
         {
-            ggd->selection = GG_SHOW_HS;
+            ggd->selection = GG_TEXT_MENU_HS;
             ggd->state     = GG_MENU;
         }
     }
     ggDrawHighScore(ggd);
 }
+
+static void doOptions()
+{
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+    }
+    // Draw
+    ggDrawOptions(ggd);
+}
+
+// Helpers
 
 static void initLevel()
 {
@@ -764,12 +774,12 @@ static void getTouchInput()
     }
 }
 
-static void handleGameEnd(bool lose, bool stall, int64_t timer)
+static void handleGameEnd(bool lose, bool stall)
 {
     // Set values
     ggd->hasLost       = lose;
     ggd->stallUsed     = stall;
-    ggd->timeRemaining = timer;
+    ggd->timeRemaining = ggd->timeLimit - ggd->timer;
     ggd->numLevels++;
 
     int final[MAX_URINALS] = {0};

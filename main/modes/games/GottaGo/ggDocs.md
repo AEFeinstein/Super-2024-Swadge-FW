@@ -31,7 +31,6 @@
   - [x] Rename functions/vars/etc to be less stupid
   - [x] Make everything Enums instead of magic numbers
 6. [ ] Add settings 
-  - [ ] Update Menu to be generic
   - [ ] Toggle tutorial/helper mode
   - [ ] Toggle touch input
 7. [ ] Tutorial update

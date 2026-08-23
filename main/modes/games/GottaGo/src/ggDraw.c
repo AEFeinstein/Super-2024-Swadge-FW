@@ -376,7 +376,7 @@ void ggDrawResult(ggData_t* ggd)
             title = GG_TEXT_GOOD_1;
         }
     }
-    else if (ggd->timer >= ggd->timeRemaining)
+    else if (ggd->timeRemaining <= 0)
     {
         title = GG_TEXT_BAD_1;
     }
@@ -427,7 +427,6 @@ void ggDrawMenu(ggData_t* ggd)
     if (ggd->selection == GG_TEXT_MENU_COUNT)
     {
         xOff = OPTION_X + textWidth(&ggd->titleFont, menuText[GG_TEXT_QUIT]) + 10;
-        
     }
     else
     {
@@ -488,6 +487,39 @@ void ggDrawHighScore(ggData_t* ggd)
     }
     snprintf(buffer, sizeof(buffer) - 1, "Highest average: %" PRId32, outVal);
     drawText(&ggd->smallFont, c000, buffer, RULES_X_BORDER, 120); */
+}
+
+void ggDrawOptions(ggData_t* ggd)
+{
+    // Draw background
+    drawBackground(ggd);
+    // Draw options
+    for (int idx = GG_TEXT_MENU_COUNT; idx < GG_TEXT_OPTIONS_COUNT; idx++)
+    {
+        drawText(&ggd->titleFont, c555, menuText[idx], OPTION_X / 4,
+                 OPTION_BUFFER + (idx - GG_TEXT_MENU_COUNT) * OPTION_SPACING * 2);
+        drawText(&ggd->titleFontOutline, c000, menuText[idx], OPTION_X / 4,
+                 OPTION_BUFFER + (idx - GG_TEXT_MENU_COUNT) * OPTION_SPACING * 2);
+        drawText(&ggd->titleFont, c000, menuText[GG_TEXT_OFF], OPTION_X / 4,
+                 OPTION_BUFFER + (idx - GG_TEXT_MENU_COUNT) * OPTION_SPACING * 2 + OPTION_SPACING);
+    }
+    // Draw quit
+    drawText(&ggd->titleFont, c555, menuText[GG_TEXT_QUIT], OPTION_X / 4,
+             OPTION_BUFFER + GG_TEXT_MENU_COUNT * OPTION_SPACING);
+    drawText(&ggd->titleFontOutline, c000, menuText[GG_TEXT_QUIT], OPTION_X / 4,
+             OPTION_BUFFER + GG_TEXT_MENU_COUNT * OPTION_SPACING);
+    // Draw selection
+    int yOff = OPTION_BUFFER + (ggd->selection) * OPTION_SPACING - 6;
+    int xOff;
+    if (ggd->selection == GG_TEXT_MENU_COUNT)
+    {
+        xOff = OPTION_X / 4 + textWidth(&ggd->titleFont, menuText[GG_TEXT_QUIT]) + 10;
+    }
+    else
+    {
+        xOff = OPTION_X / 4 + textWidth(&ggd->titleFont, menuText[ggd->selection]) + 10;
+    }
+    drawWsgSimple(&ggd->uiImages[1], xOff, yOff);
 }
 
 //==============================================================================
@@ -847,18 +879,10 @@ static void drawSolution(ggData_t* ggd)
         {
             if (best == values[idx] && !(u->brokenBowl || u->brokenDrain || u->outOfOrder || u->pluggedDrain))
             {
-                for (int i = 0; i < idx; i++)
-                {
-                    bestUIPos[i] = 0;
-                }
                 bestUIPos[idx] = 1;
             }
             if (worst == values[idx])
             {
-                for (int i = 0; i < idx; i++)
-                {
-                    worstUIPos[i] = 0;
-                }
                 worstUIPos[idx] = 1;
             }
         }
