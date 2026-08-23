@@ -177,4 +177,29 @@ void drawForeground2d(ray_t* ray)
         drawCircle(TO_PX(ray->p.posX), TO_PX(ray->p.posY + ray->ps.jumpPos), CELL_SIZE / 2,
                    zColors[ray->ps.shieldZone]);
     }
+
+    // Draw HUD
+#define X_MARGIN 24
+    int16_t xOff = X_MARGIN;
+
+    // Draw hearts
+    wsg_t* heart      = getTexByType(ray, OBJ_ITEM_HEART);
+    int16_t yHeartOff = (CELL_SIZE - heart->h) / 2;
+    for (int i = 0; i < ray->p.health; i++)
+    {
+        drawWsgSimple(heart, xOff, yHeartOff);
+        xOff += heart->w + 2;
+    }
+
+    // Measure MPoints
+    wsg_t* mpoint        = getTexByType(ray, OBJ_ITEM_MPOINT_1);
+    char mpointCount[32] = {0};
+    sprintf(mpointCount, "%" PRIu32, ray->p.mpoints);
+    int16_t mPointWidth = mpoint->w + 2 + textWidth(&ray->ibm, mpointCount);
+    xOff                = TFT_WIDTH - mPointWidth - X_MARGIN;
+
+    // Draw MPoints
+    drawWsgSimple(mpoint, xOff, 0);
+    xOff += mpoint->w + 2;
+    drawText(&ray->ibm, c555, mpointCount, xOff, (mpoint->h - ray->ibm.height) / 2);
 }
