@@ -123,7 +123,7 @@ void drawForeground2d(ray_t* ray)
                     TO_PX(obj->posY) - camY - (obj->sprite->h / 2), false, false, angle);
 
             // Draw a filled circle for a bomb explosions
-            if (OBJ_ITEM_BOMB == obj->type)
+            if (OBJ_BULLET_BOMB == obj->type)
             {
                 if (ray->bullets[bIdx].fuseUs > 0 && ray->bullets[bIdx].c.bound.radius > 0)
                 {

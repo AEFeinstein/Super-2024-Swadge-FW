@@ -224,15 +224,15 @@ static void freeScript(rayScript_t* script)
         case GET:
         case TOUCH:
         {
-            free(script->ifArgs.idList.ids);
-            free(script->ifArgs.idList.idsTriggered);
+            heap_caps_free(script->ifArgs.idList.ids);
+            heap_caps_free(script->ifArgs.idList.idsTriggered);
             break;
         }
         case SHOOT_WALLS:
         case ENTER:
         {
-            free(script->ifArgs.cellList.cells);
-            free(script->ifArgs.cellList.cellsTriggered);
+            heap_caps_free(script->ifArgs.cellList.cells);
+            heap_caps_free(script->ifArgs.cellList.cellsTriggered);
             break;
         }
         case TIME_ELAPSED:
@@ -255,25 +255,25 @@ static void freeScript(rayScript_t* script)
         case CLOSE:
         {
             // [CELLs]
-            free(script->thenArgs.cellList.cells);
+            heap_caps_free(script->thenArgs.cellList.cells);
             break;
         }
         case SPAWN:
         {
             // [SPAWNs]
-            free(script->thenArgs.spawnList.spawns);
+            heap_caps_free(script->thenArgs.spawnList.spawns);
             break;
         }
         case DESPAWN:
         {
             // [IDs]
-            free(script->thenArgs.idList.ids);
+            heap_caps_free(script->thenArgs.idList.ids);
             break;
         }
         case DIALOG:
         {
             // TEXT, get the length first
-            free(script->thenArgs.text);
+            heap_caps_free(script->thenArgs.text);
             break;
         }
         case WARP:
@@ -286,7 +286,7 @@ static void freeScript(rayScript_t* script)
     }
 
     // Free the script
-    free(script);
+    heap_caps_free(script);
 }
 
 /**
@@ -831,7 +831,7 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
                             // Iterate to the next
                             currentNode = currentNode->next;
                             // Remove the node that was iterated past
-                            free(oldNode->val);
+                            heap_caps_free(oldNode->val);
                             removeEntry(lists[lIdx], oldNode);
                         }
                         else

@@ -497,7 +497,7 @@ void checkRayCollisions(ray_t* ray)
         if (toRemove)
         {
             // Free the item
-            free(item);
+            heap_caps_free(item);
             // Remove it from the list
             removeEntry(&ray->items, toRemove);
         }
@@ -535,6 +535,54 @@ void checkRayCollisions(ray_t* ray)
                         // De-allocate the bullet
                         memset(bullet, 0, sizeof(rayBullet_t));
                         bullet->c.id = -1;
+                    }
+                }
+
+                if (OBJ_BULLET_BOMB == bullet->c.type)
+                {
+                    // Make a circle for the explosion
+                    circle_t bomb = {
+                        .pos = {
+                            .x = bullet->c.posX,
+                            .y = bullet->c.posY,
+                        },
+                        .radius = bullet->c.bound.radius,
+                    };
+
+                    // Iterate through cracked walls
+                    node_t* cNode = ray->map.crackedWalls.first;
+                    while (cNode)
+                    {
+                        uint16_t wallX     = (((intptr_t)cNode->val) >> 16) & 0xFFFF;
+                        uint16_t wallY     = ((intptr_t)cNode->val) & 0xFFFF;
+                        rayMapCell_t* cell = &ray->map.tiles[wallX][wallY];
+
+                        // Make a rectangle for the wall
+                        rectangle_t wall = {
+                            .pos = {
+                                .x = TO_FX(wallX),
+                                .y = TO_FX(wallY),
+                            },
+                            .height = TO_FX(1),
+                            .width = TO_FX(1),
+                        };
+
+                        // If the explosion intersects the wall
+                        if (circleRectIntersection(bomb, wall, NULL))
+                        {
+                            // open the door
+                            cell->type = BG_FLOOR_10;
+
+                            // Remove this address from the list
+                            node_t* next = cNode->next;
+                            removeEntry(&ray->map.crackedWalls, cNode);
+                            cNode = next;
+                        }
+                        else
+                        {
+                            // Iterate normally
+                            cNode = cNode->next;
+                        }
                     }
                 }
             }
