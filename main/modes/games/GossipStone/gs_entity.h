@@ -41,7 +41,7 @@ struct gs_entity_t
     vec_t pos;
     gs_animationType_t type;
     bool paused;
-    bool gray;
+    gs_paletteIdx_t palleteIdx;
     gs_assetIdx_t assetIndex;
     uint16_t animationTimer;
     uint8_t gameFramesPerAnimationFrame;

@@ -17,23 +17,33 @@ void gs_initializeEntityManager(gs_entityManager_t* entityManager, gs_gameData_t
     // allocate the linked list for entities
     entityManager->entities = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "entities");
 
-    wsgPaletteReset(&entityManager->palettes[GS_GRAYSCALE_PALETTE]);
-    wsgPaletteReset(&entityManager->palettes[GS_SUPERBRIGHT_GRAYSCALE_PALETTE]);
+    wsgPaletteReset(&entityManager->palettes[GS_BLUE_PALETTE]);
+    wsgPaletteReset(&entityManager->palettes[GS_RED_PALETTE]);
     for (paletteColor_t cur = c000; cur <= c555; cur++)
     {
-        uint32_t rgb    = paletteToRGB(cur);
-        uint32_t r      = (rgb >> 16) & 0xFF; // Extract red channel
-        uint32_t g      = (rgb >> 8) & 0xFF;  // Extract green channel
-        uint32_t b      = rgb & 0xFF;         // Extract blue channel
-        uint32_t sum    = r + g + b;
-        uint32_t bright = sum * 4;
-        if (bright > 765)
-            bright = 765;
-        if (sum > 765)
-            sum = 765;
+        uint32_t rgb = paletteToRGB(cur);
+        uint32_t r   = (rgb >> 16) & 0xFF; // Extract blue channel
+        uint32_t g   = (rgb >> 8) & 0xFF;  // Extract green channel
+        uint32_t b   = rgb & 0xFF;         // Extract red channel
 
-        wsgPaletteSet(&entityManager->palettes[GS_GRAYSCALE_PALETTE], cur, (sum / 153) * 43);
-        wsgPaletteSet(&entityManager->palettes[GS_SUPERBRIGHT_GRAYSCALE_PALETTE], cur, (bright / 153) * 43);
+        uint32_t newR = r;
+        if (r > 0)
+        {
+            newR -= 51;
+        }
+        uint32_t newG = g;
+        if (g > 0)
+        {
+            newG -= 51;
+        }
+        uint32_t newB = b;
+        if (b > 0)
+        {
+            newB -= 51;
+        }
+
+        wsgPaletteSet(&entityManager->palettes[GS_BLUE_PALETTE], cur, RGBtoPalette((255 << 16) | (newG << 8) | newR));
+        wsgPaletteSet(&entityManager->palettes[GS_RED_PALETTE], cur, RGBtoPalette((newB << 16) | (newG << 8) | 255));
     }
 }
 

@@ -5,8 +5,8 @@
 #include <wsg.h>
 
 #define GS_DECIMAL_BITS 4
-#define NUM_ASSETS      GS_NO_ASSET   // The number of gs_asset_t
-#define NUM_PALETTES    GS_NO_PALETTE // The number of wsgPalette_t
+#define NUM_ASSETS      GS_NO_ASSET      // The number of gs_asset_t
+#define NUM_PALETTES    GS_COUNT_PALETTE // The number of wsgPalette_t
 #define MAX_LERP_AMOUNT 30000
 
 typedef struct gs_entity_t gs_entity_t;
@@ -32,9 +32,10 @@ typedef enum __attribute__((packed))
 
 typedef enum __attribute__((packed))
 {
-    GS_GRAYSCALE_PALETTE,
-    GS_SUPERBRIGHT_GRAYSCALE_PALETTE,
-    GS_NO_PALETTE, // Keep this at the end to keep count of the number of palettes.
+    GS_UNTOUCHED_PALETTE,
+    GS_BLUE_PALETTE,
+    GS_RED_PALETTE,
+    GS_COUNT_PALETTE, // Keep this at the end to keep count of the number of palettes.
 } gs_paletteIdx_t;
 
 typedef struct __attribute__((packed))

@@ -35,10 +35,10 @@ void gs_drawAsset(gs_entity_t* self)
                 - self->gameData->assets[self->assetIndex].originX;
     int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> GS_DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originY;
-    if (self->gray)
+    if (self->palleteIdx)
     {
         drawWsgPalette(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y,
-                       &self->gameData->entityManager.palettes[GS_GRAYSCALE_PALETTE], self->flipped, false, 0);
+                       &self->gameData->entityManager.palettes[self->palleteIdx], self->flipped, false, 0);
     }
     else
     {
@@ -59,16 +59,8 @@ void gs_drawSkyGradient(gs_entity_t* self)
         int32_t x = i * self->gameData->assets[self->assetIndex].frames[0].w;
         y         = ((self->pos.y - self->gameData->camera.pos.y) >> GS_DECIMAL_BITS)
                     - self->gameData->assets[self->assetIndex].originY;
-        if (self->gray)
-        {
-            drawWsgPalette(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y,
-                           &self->gameData->entityManager.palettes[GS_GRAYSCALE_PALETTE], self->flipped, false, 0);
-        }
-        else
-        {
-            drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped,
-                    false, 0);
-        }
+        drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped,
+                false, 0);
     }
     drawRectFilled(0, y + self->gameData->assets[self->assetIndex].frames[0].h, TFT_WIDTH,
                    y + self->gameData->assets[self->assetIndex].frames[0].h + 10, c012);
@@ -94,6 +86,18 @@ void gs_updateGossip(gs_entity_t* self)
             if (data->index < data->arr_size - 1)
             {
                 data->index++;
+                if (data->index == 6 || data->index == 8)
+                {
+                    data->gossipStone->palleteIdx = GS_BLUE_PALETTE;
+                }
+                else if (data->index == 10)
+                {
+                    data->gossipStone->palleteIdx = GS_RED_PALETTE;
+                }
+                else
+                {
+                    data->gossipStone->palleteIdx = GS_UNTOUCHED_PALETTE;
+                }
             }
         }
         else
