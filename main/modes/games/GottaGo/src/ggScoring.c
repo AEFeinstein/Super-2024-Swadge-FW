@@ -14,9 +14,9 @@
 #define SCORE_BASE_NPC         200
 #define SCORE_WEIRD_ADJUSTMENT ((SCORE_BASE_NPC * 3) / 2) ///< 150% score penalty for weirdness
 // Puddle
-#define SCORE_PUDDLE_SMALL  100
-#define SCORE_PUDDLE_MEDIUM 200
-#define SCORE_PUDDLE_LARGE  300
+#define SCORE_PUDDLE_SMALL  150
+#define SCORE_PUDDLE_MEDIUM 250
+#define SCORE_PUDDLE_LARGE  350
 // Divider
 #define SCORE_BROKEN_DIVIDER  50
 #define SCORE_MISSING_DIVIDER 100
@@ -25,6 +25,7 @@
 #define SCORE_MINOR_ISSUE  50
 #define SCORE_MAJOR_ISSUE  300
 #define SCORE_SMALL_URINAL 200
+#define SCORE_END_URINAL   -20
 
 //==============================================================================
 // Function Declarations
@@ -83,7 +84,8 @@ void ggCalcUrinalScores(ggUrinal_t* urinals, int numActive, int* urinalScores, i
 {
     int pick[MAX_URINALS]   = {0}; // Score this urinal has due to issues
     int nextTo[MAX_URINALS] = {0}; // nextTo: Score this urinal receives from neighbors
-
+    pick[0]                 = SCORE_END_URINAL;
+    pick[numActive]         = SCORE_END_URINAL;
     // NPCs
     for (int idx = 0; idx < numActive; idx++)
     {
@@ -342,8 +344,8 @@ static void getBestWorstOption(ggUrinal_t* urinals, int numActive, int* urinalSc
 {
     // Init
     int start = 0;
-    *best      = 0;    // Worst case value
-    *worst     = 1000; // Worst case value
+    *best     = 0;    // Worst case value
+    *worst    = 1000; // Worst case value
     while (urinals[start].npc.active)
     { // Best toilet can't be occupied
         start++;

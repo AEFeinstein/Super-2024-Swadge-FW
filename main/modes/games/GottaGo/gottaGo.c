@@ -660,7 +660,7 @@ static void doPicked(int64_t elapsedUs)
 static void doRules()
 {
     buttonEvt_t evt;
-    int size = 14 / 2; // FIXME: magic number
+    int size = ARRAY_SIZE(rulesText) / 2;
     while (checkButtonQueueWrapper(&evt))
     {
         if (!evt.down)

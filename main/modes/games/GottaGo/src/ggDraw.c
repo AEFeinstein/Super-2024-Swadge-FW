@@ -119,30 +119,6 @@ static const char* const menuText[] = {
     "Play!", "Rules", "High Scores", "Options", "Activate Helper Mode: ", "Touch entry: ", "Quit", "Back", "On", "Off",
 };
 
-static const char* const rulesText[] = {
-    "Rules",
-    "Here's the rules book for Gotta Go! The rules should be instinctual for a lot of people, but for those that don't "
-    "use urinals on a regular basis, this will help.",
-    "Controls",
-    "Use the left/right arrows to pick a urinal, A to select it, or B to use the stall. There is no pausing!",
-    "How to play",
-    "Once you're ready, you must quickly figure out the most ideal urinal out of the available options. Be quick, your "
-    "bladder is about to burst!",
-    "Urinals",
-    "You always want to use the cleanest urinal. Obviously. Try not to stand in puddles, and if you use one that's out "
-    "of order and increase the mess, expect to be judged.",
-    "People",
-    "People are weird. Try to stay as far away from them as possible. If you have to pick, always pick the most normal "
-    "one. That means not the guy with his pants around his ankles or the guy that smells like onions.",
-    "Stalls",
-    "You can use the stall sometimes, but you only have a limit amount of times you can do that. No hogging the "
-    "stalls.",
-    "Scoring",
-    "Score is tracked in three ways: Total score, accuracy, and adjusted score. The total score is an accumulation of "
-    "all the score up to this point. Accuracy score is how close to optimal picks you are. Th adjusted score takes "
-    "your total score and adjusts it by your accuracy to provide a final number that's easy to compare.",
-};
-
 static const paletteColor_t skinColors[] = {
     c555, c333, c444, c023, c402, c233, c343,
 };

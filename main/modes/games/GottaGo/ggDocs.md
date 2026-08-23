@@ -5,7 +5,7 @@
 1. [x] Add auto flush as an option
 2. [x] Update scoring mechanics
   - [x] Adjust score penalties
-  - [ ] Penalize picking center urinals 
+  - [x] Penalize picking center urinals 
   - [x] Update calculations
     - [x] Change score for using a stall
     - [x] Diagnose/fix inability to get perfect scores (<1 sec, correct urinal)
@@ -33,7 +33,7 @@
 6. [x] Add settings 
   - [x] Toggle tutorial/helper mode
   - [x] Toggle touch input
-7. [ ] Tutorial update
+7. [x] Tutorial update
 8. [ ] Casual Mode
   - [ ] Non-timed, non-scored mode
   - [ ] Casual mode trophies
@@ -59,9 +59,6 @@
     - [ ] Select
 
 ## Known Bugs
-- Occasionally, toilets that cannot used are marked with a check
 - Sometimes when num of urinals reduces next round, selection pointer is off the end.
 - Long toilets do not have a penalty applied
-- Puddles overwrite previous penalties
-- End urinals aren't incentivized
 - Odd-order urinals are valued the same as even order
