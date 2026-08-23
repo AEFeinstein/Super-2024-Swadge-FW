@@ -79,6 +79,13 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
             rayMapCellType_t oType    = fileData[fileIdx++];
             // rayMapCellType_t cType    = map->tiles[x][y].type;
 
+            // If this is a cracked door, add it to the list for later bomb checks
+            if (BG_DOOR_CRACK_H == map->tiles[x][y].type || BG_DOOR_CRACK_V == map->tiles[x][y].type)
+            {
+                intptr_t location = ((x & 0xFFFF) << 16) | (y & 0xFFFF);
+                push(&ray->map.crackedWalls, (void*)location);
+            }
+
             // TODO Open doors which were already unlocked
             // if ((cType == BG_DOOR_KEY_A && OPEN_KEY == ray->p.i.keys[mapId][0]) || //
             //     (cType == BG_DOOR_KEY_B && OPEN_KEY == ray->p.i.keys[mapId][1]) || //
@@ -210,7 +217,7 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
     loadScripts(ray, &fileData[fileIdx], decompressedSize - fileIdx, caps);
 
     // Free the file data
-    free(fileData);
+    heap_caps_free(fileData);
 
     // Play this map's music
     globalMidiPlayerPlaySong(&ray->songs[ray->p.mapId], MIDI_BGM);
@@ -307,12 +314,15 @@ void freeRayMap(rayMap_t* map)
     // Free each column
     for (uint32_t x = 0; x < map->w; x++)
     {
-        free(map->tiles[x]);
+        heap_caps_free(map->tiles[x]);
     }
     // Free the pointers
-    free(map->tiles);
+    heap_caps_free(map->tiles);
     // Free visited tiles too
-    free(map->visitedTiles);
+    heap_caps_free(map->visitedTiles);
+
+    // Clear the list of cracked walls
+    clear(&map->crackedWalls);
 }
 
 /**
