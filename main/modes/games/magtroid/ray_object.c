@@ -595,8 +595,10 @@ void checkRayCollisions(ray_t* ray)
             // Check for a collision between bounding box and sword
             if (rectLineIntersection(rayGetObjBB(&enemy->c), sword, NULL))
             {
-                // TODO only count once
                 rayEnemyGetShot(ray, enemy, OBJ_BULLET_SWORD);
+                // Stop the sword swing
+                ray->ps.swordAngle   = 0;
+                ray->ps.swordTimerUs = 0;
             }
         }
 
@@ -633,6 +635,18 @@ void checkRayCollisions(ray_t* ray)
                     // Scenery was shot
                     checkScriptShootObjs(ray, scenery->id, scenery->sprite);
                 }
+            }
+        }
+
+        // Check if the sword touches scenery
+        if (rectLineIntersection(rayGetObjBB(scenery), sword, NULL))
+        {
+            // Check
+            if (checkScriptShootObjs(ray, scenery->id, scenery->sprite))
+            {
+                // Stop the sword swing
+                ray->ps.swordAngle   = 0;
+                ray->ps.swordTimerUs = 0;
             }
         }
 
