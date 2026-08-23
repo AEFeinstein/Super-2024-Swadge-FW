@@ -50,14 +50,14 @@ const trophyData_t gs_trophies[] = {
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_ADDITIVE,
         .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = GOSSIP_COUNT,
+        .maxVal      = GOSSIP_COUNT - 1, // Because the first message is tutorial text.
     },
 };
 
 // Individual mode settings
 trophySettings_t gs_trophySettings = {
     .drawFromBottom   = false,
-    .staticDurationUs = DRAW_STATIC_US * 6,
+    .staticDurationUs = DRAW_STATIC_US * 5,
     .slideDurationUs  = DRAW_SLIDE_US,
     .namespaceKey     = gs_trophyNVS,
 };
@@ -65,26 +65,25 @@ trophySettings_t gs_trophySettings = {
 // This is passed to the swadgeMode_t
 trophyDataList_t trophyData = {.settings = &gs_trophySettings, .list = gs_trophies, .length = ARRAY_SIZE(gs_trophies)};
 
-swadgeMode_t gossipStoneMode = {
-    .modeName = gs_ModeName,    // Assign the name we created here
-    .wifiMode = NO_WIFI,        // If we want WiFi. WiFi is expensive computationally/battery-wise, so disable
-                                // it if you're not going to use it.
-    .overrideUsb = false,       // Overrides the default USB behavior. This is helpful for the game controller
-                                // mode but unlikely to be useful for your game.
-    .usesAccelerometer = false, // If we're using motion controls
-    .usesThermometer   = false, // If we're using the internal thermometer
-    .overrideSelectBtn = false, // The select/Menu button has a default behavior. If you want to override it,
-                                // you can set this to true but you'll need to re-implement the
-                                // 'return to main menu' behavior.
-    .fnEnterMode              = gs_enterMode,              // The enter mode function
-    .fnExitMode               = gs_exitMode,               // The exit mode function
-    .fnMainLoop               = gs_mainLoop,               // The loop function
-    .fnAudioCallback          = NULL,                      // If the mode uses the microphone
-    .fnBackgroundDrawCallback = gs_BackgroundDrawCallback, // Draws a section of the display
-    .fnEspNowRecvCb           = NULL,                      // If using Wifi, add the receive function here
-    .fnEspNowSendCb           = NULL,                      // If using Wifi, add the send function here
-    .fnAdvancedUSB            = NULL,                      // If using advanced USB things_.
-};
+swadgeMode_t gossipStoneMode = {.modeName = gs_ModeName, // Assign the name we created here
+                                .wifiMode = NO_WIFI, // If we want WiFi. WiFi is expensive computationally/battery-wise,
+                                                     // so disable it if you're not going to use it.
+                                .overrideUsb = false, // Overrides the default USB behavior. This is helpful for the
+                                                      // game controller mode but unlikely to be useful for your game.
+                                .usesAccelerometer = false, // If we're using motion controls
+                                .usesThermometer   = false, // If we're using the internal thermometer
+                                .overrideSelectBtn = false, // The select/Menu button has a default behavior. If you
+                                                            // want to override it, you can set this to true but you'll
+                                                            // need to re-implement the 'return to main menu' behavior.
+                                .fnEnterMode              = gs_enterMode, // The enter mode function
+                                .fnExitMode               = gs_exitMode,  // The exit mode function
+                                .fnMainLoop               = gs_mainLoop,  // The loop function
+                                .fnAudioCallback          = NULL,         // If the mode uses the microphone
+                                .fnBackgroundDrawCallback = gs_BackgroundDrawCallback, // Draws a section of the display
+                                .fnEspNowRecvCb           = NULL, // If using Wifi, add the receive function here
+                                .fnEspNowSendCb           = NULL, // If using Wifi, add the send function here
+                                .fnAdvancedUSB            = NULL, // If using advanced USB things_.
+                                .trophyData               = &trophyData};
 
 /// @brief A heatshrink decoder to use for all WSG loads rather than allocate a new one for each WSG
 /// This helps to prevent memory fragmentation in SPIRAM.

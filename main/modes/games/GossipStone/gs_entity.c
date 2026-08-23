@@ -106,7 +106,7 @@ void gs_recordProgress(gs_entity_t* self)
     if (!gs_checkBit(self->gameData->gossipProgress[data->index / 32], data->index % 32))
     {
         // set that bit to 1
-        self->gameData->gossipProgress[data->index / 32] |= (1 << data->index % 32);
+        self->gameData->gossipProgress[data->index / 32] |= (1 << (data->index % 32));
         // To do: save it to nvs
         trophyUpdate(&(*self->gameData->trophyData)[0], trophyGetSavedValue(&(*self->gameData->trophyData)[0]) + 1,
                      true);
@@ -117,7 +117,7 @@ void gs_drawGossip(gs_entity_t* self)
 {
     gs_gossip_t* data = ((gs_gossip_t*)self->data);
     int16_t textX     = 18;
-    int16_t textY     = 30;
+    int16_t textY     = 50;
 
     uint16_t typeAmount = data->progress / FRAMES_PER_CHAR;
     char display[typeAmount + 5];
