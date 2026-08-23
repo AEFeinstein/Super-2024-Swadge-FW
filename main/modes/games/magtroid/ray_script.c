@@ -10,8 +10,8 @@
 #include "ray_tex_manager.h"
 
 static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait);
-static void checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* portrait);
-static void checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y);
+static bool checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* portrait);
+static bool checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y);
 static void freeScript(rayScript_t* script);
 
 /**
@@ -183,6 +183,14 @@ void loadScripts(ray_t* ray, const uint8_t* fileData, uint32_t fileSize, uint32_
                 // [CELL]
                 newScript->thenArgs.cell.x = fileData[fileIdx++];
                 newScript->thenArgs.cell.y = fileData[fileIdx++];
+                break;
+            }
+            case SHOP:
+            {
+                // Cost, object
+                newScript->thenArgs.shop.cost = fileData[fileIdx++];
+                newScript->thenArgs.shop.obj  = fileData[fileIdx++];
+                break;
             }
         }
 
@@ -279,6 +287,7 @@ static void freeScript(rayScript_t* script)
         case WARP:
         case WIN:
         case CAMERA:
+        case SHOP:
         {
             // Nothing allocated
             break;
@@ -296,9 +305,12 @@ static void freeScript(rayScript_t* script)
  * @param scriptList The list of scripts to check
  * @param id The ID to check
  * @param portrait A portrait to draw on dialogs
+ * @return true if a script executed, false if it didn't
  */
-static void checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* portrait)
+static bool checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* portrait)
 {
+    bool executed = false;
+
     // Iterate over all nodes
     node_t* currentNode = scriptList->first;
     while (currentNode != NULL)
@@ -377,6 +389,7 @@ static void checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* por
             {
                 // Do it
                 executeScriptEvent(ray, script, portrait);
+                executed = true;
 
                 // If this script is an always script, not a one-time script
                 if (ALWAYS == script->ifArgs.cellList.oneTime)
@@ -408,6 +421,8 @@ static void checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* por
         // Move to the next script
         currentNode = currentNode->next;
     }
+
+    return executed;
 }
 
 /**
@@ -416,10 +431,11 @@ static void checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* por
  * @param ray The entire game state
  * @param id The ID of the shot object
  * @param portrait A portrait to draw on dialogs
+ * @return true if a script executed, false if it didn't
  */
-void checkScriptShootObjs(ray_t* ray, int32_t id, wsg_t* portrait)
+bool checkScriptShootObjs(ray_t* ray, int32_t id, wsg_t* portrait)
 {
-    checkScriptId(ray, &ray->scripts[SHOOT_OBJS], id, portrait);
+    return checkScriptId(ray, &ray->scripts[SHOOT_OBJS], id, portrait);
 }
 
 /**
@@ -428,10 +444,11 @@ void checkScriptShootObjs(ray_t* ray, int32_t id, wsg_t* portrait)
  * @param ray The entire game state
  * @param id The ID of the dead enemy
  * @param portrait A portrait to draw on dialogs
+ * @return true if a script executed, false if it didn't
  */
-void checkScriptKill(ray_t* ray, int32_t id, wsg_t* portrait)
+bool checkScriptKill(ray_t* ray, int32_t id, wsg_t* portrait)
 {
-    checkScriptId(ray, &ray->scripts[KILL], id, portrait);
+    return checkScriptId(ray, &ray->scripts[KILL], id, portrait);
 }
 
 /**
@@ -440,10 +457,11 @@ void checkScriptKill(ray_t* ray, int32_t id, wsg_t* portrait)
  * @param ray The entire game state
  * @param id The ID of the item obtained
  * @param portrait A portrait to draw on dialogs
+ * @return true if a script executed, false if it didn't
  */
-void checkScriptGet(ray_t* ray, int32_t id, wsg_t* portrait)
+bool checkScriptGet(ray_t* ray, int32_t id, wsg_t* portrait)
 {
-    checkScriptId(ray, &ray->scripts[GET], id, portrait);
+    return checkScriptId(ray, &ray->scripts[GET], id, portrait);
 }
 
 /**
@@ -452,10 +470,11 @@ void checkScriptGet(ray_t* ray, int32_t id, wsg_t* portrait)
  * @param ray The entire game state
  * @param id The ID of the object touched
  * @param portrait A portrait to draw on dialogs
+ * @return true if a script executed, false if it didn't
  */
-void checkScriptTouch(ray_t* ray, int32_t id, wsg_t* portrait)
+bool checkScriptTouch(ray_t* ray, int32_t id, wsg_t* portrait)
 {
-    checkScriptId(ray, &ray->scripts[TOUCH], id, portrait);
+    return checkScriptId(ray, &ray->scripts[TOUCH], id, portrait);
 }
 
 /**
@@ -465,9 +484,12 @@ void checkScriptTouch(ray_t* ray, int32_t id, wsg_t* portrait)
  * @param scriptList The list of scripts to check
  * @param x The X coordinate of the cell
  * @param y The Y coordinate of the cell
+ * @return true if a script executed, false if it didn't
  */
-static void checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y)
+static bool checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y)
 {
+    bool executed = false;
+
     // Iterate over all nodes
     node_t* currentNode = scriptList->first;
     while (currentNode != NULL)
@@ -546,6 +568,7 @@ static void checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y
             {
                 // Do it
                 executeScriptEvent(ray, script, ray->ps.sprite);
+                executed = true;
 
                 // If this script is an always script, not a one-time script
                 if (ALWAYS == script->ifArgs.cellList.oneTime)
@@ -577,6 +600,7 @@ static void checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y
         // Move to the next script
         currentNode = currentNode->next;
     }
+    return executed;
 }
 
 /**
@@ -585,10 +609,11 @@ static void checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y
  * @param ray The entire game state
  * @param x The X coordinate of the shot wall
  * @param y The Y coordinate of the shot wall
+ * @return true if a script executed, false if it didn't
  */
-void checkScriptShootWall(ray_t* ray, int32_t x, int32_t y)
+bool checkScriptShootWall(ray_t* ray, int32_t x, int32_t y)
 {
-    checkScriptCell(ray, &ray->scripts[SHOOT_WALLS], x, y);
+    return checkScriptCell(ray, &ray->scripts[SHOOT_WALLS], x, y);
 }
 
 /**
@@ -597,10 +622,11 @@ void checkScriptShootWall(ray_t* ray, int32_t x, int32_t y)
  * @param ray The entire game state
  * @param x The X coordinate of the cell entered
  * @param y The Y coordinate of the cell entered
+ * @return true if a script executed, false if it didn't
  */
-void checkScriptEnter(ray_t* ray, int32_t x, int32_t y)
+bool checkScriptEnter(ray_t* ray, int32_t x, int32_t y)
 {
-    checkScriptCell(ray, &ray->scripts[ENTER], x, y);
+    return checkScriptCell(ray, &ray->scripts[ENTER], x, y);
 }
 
 /**
@@ -608,9 +634,12 @@ void checkScriptEnter(ray_t* ray, int32_t x, int32_t y)
  *
  * @param ray The entire game state
  * @param elapsedUs The time since this function was called last, in microseconds
+ * @return true if a script executed, false if it didn't
  */
-void checkScriptTime(ray_t* ray, uint32_t elapsedUs)
+bool checkScriptTime(ray_t* ray, uint32_t elapsedUs)
 {
+    bool executed = false;
+
     // Keep track of elapsed microseconds
     ray->scriptTimer += elapsedUs;
     // When a whole second elapses
@@ -635,6 +664,7 @@ void checkScriptTime(ray_t* ray, uint32_t elapsedUs)
                 {
                     // Do it
                     executeScriptEvent(ray, script, ray->ps.sprite);
+                    executed = true;
 
                     // Mark it as inactive
                     script->isActive = false;
@@ -673,6 +703,7 @@ void checkScriptTime(ray_t* ray, uint32_t elapsedUs)
             }
         }
     }
+    return executed;
 }
 
 /**
@@ -890,6 +921,18 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
             if (ray->camera.x < 0 && ray->camera.y < 0)
             {
                 ray->camera = ray->cameraTarget;
+            }
+            break;
+        }
+        case SHOP:
+        {
+            if (ray->p.mpoints >= script->thenArgs.shop.cost)
+            {
+                ray->p.mpoints -= script->thenArgs.shop.cost;
+                rayObjCommon_t item = {
+                    .type = script->thenArgs.shop.obj,
+                };
+                rayPlayerTouchItem(ray, &item, ray->p.mapId);
             }
             break;
         }
