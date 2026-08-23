@@ -30,7 +30,7 @@
   - [x] Use references to cut down on stupid
   - [x] Rename functions/vars/etc to be less stupid
   - [x] Make everything Enums instead of magic numbers
-6. [ ] Add settings 
+6. [x] Add settings 
   - [x] Toggle tutorial/helper mode
   - [x] Toggle touch input
 7. [ ] Tutorial update
@@ -51,7 +51,7 @@
   - [ ] Add reminder to drink water to the main menu
   - [x] Fix shoes to always draw
   - [ ] Merge win/lose screens, add icons for easier visual distinction
-  - [ ] Sort strings
+  - [x] Sort strings
 11. Sounds
   - [ ] BGM (Waiting on theme team)
   - [ ] SFX

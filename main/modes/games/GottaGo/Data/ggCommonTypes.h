@@ -16,6 +16,11 @@
 // Game settings
 #define MAX_URINALS 7 ///< Based on width of the screen/available space
 
+static const char* const ggNVSSpace[] = {
+    "ggSaves", "mLevels", "mLevelsHS", "acc", "accHS", "score", "scoreHS", "adjScore", "adjScoreHS", "helper", "touch",
+    "warningRead",
+};
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -35,6 +40,23 @@ typedef enum
     GG_HIGHSCORE,
     GG_OPTIONS,
 } ggState_t;
+
+/// @brief NVS Keys
+typedef enum
+{
+    GG_NAMESPACE,
+    GG_MAX_LEVELS,
+    GG_MAX_LEVELS_HS,
+    GG_MAX_ACC,
+    GG_MAX_ACC_HS,
+    GG_MAX_SCORE,
+    GG_MAX_SCORE_HS,
+    GG_ADJ_SCORE,
+    GG_ADJ_SCORE_HS,
+    GG_HELPER,
+    GG_TOUCH,
+    GG_WARNING_NVS,
+} ggNVSEnum_t;
 
 /// @brief Trophy names
 typedef enum

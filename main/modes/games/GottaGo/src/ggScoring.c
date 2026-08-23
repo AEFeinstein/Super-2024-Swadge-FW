@@ -27,32 +27,6 @@
 #define SCORE_SMALL_URINAL 200
 
 //==============================================================================
-// Consts
-//==============================================================================
-
-static const char* const ggNVSSpace[] = {
-    "ggSaves", "mLevels", "mLevelsHS", "acc", "accHS", "score", "scoreHS", "adjScore", "adjScoreHS",
-};
-
-//==============================================================================
-// Enums
-//==============================================================================
-
-// NVS Keys
-typedef enum
-{
-    GG_NAMESPACE,
-    GG_MAX_LEVELS,
-    GG_MAX_LEVELS_HS,
-    GG_MAX_ACC,
-    GG_MAX_ACC_HS,
-    GG_MAX_SCORE,
-    GG_MAX_SCORE_HS,
-    GG_ADJ_SCORE,
-    GG_ADJ_SCORE_HS,
-} ggNVSEnum_t;
-
-//==============================================================================
 // Function Declarations
 //==============================================================================
 

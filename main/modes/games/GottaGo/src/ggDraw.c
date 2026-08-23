@@ -252,8 +252,6 @@ static void drawSolution(ggData_t* ggd);
 
 void ggInitWarning(ggData_t* ggd)
 {
-    // FIXME: Load from NVS
-    ggd->toggle = false;
     if (ggd->toggle)
     {
         ggd->timeLimit = 0;

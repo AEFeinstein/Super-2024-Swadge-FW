@@ -261,6 +261,14 @@ static void ggEnterMode(void)
     }
 
     // Initialize
+    int outVal = 0;
+    readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_HELPER], &outVal);
+    ggd->helper = outVal;
+    readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_TOUCH], &outVal);
+    ggd->touch = outVal;
+    readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_WARNING_NVS], &outVal);
+    ggd->toggle = outVal;
+
     wsgPaletteReset(&ggd->npcPalette);
     ggInitWarning(ggd);
     ggd->state = GG_WARNING;
@@ -391,6 +399,7 @@ static void doWarning(int64_t elapsedUs)
         else if (evt.down && (evt.button & PB_A))
         {
             ggInitSplash(ggd);
+            writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_WARNING_NVS], true);
             ggd->state = GG_SPLASH;
         }
         else if (evt.down)
@@ -753,6 +762,8 @@ static void doOptions()
             {
                 ggd->state = GG_MENU;
                 ggd->selection = GG_TEXT_MENU_OPTIONS;
+                writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_HELPER], ggd->helper);
+                writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_TOUCH], ggd->touch);
             }
         }
     }
