@@ -13,6 +13,8 @@ kTms: str = 'tMs'
 kText: str = 'text'
 kAndOr: str = 'andor'
 kOneTime: str = 'onetime'
+kCost: str = 'cost'
+kObj: str = 'obj'
 
 
 class ifOpType(Enum):
@@ -34,6 +36,7 @@ class thenOpType(Enum):
     WARP = 12
     WIN = 13
     CAMERA = 14
+    SHOP = 15
 
 
 class orderType(Enum):
@@ -231,6 +234,10 @@ class rme_script:
         if kCell in self.thenArgs.keys():
             thenArgArray.append(
                 '{' + str(self.thenArgs[kCell][0]) + '.' + str(self.thenArgs[kCell][1]) + '}')
+        if kCost in self.thenArgs.keys():
+            thenArgArray.append(str(self.thenArgs[kCost]))
+        if kObj in self.thenArgs.keys():
+            thenArgArray.append(str(self.thenArgs[kObj]))
 
         # Stitch it all together
         return 'IF ' + self.ifOp.name + '(' + '; '.join(ifArgArray) + ') THEN ' + self.thenOp.name + '(' + '; '.join(thenArgArray) + ')'
@@ -335,6 +342,11 @@ class rme_script:
                 if (self.thenArgs[kCell] is None):
                     return False
 
+            elif thenOpType.SHOP:
+                # Parse the args
+                self.thenArgs[kCost] = int(argParts[0])
+                self.thenArgs[kObj] = int(argParts[1])
+
             else:
                 self.resetScript()
                 return False
@@ -404,6 +416,10 @@ class rme_script:
         if kCell in self.thenArgs.keys():
             bytes.append(self.thenArgs[kCell][0])
             bytes.append(self.thenArgs[kCell][1])
+        if kCost in self.thenArgs.keys():
+            bytes.append(self.thenArgs[kCost])
+        if kObj in self.thenArgs.keys():
+            bytes.append(self.thenArgs[kObj])
 
         return bytes
 
@@ -524,6 +540,13 @@ class rme_script:
             # Read the cell
             self.thenArgs[kCell] = [bytes[idx], bytes[idx + 1]]
             idx = idx + 2
+        elif thenOpType.SHOP == self.thenOp:
+            # Read the cost
+            self.thenArgs[kCost] = bytes[idx]
+            idx = idx + 1
+            # Read the object type
+            self.thenArgs[kObj] = bytes[idx]
+            idx = idx + 1
         else:
             self.resetScript()
             return
