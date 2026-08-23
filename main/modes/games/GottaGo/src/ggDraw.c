@@ -32,9 +32,10 @@
 #define SPLASH_US          (GG_SECOND / 2)
 
 // Menu
-#define OPTION_SPACING 32
-#define OPTION_BUFFER  42
+#define OPTION_SPACING 24
+#define OPTION_BUFFER  80
 #define OPTION_X       32
+#define OPTION_GAP     36
 
 // Rules
 #define RULES_X_BORDER 32
@@ -115,7 +116,7 @@ static const char* const levelText[] = {
 };
 
 static const char* const menuText[] = {
-    "Play!", "Rules", "High Scores", "Options", "Activate Helper Mode: ", "Touch entry: ", "Quit", "On", "Off",
+    "Play!", "Rules", "High Scores", "Options", "Activate Helper Mode: ", "Touch entry: ", "Quit", "Back", "On", "Off",
 };
 
 static const char* const rulesText[] = {
@@ -380,7 +381,7 @@ void ggDrawResult(ggData_t* ggd)
     {
         title = GG_TEXT_BAD_1;
     }
-    else if (ggd->stallUsed && ggd->stallUses < 0)
+    else if (ggd->stallUsed && ggd->stallUses <= 0)
     {
         title = GG_TEXT_BAD_3;
     }
@@ -410,6 +411,8 @@ void ggDrawMenu(ggData_t* ggd)
 {
     // Draw background
     drawBackground(ggd);
+    // Draw Title
+    drawTitleText(ggd);
     // Draw options
     for (int idx = 0; idx < GG_TEXT_MENU_COUNT; idx++)
     {
@@ -493,33 +496,93 @@ void ggDrawOptions(ggData_t* ggd)
 {
     // Draw background
     drawBackground(ggd);
-    // Draw options
-    for (int idx = GG_TEXT_MENU_COUNT; idx < GG_TEXT_OPTIONS_COUNT; idx++)
+    // Title
+    drawText(&ggd->titleFont, c555, menuText[GG_TEXT_MENU_OPTIONS], OPTION_X / 2, 10);
+    drawText(&ggd->titleFontOutline, c000, menuText[GG_TEXT_MENU_OPTIONS], OPTION_X / 2, 10);
+    // Options
+    drawText(&ggd->titleFont, c555, menuText[GG_TEXT_OPTIONS_HELPER], OPTION_X / 4, 10 + OPTION_GAP);
+    drawText(&ggd->titleFontOutline, c000, menuText[GG_TEXT_OPTIONS_HELPER], OPTION_X / 4, 10 + OPTION_GAP);
+    if (ggd->helper)
     {
-        drawText(&ggd->titleFont, c555, menuText[idx], OPTION_X / 4,
-                 OPTION_BUFFER + (idx - GG_TEXT_MENU_COUNT) * OPTION_SPACING * 2);
-        drawText(&ggd->titleFontOutline, c000, menuText[idx], OPTION_X / 4,
-                 OPTION_BUFFER + (idx - GG_TEXT_MENU_COUNT) * OPTION_SPACING * 2);
-        drawText(&ggd->titleFont, c000, menuText[GG_TEXT_OFF], OPTION_X / 4,
-                 OPTION_BUFFER + (idx - GG_TEXT_MENU_COUNT) * OPTION_SPACING * 2 + OPTION_SPACING);
-    }
-    // Draw quit
-    drawText(&ggd->titleFont, c555, menuText[GG_TEXT_QUIT], OPTION_X / 4,
-             OPTION_BUFFER + GG_TEXT_MENU_COUNT * OPTION_SPACING);
-    drawText(&ggd->titleFontOutline, c000, menuText[GG_TEXT_QUIT], OPTION_X / 4,
-             OPTION_BUFFER + GG_TEXT_MENU_COUNT * OPTION_SPACING);
-    // Draw selection
-    int yOff = OPTION_BUFFER + (ggd->selection) * OPTION_SPACING - 6;
-    int xOff;
-    if (ggd->selection == GG_TEXT_MENU_COUNT)
-    {
-        xOff = OPTION_X / 4 + textWidth(&ggd->titleFont, menuText[GG_TEXT_QUIT]) + 10;
+        drawText(&ggd->titleFont, c000, menuText[GG_TEXT_OFF], OPTION_X, 10 + 2 * OPTION_GAP);
+        drawText(&ggd->titleFont, c555, menuText[GG_TEXT_ON],
+                 TFT_WIDTH - OPTION_X - textWidth(&ggd->titleFont, menuText[GG_TEXT_ON]), 10 + 2 * OPTION_GAP);
+        drawText(&ggd->titleFontOutline, c000, menuText[GG_TEXT_ON],
+                 TFT_WIDTH - OPTION_X - textWidth(&ggd->titleFont, menuText[GG_TEXT_ON]), 10 + 2 * OPTION_GAP);
     }
     else
     {
-        xOff = OPTION_X / 4 + textWidth(&ggd->titleFont, menuText[ggd->selection]) + 10;
+        drawText(&ggd->titleFont, c555, menuText[GG_TEXT_OFF], OPTION_X, 10 + 2 * OPTION_GAP);
+        drawText(&ggd->titleFont, c000, menuText[GG_TEXT_ON],
+                 TFT_WIDTH - OPTION_X - textWidth(&ggd->titleFont, menuText[GG_TEXT_ON]), 10 + 2 * OPTION_GAP);
+        drawText(&ggd->titleFontOutline, c000, menuText[GG_TEXT_OFF], OPTION_X, 10 + 2 * OPTION_GAP);
     }
-    drawWsgSimple(&ggd->uiImages[1], xOff, yOff);
+    drawText(&ggd->titleFont, c555, menuText[GG_TEXT_OPTIONS_TOUCH], OPTION_X / 4, 10 + 3 * OPTION_GAP);
+    drawText(&ggd->titleFontOutline, c000, menuText[GG_TEXT_OPTIONS_TOUCH], OPTION_X / 4, 10 + 3 * OPTION_GAP);
+    if (ggd->touch)
+    {
+        drawText(&ggd->titleFont, c000, menuText[GG_TEXT_OFF], OPTION_X, 10 + 4 * OPTION_GAP);
+        drawText(&ggd->titleFont, c555, menuText[GG_TEXT_ON],
+                 TFT_WIDTH - OPTION_X - textWidth(&ggd->titleFont, menuText[GG_TEXT_ON]), 10 + 4 * OPTION_GAP);
+        drawText(&ggd->titleFontOutline, c000, menuText[GG_TEXT_ON],
+                 TFT_WIDTH - OPTION_X - textWidth(&ggd->titleFont, menuText[GG_TEXT_ON]), 10 + 4 * OPTION_GAP);
+    }
+    else
+    {
+        drawText(&ggd->titleFont, c555, menuText[GG_TEXT_OFF], OPTION_X, 10 + 4 * OPTION_GAP);
+        drawText(&ggd->titleFont, c000, menuText[GG_TEXT_ON],
+                 TFT_WIDTH - OPTION_X - textWidth(&ggd->titleFont, menuText[GG_TEXT_ON]), 10 + 4 * OPTION_GAP);
+        drawText(&ggd->titleFontOutline, c000, menuText[GG_TEXT_OFF], OPTION_X, 10 + 4 * OPTION_GAP);
+    }
+    drawText(&ggd->titleFont, c555, menuText[GG_TEXT_BACK], OPTION_X / 2, TFT_HEIGHT - 40);
+    drawText(&ggd->titleFontOutline, c000, menuText[GG_TEXT_BACK], OPTION_X / 2, TFT_HEIGHT - 40);
+
+    // Draw selection
+    switch (ggd->selection)
+    {
+        case 0:
+        {
+            if (ggd->helper)
+            {
+                drawLineFast(TFT_WIDTH - OPTION_X, 10 + 2 * OPTION_GAP + 20,
+                             TFT_WIDTH - (textWidth(&ggd->titleFont, menuText[GG_TEXT_ON]) + OPTION_X),
+                             10 + 2 * OPTION_GAP + 20, c500);
+            }
+            else
+            {
+                drawLineFast(OPTION_X, 10 + 2 * OPTION_GAP + 20,
+                             OPTION_X + textWidth(&ggd->titleFont, menuText[GG_TEXT_OFF]), 10 + 2 * OPTION_GAP + 20,
+                             c500);
+            }
+            break;
+        }
+        case 1:
+        {
+            if (ggd->touch)
+            {
+                drawLineFast(TFT_WIDTH - OPTION_X, 10 + 4 * OPTION_GAP + 20,
+                             TFT_WIDTH - (textWidth(&ggd->titleFont, menuText[GG_TEXT_ON]) + OPTION_X),
+                             10 + 4 * OPTION_GAP + 20, c500);
+            }
+            else
+            {
+                drawLineFast(OPTION_X, 10 + 4 * OPTION_GAP + 20,
+                             OPTION_X + textWidth(&ggd->titleFont, menuText[GG_TEXT_OFF]), 10 + 4 * OPTION_GAP + 20,
+                             c500);
+            }
+            break;
+        }
+        default:
+        {
+            drawLineFast(OPTION_X / 2, TFT_HEIGHT - 20,
+                         OPTION_X / 2 + textWidth(&ggd->titleFont, menuText[GG_TEXT_BACK]), TFT_HEIGHT - 20, c500);
+            break;
+        }
+    }
+
+    // Red line under option
+    // - sel = 3 pos
+    // - either true ot false
 }
 
 //==============================================================================
@@ -840,7 +903,11 @@ static void drawUI(ggData_t* ggd, bool solution)
             xStart + ggd->selection * ((ggd->numActive == MAX_URINALS) ? URINAL_7_SPACING : URINAL_SPACING), UI_ARROW_Y,
             false, false, 270);
     // Timer/Solution bits
-    if (!solution)
+    if (solution && ggd->helper)
+    {
+        drawSolution(ggd);
+    }
+    else if (!solution)
     {
         long timeLeft = ggd->timeLimit - ggd->timer;
         snprintf(buffer, sizeof(buffer) - 1, "Time left: %ld.%03ld", timeLeft / GG_SECOND,
@@ -854,9 +921,17 @@ static void drawUI(ggData_t* ggd, bool solution)
                            + ((ggd->timer * (TFT_WIDTH - (2 * (UI_BAR_PADDING_X + 1) + 1))) / ggd->timeLimit),
                        UI_BAR_PADDING_Y + UI_BAR_HEIGHT - 1, c440);
     }
+    else if (ggd->stallUsed)
+    {
+        drawWsgSimpleHalf(&ggd->uiImages[(ggd->hasLost) ? 2 : 3], 35, 45);
+    }
     else
     {
-        drawSolution(ggd);
+        ggUrinal_t* u = &ggd->urinals[ggd->selection];
+        bool bad      = u->brokenBowl || u->brokenDrain || u->outOfOrder || u->pluggedDrain;
+        drawWsgSimpleHalf(
+            &ggd->uiImages[(bad) ? 2 : 3],
+            ggd->selection * ((ggd->numActive == MAX_URINALS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1, 140);
     }
 }
 

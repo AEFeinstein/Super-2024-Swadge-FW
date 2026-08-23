@@ -10,7 +10,7 @@
     - [x] Change score for using a stall
     - [x] Diagnose/fix inability to get perfect scores (<1 sec, correct urinal)
 3. [x] Fix touch controls
-4. [ ] Trophies
+4. [x] Trophies
   - [x] Beat 10 levels in a row
   - [x] Beat 20 levels in a row
   - [x] Beat 30 levels in a row
@@ -20,7 +20,7 @@
   - [x] When all Urinals are occupied or Broken, use a Stall to continue
   - [x] Attempt to use a stall when there's no uses left
   - [x] Pick the worst available option 5x in a row
-  - [ ] Activate helper mode (hidden trophy)
+  - [x] Activate helper mode (hidden trophy)
   - [x] Find Manifesto (hidden trophy)
   - [x] Play 20 games
 5. [x] Refactor
@@ -31,8 +31,8 @@
   - [x] Rename functions/vars/etc to be less stupid
   - [x] Make everything Enums instead of magic numbers
 6. [ ] Add settings 
-  - [ ] Toggle tutorial/helper mode
-  - [ ] Toggle touch input
+  - [x] Toggle tutorial/helper mode
+  - [x] Toggle touch input
 7. [ ] Tutorial update
 8. [ ] Casual Mode
   - [ ] Non-timed, non-scored mode
@@ -44,12 +44,12 @@
 10. [ ] Update visuals
   - [ ] Small text font
   - [ ] Large font
-  - [ ] Make functions based on current state/overlap drawing routines to cut down on duplication
+  - [x] Make functions based on current state/overlap drawing routines to cut down on duplication
   - [ ] Add divider to leftmost toilet when < 7 toilets
   - [ ] Fix lose text when quitting on purpose
-  - [ ] Add won game display to endcard
+  - [x] Add won game display to endcard
   - [ ] Add reminder to drink water to the main menu
-  - [ ] Fix shoes to always draw
+  - [x] Fix shoes to always draw
   - [ ] Merge win/lose screens, add icons for easier visual distinction
   - [ ] Sort strings
 11. Sounds

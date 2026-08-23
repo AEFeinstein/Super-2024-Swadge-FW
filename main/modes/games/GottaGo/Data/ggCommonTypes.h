@@ -153,6 +153,7 @@ typedef enum
 typedef enum
 {
     GG_TEXT_QUIT = GG_TEXT_OPTIONS_COUNT,
+    GG_TEXT_BACK,
     GG_TEXT_ON,
     GG_TEXT_OFF,
 } ggSettingsText;

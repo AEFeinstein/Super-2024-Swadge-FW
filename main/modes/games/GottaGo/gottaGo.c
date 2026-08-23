@@ -528,7 +528,6 @@ static void doGame(int64_t elapsedUs)
             }
             else if (evt.button & PB_B)
             {
-                ggd->stallUses--;
                 if (ggd->pause)
                 {
                     ggd->pause = false;
@@ -536,6 +535,7 @@ static void doGame(int64_t elapsedUs)
                 }
                 else if (ggd->stallUses > 0)
                 {
+                    ggd->stallUses--;
                     handleGameEnd(false, true);
                     // Trophy
                     bool trophy = true;
@@ -711,6 +711,50 @@ static void doOptions()
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
+        if (evt.down)
+        {
+            if (evt.button & PB_DOWN)
+            {
+                ggd->selection++;
+                ggd->selection %= GG_TEXT_OPTIONS_COUNT - GG_TEXT_MENU_COUNT + 1;
+            }
+            else if (evt.button & PB_UP)
+            {
+                ggd->selection--;
+                if (ggd->selection < 0)
+                {
+                    ggd->selection = GG_TEXT_OPTIONS_COUNT - GG_TEXT_MENU_COUNT;
+                }
+            }
+            else if (evt.button & PB_LEFT)
+            {
+                if (ggd->selection == 0)
+                {
+                    ggd->helper = 0;
+                }
+                else if (ggd->selection == 1)
+                {
+                    ggd->touch = 0;
+                }
+            }
+            else if (evt.button & PB_RIGHT)
+            {
+                if (ggd->selection == 0)
+                {
+                    ggd->helper = 1;
+                    trophyUpdate(&ggTrophies[T_HELP_MODE], 1, true);
+                }
+                else if (ggd->selection == 1)
+                {
+                    ggd->touch = 1;
+                }
+            }
+            else if (evt.button & PB_B || ((evt.button & PB_A) && ggd->selection == 2))
+            {
+                ggd->state = GG_MENU;
+                ggd->selection = GG_TEXT_MENU_OPTIONS;
+            }
+        }
     }
     // Draw
     ggDrawOptions(ggd);
