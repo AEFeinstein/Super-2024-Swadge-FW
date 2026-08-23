@@ -205,7 +205,7 @@ static void rayExitMode(void)
     freeFont(&ray->logbook);
 
     // Free the game state
-    free(ray);
+    heap_caps_free(ray);
 }
 
 /**
@@ -236,19 +236,19 @@ void rayFreeCurrentState(ray_t* cRay)
     rayEnemy_t* poppedEnemy = NULL;
     while (NULL != (poppedEnemy = pop(&cRay->enemies)))
     {
-        free(poppedEnemy);
+        heap_caps_free(poppedEnemy);
     }
 
     rayObjCommon_t* poppedItem = NULL;
     while (NULL != (poppedItem = pop(&cRay->items)))
     {
-        free(poppedItem);
+        heap_caps_free(poppedItem);
     }
 
     rayObjCommon_t* poppedScenery = NULL;
     while (NULL != (poppedScenery = pop(&cRay->scenery)))
     {
-        free(poppedScenery);
+        heap_caps_free(poppedScenery);
     }
 
     // Free the scripts
