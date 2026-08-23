@@ -525,6 +525,7 @@ typedef struct
     uint32_t h;                   ///< The height of the map
     rayMapCell_t** tiles;         ///< A 2D array of tiles in the map
     rayTileState_t* visitedTiles; ///< A 1D array of all the visited tiles in the map, row-order
+    list_t crackedWalls;          ///< A list of cracked walls to check bombs against
 } rayMap_t;
 
 /**
