@@ -59,9 +59,9 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
             removeEntry(&ray->enemies, currentNode);
             if (enemy->state)
             {
-                free(enemy->state);
+                heap_caps_free(enemy->state);
             }
-            free(enemy);
+            heap_caps_free(enemy);
 
             // Set the next node
             currentNode = nextNode;
