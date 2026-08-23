@@ -22,6 +22,8 @@ const char gs_ModeName[]                = "Gossip Stone";
 const char gs_trophyNVS[]               = "GossipTroph";
 static const char gs_GossipStr[]        = "Gossip";
 static const char gs_AskMeAnythingStr[] = "Ask Me Anything";
+static const char gs_ProphecyStr[]      = "The Prophecy";
+static const char gs_ExitStr[]          = "Exit";
 
 //==============================================================================
 // Function Prototypes
@@ -119,14 +121,41 @@ static void gs_enterMode(void)
     gameData->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
 
     // Initialize the main menu
-    gameData->ui   = UI_MENU;
-    gameData->menu = initMenu(gs_ModeName, gs_menuCb);
-    addSingleItemToMenu(gameData->menu, gs_GossipStr);
-    addSingleItemToMenu(gameData->menu, gs_AskMeAnythingStr);
+    gameData->submode = GS_MENU_SUBMODE;
+    gameData->menu    = initMenu(gs_ModeName, gs_menuCb);
+
+    gs_populateMenu();
 
     gs_loadAssets();
 
     gs_initializeGame();
+
+    // read NVS
+    gameData->gossipProgress = heap_caps_calloc((GOSSIP_COUNT / 32) + 1, sizeof(int32_t), MALLOC_CAP_SPIRAM);
+    for (int i = 0; i < (GOSSIP_COUNT / 32) + 1; i++)
+    {
+        char nvsKey[20];
+        sprintf(nvsKey, "gossipProgress%d", i);
+        readNvs32(nvsKey, &gameData->gossipProgress[i]);
+    }
+}
+
+void gs_populateMenu(void)
+{
+    removeAllItemsFromMenu(gameData->menu);
+    // Gossip
+    addSingleItemToMenu(gameData->menu, gs_GossipStr);
+    // Ask Me Anything
+    addSingleItemToMenu(gameData->menu, gs_AskMeAnythingStr);
+    // The Prophecy
+    if (trophyGetSavedValue(&gs_trophies[0]) == GOSSIP_COUNT - 1)
+    {
+        addSingleItemToMenu(gameData->menu, gs_ProphecyStr);
+    }
+    // The Moon
+
+    // Exit
+    addSingleItemToMenu(gameData->menu, gs_ExitStr);
 }
 
 void gs_setAssetMetaData(void)
@@ -151,14 +180,17 @@ static void gs_mainLoop(int64_t elapsedUs)
     while (checkButtonQueueWrapper(&evt))
     {
         gameData->btnState = evt.state;
-        switch (gameData->ui)
+        switch (gameData->submode)
         {
-            case UI_MENU:
+            case GS_MENU_SUBMODE:
             {
                 gameData->menu = menuButton(gameData->menu, evt);
                 break;
             }
-            case UI_GAME:
+            case GS_GOSSIP_SUBMODE:
+            case GS_AMA_SUBMODE:
+            case GS_PROPHECY_SUBMODE:
+            case GS_MOON_SUBMODE:
             {
                 if (evt.down)
                 {
@@ -174,18 +206,22 @@ static void gs_mainLoop(int64_t elapsedUs)
         }
     }
 
-    switch (gameData->ui)
+    switch (gameData->submode)
     {
-        case UI_MENU:
+        case GS_MENU_SUBMODE:
         {
             drawMenuMega(gameData->menu, gameData->menuRenderer, elapsedUs);
             break;
         }
-        case UI_GAME:
+        case GS_GOSSIP_SUBMODE:
+        case GS_AMA_SUBMODE:
+        case GS_PROPHECY_SUBMODE:
+        case GS_MOON_SUBMODE:
         {
             if (gameData->btnDownState & PB_B)
             {
-                gameData->ui = UI_MENU;
+                gameData->submode = GS_MENU_SUBMODE;
+                gs_populateMenu();
                 break;
             }
             gameData->elapsedUs = elapsedUs;
@@ -275,27 +311,39 @@ bool gs_menuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
-        if (gs_GossipStr == label)
+        if (label == gs_GossipStr)
         {
-            gameData->ui        = UI_GAME;
+            gameData->submode   = GS_GOSSIP_SUBMODE;
             gs_entity_t* gossip = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_DATA);
-            ((gs_gossip_t*)gossip->data)->messageList    = gossipList;
-            ((gs_gossip_t*)gossip->data)->arr_size       = GOSSIP_COUNT;
-            ((gs_gossip_t*)gossip->data)->gossipTracking = true;
+            ((gs_gossip_t*)gossip->data)->messageList = gossipList;
+            ((gs_gossip_t*)gossip->data)->arr_size    = GOSSIP_COUNT;
             // reset a few things because the player may have exited and entered.
             ((gs_gossip_t*)gossip->data)->index    = 0;
             ((gs_gossip_t*)gossip->data)->progress = 0;
         }
-        else if (gs_AskMeAnythingStr == label)
+        else if (label == gs_AskMeAnythingStr)
         {
-            gameData->ui        = UI_GAME;
+            gameData->submode   = GS_AMA_SUBMODE;
             gs_entity_t* gossip = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_DATA);
-            ((gs_gossip_t*)gossip->data)->messageList    = AMAList;
-            ((gs_gossip_t*)gossip->data)->arr_size       = AMA_COUNT;
-            ((gs_gossip_t*)gossip->data)->gossipTracking = false;
+            ((gs_gossip_t*)gossip->data)->messageList = AMAList;
+            ((gs_gossip_t*)gossip->data)->arr_size    = AMA_COUNT;
             // reset a few things because the player may have exited and entered.
             ((gs_gossip_t*)gossip->data)->index    = 0;
             ((gs_gossip_t*)gossip->data)->progress = 0;
+        }
+        else if (label == gs_ProphecyStr)
+        {
+            gameData->submode   = GS_PROPHECY_SUBMODE;
+            gs_entity_t* gossip = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_DATA);
+            ((gs_gossip_t*)gossip->data)->messageList = ProphecyList;
+            ((gs_gossip_t*)gossip->data)->arr_size    = PROPHECY_COUNT;
+            // reset a few things because the player may have exited and entered.
+            ((gs_gossip_t*)gossip->data)->index    = 0;
+            ((gs_gossip_t*)gossip->data)->progress = 0;
+        }
+        else if (label == gs_ExitStr)
+        {
+            switchToSwadgeMode(&mainMenuMode);
         }
     }
     return false;

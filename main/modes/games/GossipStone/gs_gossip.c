@@ -1,7 +1,7 @@
 #pragma once
 #include "gs_gossip.h"
 
-const char* gossipList[6] = {
+const char* gossipList[GOSSIP_COUNT] = {
     "Shake the rock to make it talk. Testers can press A.",
     "Yo, this is the first line.",
     "Number 2 here.",
@@ -10,7 +10,7 @@ const char* gossipList[6] = {
     "Okay, that's number five.",
 };
 
-const char* AMAList[21] = {
+const char* AMAList[AMA_COUNT] = {
     "Speak a yes or no question clearly into the microphone then shake the swadge.",
     "It is certain.",
     "It is decidedly so.",
@@ -32,4 +32,19 @@ const char* AMAList[21] = {
     "My sources say no.",
     "Outlook not so good.",
     "Very doubtful.",
+};
+
+const char* ProphecyList[PROPHECY_COUNT] = {
+    "Congratulations! You've completed The Prophecy!",
+    "This is a final stupid monologue that goes in order.",
+    "T-10",
+    "9",
+    "8",
+    "7",
+    "6",
+    "5",
+    "4",
+    "3",
+    "2",
+    "1",
 };

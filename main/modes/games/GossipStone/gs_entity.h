@@ -57,7 +57,6 @@ typedef struct
     uint16_t progress; // From 0 to TYPING_FRAMES the words are typing. If it is TYPING_FRAMES, then shakes are no
                        // longer ignored.
     gs_entity_t* gossipStone; // Reference to make it start and stop animating.
-    bool gossipTracking;      // true if new messages count toward the prophecy trophy.
 } gs_gossip_t;
 
 //==============================================================================

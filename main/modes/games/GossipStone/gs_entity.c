@@ -87,12 +87,22 @@ void gs_updateGossip(gs_entity_t* self)
         }
     }
     // make this check for shake later
-    else if (self->gameData->btnDownState && PB_A)
+    else if (self->gameData->btnDownState & PB_A)
     {
-        data->index               = gs_randomInt(1, data->arr_size - 1);
+        if (self->gameData->submode == GS_PROPHECY_SUBMODE)
+        {
+            if (data->index < data->arr_size - 1)
+            {
+                data->index++;
+            }
+        }
+        else
+        {
+            data->index = gs_randomInt(1, data->arr_size - 1);
+        }
         data->progress            = 0;
         data->gossipStone->paused = false;
-        if (data->gossipTracking)
+        if (self->gameData->submode == GS_GOSSIP_SUBMODE)
         {
             gs_recordProgress(self);
         }
@@ -103,11 +113,19 @@ void gs_recordProgress(gs_entity_t* self)
 {
     gs_gossip_t* data = (gs_gossip_t*)self->data;
 
-    if (!gs_checkBit(self->gameData->gossipProgress[data->index / 32], data->index % 32))
+    uint8_t NVSgroup = data->index / 32;
+    uint8_t NVSbit   = data->index % 32;
+    if (!gs_checkBit(self->gameData->gossipProgress[NVSgroup], NVSbit))
     {
         // set that bit to 1
-        self->gameData->gossipProgress[data->index / 32] |= (1 << (data->index % 32));
-        // To do: save it to nvs
+        self->gameData->gossipProgress[NVSgroup] |= (1 << NVSbit);
+        // save it to nvs
+        char nvsKey[20];
+        sprintf(nvsKey, "gossipProgress%d", NVSgroup);
+        printf("nvsKey = '%s'\n", nvsKey);
+        writeNvs32(nvsKey, self->gameData->gossipProgress[NVSgroup]);
+
+        // update the trophy
         trophyUpdate(&(*self->gameData->trophyData)[0], trophyGetSavedValue(&(*self->gameData->trophyData)[0]) + 1,
                      true);
     }

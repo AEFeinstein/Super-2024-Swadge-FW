@@ -9,9 +9,12 @@
 
 typedef enum __attribute__((packed))
 {
-    UI_MENU,
-    UI_GAME,
-} gs_Ui_t;
+    GS_MENU_SUBMODE,
+    GS_GOSSIP_SUBMODE,
+    GS_AMA_SUBMODE,
+    GS_PROPHECY_SUBMODE,
+    GS_MOON_SUBMODE,
+} gs_submode_t;
 
 //==============================================================================
 // Structs
@@ -20,8 +23,8 @@ typedef enum __attribute__((packed))
 typedef struct gs_gameData_t
 {
     const trophyData_t (*trophyData)[1];
-    // Current UI being shown
-    gs_Ui_t ui;
+    // Current stuff being shown
+    gs_submode_t submode;
     // Main Menu
     menu_t* menu;
     menuMegaRenderer_t* menuRenderer;
@@ -42,16 +45,15 @@ typedef struct gs_gameData_t
     bool songFading;
 
     // NVS related
-    // Usage: The second bit of the first number is 1 if the player has seen gossip idx 1. All 1's if they've seen 0
-    // thru 31. The first bit of the second number is 1 if the player has seen gossip idx 32. The size of the array
-    // times 32 is how many messages can be saved.
-    uint32_t gossipProgress[2];
+    // Usage: Each bit is a gossip seen or unseen.
+    int32_t* gossipProgress;
 } gs_gameData_t;
 
 //==============================================================================
 // Functions
 //==============================================================================
 
+void gs_populateMenu(void);
 void gs_setAssetMetaData(void);
 
 //==============================================================================
