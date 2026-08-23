@@ -6,12 +6,12 @@
 void loadScripts(ray_t* ray, const uint8_t* fileData, uint32_t fileSize, uint32_t caps);
 void freeScripts(ray_t* ray);
 
-void checkScriptShootObjs(ray_t* ray, int32_t id, wsg_t* portrait);
-void checkScriptKill(ray_t* ray, int32_t id, wsg_t* portrait);
-void checkScriptGet(ray_t* ray, int32_t id, wsg_t* portrait);
-void checkScriptTouch(ray_t* ray, int32_t id, wsg_t* portrait);
-void checkScriptShootWall(ray_t* ray, int32_t x, int32_t y);
-void checkScriptEnter(ray_t* ray, int32_t x, int32_t y);
-void checkScriptTime(ray_t* ray, uint32_t elapsedUs);
+bool checkScriptShootObjs(ray_t* ray, int32_t id, wsg_t* portrait);
+bool checkScriptKill(ray_t* ray, int32_t id, wsg_t* portrait);
+bool checkScriptGet(ray_t* ray, int32_t id, wsg_t* portrait);
+bool checkScriptTouch(ray_t* ray, int32_t id, wsg_t* portrait);
+bool checkScriptShootWall(ray_t* ray, int32_t x, int32_t y);
+bool checkScriptEnter(ray_t* ray, int32_t x, int32_t y);
+bool checkScriptTime(ray_t* ray, uint32_t elapsedUs);
 
 #endif
