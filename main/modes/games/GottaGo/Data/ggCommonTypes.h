@@ -17,34 +17,6 @@
 #define MAX_URINALS 7 ///< Based on width of the screen/available space
 
 //==============================================================================
-// Consts
-//==============================================================================
-
-const char ggName[] = "Gotta Go!";
-
-static const paletteColor_t skinColors[] = {
-    c555, c333, c444, c023, c402, c233, c343,
-};
-static const paletteColor_t shirtColors[] = {
-    c500, c050, c005, c440, c204, c404, c044,
-};
-static const paletteColor_t shirtAccentColors[] = {
-    c400, c040, c004, c330, c103, c303, c033,
-};
-static const paletteColor_t pantsColors[] = {
-    c024, c330, c222, c224, c503, c240, c031,
-};
-static const paletteColor_t pantsAccentColors[] = {
-    c012, c220, c111, c113, c402, c130, c020,
-};
-static const paletteColor_t shoeColors[] = {
-    c210,
-    c000,
-    c111,
-    c300,
-};
-
-//==============================================================================
 // Enums
 //==============================================================================
 
@@ -56,12 +28,29 @@ typedef enum
     GG_MENU,
     GG_READY,
     GG_GAME,
-    // GG_CHOICE,
-    // GG_WON,
-    // GG_LOST,
+    GG_CHOICE,
+    GG_WON,
+    GG_LOST,
     GG_RULES,
     GG_HIGHSCORE,
 } ggState_t;
+
+/// @brief Trophy names
+typedef enum
+{
+    T_ROUNDS_20,
+    T_LEVELS_10,
+    T_LEVELS_20,
+    T_LEVELS_30,
+    T_OHP,
+    T_NNP,
+    T_NFP,
+    T_USE_STALL_GOOD,
+    T_USE_STALL_BAD,
+    T_WORST_OPTIONS,
+    T_HELP_MODE,
+    T_MANIFESTO,
+} ggTrophyNames_t;
 
 /// @brief Types of pants
 typedef enum
@@ -114,6 +103,53 @@ typedef enum
     GG_OOO,
     GG_MAJOR_COUNT
 } ggMajor_t;
+
+typedef enum
+{
+    GG_WARNING_TEXT,
+    GG_WARNING_MESSAGE,
+    GG_WARNING_MANI,
+} ggWarningText_t;
+
+typedef enum
+{
+    GG_TEXT_READY,
+    GG_TEXT_3,
+    GG_TEXT_2,
+    GG_TEXT_1,
+    GG_TEXT_PAUSED,
+    GG_TEXT_INSTR_PAUSE,
+    GG_TEXT_GOOD_1,
+    GG_TEXT_GOOD_2,
+    GG_TEXT_INSTR_GOOD,
+    GG_TEXT_BAD_1,
+    GG_TEXT_BAD_2,
+    GG_TEXT_BAD_3,
+    GG_TEXT_INSTR_BAD,
+} ggLevelText_t;
+
+typedef enum
+{
+    GG_TEXT_MENU_PLAY,
+    GG_TEXT_MENU_RULES,
+    GG_TEXT_MENU_HS,
+    GG_TEXT_MENU_OPTIONS,
+    GG_TEXT_MENU_COUNT
+} ggMenuText_t;
+
+typedef enum
+{
+    GG_TEXT_OPTIONS_HELPER = GG_TEXT_MENU_COUNT,
+    GG_TEXT_OPTIONS_TOUCH,
+    GG_TEXT_OPTIONS_COUNT
+} ggOptionsText_t;
+
+typedef enum
+{
+    GG_TEXT_QUIT = GG_TEXT_OPTIONS_COUNT,
+    GG_TEXT_ON,
+    GG_TEXT_OFF,
+} ggSettingsText;
 
 //==============================================================================
 // Structs
@@ -183,11 +219,16 @@ typedef struct
     int64_t timeLimit; ///< When timer is triggered
     int selection;     ///< Current selection, menu, urinal, etc.
 
+    // Settings
+    bool touch;  ///< If using the touch input
+    bool helper; ///< If using the helper mode
+
     // Level State
     int numActive;                   ///< Number of active urinals
     int stallUses;                   ///< How many stall uses are remaining
     int stallReq;                    ///< Current requirement to get a new stall use
     ggUrinal_t urinals[MAX_URINALS]; ///< All urinal data
+    bool pause;                      ///< If the game is paused
 
     // Current Score
     int64_t timeRemaining; ///< Time remaining once option is selected
@@ -196,7 +237,7 @@ typedef struct
     int totalScore;        ///< Total score, unmodified
     int adjScore;          ///< Total score, including modifier
     bool hasLost;          ///< If level resulted in a failure
-    bool stallUsed; ///< If a stall was used this level
+    bool stallUsed;        ///< If a stall was used this level
 
     // Trophies
     int accLevel1; ///< Highest accuracy requirement
@@ -207,13 +248,4 @@ typedef struct
     // Drawing
     bool toggle;             ///< Used for all toggle
     wsgPalette_t npcPalette; ///< Color converter
-
-    // TODO: Reorder
-    /*
-     bool helper_;
-     bool touch_;
-     bool pause_;
-
-
-      */
 } ggData_t;

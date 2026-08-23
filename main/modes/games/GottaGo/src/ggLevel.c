@@ -3,7 +3,6 @@
 //==============================================================================
 
 #include "ggLevel.h"
-#include "ggTrophies.h"
 #include "ggScoring.h"
 
 //==============================================================================
@@ -41,9 +40,9 @@
 
 // NPCs
 #define HEIGHT_OFFSET 7
-#define SKIRT_CHANCE 1
+#define SKIRT_CHANCE  1
 #define SHORTS_CHANCE 4
-#define PANTS_CHANCE 15
+#define PANTS_CHANCE  15
 
 //==============================================================================
 // Function Definitions
@@ -51,7 +50,7 @@
 
 /**
  * @brief Initialize an NPC to defaults
- * 
+ *
  * @param n NPC to initialize
  * @param active If they should be active or not
  */
@@ -59,8 +58,8 @@ static void ggInitNPC(ggNPC_t* n, bool active);
 
 /**
  * @brief Randomize NPC
- * 
- * @param n NPC to initialize 
+ *
+ * @param n NPC to initialize
  */
 static void ggInitRandomNPC(ggNPC_t* n);
 
@@ -283,14 +282,9 @@ bool ggEndLevel(ggData_t* ggd)
 {
     // Inc number of levels
     ggd->numLevels++;
-    // Update trophies
-    trophyUpdateMilestone(&ggTrophies[T_LEVELS_10], ggd->numLevels, 50);
-    trophyUpdateMilestone(&ggTrophies[T_LEVELS_20], ggd->numLevels, 50);
-    trophyUpdateMilestone(&ggTrophies[T_LEVELS_30], ggd->numLevels, 50);
     // Bail if this is a loss
     if (ggd->hasLost)
     {
-        trophyUpdateMilestone(&ggTrophies[T_ROUNDS_20], trophyGetSavedValue(&ggTrophies[T_ROUNDS_20]) + 1, MILE_ROUNDS);
         return false;
     }
     // Determine if the player gets another use of the stall
@@ -330,10 +324,10 @@ static void ggInitNPC(ggNPC_t* n, bool active)
 static void ggInitRandomNPC(ggNPC_t* n)
 {
     n->active     = 1;
-    n->skinColor  = esp_random() % ARRAY_SIZE(skinColors);
-    n->shirtColor = esp_random() % ARRAY_SIZE(shirtColors);
-    n->pantsColor = esp_random() % ARRAY_SIZE(pantsColors);
-    n->shoeColor  = esp_random() % ARRAY_SIZE(shoeColors);
+    n->skinColor  = esp_random() % 7;
+    n->shirtColor = esp_random() % 7;
+    n->pantsColor = esp_random() % 7;
+    n->shoeColor  = esp_random() % 4;
     n->randOffset = (HEIGHT_OFFSET + 1) - (esp_random() % ((HEIGHT_OFFSET * 2) + 1));
     switch (esp_random() % (SKIRT_CHANCE + SHORTS_CHANCE + PANTS_CHANCE))
     {

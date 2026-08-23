@@ -7,12 +7,12 @@
 
 // Data
 #include "ggCommonTypes.h"
-#include "ggTrophies.h"
 #include "ggWSGs.h"
-#include "ggText.h"
 
 // Funcs
 #include "ggDraw.h"
+#include "ggLevel.h"
+#include "ggScoring.h"
 
 //==============================================================================
 // Defines
@@ -20,19 +20,142 @@
 
 #define FRAME_RATE_US 16667
 
-#define MAX_TIMER_LEN (GG_SECOND * 10)
-#define READY_TIMEOUT (GG_SECOND * 3)
+// Timers
+#define MAX_TIMER_LEN  (GG_SECOND * 10)
+#define READY_TIMEOUT  (GG_SECOND * 3)
+#define SOLUTION_TIMER (GG_SECOND * 3)
 
+// High scores
 #define HS_PAGE_COUNT 4
-/*
-#define SOLUTION_TIMER 2000000
- */
+
+// Scores
+#define OHP_SCORE 1000
+#define NNP_SCORE  990
+#define NFP_SCORE  950
+
+// Milestone percents
+#define MILE_ACC 33
+#define MILE_ROUNDS 25
+#define MILE_WORST 99
 
 //==============================================================================
 // Consts
 //==============================================================================
 
-const char* const ggModeName = ggName;
+const char ggModeName[] = "Gotta Go!";
+
+const trophyData_t ggTrophies[] = {
+    {
+        .title       = "Maybe talk to a doctor",
+        .description = "Complete 20 rounds of Gotta Go!",
+        .image       = GG_20GAMES_WSG,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 20,
+    },
+    {
+        .title       = "Drank a Bit Too Much",
+        .description = "Beat 10 levels in a row",
+        .image       = GG_10ROUNDS_WSG,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 10,
+    },
+    {
+        .title       = "Hydrohomie",
+        .description = "Beat 20 levels in a row",
+        .image       = GG_20ROUNDS_WSG,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 20,
+    },
+    {
+        .title       = "Hyperhydrosis",
+        .description = "Beat 30 levels in a row",
+        .image       = GG_30ROUNDS_WSG,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 30,
+    },
+    {
+        .title       = "Laser beam",
+        .description = "Beat 15+ levels with a perfect accuracy",
+        .image       = GG_ONE_HUNDRED_WSG,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 15,
+    },
+    {
+        .title       = "Sniper",
+        .description = "Beat 15+ levels with 99+%% accuracy",
+        .image       = GG_NINETY_NINE_WSG,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 15,
+    },
+    {
+        .title       = "Sharpshooter",
+        .description = "Beat 15+ levels with 95+%% accuracy",
+        .image       = GG_NINETY_FIVE_WSG,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 15,
+    },
+    {
+        .title       = "Emergency Plan",
+        .description = "When all options are filled or broken, use a stall",
+        .image       = GG_STALL_CORRECT_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Stall Hogger",
+        .description = "Attempt to use a stall with no uses left",
+        .image       = GG_STALL_INCORRECT_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Socialite",
+        .description = "Pick the worst available option 5 times in a row",
+        .image       = GG_WORST_OPTION_WSG,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 5,
+    },
+    {
+        .title       = "Aim at the dot",
+        .description = "Activate helper mode for the first time",
+        .image       = GG_HELPER_MODE_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "DOWN WITH THE ESRB",
+        .description = "Find the manifesto",
+        .image       = GG_MANI_PEDI_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .hidden      = true,
+    },
+};
+
+const trophySettings_t ggTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 2,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = ggModeName,
+};
+
+const trophyDataList_t ggTrophyDate = {
+    .length   = ARRAY_SIZE(ggTrophies),
+    .list     = ggTrophies,
+    .settings = &ggTrophySettings,
+};
 
 //==============================================================================
 // Enums
@@ -61,12 +184,33 @@ static void doWarning(int64_t elapsedUS);
 static void doSplash(int64_t elapsedUs);
 static void doMenu(void);
 static void doReady(int64_t elapsedUs);
-static void doGame();
+static void doGame(int64_t elapsedUs);
+static void doPicked(int64_t elapsedUs);
 static void doRules(void);
 static void doHS(void);
 
 // Helpers
 static void initLevel(void);
+static void getTouchInput(void);
+static void handleGameEnd(bool lose, bool stall, int64_t timer);
+
+/**
+ * @brief Checks the accuracy and worst trophies. Requires ggd->selection to remain accurate
+ *
+ * @param urinalScores Array of scores, one for each urinal in order from left to right
+ * @param accuracy Current accuracy
+ * @param worst Current worst option value
+ */
+static void checkTrophies(int* urinalScores, int accuracy, int worst);
+
+/**
+ * @brief Checks an accuracy Trophy
+ *
+ * @param accuracy Current Accuracy
+ * @param count Current numer of Levels
+ * @param trophyName The trophy to update
+ */
+static void checkAccuracy(int accuracy, int target, int count, ggTrophyNames_t trophyName);
 
 //==============================================================================
 // Variables
@@ -203,27 +347,17 @@ static void ggMainLoop(int64_t elapsedUs)
         }
         case GG_GAME:
         {
-            doGame();
+            doGame(elapsedUs);
             break;
         }
         case GG_CHOICE:
         {
-            while (checkButtonQueueWrapper(&evt))
-            {
-                // Speed up timer
-                ggd->timer += SECOND;
-            }
-            ggd->timer += elapsedUs;
-            if (ggd->timer >= SOLUTION_TIMER)
-            {
-                end();
-            }
-            drawGame(false);
-            drawSolution();
+            doPicked(elapsedUs);
             break;
         }
-        case GG_WIN:
+        case GG_WON:
         {
+            buttonEvt_t evt;
             while (checkButtonQueueWrapper(&evt))
             {
                 if (evt.down)
@@ -232,11 +366,12 @@ static void ggMainLoop(int64_t elapsedUs)
                     ggd->timer = 0;
                 }
             }
-            drawWin();
+            ggDrawResult(ggd);
             break;
         }
-        case GG_LOSE:
+        case GG_LOST:
         {
+            buttonEvt_t evt;
             while (checkButtonQueueWrapper(&evt))
             {
                 if (evt.down)
@@ -245,7 +380,7 @@ static void ggMainLoop(int64_t elapsedUs)
                     ggd->state     = GG_MENU;
                 }
             }
-            drawLose();
+            ggDrawResult(ggd);
             break;
         }
     }
@@ -258,7 +393,7 @@ static void doWarning(int64_t elapsedUs)
     {
         if (evt.down && (evt.button & PB_A) && ggd->toggle)
         {
-            initSplash();
+            ggInitSplash(ggd);
             ggd->state = GG_SPLASH;
         }
         else if (evt.down)
@@ -267,6 +402,10 @@ static void doWarning(int64_t elapsedUs)
         }
     }
     ggDrawWarning(ggd, elapsedUs);
+    if (ggd->timer >= LONG_WAIT)
+    {
+        trophyUpdate(&ggTrophies[T_MANIFESTO], 1, true);
+    }
 }
 
 static void doSplash(int64_t elapsedUs)
@@ -359,13 +498,13 @@ static void doReady(int64_t elapsedUs)
     if (ggd->timer >= READY_TIMEOUT)
     {
         ggd->timer = 0;
-        gameInit();
+        ggLevelReset(ggd);
         ggd->state = GG_GAME;
     }
-    drawReady(elapsedUs);
+    ggDrawReady(ggd, elapsedUs);
 }
 
-static void doGame()
+static void doGame(int64_t elapsedUs)
 {
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
@@ -380,60 +519,42 @@ static void doGame()
                 }
                 else
                 {
-                    ggd->lose      = ggd->toilets[ggd->selection].brokenBowl == 1
-                                     || ggd->toilets[ggd->selection].brokenDrain == 1
-                                     || ggd->toilets[ggd->selection].outOfOrder == 1
-                                     || ggd->toilets[ggd->selection].pluggedDrain == 1;
-                    ggd->stallUsed = false;
-                    ggd->state     = GG_CHOICE;
-                    ggd->saveTimer = ggd->timer;
-                    ggd->timer     = 0;
+                    handleGameEnd(ggd->urinals[ggd->selection].brokenBowl || ggd->urinals[ggd->selection].brokenDrain
+                                      || ggd->urinals[ggd->selection].outOfOrder
+                                      || ggd->urinals[ggd->selection].pluggedDrain,
+                                  false, ggd->timer);
                 }
             }
             else if (evt.button & PB_B)
             {
+                ggd->stallUses--;
                 if (ggd->pause)
                 {
-                    ggd->stallUses--;
-                    ggd->pause     = false;
-                    ggd->lose      = true;
-                    ggd->stallUsed = false;
-                    ggd->state     = GG_CHOICE;
-                    ggd->saveTimer = ggd->timer;
-                    ggd->timer     = 0;
+                    ggd->pause = false;
+                    handleGameEnd(true, false, ggd->timer);
                 }
                 else if (ggd->stallUses > 0)
                 {
-                    ggd->stallUses--;
-                    ggd->lose      = false;
-                    ggd->stallUsed = true;
-                    ggd->state     = GG_CHOICE;
-                    ggd->saveTimer = ggd->timer;
-                    ggd->timer     = 0;
-
+                    handleGameEnd(false, true, ggd->timer);
                     // Trophy
                     bool trophy = true;
                     for (int idx = 0; idx < ggd->numActive; idx++)
                     {
-                        ggToilet_t* t = &ggd->toilets[idx];
-                        if (!t->npc.active && !t->brokenBowl && !t->brokenDrain && !t->outOfOrder && !t->pluggedDrain)
+                        ggUrinal_t* u = &ggd->urinals[idx];
+                        if (!u->npc.active && !u->brokenBowl && !u->brokenDrain && !u->outOfOrder && !u->pluggedDrain)
                         {
                             trophy = true;
                         }
                     }
                     if (trophy)
                     {
-                        trophyUpdate(&ggTrophies[7], 1, true);
+                        trophyUpdate(&ggTrophies[T_USE_STALL_GOOD], 1, true);
                     }
                 }
                 else
                 {
-                    ggd->lose      = true;
-                    ggd->stallUsed = true;
-                    ggd->state     = GG_CHOICE;
-                    ggd->saveTimer = ggd->timer;
-                    ggd->timer     = 0;
-                    trophyUpdate(&ggTrophies[8], 1, true);
+                    handleGameEnd(true, true, ggd->timer);
+                    trophyUpdate(&ggTrophies[T_USE_STALL_BAD], 1, true);
                 }
             }
             else if (evt.button & PB_LEFT)
@@ -443,7 +564,7 @@ static void doGame()
                 {
                     ggd->selection = ggd->numActive - 1;
                 }
-                while (ggd->toilets[ggd->selection].npc.active != 0)
+                while (ggd->urinals[ggd->selection].npc.active != 0)
                 {
                     ggd->selection--;
                     if (ggd->selection < 0)
@@ -459,7 +580,7 @@ static void doGame()
                 {
                     ggd->selection = 0;
                 }
-                while (ggd->toilets[ggd->selection].npc.active != 0)
+                while (ggd->urinals[ggd->selection].npc.active != 0)
                 {
                     ggd->selection++;
                     if (ggd->selection >= ggd->numActive)
@@ -474,60 +595,62 @@ static void doGame()
             }
         }
     }
-    linearTouch_t touch[2] = {0};
-    getTouchLinear(touch, ARRAY_SIZE(touch));
-    if (touch[0].touched)
+    if (ggd->touch)
     {
-        int pos      = touch[0].position;
-        int numValid = 0;
-        for (int idx = 0; idx < ggd->numActive; idx++)
-        {
-            if (!ggd->toilets[idx].npc.active)
-            {
-                numValid++;
-            }
-        }
-        int section    = 1024 / numValid;
-        int option     = pos / section;
-        ggd->selection = 0;
-        while (ggd->toilets[ggd->selection].npc.active != 0)
-        {
-            ggd->selection++;
-        }
-        while (option > 0)
-        {
-            ggd->selection++;
-            while (ggd->toilets[ggd->selection].npc.active != 0)
-            {
-                ggd->selection++;
-            }
-            option--;
-        }
+        getTouchInput();
     }
-    // Timer
     if (ggd->pause)
     {
-        drawPause();
+        ggDrawPause(ggd);
     }
     else
     {
         ggd->timer += elapsedUs;
-        if (ggd->timer >= ggd->loseTimerMax)
+        if (ggd->timer >= ggd->timeLimit)
         {
-            ggd->lose      = true;
-            ggd->stallUsed = false;
-            ggd->state     = GG_CHOICE;
-            ggd->timer     = 0;
-            ggd->timeOut   = true;
+            handleGameEnd(true, false, ggd->timer);
         }
-        drawGame(true);
+        ggDrawLevel(ggd, false);
     }
+}
+
+static void doPicked(int64_t elapsedUs)
+{
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+        // Speed up timer
+        ggd->timer += GG_SECOND;
+    }
+    ggd->timer += elapsedUs;
+    if (ggd->timer >= SOLUTION_TIMER)
+    {
+        // Calculate scores
+        if (ggEndLevel(ggd))
+        {
+            ggd->state = GG_WON;
+        }
+        else
+        {
+            ggd->state = GG_LOST;
+        }
+        // Update trophies
+        trophyUpdateMilestone(&ggTrophies[T_LEVELS_10], ggd->numLevels, 50);
+        trophyUpdateMilestone(&ggTrophies[T_LEVELS_20], ggd->numLevels, 50);
+        trophyUpdateMilestone(&ggTrophies[T_LEVELS_30], ggd->numLevels, 50);
+        if (ggd->hasLost)
+        {
+            trophyUpdateMilestone(&ggTrophies[T_ROUNDS_20], trophyGetSavedValue(&ggTrophies[T_ROUNDS_20]) + 1,
+                                  MILE_ROUNDS);
+        }
+    }
+    ggDrawLevel(ggd, true);
 }
 
 static void doRules()
 {
     buttonEvt_t evt;
-    int size = ARRAY_SIZE(rulesText) / 2;
+    int size = 14 / 2; // FIXME: magic number
     while (checkButtonQueueWrapper(&evt))
     {
         if (!evt.down)
@@ -602,4 +725,86 @@ static void initLevel()
     ggd->accLevel2 = 0;
     ggd->accLevel3 = 0;
     ggd->numWorst  = 0;
+}
+
+static void getTouchInput()
+{
+    linearTouch_t touch[2] = {0};
+    getTouchLinear(touch, ARRAY_SIZE(touch));
+    if (touch[0].touched)
+    {
+        int pos      = touch[0].position;
+        int numValid = 0;
+        for (int idx = 0; idx < ggd->numActive; idx++)
+        {
+            if (!ggd->urinals[idx].npc.active)
+            {
+                numValid++;
+            }
+        }
+        int section    = 1024 / numValid;
+        int option     = pos / section;
+        ggd->selection = 0;
+        while (ggd->urinals[ggd->selection].npc.active)
+        {
+            ggd->selection++;
+        }
+        while (option > 0)
+        {
+            ggd->selection++;
+            while (ggd->urinals[ggd->selection].npc.active)
+            {
+                ggd->selection++;
+            }
+            option--;
+        }
+    }
+}
+
+static void handleGameEnd(bool lose, bool stall, int64_t timer)
+{
+    // Set values
+    ggd->hasLost       = lose;
+    ggd->stallUsed     = stall;
+    ggd->timeRemaining = timer;
+
+    int final[MAX_URINALS] = {0};
+    int best, worst;
+    ggCalcFinalScores(ggd, final, &best, &worst);
+    checkTrophies(final, ggd->accScore, worst);
+
+    // Reset
+    ggd->timer = 0;
+    ggd->state = GG_CHOICE;
+}
+
+static void checkTrophies(int* urinalScores, int accuracy, int worst)
+{
+    // Reset accuracy trophy trackers if not accurate enough
+    checkAccuracy(accuracy, OHP_SCORE, ggd->accLevel1, T_OHP);
+    checkAccuracy(accuracy, NNP_SCORE, ggd->accLevel2, T_NNP);
+    checkAccuracy(accuracy, NFP_SCORE, ggd->accLevel3, T_NFP);
+
+    if (urinalScores[ggd->selection] == worst)
+    {
+        ggd->numWorst++;
+        trophyUpdateMilestone(&ggTrophies[T_WORST_OPTIONS], ggd->numWorst, MILE_WORST);
+    }
+    else
+    {
+        ggd->numWorst = 0;
+    }
+}
+
+static void checkAccuracy(int accuracy, int target, int count, ggTrophyNames_t trophyName)
+{
+    if (accuracy < target)
+    {
+        count = 0;
+    }
+    if (accuracy >= target && !ggd->stallUsed)
+    {
+        count++;
+        trophyUpdateMilestone(&ggTrophies[trophyName], count, MILE_ACC);
+    }
 }

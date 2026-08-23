@@ -1,5 +1,4 @@
 #include "ggScoring.h"
-#include "ggTrophies.h"
 
 //==============================================================================
 // Defines
@@ -77,26 +76,6 @@ static int calcNPCScore(ggNPC_t* npc, int distance);
  */
 static void getBestWorstOption(ggUrinal_t* urinals, int numActive, int* urinalScores, int* best, int* worst);
 
-/**
- * @brief Checks the accuracy and worst trophies. Requires ggd->selection to remain accurate
- *
- * @param ggd Game Data
- * @param urinalScores Array of scores, one for each urinal in order from left to right
- * @param accuracy Current accuracy
- * @param worst Current worst option value
- */
-static void checkTrophies(ggData_t* ggd, int* urinalScores, int accuracy, int worst);
-
-/**
- * @brief Checks an accuracy Trophy
- *
- * @param ggd Game Data
- * @param accuracy Current Accuracy
- * @param count Current numer of Levels
- * @param trophyName The trophy to update
- */
-static void checkAccuracy(ggData_t* ggd, int accuracy, int* count, ggTrophyNames_t trophyName);
-
 //==============================================================================
 // Functions
 //==============================================================================
@@ -123,7 +102,6 @@ void ggCalcFinalScores(ggData_t* ggd, int* urinalScores, int* best, int* worst)
     // Calc adjusted score
     ggd->adjScore = (ggd->accScore * ggd->totalScore) / MAX_PERCENTAGE;
     // Check if trophies have been triggered
-    checkTrophies(ggd, urinalScores, accuracy, worst);
     ggSaveFinalToNVS(ggd);
 }
 
@@ -324,7 +302,6 @@ void ggCalcUrinalScores(ggUrinal_t* urinals, int numActive, int* urinalScores, i
 }
 
 // NVS
-
 void ggSaveFinalToNVS(ggData_t* ggd)
 {
     int outVal;
@@ -391,13 +368,13 @@ static void getBestWorstOption(ggUrinal_t* urinals, int numActive, int* urinalSc
 {
     // Init
     int start = 0;
-    best      = 0;    // Worst case value
-    worst     = 1000; // Worst case value
+    *best      = 0;    // Worst case value
+    *worst     = 1000; // Worst case value
     while (urinals[start].npc.active)
     { // Best toilet can't be occupied
         start++;
     }
-    best = urinalScores[start];
+    *best = urinalScores[start];
     // Loop
     for (int idx = start; idx < numActive; idx++)
     {
@@ -405,46 +382,15 @@ static void getBestWorstOption(ggUrinal_t* urinals, int numActive, int* urinalSc
         {
             continue;
         }
-        if (best < urinalScores[idx]
+        if (*best < urinalScores[idx]
             && !(urinals[idx].brokenBowl || urinals[idx].brokenDrain || urinals[idx].outOfOrder
                  || urinals[idx].pluggedDrain))
         {
-            best = urinalScores[idx];
+            *best = urinalScores[idx];
         }
-        if (worst > urinalScores[idx])
+        if (*worst > urinalScores[idx])
         {
-            worst = urinalScores[idx];
+            *worst = urinalScores[idx];
         }
-    }
-}
-
-static void checkTrophies(ggData_t* ggd, int* urinalScores, int accuracy, int worst)
-{
-    // Reset accuracy trophy trackers if not accurate enough
-    checkAccuracy(ggd, accuracy, ggd->accLevel1, T_OHP);
-    checkAccuracy(ggd, accuracy, ggd->accLevel2, T_NNP);
-    checkAccuracy(ggd, accuracy, ggd->accLevel3, T_NFP);
-
-    if (urinalScores[ggd->selection] == worst)
-    {
-        ggd->numWorst++;
-        trophyUpdateMilestone(&ggTrophies[T_WORST_OPTIONS], ggd->numWorst, MILE_WORST);
-    }
-    else
-    {
-        ggd->numWorst = 0;
-    }
-}
-
-static void checkAccuracy(ggData_t* ggd, int accuracy, int* count, ggTrophyNames_t trophyName)
-{
-    if (accuracy < OHP_SCORE)
-    {
-        count = 0;
-    }
-    if (accuracy >= OHP_SCORE && !ggd->stallUsed)
-    {
-        count++;
-        trophyUpdateMilestone(&ggTrophies[trophyName], count, MILE_ACC);
     }
 }

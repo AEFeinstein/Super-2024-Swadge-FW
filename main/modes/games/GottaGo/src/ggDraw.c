@@ -5,9 +5,7 @@
 #include "ggDraw.h"
 
 // Data
-#include "ggText.h"
 #include "ggWSGs.h"
-#include "ggTrophies.h"
 
 // Functions
 #include "ggLevel.h"
@@ -24,7 +22,6 @@
 
 // Warning
 #define CONTROL_LOCKOUT (GG_SECOND * 3)
-#define LONG_WAIT       (GG_SECOND * 15)
 #define TEXT_START      64
 
 // Splash
@@ -84,6 +81,96 @@
 #define NPC_PANTS_X_OFFSET 6
 #define NPC_PANTS_X_LARGE  -3
 #define NPC_PANTS_Y_HIKE   -12
+
+//==============================================================================
+// Const
+//==============================================================================
+
+static const char* titleText = "Press 'A' to start!";
+
+static const char* const warningText[] = {
+    "ATTENTION",
+    "This game contains 'suggestive themes' and may not be suitable for all audiences. Press A to continue and "
+    "anything other button to back out.",
+    "Suggestive themes is a stupid way to put 'this game shows butts.' Saturday morning cartoons shows butts. "
+    "Everyone has one, this isn't going to cause someone to have some sort of awakening or turn your children into "
+    "perverts, it's just some very low pixel count butts. Geting you underwear in a twist over this says more about "
+    "you that you would probably like.",
+};
+
+static const char* const levelText[] = {
+    "Ready?",
+    "3",
+    "2",
+    "1",
+    "Paused",
+    "Press A to continue, B to quit",
+    "Good choice!",
+    "You used a stall.",
+    "Press any button to advance to next round",
+    "You peed yourself",
+    "You used a broken toilet",
+    "All the stalls were filled",
+    "Press any button to go back to the menu",
+};
+
+static const char* const menuText[] = {
+    "Play!",
+    "Rules",
+    "High Scores",
+    "Options",
+    "Activate Helper Mode: ",
+    "Touch entry: ",
+    "Quit",
+    "On",
+    "Off",
+};
+
+static const char* const rulesText[] = {
+    "Rules",
+    "Here's the rules book for Gotta Go! The rules should be instinctual for a lot of people, but for those that don't "
+    "use urinals on a regular basis, this will help.",
+    "Controls",
+    "Use the left/right arrows to pick a urinal, A to select it, or B to use the stall. There is no pausing!",
+    "How to play",
+    "Once you're ready, you must quickly figure out the most ideal urinal out of the available options. Be quick, your "
+    "bladder is about to burst!",
+    "Urinals",
+    "You always want to use the cleanest urinal. Obviously. Try not to stand in puddles, and if you use one that's out "
+    "of order and increase the mess, expect to be judged.",
+    "People",
+    "People are weird. Try to stay as far away from them as possible. If you have to pick, always pick the most normal "
+    "one. That means not the guy with his pants around his ankles or the guy that smells like onions.",
+    "Stalls",
+    "You can use the stall sometimes, but you only have a limit amount of times you can do that. No hogging the "
+    "stalls.",
+    "Scoring",
+    "Score is tracked in three ways: Total score, accuracy, and adjusted score. The total score is an accumulation of "
+    "all the score up to this point. Accuracy score is how close to optimal picks you are. Th adjusted score takes "
+    "your total score and adjusts it by your accuracy to provide a final number that's easy to compare.",
+};
+
+static const paletteColor_t skinColors[] = {
+    c555, c333, c444, c023, c402, c233, c343,
+};
+static const paletteColor_t shirtColors[] = {
+    c500, c050, c005, c440, c204, c404, c044,
+};
+static const paletteColor_t shirtAccentColors[] = {
+    c400, c040, c004, c330, c103, c303, c033,
+};
+static const paletteColor_t pantsColors[] = {
+    c024, c330, c222, c224, c503, c240, c031,
+};
+static const paletteColor_t pantsAccentColors[] = {
+    c012, c220, c111, c113, c402, c130, c020,
+};
+static const paletteColor_t shoeColors[] = {
+    c210,
+    c000,
+    c111,
+    c300,
+};
 
 //==============================================================================
 // Function Declarations
@@ -218,7 +305,6 @@ void ggDrawWarning(ggData_t* ggd, int64_t elapsedUs)
     if (ggd->timer >= LONG_WAIT)
     {
         displayText = warningText[GG_WARNING_MANI];
-        trophyUpdate(&ggTrophies[T_MANIFESTO], 1, true);
     }
     else if (ggd->timer >= ggd->timeLimit)
     {
