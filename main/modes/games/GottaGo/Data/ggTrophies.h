@@ -130,7 +130,7 @@ const trophySettings_t ggTrophySettings = {
     .drawFromBottom   = false,
     .staticDurationUs = DRAW_STATIC_US * 2,
     .slideDurationUs  = DRAW_SLIDE_US,
-    .namespaceKey     = ggModeName,
+    .namespaceKey     = ggName,
 };
 
 const trophyDataList_t ggTrophyDate = {

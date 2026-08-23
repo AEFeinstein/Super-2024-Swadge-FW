@@ -20,7 +20,7 @@
 // Consts
 //==============================================================================
 
-const char ggModeName[] = "Gotta Go!";
+const char ggName[] = "Gotta Go!";
 
 static const paletteColor_t skinColors[] = {
     c555, c333, c444, c023, c402, c233, c343,
@@ -51,16 +51,16 @@ static const paletteColor_t shoeColors[] = {
 /// @brief Game state
 typedef enum
 {
-    // GG_WARNING,
-    // GG_SPLASH,
-    // GG_MENU,
-    // GG_RULES,
-    // GG_READY,
-    // GG_GAME,
+    GG_WARNING,
+    GG_SPLASH,
+    GG_MENU,
+    GG_READY,
+    GG_GAME,
     // GG_CHOICE,
-    GG_WON,
-    GG_LOST,
-    // GG_HIGHSCORE,
+    // GG_WON,
+    // GG_LOST,
+    GG_RULES,
+    GG_HIGHSCORE,
 } ggState_t;
 
 /// @brief Types of pants
@@ -167,8 +167,8 @@ typedef struct
     wsg_t* backgroundImages; ///< Images used in the background of the game
     wsg_t* urinalImages;     ///< Images for generating urinals
     wsg_t* npcImages;        ///< Images for drawing NPCs
-    wsg_t* splashImgs;       ///< Images used in the splash screen
-    wsg_t* uiImages;
+    wsg_t* titleImages;      ///< Images used in the splash screen
+    wsg_t* uiImages;         ///< Images used by the UI
 
     // Fonts
     font_t titleFont;        ///< Font for large text
@@ -186,6 +186,7 @@ typedef struct
     // Level State
     int numActive;                   ///< Number of active urinals
     int stallUses;                   ///< How many stall uses are remaining
+    int stallReq;                    ///< Current requirement to get a new stall use
     ggUrinal_t urinals[MAX_URINALS]; ///< All urinal data
 
     // Current Score
@@ -194,9 +195,8 @@ typedef struct
     int accScore;          ///< How accurate the player is
     int totalScore;        ///< Total score, unmodified
     int adjScore;          ///< Total score, including modifier
-    int stallReq;          ///< Current requirement to get a new stall use
     bool hasLost;          ///< If level resulted in a failure
-    bool stallUsed;        ///< If a stall was used this level
+    bool stallUsed; ///< If a stall was used this level
 
     // Trophies
     int accLevel1; ///< Highest accuracy requirement

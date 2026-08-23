@@ -7,6 +7,7 @@
 // Data
 #include "ggText.h"
 #include "ggWSGs.h"
+#include "ggTrophies.h"
 
 // Functions
 #include "ggLevel.h"
@@ -92,21 +93,21 @@
 
 /**
  * @brief Draws the background
- * 
+ *
  * @param ggd Game data
  */
 static void drawBackground(ggData_t* ggd);
 
 /**
  * @brief Draws all of urinals
- * 
+ *
  * @param ggd Game data
  */
 static void drawUrinalArray(ggData_t* ggd);
 
 /**
  * @brief Get the star position fo the Urinal row
- * 
+ *
  * @param ggd Game data
  * @return int Start pixel for the urinals based on spacing
  */
@@ -114,7 +115,7 @@ static int getUrinalRowStart(ggData_t* ggd);
 
 /**
  * @brief Draws the urinal
- * 
+ *
  * @param ggd Game data
  * @param u urinal to draw
  * @param x X position
@@ -124,7 +125,7 @@ static void drawUrinal(ggData_t* ggd, ggUrinal_t* u, int x, int y);
 
 /**
  * @brief Draws an NPC
- * 
+ *
  * @param ggd Game data
  * @param u associated urinal
  * @param x X position
@@ -134,14 +135,14 @@ static void drawNPC(ggData_t* ggd, ggUrinal_t* u, int x, int y);
 
 /**
  * @brief Draws the title
- * 
+ *
  * @param ggd Game data
  */
 static void drawTitleText(ggData_t* ggd);
 
 /**
  * @brief Draws the current scores
- * 
+ *
  * @param ggd Game data
  * @param x X position
  * @param y Y Position
@@ -150,7 +151,7 @@ static void drawScores(ggData_t* ggd, int x, int y);
 
 /**
  * @brief Draws the UI layer
- * 
+ *
  * @param ggd Game data
  * @param solution If the solution should be drawn
  */
@@ -158,7 +159,7 @@ static void drawUI(ggData_t* ggd, bool solution);
 
 /**
  * @brief Draws the solution overlay
- * 
+ *
  * @param ggd Game data
  */
 static void drawSolution(ggData_t* ggd);
@@ -217,6 +218,7 @@ void ggDrawWarning(ggData_t* ggd, int64_t elapsedUs)
     if (ggd->timer >= LONG_WAIT)
     {
         displayText = warningText[GG_WARNING_MANI];
+        trophyUpdate(&ggTrophies[T_MANIFESTO], 1, true);
     }
     else if (ggd->timer >= ggd->timeLimit)
     {
@@ -676,15 +678,15 @@ static void drawNPC(ggData_t* ggd, ggUrinal_t* u, int x, int y)
 
 static void drawTitleText(ggData_t* ggd)
 {
-    int stdSpacing = SPLASH_TEXT_BUFFER + ggd->splashImgs[0].w;
-    drawWsgSimple(&ggd->splashImgs[0], SPLASH_TEXT_X + stdSpacing * 0, SPLASH_TEXT_Y);
-    drawWsgSimple(&ggd->splashImgs[5], SPLASH_TEXT_X + stdSpacing * 1, SPLASH_TEXT_Y - 1);
-    drawWsgSimple(&ggd->splashImgs[2], SPLASH_TEXT_X + stdSpacing * 2, SPLASH_TEXT_Y);
-    drawWsgSimple(&ggd->splashImgs[2], SPLASH_TEXT_X + stdSpacing * 3, SPLASH_TEXT_Y);
-    drawWsgSimple(&ggd->splashImgs[3], SPLASH_TEXT_X + stdSpacing * 4 - 4, SPLASH_TEXT_Y);
-    drawWsgSimple(&ggd->splashImgs[0], SPLASH_TEXT_X + stdSpacing * 6 - 20, SPLASH_TEXT_Y);
-    drawWsgSimple(&ggd->splashImgs[1], SPLASH_TEXT_X + stdSpacing * 7 - 20, SPLASH_TEXT_Y);
-    drawWsgSimple(&ggd->splashImgs[4], SPLASH_TEXT_X + stdSpacing * 8 - 20, SPLASH_TEXT_Y);
+    int stdSpacing = SPLASH_TEXT_BUFFER + ggd->titleImages[0].w;
+    drawWsgSimple(&ggd->titleImages[0], SPLASH_TEXT_X + stdSpacing * 0, SPLASH_TEXT_Y);
+    drawWsgSimple(&ggd->titleImages[5], SPLASH_TEXT_X + stdSpacing * 1, SPLASH_TEXT_Y - 1);
+    drawWsgSimple(&ggd->titleImages[2], SPLASH_TEXT_X + stdSpacing * 2, SPLASH_TEXT_Y);
+    drawWsgSimple(&ggd->titleImages[2], SPLASH_TEXT_X + stdSpacing * 3, SPLASH_TEXT_Y);
+    drawWsgSimple(&ggd->titleImages[3], SPLASH_TEXT_X + stdSpacing * 4 - 4, SPLASH_TEXT_Y);
+    drawWsgSimple(&ggd->titleImages[0], SPLASH_TEXT_X + stdSpacing * 6 - 20, SPLASH_TEXT_Y);
+    drawWsgSimple(&ggd->titleImages[1], SPLASH_TEXT_X + stdSpacing * 7 - 20, SPLASH_TEXT_Y);
+    drawWsgSimple(&ggd->titleImages[4], SPLASH_TEXT_X + stdSpacing * 8 - 20, SPLASH_TEXT_Y);
 }
 
 static void drawScores(ggData_t* ggd, int x, int y)
