@@ -30,13 +30,13 @@
 
 // Scores
 #define OHP_SCORE 1000
-#define NNP_SCORE  990
-#define NFP_SCORE  950
+#define NNP_SCORE 990
+#define NFP_SCORE 950
 
 // Milestone percents
-#define MILE_ACC 33
+#define MILE_ACC    33
 #define MILE_ROUNDS 25
-#define MILE_WORST 99
+#define MILE_WORST  99
 
 //==============================================================================
 // Consts
@@ -391,7 +391,10 @@ static void doWarning(int64_t elapsedUs)
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
-        if (evt.down && (evt.button & PB_A) && ggd->toggle)
+        if (!ggd->toggle)
+        {
+        }
+        else if (evt.down && (evt.button & PB_A))
         {
             ggInitSplash(ggd);
             ggd->state = GG_SPLASH;
@@ -767,6 +770,7 @@ static void handleGameEnd(bool lose, bool stall, int64_t timer)
     ggd->hasLost       = lose;
     ggd->stallUsed     = stall;
     ggd->timeRemaining = timer;
+    ggd->numLevels++;
 
     int final[MAX_URINALS] = {0};
     int best, worst;

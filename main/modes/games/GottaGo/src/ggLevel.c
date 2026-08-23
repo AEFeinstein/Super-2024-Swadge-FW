@@ -280,8 +280,6 @@ void ggClearUrinals(ggData_t* ggd)
 // End
 bool ggEndLevel(ggData_t* ggd)
 {
-    // Inc number of levels
-    ggd->numLevels++;
     // Bail if this is a loss
     if (ggd->hasLost)
     {
@@ -294,10 +292,6 @@ bool ggEndLevel(ggData_t* ggd)
         ggd->stallReq *= 2;
         ggd->stallReq += ggd->stallReq / 2;
     }
-    // Compute score
-    int badness[MAX_URINALS] = {0};
-    int best, worst;
-    ggCalcFinalScores(ggd, badness, &best, &worst);
     // Move on
     return true;
 }

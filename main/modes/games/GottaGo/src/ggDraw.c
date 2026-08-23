@@ -16,12 +16,12 @@
 //==============================================================================
 
 // All
-#define TITLE_TEXT_Y 32
+#define TITLE_TEXT_Y 42
 #define BUFFER_X     12
 #define FLOOR_HEIGHT 40
 
 // Warning
-#define CONTROL_LOCKOUT (GG_SECOND * 3)
+#define CONTROL_LOCKOUT (GG_SECOND)
 #define TEXT_START      64
 
 // Splash
@@ -32,8 +32,8 @@
 #define SPLASH_US          (GG_SECOND / 2)
 
 // Menu
-#define OPTION_SPACING 35
-#define OPTION_BUFFER  20
+#define OPTION_SPACING 32
+#define OPTION_BUFFER  42
 #define OPTION_X       32
 
 // Rules
@@ -115,15 +115,7 @@ static const char* const levelText[] = {
 };
 
 static const char* const menuText[] = {
-    "Play!",
-    "Rules",
-    "High Scores",
-    "Options",
-    "Activate Helper Mode: ",
-    "Touch entry: ",
-    "Quit",
-    "On",
-    "Off",
+    "Play!", "Rules", "High Scores", "Options", "Activate Helper Mode: ", "Touch entry: ", "Quit", "On", "Off",
 };
 
 static const char* const rulesText[] = {
@@ -312,7 +304,7 @@ void ggDrawWarning(ggData_t* ggd, int64_t elapsedUs)
     }
     // Draw
     drawText(&ggd->titleFont, c500, warningText[GG_WARNING_TEXT],
-             (TFT_WIDTH - textWidth(&ggd->titleFont, warningText[GG_WARNING_TEXT])), TITLE_TEXT_Y);
+             (TFT_WIDTH - textWidth(&ggd->titleFont, warningText[GG_WARNING_TEXT])) / 2, TITLE_TEXT_Y);
 
     int16_t xOff = BUFFER_X;
     int16_t yOff = TEXT_START;
@@ -353,7 +345,7 @@ void ggDrawReady(ggData_t* ggd, int64_t elapsedUs)
     if (ggd->timer >= GG_SECOND * 2)
     {
         drawText(&ggd->descFont, c555, levelText[GG_TEXT_1],
-                 NUMBERS_SPACING * 2 - textWidth(&ggd->titleFont, levelText[GG_TEXT_3]) / 2, NUMBERS_Y_OFFSET);
+                 NUMBERS_SPACING * 3 - textWidth(&ggd->titleFont, levelText[GG_TEXT_3]) / 2, NUMBERS_Y_OFFSET);
     }
 }
 
@@ -399,9 +391,9 @@ void ggDrawResult(ggData_t* ggd)
     // Draw score
     drawScores(ggd, SCORE_X, SCORE_Y);
     // Draw instructions
-    int16_t xOff = BUFFER_X;
+    int16_t xOff = BUFFER_X + 5;
     int16_t yOff = END_INSTR_OFFSET;
-    drawTextWordWrap(&ggd->descFont, c000, levelText[((ggd->hasLost) ? GG_TEXT_INSTR_GOOD : GG_TEXT_INSTR_BAD)], &xOff,
+    drawTextWordWrap(&ggd->descFont, c000, levelText[((ggd->hasLost) ? GG_TEXT_INSTR_BAD : GG_TEXT_INSTR_GOOD)], &xOff,
                      &yOff, TFT_WIDTH - BUFFER_X, TFT_HEIGHT);
 }
 
@@ -419,7 +411,7 @@ void ggDrawMenu(ggData_t* ggd)
     // Draw background
     drawBackground(ggd);
     // Draw options
-    for (int idx = 1; idx < GG_TEXT_MENU_COUNT; idx++)
+    for (int idx = 0; idx < GG_TEXT_MENU_COUNT; idx++)
     {
         drawText(&ggd->titleFont, c555, menuText[idx], OPTION_X, OPTION_BUFFER + idx * OPTION_SPACING);
         drawText(&ggd->titleFontOutline, c000, menuText[idx], OPTION_X, OPTION_BUFFER + idx * OPTION_SPACING);
@@ -430,8 +422,17 @@ void ggDrawMenu(ggData_t* ggd)
     drawText(&ggd->titleFontOutline, c000, menuText[GG_TEXT_QUIT], OPTION_X,
              OPTION_BUFFER + GG_TEXT_MENU_COUNT * OPTION_SPACING);
     // Draw selection
-    int xOff = OPTION_X + textWidth(&ggd->titleFont, menuText[ggd->selection + 1]) + 10;
-    int yOff = OPTION_BUFFER + (ggd->selection + 1) * OPTION_SPACING - 6;
+    int yOff = OPTION_BUFFER + (ggd->selection) * OPTION_SPACING - 6;
+    int xOff;
+    if (ggd->selection == GG_TEXT_MENU_COUNT)
+    {
+        xOff = OPTION_X + textWidth(&ggd->titleFont, menuText[GG_TEXT_QUIT]) + 10;
+        
+    }
+    else
+    {
+        xOff = OPTION_X + textWidth(&ggd->titleFont, menuText[ggd->selection]) + 10;
+    }
     drawWsgSimple(&ggd->uiImages[1], xOff, yOff);
 }
 

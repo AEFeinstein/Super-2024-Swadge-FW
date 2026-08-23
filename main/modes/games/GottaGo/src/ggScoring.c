@@ -92,7 +92,7 @@ void ggCalcFinalScores(ggData_t* ggd, int* urinalScores, int* best, int* worst)
     }
     else
     {
-        accuracy = (MAX_SCORE * urinalScores[ggd->selection]) / (MAX_SCORE - *best);
+        accuracy = (MAX_SCORE * urinalScores[ggd->selection]) / *best;
     }
     // Average accuracy
     ggd->accScore = (ggd->accScore * (ggd->numLevels - 1) + accuracy) / ggd->numLevels;
