@@ -59,7 +59,7 @@ typedef enum
 
 /**
  * @brief Calculate the NPC's score
- * 
+ *
  * @param npc NPC to evaluate
  * @param distance How far from a particular urinal
  * @return int Final score this NPC contributes
@@ -68,7 +68,7 @@ static int calcNPCScore(ggNPC_t* npc, int distance);
 
 /**
  * @brief Get the best and worst options set
- * 
+ *
  * @param urinals List of urinals to evaluate
  * @param numActive Number of active urinals
  * @param urinalScores Array of scores, one for each urinal in order from left to right
@@ -79,7 +79,7 @@ static void getBestWorstOption(ggUrinal_t* urinals, int numActive, int* urinalSc
 
 /**
  * @brief Checks the accuracy and worst trophies. Requires ggd->selection to remain accurate
- * 
+ *
  * @param ggd Game Data
  * @param urinalScores Array of scores, one for each urinal in order from left to right
  * @param accuracy Current accuracy
@@ -89,7 +89,7 @@ static void checkTrophies(ggData_t* ggd, int* urinalScores, int accuracy, int wo
 
 /**
  * @brief Checks an accuracy Trophy
- * 
+ *
  * @param ggd Game Data
  * @param accuracy Current Accuracy
  * @param count Current numer of Levels
@@ -380,7 +380,7 @@ static int calcNPCScore(ggNPC_t* npc, int distance)
 {
     int score = SCORE_BASE_NPC;
     // No Shirt, stinks, has pants around ankles, no pants, or underwear
-    if (!npc->shirt || npc->pants == GG_NAKED || npc->pants == GG_UNDERWEAR || npc->pants == GG_DOWN || npc->stink)
+    if (!npc->shirt || npc->pants == GG_NO_PANTS || npc->pants == GG_UNDERWEAR || npc->pants == GG_DOWN || npc->stink)
     {
         score += SCORE_WEIRD_ADJUSTMENT;
     }
@@ -405,7 +405,9 @@ static void getBestWorstOption(ggUrinal_t* urinals, int numActive, int* urinalSc
         {
             continue;
         }
-        if (best < urinalScores[idx])
+        if (best < urinalScores[idx]
+            && !(urinals[idx].brokenBowl || urinals[idx].brokenDrain || urinals[idx].outOfOrder
+                 || urinals[idx].pluggedDrain))
         {
             best = urinalScores[idx];
         }

@@ -22,7 +22,6 @@
 
 const char ggModeName[] = "Gotta Go!";
 
-// Color Arrays
 static const paletteColor_t skinColors[] = {
     c555, c333, c444, c023, c402, c233, c343,
 };
@@ -49,6 +48,21 @@ static const paletteColor_t shoeColors[] = {
 // Enums
 //==============================================================================
 
+/// @brief Game state
+typedef enum
+{
+    // GG_WARNING,
+    // GG_SPLASH,
+    // GG_MENU,
+    // GG_RULES,
+    // GG_READY,
+    // GG_GAME,
+    // GG_CHOICE,
+    GG_WON,
+    GG_LOST,
+    // GG_HIGHSCORE,
+} ggState_t;
+
 /// @brief Types of pants
 typedef enum
 {
@@ -57,7 +71,7 @@ typedef enum
     GG_SKIRT,
     GG_DOWN,
     GG_UNDERWEAR,
-    GG_NAKED,
+    GG_NO_PANTS,
     GG_PANTS_COUNT
 } ggPants_t;
 
@@ -149,27 +163,40 @@ typedef struct
 typedef struct
 {
     // Assets
+    // WSGs
+    wsg_t* backgroundImages; ///< Images used in the background of the game
+    wsg_t* urinalImages;     ///< Images for generating urinals
+    wsg_t* npcImages;        ///< Images for drawing NPCs
+    wsg_t* splashImgs;       ///< Images used in the splash screen
+    wsg_t* uiImages;
+
+    // Fonts
+    font_t titleFont;        ///< Font for large text
+    font_t titleFontOutline; ///< Outline for large text
+    font_t descFont;         ///< Font for smaller text
+
+    // SFX
 
     // Main
-    ggState_t state; ///< Game state
-    int64_t timer;   ///< Timer, used for all timing tasks
-    int selection;   ///< Current selection, menu, urinal, etc.
+    ggState_t state;   ///< Game state
+    int64_t timer;     ///< Timer, used for all timing tasks
+    int64_t timeLimit; ///< When timer is triggered
+    int selection;     ///< Current selection, menu, urinal, etc.
 
-    // Game State
+    // Level State
     int numActive;                   ///< Number of active urinals
     int stallUses;                   ///< How many stall uses are remaining
     ggUrinal_t urinals[MAX_URINALS]; ///< All urinal data
-    int64_t timeLimit;               ///< How much time user has to select a urinal
-    int64_t timeRemaining;           ///< Time remaining once option is selected
 
     // Current Score
-    int numLevels;  ///< Current number of level inside a round
-    int accScore;   ///< How accurate the player is
-    int totalScore; ///< Total score, unmodified
-    int adjScore;   ///< Total score, including modifier
-    int stallReq;   ///< Current requirement to get a new stall use
-    bool stallUsed; ///< If a stall was used this level
-    bool hasLost;   ///< If level resulted in a failure
+    int64_t timeRemaining; ///< Time remaining once option is selected
+    int numLevels;         ///< Current number of level inside a round
+    int accScore;          ///< How accurate the player is
+    int totalScore;        ///< Total score, unmodified
+    int adjScore;          ///< Total score, including modifier
+    int stallReq;          ///< Current requirement to get a new stall use
+    bool hasLost;          ///< If level resulted in a failure
+    bool stallUsed;        ///< If a stall was used this level
 
     // Trophies
     int accLevel1; ///< Highest accuracy requirement
@@ -177,19 +204,16 @@ typedef struct
     int accLevel3; ///< Lowest accuracy requirement
     int numWorst;  ///< Number of levels picked worst option
 
+    // Drawing
+    bool toggle;             ///< Used for all toggle
+    wsgPalette_t npcPalette; ///< Color converter
+
     // TODO: Reorder
-    font_t normalFont_;
-    font_t normalFontOutline_;
-    font_t smallFont_;
-    bool helper_;
-    bool touch_;
-    bool splashToggle_;
-    wsg_t* splashImgs_;
-    bool pause_;
-    bool timeOut_;
-    wsg_t* backgroundImages_;
-    wsg_t* toiletImages_;
-    wsg_t* npcImages_;
-    wsgPalette_t npcPalette_;
-    wsg_t* uiImages_;
+    /*
+     bool helper_;
+     bool touch_;
+     bool pause_;
+
+
+      */
 } ggData_t;

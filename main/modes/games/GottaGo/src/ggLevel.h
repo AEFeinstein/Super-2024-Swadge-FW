@@ -15,7 +15,14 @@
  * 
  * @param ggd game data
  */
-void levelReset(ggData_t* ggd);
+void ggLevelReset(ggData_t* ggd);
+
+/**
+ * @brief Resets the urinals to default
+ * 
+ * @param ggd Game data
+ */
+void ggClearUrinals(ggData_t* ggd);
 
 /**
  * @brief Handles ending the level

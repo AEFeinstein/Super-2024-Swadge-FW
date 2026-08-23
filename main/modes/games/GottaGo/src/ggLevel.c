@@ -50,13 +50,6 @@
 //==============================================================================
 
 /**
- * @brief Resets the urinals to default
- * 
- * @param ggd Game data
- */
-static void clearUrinals(ggData_t* ggd);
-
-/**
  * @brief Initialize an NPC to defaults
  * 
  * @param n NPC to initialize
@@ -76,10 +69,10 @@ static void ggInitRandomNPC(ggNPC_t* n);
 //==============================================================================
 
 // Initialization
-void levelReset(ggData_t* ggd)
+void ggLevelReset(ggData_t* ggd)
 {
     // Reset
-    clearUrinals(ggd);
+    ggClearUrinals(ggd);
     // Timer
     ggd->timer = 0;
     ggd->timeLimit -= ggd->timeLimit / TIME_LIMIT_DENOM;
@@ -124,7 +117,7 @@ void levelReset(ggData_t* ggd)
                 }
                 case 1:
                 {
-                    ggd->urinals[chance].npc.pants = GG_NAKED;
+                    ggd->urinals[chance].npc.pants = GG_NO_PANTS;
                     break;
                 }
                 case 2:
@@ -264,6 +257,27 @@ void levelReset(ggData_t* ggd)
     }
 }
 
+void ggClearUrinals(ggData_t* ggd)
+{
+    for (int idx = 0; idx < MAX_URINALS; idx++)
+    {
+        ggUrinal_t* u   = &ggd->urinals[idx];
+        u->autoFlush    = 0;
+        u->graffiti     = 0;
+        u->cracks       = 0;
+        u->waterLeak    = 0;
+        u->brokenDrain  = 0;
+        u->outOfOrder   = 0;
+        u->brokenBowl   = 0;
+        u->pluggedDrain = 0;
+        u->divider      = 0;
+        u->small        = 0;
+        u->height       = URINAL_DEFAULT_H;
+        u->puddle       = GG_PEE_NONE;
+        ggInitNPC(&ggd->urinals[idx].npc, 0);
+    }
+}
+
 // End
 bool ggEndLevel(ggData_t* ggd)
 {
@@ -297,27 +311,6 @@ bool ggEndLevel(ggData_t* ggd)
 //==============================================================================
 // Static Functions
 //==============================================================================
-
-static void clearUrinals(ggData_t* ggd)
-{
-    for (int idx = 0; idx < MAX_URINALS; idx++)
-    {
-        ggUrinal_t* u   = &ggd->urinals[idx];
-        u->autoFlush    = 0;
-        u->graffiti     = 0;
-        u->cracks       = 0;
-        u->waterLeak    = 0;
-        u->brokenDrain  = 0;
-        u->outOfOrder   = 0;
-        u->brokenBowl   = 0;
-        u->pluggedDrain = 0;
-        u->divider      = 0;
-        u->small        = 0;
-        u->height       = URINAL_DEFAULT_H;
-        u->puddle       = GG_PEE_NONE;
-        ggInitNPC(&ggd->urinals[idx].npc, 0);
-    }
-}
 
 static void ggInitNPC(ggNPC_t* n, bool active)
 {
