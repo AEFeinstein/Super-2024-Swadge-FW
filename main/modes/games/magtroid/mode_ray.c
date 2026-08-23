@@ -99,7 +99,7 @@ ray_t* ray;
 static void rayEnterMode(void)
 {
     // Allocate memory
-    ray = calloc(1, sizeof(ray_t));
+    ray = heap_caps_calloc(1, sizeof(ray_t), MALLOC_CAP_8BIT);
 
     // Load fonts
     loadFont(LOGBOOK_FONT, &ray->logbook, true);

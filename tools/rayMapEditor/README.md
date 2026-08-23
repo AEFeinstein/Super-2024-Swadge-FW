@@ -101,6 +101,7 @@ These are the actions that occur when a script is triggered
 | WARP      | 12    | MAP, CELL   | Warp the player to the given cell                                                                                                         |
 | WIN       | 13    |             | Beat the game                                                                                                                             |
 | CAMERA    | 14    | CELL        | Center the camera on the given cell                                                                                                       |
+| SHOP       | 15    | COST, OBJ_TYPE | Attempt to spend `COST` MPoints to get `OBJ_TYPE`                                                                                      |
 
 ### Script Element Syntax
 

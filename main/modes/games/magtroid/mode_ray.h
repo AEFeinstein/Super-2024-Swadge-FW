@@ -274,38 +274,38 @@ typedef enum __attribute__((packed))
     OBJ_BULLET_30        = (OBJ | BULLET | 30),
     OBJ_BULLET_31        = (OBJ | BULLET | 31),
     // Scenery
-    OBJ_SCENERY_0  = (OBJ | SCENERY | 0),
-    OBJ_SCENERY_1  = (OBJ | SCENERY | 1),
-    OBJ_SCENERY_2  = (OBJ | SCENERY | 2),
-    OBJ_SCENERY_3  = (OBJ | SCENERY | 3),
-    OBJ_SCENERY_4  = (OBJ | SCENERY | 4),
-    OBJ_SCENERY_5  = (OBJ | SCENERY | 5),
-    OBJ_SCENERY_6  = (OBJ | SCENERY | 6),
-    OBJ_SCENERY_7  = (OBJ | SCENERY | 7),
-    OBJ_SCENERY_8  = (OBJ | SCENERY | 8),
-    OBJ_SCENERY_9  = (OBJ | SCENERY | 9),
-    OBJ_SCENERY_10 = (OBJ | SCENERY | 10),
-    OBJ_SCENERY_11 = (OBJ | SCENERY | 11),
-    OBJ_SCENERY_12 = (OBJ | SCENERY | 12),
-    OBJ_SCENERY_13 = (OBJ | SCENERY | 13),
-    OBJ_SCENERY_14 = (OBJ | SCENERY | 14),
-    OBJ_SCENERY_15 = (OBJ | SCENERY | 15),
-    OBJ_SCENERY_16 = (OBJ | SCENERY | 16),
-    OBJ_SCENERY_17 = (OBJ | SCENERY | 17),
-    OBJ_SCENERY_18 = (OBJ | SCENERY | 18),
-    OBJ_SCENERY_19 = (OBJ | SCENERY | 19),
-    OBJ_SCENERY_20 = (OBJ | SCENERY | 20),
-    OBJ_SCENERY_21 = (OBJ | SCENERY | 21),
-    OBJ_SCENERY_22 = (OBJ | SCENERY | 22),
-    OBJ_SCENERY_23 = (OBJ | SCENERY | 23),
-    OBJ_SCENERY_24 = (OBJ | SCENERY | 24),
-    OBJ_SCENERY_25 = (OBJ | SCENERY | 25),
-    OBJ_SCENERY_26 = (OBJ | SCENERY | 26),
-    OBJ_SCENERY_27 = (OBJ | SCENERY | 27),
-    OBJ_SCENERY_28 = (OBJ | SCENERY | 28),
-    OBJ_SCENERY_29 = (OBJ | SCENERY | 29),
-    OBJ_SCENERY_30 = (OBJ | SCENERY | 30),
-    OBJ_SCENERY_31 = (OBJ | SCENERY | 31),
+    OBJ_SCENERY_SHOP_BOMB = (OBJ | SCENERY | 0),
+    OBJ_SCENERY_1         = (OBJ | SCENERY | 1),
+    OBJ_SCENERY_2         = (OBJ | SCENERY | 2),
+    OBJ_SCENERY_3         = (OBJ | SCENERY | 3),
+    OBJ_SCENERY_4         = (OBJ | SCENERY | 4),
+    OBJ_SCENERY_5         = (OBJ | SCENERY | 5),
+    OBJ_SCENERY_6         = (OBJ | SCENERY | 6),
+    OBJ_SCENERY_7         = (OBJ | SCENERY | 7),
+    OBJ_SCENERY_8         = (OBJ | SCENERY | 8),
+    OBJ_SCENERY_9         = (OBJ | SCENERY | 9),
+    OBJ_SCENERY_10        = (OBJ | SCENERY | 10),
+    OBJ_SCENERY_11        = (OBJ | SCENERY | 11),
+    OBJ_SCENERY_12        = (OBJ | SCENERY | 12),
+    OBJ_SCENERY_13        = (OBJ | SCENERY | 13),
+    OBJ_SCENERY_14        = (OBJ | SCENERY | 14),
+    OBJ_SCENERY_15        = (OBJ | SCENERY | 15),
+    OBJ_SCENERY_16        = (OBJ | SCENERY | 16),
+    OBJ_SCENERY_17        = (OBJ | SCENERY | 17),
+    OBJ_SCENERY_18        = (OBJ | SCENERY | 18),
+    OBJ_SCENERY_19        = (OBJ | SCENERY | 19),
+    OBJ_SCENERY_20        = (OBJ | SCENERY | 20),
+    OBJ_SCENERY_21        = (OBJ | SCENERY | 21),
+    OBJ_SCENERY_22        = (OBJ | SCENERY | 22),
+    OBJ_SCENERY_23        = (OBJ | SCENERY | 23),
+    OBJ_SCENERY_24        = (OBJ | SCENERY | 24),
+    OBJ_SCENERY_25        = (OBJ | SCENERY | 25),
+    OBJ_SCENERY_26        = (OBJ | SCENERY | 26),
+    OBJ_SCENERY_27        = (OBJ | SCENERY | 27),
+    OBJ_SCENERY_28        = (OBJ | SCENERY | 28),
+    OBJ_SCENERY_29        = (OBJ | SCENERY | 29),
+    OBJ_SCENERY_30        = (OBJ | SCENERY | 30),
+    OBJ_SCENERY_31        = (OBJ | SCENERY | 31),
 } rayMapCellType_t;
 
 /**
@@ -336,6 +336,7 @@ typedef enum
     WARP    = 12, ///< Warp to a location on a map
     WIN     = 13, ///< Win the game
     CAMERA  = 14, ///< Move the camera
+    SHOP    = 15, ///< Try to buy an object
 } thenOp_t;
 
 /**
@@ -501,6 +502,13 @@ typedef struct
 
         /// A single cell
         rayMapCoordinates_t cell;
+
+        struct
+        {
+            uint8_t cost;         ///< The cost of the object
+            rayMapCellType_t obj; ///< The object to buy
+        } shop;
+
     } thenArgs;
 
 } rayScript_t;

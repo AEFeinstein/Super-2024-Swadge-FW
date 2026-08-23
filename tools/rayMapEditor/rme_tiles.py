@@ -220,7 +220,7 @@ class tileType(Enum):
     OBJ_BULLET_30 = (OBJ | BULLET | 30)
     OBJ_BULLET_31 = (OBJ | BULLET | 31)
     # Scenery
-    OBJ_SCENERY_0 = (OBJ | SCENERY | 0)
+    OBJ_SCENERY_SHOP_BOMB = (OBJ | SCENERY | 0)
     OBJ_SCENERY_1 = (OBJ | SCENERY | 1)
     OBJ_SCENERY_2 = (OBJ | SCENERY | 2)
     OBJ_SCENERY_3 = (OBJ | SCENERY | 3)
@@ -430,7 +430,7 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ENEMY_31,
     ],
     [
-        tileType.OBJ_SCENERY_0,
+        tileType.OBJ_SCENERY_SHOP_BOMB,
         tileType.OBJ_SCENERY_1,
         tileType.OBJ_SCENERY_2,
         tileType.OBJ_SCENERY_3,

@@ -311,18 +311,21 @@ void rayCreateCommonObj(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, 
  */
 void freeRayMap(rayMap_t* map)
 {
-    // Free each column
-    for (uint32_t x = 0; x < map->w; x++)
+    if (map->tiles)
     {
-        heap_caps_free(map->tiles[x]);
-    }
-    // Free the pointers
-    heap_caps_free(map->tiles);
-    // Free visited tiles too
-    heap_caps_free(map->visitedTiles);
+        // Free each column
+        for (uint32_t x = 0; x < map->w; x++)
+        {
+            heap_caps_free(map->tiles[x]);
+        }
+        // Free the pointers
+        heap_caps_free(map->tiles);
+        // Free visited tiles too
+        heap_caps_free(map->visitedTiles);
 
-    // Clear the list of cracked walls
-    clear(&map->crackedWalls);
+        // Clear the list of cracked walls
+        clear(&map->crackedWalls);
+    }
 }
 
 /**
