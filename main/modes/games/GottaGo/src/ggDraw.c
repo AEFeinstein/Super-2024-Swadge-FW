@@ -144,7 +144,7 @@ static const char* const hydrateText[] = {
     "Adraxians live among humans as societal infiltration",
     "If you suspect someone of being Adraxian, call your local planetary immigration office",
     "Adraxians do not eat humans under normal circumstances",
-    "The best defense is being hydrated, as they prefer the taste of overworked kidneys."
+    "The best defense is being hydrated. They prefer the taste of overworked kidneys.",
     "Drink loooooots of water.",
 };
 
@@ -424,7 +424,7 @@ void ggDrawResult(ggData_t* ggd)
     // Draw instructions
     int16_t xOff = BUFFER_X + 5;
     int16_t yOff = END_INSTR_OFFSET;
-    drawTextWordWrap(&ggd->descFont, c000, levelText[((ggd->hasLost) ? GG_TEXT_INSTR_BAD : GG_TEXT_INSTR_GOOD)], &xOff,
+    drawTextWordWrapCentered(&ggd->descFont, c000, levelText[((ggd->hasLost) ? GG_TEXT_INSTR_BAD : GG_TEXT_INSTR_GOOD)], &xOff,
                      &yOff, TFT_WIDTH - BUFFER_X, TFT_HEIGHT);
     // Draw icon for better legibility
     drawWsgSimple(&ggd->uiImages[(ggd->hasLost) ? 2 : 3], 200, 95);

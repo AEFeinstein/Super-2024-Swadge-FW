@@ -37,6 +37,7 @@
 #define MILE_ACC    33
 #define MILE_ROUNDS 25
 #define MILE_WORST  99
+#define MILE_CASUAL 25
 
 //==============================================================================
 // Consts
@@ -118,6 +119,14 @@ const trophyData_t ggTrophies[] = {
         .maxVal      = 1,
     },
     {
+        .title       = "Relaxed pee",
+        .description = "Play 100 total levels of casual",
+        .image       = GG_20GAMES_WSG,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 100,
+    },
+    {
         .title       = "Socialite",
         .description = "Pick the worst available option 5 times in a row",
         .image       = GG_WORST_OPTION_WSG,
@@ -182,6 +191,7 @@ typedef enum
     T_NFP,
     T_USE_STALL_GOOD,
     T_USE_STALL_BAD,
+    T_CASUAL,
     T_WORST_OPTIONS,
     T_HELP_MODE,
     T_MANIFESTO,
@@ -570,6 +580,11 @@ static void doMenu()
                     }
                 }
             }
+            if (evt.button & PB_START)
+            {
+                ggd->textOrder++;
+                ggd->textOrder = ggd->textOrder % (ggGetDrinkTextLen() + 1);
+            }
         }
     }
     ggDrawMenu(ggd);
@@ -593,8 +608,8 @@ static void doPickGame()
                 {
                     ggLevelReset(ggd);
                     ggd->stallUses = 9999;
-                    ggd->casual = true;
-                    ggd->state  = GG_CASUAL;
+                    ggd->casual    = true;
+                    ggd->state     = GG_CASUAL;
                 }
                 else
                 {
@@ -976,7 +991,12 @@ static void handleGameEnd(bool lose, bool stall)
     {
         ggCalcFinalScores(ggd, final, &best, &worst);
     }
-    checkTrophies(final, ggd->accScore, worst);
+    if (!ggd->casual)
+    {
+        checkTrophies(final, ggd->accScore, worst);
+    } else {
+        trophyUpdateMilestone(&ggTrophies[T_WORST_OPTIONS], ggd->numLevels, MILE_CASUAL);
+    }
 
     // Reset
     ggd->timer = 0;
@@ -993,7 +1013,7 @@ static void checkTrophies(int* urinalScores, int accuracy, int worst)
     if (urinalScores[ggd->selection] == worst)
     {
         ggd->numWorst++;
-        trophyUpdateMilestone(&ggTrophies[T_WORST_OPTIONS], ggd->numWorst, MILE_WORST);
+        trophyUpdateMilestone(&ggTrophies[T_CASUAL], ggd->numWorst, MILE_WORST);
     }
     else
     {

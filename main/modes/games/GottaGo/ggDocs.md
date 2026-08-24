@@ -35,9 +35,9 @@
   - [x] Toggle touch input
 7. [x] Tutorial update
   - [x] Add tutorial images
-8. [ ] Casual Mode
-  - [ ] Non-timed, non-scored mode
-  - [ ] Casual mode trophies
+8. [x] Casual Mode
+  - [x] Non-timed, non-scored mode
+  - [x] Casual mode trophies
 9. [ ] Swadgepass
   - [ ] Add to packet
   - [ ] Pull from packet
