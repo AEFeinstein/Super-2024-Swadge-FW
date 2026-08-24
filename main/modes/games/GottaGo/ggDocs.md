@@ -45,8 +45,8 @@
   - [ ] Small text font
   - [ ] Large font
   - [x] Make functions based on current state/overlap drawing routines to cut down on duplication
-  - [ ] Add divider to leftmost toilet when < 7 toilets
-  - [ ] Fix lose text when quitting on purpose
+  - [x] Add divider to leftmost toilet when < 7 toilets
+  - [x] Fix lose text when quitting on purpose
   - [x] Add won game display to endcard
   - [x] Add reminder to drink water to the main menu
   - [x] Fix shoes to always draw
@@ -63,3 +63,4 @@
 
 ## Known Bugs
 - Sometimes when num of urinals reduces next round, selection pointer is off the end.
+- Score timer is reversed

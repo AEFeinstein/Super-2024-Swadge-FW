@@ -144,7 +144,7 @@ const trophyData_t ggTrophies[] = {
     },
     {
         .title       = "The Truth is out there",
-        .description = "Learn the truth about the Atraxians",
+        .description = "Learn the truth about the Adraxians",
         .image       = TROPHY_DIFF_EASY,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
@@ -209,10 +209,26 @@ static void doHS(void);
 static void doOptions(void);
 
 // Helpers
+
+/**
+ * @brief Initializes a new level
+ *
+ */
 static void initLevel(void);
+
+/**
+ * @brief Get the Touch Input
+ *
+ */
 static void getTouchInput(void);
+
+/**
+ * @brief Handles the end of the game. Saves score, updates NVS, etc.
+ *
+ * @param lose If this match resulted in a loss
+ * @param stall If a stall was used
+ */
 static void handleGameEnd(bool lose, bool stall);
-static void drinkWater(void);
 
 /**
  * @brief Checks the accuracy and worst trophies. Requires ggd->selection to remain accurate
@@ -231,6 +247,12 @@ static void checkTrophies(int* urinalScores, int accuracy, int worst);
  * @param trophyName The trophy to update
  */
 static void checkAccuracy(int accuracy, int target, int count, ggTrophyNames_t trophyName);
+
+/**
+ * @brief Gets the length of the drink water phrase list
+ *
+ */
+static void drinkWater(void);
 
 //==============================================================================
 // Variables
@@ -405,6 +427,7 @@ static void ggMainLoop(int64_t elapsedUs)
             {
                 if (evt.down)
                 {
+                    ggd->pause     = false;
                     ggd->selection = GG_TEXT_MENU_PLAY;
                     ggd->state     = GG_MENU;
                 }
@@ -572,7 +595,6 @@ static void doGame(int64_t elapsedUs)
             {
                 if (ggd->pause)
                 {
-                    ggd->pause = false;
                     handleGameEnd(true, false);
                 }
                 else if (ggd->stallUses > 0)

@@ -134,6 +134,7 @@ typedef enum
     GG_TEXT_BAD_1,
     GG_TEXT_BAD_2,
     GG_TEXT_BAD_3,
+    GG_TEXT_BAD_4,
     GG_TEXT_INSTR_BAD,
 } ggLevelText_t;
 

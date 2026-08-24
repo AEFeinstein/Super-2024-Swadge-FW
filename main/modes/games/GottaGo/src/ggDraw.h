@@ -184,4 +184,4 @@ void ggDrawOptions(ggData_t* ggd);
  * 
  * @return int number of positions in the array
  */
-int ggGetDrinkTextLen();
+int ggGetDrinkTextLen(void);

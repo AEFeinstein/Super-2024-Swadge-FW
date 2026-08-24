@@ -112,6 +112,7 @@ static const char* const levelText[] = {
     "You peed yourself",
     "You used a broken toilet",
     "All the stalls were filled",
+    "You gave up",
     "Press any button to go back to the menu",
 };
 
@@ -364,7 +365,11 @@ void ggDrawResult(ggData_t* ggd)
     drawBackground(ggd);
     // Pick Title text
     ggLevelText_t title = GG_TEXT_BAD_2;
-    if (!ggd->hasLost)
+    if (ggd->pause)
+    {
+        title = GG_TEXT_BAD_4;
+    }
+    else if (!ggd->hasLost)
     {
         if (ggd->stallUsed)
         {
