@@ -623,6 +623,10 @@ static void drawBackground(ggData_t* ggd)
 static void drawUrinalArray(ggData_t* ggd)
 {
     int xStart = getUrinalRowStart(ggd);
+    if (ggd->numActive < MAX_URINALS)
+    {
+        drawWsgSimple(&ggd->urinalImages[18], xStart - 6, URINAL_HEIGHT + DIVIDER_TOP_OFFSET);
+    }
     for (int idx = 0; idx < ggd->numActive; idx++)
     {
         int spacing = ((ggd->numActive == MAX_URINALS) ? URINAL_7_SPACING : URINAL_SPACING);
