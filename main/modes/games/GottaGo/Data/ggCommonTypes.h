@@ -229,7 +229,9 @@ typedef struct
     font_t titleFontOutline; ///< Outline for large text
     font_t descFont;         ///< Font for smaller text
 
-    // SFX
+    // SFX/BGM
+    midiFile_t bgm;
+    midiPlayer_t* sfxPlayer;
 
     // Main
     ggState_t state;   ///< Game state

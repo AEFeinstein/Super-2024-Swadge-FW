@@ -56,9 +56,8 @@
   - [x] Pretty up pause menu
 11. Sounds
   - [ ] BGM (Waiting on theme team)
-  - [ ] SFX
-    - [ ] Move
-    - [ ] Select
+  - [x] SFX
+    - [x] Move
 12. Misc
   - [ ] Use LEDs
 

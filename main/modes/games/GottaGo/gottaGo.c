@@ -324,8 +324,10 @@ static void ggEnterMode(void)
     {
         loadWsg(titleImages[idx], &ggd->titleImages[idx], true);
     }
+    // Audio files
+    loadMidiFile(ROBO_RUNNER_BGM_MID, &ggd->bgm, true);
 
-    // Initialize
+    // NVS
     int outVal = 0;
     readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_HELPER], &outVal);
     ggd->helper = outVal;
@@ -334,6 +336,17 @@ static void ggEnterMode(void)
     readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_WARNING_NVS], &outVal);
     ggd->toggle = outVal;
 
+    // Audio
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    player->loop         = true;
+    midiGmOn(player);
+    globalMidiPlayerSetVolume(MIDI_BGM, 12);
+    // globalMidiPlayerPlaySong(&ggd->bgm, MIDI_BGM);
+    ggd->sfxPlayer = globalMidiPlayerGet(MIDI_SFX);
+    midiGmOn(ggd->sfxPlayer);
+    midiPause(ggd->sfxPlayer, false);
+
+    // Init
     drinkWater();
     wsgPaletteReset(&ggd->npcPalette);
     ggInitWarning(ggd);
@@ -342,6 +355,8 @@ static void ggEnterMode(void)
 
 static void ggExitMode(void)
 {
+    globalMidiPlayerStop(MIDI_BGM);
+    unloadMidiFile(&ggd->bgm);
     for (int idx = 0; idx < ARRAY_SIZE(uiImages); idx++)
     {
         freeWsg(&ggd->uiImages[idx]);
@@ -484,15 +499,18 @@ static void doWarning(int64_t elapsedUs)
     {
         if (!ggd->toggle)
         {
+            midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
         }
         else if (evt.down && (evt.button & PB_A))
         {
+            midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
             ggInitSplash(ggd);
             writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_WARNING_NVS], true);
             ggd->state = GG_SPLASH;
         }
         else if (evt.down)
         {
+            midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
             switchToSwadgeMode(&mainMenuMode);
         }
     }
@@ -510,6 +528,7 @@ static void doSplash(int64_t elapsedUs)
     {
         if (evt.button & PB_A && evt.down)
         {
+            midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
             ggd->state = GG_MENU;
         }
     }
@@ -523,6 +542,7 @@ static void doMenu()
     {
         if (evt.down)
         {
+            midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
             if (evt.button & PB_DOWN)
             {
                 ggd->selection++;
@@ -595,6 +615,7 @@ static void doPickGame()
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
+        midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
         if (evt.down)
         {
             if (evt.button & PB_B)
@@ -657,6 +678,7 @@ static void doGame(int64_t elapsedUs)
     {
         if (evt.down)
         {
+            midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
             if (evt.button & PB_A)
             {
                 if (ggd->pause)
@@ -809,6 +831,7 @@ static void doRules()
     int size = ARRAY_SIZE(rulesText) / 2;
     while (checkButtonQueueWrapper(&evt))
     {
+        midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
         if (!evt.down)
         {
             if (evt.button & PB_RIGHT)
@@ -841,23 +864,27 @@ static void doHS()
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
-        if (evt.button & PB_DOWN)
+        if (evt.down)
         {
-            ggd->selection++;
-            ggd->selection %= HS_PAGE_COUNT;
-        }
-        if (evt.button & PB_UP)
-        {
-            ggd->selection--;
-            if (ggd->selection < 0)
+            midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
+            if (evt.button & PB_DOWN)
             {
-                ggd->selection = HS_PAGE_COUNT - 1;
+                ggd->selection++;
+                ggd->selection %= HS_PAGE_COUNT;
             }
-        }
-        if (evt.button & PB_B)
-        {
-            ggd->selection = GG_TEXT_MENU_HS;
-            ggd->state     = GG_MENU;
+            if (evt.button & PB_UP)
+            {
+                ggd->selection--;
+                if (ggd->selection < 0)
+                {
+                    ggd->selection = HS_PAGE_COUNT - 1;
+                }
+            }
+            if (evt.button & PB_B)
+            {
+                ggd->selection = GG_TEXT_MENU_HS;
+                ggd->state     = GG_MENU;
+            }
         }
     }
     ggDrawHighScore(ggd);
@@ -870,6 +897,7 @@ static void doOptions()
     {
         if (evt.down)
         {
+            midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
             if (evt.button & PB_DOWN)
             {
                 ggd->selection++;
@@ -994,7 +1022,9 @@ static void handleGameEnd(bool lose, bool stall)
     if (!ggd->casual)
     {
         checkTrophies(final, ggd->accScore, worst);
-    } else {
+    }
+    else
+    {
         trophyUpdateMilestone(&ggTrophies[T_WORST_OPTIONS], ggd->numLevels, MILE_CASUAL);
     }
 
