@@ -322,6 +322,7 @@ static void ggInitRandomNPC(ggNPC_t* n)
     n->shirtColor = esp_random() % 7;
     n->pantsColor = esp_random() % 7;
     n->shoeColor  = esp_random() % 4;
+    n->small      = (esp_random() % 20 == 0) ? 1 : 0;
     n->randOffset = (HEIGHT_OFFSET + 1) - (esp_random() % ((HEIGHT_OFFSET * 2) + 1));
     switch (esp_random() % (SKIRT_CHANCE + SHORTS_CHANCE + PANTS_CHANCE))
     {

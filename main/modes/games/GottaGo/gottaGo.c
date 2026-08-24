@@ -521,6 +521,8 @@ static void doMenu()
                     }
                     case GG_TEXT_MENU_RULES:
                     {
+                        // Set up urinal array for display
+                        ggClearUrinals(ggd);
                         ggd->state     = GG_RULES;
                         ggd->selection = 0;
                         break;
@@ -722,11 +724,13 @@ static void doRules()
         {
             if (evt.button & PB_RIGHT)
             {
+                ggClearUrinals(ggd);
                 ggd->selection++;
                 ggd->selection %= size;
             }
             if (evt.button & PB_LEFT)
             {
+                ggClearUrinals(ggd);
                 ggd->selection--;
                 if (ggd->selection < 0)
                 {

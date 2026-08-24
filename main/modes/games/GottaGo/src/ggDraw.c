@@ -48,7 +48,7 @@
 #define NUMBERS_Y_OFFSET 160
 #define NUMBERS_SPACING  (TFT_WIDTH / 4)
 // Pause
-#define PAUSE_INSTRUCTIONS_Y 64
+#define PAUSE_INSTRUCTIONS_Y 110
 // UI
 #define UI_STALL_X       12
 #define UI_STALL_Y       44
@@ -356,8 +356,8 @@ void ggDrawPause(ggData_t* ggd)
              (TFT_WIDTH - textWidth(&ggd->titleFont, levelText[GG_TEXT_PAUSED])) / 2, TITLE_TEXT_Y);
     int16_t xOff = BUFFER_X;
     int16_t yOff = PAUSE_INSTRUCTIONS_Y;
-    drawTextWordWrap(&ggd->descFont, c555, levelText[GG_TEXT_INSTR_PAUSE], &xOff, &yOff, TFT_WIDTH - BUFFER_X,
-                     TFT_HEIGHT);
+    drawTextWordWrapCentered(&ggd->descFont, c555, levelText[GG_TEXT_INSTR_PAUSE], &xOff, &yOff, TFT_WIDTH - BUFFER_X,
+                             TFT_HEIGHT);
 }
 
 void ggDrawResult(ggData_t* ggd)
@@ -455,6 +455,160 @@ void ggDrawRules(ggData_t* ggd)
 {
     // Draw background
     drawBackground(ggd);
+    // Images
+    switch (ggd->selection)
+    {
+        case 0:
+        {
+            ggd->numActive = 3;
+            drawUrinalArray(ggd);
+            break;
+        }
+        case 3:
+        {
+            // Draw bar
+            drawRectFilled(10, 145, TFT_WIDTH - 10, 172, c222);
+            char buffer[32];
+            long timeLeft  = 1234567;
+            ggd->timeLimit = 2000000;
+            snprintf(buffer, sizeof(buffer) - 1, "Time left: %ld.%03ld", timeLeft / GG_SECOND,
+                     (timeLeft % GG_SECOND) / 1000);
+            drawText(&ggd->descFont, c550, buffer, UI_TIMER_X, 148);
+            // Prog bar
+            drawRectFilled(UI_BAR_PADDING_X, 160, TFT_WIDTH - UI_BAR_PADDING_X, 160 + UI_BAR_HEIGHT, c111);
+            drawRectFilled(UI_BAR_PADDING_X + 1, 160 + 1,
+                           UI_BAR_PADDING_X + 1
+                               + ((timeLeft * (TFT_WIDTH - (2 * (UI_BAR_PADDING_X + 1) + 1))) / ggd->timeLimit),
+                           160 + UI_BAR_HEIGHT - 1, c440);
+            break;
+        }
+        case 4:
+        {
+            ggd->numActive = 3;
+            drawUrinalArray(ggd);
+            int xStart = getUrinalRowStart(ggd);
+            drawWsgSimpleHalf(&ggd->uiImages[3],
+                              0 * ((ggd->numActive == MAX_URINALS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1,
+                              140);
+            drawWsgSimpleHalf(&ggd->uiImages[2],
+                              1 * ((ggd->numActive == MAX_URINALS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1,
+                              140);
+            drawWsgSimpleHalf(&ggd->uiImages[3],
+                              2 * ((ggd->numActive == MAX_URINALS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1,
+                              140);
+            break;
+        }
+        case 5:
+        {
+            ggd->numActive = 7;
+            for (int i = 0; i < 7; i++)
+            {
+                ggNPC_t* n    = &ggd->urinals[i].npc;
+                n->active     = 1;
+                n->randOffset = 0;
+                n->skinColor  = i;
+                n->shirtColor = i;
+                n->pantsColor = i;
+                n->shoeColor  = i % 4;
+            }
+            ggd->urinals[1].npc.pants = GG_SHORTS;
+            ggd->urinals[6].npc.pants = GG_SKIRT;
+            ggd->urinals[3].npc.small = 1;
+            drawUrinalArray(ggd);
+            break;
+        }
+        case 6:
+        {
+            ggd->numActive = 5;
+            for (int i = 0; i < 5; i++)
+            {
+                ggd->urinals[i].npc.active     = 1;
+            }
+            ggd->urinals[0].npc.pants = GG_DOWN;
+            ggd->urinals[1].npc.pants = GG_UNDERWEAR;
+            ggd->urinals[2].npc.pants = GG_NO_PANTS;
+            ggd->urinals[3].npc.shirt = 0;
+            ggd->urinals[4].npc.stink = 1;
+            drawUrinalArray(ggd);
+            break;
+        }
+        case 7:
+        {
+            ggd->numActive               = 4;
+            ggd->urinals[0].brokenBowl   = 1;
+            ggd->urinals[1].brokenDrain  = 1;
+            ggd->urinals[2].outOfOrder   = 1;
+            ggd->urinals[3].pluggedDrain = 1;
+            drawUrinalArray(ggd);
+            break;
+        }
+        case 8:
+        {
+            ggd->numActive            = 3;
+            ggd->urinals[0].graffiti  = 7;
+            ggd->urinals[1].cracks    = 3;
+            ggd->urinals[2].waterLeak = 1;
+            drawUrinalArray(ggd);
+            break;
+        }
+        case 9:
+        {
+            ggd->numActive          = 4;
+            ggd->urinals[0].divider = GG_DIV_TOP;
+            ggd->urinals[1].divider = GG_DIV_NONE;
+            ggd->urinals[2].divider = GG_DIV_BOTTOM;
+            ggd->urinals[3].divider = GG_DIV_FULL;
+            drawUrinalArray(ggd);
+            break;
+        }
+        case 10:
+        {
+            ggd->numActive         = 3;
+            ggd->urinals[0].puddle = GG_PEE_SMALL;
+            ggd->urinals[1].puddle = GG_PEE_MED;
+            ggd->urinals[2].puddle = GG_PEE_LARGE;
+            drawUrinalArray(ggd);
+            break;
+        }
+        case 11:
+        {
+            ggd->numActive        = 2;
+            ggd->urinals[1].small = 1;
+            drawUrinalArray(ggd);
+            break;
+        }
+        case 12:
+        {
+            ggd->numActive            = 2;
+            ggd->urinals[1].autoFlush = 1;
+            drawUrinalArray(ggd);
+            break;
+        }
+        case 13:
+        {
+            // Draw Stall icon
+            drawWsgSimpleScaled(&ggd->uiImages[0], TFT_WIDTH / 2 - ggd->uiImages[0].w, 120, 2, 2);
+            break;
+        }
+        case 14:
+        {
+            ggd->numActive             = 4;
+            ggd->urinals[3].npc.active = 1;
+            drawUrinalArray(ggd);
+            int xStart = getUrinalRowStart(ggd);
+            drawWsgSimpleHalf(&ggd->uiImages[3],
+                              0 * ((ggd->numActive == MAX_URINALS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1,
+                              140);
+            drawWsgSimpleHalf(&ggd->uiImages[2],
+                              2 * ((ggd->numActive == MAX_URINALS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1,
+                              140);
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
     // Draw information
     int16_t xOff = 32;
     int16_t yOff = 32;
@@ -465,7 +619,7 @@ void ggDrawRules(ggData_t* ggd)
                      TFT_HEIGHT);
     char buffer[32];
     snprintf(buffer, sizeof(buffer) - 1, "Page %d/%d", ggd->selection + 1, (int)ARRAY_SIZE(rulesText) / 2);
-    drawText(&ggd->descFont, c000, buffer, RULES_X_BORDER, TFT_HEIGHT - 32);
+    drawText(&ggd->descFont, c000, buffer, RULES_X_BORDER, TFT_HEIGHT - 24);
 }
 
 void ggDrawHighScore(ggData_t* ggd)

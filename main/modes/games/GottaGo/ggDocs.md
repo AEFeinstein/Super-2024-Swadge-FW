@@ -34,6 +34,7 @@
   - [x] Toggle tutorial/helper mode
   - [x] Toggle touch input
 7. [x] Tutorial update
+  - [x] Add tutorial images
 8. [ ] Casual Mode
   - [ ] Non-timed, non-scored mode
   - [ ] Casual mode trophies
@@ -52,7 +53,7 @@
   - [x] Fix shoes to always draw
   - [x] Merge win/lose screens, add icons for easier visual  distinction
   - [x] Sort strings
-  - [ ] Pretty up pause menu
+  - [x] Pretty up pause menu
 11. Sounds
   - [ ] BGM (Waiting on theme team)
   - [ ] SFX

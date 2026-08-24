@@ -23,56 +23,47 @@ static const char* const rulesText[] = {
     "A: Select Urinal\nB: Use a stall\nLeft/right: Pick a urinal\nLeft swipe pad can also be used\nStart/select: Pause "
     "game",
     "Mechanics",
-    "There's more that goes into choosing a urinal than you might expect or thing about when you use the boy's room, "
-    "but all the details are included in these rules.",
+    "There's more that goes into choosing a urinal than you might expect or think about when you use the little boy's "
+    "room, but all the details are included in these rules.",
     "Timer/Need to Pee",
     "There's a timer at the top of the screen with a numeric readout above it. This is how long you can hold your "
     "bladder for. Let it build up too much and you'll pee yourself.",
     "Number of Urinals",
-    "There's always at least three urinals, and up to seven. THe number is random, but starts on the small end until "
-    "you have time to learn the ropes. The urinals on the sides are more desirable since they provide the most space "
-    "for a theoretical next person to come into bathroom.",
+    "There's always at least three urinals, and up to seven. The number is random. The urinals on the ends are more "
+    "desirable.",
     "People",
-    "People are weird. Some are very weird. Some drop their pants around their ankle, some come in with their "
-    "underwear, and some butt naked. Some smell really bad. Stay further away from the weird people.",
+    "There's a wide variety of people.",
+    "Weird people",
+    "You want to stay away from the weirder people.",
     "Major issues",
-    "Some issues are dealbreakers. If oyu use that urinal, you're going to get pee everywhere. If the drain is plugged "
-    "and there's a puddle in the bowl, the bowl or drain are broken, or if there's an out of order sign you shouldn't "
-    "be using it.",
+    "All of the following options result in a failure. You'll get pee everywhere or at least damage the sign.",
     "Minor issues",
-    "Vandals may scrawl graffiti, there may be small cracks, and the flushing mechanism may be constantly flowing "
-    "water, but none of these are dealbreakers. Still, it's less than ideal.",
+    "All of the following options are not deal-breakers. Still, you'd rather a clean toilet.",
     "Dividers",
-    "Dividers provide a bit of privacy. from your immediate neighbors. Well, unless they're missing. It's important "
-    "there's on on either side, though the wall on the left side is acceptable. Without a divider, using the one next "
-    "to the door is risky.",
+    "Dividers provide a bit of privacy unless they're missing. The one next to the door can go missing too.",
     "Puddles",
-    "Some people just can't aim. Sometimes the pipe leaks. At least you're wearing shoes... right? Try not to stand in "
-    "a puddle, or even near one if you don't have to. They're gross.",
+    "Puddles suck to stand in, and even next to. Avoid them if possible.",
     "Low Urinals",
-    "The American Disability Act means that there's usually at least one shorter urinal for people who need it, and "
-    "surprise surprise, you don't need. it. Use this one last.",
-    "Stalls",
-    "All of the urinals occupied, broken, or the situation is too confusing? Use a stall! Press B to use a stall, but "
-    "beware, there's only so many times you can use it before the stalls are full. Try to use a stall when you don't "
-    "have any available and you'll pee your pants.",
+    "The low toilets are an accessability toilet. Use it only when the other options are really bad.",
     "Autoflusher",
     "Some urinals include an autoflusher, and with how disgusting these things get, you're probably going to want to "
     "use that one over the others.",
+    "Stalls",
+    "Use a stall if you have no good options or the situation is too confusing. Press 'B' to use a stall. You fail if "
+    "you don't have any uses left, however.",
     "Helper mode",
-    "In settings, there's a 'helper' mode. This mode shows what the best and worst urinals are after each round. All "
-    "of the best and worst urinals are marked with a check or an x respectively.",
+    "If you want to be shown the best and worst options after each level, activate helper mode. Best has green check, worst has a red X.",
     "Casual mode",
     "Don't really need to go? Play without the timer looming over your head and spend your time picking the best "
-    "option.\n\n Scores are not tracked in this game mode.",
-    "Scoreing",
+    "option.\n\n Scores are not tallied, and you can keep playing until you're done.",
+    "Scoring",
     "There are four metrics tracked: Game count, accuracy, total score, and adjusted score. ",
     "Game count",
     "Game count is straightforward. The highest level a player has completed. It doesn't count the final round which "
     "is inevitably a loss, and the score is not counted for that round.",
     "Accuracy",
-    "Accuracy is how well the player's choices match the best option in any given situation. 100%% means the player "
-    "always picks the best option. Turn on helper mode if you find yourself confused with what is the bast option.",
+    "Accuracy is how well the player's choices match the best option in any given situation. 100% means the player "
+    "always picks the best option. Turn on helper mode if you find yourself confused with what is the best option.",
     "Total Score",
     "Total raw score, calculated as per-level accuracy subtract time taken. The longer you take, the less of your "
     "score you get to keep.",
@@ -181,7 +172,7 @@ void ggDrawOptions(ggData_t* ggd);
 
 /**
  * @brief Returns the length of the hydrate text array
- * 
+ *
  * @return int number of positions in the array
  */
 int ggGetDrinkTextLen(void);
