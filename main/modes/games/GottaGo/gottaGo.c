@@ -206,6 +206,7 @@ typedef enum
 static void ggEnterMode(void);
 static void ggExitMode(void);
 static void ggMainLoop(int64_t elapsedUs);
+static void ggAddToSwadgePassPacket(struct swadgePassPacket* packet);
 
 // States
 static void doWarning(int64_t elapsedUS);
@@ -279,6 +280,7 @@ swadgeMode_t gottaGoMode = {
     .fnExitMode        = ggExitMode,
     .fnMainLoop        = ggMainLoop,
     .overrideSelectBtn = true,
+    .fnAddToSwadgePassPacket = &ggAddToSwadgePassPacket,
     .trophyData        = &ggTrophyDate,
 };
 
@@ -488,6 +490,11 @@ static void ggMainLoop(int64_t elapsedUs)
             doOptions();
         }
     }
+}
+
+static void ggAddToSwadgePassPacket(struct swadgePassPacket* packet)
+{
+
 }
 
 // States
