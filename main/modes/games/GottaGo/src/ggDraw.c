@@ -424,8 +424,8 @@ void ggDrawResult(ggData_t* ggd)
     // Draw instructions
     int16_t xOff = BUFFER_X + 5;
     int16_t yOff = END_INSTR_OFFSET;
-    drawTextWordWrapCentered(&ggd->descFont, c000, levelText[((ggd->hasLost) ? GG_TEXT_INSTR_BAD : GG_TEXT_INSTR_GOOD)], &xOff,
-                     &yOff, TFT_WIDTH - BUFFER_X, TFT_HEIGHT);
+    drawTextWordWrapCentered(&ggd->descFont, c000, levelText[((ggd->hasLost) ? GG_TEXT_INSTR_BAD : GG_TEXT_INSTR_GOOD)],
+                             &xOff, &yOff, TFT_WIDTH - BUFFER_X, TFT_HEIGHT);
     // Draw icon for better legibility
     drawWsgSimple(&ggd->uiImages[(ggd->hasLost) ? 2 : 3], 200, 95);
 }
@@ -1117,20 +1117,21 @@ static void drawUI(ggData_t* ggd, bool solution)
         if (ggd->casual)
         {
             drawText(&ggd->titleFont, c550, menuText[GG_TEXT_CASUAL], UI_TIMER_X, UI_TIMER_Y);
-        } else {
-long timeLeft = ggd->timeLimit - ggd->timer;
-        snprintf(buffer, sizeof(buffer) - 1, "Time left: %ld.%03ld", timeLeft / GG_SECOND,
-                 (timeLeft % GG_SECOND) / 1000);
-        drawText(&ggd->descFont, c550, buffer, UI_TIMER_X, UI_TIMER_Y);
-        // Prog bar
-        drawRectFilled(UI_BAR_PADDING_X, UI_BAR_PADDING_Y, TFT_WIDTH - UI_BAR_PADDING_X,
-                       UI_BAR_PADDING_Y + UI_BAR_HEIGHT, c111);
-        drawRectFilled(UI_BAR_PADDING_X + 1, UI_BAR_PADDING_Y + 1,
-                       UI_BAR_PADDING_X + 1
-                           + ((ggd->timer * (TFT_WIDTH - (2 * (UI_BAR_PADDING_X + 1) + 1))) / ggd->timeLimit),
-                       UI_BAR_PADDING_Y + UI_BAR_HEIGHT - 1, c440);
         }
-        
+        else
+        {
+            long timeLeft = ggd->timeLimit - ggd->timer;
+            snprintf(buffer, sizeof(buffer) - 1, "Time left: %ld.%03ld", timeLeft / GG_SECOND,
+                     (timeLeft % GG_SECOND) / 1000);
+            drawText(&ggd->descFont, c550, buffer, UI_TIMER_X, UI_TIMER_Y);
+            // Prog bar
+            drawRectFilled(UI_BAR_PADDING_X, UI_BAR_PADDING_Y, TFT_WIDTH - UI_BAR_PADDING_X,
+                           UI_BAR_PADDING_Y + UI_BAR_HEIGHT, c111);
+            drawRectFilled(UI_BAR_PADDING_X + 1, UI_BAR_PADDING_Y + 1,
+                           UI_BAR_PADDING_X + 1
+                               + ((ggd->timer * (TFT_WIDTH - (2 * (UI_BAR_PADDING_X + 1) + 1))) / ggd->timeLimit),
+                           UI_BAR_PADDING_Y + UI_BAR_HEIGHT - 1, c440);
+        }
     }
     else if (ggd->stallUsed)
     {
