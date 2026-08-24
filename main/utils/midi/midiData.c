@@ -772,3 +772,333 @@ const uint8_t mmxTimbreMap[] = {
 };
 
 const size_t mmxTimbreCount = sizeof(mmxTimbres) / sizeof(*mmxTimbres);
+
+const midiTimbre_t z3BellTimbre = {
+    .type = SAMPLE,
+    .flags = TF_NONE,
+    .sample = {
+        .baseNote = FREQ_G2,
+        .tune = 80,
+        .fIdx = Z3_BELL_BIN,
+        .rate = 10992,
+        .loop = 0,
+        .loopStart = 207,
+        .loopEnd = 383,
+    },
+    .envelope = {
+        .attackTime = 0,
+        .decayTime = 101714,
+        .sustainVol = 0,
+        .releaseTime = 0,
+    },
+    .name = "Z3 Bell",
+};
+
+const midiTimbre_t z3FluteTimbre = {
+    .type = SAMPLE,
+    .flags = TF_NONE,
+    .sample = {
+        .baseNote = FREQ_F_SHARP_3,
+        .tune = 59,
+        .fIdx = Z3_FLUTE_BIN,
+        .rate = 17160,
+        .loop = 0,
+        .loopStart = 959,
+        .loopEnd = 1007,
+    },
+    .envelope = {
+        .attackTime = 0,
+        .decayTime = 0,
+        .sustainVol = 127,
+        .releaseTime = 0,
+    },
+    .name = "Z3 Flute",
+};
+
+const midiTimbre_t z3HarpTimbre = {
+    .type = SAMPLE,
+    .flags = TF_NONE,
+    .sample = {
+        .baseNote = FREQ_G4,
+        .tune = 24,
+        .fIdx = Z3_HARP_BIN,
+        .rate = 72720,
+        .loop = 0,
+        .loopStart = 816,
+        .loopEnd = 863,
+    },
+    .envelope = {
+        .attackTime = 0,
+        .decayTime = 101714,
+        .sustainVol = 0,
+        .releaseTime = 0,
+    },
+    .name = "Z3 Harp",
+};
+
+const noteSampleMap_t z3PercussionSampleMap[] = {
+    {
+        .noteStart = 49,
+        .noteEnd = 59,
+        .sample = {
+            .baseNote = FREQ_F2,
+            .tune = 0,
+            .fIdx = Z3_CRASHCYMBAL_BIN,
+            .rate = 9768,
+            .loop = 1,
+            .loopStart = 0,
+            .loopEnd = 0,
+        },
+        .envelope = {
+            .attackTime = 0,
+            .decayTime = 0,
+            .sustainVol = 127,
+            .releaseTime = 0,
+        },
+    },
+    {
+        .noteStart = 38,
+        .noteEnd = 38,
+        .sample = {
+            .baseNote = FREQ_D1,
+            .tune = 0,
+            .fIdx = Z3_SNARE_BIN,
+            .rate = 36656,
+            .loop = 1,
+            .loopStart = 0,
+            .loopEnd = 0,
+        },
+        .envelope = {
+            .attackTime = 0,
+            .decayTime = 0,
+            .sustainVol = 127,
+            .releaseTime = 0,
+        },
+    },
+};
+
+const midiTimbre_t z3DrumkitTimbre = {
+    .type = MULTI_SAMPLE,
+    .flags = TF_PERCUSSION,
+    .multiSample = {
+        .map = z3PercussionSampleMap,
+        .count = ARRAY_SIZE(z3PercussionSampleMap),
+    },
+    .envelope = {
+        .attackTime = 0,
+        .decayTime = 0,
+        .sustainVol = 127,
+        .releaseTime = 0,
+    },
+    .name = "Z3 Percussion",
+};
+
+const midiTimbre_t z3PianoTimbre = {
+    .type = SAMPLE,
+    .flags = TF_NONE,
+    .sample = {
+        .baseNote = FREQ_F4,
+        .tune = 77,
+        .fIdx = Z3_PIANO_BIN,
+        .rate = 74920,
+        .loop = 0,
+        .loopStart = 3279,
+        .loopEnd = 3391,
+    },
+    .envelope = {
+        .attackTime = 0,
+        .decayTime = 78387,
+        .sustainVol = 0,
+        .releaseTime = 0,
+    },
+    .name = "Z3 Piano",
+};
+
+const midiTimbre_t z3RainTimbre = {
+    .type = SAMPLE,
+    .flags = TF_NONE,
+    .sample = {
+        .baseNote = FREQ_C3,
+        .tune = 0,
+        .fIdx = Z3_RAIN_BIN,
+        .rate = 6416,
+        .loop = 0,
+        .loopStart = 48,
+        .loopEnd = 3487,
+    },
+    .envelope = {
+        .attackTime = 0,
+        .decayTime = 0,
+        .sustainVol = 127,
+        .releaseTime = 0,
+    },
+    .name = "Z3 Rain",
+};
+
+const midiTimbre_t z3StringsTimbre = {
+    .type = SAMPLE,
+    .flags = TF_NONE,
+    .sample = {
+        .baseNote = FREQ_B3,
+        .tune = 68,
+        .fIdx = Z3_STRINGS_BIN,
+        .rate = 7152,
+        .loop = 0,
+        .loopStart = 2528,
+        .loopEnd = 6143,
+    },
+    .envelope = {
+        .attackTime = 0,
+        .decayTime = 0,
+        .sustainVol = 127,
+        .releaseTime = 0,
+    },
+    .name = "Z3 Strings",
+};
+
+const midiTimbre_t z3TimpaniTimbre = {
+    .type = SAMPLE,
+    .flags = TF_NONE,
+    .sample = {
+        .baseNote = FREQ_F_SHARP_2,
+        .tune = 84,
+        .fIdx = Z3_TIMPANI_BIN,
+        .rate = 6864,
+        .loop = 1,
+        .loopStart = 0,
+        .loopEnd = 0,
+    },
+    .envelope = {
+        .attackTime = 0,
+        .decayTime = 0,
+        .sustainVol = 127,
+        .releaseTime = 0,
+    },
+    .name = "Z3 Timpani",
+};
+
+const midiTimbre_t z3TrumpetOctaveTimbre = {
+    .type = SAMPLE,
+    .flags = TF_NONE,
+    .sample = {
+        .baseNote = FREQ_B3,
+        .tune = 64,
+        .fIdx = Z3_TRUMPETOCTAVE_BIN,
+        .rate = 22896,
+        .loop = 0,
+        .loopStart = 1791,
+        .loopEnd = 1887,
+    },
+    .envelope = {
+        .attackTime = 0,
+        .decayTime = 0,
+        .sustainVol = 127,
+        .releaseTime = 0,
+    },
+    .name = "Z3 Trumpet Octave",
+};
+
+const midiTimbre_t z3TrumpetTimbre = {
+    .type = SAMPLE,
+    .flags = TF_NONE,
+    .sample = {
+        .baseNote = FREQ_B2,
+        .tune = 65,
+        .fIdx = Z3_TRUMPET_BIN,
+        .rate = 5712,
+        .loop = 0,
+        .loopStart = 3151,
+        .loopEnd = 3199,
+    },
+    .envelope = {
+        .attackTime = 0,
+        .decayTime = 0,
+        .sustainVol = 127,
+        .releaseTime = 0,
+    },
+    .name = "Z3 Trumpet",
+};
+
+const midiTimbre_t z3VoiceTimbre = {
+    .type = SAMPLE,
+    .flags = TF_NONE,
+    .sample = {
+        .baseNote = FREQ_E3,
+        .tune = 66,
+        .fIdx = Z3_VOICE_BIN,
+        .rate = 9696,
+        .loop = 0,
+        .loopStart = 2351,
+        .loopEnd = 5903,
+    },
+    .envelope = {
+        .attackTime = 0,
+        .decayTime = 0,
+        .sustainVol = 127,
+        .releaseTime = 0,
+    },
+    .name = "Z3 Voice",
+};
+
+const midiTimbre_t z3WaterTimbre = {
+    .type = SAMPLE,
+    .flags = TF_NONE,
+    .sample = {
+        .baseNote = FREQ_C3,
+        .tune = 0,
+        .fIdx = Z3_WATERDROPLET_BIN,
+        .rate = 48976,
+        .loop = 1,
+        .loopStart = 0,
+        .loopEnd = 0,
+    },
+    .envelope = {
+        .attackTime = 0,
+        .decayTime = 0,
+        .sustainVol = 127,
+        .releaseTime = 0,
+    },
+    .name = "Z3 Water",
+};
+
+const midiTimbre_t z3WindTimbre = {
+    .type = SAMPLE,
+    .flags = TF_NONE,
+    .sample = {
+        .baseNote = FREQ_C3,
+        .tune = 0,
+        .fIdx = Z3_WIND_BIN,
+        .rate = 2136,
+        .loop = 0,
+        .loopStart = 48,
+        .loopEnd = 3487,
+    },
+    .envelope = {
+        .attackTime = 0,
+        .decayTime = 0,
+        .sustainVol = 127,
+        .releaseTime = 0,
+    },
+    .name = "Z3 Wind",
+};
+
+const midiTimbre_t* const z3Timbres[] = {
+    &z3PianoTimbre,         // 000 (acoustic grand piano)
+    &z3BellTimbre,          // 008 (celesta?)
+    &z3HarpTimbre,          // 046 (orchestral harp)
+    &z3TimpaniTimbre,       // 047 (timpani)
+    &z3StringsTimbre,       // 050 (synth strings 1)
+    &z3VoiceTimbre,         // 054 (synth voice)
+    &z3TrumpetTimbre,       // 056
+    &z3TrumpetOctaveTimbre, // 059 (muted trumpet)
+    &z3FluteTimbre,         // 073
+    &z3WindTimbre,          // 076 (blown bottle)
+    &z3RainTimbre,          // 096
+    &z3WaterTimbre,         // 122 (seashore)
+};
+
+const uint8_t z3TimbreMap[] = {
+    0, 8, 46, 47, 50, 54, 56, 59, 73, 76, 96, 122,
+};
+
+const size_t z3TimbreCount = sizeof(z3Timbres) / sizeof(*z3Timbres);
