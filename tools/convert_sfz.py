@@ -48,7 +48,7 @@ def convert_rate_pos(in_pos, in_rate):
 @functools.lru_cache()
 def get_sample_rate(name, basedir):
     name = name.replace('\\', os.path.sep).replace('/', os.path.sep)
-    with wave.open(os.path.join(basedir, name), 'rb') as f:
+    with wave.open(name, 'rb') as f:
         #print(f"{name} has rate {f.getframerate()} Hz")
         return f.getframerate()
 
@@ -169,7 +169,7 @@ def prettify(text):
 
 def print_sample(data, basedir, control, indent=8):
     rate = get_sample_rate(data["sample"], get_basedir(basedir, control))
-    sample_bin = os.path.basename(data["sample"]).replace("wav", "bin").replace(".", "_").upper()
+    sample_bin = os.path.basename(data["sample"]).replace("wav", "bin").replace(".", "_").replace("-", "_").upper()
     loop_mode = data.get('loop_mode', 1)
     loop_start = data.get('loop_start', 0) if not loop_mode else 0
     loop_end = data.get('loop_end', 0) if not loop_mode else 0
@@ -222,7 +222,7 @@ def compile_sfz(control, group, regions, inpath):
         proc_regions.append(data)
 
     if multi_sample:
-        print(f"const noteSampleMap_t {symbol_name}SampleMap = {{")
+        print(f"const noteSampleMap_t {symbol_name}SampleMap[] = {{")
         for data in proc_regions:
             lokey = data.get("lokey", data.get("key"))
             hikey = data.get("hikey", data.get("key"))
