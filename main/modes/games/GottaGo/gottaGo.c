@@ -142,6 +142,15 @@ const trophyData_t ggTrophies[] = {
         .maxVal      = 1,
         .hidden      = true,
     },
+    {
+        .title       = "The Truth is out there",
+        .description = "Learn the truth about the Atraxians",
+        .image       = TROPHY_DIFF_EASY,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .hidden      = true,
+    },
 };
 
 const trophySettings_t ggTrophySettings = {
@@ -156,6 +165,28 @@ const trophyDataList_t ggTrophyDate = {
     .list     = ggTrophies,
     .settings = &ggTrophySettings,
 };
+
+//==============================================================================
+// Enums
+//==============================================================================
+
+/// @brief Trophy names
+typedef enum
+{
+    T_ROUNDS_20,
+    T_LEVELS_10,
+    T_LEVELS_20,
+    T_LEVELS_30,
+    T_OHP,
+    T_NNP,
+    T_NFP,
+    T_USE_STALL_GOOD,
+    T_USE_STALL_BAD,
+    T_WORST_OPTIONS,
+    T_HELP_MODE,
+    T_MANIFESTO,
+    T_TRUTH,
+} ggTrophyNames_t;
 
 //==============================================================================
 // Functions declarations
@@ -181,6 +212,7 @@ static void doOptions(void);
 static void initLevel(void);
 static void getTouchInput(void);
 static void handleGameEnd(bool lose, bool stall);
+static void drinkWater(void);
 
 /**
  * @brief Checks the accuracy and worst trophies. Requires ggd->selection to remain accurate
@@ -269,6 +301,7 @@ static void ggEnterMode(void)
     readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_WARNING_NVS], &outVal);
     ggd->toggle = outVal;
 
+    drinkWater();
     wsgPaletteReset(&ggd->npcPalette);
     ggInitWarning(ggd);
     ggd->state = GG_WARNING;
@@ -760,7 +793,7 @@ static void doOptions()
             }
             else if (evt.button & PB_B || ((evt.button & PB_A) && ggd->selection == 2))
             {
-                ggd->state = GG_MENU;
+                ggd->state     = GG_MENU;
                 ggd->selection = GG_TEXT_MENU_OPTIONS;
                 writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_HELPER], ggd->helper);
                 writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_TOUCH], ggd->touch);
@@ -876,4 +909,20 @@ static void checkAccuracy(int accuracy, int target, int count, ggTrophyNames_t t
         count++;
         trophyUpdateMilestone(&ggTrophies[trophyName], count, MILE_ACC);
     }
+}
+
+static void drinkWater()
+{
+    ggd->textOrder = 0;
+    readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_TEXT_PROG], &ggd->textOrder);
+    ggd->textOrder++;
+    if (ggd->textOrder >= ggGetDrinkTextLen())
+    {
+        ggd->textOrder = 0;
+    }
+    if (ggd->textOrder == ggGetDrinkTextLen() - 1)
+    {
+        trophyUpdate(&ggTrophies[T_TRUTH], 1, true);
+    }
+    writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_TEXT_PROG], ggd->textOrder);
 }

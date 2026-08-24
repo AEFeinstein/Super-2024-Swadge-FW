@@ -119,6 +119,30 @@ static const char* const menuText[] = {
     "Play!", "Rules", "High Scores", "Options", "Activate Helper Mode: ", "Touch entry: ", "Quit", "Back", "On", "Off",
 };
 
+static const char* const hydrateText[] = {
+    "Remember to stay hydrated!",
+    "Drink plenty of fluids!",
+    "HUman bodies are approximately 70% water",
+    "Hydration helps with hangovers",
+    "Alcohol dehydrates you, drink water",
+    "Hyperhydrosis requires a lot of water. Drink more water, you'll be fine.",
+    "All hail the kidneys",
+    "Urine is only sterile until it leaves the body",
+    "The color of urine is a direct correlation with how much your kidneys are filtering.",
+    "Normal urine colors are clear, yellow, orange or luminescent pink",
+    "Adraxian urine is a lovely shade of blue",
+    "Do not drink Adraxian urine",
+    "Do not agree to drink anything the Adraxians give you",
+    "If you consume Adraxian body fluids, flush out of system with water",
+    "Water is 54-84% of the Adraxian's physical makeup depending on egg cycle",
+    "Adraxians can disguise themselves as humans for weeks at a time.",
+    "Adraxians live among humans as societal infiltration",
+    "If you suspect someone of being Adraxian, call your local planetary immigration office",
+    "Adraxians do not eat humans under normal circumstances",
+    "The best defense is being hydrated, as they prefer the taste of overworked kidneys."
+    "Drink loooooots of water.",
+};
+
 static const paletteColor_t skinColors[] = {
     c555, c333, c444, c023, c402, c233, c343,
 };
@@ -370,6 +394,8 @@ void ggDrawResult(ggData_t* ggd)
     int16_t yOff = END_INSTR_OFFSET;
     drawTextWordWrap(&ggd->descFont, c000, levelText[((ggd->hasLost) ? GG_TEXT_INSTR_BAD : GG_TEXT_INSTR_GOOD)], &xOff,
                      &yOff, TFT_WIDTH - BUFFER_X, TFT_HEIGHT);
+    // Draw icon for better legibility
+    drawWsgSimple(&ggd->uiImages[(ggd->hasLost) ? 2 : 3], 200, 95);
 }
 
 // Levels
@@ -410,6 +436,14 @@ void ggDrawMenu(ggData_t* ggd)
         xOff = OPTION_X + textWidth(&ggd->titleFont, menuText[ggd->selection]) + 10;
     }
     drawWsgSimple(&ggd->uiImages[1], xOff, yOff);
+    // Draw cheeky reminder
+    int16_t xOff2 = 12;
+    int16_t yOff2 = 202;
+    if (ggd->textOrder < 0 || ggd->textOrder >= ggGetDrinkTextLen())
+    {
+        ggd->textOrder = 0;
+    }
+    drawTextWordWrap(&ggd->descFont, c000, hydrateText[ggd->textOrder], &xOff2, &yOff2, TFT_WIDTH - 12, TFT_HEIGHT);
 }
 
 void ggDrawRules(ggData_t* ggd)
@@ -557,6 +591,11 @@ void ggDrawOptions(ggData_t* ggd)
     // Red line under option
     // - sel = 3 pos
     // - either true ot false
+}
+
+int ggGetDrinkTextLen()
+{
+    return ARRAY_SIZE(hydrateText);
 }
 
 //==============================================================================

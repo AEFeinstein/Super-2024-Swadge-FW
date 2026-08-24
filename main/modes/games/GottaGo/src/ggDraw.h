@@ -178,3 +178,10 @@ void ggDrawHighScore(ggData_t* ggd);
  * @param ggd Game data
  */
 void ggDrawOptions(ggData_t* ggd);
+
+/**
+ * @brief Returns the length of the hydrate text array
+ * 
+ * @return int number of positions in the array
+ */
+int ggGetDrinkTextLen();

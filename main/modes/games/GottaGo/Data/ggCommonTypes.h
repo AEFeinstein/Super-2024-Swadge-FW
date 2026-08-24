@@ -18,7 +18,7 @@
 
 static const char* const ggNVSSpace[] = {
     "ggSaves", "mLevels", "mLevelsHS", "acc", "accHS", "score", "scoreHS", "adjScore", "adjScoreHS", "helper", "touch",
-    "warningRead",
+    "warningRead", "watermsgprog",
 };
 
 //==============================================================================
@@ -56,24 +56,8 @@ typedef enum
     GG_HELPER,
     GG_TOUCH,
     GG_WARNING_NVS,
+    GG_TEXT_PROG,
 } ggNVSEnum_t;
-
-/// @brief Trophy names
-typedef enum
-{
-    T_ROUNDS_20,
-    T_LEVELS_10,
-    T_LEVELS_20,
-    T_LEVELS_30,
-    T_OHP,
-    T_NNP,
-    T_NFP,
-    T_USE_STALL_GOOD,
-    T_USE_STALL_BAD,
-    T_WORST_OPTIONS,
-    T_HELP_MODE,
-    T_MANIFESTO,
-} ggTrophyNames_t;
 
 /// @brief Types of pants
 typedef enum
@@ -273,6 +257,7 @@ typedef struct
     int accLevel2; ///< Middle accuracy requirement
     int accLevel3; ///< Lowest accuracy requirement
     int numWorst;  ///< Number of levels picked worst option
+    int textOrder; ///< Uncover Adraxian sabotage
 
     // Drawing
     bool toggle;             ///< Used for all toggle

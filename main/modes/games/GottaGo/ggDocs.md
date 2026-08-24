@@ -48,17 +48,18 @@
   - [ ] Add divider to leftmost toilet when < 7 toilets
   - [ ] Fix lose text when quitting on purpose
   - [x] Add won game display to endcard
-  - [ ] Add reminder to drink water to the main menu
+  - [x] Add reminder to drink water to the main menu
   - [x] Fix shoes to always draw
-  - [ ] Merge win/lose screens, add icons for easier visual distinction
+  - [x] Merge win/lose screens, add icons for easier visual  distinction
   - [x] Sort strings
+  - [ ] Pretty up pause menu
 11. Sounds
   - [ ] BGM (Waiting on theme team)
   - [ ] SFX
     - [ ] Move
     - [ ] Select
+12. Misc
+  - [ ] Use LEDs
 
 ## Known Bugs
 - Sometimes when num of urinals reduces next round, selection pointer is off the end.
-- Long toilets do not have a penalty applied
-- Odd-order urinals are valued the same as even order
