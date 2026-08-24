@@ -63,4 +63,3 @@
 
 ## Known Bugs
 - Sometimes when num of urinals reduces next round, selection pointer is off the end.
-- Score timer is reversed

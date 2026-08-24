@@ -73,7 +73,7 @@ void ggCalcFinalScores(ggData_t* ggd, int* urinalScores, int* best, int* worst)
     ggd->accScore = (ggd->accScore * (ggd->numLevels - 1) + accuracy) / ggd->numLevels;
     // Calc total score
     ggd->totalScore
-        += accuracy * ((ggd->timeLimit + TIMER_BUFFER) - MAX(ggd->timeRemaining, TIMER_BUFFER)) / ggd->timeLimit;
+        += accuracy * ((ggd->timeLimit + TIMER_BUFFER) - MAX(ggd->timer, TIMER_BUFFER)) / ggd->timeLimit;
     // Calc adjusted score
     ggd->adjScore = (ggd->accScore * ggd->totalScore) / MAX_PERCENTAGE;
     // Check if trophies have been triggered
