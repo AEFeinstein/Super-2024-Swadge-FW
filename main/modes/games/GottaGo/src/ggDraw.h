@@ -109,6 +109,13 @@ void ggDrawWarning(ggData_t* ggd, int64_t elapsedUs);
 void ggDrawSplash(ggData_t* ggd, int64_t elapsedUs);
 
 /**
+ * @brief Draws the pick screen
+ * 
+ * @param ggd Game data
+ */
+void ggDrawPick(ggData_t* ggd);
+
+/**
  * @brief Draws the ready screen
  *
  * @param ggd Game data

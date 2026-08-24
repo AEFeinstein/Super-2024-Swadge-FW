@@ -201,9 +201,10 @@ static void ggMainLoop(int64_t elapsedUs);
 static void doWarning(int64_t elapsedUS);
 static void doSplash(int64_t elapsedUs);
 static void doMenu(void);
+static void doPickGame(void);
 static void doReady(int64_t elapsedUs);
 static void doGame(int64_t elapsedUs);
-static void doPicked(int64_t elapsedUs);
+static void doChoice(int64_t elapsedUs);
 static void doRules(void);
 static void doHS(void);
 static void doOptions(void);
@@ -396,14 +397,20 @@ static void ggMainLoop(int64_t elapsedUs)
             doHS();
             break;
         }
+        case GG_PICK_GAME:
+        {
+            doPickGame();
+            break;
+        }
         case GG_GAME:
+        case GG_CASUAL:
         {
             doGame(elapsedUs);
             break;
         }
         case GG_CHOICE:
         {
-            doPicked(elapsedUs);
+            doChoice(elapsedUs);
             break;
         }
         case GG_WON:
@@ -413,8 +420,16 @@ static void ggMainLoop(int64_t elapsedUs)
             {
                 if (evt.down)
                 {
-                    ggd->state = GG_READY;
-                    ggd->timer = 0;
+                    if (ggd->casual)
+                    {
+                        ggLevelReset(ggd);
+                        ggd->state = GG_CASUAL;
+                    }
+                    else
+                    {
+                        ggd->state = GG_READY;
+                        ggd->timer = 0;
+                    }
                 }
             }
             ggDrawResult(ggd);
@@ -427,9 +442,17 @@ static void ggMainLoop(int64_t elapsedUs)
             {
                 if (evt.down)
                 {
-                    ggd->pause     = false;
-                    ggd->selection = GG_TEXT_MENU_PLAY;
-                    ggd->state     = GG_MENU;
+                    if (ggd->casual)
+                    {
+                        ggLevelReset(ggd);
+                        ggd->state = GG_CASUAL;
+                    }
+                    else
+                    {
+                        ggd->pause     = false;
+                        ggd->selection = GG_TEXT_MENU_PLAY;
+                        ggd->state     = GG_MENU;
+                    }
                 }
             }
             ggDrawResult(ggd);
@@ -516,7 +539,7 @@ static void doMenu()
                     case GG_TEXT_MENU_PLAY:
                     {
                         initLevel();
-                        ggd->state = GG_READY;
+                        ggd->state = GG_PICK_GAME;
                         break;
                     }
                     case GG_TEXT_MENU_RULES:
@@ -550,6 +573,46 @@ static void doMenu()
         }
     }
     ggDrawMenu(ggd);
+}
+
+static void doPickGame()
+{
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down)
+        {
+            if (evt.button & PB_B)
+            {
+                ggd->selection = 0;
+                ggd->state     = GG_MENU;
+            }
+            else if (evt.button & PB_A)
+            {
+                if (ggd->selection)
+                {
+                    ggLevelReset(ggd);
+                    ggd->stallUses = 9999;
+                    ggd->casual = true;
+                    ggd->state  = GG_CASUAL;
+                }
+                else
+                {
+                    ggd->casual = false;
+                    ggd->state  = GG_READY;
+                }
+            }
+            else if (evt.button & PB_UP)
+            {
+                ggd->selection = 0;
+            }
+            else if (evt.button & PB_DOWN)
+            {
+                ggd->selection = 1;
+            }
+        }
+    }
+    ggDrawPick(ggd);
 }
 
 static void doReady(int64_t elapsedUs)
@@ -670,6 +733,10 @@ static void doGame(int64_t elapsedUs)
     {
         ggDrawPause(ggd);
     }
+    else if (ggd->casual)
+    {
+        ggDrawLevel(ggd, false);
+    }
     else
     {
         ggd->timer += elapsedUs;
@@ -681,7 +748,7 @@ static void doGame(int64_t elapsedUs)
     }
 }
 
-static void doPicked(int64_t elapsedUs)
+static void doChoice(int64_t elapsedUs)
 {
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
@@ -692,8 +759,15 @@ static void doPicked(int64_t elapsedUs)
     ggd->timer += elapsedUs;
     if (ggd->timer >= SOLUTION_TIMER)
     {
+        // Determine if the player gets another use of the stall
+        if (ggd->numLevels > ggd->stallReq)
+        {
+            ggd->stallUses++;
+            ggd->stallReq *= 2;
+            ggd->stallReq += ggd->stallReq / 2;
+        }
         // Calculate scores
-        if (ggEndLevel(ggd))
+        if (!ggd->hasLost)
         {
             ggd->state = GG_WON;
         }
@@ -898,7 +972,10 @@ static void handleGameEnd(bool lose, bool stall)
 
     int final[MAX_URINALS] = {0};
     int best, worst;
-    ggCalcFinalScores(ggd, final, &best, &worst);
+    if (!ggd->pause)
+    {
+        ggCalcFinalScores(ggd, final, &best, &worst);
+    }
     checkTrophies(final, ggd->accScore, worst);
 
     // Reset

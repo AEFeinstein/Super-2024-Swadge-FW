@@ -43,6 +43,9 @@
 #define RULES_DESC_Y   8
 
 // Level
+// Pick
+#define PICK_TOP_Y 70
+#define PICK_BOT_Y 150
 // Ready
 #define READY_Y_OFFSET   100
 #define NUMBERS_Y_OFFSET 160
@@ -63,7 +66,7 @@
 // End screen
 #define SCORE_X          32
 #define SCORE_Y          80
-#define END_INSTR_OFFSET 160
+#define END_INSTR_OFFSET 170
 
 // Urinals
 #define URINAL_SPACING      41
@@ -117,20 +120,21 @@ static const char* const levelText[] = {
 };
 
 static const char* const menuText[] = {
-    "Play!", "Rules", "High Scores", "Options", "Activate Helper Mode: ", "Touch entry: ", "Quit", "Back", "On", "Off",
+    "Play!", "Rules", "High Scores", "Options", "Activate Helper Mode: ", "Touch entry: ", "Quit", "Back",
+    "On",    "Off",   "Timed",       "Casual",
 };
 
 static const char* const hydrateText[] = {
     "Remember to stay hydrated!",
     "Drink plenty of fluids!",
-    "HUman bodies are approximately 70% water",
+    "Human bodies are approximately 70% water",
     "Hydration helps with hangovers",
     "Alcohol dehydrates you, drink water",
     "Hyperhydrosis requires a lot of water. Drink more water, you'll be fine.",
     "All hail the kidneys",
     "Urine is only sterile until it leaves the body",
     "The color of urine is a direct correlation with how much your kidneys are filtering.",
-    "Normal urine colors are clear, yellow, orange or luminescent pink",
+    "Normal urine colors are clear, yellow, orange, blue or luminescent pink",
     "Adraxian urine is a lovely shade of blue",
     "Do not drink Adraxian urine",
     "Do not agree to drink anything the Adraxians give you",
@@ -330,6 +334,29 @@ void ggDrawSplash(ggData_t* ggd, int64_t elapsedUs)
     }
 }
 
+void ggDrawPick(ggData_t* ggd)
+{
+    drawBackground(ggd);
+    drawText(&ggd->titleFont, c555, menuText[GG_TEXT_TIMED],
+             (TFT_WIDTH - textWidth(&ggd->titleFont, menuText[GG_TEXT_TIMED])) / 2, PICK_TOP_Y);
+    drawText(&ggd->titleFontOutline, c000, menuText[GG_TEXT_TIMED],
+             (TFT_WIDTH - textWidth(&ggd->titleFont, menuText[GG_TEXT_TIMED])) / 2, PICK_TOP_Y);
+    drawText(&ggd->titleFont, c555, menuText[GG_TEXT_CASUAL],
+             (TFT_WIDTH - textWidth(&ggd->titleFont, menuText[GG_TEXT_CASUAL])) / 2, PICK_BOT_Y);
+    drawText(&ggd->titleFontOutline, c000, menuText[GG_TEXT_CASUAL],
+             (TFT_WIDTH - textWidth(&ggd->titleFont, menuText[GG_TEXT_CASUAL])) / 2, PICK_BOT_Y);
+    if (!ggd->selection)
+    {
+        drawRect((TFT_WIDTH - textWidth(&ggd->titleFont, menuText[GG_TEXT_TIMED])) / 2 - 2, PICK_TOP_Y - 2,
+                 (TFT_WIDTH + textWidth(&ggd->titleFont, menuText[GG_TEXT_TIMED])) / 2 + 2, PICK_TOP_Y + 20 + 2, c500);
+    }
+    else
+    {
+        drawRect((TFT_WIDTH - textWidth(&ggd->titleFont, menuText[GG_TEXT_CASUAL])) / 2 - 2, PICK_BOT_Y - 2,
+                 (TFT_WIDTH + textWidth(&ggd->titleFont, menuText[GG_TEXT_CASUAL])) / 2 + 2, PICK_BOT_Y + 20 + 2, c500);
+    }
+}
+
 void ggDrawReady(ggData_t* ggd, int64_t elapsedUs)
 {
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
@@ -522,7 +549,7 @@ void ggDrawRules(ggData_t* ggd)
             ggd->numActive = 5;
             for (int i = 0; i < 5; i++)
             {
-                ggd->urinals[i].npc.active     = 1;
+                ggd->urinals[i].npc.active = 1;
             }
             ggd->urinals[0].npc.pants = GG_DOWN;
             ggd->urinals[1].npc.pants = GG_UNDERWEAR;
@@ -1052,12 +1079,14 @@ static void drawScores(ggData_t* ggd, int x, int y)
     char buffer[32];
     snprintf(buffer, sizeof(buffer) - 1, "Number of Levels completed: %d", ggd->numLevels);
     drawText(&ggd->descFont, c000, buffer, x, y + 0 * (ggd->descFont.height + 4));
-    snprintf(buffer, sizeof(buffer) - 1, "Total score: %d", ggd->totalScore);
+    snprintf(buffer, sizeof(buffer) - 1, "Level score: %d", ggd->levelScore);
     drawText(&ggd->descFont, c000, buffer, x, y + 1 * (ggd->descFont.height + 4));
-    snprintf(buffer, sizeof(buffer) - 1, "Accuracy score: %d.%d", ggd->accScore / 10, ggd->accScore % 10);
+    snprintf(buffer, sizeof(buffer) - 1, "Total score: %d", ggd->totalScore);
     drawText(&ggd->descFont, c000, buffer, x, y + 2 * (ggd->descFont.height + 4));
-    snprintf(buffer, sizeof(buffer) - 1, "Adjusted score: %d", ggd->adjScore);
+    snprintf(buffer, sizeof(buffer) - 1, "Accuracy score: %d.%d", ggd->accScore / 10, ggd->accScore % 10);
     drawText(&ggd->descFont, c000, buffer, x, y + 3 * (ggd->descFont.height + 4));
+    snprintf(buffer, sizeof(buffer) - 1, "Adjusted score: %d", ggd->adjScore);
+    drawText(&ggd->descFont, c000, buffer, x, y + 4 * (ggd->descFont.height + 4));
 }
 
 static void drawUI(ggData_t* ggd, bool solution)
@@ -1085,7 +1114,11 @@ static void drawUI(ggData_t* ggd, bool solution)
     }
     else if (!solution)
     {
-        long timeLeft = ggd->timeLimit - ggd->timer;
+        if (ggd->casual)
+        {
+            drawText(&ggd->titleFont, c550, menuText[GG_TEXT_CASUAL], UI_TIMER_X, UI_TIMER_Y);
+        } else {
+long timeLeft = ggd->timeLimit - ggd->timer;
         snprintf(buffer, sizeof(buffer) - 1, "Time left: %ld.%03ld", timeLeft / GG_SECOND,
                  (timeLeft % GG_SECOND) / 1000);
         drawText(&ggd->descFont, c550, buffer, UI_TIMER_X, UI_TIMER_Y);
@@ -1096,6 +1129,8 @@ static void drawUI(ggData_t* ggd, bool solution)
                        UI_BAR_PADDING_X + 1
                            + ((ggd->timer * (TFT_WIDTH - (2 * (UI_BAR_PADDING_X + 1) + 1))) / ggd->timeLimit),
                        UI_BAR_PADDING_Y + UI_BAR_HEIGHT - 1, c440);
+        }
+        
     }
     else if (ggd->stallUsed)
     {

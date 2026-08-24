@@ -277,25 +277,6 @@ void ggClearUrinals(ggData_t* ggd)
     }
 }
 
-// End
-bool ggEndLevel(ggData_t* ggd)
-{
-    // Bail if this is a loss
-    if (ggd->hasLost)
-    {
-        return false;
-    }
-    // Determine if the player gets another use of the stall
-    if (ggd->numLevels > ggd->stallReq)
-    {
-        ggd->stallUses++;
-        ggd->stallReq *= 2;
-        ggd->stallReq += ggd->stallReq / 2;
-    }
-    // Move on
-    return true;
-}
-
 //==============================================================================
 // Static Functions
 //==============================================================================

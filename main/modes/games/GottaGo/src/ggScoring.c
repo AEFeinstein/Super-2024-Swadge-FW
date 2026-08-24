@@ -72,12 +72,15 @@ void ggCalcFinalScores(ggData_t* ggd, int* urinalScores, int* best, int* worst)
     // Average accuracy
     ggd->accScore = (ggd->accScore * (ggd->numLevels - 1) + accuracy) / ggd->numLevels;
     // Calc total score
-    ggd->totalScore
-        += accuracy * ((ggd->timeLimit + TIMER_BUFFER) - MAX(ggd->timer, TIMER_BUFFER)) / ggd->timeLimit;
+    ggd->levelScore = accuracy * ((ggd->timeLimit + TIMER_BUFFER) - MAX(ggd->timer, TIMER_BUFFER)) / ggd->timeLimit;
+    ggd->totalScore += ggd->levelScore;
     // Calc adjusted score
     ggd->adjScore = (ggd->accScore * ggd->totalScore) / MAX_PERCENTAGE;
     // Check if trophies have been triggered
-    ggSaveFinalToNVS(ggd);
+    if (ggd->state != GG_CASUAL)
+    {
+        ggSaveFinalToNVS(ggd);
+    }
 }
 
 void ggCalcUrinalScores(ggUrinal_t* urinals, int numActive, int* urinalScores, int* best, int* worst)
@@ -85,7 +88,7 @@ void ggCalcUrinalScores(ggUrinal_t* urinals, int numActive, int* urinalScores, i
     int pick[MAX_URINALS]   = {0}; // Score this urinal has due to issues
     int nextTo[MAX_URINALS] = {0}; // nextTo: Score this urinal receives from neighbors
     pick[0]                 = SCORE_END_URINAL;
-    pick[numActive]         = SCORE_END_URINAL;
+    pick[numActive - 1]     = SCORE_END_URINAL;
     // NPCs
     for (int idx = 0; idx < numActive; idx++)
     {

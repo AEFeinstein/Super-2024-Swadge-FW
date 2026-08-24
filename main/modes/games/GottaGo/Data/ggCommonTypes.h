@@ -17,8 +17,8 @@
 #define MAX_URINALS 7 ///< Based on width of the screen/available space
 
 static const char* const ggNVSSpace[] = {
-    "ggSaves", "mLevels", "mLevelsHS", "acc", "accHS", "score", "scoreHS", "adjScore", "adjScoreHS", "helper", "touch",
-    "warningRead", "watermsgprog",
+    "ggSaves",  "mLevels",    "mLevelsHS", "acc",   "accHS",       "score",        "scoreHS",
+    "adjScore", "adjScoreHS", "helper",    "touch", "warningRead", "watermsgprog",
 };
 
 //==============================================================================
@@ -32,7 +32,9 @@ typedef enum
     GG_SPLASH,
     GG_MENU,
     GG_READY,
+    GG_PICK_GAME,
     GG_GAME,
+    GG_CASUAL,
     GG_CHOICE,
     GG_WON,
     GG_LOST,
@@ -163,6 +165,8 @@ typedef enum
     GG_TEXT_BACK,
     GG_TEXT_ON,
     GG_TEXT_OFF,
+    GG_TEXT_TIMED,
+    GG_TEXT_CASUAL,
 } ggSettingsText;
 
 //==============================================================================
@@ -243,10 +247,12 @@ typedef struct
     int stallReq;                    ///< Current requirement to get a new stall use
     ggUrinal_t urinals[MAX_URINALS]; ///< All urinal data
     bool pause;                      ///< If the game is paused
+    bool casual;                     ///< Casual mode
 
     // Current Score
     int64_t timeRemaining; ///< Time remaining once option is selected
     int numLevels;         ///< Current number of level inside a round
+    int levelScore;        ///< Score for the completed level
     int accScore;          ///< How accurate the player is
     int totalScore;        ///< Total score, unmodified
     int adjScore;          ///< Total score, including modifier
