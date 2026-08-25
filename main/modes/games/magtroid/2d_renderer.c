@@ -93,15 +93,36 @@ void drawCommonList(ray_t* ray, list_t* list, int camX, int camY, paletteColor_t
             }
             else
             {
-                drawCircle(TO_PX(obj->posX), TO_PX(obj->posY), obj->bound.radius, bbColor);
+                drawCircle(TO_PX(obj->posX), TO_PX(obj->posY), TO_PX(obj->bound.radius), bbColor);
             }
         }
         node = node->next;
     }
 }
 
-void drawForeground2d(ray_t* ray)
+void drawForeground2d(ray_t* ray, uint32_t elapsedUs)
 {
+    // Run timers for camera movement
+    RUN_TIMER_EVERY(ray->cameraTimer, (1000000 / TFT_WIDTH), elapsedUs, {
+        if (ray->camera.x < ray->cameraTarget.x)
+        {
+            ray->camera.x++;
+        }
+        else if (ray->camera.x > ray->cameraTarget.x)
+        {
+            ray->camera.x--;
+        }
+
+        if (ray->camera.y < ray->cameraTarget.y)
+        {
+            ray->camera.y++;
+        }
+        else if (ray->camera.y > ray->cameraTarget.y)
+        {
+            ray->camera.y--;
+        }
+    });
+
     int32_t camX = ray->camera.x;
     int32_t camY = ray->camera.y;
 
@@ -141,7 +162,7 @@ void drawForeground2d(ray_t* ray)
             }
             else
             {
-                drawCircle(TO_PX(obj->posX) - camX, TO_PX(obj->posY) - camY, obj->bound.radius, c505);
+                drawCircle(TO_PX(obj->posX) - camX, TO_PX(obj->posY) - camY, TO_PX(obj->bound.radius), c505);
             }
         }
     }
