@@ -380,6 +380,7 @@ typedef enum
 {
     RAY_MENU,         ///< The main menu is being shown
     RAY_GAME,         ///< The game loop is being shown
+    RAY_INSTRUMENT,   ///< An instrument is being played
     RAY_DIALOG,       ///< A dialog box is being shown
     RAY_PAUSE,        ///< The pause menu is being shown
     RAY_WARP_SCREEN,  ///< The warp screen animation is being shown
@@ -684,8 +685,18 @@ typedef struct
     int32_t fallTimerUs;         ///< Timer for falling down a hole
     int32_t fallRotationTimerUs; ///< Timer for animating falling down a hole
 
+    bool pbaDown;           ///< If PB_A is down, used to differentiate short and long presses
+    uint32_t pbaDownTimeUs; ///< The time PB_A has been held down
+
     wsg_t* sprite;
 } rayPlayerState_t;
+
+typedef struct
+{
+    int8_t lTouchZone;   ///< The current left touch zone, or -1
+    int8_t rTouchZone;   ///< The current right touch zone, or -1
+    uint8_t notesActive; ///< Bitmask of actively played notes
+} rayInstrumentState_t;
 
 /**
  * @brief The entire game state
@@ -770,6 +781,8 @@ typedef struct rayGame
     credits_t credits; ///< Credits shown when the game is won
 
     const char* deathText; ///< Text shown on the death screen
+
+    rayInstrumentState_t is; // The instrument state
 } ray_t;
 
 //==============================================================================
