@@ -129,6 +129,21 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
     // Don't accept input or move while falling
     bool acceptInput = (ray->ps.fallTimerUs <= 0);
 
+    // If PB_A is held down
+    if (ray->ps.pbaDown)
+    {
+        // Accumulate time
+        ray->ps.pbaDownTimeUs += elapsedUs;
+
+        // If it's been held for more than a second
+        if (ray->ps.pbaDownTimeUs >= 1000000)
+        {
+            // Switch to instrument mode
+            ray->ps.pbaDown = false;
+            raySwitchToScreen(RAY_INSTRUMENT);
+        }
+    }
+
     // Check all queued button events
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
@@ -167,10 +182,19 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
             // The A button shoots. Make sure there is a gun
             else if (PB_A == evt.button)
             {
-                if (ray->p.i.haveJumpBoots && evt.down)
+                if (evt.down)
                 {
+                    // When the button is pressed, start accumulating time
+                    ray->ps.pbaDown       = true;
+                    ray->ps.pbaDownTimeUs = 0;
+                }
+                else if (ray->ps.pbaDown)
+                {
+                    // WHen the button is released, if long-press wasn't already triggered, do a short press
+                    ray->ps.pbaDown = false;
+
                     // If not already jumping, add an impulse to jump
-                    if (!rayPlayerIsJumping(ray))
+                    if (ray->p.i.haveJumpBoots && !rayPlayerIsJumping(ray))
                     {
                         ray->ps.jumpVel = -TO_FX_FRAC(5, 8);
                     }
@@ -440,7 +464,6 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
         {
             if (ray->p.i.haveBombs && !ts->settingBomb)
             {
-                printf("Setting bomb\n");
                 ts->settingBomb = true;
             }
         }

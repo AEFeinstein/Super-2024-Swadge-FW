@@ -15,6 +15,7 @@
 #include "ray_warp_screen.h"
 #include "ray_death_screen.h"
 #include "ray_credits.h"
+#include "ray_instrument.h"
 #include "2d_renderer.h"
 
 //==============================================================================
@@ -363,28 +364,7 @@ static void rayMainLoop(int64_t elapsedUs)
         }
         case RAY_GAME:
         {
-            drawForeground2d(ray);
-
-            // Run timers for camera movement
-            RUN_TIMER_EVERY(ray->cameraTimer, (1000000 / TFT_WIDTH), elapsedUs, {
-                if (ray->camera.x < ray->cameraTarget.x)
-                {
-                    ray->camera.x++;
-                }
-                else if (ray->camera.x > ray->cameraTarget.x)
-                {
-                    ray->camera.x--;
-                }
-
-                if (ray->camera.y < ray->cameraTarget.y)
-                {
-                    ray->camera.y++;
-                }
-                else if (ray->camera.y > ray->cameraTarget.y)
-                {
-                    ray->camera.y--;
-                }
-            });
+            drawForeground2d(ray, elapsedUs);
 
             // Only run this code when the camera is settled
             if (ray->camera.x == ray->cameraTarget.x && ray->camera.y == ray->cameraTarget.y)
@@ -423,6 +403,16 @@ static void rayMainLoop(int64_t elapsedUs)
                     rayShowCredits(ray);
                 }
             }
+            break;
+        }
+        case RAY_INSTRUMENT:
+        {
+            // Check buttons
+            rayInstrumentCheckButtons(ray);
+            // Draw game foreground
+            drawForeground2d(ray, elapsedUs);
+            // Draw instrument UI on top of that
+            rayInstrumentRender(ray, elapsedUs);
             break;
         }
         case RAY_DIALOG:
@@ -484,6 +474,7 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
             // Do nothing
             break;
         }
+        case RAY_INSTRUMENT:
         case RAY_GAME:
         {
             drawBackground2d(ray, y, y + h);
@@ -599,6 +590,14 @@ void raySwitchToScreen(rayScreen_t newScreen)
             globalMidiPlayerStop(true);
             // Reinit menu
             rayInitMenu();
+            break;
+        }
+        case RAY_INSTRUMENT:
+        {
+            ray->is.lTouchZone  = -1;
+            ray->is.rTouchZone  = -1;
+            ray->is.notesActive = 0;
+            globalMidiPlayerPauseAll();
             break;
         }
         case RAY_GAME:
