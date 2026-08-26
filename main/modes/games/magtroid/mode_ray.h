@@ -693,9 +693,11 @@ typedef struct
 
 typedef struct
 {
-    int8_t lTouchZone;   ///< The current left touch zone, or -1
-    int8_t rTouchZone;   ///< The current right touch zone, or -1
-    uint8_t notesActive; ///< Bitmask of actively played notes
+    uint32_t noteHistory;       ///< Notes are 0-7 (3 bits) and invalid (4th bit) so this stores a history of 8 notes
+    const char* lastPlayedSong; ///< Text indicating the last song played
+    int8_t lTouchZone;          ///< The current left touch zone, or -1
+    int8_t rTouchZone;          ///< The current right touch zone, or -1
+    uint8_t notesActive;        ///< Bitmask of actively played notes
 } rayInstrumentState_t;
 
 /**
@@ -783,6 +785,10 @@ typedef struct rayGame
     const char* deathText; ///< Text shown on the death screen
 
     rayInstrumentState_t is; // The instrument state
+
+    synthOscillator_t lOsc;            ///< An oscillator for the left touchpad
+    synthOscillator_t rOsc;            ///< An oscillator for the right touchpad
+    synthOscillator_t* oscillators[2]; ///< Access to both oscillators
 } ray_t;
 
 //==============================================================================
