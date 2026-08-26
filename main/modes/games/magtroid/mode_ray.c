@@ -28,6 +28,7 @@ static void rayMainLoop(int64_t elapsedUs);
 static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static bool rayMenuCb(const char* label, bool selected, uint32_t settingVal);
 static void rayInitMenu(void);
+static void rayInstrumentDacCallback(uint8_t* samples, int16_t len);
 
 //==============================================================================
 // Const Variables
@@ -86,6 +87,7 @@ swadgeMode_t rayMode = {
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
+    .fnDacCb                  = NULL,
 };
 
 ray_t* ray;
@@ -152,6 +154,12 @@ static void rayEnterMode(void)
 
     // Start a blink for dialog and pause and such
     ray->blinkTimer = BLINK_US;
+
+    // Initialize instrument oscillators
+    swSynthInitOscillator(&ray->lOsc, SHAPE_SINE, 440, 0);
+    swSynthInitOscillator(&ray->rOsc, SHAPE_SINE, 440, 0);
+    ray->oscillators[0] = &ray->lOsc;
+    ray->oscillators[1] = &ray->rOsc;
 
     // Turn off LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
@@ -582,6 +590,9 @@ void raySwitchToScreen(rayScreen_t newScreen)
     // Set the new screen
     ray->screen = newScreen;
 
+    // Assume MIDI output
+    rayMode.fnDacCb = NULL;
+
     // Initialize depending on the screen
     switch (newScreen)
     {
@@ -597,7 +608,10 @@ void raySwitchToScreen(rayScreen_t newScreen)
             ray->is.lTouchZone  = -1;
             ray->is.rTouchZone  = -1;
             ray->is.notesActive = 0;
+            ray->is.noteHistory = 0xFFFFFFFF;
             globalMidiPlayerPauseAll();
+
+            rayMode.fnDacCb = rayInstrumentDacCallback;
             break;
         }
         case RAY_GAME:
@@ -647,4 +661,18 @@ static void rayInitMenu(void)
 
     // Initialize a renderer
     ray->renderer = initMenuZorldoRenderer(NULL, NULL);
+}
+
+/**
+ * @brief A callback which requests DAC samples from the application
+ *
+ * @param samples A buffer to fill with 8 bit unsigned DAC samples
+ * @param len The length of the buffer to fill
+ */
+static void rayInstrumentDacCallback(uint8_t* samples, int16_t len)
+{
+    while (len--)
+    {
+        *samples++ = swSynthMixOscillators(ray->oscillators, ARRAY_SIZE(ray->oscillators));
+    }
 }
