@@ -130,7 +130,7 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
     bool acceptInput = (ray->ps.fallTimerUs <= 0);
 
     // If PB_A is held down
-    if (ray->ps.pbaDown)
+    if (ray->ps.pbaDown && ray->p.i.haveDoriasLullaby)
     {
         // Accumulate time
         ray->ps.pbaDownTimeUs += elapsedUs;
