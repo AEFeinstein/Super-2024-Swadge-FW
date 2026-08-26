@@ -4,13 +4,18 @@
 #include <stdbool.h>
 #include <wsg.h>
 
-#define GS_DECIMAL_BITS 4
-#define NUM_ASSETS      GS_NO_ASSET      // The number of gs_asset_t
-#define NUM_PALETTES    GS_COUNT_PALETTE // The number of wsgPalette_t
-#define MAX_LERP_AMOUNT 30000
+#define GS_DECIMAL_BITS   4
+#define NUM_ASSETS        GS_NO_ASSET      // The number of gs_asset_t
+#define NUM_PALETTES      GS_COUNT_PALETTE // The number of wsgPalette_t
+#define MAX_LERP_AMOUNT   30000
+#define TILE_FIELD_WIDTH  120 // matches the level wsg graphic width
+#define TILE_FIELD_HEIGHT 120 // matches the level wsg graphic height
 
 typedef struct gs_entity_t gs_entity_t;
 typedef struct gs_gameData_t gs_gameData_t;
+typedef struct gs_tilemap_t gs_tilemap_t;
+typedef struct gs_hitInfo_t gs_hitInfo_t;
+typedef struct gs_tileInfo_t gs_tileInfo_t;
 
 typedef void (*gs_callbackFunction_t)(gs_entity_t* self);
 
@@ -20,6 +25,8 @@ typedef enum __attribute__((packed))
     GS_HILL_ASSET,
     GS_MOON_ASSET,
     GS_GOSSIP_STONE_ASSET,
+    GS_FLAME_ASSET,
+    GS_MOON_TILE_ASSET,
     GS_NO_ASSET, // Keep this one at the end of the enum. Used for entities with no wsgs.
 } gs_assetIdx_t;
 

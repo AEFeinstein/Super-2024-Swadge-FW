@@ -152,3 +152,79 @@ void gs_drawGossip(gs_entity_t* self)
                          TFT_HEIGHT - textY);
     }
 }
+
+void gs_drawFlame(gs_entity_t* self)
+{
+    if (!self->gameData->touchState[1].touched)
+    {
+        return;
+    }
+    // use the right touch input to draw the sized flame.
+    self->currentAnimationFrame
+        = (self->gameData->assets[GS_FLAME_ASSET].numFrames) * self->gameData->touchState[1].position / 1023;
+    self->currentAnimationFrame = self->gameData->assets[GS_FLAME_ASSET].numFrames - 1 - self->currentAnimationFrame;
+
+    int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> GS_DECIMAL_BITS)
+                - self->gameData->assets[self->assetIndex].originX;
+    int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> GS_DECIMAL_BITS)
+                - self->gameData->assets[self->assetIndex].originY;
+    drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, gs_randomInt(0, 1),
+            false, 0);
+    drawCircleFilled(x + self->gameData->assets[self->assetIndex].originX,
+                     y + self->gameData->assets[self->assetIndex].originY + 3 + self->currentAnimationFrame,
+                     2 + self->currentAnimationFrame + gs_randomInt(-1, 1), c530);
+    drawCircleFilled(x + self->gameData->assets[self->assetIndex].originX + gs_randomInt(-1, 1),
+                     y + self->gameData->assets[self->assetIndex].originY + self->currentAnimationFrame
+                         + gs_randomInt(-1, 1),
+                     1 + (self->currentAnimationFrame >> 1), c554);
+}
+
+void gs_updatePhysicsObject(gs_entity_t* self)
+{
+    gs_physics_t* pData = (gs_physics_t*)self->data;
+    pData->vel.y++;
+    self->pos.x += (pData->vel.x * self->gameData->elapsedUs) >> 15;
+    self->pos.y += (pData->vel.y * self->gameData->elapsedUs) >> 15;
+
+    gs_hitInfo_t hitInfo = {0};
+    if (self->gameData->entityManager.tilemap) // The Prophecy level doesn't have a tilemap
+    {
+        gs_collisionCheck(self->gameData->entityManager.tilemap, self, &hitInfo);
+        if (hitInfo.hit == false)
+        {
+            return;
+        }
+        // self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
+        // self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
+
+        // Reflect the velocity vector along the normal
+        // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
+        pData->vel = divVec2d(
+            mulVec2d(subVec2d(pData->vel, mulVec2d(hitInfo.normal, (2 * dotVec2d(pData->vel, hitInfo.normal)))),
+                     pData->bounceNumerator),
+            pData->bounceDenominator);
+    }
+    // keep the physics object within the bounds of the level.
+    if (self->pos.x < 256)
+    {
+        self->pos.x = 256;
+    }
+    else if (self->pos.x > 38144)
+    {
+        self->pos.x = 38144;
+    }
+}
+
+void gs_drawTileMap(gs_entity_t* self)
+{
+}
+
+void gs_collisionCheck(gs_entity_t* tilemap, gs_entity_t* ent, gs_hitInfo_t* hitInfo)
+{
+}
+
+void gs_updateGossipStone(gs_entity_t* self)
+{
+    gs_gossipStone_t* gsData = (gs_gossipStone_t*)self->data;
+    gsData->flame->pos       = self->pos;
+}

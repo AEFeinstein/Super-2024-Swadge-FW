@@ -23,6 +23,7 @@ const char gs_trophyNVS[]               = "GossipTroph";
 static const char gs_GossipStr[]        = "Gossip";
 static const char gs_AskMeAnythingStr[] = "Ask Me Anything";
 static const char gs_ProphecyStr[]      = "The Prophecy";
+static const char gs_MoonStr[]          = "The Moon";
 static const char gs_ExitStr[]          = "Exit";
 
 //==============================================================================
@@ -204,6 +205,9 @@ static void gs_mainLoop(int64_t elapsedUs)
         }
     }
 
+    getTouchLinear(gameData->touchState, ARRAY_SIZE(gameData->touchState));
+
+    // Update and Draw depending on the submode
     switch (gameData->submode)
     {
         case GS_MENU_SUBMODE:
@@ -249,6 +253,9 @@ static void gs_loadAssets(void)
     gameData->assets[GS_HILL_ASSET].originX = 0;
     gs_loadAsset(MOON_WSG, 1, &gameData->assets[GS_MOON_ASSET]);
     gs_loadAsset(GOSSIP_STONE_0_WSG, 3, &gameData->assets[GS_GOSSIP_STONE_ASSET]);
+    gs_loadAsset(FLAME_0_WSG, 6, &gameData->assets[GS_FLAME_ASSET]);
+    gameData->assets[GS_FLAME_ASSET].originY = 0;
+    gs_loadAsset(MOON_TILE_0_WSG, 15, &gameData->assets[GS_MOON_TILE_ASSET]);
 }
 
 static void gs_initializeGame(void)
@@ -265,6 +272,9 @@ static void gs_initializeGame(void)
     gs_entity_t* gossipStone
         = gs_createEntity(&gameData->entityManager, 3, GS_LOOPING_ANIMATION, false, GS_GOSSIP_STONE_ASSET, 5,
                           (vec_t){0xFFFF + (11 << GS_DECIMAL_BITS), 0xFFFF + (82 << GS_DECIMAL_BITS)}, gameData);
+    gossipStone->data                                = heap_caps_calloc(1, sizeof(gs_gossipStone_t), MALLOC_CAP_SPIRAM);
+    gossipStone->dataType                            = GS_GOSSIP_STONE_DATA;
+    ((gs_gossipStone_t*)gossipStone->data)->grounded = true;
     gs_entity_t* gossip = gs_createEntity(&gameData->entityManager, 0, GS_NO_ANIMATION, true, GS_NO_ASSET, 0,
                                           (vec_t){0xffff, 0xffff}, gameData);
     gossip->data        = heap_caps_calloc(1, sizeof(gs_gossip_t), MALLOC_CAP_SPIRAM);
@@ -277,7 +287,7 @@ static void gs_initializeGame(void)
     }
     else
     {
-        // Exit to the main menu
+        // Failed
         switchToSwadgeMode(&mainMenuMode);
     }
 }
@@ -338,6 +348,42 @@ bool gs_menuCb(const char* label, bool selected, uint32_t value)
             // reset a few things because the player may have exited and entered.
             ((gs_gossip_t*)gossip->data)->index    = 0;
             ((gs_gossip_t*)gossip->data)->progress = 0;
+
+            if (gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_FLAME_DATA) == NULL)
+            {
+                gs_entity_t* flame = gs_createEntity(&gameData->entityManager, 6, GS_NO_ANIMATION, true, GS_FLAME_ASSET,
+                                                     0, (vec_t){0xffff, 0xffff}, gameData);
+                gs_entity_t* gossipStone
+                    = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_STONE_DATA);
+                ((gs_gossipStone_t*)gossipStone->data)->flame = flame;
+                flame->data = heap_caps_calloc(1, sizeof(gs_flame_t), MALLOC_CAP_SPIRAM);
+                if (gossip->data != NULL)
+                {
+                    flame->dataType     = GS_FLAME_DATA;
+                    flame->drawFunction = gs_drawFlame;
+                }
+                else
+                {
+                    // Failed
+                    switchToSwadgeMode(&mainMenuMode);
+                }
+            }
+        }
+        else if (label == gs_MoonStr)
+        {
+            if (gameData->entityManager.tilemap == NULL)
+            {
+                gameData->entityManager.tilemap
+                    = gs_createEntity(&gameData->entityManager, 15, GS_NO_ANIMATION, true, GS_MOON_TILE_ASSET, 0,
+                                      (vec_t){0xffff, 0xffff}, gameData);
+                gameData->entityManager.tilemap->dataType = GS_TILEMAP_DATA;
+                // calloc the columns in layers separately to avoid a big alloc
+                for (int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
+                {
+                    ((gs_tilemap_t*)gameData->entityManager.tilemap->data)->tiles[w]
+                        = heap_caps_calloc_tag(TILE_FIELD_HEIGHT, sizeof(gs_tileInfo_t), MALLOC_CAP_SPIRAM, "fgTile");
+                }
+            }
         }
         else if (label == gs_ExitStr)
         {

@@ -17,7 +17,10 @@
 typedef enum
 {
     GS_NULL_DATA,
+    GS_TILEMAP_DATA,
     GS_GOSSIP_DATA,
+    GS_FLAME_DATA,
+    GS_GOSSIP_STONE_DATA,
 } gs_dataType_t;
 
 //==============================================================================
@@ -49,6 +52,30 @@ struct gs_entity_t
     gs_gameData_t* gameData;
 };
 
+struct gs_tileInfo_t // child class
+{
+    uint16_t pos;      // bitpacked x,y,z
+                       // x is bits 0 through 6
+                       // y is bits 7 through 14
+                       // z is bit 15
+                       // x and y are indices in the tilemap. z is true for foreground false for midground.
+    int8_t framePlus1; // 0 is air, 1-12 are zodiac signs, 13 is floor, 14 is wall, 15 is midground wall
+};
+
+struct gs_tilemap_t
+{
+    gs_tileInfo_t* tiles[TILE_FIELD_WIDTH]; ///< The array of tiles.
+};
+
+struct gs_hitInfo_t
+{
+    bool hit;
+    vec_t pos; // the precise hit point somewhere on an edge of a tile.
+    vec_t normal;
+    int32_t tile_i;
+    int32_t tile_j;
+};
+
 typedef struct
 {
     char** messageList;
@@ -58,6 +85,35 @@ typedef struct
                        // longer ignored.
     gs_entity_t* gossipStone; // Reference to make it start and stop animating.
 } gs_gossip_t;
+
+typedef struct // parent class
+{
+    vec_t vel;               // velocity
+    uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
+                             // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
+    uint8_t bounceDenominator;
+} gs_physics_t;
+
+typedef struct // child class
+{
+    vec_t vel;
+    uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
+                             // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
+    uint8_t bounceDenominator;
+    // child data
+    vec_t accel;       // acceleration
+    vec_t previousPos; // position from the previous frame
+    bool grounded;
+    int32_t rotateDeg;
+    int8_t angVel; // angular velocity
+    gs_entity_t* flame;
+    int32_t fuel; // Remaining fuel.
+} gs_gossipStone_t;
+
+typedef struct
+{
+    uint8_t size;
+} gs_flame_t;
 
 //==============================================================================
 // Prototypes
@@ -71,3 +127,8 @@ void gs_drawSkyGradient(gs_entity_t* self);
 void gs_updateGossip(gs_entity_t* self);
 void gs_recordProgress(gs_entity_t* self);
 void gs_drawGossip(gs_entity_t* self);
+void gs_drawFlame(gs_entity_t* self);
+void gs_updatePhysicsObject(gs_entity_t* self);
+void gs_drawTileMap(gs_entity_t* self);
+void gs_collisionCheck(gs_entity_t* tilemap, gs_entity_t* ent, gs_hitInfo_t* hitInfo);
+void gs_updateGossipStone(gs_entity_t* self);
