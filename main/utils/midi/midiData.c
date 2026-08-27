@@ -838,13 +838,13 @@ const midiTimbre_t z3HarpTimbre = {
 
 const noteSampleMap_t z3PercussionSampleMap[] = {
     {
-        .noteStart = 49,
-        .noteEnd = 59,
+        .noteStart = 38,
+        .noteEnd = 38,
         .sample = {
-            .baseNote = FREQ_F2,
+            .baseNote = FREQ_D1,
             .tune = 0,
-            .fIdx = Z3_CRASHCYMBAL_BIN,
-            .rate = 9768,
+            .fIdx = Z3_SNARE_BIN,
+            .rate = 36656,
             .loop = 1,
             .loopStart = 0,
             .loopEnd = 0,
@@ -857,13 +857,13 @@ const noteSampleMap_t z3PercussionSampleMap[] = {
         },
     },
     {
-        .noteStart = 38,
-        .noteEnd = 38,
+        .noteStart = 49,
+        .noteEnd = 59,
         .sample = {
-            .baseNote = FREQ_D1,
+            .baseNote = FREQ_F2,
             .tune = 0,
-            .fIdx = Z3_SNARE_BIN,
-            .rate = 36656,
+            .fIdx = Z3_CRASHCYMBAL_BIN,
+            .rate = 9768,
             .loop = 1,
             .loopStart = 0,
             .loopEnd = 0,
