@@ -268,6 +268,12 @@ void gs_updateGossipStone(gs_entity_t* self)
     {
         self->gameData->camera.pos.y = self->pos.y - (TFT_HEIGHT<<(DECIMAL_BITS-1));
     }
+    //ground collision
+    if(self->pos.y > 66847)//0xFFFF + (82 << DECIMAL_BITS))
+    {
+        self->pos.y = 66847;
+        gsData->vel.y = 0;
+    }
     self->gameData->camera.pos.x = self->pos.x - (TFT_WIDTH<<(DECIMAL_BITS-1));
 }
 
@@ -279,7 +285,7 @@ void gs_drawGossipStone(gs_entity_t* self)
     int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originY;
     int32_t finalRot = gsData->rotateDeg>>DECIMAL_BITS;
-    finalRot = (finalRot + 41)%360;
+    finalRot = (finalRot + 45)%360;
     if (self->palleteIdx)
     {
         drawWsgPalette(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y,
@@ -290,4 +296,51 @@ void gs_drawGossipStone(gs_entity_t* self)
         drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped,
                 false, finalRot);
     }
+}
+
+void gs_randomizeStarData(gs_entity_t* self)
+{
+    gs_star_t* sData = (gs_star_t*)self->data;
+    self->gameFramesPerAnimationFrame = gs_randomInt(4,21);
+    sData->linearPlayback = gs_randomInt(0,1);
+    sData->startFrame = gs_randomInt(0,self->gameData->assets[self->assetIndex].numFrames - 1);
+    uint8_t endFrame = sData->startFrame;
+    if(gs_randomInt(0,1) && sData->startFrame < self->gameData->assets[self->assetIndex].numFrames - 1)
+    {
+        endFrame = gs_randomInt(sData->startFrame+1, self->gameData->assets[self->assetIndex].numFrames - 1);
+    }
+    sData->frameCount = endFrame - sData->startFrame; //it's actually the frame count minus 1.
+}
+
+void gs_updateFarStar(gs_entity_t* self)
+{
+
+}
+
+void gs_drawStar(gs_entity_t* self)
+{
+    gs_star_t* sData = (gs_star_t*)self->data;
+    if(sData->linearPlayback)
+    {
+        self->animationTimer++;
+        if (self->animationTimer >= self->gameFramesPerAnimationFrame)
+        {
+            self->animationTimer = 0;
+            self->currentAnimationFrame++;
+            if (self->currentAnimationFrame >= sData->startFrame+sData->frameCount)
+                self->currentAnimationFrame = 0;
+        }
+    }
+    else
+    {
+        self->currentAnimationFrame = gs_randomInt(sData->startFrame, sData->startFrame+sData->frameCount);
+    }
+
+    int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DECIMAL_BITS)
+                - self->gameData->assets[self->assetIndex].originX;
+    int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DECIMAL_BITS)
+                - self->gameData->assets[self->assetIndex].originY;
+    drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped,
+            false, 0);
+    
 }
