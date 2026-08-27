@@ -36,7 +36,6 @@ const char* AMAList[AMA_COUNT] = {
 
 const char* ProphecyList[PROPHECY_COUNT] = {
     "Congratulations! You've completed The Prophecy!",
-    "This is a final stupid monologue that goes in order.",
     "T-10",
     "9",
     "8",
@@ -47,4 +46,5 @@ const char* ProphecyList[PROPHECY_COUNT] = {
     "3",
     "2",
     "1",
+    "What are you waiting for? Use the touch strips."
 };

@@ -352,11 +352,12 @@ bool gs_menuCb(const char* label, bool selected, uint32_t value)
             if (gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_FLAME_DATA) == NULL)
             {
                 gs_entity_t* flame = gs_createEntity(&gameData->entityManager, 6, GS_NO_ANIMATION, true, GS_FLAME_ASSET,
-                                                     0, (vec_t){0xffff, 0xffff}, gameData);
+                                                     0, (vec_t){0xffff, 0xffff}, gameData);                                     
+                flame->data = heap_caps_calloc(1, sizeof(gs_flame_t), MALLOC_CAP_SPIRAM);
                 gs_entity_t* gossipStone
                     = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_STONE_DATA);
+                gossipStone->updateFunction = gs_updateGossipStone;
                 ((gs_gossipStone_t*)gossipStone->data)->flame = flame;
-                flame->data = heap_caps_calloc(1, sizeof(gs_flame_t), MALLOC_CAP_SPIRAM);
                 if (gossip->data != NULL)
                 {
                     flame->dataType     = GS_FLAME_DATA;

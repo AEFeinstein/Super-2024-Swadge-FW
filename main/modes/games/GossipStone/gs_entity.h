@@ -105,14 +105,14 @@ typedef struct // child class
     vec_t previousPos; // position from the previous frame
     bool grounded;
     int32_t rotateDeg;
-    int8_t angVel; // angular velocity
+    int16_t angVel; // angular velocity
     gs_entity_t* flame;
     int32_t fuel; // Remaining fuel.
 } gs_gossipStone_t;
 
 typedef struct
 {
-    uint8_t size;
+    int32_t rotateDeg;
 } gs_flame_t;
 
 //==============================================================================
