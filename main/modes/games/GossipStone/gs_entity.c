@@ -170,7 +170,7 @@ void gs_drawFlame(gs_entity_t* self)
     int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> GS_DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originY;
     drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, gs_randomInt(0, 1),
-            false, fData->rotateDeg);
+            false, fData->rotateDeg>>4);
     drawCircleFilled(x + self->gameData->assets[self->assetIndex].originX,
                      y + self->gameData->assets[self->assetIndex].originY + 3 + self->currentAnimationFrame,
                      2 + self->currentAnimationFrame + gs_randomInt(-1, 1), c530);
@@ -230,17 +230,20 @@ void gs_updateGossipStone(gs_entity_t* self)
     if(self->gameData->touchState[0].touched)
     {
         //printf("elapsedUs: %d\n", self->gameData->touchState[0].position - 511);
-        //printf("tmp %d\n", tmp * self->gameData->elapsedUs >> 18);
-        gsData->angVel += (self->gameData->touchState[0].position - 511) * self->gameData->elapsedUs >> 18;
+        //printf("tmp %d\n", (self->gameData->touchState[0].position - 511) * self->gameData->elapsedUs >> 14);
+        gsData->angVel += (self->gameData->touchState[0].position - 511) * self->gameData->elapsedUs >> 13;
     }
     //5% angular drag per frame
     gsData->angVel = gsData->angVel * 19 / 20;
-    //printf("ang vel: %d\n", gsData->angVel);
-    gsData->rotateDeg += gsData->angVel * self->gameData->elapsedUs >> 21;
-    gsData->rotateDeg %= 360;
+    printf("ang vel: %d\n", gsData->angVel);
+    printf("elapsed trunc: %d\n",self->gameData->elapsedUs>>2);
+    printf("uhhh: %d\n", gsData->angVel * (self->gameData->elapsedUs>>2));
+    printf("heh? %d\n", gsData->angVel * (self->gameData->elapsedUs>>2) / 24);
+    gsData->rotateDeg += gsData->angVel * (self->gameData->elapsedUs>>2) / 1000000;
+    gsData->rotateDeg %= 360<<4;
     if(gsData->rotateDeg < 0)
     {
-        gsData->rotateDeg += 360;
+        gsData->rotateDeg += 360<<4;
     }
     ((gs_flame_t*)gsData->flame->data)->rotateDeg = gsData->rotateDeg;
     

@@ -254,7 +254,6 @@ static void gs_loadAssets(void)
     gs_loadAsset(MOON_WSG, 1, &gameData->assets[GS_MOON_ASSET]);
     gs_loadAsset(GOSSIP_STONE_0_WSG, 3, &gameData->assets[GS_GOSSIP_STONE_ASSET]);
     gs_loadAsset(FLAME_0_WSG, 6, &gameData->assets[GS_FLAME_ASSET]);
-    gameData->assets[GS_FLAME_ASSET].originY = 0;
     gs_loadAsset(MOON_TILE_0_WSG, 15, &gameData->assets[GS_MOON_TILE_ASSET]);
 }
 
