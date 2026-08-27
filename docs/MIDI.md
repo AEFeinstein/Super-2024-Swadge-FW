@@ -71,6 +71,7 @@ By default, this drum kit is available on MIDI Channel 11.
 
 ### MMX Instruments (Bank 2) {#MMXPrograms}
 These instruments are based on the MMX SoundFont.
+
 | Program# | Name             |
 | -------- | ---------------- |
 |       11 | Vibraphone       |
@@ -102,6 +103,32 @@ The MMX drum kit is also available for percussion channels using Bank 2.
 | G♯2 to C4  | 56 to 72    | Crash Cymbal |
 | C♯4 to C♯5 | 73 to 85    | Synth Tom    |
 | D5 to F♯6  | 86 to 102   | Tom          |
+
+### LTTP Instruments (Bank 3) {#LTTPPrograms}
+These instruments are based on the LTTP SoundFont.
+
+| Program# | Name           |
+| -------- | -------------- |
+|        0 | Piano          |
+|        8 | Bell           |
+|       46 | Harp           |
+|       47 | Timpani        |
+|       50 | Strings        |
+|       54 | Voice          |
+|       56 | Trumpet        |
+|       59 | Trumpet Octave |
+|       73 | Flute          |
+|       76 | Wind           |
+|       96 | Rain           |
+|      122 | Water          |
+
+### LTTP Drum Kit
+The LTTP drum kit is also available for percussion channels using Bank 3.
+
+| Note       | Note Number | Description  |
+| ---------- | ----------- | ------------ |
+| D1         | 38          | Snare        |
+| C♯2 to B3  | 49 to 59    | Crash Cymbal |
 
 
 ## MIDI Continuous Controllers
