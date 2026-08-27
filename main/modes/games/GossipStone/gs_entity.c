@@ -169,14 +169,18 @@ void gs_drawFlame(gs_entity_t* self)
                 - self->gameData->assets[self->assetIndex].originX;
     int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originY;
+
+    vec_t direction = rotateVec2d((vec_t){0, 1<<DECIMAL_BITS}, fData->rotateDeg>>DECIMAL_BITS);
+    vec_t directionScaled = mulVec2d(direction, 28 + self->currentAnimationFrame);
     drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, gs_randomInt(0, 1),
             false, fData->rotateDeg>>DECIMAL_BITS);
-    drawCircleFilled(x + self->gameData->assets[self->assetIndex].originX,
-                     y + self->gameData->assets[self->assetIndex].originY + 3 + self->currentAnimationFrame,
+    drawCircleFilled(x + self->gameData->assets[self->assetIndex].originX + (directionScaled.x >> DECIMAL_BITS),
+                     y + self->gameData->assets[self->assetIndex].originY + (directionScaled.y >> DECIMAL_BITS),
                      2 + self->currentAnimationFrame + gs_randomInt(-1, 1), c530);
-    drawCircleFilled(x + self->gameData->assets[self->assetIndex].originX + gs_randomInt(-1, 1),
-                     y + self->gameData->assets[self->assetIndex].originY + self->currentAnimationFrame
-                         + gs_randomInt(-1, 1),
+    
+    directionScaled = mulVec2d(direction, 24 + self->currentAnimationFrame);
+    drawCircleFilled(x + self->gameData->assets[self->assetIndex].originX + (directionScaled.x >> DECIMAL_BITS) + gs_randomInt(-1, 1),
+                     y + self->gameData->assets[self->assetIndex].originY + (directionScaled.y >> DECIMAL_BITS) + gs_randomInt(-1, 1),
                      1 + (self->currentAnimationFrame >> 1), c554);
 }
 
@@ -227,6 +231,7 @@ void gs_collisionCheck(gs_entity_t* tilemap, gs_entity_t* ent, gs_hitInfo_t* hit
 void gs_updateGossipStone(gs_entity_t* self)
 {
     gs_gossipStone_t* gsData = (gs_gossipStone_t*)self->data;
+    //angular physics
     if(self->gameData->touchState[0].touched)
     {
         //printf("elapsedUs: %d\n", self->gameData->touchState[0].position - 511);
@@ -235,10 +240,10 @@ void gs_updateGossipStone(gs_entity_t* self)
     }
     //5% angular drag per frame
     gsData->angVel = gsData->angVel * 19 / 20;
-    printf("ang vel: %d\n", gsData->angVel);
-    printf("elapsed trunc: %d\n",self->gameData->elapsedUs>>2);
-    printf("uhhh: %d\n", gsData->angVel * (self->gameData->elapsedUs>>2));
-    printf("heh? %d\n", gsData->angVel * (self->gameData->elapsedUs>>2) / 24);
+    // printf("ang vel: %d\n", gsData->angVel);
+    // printf("elapsed trunc: %d\n",self->gameData->elapsedUs>>2);
+    // printf("uhhh: %d\n", gsData->angVel * (self->gameData->elapsedUs>>2));
+    // printf("heh? %d\n", gsData->angVel * (self->gameData->elapsedUs>>2) / 24);
     gsData->rotateDeg += gsData->angVel * (self->gameData->elapsedUs>>2) / 1000000;
     gsData->rotateDeg %= 360<<DECIMAL_BITS;
     if(gsData->rotateDeg < 0)
@@ -247,7 +252,23 @@ void gs_updateGossipStone(gs_entity_t* self)
     }
     ((gs_flame_t*)gsData->flame->data)->rotateDeg = gsData->rotateDeg;
     
+    //translational physics
+    if(self->gameData->touchState[1].touched)
+    {
+        vec_t rocketForce = rotateVec2d((vec_t){0, 1<<DECIMAL_BITS}, (gsData->rotateDeg>>DECIMAL_BITS)+180);
+        rocketForce = mulVec2d(rocketForce, (1024-self->gameData->touchState[1].position) * self->gameData->elapsedUs);
+        gsData->vel = addVec2d(gsData->vel,divVec2d(rocketForce,10000000));
+    }
+    self->pos.x += gsData->vel.x * self->gameData->elapsedUs >> 20;
+    self->pos.y += gsData->vel.y * self->gameData->elapsedUs >> 20;
+
     gsData->flame->pos       = self->pos;
+
+    if(self->pos.y < 0xFFFF)
+    {
+        self->gameData->camera.pos.y = self->pos.y - (TFT_HEIGHT<<(DECIMAL_BITS-1));
+    }
+    self->gameData->camera.pos.x = self->pos.x - (TFT_WIDTH<<(DECIMAL_BITS-1));
 }
 
 void gs_drawGossipStone(gs_entity_t* self)
