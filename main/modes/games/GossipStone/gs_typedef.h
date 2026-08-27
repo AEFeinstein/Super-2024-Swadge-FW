@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <wsg.h>
 
-#define GS_DECIMAL_BITS   4
+#define DECIMAL_BITS   4
 #define NUM_ASSETS        GS_NO_ASSET      // The number of gs_asset_t
 #define NUM_PALETTES      GS_COUNT_PALETTE // The number of wsgPalette_t
 #define MAX_LERP_AMOUNT   30000

@@ -31,9 +31,9 @@ gs_entity_t* gs_findLastEntityOfType(gs_entity_t* self, gs_dataType_t type)
 
 void gs_drawAsset(gs_entity_t* self)
 {
-    int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> GS_DECIMAL_BITS)
+    int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originX;
-    int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> GS_DECIMAL_BITS)
+    int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originY;
     if (self->palleteIdx)
     {
@@ -57,7 +57,7 @@ void gs_drawSkyGradient(gs_entity_t* self)
     for (int i = 0; i < 35; i++)
     {
         int32_t x = i * self->gameData->assets[self->assetIndex].frames[0].w;
-        y         = ((self->pos.y - self->gameData->camera.pos.y) >> GS_DECIMAL_BITS)
+        y         = ((self->pos.y - self->gameData->camera.pos.y) >> DECIMAL_BITS)
                     - self->gameData->assets[self->assetIndex].originY;
         drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped,
                 false, 0);
@@ -165,12 +165,12 @@ void gs_drawFlame(gs_entity_t* self)
         = (self->gameData->assets[GS_FLAME_ASSET].numFrames) * self->gameData->touchState[1].position / 1023;
     self->currentAnimationFrame = self->gameData->assets[GS_FLAME_ASSET].numFrames - 1 - self->currentAnimationFrame;
 
-    int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> GS_DECIMAL_BITS)
+    int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originX;
-    int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> GS_DECIMAL_BITS)
+    int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originY;
     drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, gs_randomInt(0, 1),
-            false, fData->rotateDeg>>4);
+            false, fData->rotateDeg>>DECIMAL_BITS);
     drawCircleFilled(x + self->gameData->assets[self->assetIndex].originX,
                      y + self->gameData->assets[self->assetIndex].originY + 3 + self->currentAnimationFrame,
                      2 + self->currentAnimationFrame + gs_randomInt(-1, 1), c530);
@@ -240,12 +240,33 @@ void gs_updateGossipStone(gs_entity_t* self)
     printf("uhhh: %d\n", gsData->angVel * (self->gameData->elapsedUs>>2));
     printf("heh? %d\n", gsData->angVel * (self->gameData->elapsedUs>>2) / 24);
     gsData->rotateDeg += gsData->angVel * (self->gameData->elapsedUs>>2) / 1000000;
-    gsData->rotateDeg %= 360<<4;
+    gsData->rotateDeg %= 360<<DECIMAL_BITS;
     if(gsData->rotateDeg < 0)
     {
-        gsData->rotateDeg += 360<<4;
+        gsData->rotateDeg += 360<<DECIMAL_BITS;
     }
     ((gs_flame_t*)gsData->flame->data)->rotateDeg = gsData->rotateDeg;
     
     gsData->flame->pos       = self->pos;
+}
+
+void gs_drawGossipStone(gs_entity_t* self)
+{
+    gs_gossipStone_t* gsData = (gs_gossipStone_t*)self->data;
+    int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DECIMAL_BITS)
+                - self->gameData->assets[self->assetIndex].originX;
+    int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DECIMAL_BITS)
+                - self->gameData->assets[self->assetIndex].originY;
+    int32_t finalRot = gsData->rotateDeg>>DECIMAL_BITS;
+    finalRot = (finalRot + 41)%360;
+    if (self->palleteIdx)
+    {
+        drawWsgPalette(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y,
+                       &self->gameData->entityManager.palettes[self->palleteIdx], self->flipped, false, finalRot);
+    }
+    else
+    {
+        drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped,
+                false, finalRot);
+    }
 }

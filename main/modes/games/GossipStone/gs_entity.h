@@ -132,3 +132,4 @@ void gs_updatePhysicsObject(gs_entity_t* self);
 void gs_drawTileMap(gs_entity_t* self);
 void gs_collisionCheck(gs_entity_t* tilemap, gs_entity_t* ent, gs_hitInfo_t* hitInfo);
 void gs_updateGossipStone(gs_entity_t* self);
+void gs_drawGossipStone(gs_entity_t* self);
