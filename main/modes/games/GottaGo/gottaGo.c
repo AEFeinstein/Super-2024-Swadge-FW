@@ -40,6 +40,9 @@
 #define MILE_WORST  99
 #define MILE_CASUAL 25
 
+// LEDs
+#define CRUSH_FACTOR 1000
+
 //==============================================================================
 // Consts
 //==============================================================================
@@ -267,6 +270,12 @@ static void checkAccuracy(int accuracy, int target, int count, ggTrophyNames_t t
  */
 static void drinkWater(void);
 
+/**
+ * @brief Update the LEDs
+ *
+ */
+static void doLEDs(void);
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -357,6 +366,7 @@ static void ggEnterMode(void)
     wsgPaletteReset(&ggd->npcPalette);
     ggInitWarning(ggd);
     ggd->state = GG_WARNING;
+    doLEDs();
 }
 
 static void ggExitMode(void)
@@ -705,6 +715,7 @@ static void doReady(int64_t elapsedUs)
         ggLevelReset(ggd);
         ggd->state = GG_GAME;
     }
+    doLEDs();
     ggDrawReady(ggd, elapsedUs);
 }
 
@@ -818,6 +829,7 @@ static void doGame(int64_t elapsedUs)
         {
             handleGameEnd(true, false);
         }
+        doLEDs();
         ggDrawLevel(ggd, false);
     }
 }
@@ -1116,4 +1128,43 @@ static void drinkWater()
         trophyUpdate(&ggTrophies[T_TRUTH], 1, true);
     }
     writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_TEXT_PROG], ggd->textOrder);
+}
+
+static void doLEDs()
+{
+    int64_t oneThird = (ggd->timeLimit / 3) / CRUSH_FACTOR;
+    int64_t time     = ggd->timer / CRUSH_FACTOR;
+    if (ggd->state != GG_GAME)
+    {
+        for (int idx = 0; idx < CONFIG_NUM_LEDS; idx++)
+        {
+            ggd->leds[idx].r = 0;
+            ggd->leds[idx].g = 0;
+        }
+    }
+    else if (time < oneThird)
+    {
+        int value      = (time * 255) / oneThird;
+        ggd->leds[1].r = value;
+        ggd->leds[1].g = value;
+        ggd->leds[4].r = value;
+        ggd->leds[4].g = value;
+    }
+    else if (time < (oneThird * 2))
+    {
+        int value      = ((time - oneThird) * 255) / oneThird;
+        ggd->leds[2].r = value;
+        ggd->leds[2].g = value;
+        ggd->leds[3].r = value;
+        ggd->leds[3].g = value;
+    }
+    else
+    {
+        int value      = ((time - oneThird * 2) * 255) / oneThird;
+        ggd->leds[0].r = value;
+        ggd->leds[0].g = value;
+        ggd->leds[5].r = value;
+        ggd->leds[5].g = value;
+    }
+    setLeds(ggd->leds, CONFIG_NUM_LEDS);
 }

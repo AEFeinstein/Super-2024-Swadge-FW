@@ -228,7 +228,7 @@ typedef struct
     int32_t packedName;
 } ggHighScore_t;
 
-typedef struct 
+typedef struct
 {
     ggHighScore_t scores[MAX_SCORES];
 } ggHSTable_t;
@@ -249,8 +249,8 @@ typedef struct
     font_t descFont;         ///< Font for smaller text
 
     // SFX/BGM
-    midiFile_t bgm;
-    midiPlayer_t* sfxPlayer;
+    midiFile_t bgm;          ///< Background track
+    midiPlayer_t* sfxPlayer; ///< SFX player
 
     // Main
     ggState_t state;   ///< Game state
@@ -292,5 +292,8 @@ typedef struct
     wsgPalette_t npcPalette; ///< Color converter
 
     // High score
-    ggHSTable_t tables[4];
+    ggHSTable_t tables[4]; ///< High score tables
+
+    // LEDs
+    led_t leds[CONFIG_NUM_LEDS]; ///< LEDs!
 } ggData_t;
