@@ -91,7 +91,7 @@ void loadEnvTextures(ray_t* ray)
     LOAD_TEXTURE(ray, BG_FLOOR_29);
     LOAD_TEXTURE(ray, BG_FLOOR_30);
     LOAD_TEXTURE(ray, BG_FLOOR_31);
-    LOAD_TEXTURE(ray, BG_WALL_0);
+    LOAD_TEXTURE(ray, BG_WALL_TARGET);
     LOAD_TEXTURE(ray, BG_WALL_1);
     LOAD_TEXTURE(ray, BG_WALL_2);
     LOAD_TEXTURE(ray, BG_WALL_3);
