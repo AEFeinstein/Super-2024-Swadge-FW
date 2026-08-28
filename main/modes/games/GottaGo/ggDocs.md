@@ -38,10 +38,10 @@
 8. [x] Casual Mode
   - [x] Non-timed, non-scored mode
   - [x] Casual mode trophies
-9. [ ] Swadgepass
-  - [ ] Add to packet
-  - [ ] Pull from packet
-  - [ ] High Score table
+9. [x] Swadgepass
+  - [x] Add to packet
+  - [x] Pull from packet
+  - [x] High Score table
 10. [ ] Update visuals
   - [ ] Small text font
   - [ ] Large font
@@ -63,3 +63,4 @@
 
 ## Known Bugs
 - Sometimes when num of urinals reduces next round, selection pointer is off the end.
+- One time had 100.1% accuracy

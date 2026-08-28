@@ -51,6 +51,42 @@ static int calcNPCScore(ggNPC_t* npc, int distance);
  */
 static void getBestWorstOption(ggUrinal_t* urinals, int numActive, int* urinalScores, int* best, int* worst);
 
+/**
+ * @brief Set up all data for HS tables at the start of the mode
+ * 
+ * @param hs score table
+ * @param table Which table to reference
+ */
+static void initHSTable(ggHSTable_t* hs, ggNVSEnum_t table);
+
+/**
+ * @brief Initializes a table with the best five of each score type
+ * 
+ * @param mode Swadgemode to provide modename
+ * @param tables A set of tables to fill up
+ */
+static void initHSTableFomSwadgepass(swadgeMode_t* mode, ggHSTable_t* tables);
+
+/**
+ * @brief Updates the table via bubble sort (?)
+ * 
+ * @param hs score table
+ * @param newScore Newest score to add
+ * @param packedName Packed representation of the username
+ * @return true If there was an update to the table
+ * @return false If there was not an update to the table
+ */
+static bool updateHSTable(ggHSTable_t* hs, int newScore, int32_t packedName);
+
+/**
+ * @brief Updates score of user
+ * 
+ * @param hs score table
+ * @param newScore Newest score to add
+ * @param table Which table to reference
+ */
+static void updateHighScore(ggHSTable_t* hs, int newScore, ggNVSEnum_t table);
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -76,11 +112,6 @@ void ggCalcFinalScores(ggData_t* ggd, int* urinalScores, int* best, int* worst)
     ggd->totalScore += ggd->levelScore;
     // Calc adjusted score
     ggd->adjScore = (ggd->accScore * ggd->totalScore) / MAX_PERCENTAGE;
-    // Check if trophies have been triggered
-    if (ggd->state != GG_CASUAL)
-    {
-        ggSaveFinalToNVS(ggd);
-    }
 }
 
 void ggCalcUrinalScores(ggUrinal_t* urinals, int numActive, int* urinalScores, int* best, int* worst)
@@ -330,6 +361,45 @@ void ggSaveFinalToNVS(ggData_t* ggd)
     }
 }
 
+// High score
+
+void ggInitHighScores(swadgeMode_t* mode, ggData_t* ggd)
+{
+    // From NVS
+    initHSTable(&ggd->tables[0], GG_MAX_LEVELS_HS);
+    initHSTable(&ggd->tables[1], GG_MAX_ACC_HS);
+    initHSTable(&ggd->tables[2], GG_MAX_SCORE_HS);
+    initHSTable(&ggd->tables[3], GG_ADJ_SCORE_HS);
+
+    // From Swadgepass
+    ggHSTable_t tables[4] = {0};
+    initHSTableFomSwadgepass(mode, tables);
+
+    // Merge new score table into table loaded from NVS
+    for (int idx = 0; idx < 4; idx++)
+    {
+        for (int i = 0; i < MAX_SCORES; i++)
+        {
+            updateHSTable(&ggd->tables[idx], tables[idx].scores[i].score, tables[idx].scores[i].packedName);
+        }
+    }
+}
+
+void ggNewUserScore(ggData_t* ggd)
+{
+    // Max levels
+    updateHighScore(&ggd->tables[0], ggd->numLevels, GG_MAX_LEVELS_HS);
+
+    // Accuracy
+    updateHighScore(&ggd->tables[1], ggd->accScore, GG_MAX_ACC_HS);
+
+    // Total Score
+    updateHighScore(&ggd->tables[2], ggd->totalScore, GG_MAX_SCORE_HS);
+
+    // Adjusted score
+    updateHighScore(&ggd->tables[3], ggd->adjScore, GG_ADJ_SCORE_HS);
+}
+
 // Static functions
 
 static int calcNPCScore(ggNPC_t* npc, int distance)
@@ -371,5 +441,74 @@ static void getBestWorstOption(ggUrinal_t* urinals, int numActive, int* urinalSc
         {
             *worst = urinalScores[idx];
         }
+    }
+}
+
+static void initHSTable(ggHSTable_t* hs, ggNVSEnum_t table)
+{
+    size_t nvsLength = sizeof(hs->scores);
+    if (!readNamespaceNvsBlob(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[table], hs->scores, &nvsLength))
+    {
+        for (int idx = 0; idx < MAX_SCORES; idx++)
+        {
+            hs->scores[idx].score      = 0;
+            hs->scores[idx].packedName = 0xFFFFFFFF;
+        }
+        writeNamespaceNvsBlob(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[table], hs->scores, nvsLength);
+    }
+}
+
+static void initHSTableFomSwadgepass(swadgeMode_t* mode, ggHSTable_t* tables)
+{
+    list_t spList = {0};
+    getSwadgePasses(&spList, mode, false);
+    node_t* currNode = spList.first;
+    switchToSpeaker();
+    dacStop();
+    while (currNode)
+    {
+        swadgePassData_t* data     = (swadgePassData_t*)currNode->val;
+        swadgePassPacket_t* packet = &data->data.packet;
+        updateHSTable(&tables[0], packet->gottaGo.maxLevels, packet->swadgesona.core.packedName);
+        updateHSTable(&tables[1], packet->gottaGo.accuracy, packet->swadgesona.core.packedName);
+        updateHSTable(&tables[2], packet->gottaGo.totalScore, packet->swadgesona.core.packedName);
+        updateHSTable(&tables[3], packet->gottaGo.adjScore, packet->swadgesona.core.packedName);
+        setPacketUsedByMode(data, mode, true);
+    }
+    dacStart();
+}
+
+static bool updateHSTable(ggHSTable_t* hs, int newScore, int32_t packedName)
+{
+    int currScore = MAX_SCORES - 1;
+    bool new      = false;
+    while (hs->scores[currScore].score < newScore && currScore >= 0)
+    {
+        // Swap
+        int tempScore                    = hs->scores[currScore].score;
+        int32_t tempName                 = hs->scores[currScore].packedName;
+        hs->scores[currScore].score      = newScore;
+        hs->scores[currScore].packedName = packedName;
+        if (currScore != MAX_SCORES - 1)
+        {
+            // If item hasn't fallen off list, save it
+            hs->scores[currScore + 1].score      = tempScore;
+            hs->scores[currScore + 1].packedName = tempName;
+        }
+        // Check the next rung
+        currScore--;
+        new = true;
+    }
+    return new;
+}
+
+static void updateHighScore(ggHSTable_t* hs, int newScore, ggNVSEnum_t table)
+{
+    nameData_t nd      = *getSystemUsername();
+    int32_t packedName = GET_PACKED_USERNAME(nd);
+    if (updateHSTable(hs, newScore, packedName))
+    {
+        size_t nvsLength = sizeof(hs) * MAX_SCORES;
+        writeNamespaceNvsBlob(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[table], hs, nvsLength);
     }
 }

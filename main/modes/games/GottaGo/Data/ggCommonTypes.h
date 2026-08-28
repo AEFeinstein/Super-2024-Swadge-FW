@@ -16,6 +16,14 @@
 // Game settings
 #define MAX_URINALS 7 ///< Based on width of the screen/available space
 
+// High score
+#define MAX_SCORES 5
+
+//==============================================================================
+// Consts
+//==============================================================================
+
+// NVS Keys
 static const char* const ggNVSSpace[] = {
     "ggSaves",  "mLevels",    "mLevelsHS", "acc",   "accHS",       "score",        "scoreHS",
     "adjScore", "adjScoreHS", "helper",    "touch", "warningRead", "watermsgprog",
@@ -216,6 +224,17 @@ typedef struct
 
 typedef struct
 {
+    int32_t score;
+    int32_t packedName;
+} ggHighScore_t;
+
+typedef struct 
+{
+    ggHighScore_t scores[MAX_SCORES];
+} ggHSTable_t;
+
+typedef struct
+{
     // Assets
     // WSGs
     wsg_t* backgroundImages; ///< Images used in the background of the game
@@ -271,4 +290,7 @@ typedef struct
     // Drawing
     bool toggle;             ///< Used for all toggle
     wsgPalette_t npcPalette; ///< Color converter
+
+    // High score
+    ggHSTable_t tables[4];
 } ggData_t;

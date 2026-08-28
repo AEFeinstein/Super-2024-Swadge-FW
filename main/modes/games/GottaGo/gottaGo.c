@@ -4,6 +4,7 @@
 
 #include "gottaGo.h"
 #include "mainMenu.h"
+#include "nameList.h"
 
 // Data
 #include "ggCommonTypes.h"
@@ -271,17 +272,17 @@ static void drinkWater(void);
 //==============================================================================
 
 swadgeMode_t gottaGoMode = {
-    .modeName          = ggModeName,
-    .wifiMode          = NO_WIFI,
-    .overrideUsb       = false,
-    .usesAccelerometer = false,
-    .usesThermometer   = false,
-    .fnEnterMode       = ggEnterMode,
-    .fnExitMode        = ggExitMode,
-    .fnMainLoop        = ggMainLoop,
-    .overrideSelectBtn = true,
+    .modeName                = ggModeName,
+    .wifiMode                = NO_WIFI,
+    .overrideUsb             = false,
+    .usesAccelerometer       = false,
+    .usesThermometer         = false,
+    .fnEnterMode             = ggEnterMode,
+    .fnExitMode              = ggExitMode,
+    .fnMainLoop              = ggMainLoop,
+    .overrideSelectBtn       = true,
     .fnAddToSwadgePassPacket = &ggAddToSwadgePassPacket,
-    .trophyData        = &ggTrophyDate,
+    .trophyData              = &ggTrophyDate,
 };
 
 ggData_t* ggd;
@@ -337,6 +338,9 @@ static void ggEnterMode(void)
     ggd->touch = outVal;
     readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_WARNING_NVS], &outVal);
     ggd->toggle = outVal;
+
+    // Init HS tables
+    ggInitHighScores(&gottaGoMode, ggd);
 
     // Audio
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
@@ -479,6 +483,8 @@ static void ggMainLoop(int64_t elapsedUs)
                         ggd->pause     = false;
                         ggd->selection = GG_TEXT_MENU_PLAY;
                         ggd->state     = GG_MENU;
+                        ggSaveFinalToNVS(ggd); // Only saves at the end of a run
+                        ggNewUserScore(ggd);   // Try to add score to scoreboard
                     }
                 }
             }
@@ -494,7 +500,31 @@ static void ggMainLoop(int64_t elapsedUs)
 
 static void ggAddToSwadgePassPacket(struct swadgePassPacket* packet)
 {
-
+    int32_t outVal;
+    if (!readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_LEVELS], &outVal))
+    {
+        outVal = 0;
+        writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_LEVELS], outVal);
+    }
+    packet->gottaGo.maxLevels = outVal;
+    if (!readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_ACC], &outVal))
+    {
+        outVal = 0;
+        writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_ACC], outVal);
+    }
+    packet->gottaGo.accuracy = outVal;
+    if (!readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_SCORE], &outVal))
+    {
+        outVal = 0;
+        writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_SCORE], outVal);
+    }
+    packet->gottaGo.totalScore = outVal;
+    if (!readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_ADJ_SCORE], &outVal))
+    {
+        outVal = 0;
+        writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_ADJ_SCORE], outVal);
+    }
+    packet->gottaGo.adjScore = outVal;
 }
 
 // States
@@ -874,12 +904,12 @@ static void doHS()
         if (evt.down)
         {
             midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
-            if (evt.button & PB_DOWN)
+            if (evt.button & PB_DOWN || evt.button & PB_RIGHT)
             {
                 ggd->selection++;
                 ggd->selection %= HS_PAGE_COUNT;
             }
-            if (evt.button & PB_UP)
+            if (evt.button & PB_UP || evt.button & PB_LEFT)
             {
                 ggd->selection--;
                 if (ggd->selection < 0)
@@ -1020,6 +1050,7 @@ static void handleGameEnd(bool lose, bool stall)
     ggd->timeRemaining = ggd->timeLimit - ggd->timer;
     ggd->numLevels++;
 
+    // Trophies
     int final[MAX_URINALS] = {0};
     int best, worst;
     if (!ggd->pause)

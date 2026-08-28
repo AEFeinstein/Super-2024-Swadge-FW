@@ -98,7 +98,7 @@ static const char* const warningText[] = {
     "anything other button to back out.",
     "Suggestive themes is a stupid way to put 'this game shows butts.' Saturday morning cartoons shows butts. "
     "Everyone has one, this isn't going to cause someone to have some sort of awakening or turn your children into "
-    "perverts, it's just some very low pixel count butts. Geting you underwear in a twist over this says more about "
+    "perverts, it's just some very low pixel count butts. Getting you underwear in a twist over this says more about "
     "you that you would probably like.",
 };
 
@@ -146,6 +146,13 @@ static const char* const hydrateText[] = {
     "Adraxians do not eat humans under normal circumstances",
     "The best defense is being hydrated. They prefer the taste of overworked kidneys.",
     "Drink loooooots of water.",
+};
+
+static const char* const scoreTypeText[] = {
+    "Max Level",
+    "Best Accuracy",
+    "Highest Score",
+    "HIghest Adjusted Score",
 };
 
 static const paletteColor_t skinColors[] = {
@@ -248,6 +255,15 @@ static void drawUI(ggData_t* ggd, bool solution);
  * @param ggd Game data
  */
 static void drawSolution(ggData_t* ggd);
+
+/**
+ * @brief Draws the scoreboard
+ * 
+ * @param ggd Game data
+ * @param hs High score table
+ * @param percent If the score needs to be modified into a percent
+ */
+static void drawHSTable(ggData_t* ggd, ggHSTable_t* hs, bool percent);
 
 //==============================================================================
 // Functions
@@ -656,34 +672,11 @@ void ggDrawHighScore(ggData_t* ggd)
     // TItle
     drawText(&ggd->titleFont, c555, menuText[GG_TEXT_MENU_HS], RULES_X_BORDER, RULES_TITLE_Y);
     drawText(&ggd->titleFontOutline, c000, menuText[GG_TEXT_MENU_HS], RULES_X_BORDER, RULES_TITLE_Y);
-    // TODO: Revise for Swadgepass
-    // Draw high Scores based on selection page
-    /* char buffer[36];
-    int32_t outVal;
-    if (!readNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[1], &outVal))
-    {
-        outVal = 0;
-    }
-    snprintf(buffer, sizeof(buffer) - 1, "Highest number of games won: %" PRId32, outVal);
-    drawText(&ggd->smallFont, c000, buffer, RULES_X_BORDER, 60);
-    if (!readNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[2], &outVal))
-    {
-        outVal = 0;
-    }
-    snprintf(buffer, sizeof(buffer) - 1, "Highest adjusted score: %" PRId32, outVal);
-    drawText(&ggd->smallFont, c000, buffer, RULES_X_BORDER, 80);
-    if (!readNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[3], &outVal))
-    {
-        outVal = 0;
-    }
-    snprintf(buffer, sizeof(buffer) - 1, "Highest total score: %" PRId32, outVal);
-    drawText(&ggd->smallFont, c000, buffer, RULES_X_BORDER, 100);
-    if (!readNamespaceNvs32(ggNVSSpace[0], ggNVSSpace[4], &outVal))
-    {
-        outVal = 0;
-    }
-    snprintf(buffer, sizeof(buffer) - 1, "Highest average: %" PRId32, outVal);
-    drawText(&ggd->smallFont, c000, buffer, RULES_X_BORDER, 120); */
+
+    // Tables
+    drawText(&ggd->titleFont, c000, scoreTypeText[ggd->selection],
+             (TFT_WIDTH - textWidth(&ggd->titleFont, scoreTypeText[ggd->selection])) / 2, 44);
+    drawHSTable(ggd, &ggd->tables[ggd->selection], (ggd->selection == 1));
 }
 
 void ggDrawOptions(ggData_t* ggd)
@@ -1201,5 +1194,27 @@ static void drawSolution(ggData_t* ggd)
                               idx * ((ggd->numActive == MAX_URINALS) ? URINAL_7_SPACING : URINAL_SPACING) + xStart - 1,
                               140);
         }
+    }
+}
+
+// High score
+static void drawHSTable(ggData_t* ggd, ggHSTable_t* hs, bool percent)
+{
+    char buffer[64];
+    for (int idx = 0; idx < MAX_SCORES; idx++)
+    {
+        nameData_t nd;
+        setUsernameFrom32(&nd, hs->scores[idx].packedName);
+        if (percent)
+        {
+            snprintf(buffer, sizeof(buffer) - 1, "%" PRId8 ": %s - %" PRId32 ".%" PRId8, idx + 1, nd.nameBuffer,
+                     hs->scores[idx].score / 10, (int8_t)hs->scores[idx].score % 10);
+        }
+        else
+        {
+            snprintf(buffer, sizeof(buffer) - 1, "%" PRId8 ": %s - %" PRId32, idx + 1, nd.nameBuffer,
+                     hs->scores[idx].score);
+        }
+        drawText(&ggd->descFont, c000, buffer, 32, 24 * (idx + 3));
     }
 }
