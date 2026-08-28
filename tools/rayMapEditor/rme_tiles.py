@@ -55,7 +55,7 @@ class tileType(Enum):
     BG_FLOOR_30 = (BG | FLOOR | 30)
     BG_FLOOR_31 = (BG | FLOOR | 31)
     # Wall tiles
-    BG_WALL_0 = (BG | WALL | 0)
+    BG_WALL_TARGET = (BG | WALL | 0)
     BG_WALL_1 = (BG | WALL | 1)
     BG_WALL_2 = (BG | WALL | 2)
     BG_WALL_3 = (BG | WALL | 3)
@@ -290,7 +290,7 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_FLOOR_31,
     ],
     [
-        tileType.BG_WALL_0,
+        tileType.BG_WALL_TARGET,
         tileType.BG_WALL_1,
         tileType.BG_WALL_2,
         tileType.BG_WALL_3,
