@@ -101,6 +101,85 @@ void moveRayObjects(ray_t* ray, uint32_t elapsedUs)
 {
     moveRayBullets(ray, elapsedUs);
     rayEnemiesMoveAnimate(ray, elapsedUs);
+
+    // Run a timer to open or close doors every 5ms
+    RUN_TIMER_EVERY(ray->doorTimer, 5000, elapsedUs, {
+        // Iterate the map
+        for (int32_t y = 0; y < ray->map.h; y++)
+        {
+            for (int32_t x = 0; x < ray->map.w; x++)
+            {
+                // Get a reference to this cell
+                rayMapCell_t* cell = &(ray->map.tiles[x][y]);
+
+                // If the timer to start closing the door is running
+                if (0 < cell->closeTimer)
+                {
+                    // Decrement it
+                    cell->closeTimer--;
+                    // If it expired
+                    if (0 == cell->closeTimer)
+                    {
+                        // When this elapses, start closing the door
+                        cell->openingDirection = -1;
+                    }
+                }
+
+                // If the door is opening
+                if (0 < cell->openingDirection)
+                {
+                    // And it isn't fully open
+                    if (cell->doorOpen < TO_FX(1))
+                    {
+                        // Open a little more
+                        cell->doorOpen++;
+                    }
+                    else
+                    {
+                        // Door is fully open
+                        cell->openingDirection = 0;
+
+                        // Turn DOOR into FLOOR
+                        cell->type &= ~DOOR;
+                        cell->type |= FLOOR;
+
+                        // If the door is not a key or script door
+                        // if ((BG_DOOR_KEY_A != cell->type) && //
+                        //     (BG_DOOR_KEY_B != cell->type) && //
+                        //     (BG_DOOR_KEY_C != cell->type) && //
+                        //     (BG_DOOR_SCRIPT != cell->type))
+                        // {
+                        //     // Start a timer to close the door
+                        //     // 5s in units of 5ms (each tick of this timer)
+                        //     cell->closeTimer = 1000;
+                        // }
+                    }
+                }
+                // Else if the door is closing
+                else if (0 > cell->openingDirection)
+                {
+                    // Make sure not to close on the player
+                    if (x != FROM_FX(ray->p.posX) || y != FROM_FX(ray->p.posY))
+                    {
+                        // Close it a little more
+                        if (cell->doorOpen > 0)
+                        {
+                            cell->doorOpen--;
+                        }
+                        else
+                        {
+                            // Door is fully closed
+                            cell->openingDirection = 0;
+
+                            // Turn FLOOR into DOOR
+                            cell->type &= ~FLOOR;
+                            cell->type |= DOOR;
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
 
 /**
@@ -266,6 +345,12 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
  */
 bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int32_t oId)
 {
+    // Bombs don't collide with background
+    if (OBJ_BULLET_BOMB == oType)
+    {
+        return false;
+    }
+
     // Get the cell the bullet is in now
     rayMapCell_t* cell = &ray->map.tiles[FROM_FX(x)][FROM_FX(y)];
 
@@ -276,7 +361,7 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
         if (1 == oId)
         {
             // If it hit a wall
-            if (CELL_IS_TYPE(cell->type, BG | WALL))
+            if (CELL_IS_TYPE(cell->type, BG | WALL) && OBJ_BULLET_ARROW == oType)
             {
                 // Check wall scripts
                 checkScriptShootWall(ray, FROM_FX(x), FROM_FX(y));
@@ -311,12 +396,7 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
                         case BG_DOOR_CRACK_H:
                         case BG_DOOR_CRACK_V:
                         {
-                            if (OBJ_BULLET_BOMB == oType)
-                            {
-                                // Blow up the wall by changing the type to floor
-                                cell->type = BG_FLOOR_16;
-                            }
-                            opened = true;
+                            // Do nothing. Explosion radius checked against crackedWalls elsewhere
                             break;
                         }
                         // case BG_DOOR_KEY_A:
@@ -418,7 +498,7 @@ void checkRayCollisions(ray_t* ray)
         .bound.box.h = TO_FX(1),
     };
 
-    // Check if a bullet touches a player
+    // Check if a bullet touches a player or cracked wall
     for (uint16_t bIdx = 0; bIdx < MAX_RAY_BULLETS; bIdx++)
     {
         rayBullet_t* bullet = &ray->bullets[bIdx];
@@ -466,6 +546,53 @@ void checkRayCollisions(ray_t* ray)
                 // De-allocate the bullet
                 memset(bullet, 0, sizeof(rayBullet_t));
                 bullet->c.id = -1;
+            }
+        }
+        else if (OBJ_BULLET_BOMB == bullet->c.type && bullet->c.bound.radius > 0) // Player's exploded bomb
+        {
+            // Make a circle for the explosion
+            circle_t bomb = {
+                .pos = {
+                    .x = bullet->c.posX,
+                    .y = bullet->c.posY,
+                },
+                .radius = bullet->c.bound.radius,
+            };
+
+            // Iterate through cracked walls
+            node_t* cNode = ray->map.crackedWalls.first;
+            while (cNode)
+            {
+                uint16_t wallX     = (((intptr_t)cNode->val) >> 16) & 0xFFFF;
+                uint16_t wallY     = ((intptr_t)cNode->val) & 0xFFFF;
+                rayMapCell_t* cell = &ray->map.tiles[wallX][wallY];
+
+                // Make a rectangle for the wall
+                rectangle_t wall = {
+                    .pos = {
+                        .x = TO_FX(wallX),
+                        .y = TO_FX(wallY),
+                    },
+                    .height = TO_FX(1),
+                    .width = TO_FX(1),
+                };
+
+                // If the explosion intersects the wall
+                if (circleRectIntersection(bomb, wall, NULL))
+                {
+                    // open the door by changing the floor type
+                    cell->type = BG_FLOOR_1;
+
+                    // Remove this address from the list
+                    node_t* next = cNode->next;
+                    removeEntry(&ray->map.crackedWalls, cNode);
+                    cNode = next;
+                }
+                else
+                {
+                    // Iterate normally
+                    cNode = cNode->next;
+                }
             }
         }
     }
@@ -535,54 +662,6 @@ void checkRayCollisions(ray_t* ray)
                         // De-allocate the bullet
                         memset(bullet, 0, sizeof(rayBullet_t));
                         bullet->c.id = -1;
-                    }
-                }
-
-                if (OBJ_BULLET_BOMB == bullet->c.type)
-                {
-                    // Make a circle for the explosion
-                    circle_t bomb = {
-                        .pos = {
-                            .x = bullet->c.posX,
-                            .y = bullet->c.posY,
-                        },
-                        .radius = bullet->c.bound.radius,
-                    };
-
-                    // Iterate through cracked walls
-                    node_t* cNode = ray->map.crackedWalls.first;
-                    while (cNode)
-                    {
-                        uint16_t wallX     = (((intptr_t)cNode->val) >> 16) & 0xFFFF;
-                        uint16_t wallY     = ((intptr_t)cNode->val) & 0xFFFF;
-                        rayMapCell_t* cell = &ray->map.tiles[wallX][wallY];
-
-                        // Make a rectangle for the wall
-                        rectangle_t wall = {
-                            .pos = {
-                                .x = TO_FX(wallX),
-                                .y = TO_FX(wallY),
-                            },
-                            .height = TO_FX(1),
-                            .width = TO_FX(1),
-                        };
-
-                        // If the explosion intersects the wall
-                        if (circleRectIntersection(bomb, wall, NULL))
-                        {
-                            // open the door
-                            cell->type = BG_FLOOR_10;
-
-                            // Remove this address from the list
-                            node_t* next = cNode->next;
-                            removeEntry(&ray->map.crackedWalls, cNode);
-                            cNode = next;
-                        }
-                        else
-                        {
-                            // Iterate normally
-                            cNode = cNode->next;
-                        }
                     }
                 }
             }
