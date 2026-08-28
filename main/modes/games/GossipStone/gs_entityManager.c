@@ -8,12 +8,16 @@
 #include "gs_entity.h"
 #include "linked_list.h"
 #include "gs_utility.h"
+#include "gs_collision.h"
 
 //==============================================================================
 // Functions
 //==============================================================================
 void gs_initializeEntityManager(gs_entityManager_t* entityManager, gs_gameData_t* gameData)
 {
+    // set the camera to the center of positive ints
+    entityManager->camera.pos
+        = (vec_t){0xFFFF - (TFT_WIDTH << (DECIMAL_BITS - 1)), 0xFFFF - (TFT_HEIGHT << (DECIMAL_BITS - 1))};
     // allocate the linked list for entities
     entityManager->entities = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "entities");
 
@@ -111,9 +115,22 @@ void gs_updateEntities(gs_entityManager_t* entityManager)
     while (curNode != NULL)
     {
         gs_entity_t* entity = (gs_entity_t*)curNode->val;
-        if (entity->updateFunction != NULL)
+        if (entity->updateFunction)
         {
             entity->updateFunction(entity);
+        }
+        if (entity->updateFarFunction)
+        {
+            // 2752 = (140+32) << 4; 2432 = (120+32) << 4
+            if (!gs_AABBPointCheck(&(gs_entity_t){.pos = addVec2d(entityManager->camera.pos,
+                                                                  (vec_t){.x = TFT_WIDTH << (DECIMAL_BITS - 1),
+                                                                          .y = TFT_HEIGHT << (DECIMAL_BITS - 1)}),
+                                                  .colliderType = GS_AABB,
+                                                  .collider     = {.AABB = {.halfWidth = 2752, .halfHeight = 2432}}},
+                                   &(gs_entity_t){.pos = entity->pos, .colliderType = GS_POINT}))
+            {
+                entity->updateFarFunction(entity);
+            }
         }
         if (entityManager->entities->first == NULL) // First may become NULL mid loop if all entities are destroyed.
         {

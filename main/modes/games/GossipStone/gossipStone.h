@@ -35,7 +35,6 @@ typedef struct gs_gameData_t
     uint16_t btnDownState;
     // The state of two linear touchpads.
     linearTouch_t touchState[2];
-    rectangle_t camera;
     int32_t elapsedUs; // Time elapsed since the last frame in microseconds
     gs_entityManager_t entityManager;
     gs_asset_t assets[NUM_ASSETS];

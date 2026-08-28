@@ -20,6 +20,7 @@ typedef struct
     wsgPalette_t palettes[NUM_PALETTES]; // holds the palettes for swapping
     list_t* entities;
     gs_entity_t* tilemap;
+    gs_camera_t camera;
 } gs_entityManager_t;
 
 //==============================================================================

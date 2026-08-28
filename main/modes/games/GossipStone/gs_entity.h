@@ -38,10 +38,14 @@ struct gs_entity_t
     void* data;
     gs_dataType_t dataType;
     gs_updateFunction_t updateFunction; // Only set for entities that need update logic
-    bool flipped;                       // draw flipped
-    gs_drawFunction_t drawFunction;     // Only set for entities such as Garbotnik that need custom drawing logic
-    bool destroyFlag;                   // Entity will be destroyed after engine updating and before engine drawing.
+    gs_updateFarFunction_t
+        updateFarFunction;          // Only set for entities to trigger something when they are reaesonably off screen.
+    bool flipped;                   // draw flipped
+    gs_drawFunction_t drawFunction; // Only set for entities such as Garbotnik that need custom drawing logic
+    bool destroyFlag;               // Entity will be destroyed after engine updating and before engine drawing.
     vec_t pos;
+    gs_colliderType_t colliderType;
+    union gs_collider_u collider; // it's a union so whichever internal variable was saved last uses the space.
     gs_animationType_t type;
     bool paused;
     gs_paletteIdx_t palleteIdx;

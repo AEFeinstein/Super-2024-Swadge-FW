@@ -31,9 +31,9 @@ gs_entity_t* gs_findLastEntityOfType(gs_entity_t* self, gs_dataType_t type)
 
 void gs_drawAsset(gs_entity_t* self)
 {
-    int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DECIMAL_BITS)
+    int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originX;
-    int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DECIMAL_BITS)
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originY;
     if (self->palleteIdx)
     {
@@ -57,7 +57,7 @@ void gs_drawSkyGradient(gs_entity_t* self)
     for (int i = 0; i < 35; i++)
     {
         int32_t x = i * self->gameData->assets[self->assetIndex].frames[0].w;
-        y         = ((self->pos.y - self->gameData->camera.pos.y) >> DECIMAL_BITS)
+        y         = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS)
                     - self->gameData->assets[self->assetIndex].originY;
         drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped,
                 false, 0);
@@ -165,22 +165,24 @@ void gs_drawFlame(gs_entity_t* self)
         = (self->gameData->assets[GS_FLAME_ASSET].numFrames) * self->gameData->touchState[1].position / 1023;
     self->currentAnimationFrame = self->gameData->assets[GS_FLAME_ASSET].numFrames - 1 - self->currentAnimationFrame;
 
-    int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DECIMAL_BITS)
+    int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originX;
-    int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DECIMAL_BITS)
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originY;
 
-    vec_t direction = rotateVec2d((vec_t){0, 1<<DECIMAL_BITS}, fData->rotateDeg>>DECIMAL_BITS);
+    vec_t direction       = rotateVec2d((vec_t){0, 1 << DECIMAL_BITS}, fData->rotateDeg >> DECIMAL_BITS);
     vec_t directionScaled = mulVec2d(direction, 28 + self->currentAnimationFrame);
     drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, gs_randomInt(0, 1),
-            false, fData->rotateDeg>>DECIMAL_BITS);
+            false, fData->rotateDeg >> DECIMAL_BITS);
     drawCircleFilled(x + self->gameData->assets[self->assetIndex].originX + (directionScaled.x >> DECIMAL_BITS),
                      y + self->gameData->assets[self->assetIndex].originY + (directionScaled.y >> DECIMAL_BITS),
                      2 + self->currentAnimationFrame + gs_randomInt(-1, 1), c530);
-    
+
     directionScaled = mulVec2d(direction, 24 + self->currentAnimationFrame);
-    drawCircleFilled(x + self->gameData->assets[self->assetIndex].originX + (directionScaled.x >> DECIMAL_BITS) + gs_randomInt(-1, 1),
-                     y + self->gameData->assets[self->assetIndex].originY + (directionScaled.y >> DECIMAL_BITS) + gs_randomInt(-1, 1),
+    drawCircleFilled(x + self->gameData->assets[self->assetIndex].originX + (directionScaled.x >> DECIMAL_BITS)
+                         + gs_randomInt(-1, 1),
+                     y + self->gameData->assets[self->assetIndex].originY + (directionScaled.y >> DECIMAL_BITS)
+                         + gs_randomInt(-1, 1),
                      1 + (self->currentAnimationFrame >> 1), c554);
 }
 
@@ -231,61 +233,65 @@ void gs_collisionCheck(gs_entity_t* tilemap, gs_entity_t* ent, gs_hitInfo_t* hit
 void gs_updateGossipStone(gs_entity_t* self)
 {
     gs_gossipStone_t* gsData = (gs_gossipStone_t*)self->data;
-    //angular physics
-    if(self->gameData->touchState[0].touched)
+    // angular physics
+    if (self->gameData->touchState[0].touched)
     {
-        //printf("elapsedUs: %d\n", self->gameData->touchState[0].position - 511);
-        //printf("tmp %d\n", (self->gameData->touchState[0].position - 511) * self->gameData->elapsedUs >> 14);
+        // printf("elapsedUs: %d\n", self->gameData->touchState[0].position - 511);
+        // printf("tmp %d\n", (self->gameData->touchState[0].position - 511) * self->gameData->elapsedUs >> 14);
         gsData->angVel += (self->gameData->touchState[0].position - 511) * self->gameData->elapsedUs >> 13;
     }
-    //5% angular drag per frame
+    // 5% angular drag per frame
     gsData->angVel = gsData->angVel * 19 / 20;
     // printf("ang vel: %d\n", gsData->angVel);
     // printf("elapsed trunc: %d\n",self->gameData->elapsedUs>>2);
     // printf("uhhh: %d\n", gsData->angVel * (self->gameData->elapsedUs>>2));
     // printf("heh? %d\n", gsData->angVel * (self->gameData->elapsedUs>>2) / 24);
-    gsData->rotateDeg += gsData->angVel * (self->gameData->elapsedUs>>2) / 1000000;
-    gsData->rotateDeg %= 360<<DECIMAL_BITS;
-    if(gsData->rotateDeg < 0)
+    gsData->rotateDeg += gsData->angVel * (self->gameData->elapsedUs >> 2) / 1000000;
+    gsData->rotateDeg %= 360 << DECIMAL_BITS;
+    if (gsData->rotateDeg < 0)
     {
-        gsData->rotateDeg += 360<<DECIMAL_BITS;
+        gsData->rotateDeg += 360 << DECIMAL_BITS;
     }
     ((gs_flame_t*)gsData->flame->data)->rotateDeg = gsData->rotateDeg;
-    
-    //translational physics
-    if(self->gameData->touchState[1].touched)
+
+    // translational physics
+    if (self->gameData->touchState[1].touched)
     {
-        vec_t rocketForce = rotateVec2d((vec_t){0, 1<<DECIMAL_BITS}, (gsData->rotateDeg>>DECIMAL_BITS)+180);
-        rocketForce = mulVec2d(rocketForce, (1024-self->gameData->touchState[1].position) * self->gameData->elapsedUs);
-        gsData->vel = addVec2d(gsData->vel,divVec2d(rocketForce,10000000));
+        vec_t rocketForce = rotateVec2d((vec_t){0, 1 << DECIMAL_BITS}, (gsData->rotateDeg >> DECIMAL_BITS) + 180);
+        rocketForce
+            = mulVec2d(rocketForce, (1024 - self->gameData->touchState[1].position) * self->gameData->elapsedUs);
+        gsData->vel = addVec2d(gsData->vel, divVec2d(rocketForce, 10000000));
     }
     self->pos.x += gsData->vel.x * self->gameData->elapsedUs >> 20;
     self->pos.y += gsData->vel.y * self->gameData->elapsedUs >> 20;
 
-    gsData->flame->pos       = self->pos;
+    gsData->flame->pos = self->pos;
 
-    if(self->pos.y < 0xFFFF)
+    self->gameData->entityManager.camera.vel = self->gameData->entityManager.camera.pos;
+    if (self->pos.y < 0xFFFF)
     {
-        self->gameData->camera.pos.y = self->pos.y - (TFT_HEIGHT<<(DECIMAL_BITS-1));
+        self->gameData->entityManager.camera.pos.y = self->pos.y - (TFT_HEIGHT << (DECIMAL_BITS - 1));
     }
-    //ground collision
-    if(self->pos.y > 66847)//0xFFFF + (82 << DECIMAL_BITS))
+    // ground collision
+    if (self->pos.y > 66847) // 0xFFFF + (82 << DECIMAL_BITS))
     {
-        self->pos.y = 66847;
+        self->pos.y   = 66847;
         gsData->vel.y = 0;
     }
-    self->gameData->camera.pos.x = self->pos.x - (TFT_WIDTH<<(DECIMAL_BITS-1));
+    self->gameData->entityManager.camera.pos.x = self->pos.x - (TFT_WIDTH << (DECIMAL_BITS - 1));
+    self->gameData->entityManager.camera.vel
+        = subVec2d(self->gameData->entityManager.camera.pos, self->gameData->entityManager.camera.vel);
 }
 
 void gs_drawGossipStone(gs_entity_t* self)
 {
     gs_gossipStone_t* gsData = (gs_gossipStone_t*)self->data;
-    int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DECIMAL_BITS)
-                - self->gameData->assets[self->assetIndex].originX;
-    int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DECIMAL_BITS)
-                - self->gameData->assets[self->assetIndex].originY;
-    int32_t finalRot = gsData->rotateDeg>>DECIMAL_BITS;
-    finalRot = (finalRot + 45)%360;
+    int32_t x                = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS)
+                               - self->gameData->assets[self->assetIndex].originX;
+    int32_t y                = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS)
+                               - self->gameData->assets[self->assetIndex].originY;
+    int32_t finalRot         = gsData->rotateDeg >> DECIMAL_BITS;
+    finalRot                 = (finalRot + 45) % 360;
     if (self->palleteIdx)
     {
         drawWsgPalette(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y,
@@ -300,47 +306,84 @@ void gs_drawGossipStone(gs_entity_t* self)
 
 void gs_randomizeStarData(gs_entity_t* self)
 {
-    gs_star_t* sData = (gs_star_t*)self->data;
-    self->gameFramesPerAnimationFrame = gs_randomInt(4,21);
-    sData->linearPlayback = gs_randomInt(0,1);
-    sData->startFrame = gs_randomInt(0,self->gameData->assets[self->assetIndex].numFrames - 1);
-    uint8_t endFrame = sData->startFrame;
-    if(gs_randomInt(0,1) && sData->startFrame < self->gameData->assets[self->assetIndex].numFrames - 1)
+    gs_star_t* sData                  = (gs_star_t*)self->data;
+    self->gameFramesPerAnimationFrame = gs_randomInt(5, 30);
+    sData->linearPlayback             = gs_randomInt(0, 1);
+    sData->startFrame                 = gs_randomInt(0, self->gameData->assets[self->assetIndex].numFrames - 1);
+    uint8_t endFrame                  = sData->startFrame;
+    if (gs_randomInt(0, 1) && sData->startFrame < self->gameData->assets[self->assetIndex].numFrames - 1)
     {
-        endFrame = gs_randomInt(sData->startFrame+1, self->gameData->assets[self->assetIndex].numFrames - 1);
+        endFrame = gs_randomInt(sData->startFrame + 1, self->gameData->assets[self->assetIndex].numFrames - 1);
     }
-    sData->frameCount = endFrame - sData->startFrame; //it's actually the frame count minus 1.
+    sData->frameCount = endFrame - sData->startFrame; // it's actually the frame count minus 1.
 }
 
 void gs_updateFarStar(gs_entity_t* self)
 {
+    if (self->gameData->entityManager.camera.vel.x == 0 && self->gameData->entityManager.camera.vel.y == 0)
+    {
+        return;
+    }
 
+    uint16_t longOdds = TFT_WIDTH * abs(self->gameData->entityManager.camera.vel.y);
+
+    uint16_t total = longOdds + TFT_HEIGHT * abs(self->gameData->entityManager.camera.vel.x);
+    uint16_t roll  = gs_randomInt(0, total);
+
+    if (roll <= longOdds) // it warps to a long edge
+    {
+        if (self->gameData->entityManager.camera.vel.y < 0)
+        {
+            self->pos = addVec2d(self->gameData->entityManager.camera.pos,
+                                 (vec_t){.x = gs_randomInt(0, TFT_WIDTH << DECIMAL_BITS), .y = -(16 << DECIMAL_BITS)});
+        }
+        else
+        {
+            self->pos = addVec2d(
+                self->gameData->entityManager.camera.pos,
+                (vec_t){.x = gs_randomInt(0, TFT_WIDTH << DECIMAL_BITS), .y = ((TFT_HEIGHT + 16) << DECIMAL_BITS)});
+        }
+    }
+    else // it warps to a short edge
+    {
+        if (self->gameData->entityManager.camera.vel.x < 0)
+        {
+            self->pos = addVec2d(self->gameData->entityManager.camera.pos,
+                                 (vec_t){.x = -(16 << DECIMAL_BITS), .y = gs_randomInt(0, TFT_HEIGHT << DECIMAL_BITS)});
+        }
+        else
+        {
+            self->pos = addVec2d(
+                self->gameData->entityManager.camera.pos,
+                (vec_t){.x = ((TFT_WIDTH + 16) << DECIMAL_BITS), .y = gs_randomInt(0, TFT_HEIGHT << DECIMAL_BITS)});
+        }
+    }
 }
 
 void gs_drawStar(gs_entity_t* self)
 {
     gs_star_t* sData = (gs_star_t*)self->data;
-    if(sData->linearPlayback)
+    self->animationTimer++;
+    if (self->animationTimer >= self->gameFramesPerAnimationFrame)
     {
-        self->animationTimer++;
-        if (self->animationTimer >= self->gameFramesPerAnimationFrame)
+        self->animationTimer = 0;
+
+        if (sData->linearPlayback)
         {
-            self->animationTimer = 0;
             self->currentAnimationFrame++;
-            if (self->currentAnimationFrame >= sData->startFrame+sData->frameCount)
+            if (self->currentAnimationFrame >= sData->startFrame + sData->frameCount)
                 self->currentAnimationFrame = 0;
         }
-    }
-    else
-    {
-        self->currentAnimationFrame = gs_randomInt(sData->startFrame, sData->startFrame+sData->frameCount);
+        else
+        {
+            self->currentAnimationFrame = gs_randomInt(sData->startFrame, sData->startFrame + sData->frameCount);
+        }
     }
 
-    int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DECIMAL_BITS)
+    int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originX;
-    int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DECIMAL_BITS)
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originY;
-    drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped,
-            false, 0);
-    
+    drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped, false,
+            0);
 }

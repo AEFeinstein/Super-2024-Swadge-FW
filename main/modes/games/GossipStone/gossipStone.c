@@ -103,9 +103,6 @@ static void gs_enterMode(void)
 
     gameData->trophyData = &gs_trophies;
 
-    // set the camera to the center of positive ints
-    gameData->camera.pos
-        = (vec_t){0xFFFF - (TFT_WIDTH << (DECIMAL_BITS - 1)), 0xFFFF - (TFT_HEIGHT << (DECIMAL_BITS - 1))};
     gs_initializeEntityManager(&gameData->entityManager, gameData);
     gs_setAssetMetaData();
 
@@ -255,29 +252,32 @@ static void gs_loadAssets(void)
     gs_loadAsset(GOSSIP_STONE_0_WSG, 3, &gameData->assets[GS_GOSSIP_STONE_ASSET]);
     gs_loadAsset(FLAME_0_WSG, 6, &gameData->assets[GS_FLAME_ASSET]);
     gs_loadAsset(MOON_TILE_0_WSG, 15, &gameData->assets[GS_MOON_TILE_ASSET]);
-    gs_loadAsset(STAR_0_WSG, 14, &gameData->assets[GS_STAR_ASSET]);//anim sequences 0-5, 6, 7-12, 13, 10
+    gs_loadAsset(STAR_0_WSG, 14, &gameData->assets[GS_STAR_ASSET]); // anim sequences 0-5, 6, 7-12, 13, 10
 }
 
 static void gs_initializeGame(void)
 {
     gs_entity_t* skyGradient
-        = gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_SKY_GRADIENT_ASSET, 1,
+        = gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_SKY_GRADIENT_ASSET, 1,
                           (vec_t){0xFFFF - (0 << DECIMAL_BITS), 0xFFFF + (25 << DECIMAL_BITS)}, gameData);
     skyGradient->drawFunction = gs_drawSkyGradient;
-    
-    for(int i = 0; i < 20; i++){
-        gs_entity_t* star = gs_createEntity(&gameData->entityManager, 0, GS_NO_ANIMATION, true, GS_STAR_ASSET, 0,
-                (vec_t){0xFFFF + (gs_randomInt(-(TFT_WIDTH>>1),TFT_WIDTH>>1) << DECIMAL_BITS), 0xFFFF + (gs_randomInt(0,90) << DECIMAL_BITS)}, gameData);
+
+    for (int i = 0; i < 20; i++)
+    {
+        gs_entity_t* star
+            = gs_createEntity(&gameData->entityManager, 0, GS_NO_ANIMATION, false, GS_STAR_ASSET, 0,
+                              (vec_t){0xFFFF + (gs_randomInt(-(TFT_WIDTH >> 1), TFT_WIDTH >> 1) << DECIMAL_BITS),
+                                      0xFFFF + (gs_randomInt(0, 90) << DECIMAL_BITS)},
+                              gameData);
         star->data = heap_caps_calloc(1, sizeof(gs_star_t), MALLOC_CAP_SPIRAM);
         gs_randomizeStarData(star);
-        //star->updateFarFunction = gs_updateFarStar;
-        star->drawFunction = gs_drawStar;
+        star->updateFarFunction = gs_updateFarStar;
+        star->drawFunction      = gs_drawStar;
     }
-    
-    gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_HILL_ASSET, 1,
-                    (vec_t){0xFFFF, 0xFFFF + (102 << DECIMAL_BITS)},
-                    gameData);
-    gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, true, GS_MOON_ASSET, 1,
+
+    gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_HILL_ASSET, 1,
+                    (vec_t){0xFFFF, 0xFFFF + (102 << DECIMAL_BITS)}, gameData);
+    gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_MOON_ASSET, 1,
                     (vec_t){0xFFFF - (90 << DECIMAL_BITS), 0xFFFF - (0 << DECIMAL_BITS)}, gameData);
     gs_entity_t* gossipStone
         = gs_createEntity(&gameData->entityManager, 3, GS_LOOPING_ANIMATION, false, GS_GOSSIP_STONE_ASSET, 5,
@@ -285,7 +285,7 @@ static void gs_initializeGame(void)
     gossipStone->data                                = heap_caps_calloc(1, sizeof(gs_gossipStone_t), MALLOC_CAP_SPIRAM);
     gossipStone->dataType                            = GS_GOSSIP_STONE_DATA;
     ((gs_gossipStone_t*)gossipStone->data)->grounded = true;
-    gs_entity_t* gossip = gs_createEntity(&gameData->entityManager, 0, GS_NO_ANIMATION, true, GS_NO_ASSET, 0,
+    gs_entity_t* gossip = gs_createEntity(&gameData->entityManager, 0, GS_NO_ANIMATION, false, GS_NO_ASSET, 0,
                                           (vec_t){0xffff, 0xffff}, gameData);
     gossip->data        = heap_caps_calloc(1, sizeof(gs_gossip_t), MALLOC_CAP_SPIRAM);
     if (gossip->data != NULL)
@@ -361,15 +361,15 @@ bool gs_menuCb(const char* label, bool selected, uint32_t value)
 
             if (gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_FLAME_DATA) == NULL)
             {
-                gs_entity_t* flame = gs_createEntity(&gameData->entityManager, 6, GS_NO_ANIMATION, true, GS_FLAME_ASSET,
-                                                     0, (vec_t){0xffff, 0xffff}, gameData);                                     
-                flame->data = heap_caps_calloc(1, sizeof(gs_flame_t), MALLOC_CAP_SPIRAM);
+                gs_entity_t* flame = gs_createEntity(&gameData->entityManager, 6, GS_NO_ANIMATION, false,
+                                                     GS_FLAME_ASSET, 0, (vec_t){0xffff, 0xffff}, gameData);
+                flame->data        = heap_caps_calloc(1, sizeof(gs_flame_t), MALLOC_CAP_SPIRAM);
                 gs_entity_t* gossipStone
                     = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_STONE_DATA);
-                gossipStone->updateFunction = gs_updateGossipStone;
-                gossipStone->drawFunction = gs_drawGossipStone;
-                ((gs_gossipStone_t*)gossipStone->data)->flame = flame;
-                ((gs_gossipStone_t*)gossipStone->data)->rotateDeg = (360 - 45)<<DECIMAL_BITS;
+                gossipStone->updateFunction                       = gs_updateGossipStone;
+                gossipStone->drawFunction                         = gs_drawGossipStone;
+                ((gs_gossipStone_t*)gossipStone->data)->flame     = flame;
+                ((gs_gossipStone_t*)gossipStone->data)->rotateDeg = (360 - 45) << DECIMAL_BITS;
                 if (gossip->data != NULL)
                 {
                     flame->dataType     = GS_FLAME_DATA;
