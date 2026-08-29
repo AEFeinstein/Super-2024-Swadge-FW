@@ -73,6 +73,11 @@ bool initializePlayer(ray_t* ray)
         ray->p.maxHealth = GAME_START_HEALTH;
         ray->p.health    = GAME_START_HEALTH;
     }
+    else
+    {
+        // When loading, set the camera equal to the prior target
+        ray->camera = ray->p.cameraTarget;
+    }
 
     // Load sprites
     ray->ps.sprite = loadTexture(ray, HYUT_WSG, EMPTY);

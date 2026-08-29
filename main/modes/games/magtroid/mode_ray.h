@@ -650,6 +650,7 @@ typedef struct
     q24_8 posY;                 ///< The player's Y position
     q24_8 dirX;                 ///< The player's X direction
     q24_8 dirY;                 ///< The player's Y direction
+    vec_t cameraTarget;         ///< The target position of the 2D camera
     int32_t mapId;              ///< The ID of the current map
     bool mapsVisited[NUM_MAPS]; ///< Booleans for each map visited
     // Current status
@@ -718,7 +719,6 @@ typedef struct rayGame
     int32_t doorTimer; ///< A timer used to open doors
 
     vec_t camera;        ///< The position of the 2D camera
-    vec_t cameraTarget;  ///< The target position of the 2D camera
     int32_t cameraTimer; ///< A timer to move the camera from current to target positions
 
     rayPlayer_t p;       ///< All the player's state, loaded from NVM

@@ -205,10 +205,6 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
         }
     }
 
-    // Set the camera to be overwritten by the script
-    ray->camera.x = 0;
-    ray->camera.y = 0;
-
     // Reset script timers
     ray->scriptTimer       = 0;
     ray->secondsSinceStart = 0;
