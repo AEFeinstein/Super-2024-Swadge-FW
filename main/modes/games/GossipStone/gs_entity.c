@@ -262,6 +262,8 @@ void gs_updateGossipStone(gs_entity_t* self)
             = mulVec2d(rocketForce, (1024 - self->gameData->touchState[1].position) * self->gameData->elapsedUs);
         gsData->vel = addVec2d(gsData->vel, divVec2d(rocketForce, 10000000));
     }
+    //gravity
+    gsData->vel.y += 100 * self->gameData->elapsedUs >> 18;
     self->pos.x += gsData->vel.x * self->gameData->elapsedUs >> 20;
     self->pos.y += gsData->vel.y * self->gameData->elapsedUs >> 20;
 
@@ -324,6 +326,7 @@ void gs_updateFarStar(gs_entity_t* self)
     {
         return;
     }
+    gs_randomizeStarData(self);
 
     uint16_t longOdds = TFT_WIDTH * abs(self->gameData->entityManager.camera.vel.y);
 
