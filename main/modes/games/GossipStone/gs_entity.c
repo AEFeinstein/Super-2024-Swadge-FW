@@ -54,21 +54,29 @@ void gs_drawNothing(gs_entity_t* self)
 void gs_drawSkyGradient(gs_entity_t* self)
 {
     int32_t y;
-    for (int i = 0; i < 35; i++)
+    int8_t offset = - ((self->gameData->entityManager.camera.pos.x>>DECIMAL_BITS) % self->gameData->assets[self->assetIndex].frames[0].w);
+    for (int i = 0; i < TFT_WIDTH / self->gameData->assets[self->assetIndex].frames[0].w + 1; i++)
     {
-        int32_t x = i * self->gameData->assets[self->assetIndex].frames[0].w;
+        int32_t x = i * self->gameData->assets[self->assetIndex].frames[0].w + offset;
         y         = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS)
                     - self->gameData->assets[self->assetIndex].originY;
         drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped,
                 false, 0);
     }
-    drawRectFilled(0, y + self->gameData->assets[self->assetIndex].frames[0].h, TFT_WIDTH,
-                   y + self->gameData->assets[self->assetIndex].frames[0].h + 10, c012);
 }
 
 void gs_updateGossip(gs_entity_t* self)
 {
     gs_gossip_t* data = (gs_gossip_t*)self->data;
+    if(data->dialogueFinished)
+    {
+        return;
+    }
+    if(self->gameData->submode == GS_PROPHECY_SUBMODE && data->index == data->arr_size - 1 && (self->gameData->touchState[0].touched || self->gameData->touchState[1].touched))
+    {
+        data->dialogueFinished = true;
+        data->onDialogueFinished(self);
+    }
     if (data->progress < strlen(data->messageList[data->index]) * FRAMES_PER_CHAR)
     {
         data->progress++;
@@ -81,31 +89,38 @@ void gs_updateGossip(gs_entity_t* self)
     // make this check for shake later
     else if (self->gameData->btnDownState & PB_A)
     {
-        if (self->gameData->submode == GS_PROPHECY_SUBMODE)
+        switch(self->gameData->submode)
         {
-            if (data->index < data->arr_size - 1)
-            {
-                data->index++;
-                if (data->index == 6 || data->index == 8)
+            case GS_GOSSIP_SUBMODE:
+            case GS_AMA_SUBMODE:
+                data->index = gs_randomInt(1, data->arr_size - 1);
+                break;
+            case GS_PROPHECY_SUBMODE:
+                if (data->index < data->arr_size - 1)
                 {
-                    data->gossipStone->palleteIdx = GS_BLUE_PALETTE;
-                }
-                else if (data->index == 10)
-                {
-                    data->gossipStone->palleteIdx = GS_RED_PALETTE;
+                    data->index++;
+                    if (data->index == 6 || data->index == 8)
+                    {
+                        data->gossipStone->palleteIdx = GS_BLUE_PALETTE;
+                    }
+                    else if (data->index == 10)
+                    {
+                        data->gossipStone->palleteIdx = GS_RED_PALETTE;
+                    }
+                    else
+                    {
+                        data->gossipStone->palleteIdx = GS_UNTOUCHED_PALETTE;
+                    }
+                    data->gossipStone->paused = false;  
                 }
                 else
                 {
-                    data->gossipStone->palleteIdx = GS_UNTOUCHED_PALETTE;
+                    data->dialogueFinished = true;
+                    data->onDialogueFinished(self);
                 }
-            }
-        }
-        else
-        {
-            data->index = gs_randomInt(1, data->arr_size - 1);
+                break;
         }
         data->progress            = 0;
-        data->gossipStone->paused = false;
         if (self->gameData->submode == GS_GOSSIP_SUBMODE)
         {
             gs_recordProgress(self);
@@ -138,6 +153,10 @@ void gs_recordProgress(gs_entity_t* self)
 void gs_drawGossip(gs_entity_t* self)
 {
     gs_gossip_t* data = ((gs_gossip_t*)self->data);
+    if(data->dialogueFinished)
+    {
+        return;
+    }
     int16_t textX     = 18;
     int16_t textY     = 50;
 
@@ -155,11 +174,11 @@ void gs_drawGossip(gs_entity_t* self)
 
 void gs_drawFlame(gs_entity_t* self)
 {
-    if (!self->gameData->touchState[1].touched)
+    gs_flame_t* fData = (gs_flame_t*)self->data;
+    if (!fData->flameOn)
     {
         return;
     }
-    gs_flame_t* fData = (gs_flame_t*)self->data;
     // use the right touch input to draw the sized flame.
     self->currentAnimationFrame
         = (self->gameData->assets[GS_FLAME_ASSET].numFrames) * self->gameData->touchState[1].position / 1023;
@@ -234,14 +253,14 @@ void gs_updateGossipStone(gs_entity_t* self)
 {
     gs_gossipStone_t* gsData = (gs_gossipStone_t*)self->data;
     // angular physics
-    if (self->gameData->touchState[0].touched)
+    if (self->gameData->touchState[0].touched && gsData->rcsEnabled)
     {
         // printf("elapsedUs: %d\n", self->gameData->touchState[0].position - 511);
         // printf("tmp %d\n", (self->gameData->touchState[0].position - 511) * self->gameData->elapsedUs >> 14);
-        gsData->angVel += (self->gameData->touchState[0].position - 511) * self->gameData->elapsedUs >> 13;
+        gsData->angVel += (self->gameData->touchState[0].position - 511) * self->gameData->elapsedUs >> 14;
     }
-    // 5% angular drag per frame
-    gsData->angVel = gsData->angVel * 19 / 20;
+    // angular drag per frame
+    gsData->angVel = gsData->angVel * 39 / 40;
     // printf("ang vel: %d\n", gsData->angVel);
     // printf("elapsed trunc: %d\n",self->gameData->elapsedUs>>2);
     // printf("uhhh: %d\n", gsData->angVel * (self->gameData->elapsedUs>>2));
@@ -252,10 +271,13 @@ void gs_updateGossipStone(gs_entity_t* self)
     {
         gsData->rotateDeg += 360 << DECIMAL_BITS;
     }
-    ((gs_flame_t*)gsData->flame->data)->rotateDeg = gsData->rotateDeg;
+
+    gs_flame_t* fData = (gs_flame_t*)gsData->flame->data;
+    fData->rotateDeg = gsData->rotateDeg;
 
     // translational physics
-    if (self->gameData->touchState[1].touched)
+    fData->flameOn = self->gameData->touchState[1].touched && gsData->throttleEnabled;
+    if (fData->flameOn)
     {
         vec_t rocketForce = rotateVec2d((vec_t){0, 1 << DECIMAL_BITS}, (gsData->rotateDeg >> DECIMAL_BITS) + 180);
         rocketForce
@@ -389,4 +411,14 @@ void gs_drawStar(gs_entity_t* self)
                 - self->gameData->assets[self->assetIndex].originY;
     drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped, false,
             0);
+}
+
+void gs_enableFlightControls(gs_entity_t* self)
+{
+    gs_entity_t* gossipStone = ((gs_gossip_t*)self->data)->gossipStone;
+    gossipStone->currentAnimationFrame = 0;
+    gossipStone->paused = true;
+    gs_gossipStone_t* gsData = (gs_gossipStone_t*)gossipStone->data;
+    gsData->rcsEnabled = true;
+    gsData->throttleEnabled = true;
 }

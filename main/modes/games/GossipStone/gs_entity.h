@@ -88,6 +88,8 @@ typedef struct
     uint16_t progress; // From 0 to TYPING_FRAMES the words are typing. If it is TYPING_FRAMES, then shakes are no
                        // longer ignored.
     gs_entity_t* gossipStone; // Reference to make it start and stop animating.
+    bool dialogueFinished;
+    gs_callbackFunction_t onDialogueFinished;
 } gs_gossip_t;
 
 typedef struct // parent class
@@ -105,6 +107,8 @@ typedef struct // child class
                              // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
     uint8_t bounceDenominator;
     // child data
+    bool throttleEnabled;
+    bool rcsEnabled;
     vec_t accel;       // acceleration
     vec_t previousPos; // position from the previous frame
     bool grounded;
@@ -116,6 +120,7 @@ typedef struct // child class
 
 typedef struct
 {
+    bool flameOn;
     int32_t rotateDeg;
 } gs_flame_t;
 
@@ -147,3 +152,4 @@ void gs_drawGossipStone(gs_entity_t* self);
 void gs_randomizeStarData(gs_entity_t* self);
 void gs_updateFarStar(gs_entity_t* self);
 void gs_drawStar(gs_entity_t* self);
+void gs_enableFlightControls(gs_entity_t* self);

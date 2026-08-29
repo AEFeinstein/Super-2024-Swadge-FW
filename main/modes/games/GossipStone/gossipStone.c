@@ -19,8 +19,8 @@
 //==============================================================================
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-const char gs_ModeName[]                = "Gossip Stone";
-const char gs_trophyNVS[]               = "GossipTroph";
+const char gs_ModeName[]                = "Talky Rocky";
+const char gs_trophyNVS[]               = "OreatorTroph";
 static const char gs_GossipStr[]        = "Gossip";
 static const char gs_AskMeAnythingStr[] = "Ask Me Anything";
 static const char gs_ProphecyStr[]      = "The Prophecy";
@@ -241,7 +241,11 @@ static void gs_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 {
     // Fill the flat background color
     paletteColor_t* frameBuf = getPxTftFramebuffer();
-    memset(&frameBuf[(y * TFT_WIDTH) + x], c011, sizeof(paletteColor_t) * w * h);
+    paletteColor_t col = c011;
+    if(gameData->entityManager.camera.pos.y < 0xFFFF - (370 << DECIMAL_BITS)){
+        col = c000;
+    }
+    memset(&frameBuf[(y * TFT_WIDTH) + x], col, sizeof(paletteColor_t) * w * h);
 }
 
 static void gs_loadAssets(void)
@@ -253,6 +257,8 @@ static void gs_loadAssets(void)
     gs_loadAsset(FLAME_0_WSG, 6, &gameData->assets[GS_FLAME_ASSET]);
     gs_loadAsset(MOON_TILE_0_WSG, 15, &gameData->assets[GS_MOON_TILE_ASSET]);
     gs_loadAsset(STAR_0_WSG, 14, &gameData->assets[GS_STAR_ASSET]); // anim sequences 0-5, 6, 7-12, 13, 10
+    gs_loadAsset(SPACE_GRADIENT_WSG, 1, &gameData->assets[GS_SPACE_GRADIENT_ASSET]);
+    gs_loadAsset(HI_RES_MOON_WSG, 1, &gameData->assets[GS_HI_RES_MOON_ASSET]);
 }
 
 static void gs_initializeGame(void)
@@ -261,6 +267,11 @@ static void gs_initializeGame(void)
         = gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_SKY_GRADIENT_ASSET, 1,
                           (vec_t){0xFFFF - (0 << DECIMAL_BITS), 0xFFFF + (25 << DECIMAL_BITS)}, gameData);
     skyGradient->drawFunction = gs_drawSkyGradient;
+
+    gs_entity_t* spaceGradient
+        = gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_SPACE_GRADIENT_ASSET, 1,
+                          (vec_t){0xFFFF - (0 << DECIMAL_BITS), 0xFFFF - (250 << DECIMAL_BITS)}, gameData);
+    spaceGradient->drawFunction = gs_drawSkyGradient;
 
     for (int i = 0; i < 20; i++)
     {
@@ -274,6 +285,9 @@ static void gs_initializeGame(void)
         star->updateFarFunction = gs_updateFarStar;
         star->drawFunction      = gs_drawStar;
     }
+
+    gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_HI_RES_MOON_ASSET, 1,
+                    (vec_t){0xFFFF, 0xFFFF - (1000 << DECIMAL_BITS)}, gameData);
 
     gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_HILL_ASSET, 1,
                     (vec_t){0xFFFF, 0xFFFF + (102 << DECIMAL_BITS)}, gameData);
@@ -333,31 +347,35 @@ bool gs_menuCb(const char* label, bool selected, uint32_t value)
         {
             gameData->submode   = GS_GOSSIP_SUBMODE;
             gs_entity_t* gossip = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_DATA);
-            ((gs_gossip_t*)gossip->data)->messageList = gossipList;
-            ((gs_gossip_t*)gossip->data)->arr_size    = GOSSIP_COUNT;
+            gs_gossip_t* gData = (gs_gossip_t*)gossip->data;
+            gData->messageList = gossipList;
+            gData->arr_size    = GOSSIP_COUNT;
             // reset a few things because the player may have exited and entered.
-            ((gs_gossip_t*)gossip->data)->index    = 0;
+            gData->index    = 0;
             ((gs_gossip_t*)gossip->data)->progress = 0;
         }
         else if (label == gs_AskMeAnythingStr)
         {
             gameData->submode   = GS_AMA_SUBMODE;
             gs_entity_t* gossip = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_DATA);
-            ((gs_gossip_t*)gossip->data)->messageList = AMAList;
-            ((gs_gossip_t*)gossip->data)->arr_size    = AMA_COUNT;
+            gs_gossip_t* gData = (gs_gossip_t*)gossip->data;
+            gData->messageList = AMAList;
+            gData->arr_size    = AMA_COUNT;
             // reset a few things because the player may have exited and entered.
-            ((gs_gossip_t*)gossip->data)->index    = 0;
-            ((gs_gossip_t*)gossip->data)->progress = 0;
+            gData->index    = 0;
+            gData->progress = 0;
         }
         else if (label == gs_ProphecyStr)
         {
             gameData->submode   = GS_PROPHECY_SUBMODE;
             gs_entity_t* gossip = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_DATA);
-            ((gs_gossip_t*)gossip->data)->messageList = ProphecyList;
-            ((gs_gossip_t*)gossip->data)->arr_size    = PROPHECY_COUNT;
+            gs_gossip_t* gData = (gs_gossip_t*)gossip->data;
+            gData->messageList = ProphecyList;
+            gData->arr_size    = PROPHECY_COUNT;
+            gData->onDialogueFinished = gs_enableFlightControls;
             // reset a few things because the player may have exited and entered.
-            ((gs_gossip_t*)gossip->data)->index    = 0;
-            ((gs_gossip_t*)gossip->data)->progress = 0;
+            gData->index    = 0;
+            gData->progress = 0;
 
             if (gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_FLAME_DATA) == NULL)
             {

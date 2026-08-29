@@ -29,6 +29,8 @@ typedef enum __attribute__((packed))
     GS_FLAME_ASSET,
     GS_MOON_TILE_ASSET,
     GS_STAR_ASSET,
+    GS_SPACE_GRADIENT_ASSET,
+    GS_HI_RES_MOON_ASSET,
     GS_NO_ASSET, // Keep this one at the end of the enum. Used for entities with no wsgs.
 } gs_assetIdx_t;
 
