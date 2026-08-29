@@ -34,6 +34,9 @@ const char* AMAList[AMA_COUNT] = {
     "Very doubtful.",
 };
 
-const char* ProphecyList[PROPHECY_COUNT]
+const char* prophecyList[PROPHECY_COUNT]
     = {"Congratulations! You've completed The Prophecy!", "T-10", "9", "8", "7", "6", "5", "4", "3", "2", "1",
        "What are you waiting for? Use the touch strips."};
+
+
+const char* prophecyEndSceneList[PROPHECY_END_SCENE_COUNT] = {"You thought I was done talking? Shake me, baby!", "My people need meeeee!"};

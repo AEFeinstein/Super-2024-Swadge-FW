@@ -1,5 +1,6 @@
 #include "gs_entity.h"
 #include "gs_utility.h"
+#include "gs_gossip.h"
 #include "shapes.h"
 #include <linked_list.h>
 #include <limits.h>
@@ -55,6 +56,10 @@ void gs_drawSkyGradient(gs_entity_t* self)
 {
     int32_t y;
     int8_t offset = - ((self->gameData->entityManager.camera.pos.x>>DECIMAL_BITS) % self->gameData->assets[self->assetIndex].frames[0].w);
+    if(self->gameData->entityManager.camera.pos.x < 0)
+    {
+        offset -= self->gameData->assets[self->assetIndex].frames[0].w;
+    }
     for (int i = 0; i < TFT_WIDTH / self->gameData->assets[self->assetIndex].frames[0].w + 1; i++)
     {
         int32_t x = i * self->gameData->assets[self->assetIndex].frames[0].w + offset;
@@ -72,7 +77,7 @@ void gs_updateGossip(gs_entity_t* self)
     {
         return;
     }
-    if(self->gameData->submode == GS_PROPHECY_SUBMODE && data->index == data->arr_size - 1 && (self->gameData->touchState[0].touched || self->gameData->touchState[1].touched))
+    if(self->gameData->submode == GS_PROPHECY_SUBMODE && data->index == data->arr_size - 1 && (self->gameData->touchState[0].touched || self->gameData->touchState[1].touched) && data->arr_size == PROPHECY_COUNT)
     {
         data->dialogueFinished = true;
         data->onDialogueFinished(self);
@@ -285,11 +290,13 @@ void gs_updateGossipStone(gs_entity_t* self)
         gsData->vel = addVec2d(gsData->vel, divVec2d(rocketForce, 10000000));
     }
     //gravity
-    gsData->vel.y += 100 * self->gameData->elapsedUs >> 18;
+    gsData->vel.y += gsData->gravity * self->gameData->elapsedUs >> 18;
     self->pos.x += gsData->vel.x * self->gameData->elapsedUs >> 20;
     self->pos.y += gsData->vel.y * self->gameData->elapsedUs >> 20;
 
     gsData->flame->pos = self->pos;
+
+    //printf("pos x: %d pos y: %d\n", self->pos.x, self->pos.y);
 
     self->gameData->entityManager.camera.vel = self->gameData->entityManager.camera.pos;
     if (self->pos.y < 0xFFFF)
@@ -340,6 +347,16 @@ void gs_randomizeStarData(gs_entity_t* self)
         endFrame = gs_randomInt(sData->startFrame + 1, self->gameData->assets[self->assetIndex].numFrames - 1);
     }
     sData->frameCount = endFrame - sData->startFrame; // it's actually the frame count minus 1.
+    self->currentAnimationFrame = sData->startFrame;
+}
+
+void gs_updateStar(gs_entity_t* self)
+{
+    //fake movement during talking cutscene moment
+    if(self->gameData->entityManager.gossipStone->updateFunction == NULL)
+    {
+        self->pos = subVec2d(self->pos, self->gameData->entityManager.camera.vel);
+    }
 }
 
 void gs_updateFarStar(gs_entity_t* self)
@@ -350,10 +367,10 @@ void gs_updateFarStar(gs_entity_t* self)
     }
     gs_randomizeStarData(self);
 
-    uint16_t longOdds = TFT_WIDTH * abs(self->gameData->entityManager.camera.vel.y);
+    uint32_t longOdds = TFT_WIDTH * abs(self->gameData->entityManager.camera.vel.y);
 
-    uint16_t total = longOdds + TFT_HEIGHT * abs(self->gameData->entityManager.camera.vel.x);
-    uint16_t roll  = gs_randomInt(0, total);
+    uint32_t total = longOdds + TFT_HEIGHT * abs(self->gameData->entityManager.camera.vel.x);
+    uint32_t roll  = gs_randomInt(0, total);
 
     if (roll <= longOdds) // it warps to a long edge
     {
@@ -421,4 +438,42 @@ void gs_enableFlightControls(gs_entity_t* self)
     gs_gossipStone_t* gsData = (gs_gossipStone_t*)gossipStone->data;
     gsData->rcsEnabled = true;
     gsData->throttleEnabled = true;
+}
+
+void gs_updateMoon(gs_entity_t* self)
+{
+    //Just doing some prophecy scene management with the little moon that happens to be present for the scene.
+    if(self->gameData->entityManager.gossipStone->pos.y < 30000 && ((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->throttleEnabled)
+    {
+        ((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->throttleEnabled = false;
+        ((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->gravity = 0;
+        ((gs_flame_t*)((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->flame->data)->flameOn = false;
+        gs_gossip_t* gData = (gs_gossip_t*)self->gameData->entityManager.gossip->data;
+        gData->gossipStone->paused = false;
+        gData->messageList = prophecyEndSceneList;
+        gData->arr_size    = PROPHECY_END_SCENE_COUNT;
+        gData->dialogueFinished = false;
+        gData->onDialogueFinished = gs_spawnMoon;
+        gData->index    = 0;
+        gData->progress = 0;
+    }
+}
+
+void gs_spawnMoon(gs_entity_t* self)
+{
+    self->gameData->entityManager.gossipStone->updateFunction = gs_updateGossipStone;
+    //Where the moon is spawning relative to the GossipStone.
+    vec_t moonOffset = mulVec2d((vec_t){self->gameData->entityManager.camera.vel.x / 16, self->gameData->entityManager.camera.vel.y / 16}, 200);
+    //if it is so close that it would pop on screen
+    if(sqMagVec2d(moonOffset) < 140*140)
+    {
+        //make the offset be the length of half the tft width.
+        vec_t norm = (vec_t){self->gameData->entityManager.camera.vel.x, self->gameData->entityManager.camera.vel.y};
+        fastNormVec(&norm.x, &norm.y);
+        moonOffset = mulVec2d(norm, 140);
+    }
+    moonOffset.x *= 16;
+    moonOffset.y *= 16;
+    gs_createEntity(&self->gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_HI_RES_MOON_ASSET, 1,
+                    addVec2d(self->gameData->entityManager.gossipStone->pos, moonOffset), self->gameData);
 }

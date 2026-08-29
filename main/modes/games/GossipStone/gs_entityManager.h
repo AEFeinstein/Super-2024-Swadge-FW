@@ -21,6 +21,8 @@ typedef struct
     list_t* entities;
     gs_entity_t* tilemap;
     gs_camera_t camera;
+    gs_entity_t* gossip;
+    gs_entity_t* gossipStone;
 } gs_entityManager_t;
 
 //==============================================================================

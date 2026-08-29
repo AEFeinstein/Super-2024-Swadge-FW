@@ -116,6 +116,7 @@ typedef struct // child class
     int16_t angVel; // angular velocity
     gs_entity_t* flame;
     int32_t fuel; // Remaining fuel.
+    uint16_t gravity;
 } gs_gossipStone_t;
 
 typedef struct
@@ -150,6 +151,9 @@ void gs_collisionCheck(gs_entity_t* tilemap, gs_entity_t* ent, gs_hitInfo_t* hit
 void gs_updateGossipStone(gs_entity_t* self);
 void gs_drawGossipStone(gs_entity_t* self);
 void gs_randomizeStarData(gs_entity_t* self);
+void gs_updateStar(gs_entity_t* self);
 void gs_updateFarStar(gs_entity_t* self);
 void gs_drawStar(gs_entity_t* self);
 void gs_enableFlightControls(gs_entity_t* self);
+void gs_updateMoon(gs_entity_t* self);
+void gs_spawnMoon(gs_entity_t* self);
