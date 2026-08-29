@@ -376,7 +376,7 @@ static void rayMainLoop(int64_t elapsedUs)
             drawForeground2d(ray, elapsedUs);
 
             // Only run this code when the camera is settled
-            if (ray->camera.x == ray->cameraTarget.x && ray->camera.y == ray->cameraTarget.y)
+            if (ray->camera.x == ray->p.cameraTarget.x && ray->camera.y == ray->p.cameraTarget.y)
             {
                 // Check buttons for the player and move player accordingly
                 rayPlayerCheckButtons(ray, elapsedUs);
@@ -557,6 +557,11 @@ void rayStartGame(void)
     // Clear all lists
     rayFreeCurrentState(ray);
 
+    // Start with an uninitialized camera
+    // This may be loaded from NVM or set via script
+    ray->camera.x = -1;
+    ray->camera.y = -1;
+
     // Load player data from NVM
     bool initFromScratch = initializePlayer(ray);
 
@@ -589,7 +594,7 @@ void rayStartGame(void)
     raySwitchToScreen(RAY_GAME);
 
     // Check script from entering the initial cell
-    checkScriptEnter(ray, FROM_FX(pStartX), FROM_FX(pStartY));
+    checkScriptEnter(ray, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
 }
 
 /**
