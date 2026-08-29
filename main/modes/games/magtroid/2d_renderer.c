@@ -104,20 +104,20 @@ void drawForeground2d(ray_t* ray, uint32_t elapsedUs)
 {
     // Run timers for camera movement
     RUN_TIMER_EVERY(ray->cameraTimer, (1000000 / TFT_WIDTH), elapsedUs, {
-        if (ray->camera.x < ray->cameraTarget.x)
+        if (ray->camera.x < ray->p.cameraTarget.x)
         {
             ray->camera.x++;
         }
-        else if (ray->camera.x > ray->cameraTarget.x)
+        else if (ray->camera.x > ray->p.cameraTarget.x)
         {
             ray->camera.x--;
         }
 
-        if (ray->camera.y < ray->cameraTarget.y)
+        if (ray->camera.y < ray->p.cameraTarget.y)
         {
             ray->camera.y++;
         }
-        else if (ray->camera.y > ray->cameraTarget.y)
+        else if (ray->camera.y > ray->p.cameraTarget.y)
         {
             ray->camera.y--;
         }
