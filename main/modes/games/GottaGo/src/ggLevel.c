@@ -245,14 +245,22 @@ void ggLevelReset(ggData_t* ggd)
     }
 
     // Set selection to a valid option
-    ggd->selection = ggd->numActive / 2;
+    if (ggd->numActive % 2 == 1)
+    {
+        ggd->selection = ggd->numActive / 2;
+    }
+    else
+    {
+        ggd->selection = (ggd->numActive / 2) - 1;
+    }
     while (ggd->urinals[ggd->selection].npc.active)
     {
         ggd->selection++;
-    }
-    if (ggd->selection >= ggd->numActive)
-    {
-        ESP_LOGE("GG", "Selection >= active. May cause memory leaks");
+        if (ggd->urinals[ggd->selection].npc.active)
+        {
+            ggd->selection += ggd->numActive - 2;
+        }
+        ggd->selection %= ggd->numActive;
     }
 }
 

@@ -4,7 +4,7 @@
 
 - [ ] Fix bugs
   - [ ] Accuracy can go above 100%
-  - [ ] Sometimes when num of urinals reduces next round, selection pointer is off the end
+  - [x] Sometimes when num of urinals reduces next round, selection pointer is off the end
   - [x] Trophies aren't triggering at the right spot
 - [ ] Test on hardware
 - [ ] Update SFX to be less annoying
