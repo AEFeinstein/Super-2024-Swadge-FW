@@ -8,6 +8,7 @@
 #include "ray_credits.h"
 #include "ray_pause.h"
 #include "ray_tex_manager.h"
+#include "ray_shop_dialog.h"
 
 static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait);
 static bool checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* portrait);
@@ -926,14 +927,7 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         }
         case SHOP:
         {
-            if (ray->p.mpoints >= script->thenArgs.shop.cost)
-            {
-                ray->p.mpoints -= script->thenArgs.shop.cost;
-                rayObjCommon_t item = {
-                    .type = script->thenArgs.shop.obj,
-                };
-                rayPlayerTouchItem(ray, &item, ray->p.mapId);
-            }
+            rayShowShopDialog(ray, portrait, script->thenArgs.shop.cost, script->thenArgs.shop.obj);
             break;
         }
     }

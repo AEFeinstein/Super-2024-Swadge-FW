@@ -17,6 +17,7 @@
 #include "ray_credits.h"
 #include "ray_instrument.h"
 #include "2d_renderer.h"
+#include "ray_shop_dialog.h"
 
 //==============================================================================
 // Function Prototypes
@@ -423,6 +424,16 @@ static void rayMainLoop(int64_t elapsedUs)
             rayInstrumentRender(ray, elapsedUs);
             break;
         }
+        case RAY_SHOP_DIALOG:
+        {
+            // Draw game foreground
+            drawForeground2d(ray, elapsedUs);
+            // Render dialog on top of that
+            rayShopDialogRender(ray, elapsedUs);
+            // Check buttons
+            rayShopDialogCheckButtons(ray);
+            break;
+        }
         case RAY_DIALOG:
         {
             // Render first
@@ -482,6 +493,7 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
             // Do nothing
             break;
         }
+        case RAY_SHOP_DIALOG:
         case RAY_INSTRUMENT:
         case RAY_GAME:
         {
@@ -615,6 +627,7 @@ void raySwitchToScreen(rayScreen_t newScreen)
             break;
         }
         case RAY_GAME:
+        case RAY_SHOP_DIALOG:
         case RAY_DIALOG:
         case RAY_PAUSE:
         case RAY_WARP_SCREEN:
@@ -675,4 +688,14 @@ static void rayInstrumentDacCallback(uint8_t* samples, int16_t len)
     {
         *samples++ = swSynthMixOscillators(ray->oscillators, ARRAY_SIZE(ray->oscillators));
     }
+}
+
+/**
+ * @brief Get all of the game state. This can be called from within callbacks that can't take ray_t* as an argument
+ *
+ * @return The entire game state
+ */
+ray_t* getRayState(void)
+{
+    return ray;
 }
