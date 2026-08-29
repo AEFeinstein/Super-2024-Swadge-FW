@@ -505,7 +505,7 @@ void drawDialogBox(const dialogBox_t* dialogBox, const font_t* titleFont, const 
         }
         else
         {
-            fillDisplayArea(drawInfo->x, drawInfo->y, drawInfo->x + drawInfo->w, drawInfo->y + drawInfo->h,
+            fillDisplayArea(drawInfo->x, drawInfo->y, drawInfo->x + drawInfo->w + 1, drawInfo->y + drawInfo->h + 1,
                             drawInfo->selected ? (drawInfo->pressed ? COL_DETAIL : COL_OPTION_BG_SEL) : COL_OPTION_BG);
         }
 

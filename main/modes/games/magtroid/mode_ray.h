@@ -381,6 +381,7 @@ typedef enum
     RAY_MENU,         ///< The main menu is being shown
     RAY_GAME,         ///< The game loop is being shown
     RAY_INSTRUMENT,   ///< An instrument is being played
+    RAY_SHOP_DIALOG,  ///< A shop dialog is being shown
     RAY_DIALOG,       ///< A dialog box is being shown
     RAY_PAUSE,        ///< The pause menu is being shown
     RAY_WARP_SCREEN,  ///< The warp screen animation is being shown
@@ -789,6 +790,11 @@ typedef struct rayGame
     synthOscillator_t lOsc;            ///< An oscillator for the left touchpad
     synthOscillator_t rOsc;            ///< An oscillator for the right touchpad
     synthOscillator_t* oscillators[2]; ///< Access to both oscillators
+
+    dialogBox_t* shopDialog;  ///< A dialog for buying items
+    uint32_t shopCost;        ///< The cost of the current item being purchased
+    rayMapCellType_t shopObj; ///< The item currently being purchased
+    char* shopDescription;    ///< A description of item and cost
 } ray_t;
 
 //==============================================================================
@@ -811,5 +817,6 @@ extern const char MAGTROID_UNLOCK_KEY[];
 void rayFreeCurrentState(ray_t* ray);
 void rayStartGame(void);
 void raySwitchToScreen(rayScreen_t newScreen);
+ray_t* getRayState(void);
 
 #endif
