@@ -6,45 +6,28 @@
 #include "ci_campIdle.h"
 
 // Subcomponents
+#include "ci_genericData.h"
 #include "ci_items.h"
+#include "ci_draw.h"
 
 //==============================================================================
 // Consts
 //==============================================================================
 
 const char campModeName[] = "Cozy Camping";
- 
-//==============================================================================
-// Enum
-//==============================================================================
-
-typedef enum {
-    CI_SPLASH,
-    CI_MENU,
-    CI_DAY,
-    CI_NIGHT,
-} ci_state_t;
-
-//==============================================================================
-// Structs
-//==============================================================================
-
-typedef struct
-{
-    // Current state
-    ci_state_t state;
-
-    // Day
-    ci_inventory_t inv;
-} ci_campData_t;
 
 //==============================================================================
 // Function Declarations
 //==============================================================================
 
+// Main
 static void campEnterMode(void);
 static void campExitMode(void);
 static void campMainLoop(int64_t elapsedUs);
+
+// Game States
+static void doSplash(void);
+static void doMenu(void);
 
 //==============================================================================
 // Variables
@@ -67,47 +50,68 @@ swadgeMode_t campIdleMode = {
     .fnAdvancedUSB            = NULL,
 };
 
-ci_campData_t* ciData;
+ciCampData_t* ccd;
 
 //==============================================================================
 // Functions
 //==============================================================================
- 
+
 static void campEnterMode()
 {
-    ciData = (ci_campData_t*)heap_caps_calloc(1, sizeof(ci_campData_t), MALLOC_CAP_8BIT);
-    ci_initInv(&ciData->inv);
+    ccd = (ciCampData_t*)heap_caps_calloc(1, sizeof(ciCampData_t), MALLOC_CAP_8BIT);
+    ciInitInventory(ccd);
 }
- 
+
 static void campExitMode()
 {
-    free(ciData);
+    ciFreeInventory(ccd);
+    free(ccd);
 }
- 
+
 static void campMainLoop(int64_t elapsedUs)
 {
-    buttonEvt_t evt;
-    switch (ciData->state)
+    switch (ccd->state)
     {
         case CI_SPLASH:
         {
-            while (checkButtonQueueWrapper(&evt))
-            {
-                if (evt.button & PB_A)
-                {
-                    ciData->state = CI_MENU;
-                }
-            }
+            doSplash();
             break;
         }
-        case CI_DAY:
+        case CI_MENU:
         {
-            
+            doMenu();
             break;
         }
         default:
         {
+            buttonEvt_t evt;
+            while (checkButtonQueueWrapper(&evt))
+            {
+                // Allow backing out
+            }
             break;
         }
     }
+}
+
+static void doSplash()
+{
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down && (evt.button & PB_A))
+        {
+            ccd->state = CI_MENU;
+        }
+    }
+    ciDrawSplash(ccd);
+}
+
+static void doMenu()
+{
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+    }
+    ciDrawMenu(ccd);
 }
