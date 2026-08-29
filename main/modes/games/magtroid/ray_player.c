@@ -139,7 +139,8 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
         if (ray->ps.pbaDownTimeUs >= 1000000)
         {
             // Switch to instrument mode
-            ray->ps.pbaDown = false;
+            ray->ps.pbaDown       = false;
+            ray->ps.pbaDownTimeUs = 0;
             raySwitchToScreen(RAY_INSTRUMENT);
         }
     }
@@ -184,20 +185,20 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
             {
                 if (evt.down)
                 {
+                    // If not already jumping, add an impulse to jump
+                    if (ray->p.i.haveJumpBoots && !rayPlayerIsJumping(ray))
+                    {
+                        ray->ps.jumpVel = -TO_FX_FRAC(5, 8);
+                    }
+
                     // When the button is pressed, start accumulating time
                     ray->ps.pbaDown       = true;
                     ray->ps.pbaDownTimeUs = 0;
                 }
                 else if (ray->ps.pbaDown)
                 {
-                    // WHen the button is released, if long-press wasn't already triggered, do a short press
+                    // Mark PB_A as released
                     ray->ps.pbaDown = false;
-
-                    // If not already jumping, add an impulse to jump
-                    if (ray->p.i.haveJumpBoots && !rayPlayerIsJumping(ray))
-                    {
-                        ray->ps.jumpVel = -TO_FX_FRAC(5, 8);
-                    }
                 }
             }
         }
