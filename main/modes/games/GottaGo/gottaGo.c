@@ -1074,7 +1074,6 @@ static void handleGameEnd(bool lose, bool stall)
     {
         checkTrophies(final, ggd->accScore, worst);
         trophyUpdateMilestone(&ggTrophies[T_ROUNDS_20], trophyGetSavedValue(&ggTrophies[T_ROUNDS_20]) + 1, MILE_ROUNDS);
-        trophyUpdateMilestone(&ggTrophies[T_WORST_OPTIONS], ggd->numLevels, MILE_CASUAL);
     }
     else
     {
