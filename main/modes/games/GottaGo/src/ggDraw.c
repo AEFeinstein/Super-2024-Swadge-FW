@@ -1203,6 +1203,10 @@ static void drawHSTable(ggData_t* ggd, ggHSTable_t* hs, bool percent)
     char buffer[64];
     for (int idx = 0; idx < MAX_SCORES; idx++)
     {
+        if (hs->scores[idx].packedName == -1)
+        {
+            return;
+        }
         nameData_t nd;
         setUsernameFrom32(&nd, hs->scores[idx].packedName);
         if (percent)

@@ -158,7 +158,7 @@ const trophyData_t ggTrophies[] = {
     {
         .title       = "The Truth is out there",
         .description = "Learn the truth about the Adraxians",
-        .image       = TROPHY_DIFF_EASY,
+        .image       = BRONZE_TROPHY_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
@@ -262,7 +262,7 @@ static void checkTrophies(int* urinalScores, int accuracy, int worst);
  * @param count Current numer of Levels
  * @param trophyName The trophy to update
  */
-static void checkAccuracy(int accuracy, int target, int count, ggTrophyNames_t trophyName);
+static void checkAccuracy(int accuracy, int target, int* count, ggTrophyNames_t trophyName);
 
 /**
  * @brief Gets the length of the drink water phrase list
@@ -485,8 +485,17 @@ static void ggMainLoop(int64_t elapsedUs)
                 {
                     if (ggd->casual)
                     {
-                        ggLevelReset(ggd);
-                        ggd->state = GG_CASUAL;
+                        if (ggd->pause)
+                        {
+                            ggd->pause     = false;
+                            ggd->selection = GG_TEXT_MENU_PLAY;
+                            ggd->state     = GG_MENU;
+                        }
+                        else
+                        {
+                            ggLevelReset(ggd);
+                            ggd->state = GG_CASUAL;
+                        }
                     }
                     else
                     {
@@ -852,23 +861,14 @@ static void doChoice(int64_t elapsedUs)
             ggd->stallReq *= 2;
             ggd->stallReq += ggd->stallReq / 2;
         }
-        // Calculate scores
-        if (!ggd->hasLost)
-        {
-            ggd->state = GG_WON;
-        }
-        else
-        {
-            ggd->state = GG_LOST;
-        }
+        ggd->state = GG_WON;
         // Update trophies
         trophyUpdateMilestone(&ggTrophies[T_LEVELS_10], ggd->numLevels, 50);
         trophyUpdateMilestone(&ggTrophies[T_LEVELS_20], ggd->numLevels, 50);
         trophyUpdateMilestone(&ggTrophies[T_LEVELS_30], ggd->numLevels, 50);
         if (ggd->hasLost)
         {
-            trophyUpdateMilestone(&ggTrophies[T_ROUNDS_20], trophyGetSavedValue(&ggTrophies[T_ROUNDS_20]) + 1,
-                                  MILE_ROUNDS);
+            ggd->state = GG_LOST;
         }
     }
     ggDrawLevel(ggd, true);
@@ -1072,10 +1072,12 @@ static void handleGameEnd(bool lose, bool stall)
     if (!ggd->casual)
     {
         checkTrophies(final, ggd->accScore, worst);
+        trophyUpdateMilestone(&ggTrophies[T_ROUNDS_20], trophyGetSavedValue(&ggTrophies[T_ROUNDS_20]) + 1, MILE_ROUNDS);
+        trophyUpdateMilestone(&ggTrophies[T_WORST_OPTIONS], ggd->numLevels, MILE_CASUAL);
     }
     else
     {
-        trophyUpdateMilestone(&ggTrophies[T_WORST_OPTIONS], ggd->numLevels, MILE_CASUAL);
+        trophyUpdateMilestone(&ggTrophies[T_CASUAL], trophyGetSavedValue(&ggTrophies[T_CASUAL]) + 1, MILE_ROUNDS);
     }
 
     // Reset
@@ -1086,14 +1088,14 @@ static void handleGameEnd(bool lose, bool stall)
 static void checkTrophies(int* urinalScores, int accuracy, int worst)
 {
     // Reset accuracy trophy trackers if not accurate enough
-    checkAccuracy(accuracy, OHP_SCORE, ggd->accLevel1, T_OHP);
-    checkAccuracy(accuracy, NNP_SCORE, ggd->accLevel2, T_NNP);
-    checkAccuracy(accuracy, NFP_SCORE, ggd->accLevel3, T_NFP);
+    checkAccuracy(accuracy, OHP_SCORE, &ggd->accLevel1, T_OHP);
+    checkAccuracy(accuracy, NNP_SCORE, &ggd->accLevel2, T_NNP);
+    checkAccuracy(accuracy, NFP_SCORE, &ggd->accLevel3, T_NFP);
 
-    if (urinalScores[ggd->selection] == worst)
+    if (urinalScores[ggd->selection] == worst && worst != 1000)
     {
         ggd->numWorst++;
-        trophyUpdateMilestone(&ggTrophies[T_CASUAL], ggd->numWorst, MILE_WORST);
+        trophyUpdateMilestone(&ggTrophies[T_WORST_OPTIONS], ggd->numWorst, MILE_WORST);
     }
     else
     {
@@ -1101,16 +1103,16 @@ static void checkTrophies(int* urinalScores, int accuracy, int worst)
     }
 }
 
-static void checkAccuracy(int accuracy, int target, int count, ggTrophyNames_t trophyName)
+static void checkAccuracy(int accuracy, int target, int* count, ggTrophyNames_t trophyName)
 {
     if (accuracy < target)
     {
-        count = 0;
+        *count = 0;
     }
     if (accuracy >= target && !ggd->stallUsed)
     {
-        count++;
-        trophyUpdateMilestone(&ggTrophies[trophyName], count, MILE_ACC);
+        *count += 1;
+        trophyUpdateMilestone(&ggTrophies[trophyName], *count, MILE_ACC);
     }
 }
 
