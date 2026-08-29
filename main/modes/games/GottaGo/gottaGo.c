@@ -360,6 +360,7 @@ static void ggEnterMode(void)
     ggd->sfxPlayer = globalMidiPlayerGet(MIDI_SFX);
     midiGmOn(ggd->sfxPlayer);
     midiPause(ggd->sfxPlayer, false);
+    ggd->clickSound = HIGH_FLOOR_TOM;
 
     // Init
     drinkWater();
@@ -555,18 +556,18 @@ static void doWarning(int64_t elapsedUs)
     {
         if (!ggd->toggle)
         {
-            midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
+            midiNoteOn(ggd->sfxPlayer, 9, ggd->clickSound, 0x7F);
         }
         else if (evt.down && (evt.button & PB_A))
         {
-            midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
+            midiNoteOn(ggd->sfxPlayer, 9, ggd->clickSound, 0x7F);
             ggInitSplash(ggd);
             writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_WARNING_NVS], true);
             ggd->state = GG_SPLASH;
         }
         else if (evt.down)
         {
-            midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
+            midiNoteOn(ggd->sfxPlayer, 9, ggd->clickSound, 0x7F);
             switchToSwadgeMode(&mainMenuMode);
         }
     }
@@ -584,7 +585,7 @@ static void doSplash(int64_t elapsedUs)
     {
         if (evt.button & PB_A && evt.down)
         {
-            midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
+            midiNoteOn(ggd->sfxPlayer, 9, ggd->clickSound, 0x7F);
             ggd->state = GG_MENU;
         }
     }
@@ -598,7 +599,7 @@ static void doMenu()
     {
         if (evt.down)
         {
-            midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
+            midiNoteOn(ggd->sfxPlayer, 9, ggd->clickSound, 0x7F);
             if (evt.button & PB_DOWN)
             {
                 ggd->selection++;
@@ -671,7 +672,7 @@ static void doPickGame()
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
-        midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
+        midiNoteOn(ggd->sfxPlayer, 9, ggd->clickSound, 0x7F);
         if (evt.down)
         {
             if (evt.button & PB_B)
@@ -735,7 +736,7 @@ static void doGame(int64_t elapsedUs)
     {
         if (evt.down)
         {
-            midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
+            midiNoteOn(ggd->sfxPlayer, 9, ggd->clickSound, 0x7F);
             if (evt.button & PB_A)
             {
                 if (ggd->pause)
@@ -880,7 +881,7 @@ static void doRules()
     int size = ARRAY_SIZE(rulesText) / 2;
     while (checkButtonQueueWrapper(&evt))
     {
-        midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
+        midiNoteOn(ggd->sfxPlayer, 9, ggd->clickSound, 0x7F);
         if (!evt.down)
         {
             if (evt.button & PB_RIGHT)
@@ -915,7 +916,7 @@ static void doHS()
     {
         if (evt.down)
         {
-            midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
+            midiNoteOn(ggd->sfxPlayer, 9, ggd->clickSound, 0x7F);
             if (evt.button & PB_DOWN || evt.button & PB_RIGHT)
             {
                 ggd->selection++;
@@ -946,7 +947,7 @@ static void doOptions()
     {
         if (evt.down)
         {
-            midiNoteOn(ggd->sfxPlayer, 9, HIGH_TOM, 0x7F);
+            midiNoteOn(ggd->sfxPlayer, 9, ggd->clickSound, 0x7F);
             if (evt.button & PB_DOWN)
             {
                 ggd->selection++;

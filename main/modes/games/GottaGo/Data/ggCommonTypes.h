@@ -251,6 +251,7 @@ typedef struct
     // SFX/BGM
     midiFile_t bgm;          ///< Background track
     midiPlayer_t* sfxPlayer; ///< SFX player
+    int clickSound;          ///< The sound of a button press
 
     // Main
     ggState_t state;   ///< Game state
