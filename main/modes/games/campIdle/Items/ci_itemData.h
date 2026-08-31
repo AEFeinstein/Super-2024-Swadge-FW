@@ -29,7 +29,7 @@ typedef enum
     CI_JUNGLE,
     CI_M_FOREST,
     CI_LOCATION_COUNT,
-    CI_NONE,
+    CI_NONE, // If crafted
     CI_ALL,
 } ciLocations_t;
 
@@ -39,6 +39,71 @@ typedef enum
     CI_MED,
     CI_LARGE
 } ciItemSizes_t;
+
+/// @brief Must stay in the same order as ciItemData's items
+typedef enum
+{
+    CI_FLOOR_PIZZA,
+    CI_FURRY_MILK,
+    CI_ICBINB,
+    CI_MALORT,
+    CI_PILK,
+    CI_RAVER_SWEAT,
+    CI_SQUIRREL_NUTS,
+    CI_YPLA,
+    CI_CLOTH,
+    CI_CUT_ROCK,
+    CI_DIAMOND,
+    CI_DIAMOND_POWDER,
+    CI_GEAR,
+    CI_IRON,
+    CI_HIDE,
+    CI_POLISHED_ROCK,
+    CI_POLISHED_CRYSTAL,
+    CI_ROPE,
+    CI_SALT,
+    CI_STRING,
+    CI_APPLE,
+    CI_BEANS,
+    CI_BERRIES,
+    CI_DONUT,
+    CI_ENERGY_DRINK,
+    CI_HONEY,
+    CI_MRE,
+    CI_MUSHROOMS,
+    CI_MYSTERY_MEAT,
+    CI_PAN_PIZZA,
+    CI_PICKLES,
+    CI_PROTEIN_POWDER,
+    CI_PUDDING,
+    CI_ROAST_TURKEY,
+    CI_SQUEEZY_PEANUT_BUTTER,
+    CI_STRING_CHEESE,
+    CI_TASTEFUL_NOODZ,
+    CI_BAMBOO,
+    CI_HONEY_COMB,
+    CI_BIRCH_BARK,
+    CI_COAL,
+    CI_CRYSTAL,
+    CI_DRIED_GRASS,
+    CI_IRON_ORE,
+    CI_LARGE_LEAF,
+    CI_LATEX,
+    CI_LOG,
+    CI_RESIN,
+    CI_ROCKS,
+    CI_ROCK_SALT,
+    CI_SPIDER_WEB,
+    CI_STICK,
+    CI_UNCURED_HIDE,
+    CI_VINE,
+    CI_TAR,
+    CI_HEALING_POWDER,
+    CI_BANDAGES,
+    CI_POULTICE,
+    CI_HEALING_POTION,
+    CI_HEART,
+} ciItemIdx_t;
 
 //==============================================================================
 // Structs
@@ -56,6 +121,7 @@ typedef struct
     const char* desc;
 } ciItem_t;
 
+/// @brief Used to pack the inventory as tightly as possible
 typedef struct __attribute__((packed))
 {
     // Bad Food
@@ -77,7 +143,7 @@ typedef struct __attribute__((packed))
     uint8_t pelts            : 8;
     uint8_t polishedBlocks   : 8;
     uint8_t polishedCrystals : 8;
-    uint8_t Rope             : 8;
+    uint8_t rope             : 8;
     uint8_t salt             : 8;
     uint8_t string           : 8;
     // Food
@@ -123,7 +189,7 @@ typedef struct __attribute__((packed))
     uint8_t poultice      : 8;
     uint8_t healingPotion : 8;
     uint8_t heart         : 8;
-} ciInvQtys_t;
+} ciInvQtysPacked_t;
 
 extern const ciItem_t ciItemData[];
 
