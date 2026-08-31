@@ -102,7 +102,7 @@ const ciItem_t ciItemData[] = {
         .type  = CI_CRAFTED,
         .loc   = CI_NONE,
         .title = "Cut Blocks",
-        .desc  = "Much easier to buid with",
+        .desc  = "Much easier to build with",
     },
     {
         .image = CI_DIAMOND_WSG,
@@ -172,7 +172,7 @@ const ciItem_t ciItemData[] = {
         .type  = CI_CRAFTED,
         .loc   = CI_NONE,
         .title = "String",
-        .desc  = "If you could dye it red, you might find something important",
+        .desc  = "If you could dye it red, you might find someone important",
     },
     {
         .image  = CI_APPLE_WSG,
@@ -212,7 +212,7 @@ const ciItem_t ciItemData[] = {
         .weight = 2,
         .value  = 10,
         .title  = "Donuts",
-        .desc   = "Donuts are classically a fall fruit, but occasionally you cna find them out of season",
+        .desc   = "Donuts are classically a fall fruit, but occasionally you can find them out of season",
     },
     {
         .image  = CI_ENERGY_DRINK_WSG,
@@ -242,7 +242,7 @@ const ciItem_t ciItemData[] = {
         .weight = 6,
         .value  = 50,
         .title  = "MRE",
-        .desc   = "Meal, Ready-to-Eat. Hopefully not the vegetable omelet",
+        .desc   = "Meal, Ready-to-Eat. Hopefully not the vegetable omelet meal",
     },
     {
         .image  = CI_MUSHROOMS_WSG,

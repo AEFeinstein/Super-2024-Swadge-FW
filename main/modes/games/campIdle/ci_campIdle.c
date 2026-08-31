@@ -59,12 +59,16 @@ ciCampData_t* ccd;
 static void campEnterMode()
 {
     ccd = (ciCampData_t*)heap_caps_calloc(1, sizeof(ciCampData_t), MALLOC_CAP_8BIT);
+    loadFont(IBM_VGA_8_FONT, &ccd->smallFont, true);
+    loadFont(RODIN_EB_FONT, &ccd->largeText, true);
     ciInitInventory(ccd);
 }
 
 static void campExitMode()
 {
     ciFreeInventory(ccd);
+    freeFont(&ccd->largeText);
+    freeFont(&ccd->smallFont);
     free(ccd);
 }
 
@@ -101,7 +105,9 @@ static void doSplash()
     {
         if (evt.down && (evt.button & PB_A))
         {
-            ccd->state = CI_MENU;
+            //ccd->state = CI_MENU;
+            ccd->selection++;
+            ccd->selection %= ciGetArrayLength();
         }
     }
     ciDrawSplash(ccd);

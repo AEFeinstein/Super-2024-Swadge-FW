@@ -43,9 +43,15 @@ typedef struct
     // WSGs
     wsg_t* itemImages;
 
+    // Fonts
+    font_t smallFont;
+    font_t largeText;
+
     // Current state
     ciState_t state;
+    int selection;
 
     // Items
-    ciInvQtys_t qtys;
+    // ciInvQtys_t qtys;
+    uint8_t* qtys;
 } ciCampData_t;
