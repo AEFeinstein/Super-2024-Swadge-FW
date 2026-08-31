@@ -21,6 +21,7 @@ typedef enum
     GS_GOSSIP_DATA,
     GS_FLAME_DATA,
     GS_GOSSIP_STONE_DATA,
+    GS_BIG_MOON_DATA,
 } gs_dataType_t;
 
 //==============================================================================
@@ -82,7 +83,7 @@ struct gs_hitInfo_t
 
 typedef struct
 {
-    char** messageList;
+    const char** messageList;
     uint16_t index;    // The message being displayed
     uint16_t arr_size; // The size of the message list
     uint16_t progress; // From 0 to TYPING_FRAMES the words are typing. If it is TYPING_FRAMES, then shakes are no
@@ -132,10 +133,16 @@ typedef struct
     bool linearPlayback;
 } gs_star_t;
 
+typedef struct
+{
+    uint16_t scale;
+} gs_bigMoon_t;
+
 //==============================================================================
 // Prototypes
 //==============================================================================
 void gs_setData(gs_entity_t* self, void* data, gs_dataType_t dataType);
+void* gs_findLastNodeOfType(gs_entity_t* self, gs_dataType_t type);
 gs_entity_t* gs_findLastEntityOfType(gs_entity_t* self, gs_dataType_t type);
 void gs_drawAsset(gs_entity_t* self);
 void gs_drawNothing(gs_entity_t* self);
@@ -156,4 +163,5 @@ void gs_updateFarStar(gs_entity_t* self);
 void gs_drawStar(gs_entity_t* self);
 void gs_enableFlightControls(gs_entity_t* self);
 void gs_updateMoon(gs_entity_t* self);
-void gs_spawnMoon(gs_entity_t* self);
+void gs_updateBigMoon(gs_entity_t* self);
+void gs_spawnBigMoon(gs_entity_t* self);

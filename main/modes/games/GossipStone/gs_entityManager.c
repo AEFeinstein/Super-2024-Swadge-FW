@@ -243,6 +243,30 @@ gs_entity_t* gs_createEntity(gs_entityManager_t* entityManager, uint8_t numFrame
     return entity;
 }
 
+gs_entity_t* gs_createEntityBefore(void* before, gs_entityManager_t* entityManager, uint8_t numFrames, gs_animationType_t type, bool paused,
+                             gs_assetIdx_t assetIndex, uint8_t gameFramesPerAnimationFrame, vec_t pos,
+                             gs_gameData_t* gameData)
+{
+    gs_entity_t* entity = heap_caps_calloc(1, sizeof(gs_entity_t), MALLOC_CAP_SPIRAM);
+    if (entity == NULL)
+    {
+        // Exit to the main menu
+        switchToSwadgeMode(&mainMenuMode);
+        return NULL;
+    }
+
+    entity->type                        = type;
+    entity->paused                      = paused;
+    entity->assetIndex                  = assetIndex;
+    entity->gameFramesPerAnimationFrame = gameFramesPerAnimationFrame;
+    entity->pos                         = pos;
+    entity->gameData                    = gameData;
+    entity->drawFunction                = gs_drawAsset;
+
+    addBefore(entityManager->entities, (void*)entity, before);
+    return entity;
+}
+
 gs_entity_t* gs_createEntitySimple(gs_entityManager_t* entityManager, gs_assetIdx_t assetIndex, vec_t pos,
                                    gs_gameData_t* gameData)
 {

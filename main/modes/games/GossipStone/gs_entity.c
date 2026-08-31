@@ -16,7 +16,7 @@ void gs_setData(gs_entity_t* self, void* data, gs_dataType_t dataType)
     self->dataType = dataType;
 }
 
-gs_entity_t* gs_findLastEntityOfType(gs_entity_t* self, gs_dataType_t type)
+void* gs_findLastNodeOfType(gs_entity_t* self, gs_dataType_t type)
 {
     node_t* cur = self->gameData->entityManager.entities->last;
     while (((gs_entity_t*)cur->val)->dataType != type)
@@ -27,7 +27,17 @@ gs_entity_t* gs_findLastEntityOfType(gs_entity_t* self, gs_dataType_t type)
             return NULL;
         }
     }
-    return (gs_entity_t*)cur->val;
+    return cur;
+}
+
+gs_entity_t* gs_findLastEntityOfType(gs_entity_t* self, gs_dataType_t type)
+{
+    node_t* node = (node_t*)gs_findLastNodeOfType(self, type);
+    if(node)
+    {
+        return (gs_entity_t*)node->val;
+    }
+    return NULL;
 }
 
 void gs_drawAsset(gs_entity_t* self)
@@ -104,11 +114,11 @@ void gs_updateGossip(gs_entity_t* self)
                 if (data->index < data->arr_size - 1)
                 {
                     data->index++;
-                    if (data->index == 6 || data->index == 8)
+                    if (data->messageList[data->index][0] == '5' || data->messageList[data->index][0] == '3')
                     {
                         data->gossipStone->palleteIdx = GS_BLUE_PALETTE;
                     }
-                    else if (data->index == 10)
+                    else if (data->messageList[data->index][0] == '1')
                     {
                         data->gossipStone->palleteIdx = GS_RED_PALETTE;
                     }
@@ -443,8 +453,9 @@ void gs_enableFlightControls(gs_entity_t* self)
 void gs_updateMoon(gs_entity_t* self)
 {
     //Just doing some prophecy scene management with the little moon that happens to be present for the scene.
-    if(self->gameData->entityManager.gossipStone->pos.y < 30000 && ((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->throttleEnabled)
+    if(self->gameData->entityManager.gossipStone->pos.y < 30000)
     {
+        self->updateFunction = NULL;
         ((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->throttleEnabled = false;
         ((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->gravity = 0;
         ((gs_flame_t*)((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->flame->data)->flameOn = false;
@@ -453,15 +464,25 @@ void gs_updateMoon(gs_entity_t* self)
         gData->messageList = prophecyEndSceneList;
         gData->arr_size    = PROPHECY_END_SCENE_COUNT;
         gData->dialogueFinished = false;
-        gData->onDialogueFinished = gs_spawnMoon;
+        gData->onDialogueFinished = gs_spawnBigMoon;
         gData->index    = 0;
         gData->progress = 0;
     }
 }
 
-void gs_spawnMoon(gs_entity_t* self)
+void gs_updateBigMoon(gs_entity_t* self)
+{
+    //The big moon pulls the gossip stone in.
+    gs_entity_t* gs = self->gameData->entityManager.gossipStone;
+    vec_t gsVec = subVec2d(gs->pos, self->pos);
+    gsVec = divVec2d(mulVec2d(gsVec, 199), 200);
+    gs->pos = addVec2d(self->pos, gsVec);
+}
+
+void gs_spawnBigMoon(gs_entity_t* self)
 {
     self->gameData->entityManager.gossipStone->updateFunction = gs_updateGossipStone;
+    ((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->vel = (vec_t){0,0};
     //Where the moon is spawning relative to the GossipStone.
     vec_t moonOffset = mulVec2d((vec_t){self->gameData->entityManager.camera.vel.x / 16, self->gameData->entityManager.camera.vel.y / 16}, 200);
     //if it is so close that it would pop on screen
@@ -470,10 +491,15 @@ void gs_spawnMoon(gs_entity_t* self)
         //make the offset be the length of half the tft width.
         vec_t norm = (vec_t){self->gameData->entityManager.camera.vel.x, self->gameData->entityManager.camera.vel.y};
         fastNormVec(&norm.x, &norm.y);
+        norm = divVec2d(norm, 64);
         moonOffset = mulVec2d(norm, 140);
     }
     moonOffset.x *= 16;
     moonOffset.y *= 16;
-    gs_createEntity(&self->gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_HI_RES_MOON_ASSET, 1,
+    gs_entity_t* moon = gs_createEntityBefore(gs_findLastNodeOfType(self, GS_GOSSIP_STONE_DATA), &self->gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_HI_RES_MOON_ASSET, 1,
                     addVec2d(self->gameData->entityManager.gossipStone->pos, moonOffset), self->gameData);
+    moon->updateFunction = gs_updateBigMoon;
+    moon->data                                = heap_caps_calloc(1, sizeof(gs_bigMoon_t), MALLOC_CAP_SPIRAM);
+    moon->dataType                            = GS_BIG_MOON_DATA;
+    ((gs_gossipStone_t*)moon->data)->grounded = true;
 }

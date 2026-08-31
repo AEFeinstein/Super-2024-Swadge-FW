@@ -1,6 +1,7 @@
 #pragma once
 #include "gs_gossip.h"
 
+// clang-format off
 const char* gossipList[GOSSIP_COUNT] = {
     "Shake the rock to make it talk. Testers can press A.",
     "Yo, this is the first line.",
@@ -34,9 +35,31 @@ const char* AMAList[AMA_COUNT] = {
     "Very doubtful.",
 };
 
-const char* prophecyList[PROPHECY_COUNT]
-    = {"Congratulations! You've completed The Prophecy!", "T-10", "9", "8", "7", "6", "5", "4", "3", "2", "1",
-       "What are you waiting for? Use the touch strips."};
+const char* prophecyList[PROPHECY_COUNT] = {
+    "Interesting!",
+    "It took 1,312 years to tether a gaylordian.",
+    "A very short task after my last assignment.",
+    "Thank you for relentlessly shaking me.",
+    "T-10",
+    "9",
+    "8",
+    "7",
+    "6",
+    "5",
+    "4",
+    "3",
+    "2",
+    "1",
+    "What are you waiting for? Use the touch strips.",
+};
 
 
-const char* prophecyEndSceneList[PROPHECY_END_SCENE_COUNT] = {"You thought I was done talking? Shake me, baby!", "My people need meeeee!"};
+const char* prophecyEndSceneList[PROPHECY_END_SCENE_COUNT] = {
+    "Fortunate vector. Homebound.",
+    "Our linkage should be a cause for celebration.",
+    "But there's a bad omen from Delphinus extending past the 2027 boundary.",
+    "A multi-year meta-plot could unbind MAGFest as we know it.",
+    "We must see the Augur.",
+};
+
+// clang-format on
