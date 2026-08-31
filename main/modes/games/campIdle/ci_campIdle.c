@@ -105,9 +105,7 @@ static void doSplash()
     {
         if (evt.down && (evt.button & PB_A))
         {
-            //ccd->state = CI_MENU;
-            ccd->selection++;
-            ccd->selection %= ciGetArrayLength();
+            ccd->state = CI_MENU;
         }
     }
     ciDrawSplash(ccd);
