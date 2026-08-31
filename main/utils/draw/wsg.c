@@ -9,6 +9,7 @@
 #include "trigonometry.h"
 #include "fill.h"
 #include "wsg.h"
+#include <fp_math.h>
 
 //==============================================================================
 // Functions
@@ -313,7 +314,6 @@ void drawWsgSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff)
         }
         lineout += dWidth;
         linein += wWidth;
-        wsgY++;
     }
 }
 
@@ -396,24 +396,27 @@ void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t x
  * @param wsg  The WSG to draw to the display
  * @param xOff The x offset to draw the WSG at
  * @param yOff The y offset to draw the WSG at
+ * @param scaleFactor 1 draws at half scale, 2 at quarter scale, etc...
  */
-void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff)
+void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t scaleFactor)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
 
-    if (NULL == wsg->px)
+    if (NULL == wsg->px || scaleFactor < 1)
     {
         return;
     }
+
+    int scale = 1 << scaleFactor;
 
     // Only draw in bounds
     int dWidth                   = TFT_WIDTH;
     int wWidth                   = wsg->w;
     int xMin                     = CLAMP(xOff, 0, dWidth);
-    int xMax                     = CLAMP(xOff + (wWidth / 2), 0, dWidth);
+    int xMax                     = CLAMP(xOff + (wWidth / scale), 0, dWidth);
     int yMin                     = CLAMP(yOff, 0, TFT_HEIGHT);
-    int yMax                     = CLAMP(yOff + (wsg->h / 2), 0, TFT_HEIGHT);
+    int yMax                     = CLAMP(yOff + (wsg->h / scale), 0, TFT_HEIGHT);
     paletteColor_t* px           = getPxTftFramebuffer();
     int numX                     = xMax - xMin;
     int wsgY                     = (yMin - yOff);
@@ -426,15 +429,80 @@ void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff)
     {
         for (int x = 0; x < numX; x++)
         {
-            int color = linein[x * 2];
+            int color = linein[x * scale];
             if (color != cTransparent)
             {
                 lineout[x] = color;
             }
         }
         lineout += dWidth;
-        linein += (2 * wWidth);
+        linein += (scale * wWidth);
         wsgY++;
+    }
+}
+
+/**
+ * @brief Draw a WSG to the display without flipping or rotation. Use drawWsgSimpleScaled and drawWsgSimpleHalf if
+ * halving or doubling sprites.
+ *
+ * @param wsg  The WSG to draw to the display
+ * @param xOff The x offset to draw the WSG at
+ * @param yOff The y offset to draw the WSG at
+ * @param xScale The amount to scale the image horizontally
+ * @param yScale The amount to scale the image vertically
+ */
+void drawWsgSmoothScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, q24_8 xScale, q24_8 yScale)
+{
+    //  This function added by DebrisHauler on 8/31/2026
+    //  Nearest Neigbhor scaling algorithm:
+    //  https://courses.cs.vt.edu/~masc1044/L17-Rotation/ScalingNN.html
+
+    if(xScale > 0b10010001)
+    {
+        xScale = 0b10010001;
+    }
+    if(yScale > 0b10010001)
+    {
+        yScale = 0b10010001;
+    }
+    if (NULL == wsg->px)
+    {
+        return;
+    }
+
+    q24_8 wWidth   = TO_FX_QN(wsg->w, FRAC_BITS);
+    q24_8 wHeigt   = TO_FX_QN(wsg->h, FRAC_BITS);
+    q24_8 newWidth = MUL_FX_QN(wWidth, xScale, FRAC_BITS);
+    q24_8 newHeigt = MUL_FX_QN(wHeigt, yScale, FRAC_BITS);
+    // Only draw in bounds
+    q24_8 xMin                   = TO_FX_QN(CLAMP(xOff, 0, TFT_WIDTH), FRAC_BITS);
+    q24_8 xMax                   = TO_FX_QN(CLAMP(xOff + (newWidth >> FRAC_BITS), 0, DIV_FX_QN(TO_FX_QN(TFT_WIDTH,FRAC_BITS),xScale,FRAC_BITS)>>FRAC_BITS), FRAC_BITS);
+    q24_8 yMin                   = TO_FX_QN(CLAMP(yOff, 0, TFT_HEIGHT), FRAC_BITS);
+    q24_8 yMax                   = TO_FX_QN(CLAMP(yOff + (newHeigt >> FRAC_BITS), 0, DIV_FX_QN(TO_FX_QN(TFT_HEIGHT,FRAC_BITS),yScale,FRAC_BITS)>>FRAC_BITS), FRAC_BITS);
+    paletteColor_t* px           = getPxTftFramebuffer();
+    q24_8 numX                   = SUB_FX_QN(xMax, xMin, FRAC_BITS);
+    int wsgY                     = ((yMin >> FRAC_BITS) - yOff);
+    int wsgX                     = ((xMin >> FRAC_BITS) - xOff);
+    paletteColor_t* lineout      = &px[((yMin >> FRAC_BITS) * TFT_WIDTH) + (xMin >> FRAC_BITS)];
+    const paletteColor_t* linein = &wsg->px[wsgY * wsg->w + wsgX];
+
+
+    // Draw each pixel
+    for (q24_8 y = yMin; y < yMax; y += TO_FX_QN(1, FRAC_BITS))
+    {
+        wsgY  = ROUND_FX_QN(MUL_FX_QN(DIV_FX_QN(y, newHeigt, FRAC_BITS), wHeigt, FRAC_BITS), FRAC_BITS);
+        wsgY      = MIN(wsgY, wsg->h - 1);
+        for (q24_8 x = xMin; x < numX; x += TO_FX_QN(1, FRAC_BITS))
+        {
+            wsgX  = ROUND_FX_QN(MUL_FX_QN(DIV_FX_QN(x, newWidth, FRAC_BITS), wWidth, FRAC_BITS), FRAC_BITS);
+            wsgX      = MIN(wsgX, wsg->w - 1);
+            int color = linein[wsgY * wsg->w + wsgX];
+            if (color != cTransparent)
+            {
+                lineout[x >> FRAC_BITS] = color;
+            }
+        }
+        lineout+=TFT_WIDTH;
     }
 }
 

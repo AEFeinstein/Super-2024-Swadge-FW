@@ -241,8 +241,9 @@ static void gs_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 {
     // Fill the flat background color
     paletteColor_t* frameBuf = getPxTftFramebuffer();
-    paletteColor_t col = c011;
-    if(gameData->entityManager.camera.pos.y < 0xFFFF - (370 << DECIMAL_BITS)){
+    paletteColor_t col       = c011;
+    if (gameData->entityManager.camera.pos.y < 0xFFFF - (370 << DECIMAL_BITS))
+    {
         col = c000;
     }
     memset(&frameBuf[(y * TFT_WIDTH) + x], col, sizeof(paletteColor_t) * w * h);
@@ -275,14 +276,13 @@ static void gs_initializeGame(void)
 
     for (int i = 0; i < 20; i++)
     {
-        gs_entity_t* star
-            = gs_createEntity(&gameData->entityManager, 0, GS_NO_ANIMATION, false, GS_STAR_ASSET, 0,
-                              (vec_t){0xFFFF + (gs_randomInt(-(TFT_WIDTH >> 1), TFT_WIDTH >> 1) * 16),
-                                      0xFFFF + (gs_randomInt(0, 90) << DECIMAL_BITS)},
-                              gameData);
-        star->data = heap_caps_calloc(1, sizeof(gs_star_t), MALLOC_CAP_SPIRAM);
+        gs_entity_t* star = gs_createEntity(&gameData->entityManager, 0, GS_NO_ANIMATION, false, GS_STAR_ASSET, 0,
+                                            (vec_t){0xFFFF + (gs_randomInt(-(TFT_WIDTH >> 1), TFT_WIDTH >> 1) * 16),
+                                                    0xFFFF + (gs_randomInt(0, 90) << DECIMAL_BITS)},
+                                            gameData);
+        star->data        = heap_caps_calloc(1, sizeof(gs_star_t), MALLOC_CAP_SPIRAM);
         gs_randomizeStarData(star);
-        star->updateFunction = gs_updateStar;
+        star->updateFunction    = gs_updateStar;
         star->updateFarFunction = gs_updateFarStar;
         star->drawFunction      = gs_drawStar;
     }
@@ -290,7 +290,7 @@ static void gs_initializeGame(void)
     gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_HILL_ASSET, 1,
                     (vec_t){0xFFFF, 0xFFFF + (102 << DECIMAL_BITS)}, gameData);
     gs_entity_t* moon = gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_MOON_ASSET, 1,
-                    (vec_t){0xFFFF - (90 << DECIMAL_BITS), 0xFFFF - (0 << DECIMAL_BITS)}, gameData);
+                                        (vec_t){0xFFFF - (90 << DECIMAL_BITS), 0xFFFF - (0 << DECIMAL_BITS)}, gameData);
     moon->updateFunction = gs_updateMoon;
     gs_entity_t* gossipStone
         = gs_createEntity(&gameData->entityManager, 3, GS_LOOPING_ANIMATION, false, GS_GOSSIP_STONE_ASSET, 5,
@@ -298,18 +298,18 @@ static void gs_initializeGame(void)
     gossipStone->data                                = heap_caps_calloc(1, sizeof(gs_gossipStone_t), MALLOC_CAP_SPIRAM);
     gossipStone->dataType                            = GS_GOSSIP_STONE_DATA;
     ((gs_gossipStone_t*)gossipStone->data)->grounded = true;
-    ((gs_gossipStone_t*)gossipStone->data)->gravity = 100;
+    ((gs_gossipStone_t*)gossipStone->data)->gravity  = 100;
     gs_entity_t* gossip = gs_createEntity(&gameData->entityManager, 0, GS_NO_ANIMATION, false, GS_NO_ASSET, 0,
                                           (vec_t){0xffff, 0xffff}, gameData);
     gameData->entityManager.gossip = gossip;
-    gossip->data        = heap_caps_calloc(1, sizeof(gs_gossip_t), MALLOC_CAP_SPIRAM);
+    gossip->data                   = heap_caps_calloc(1, sizeof(gs_gossip_t), MALLOC_CAP_SPIRAM);
     if (gossip->data != NULL)
     {
         gossip->dataType                          = GS_GOSSIP_DATA;
         gossip->updateFunction                    = gs_updateGossip;
         gossip->drawFunction                      = gs_drawGossip;
         ((gs_gossip_t*)gossip->data)->gossipStone = gossipStone;
-        gameData->entityManager.gossipStone = gossipStone;
+        gameData->entityManager.gossipStone       = gossipStone;
     }
     else
     {
@@ -349,16 +349,16 @@ bool gs_menuCb(const char* label, bool selected, uint32_t value)
         {
             gameData->submode   = GS_GOSSIP_SUBMODE;
             gs_entity_t* gossip = gs_findLastEntityOfType(gameData->entityManager.entities->first->val, GS_GOSSIP_DATA);
-            gs_gossip_t* gData = (gs_gossip_t*)gossip->data;
-            gData->messageList = gossipList;
-            gData->arr_size    = GOSSIP_COUNT;
+            gs_gossip_t* gData  = (gs_gossip_t*)gossip->data;
+            gData->messageList  = gossipList;
+            gData->arr_size     = GOSSIP_COUNT;
             // reset a few things because the player may have exited and entered.
-            gData->index    = 0;
+            gData->index                           = 0;
             ((gs_gossip_t*)gossip->data)->progress = 0;
         }
         else if (label == gs_AskMeAnythingStr)
         {
-            gameData->submode   = GS_AMA_SUBMODE;
+            gameData->submode  = GS_AMA_SUBMODE;
             gs_gossip_t* gData = (gs_gossip_t*)gameData->entityManager.gossip->data;
             gData->messageList = AMAList;
             gData->arr_size    = AMA_COUNT;
@@ -368,10 +368,10 @@ bool gs_menuCb(const char* label, bool selected, uint32_t value)
         }
         else if (label == gs_ProphecyStr)
         {
-            gameData->submode   = GS_PROPHECY_SUBMODE;
-            gs_gossip_t* gData = (gs_gossip_t*)gameData->entityManager.gossip->data;
-            gData->messageList = prophecyList;
-            gData->arr_size    = PROPHECY_COUNT;
+            gameData->submode         = GS_PROPHECY_SUBMODE;
+            gs_gossip_t* gData        = (gs_gossip_t*)gameData->entityManager.gossip->data;
+            gData->messageList        = prophecyList;
+            gData->arr_size           = PROPHECY_COUNT;
             gData->onDialogueFinished = gs_enableFlightControls;
             // reset a few things because the player may have exited and entered.
             gData->index    = 0;

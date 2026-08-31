@@ -135,7 +135,7 @@ typedef struct
 
 typedef struct
 {
-    uint16_t scale;
+    q24_8 scale;
 } gs_bigMoon_t;
 
 //==============================================================================
@@ -164,4 +164,5 @@ void gs_drawStar(gs_entity_t* self);
 void gs_enableFlightControls(gs_entity_t* self);
 void gs_updateMoon(gs_entity_t* self);
 void gs_updateBigMoon(gs_entity_t* self);
+void gs_drawBigMoon(gs_entity_t* self);
 void gs_spawnBigMoon(gs_entity_t* self);

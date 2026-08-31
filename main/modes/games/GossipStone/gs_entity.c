@@ -33,7 +33,7 @@ void* gs_findLastNodeOfType(gs_entity_t* self, gs_dataType_t type)
 gs_entity_t* gs_findLastEntityOfType(gs_entity_t* self, gs_dataType_t type)
 {
     node_t* node = (node_t*)gs_findLastNodeOfType(self, type);
-    if(node)
+    if (node)
     {
         return (gs_entity_t*)node->val;
     }
@@ -65,8 +65,9 @@ void gs_drawNothing(gs_entity_t* self)
 void gs_drawSkyGradient(gs_entity_t* self)
 {
     int32_t y;
-    int8_t offset = - ((self->gameData->entityManager.camera.pos.x>>DECIMAL_BITS) % self->gameData->assets[self->assetIndex].frames[0].w);
-    if(self->gameData->entityManager.camera.pos.x < 0)
+    int8_t offset = -((self->gameData->entityManager.camera.pos.x >> DECIMAL_BITS)
+                      % self->gameData->assets[self->assetIndex].frames[0].w);
+    if (self->gameData->entityManager.camera.pos.x < 0)
     {
         offset -= self->gameData->assets[self->assetIndex].frames[0].w;
     }
@@ -83,11 +84,13 @@ void gs_drawSkyGradient(gs_entity_t* self)
 void gs_updateGossip(gs_entity_t* self)
 {
     gs_gossip_t* data = (gs_gossip_t*)self->data;
-    if(data->dialogueFinished)
+    if (data->dialogueFinished)
     {
         return;
     }
-    if(self->gameData->submode == GS_PROPHECY_SUBMODE && data->index == data->arr_size - 1 && (self->gameData->touchState[0].touched || self->gameData->touchState[1].touched) && data->arr_size == PROPHECY_COUNT)
+    if (self->gameData->submode == GS_PROPHECY_SUBMODE && data->index == data->arr_size - 1
+        && (self->gameData->touchState[0].touched || self->gameData->touchState[1].touched)
+        && data->arr_size == PROPHECY_COUNT)
     {
         data->dialogueFinished = true;
         data->onDialogueFinished(self);
@@ -104,7 +107,7 @@ void gs_updateGossip(gs_entity_t* self)
     // make this check for shake later
     else if (self->gameData->btnDownState & PB_A)
     {
-        switch(self->gameData->submode)
+        switch (self->gameData->submode)
         {
             case GS_GOSSIP_SUBMODE:
             case GS_AMA_SUBMODE:
@@ -126,7 +129,7 @@ void gs_updateGossip(gs_entity_t* self)
                     {
                         data->gossipStone->palleteIdx = GS_UNTOUCHED_PALETTE;
                     }
-                    data->gossipStone->paused = false;  
+                    data->gossipStone->paused = false;
                 }
                 else
                 {
@@ -135,7 +138,7 @@ void gs_updateGossip(gs_entity_t* self)
                 }
                 break;
         }
-        data->progress            = 0;
+        data->progress = 0;
         if (self->gameData->submode == GS_GOSSIP_SUBMODE)
         {
             gs_recordProgress(self);
@@ -168,12 +171,12 @@ void gs_recordProgress(gs_entity_t* self)
 void gs_drawGossip(gs_entity_t* self)
 {
     gs_gossip_t* data = ((gs_gossip_t*)self->data);
-    if(data->dialogueFinished)
+    if (data->dialogueFinished)
     {
         return;
     }
-    int16_t textX     = 18;
-    int16_t textY     = 50;
+    int16_t textX = 18;
+    int16_t textY = 50;
 
     uint16_t typeAmount = data->progress / FRAMES_PER_CHAR;
     char display[typeAmount + 5];
@@ -288,7 +291,7 @@ void gs_updateGossipStone(gs_entity_t* self)
     }
 
     gs_flame_t* fData = (gs_flame_t*)gsData->flame->data;
-    fData->rotateDeg = gsData->rotateDeg;
+    fData->rotateDeg  = gsData->rotateDeg;
 
     // translational physics
     fData->flameOn = self->gameData->touchState[1].touched && gsData->throttleEnabled;
@@ -299,14 +302,14 @@ void gs_updateGossipStone(gs_entity_t* self)
             = mulVec2d(rocketForce, (1024 - self->gameData->touchState[1].position) * self->gameData->elapsedUs);
         gsData->vel = addVec2d(gsData->vel, divVec2d(rocketForce, 10000000));
     }
-    //gravity
+    // gravity
     gsData->vel.y += gsData->gravity * self->gameData->elapsedUs >> 18;
     self->pos.x += gsData->vel.x * self->gameData->elapsedUs >> 20;
     self->pos.y += gsData->vel.y * self->gameData->elapsedUs >> 20;
 
     gsData->flame->pos = self->pos;
 
-    //printf("pos x: %d pos y: %d\n", self->pos.x, self->pos.y);
+    // printf("pos x: %d pos y: %d\n", self->pos.x, self->pos.y);
 
     self->gameData->entityManager.camera.vel = self->gameData->entityManager.camera.pos;
     if (self->pos.y < 0xFFFF)
@@ -356,14 +359,14 @@ void gs_randomizeStarData(gs_entity_t* self)
     {
         endFrame = gs_randomInt(sData->startFrame + 1, self->gameData->assets[self->assetIndex].numFrames - 1);
     }
-    sData->frameCount = endFrame - sData->startFrame; // it's actually the frame count minus 1.
+    sData->frameCount           = endFrame - sData->startFrame; // it's actually the frame count minus 1.
     self->currentAnimationFrame = sData->startFrame;
 }
 
 void gs_updateStar(gs_entity_t* self)
 {
-    //fake movement during talking cutscene moment
-    if(self->gameData->entityManager.gossipStone->updateFunction == NULL)
+    // fake movement during talking cutscene moment
+    if (self->gameData->entityManager.gossipStone->updateFunction == NULL)
     {
         self->pos = subVec2d(self->pos, self->gameData->entityManager.camera.vel);
     }
@@ -442,64 +445,80 @@ void gs_drawStar(gs_entity_t* self)
 
 void gs_enableFlightControls(gs_entity_t* self)
 {
-    gs_entity_t* gossipStone = ((gs_gossip_t*)self->data)->gossipStone;
+    gs_entity_t* gossipStone           = ((gs_gossip_t*)self->data)->gossipStone;
     gossipStone->currentAnimationFrame = 0;
-    gossipStone->paused = true;
-    gs_gossipStone_t* gsData = (gs_gossipStone_t*)gossipStone->data;
-    gsData->rcsEnabled = true;
-    gsData->throttleEnabled = true;
+    gossipStone->paused                = true;
+    gs_gossipStone_t* gsData           = (gs_gossipStone_t*)gossipStone->data;
+    gsData->rcsEnabled                 = true;
+    gsData->throttleEnabled            = true;
 }
 
 void gs_updateMoon(gs_entity_t* self)
 {
-    //Just doing some prophecy scene management with the little moon that happens to be present for the scene.
-    if(self->gameData->entityManager.gossipStone->pos.y < 30000)
+    // Just doing some prophecy scene management with the little moon that happens to be present for the scene.
+    if (self->gameData->entityManager.gossipStone->pos.y < 30000)
     {
-        self->updateFunction = NULL;
+        self->updateFunction                                                                  = NULL;
         ((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->throttleEnabled = false;
-        ((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->gravity = 0;
-        ((gs_flame_t*)((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->flame->data)->flameOn = false;
-        gs_gossip_t* gData = (gs_gossip_t*)self->gameData->entityManager.gossip->data;
+        ((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->gravity         = 0;
+        ((gs_flame_t*)((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->flame->data)->flameOn
+            = false;
+        gs_gossip_t* gData         = (gs_gossip_t*)self->gameData->entityManager.gossip->data;
         gData->gossipStone->paused = false;
-        gData->messageList = prophecyEndSceneList;
-        gData->arr_size    = PROPHECY_END_SCENE_COUNT;
-        gData->dialogueFinished = false;
-        gData->onDialogueFinished = gs_spawnBigMoon;
-        gData->index    = 0;
-        gData->progress = 0;
+        gData->messageList         = prophecyEndSceneList;
+        gData->arr_size            = PROPHECY_END_SCENE_COUNT;
+        gData->dialogueFinished    = false;
+        gData->onDialogueFinished  = gs_spawnBigMoon;
+        gData->index               = 0;
+        gData->progress            = 0;
     }
 }
 
 void gs_updateBigMoon(gs_entity_t* self)
 {
-    //The big moon pulls the gossip stone in.
+    // The big moon pulls the gossip stone in.
     gs_entity_t* gs = self->gameData->entityManager.gossipStone;
-    vec_t gsVec = subVec2d(gs->pos, self->pos);
-    gsVec = divVec2d(mulVec2d(gsVec, 199), 200);
-    gs->pos = addVec2d(self->pos, gsVec);
+    vec_t gsVec     = subVec2d(gs->pos, self->pos);
+    gsVec           = divVec2d(mulVec2d(gsVec, 199), 200);
+    gs->pos         = addVec2d(self->pos, gsVec);
+
+    ((gs_bigMoon_t*)self->data)->scale ++;
+}
+
+void gs_drawBigMoon(gs_entity_t* self)
+{
+    gs_bigMoon_t* bmData = (gs_bigMoon_t*)self->data;
+    int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS)
+                - self->gameData->assets[self->assetIndex].originX;
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS)
+                - self->gameData->assets[self->assetIndex].originY;
+    drawWsgSmoothScaled(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, bmData->scale, bmData->scale);
 }
 
 void gs_spawnBigMoon(gs_entity_t* self)
 {
-    self->gameData->entityManager.gossipStone->updateFunction = gs_updateGossipStone;
-    ((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->vel = (vec_t){0,0};
-    //Where the moon is spawning relative to the GossipStone.
-    vec_t moonOffset = mulVec2d((vec_t){self->gameData->entityManager.camera.vel.x / 16, self->gameData->entityManager.camera.vel.y / 16}, 200);
-    //if it is so close that it would pop on screen
-    if(sqMagVec2d(moonOffset) < 140*140)
+    self->gameData->entityManager.gossipStone->updateFunction                 = gs_updateGossipStone;
+    ((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->vel = (vec_t){0, 0};
+    // Where the moon is spawning relative to the GossipStone.
+    vec_t moonOffset = mulVec2d(
+        (vec_t){self->gameData->entityManager.camera.vel.x / 16, self->gameData->entityManager.camera.vel.y / 16}, 200);
+    // if it is so close that it would pop on screen
+    if (sqMagVec2d(moonOffset) < 140 * 140)
     {
-        //make the offset be the length of half the tft width.
+        // make the offset be the length of half the tft width.
         vec_t norm = (vec_t){self->gameData->entityManager.camera.vel.x, self->gameData->entityManager.camera.vel.y};
         fastNormVec(&norm.x, &norm.y);
-        norm = divVec2d(norm, 64);
+        norm       = divVec2d(norm, 64);
         moonOffset = mulVec2d(norm, 140);
     }
     moonOffset.x *= 16;
     moonOffset.y *= 16;
-    gs_entity_t* moon = gs_createEntityBefore(gs_findLastNodeOfType(self, GS_GOSSIP_STONE_DATA), &self->gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_HI_RES_MOON_ASSET, 1,
-                    addVec2d(self->gameData->entityManager.gossipStone->pos, moonOffset), self->gameData);
-    moon->updateFunction = gs_updateBigMoon;
+    gs_entity_t* moon = gs_createEntityBefore(
+        gs_findLastNodeOfType(self, GS_GOSSIP_STONE_DATA), &self->gameData->entityManager, 1, GS_NO_ANIMATION, false,
+        GS_HI_RES_MOON_ASSET, 1, addVec2d(self->gameData->entityManager.gossipStone->pos, moonOffset), self->gameData);
+    moon->updateFunction                      = gs_updateBigMoon;
+    moon->drawFunction = gs_drawBigMoon;
     moon->data                                = heap_caps_calloc(1, sizeof(gs_bigMoon_t), MALLOC_CAP_SPIRAM);
     moon->dataType                            = GS_BIG_MOON_DATA;
-    ((gs_gossipStone_t*)moon->data)->grounded = true;
+    ((gs_bigMoon_t*)moon->data)->scale = 1<<7;//q24_8 for 0.5
 }

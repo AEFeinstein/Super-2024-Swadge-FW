@@ -56,10 +56,10 @@ const char* prophecyList[PROPHECY_COUNT] = {
 
 const char* prophecyEndSceneList[PROPHECY_END_SCENE_COUNT] = {
     "Fortunate vector. Homebound.",
-    "Our linkage should be a cause for celebration.",
+    "Our arrival should be a cause for celebration.",
     "But there's a bad omen from Delphinus extending past the 2027 boundary.",
     "A multi-year meta-plot could unbind MAGFest as we know it.",
-    "We must see the Augur.",
+    "We must consult the Augur.",
 };
 
 // clang-format on
