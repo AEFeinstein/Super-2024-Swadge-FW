@@ -65,8 +65,10 @@ void rotatePixel(int32_t* x, int32_t* y, int32_t rotateDeg, int32_t width, int32
 void drawWsg(const wsg_t* wsg, int32_t xOff, int32_t yOff, bool flipLR, bool flipUD, int32_t rotateDeg);
 void drawWsgSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff);
 void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t xScale, int16_t yScale);
+void drawWsgSimpleScaledUp(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t xScale, int16_t yScale);
+void drawWsgSimpleScaledDown(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t xScale, int16_t yScale);
 void drawWsgSmoothScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, q24_8 xScale, q24_8 yScale);
 void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff);
-void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t scaleFactor);
+void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff);
 
 #endif

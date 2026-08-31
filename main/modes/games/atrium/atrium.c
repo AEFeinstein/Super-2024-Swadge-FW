@@ -950,8 +950,8 @@ static void drawAtriumTitle(uint64_t elapsedUs)
     else
     {
         drawWsgSimple(&atr->uiElements[6], 0, 0);
-        drawWsgSimpleHalf(&atr->uiElements[2], 50, 160, 1);
-        drawWsgSimpleHalf(&atr->uiElements[4], 50, 180, 1);
+        drawWsgSimpleHalf(&atr->uiElements[2], 50, 160);
+        drawWsgSimpleHalf(&atr->uiElements[4], 50, 180);
         drawText(&atr->fonts[0], c121, "Enter Atrium", 70, 162);
         drawText(&atr->fonts[0], c121, "Edit Profile", 70, 182);
     }
@@ -970,7 +970,7 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
         }
         drawWsgSimple(&atr->uiElements[7], 0, 0);
         int frame = atr->loadAnims % 8;
-        drawWsgSimpleHalf(&atr->uiElements[8 + frame], 180, 200, 1);
+        drawWsgSimpleHalf(&atr->uiElements[8 + frame], 180, 200);
 
         return;
     }
@@ -1037,8 +1037,8 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
         loadProfiles(SONA_PER, atr->page);
         drawSonas(atr->page, elapsedUs);
         drawRectFilled(8, 8, 68, 48, c555);
-        drawWsgSimpleHalf(&atr->uiElements[2], 10, 10, 1);
-        drawWsgSimpleHalf(&atr->uiElements[4], 10, 30, 1);
+        drawWsgSimpleHalf(&atr->uiElements[2], 10, 10);
+        drawWsgSimpleHalf(&atr->uiElements[4], 10, 30);
         drawText(&atr->fonts[0], c000, "Select", 30, 11);
         drawText(&atr->fonts[0], c000, "Back", 30, 31);
     }

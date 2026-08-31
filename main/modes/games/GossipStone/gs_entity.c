@@ -482,17 +482,18 @@ void gs_updateBigMoon(gs_entity_t* self)
     gsVec           = divVec2d(mulVec2d(gsVec, 199), 200);
     gs->pos         = addVec2d(self->pos, gsVec);
 
-    ((gs_bigMoon_t*)self->data)->scale ++;
+    ((gs_bigMoon_t*)self->data)->scale++;
 }
 
 void gs_drawBigMoon(gs_entity_t* self)
 {
     gs_bigMoon_t* bmData = (gs_bigMoon_t*)self->data;
-    int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS)
-                - self->gameData->assets[self->assetIndex].originX;
-    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS)
-                - self->gameData->assets[self->assetIndex].originY;
-    drawWsgSmoothScaled(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, bmData->scale, bmData->scale);
+    int32_t x            = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS)
+                           - self->gameData->assets[self->assetIndex].originX;
+    int32_t y            = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS)
+                           - self->gameData->assets[self->assetIndex].originY;
+    drawWsgSmoothScaled(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y,
+                        bmData->scale, bmData->scale);
 }
 
 void gs_spawnBigMoon(gs_entity_t* self)
@@ -516,9 +517,9 @@ void gs_spawnBigMoon(gs_entity_t* self)
     gs_entity_t* moon = gs_createEntityBefore(
         gs_findLastNodeOfType(self, GS_GOSSIP_STONE_DATA), &self->gameData->entityManager, 1, GS_NO_ANIMATION, false,
         GS_HI_RES_MOON_ASSET, 1, addVec2d(self->gameData->entityManager.gossipStone->pos, moonOffset), self->gameData);
-    moon->updateFunction                      = gs_updateBigMoon;
-    moon->drawFunction = gs_drawBigMoon;
-    moon->data                                = heap_caps_calloc(1, sizeof(gs_bigMoon_t), MALLOC_CAP_SPIRAM);
-    moon->dataType                            = GS_BIG_MOON_DATA;
-    ((gs_bigMoon_t*)moon->data)->scale = 1<<7;//q24_8 for 0.5
+    moon->updateFunction               = gs_updateBigMoon;
+    moon->drawFunction                 = gs_drawBigMoon;
+    moon->data                         = heap_caps_calloc(1, sizeof(gs_bigMoon_t), MALLOC_CAP_SPIRAM);
+    moon->dataType                     = GS_BIG_MOON_DATA;
+    ((gs_bigMoon_t*)moon->data)->scale = 1 << 7; // q24_8 for 0.5
 }
