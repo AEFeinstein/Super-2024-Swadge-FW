@@ -86,6 +86,7 @@ These are the conditions which can trigger scripts.
 | SHOOT_WALLS  | 4     | AND_OR, \[CELLs\], ORDER, ONE_TIME | Triggered when one or all walls in the given cells are shot. If all, may be in the given order or any order. May reset after triggering.     |
 | ENTER        | 5     | AND_OR, \[CELLs\], ORDER, ONE_TIME | Triggered when the player enters one or all of the given cells. If all, may be in the given order or any order. May reset after triggering.  |
 | TIME_ELAPSED | 6     | TIME                               | Triggered after the given time, in seconds, elapses from the start of the level.                                                        |
+| PLAY | 7 | SONG, \[CELLs\] | Triggered when the given song is played within the bounding rectangle given by two cells |
 
 ### THEN Operations
 
@@ -121,6 +122,7 @@ Arguments, arrays, CELLs, and SPAWNs all have different delimiters to make parsi
 | TEXT      | `abc`           | Not quoted, cannot use the characters `(` or `)`                |
 | TIME      | `0`             | Integer from 0 to 2147483647, in seconds                        |
 | MAP       | `0`             | Integer corresponding to the map                                |
+| SONG      | `abc`           | `LULLABY` or other song                                         |
 
 ### Script Examples
 

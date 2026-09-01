@@ -13,5 +13,6 @@ bool checkScriptTouch(ray_t* ray, int32_t id, wsg_t* portrait);
 bool checkScriptShootWall(ray_t* ray, int32_t x, int32_t y);
 bool checkScriptEnter(ray_t* ray, int32_t x, int32_t y);
 bool checkScriptTime(ray_t* ray, uint32_t elapsedUs);
+bool checkScriptSong(ray_t* ray, int32_t x, int32_t y, songType_t song, wsg_t* portrait);
 
 #endif
