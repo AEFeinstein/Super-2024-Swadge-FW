@@ -27,7 +27,8 @@ typedef enum
     CI_NVS_INVENTORY,
 } ciNVSKeyEnum_t;
 
-typedef enum {
+typedef enum
+{
     CI_SPLASH,
     CI_MENU,
     CI_DAY,

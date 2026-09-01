@@ -8,7 +8,7 @@
 // Subcomponents
 #include "ci_genericData.h"
 #include "ci_items.h"
-#include "ci_draw.h"
+#include "ci_menu.h"
 
 //==============================================================================
 // Consts
@@ -24,10 +24,6 @@ const char campModeName[] = "Cozy Camping";
 static void campEnterMode(void);
 static void campExitMode(void);
 static void campMainLoop(int64_t elapsedUs);
-
-// Game States
-static void doSplash(void);
-static void doMenu(void);
 
 //==============================================================================
 // Variables
@@ -62,6 +58,7 @@ static void campEnterMode()
     loadFont(IBM_VGA_8_FONT, &ccd->smallFont, true);
     loadFont(RODIN_EB_FONT, &ccd->largeText, true);
     ciInitInventory(ccd);
+    ciInitSplash(ccd);
 }
 
 static void campExitMode()
@@ -78,12 +75,12 @@ static void campMainLoop(int64_t elapsedUs)
     {
         case CI_SPLASH:
         {
-            doSplash();
+            ciRunSplash(ccd);
             break;
         }
         case CI_MENU:
         {
-            doMenu();
+            ciRunMenu(ccd);
             break;
         }
         default:
@@ -96,26 +93,4 @@ static void campMainLoop(int64_t elapsedUs)
             break;
         }
     }
-}
-
-static void doSplash()
-{
-    buttonEvt_t evt;
-    while (checkButtonQueueWrapper(&evt))
-    {
-        if (evt.down && (evt.button & PB_A))
-        {
-            ccd->state = CI_MENU;
-        }
-    }
-    ciDrawSplash(ccd);
-}
-
-static void doMenu()
-{
-    buttonEvt_t evt;
-    while (checkButtonQueueWrapper(&evt))
-    {
-    }
-    ciDrawMenu(ccd);
 }
