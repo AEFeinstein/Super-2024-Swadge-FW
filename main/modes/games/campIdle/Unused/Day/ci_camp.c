@@ -13,6 +13,5 @@ void ci_runDay(buttonEvt_t* evt)
     // Handle input
     while (checkButtonQueueWrapper(evt))
     {
-
     }
 }
