@@ -18,6 +18,10 @@
  */
 int gs_lerp(int a, int b, uint16_t amount)
 {
+    if (amount > 30000)
+    {
+        amount = 30000;
+    }
     return a + ((b - a) * amount) / 30000;
 }
 

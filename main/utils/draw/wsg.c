@@ -493,22 +493,21 @@ void drawWsgSmoothScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, q24_8 xSc
     q24_8 newWidth = MUL_FX_QN(wWidth, xScale, FRAC_BITS);
     q24_8 newHeigt = MUL_FX_QN(wHeigt, yScale, FRAC_BITS);
 
-
     // Portion of the scaled image that falls inside the screen.
-    q24_8 startX = TO_FX_QN(MAX(0, xOff),FRAC_BITS);
-    q24_8 endX = TO_FX_QN(MIN(TFT_WIDTH, xOff + (newWidth>>FRAC_BITS)),FRAC_BITS);
+    q24_8 startX = TO_FX_QN(MAX(0, xOff), FRAC_BITS);
+    q24_8 endX   = TO_FX_QN(MIN(TFT_WIDTH, xOff + (newWidth >> FRAC_BITS)), FRAC_BITS);
 
-    q24_8 startY = TO_FX_QN(MAX(0, yOff),FRAC_BITS);
-    q24_8 endY = TO_FX_QN(MIN(TFT_HEIGHT, yOff + (newHeigt>>FRAC_BITS)),FRAC_BITS);
+    q24_8 startY = TO_FX_QN(MAX(0, yOff), FRAC_BITS);
+    q24_8 endY   = TO_FX_QN(MIN(TFT_HEIGHT, yOff + (newHeigt >> FRAC_BITS)), FRAC_BITS);
 
     paletteColor_t* px = getPxTftFramebuffer();
     int wsgY           = 0;
-    if(yOff < 0)
+    if (yOff < 0)
     {
         wsgY -= yOff;
     }
-    int wsgX           = 0;
-    if(xOff < 0)
+    int wsgX = 0;
+    if (xOff < 0)
     {
         wsgX -= xOff;
     }
@@ -517,8 +516,8 @@ void drawWsgSmoothScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, q24_8 xSc
     {
         for (q24_8 x = startX; x < endX; x += TO_FX_QN(1, FRAC_BITS))
         {
-            q24_8 scaledX = SUB_FX_QN(x,TO_FX_QN(xOff,FRAC_BITS), FRAC_BITS);
-            q24_8 scaledY = SUB_FX_QN(y,TO_FX_QN(yOff,FRAC_BITS), FRAC_BITS);
+            q24_8 scaledX = SUB_FX_QN(x, TO_FX_QN(xOff, FRAC_BITS), FRAC_BITS);
+            q24_8 scaledY = SUB_FX_QN(y, TO_FX_QN(yOff, FRAC_BITS), FRAC_BITS);
 
             // Convert scaled position to source position
             int srcX = ROUND_FX_QN(MUL_FX_QN(DIV_FX_QN(scaledX, newWidth, FRAC_BITS), wWidth, FRAC_BITS), FRAC_BITS);
@@ -527,7 +526,7 @@ void drawWsgSmoothScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, q24_8 xSc
             int color = wsg->px[srcY * wsg->w + srcX];
             if (color != cTransparent)
             {
-                px[(y>>FRAC_BITS) * TFT_WIDTH + (x >> FRAC_BITS)] = color;
+                px[(y >> FRAC_BITS) * TFT_WIDTH + (x >> FRAC_BITS)] = color;
             }
         }
     }
