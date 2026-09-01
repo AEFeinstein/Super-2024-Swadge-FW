@@ -22,6 +22,9 @@ void drawBackground2d(ray_t* ray, int32_t firstRow, int32_t lastRow)
     int32_t iTexOffsetX = (ray->camera.x) % CELL_SIZE;
     int32_t iCopySize   = CELL_SIZE - iTexOffsetX;
 
+    // A cache for WSGs used on this row
+    const wsg_t* tileRow[(TFT_WIDTH / CELL_SIZE) + 1] = {NULL};
+
     // For each pixel row in this update
     for (uint32_t y = firstRow; y < lastRow; y++)
     {
@@ -31,14 +34,16 @@ void drawBackground2d(ray_t* ray, int32_t firstRow, int32_t lastRow)
         int32_t copySize   = iCopySize;
 
         // For the entire row, in CELL_SIZE steps
-        for (int32_t x = 0; x < TFT_WIDTH; /* x updated in the loop */)
+        for (int32_t x = 0, tIdx = 0; x < TFT_WIDTH; tIdx++ /* x updated in the loop */)
         {
-            // Get this cell type and the texture for it
-            rayMapCellType_t type = ray->map.tiles[mapX][mapY].type;
-            const wsg_t* texture  = getTexByType(ray, type);
+            // If there is no cached texture, get one
+            if (!tileRow[tIdx])
+            {
+                tileRow[tIdx] = ray->typeToTexMap[ray->map.tiles[mapX][mapY].type];
+            }
 
             // Copy one row from the texture to the framebuffer
-            memcpy(fb, &texture->px[CELL_SIZE * texOffsetY + texOffsetX], copySize);
+            memcpy(fb, &tileRow[tIdx]->px[CELL_SIZE * texOffsetY + texOffsetX], copySize);
 
             // Advance the framebuffer
             fb += copySize;
@@ -67,6 +72,8 @@ void drawBackground2d(ray_t* ray, int32_t firstRow, int32_t lastRow)
             // Advance to the next cell
             mapY++;
             texOffsetY = 0;
+            // Invalidate the cache
+            memset(tileRow, 0, sizeof(tileRow));
         }
     }
 }
