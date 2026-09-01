@@ -15,6 +15,7 @@ kAndOr: str = 'andor'
 kOneTime: str = 'onetime'
 kCost: str = 'cost'
 kObj: str = 'obj'
+kSong: str = 'song'
 
 
 class ifOpType(Enum):
@@ -25,6 +26,7 @@ class ifOpType(Enum):
     SHOOT_WALLS = 4
     ENTER = 5
     TIME_ELAPSED = 6
+    PLAY = 7
 
 
 class thenOpType(Enum):
@@ -52,6 +54,9 @@ class andOrType(Enum):
 class oneTimeType(Enum):
     ONCE = 0
     ALWAYS = 1
+
+class songType(Enum):
+    LULLABY = 0
 
 
 class spawn:
@@ -165,6 +170,13 @@ class rme_script:
                 return type[1]
         return None
 
+    def __parseSong(self, order: str) -> songType:
+        # LULLABY or other
+        for type in songType.__members__.items():
+            if order == type[0]:
+                return type[1]
+        return None
+
     def __parseOneTime(self, order: str) -> oneTimeType:
         # Either ONCE or ALWAYS
         for type in oneTimeType.__members__.items():
@@ -201,6 +213,8 @@ class rme_script:
 
         # Stringify the if args
         ifArgArray = []
+        if kSong in self.ifArgs.keys():
+            ifArgArray.append(self.ifArgs[kSong].name)
         if kAndOr in self.ifArgs.keys():
             ifArgArray.append(str(self.ifArgs[kAndOr].name))
         if kIds in self.ifArgs.keys():
@@ -280,6 +294,11 @@ class rme_script:
                 # Validate the args
                 if self.ifArgs[kTms] is None:
                     return False
+            elif (ifOpType.PLAY == self.ifOp):
+                self.ifArgs[kSong] = self.__parseSong(argParts[0])
+                self.ifArgs[kCells] = [self.__parseCell(
+                    s) for s in self.__parseArray(argParts[1])]
+
             else:
                 self.resetScript()
                 return False
@@ -364,6 +383,8 @@ class rme_script:
         bytes.append(self.ifOp.value)
 
         # Append the IF arguments, order matters
+        if kSong in self.ifArgs.keys():
+            bytes.append(self.ifArgs[kSong].value)
         if kAndOr in self.ifArgs.keys():
             bytes.append(self.ifArgs[kAndOr].value)
         if kIds in self.ifArgs.keys():
@@ -478,6 +499,18 @@ class rme_script:
                 (bytes[idx + 2] << 8) + \
                 (bytes[idx + 3])
             idx = idx + 4
+        elif ifOpType.PLAY == self.ifOp:
+            # Read song
+            self.ifArgs[kSong] = songType._value2member_map_[bytes[idx]]
+            idx = idx + 1
+            # Read number of cells (should be 2)
+            numCells: int = bytes[idx]
+            idx = idx + 1
+            # Read cells
+            self.ifArgs[kCells] = []
+            for cell in range(numCells):
+                self.ifArgs[kCells].append([bytes[idx], bytes[idx + 1]])
+                idx = idx + 2
         else:
             self.resetScript()
             return

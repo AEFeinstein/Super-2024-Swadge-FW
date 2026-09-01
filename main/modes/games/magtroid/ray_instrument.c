@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include "ray_instrument.h"
+#include "ray_script.h"
 
 //==============================================================================
 // Const data
@@ -101,6 +102,9 @@ static void handleRayInstrument(ray_t* ray, const linearTouch_t* touch, int8_t* 
 
                 // Clear note history
                 ray->is.noteHistory = 0xFFFFFFFF;
+
+                // Check scripts for this song
+                checkScriptSong(ray, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY), LULLABY, NULL);
             }
         }
     }
