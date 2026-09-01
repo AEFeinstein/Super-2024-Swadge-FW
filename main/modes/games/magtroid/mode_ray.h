@@ -320,6 +320,7 @@ typedef enum
     SHOOT_WALLS  = 4, ///< Walls were shot
     ENTER        = 5, ///< Map cells were entered
     TIME_ELAPSED = 6, ///< Time elapsed
+    PLAY         = 7, ///< A song was played
     NUM_IF_OP_TYPES,  ///< The number of IF operation types
 } ifOp_t;
 
@@ -365,6 +366,11 @@ typedef enum
     ONCE   = 0, ///< The script only triggers once
     ALWAYS = 1, ///< The script resets after triggering
 } repeat_t;
+
+typedef enum
+{
+    LULLABY = 0, ///< Doria's Lullaby
+} songType_t;
 
 typedef enum
 {
@@ -466,6 +472,14 @@ typedef struct
             rayMapCoordinates_t* cells; ///< A list of cells
             bool* cellsTriggered;       ///< A list of triggered cells
         } cellList;
+        /// A struct for arguments when playing a song
+        struct mode_ray
+        {
+            /* data */
+            songType_t song;            ///< The song played
+            uint8_t numCells;           ///< The number of cells in the list (should be 2)
+            rayMapCoordinates_t* cells; ///< A list of cells
+        } playSong;
     } ifArgs;
 
     thenOp_t thenOp; ///< The type of event that happens

@@ -100,6 +100,40 @@ void loadScripts(ray_t* ray, const uint8_t* fileData, uint32_t fileSize, uint32_
                 fileIdx += 4;
                 break;
             }
+            case PLAY:
+            {
+                // The song played
+                newScript->ifArgs.playSong.song = fileData[fileIdx++];
+                // [CELLs] (should be length 2)
+                newScript->ifArgs.playSong.numCells = fileData[fileIdx++];
+                newScript->ifArgs.playSong.cells
+                    = heap_caps_calloc(newScript->ifArgs.playSong.numCells, sizeof(rayMapCoordinates_t), caps);
+                for (uint8_t i = 0; i < newScript->ifArgs.playSong.numCells; i++)
+                {
+                    newScript->ifArgs.playSong.cells[i].x = fileData[fileIdx++];
+                    newScript->ifArgs.playSong.cells[i].y = fileData[fileIdx++];
+                }
+                // Order cells
+                if (2 == newScript->ifArgs.playSong.numCells)
+                {
+                    rayMapCoordinates_t* cells = newScript->ifArgs.playSong.cells;
+
+                    if (cells[0].x > cells[1].x)
+                    {
+                        uint8_t tmp = cells[0].x;
+                        cells[0].x  = cells[1].x;
+                        cells[1].x  = tmp;
+                    }
+
+                    if (cells[0].y > cells[1].y)
+                    {
+                        uint8_t tmp = cells[0].y;
+                        cells[0].y  = cells[1].y;
+                        cells[1].y  = tmp;
+                    }
+                }
+                break;
+            }
             default:
             case NUM_IF_OP_TYPES:
             {
@@ -248,6 +282,10 @@ static void freeScript(rayScript_t* script)
         {
             // Nothing allocated
             break;
+        }
+        case PLAY:
+        {
+            heap_caps_free(script->ifArgs.playSong.cells);
         }
         default:
         case NUM_IF_OP_TYPES:
@@ -703,6 +741,48 @@ bool checkScriptTime(ray_t* ray, uint32_t elapsedUs)
                 currentNode = currentNode->next;
             }
         }
+    }
+    return executed;
+}
+
+/**
+ * @brief Check scripts when a song is played
+ *
+ * @param ray The entire game state
+ * @param x The X cell location where the song was played
+ * @param y The Y cell location where the song was played
+ * @param song The song that was played
+ * @return true if a script executed, false if it didn't
+ */
+bool checkScriptSong(ray_t* ray, int32_t x, int32_t y, songType_t song, wsg_t* portrait)
+{
+    bool executed = false;
+    // Iterate over all nodes
+    node_t* currentNode = ray->scripts[PLAY].first;
+    while (currentNode != NULL)
+    {
+        // Get the script
+        rayScript_t* script = currentNode->val;
+
+        // Only check if the script is active
+        if (script->isActive)
+        {
+            // Check if the song matches
+            if (song == script->ifArgs.playSong.song)
+            {
+                // Check if bounds are given and it's in bounds
+                if (((2 == script->ifArgs.playSong.numCells)
+                     && (script->ifArgs.playSong.cells[0].x <= x && x <= script->ifArgs.playSong.cells[1].x
+                         && script->ifArgs.playSong.cells[0].y <= y && y <= script->ifArgs.playSong.cells[1].y))
+                    || (2 != script->ifArgs.playSong.numCells))
+                {
+                    // In bounds or no bounds given
+                    executeScriptEvent(ray, script, portrait);
+                }
+            }
+        }
+
+        currentNode = currentNode->next;
     }
     return executed;
 }
