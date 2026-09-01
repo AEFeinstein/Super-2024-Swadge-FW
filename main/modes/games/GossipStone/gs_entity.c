@@ -490,7 +490,14 @@ void gs_updateBigMoon(gs_entity_t* self)
     bmData->deltaScale++;
     q24_8 increaseBy = gs_lerp(512, bmData->deltaScale, bmData->scale);
     bmData->scale += (increaseBy >> 9);
-    // printf("scale %d\n", bmData->scale);
+    if(bmData->scale > bmData->targetScale)
+    {
+        self->updateFunction = NULL;
+        if(bmData->callback)
+        {
+            bmData->callback(self);
+        }
+    }
 }
 
 void gs_drawBigMoon(gs_entity_t* self)
@@ -504,7 +511,7 @@ void gs_drawBigMoon(gs_entity_t* self)
     y -= FROM_FX_QN(
         MUL_FX_QN(TO_FX_QN(self->gameData->assets[self->assetIndex].originY, FRAC_BITS), bmData->scale, FRAC_BITS),
         FRAC_BITS);
-    drawWsgSmoothScaled(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x - 15, y + 15,
+    drawWsgSmoothScaled(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y,
                         bmData->scale, bmData->scale);
 }
 
@@ -534,4 +541,19 @@ void gs_spawnBigMoon(gs_entity_t* self)
     moon->data                         = heap_caps_calloc(1, sizeof(gs_bigMoon_t), MALLOC_CAP_SPIRAM);
     moon->dataType                     = GS_BIG_MOON_DATA;
     ((gs_bigMoon_t*)moon->data)->scale = 1; // q24_8 for 0.125
+    ((gs_bigMoon_t*)moon->data)->callback = gs_spawnLanding; // q24_8 for 0.125
+    ((gs_bigMoon_t*)moon->data)->targetScale = 700;
+}
+
+void gs_spawnLanding(gs_entity_t* self)
+{
+    gs_entity_t* landing = gs_createEntityBefore(
+        gs_findLastNodeOfType(self, GS_GOSSIP_STONE_DATA), &self->gameData->entityManager, 1, GS_NO_ANIMATION, false,
+        GS_LANDING_ASSET, 1, self->gameData->entityManager.gossipStone->pos, self->gameData);
+    landing->updateFunction               = gs_updateBigMoon;
+    landing->drawFunction                 = gs_drawBigMoon;
+    landing->data                         = heap_caps_calloc(1, sizeof(gs_bigMoon_t), MALLOC_CAP_SPIRAM);
+    landing->dataType                     = GS_BIG_MOON_DATA;
+    ((gs_bigMoon_t*)landing->data)->scale = 1;
+    ((gs_bigMoon_t*)landing->data)->targetScale = 800;
 }

@@ -137,6 +137,8 @@ typedef struct
 {
     q24_8 deltaScale;
     q24_8 scale;
+    q24_8 targetScale;
+    gs_callbackFunction_t callback;//fires when scale greater than targetScale.
 } gs_bigMoon_t;
 
 //==============================================================================
@@ -167,3 +169,4 @@ void gs_updateMoon(gs_entity_t* self);
 void gs_updateBigMoon(gs_entity_t* self);
 void gs_drawBigMoon(gs_entity_t* self);
 void gs_spawnBigMoon(gs_entity_t* self);
+void gs_spawnLanding(gs_entity_t* self);

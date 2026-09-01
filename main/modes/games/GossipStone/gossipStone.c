@@ -260,6 +260,9 @@ static void gs_loadAssets(void)
     gs_loadAsset(STAR_0_WSG, 14, &gameData->assets[GS_STAR_ASSET]); // anim sequences 0-5, 6, 7-12, 13, 10
     gs_loadAsset(SPACE_GRADIENT_WSG, 1, &gameData->assets[GS_SPACE_GRADIENT_ASSET]);
     gs_loadAsset(HI_RES_MOON_WSG, 1, &gameData->assets[GS_HI_RES_MOON_ASSET]);
+    gameData->assets[GS_HI_RES_MOON_ASSET].originX = 180;
+    gameData->assets[GS_HI_RES_MOON_ASSET].originY = 127;
+    gs_loadAsset(LANDING_DITHERED_WSG, 1, &gameData->assets[GS_LANDING_ASSET]);
 }
 
 static void gs_initializeGame(void)
