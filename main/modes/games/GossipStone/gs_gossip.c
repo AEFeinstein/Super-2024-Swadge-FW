@@ -37,27 +37,27 @@ const char* AMAList[AMA_COUNT] = {
 
 const char* prophecyList[PROPHECY_COUNT] = {
     "Interesting!",
-    // "It took 1,312 years to tether a gaylordian.",
-    // "A very short task after my last assignment.",
-    // "Thank you for relentlessly shaking me.",
-    // "T-10",
-    // "9",
-    // "8",
-    // "7",
-    // "6",
-    // "5",
-    // "4",
-    // "3",
-    // "2",
-    // "1",
-    // "What are you waiting for? Use the touch strips.",
+    "It took 1,312 years to tether a gaylordian.",
+    "A very short task after my last assignment.",
+    "Thank you for relentlessly shaking me.",
+    "T-10",
+    "9",
+    "8",
+    "7",
+    "6",
+    "5",
+    "4",
+    "3",
+    "2",
+    "1",
+    "What are you waiting for? Use the touch strips.",
 };
 
 
 const char* prophecyEndSceneList[PROPHECY_END_SCENE_COUNT] = {
     "Fortunate vector. Homebound.",
     "Our arrival should be a cause for celebration.",
-    "But there's a bad omen from Delphinus extending past the 2027 boundary.",
+    "But there's a bad omen from Delphinus projecting past the 2027 boundary.",
     "A multi-year meta-plot could unbind MAGFest as we know it.",
     "We must consult the Augur.",
 };

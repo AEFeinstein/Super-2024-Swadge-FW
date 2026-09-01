@@ -2,7 +2,7 @@
 
 #define GOSSIP_COUNT             6
 #define AMA_COUNT                21
-#define PROPHECY_COUNT           1 // 15
+#define PROPHECY_COUNT           15
 #define PROPHECY_END_SCENE_COUNT 5
 
 //==============================================================================
