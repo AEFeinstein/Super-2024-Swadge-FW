@@ -488,55 +488,48 @@ void drawWsgSmoothScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, q24_8 xSc
     //  Nearest Neigbhor scaling algorithm:
     //  https://courses.cs.vt.edu/~masc1044/L17-Rotation/ScalingNN.html
 
-    if (xScale > 0b10010001)
-    {
-        xScale = 0b10010001;
-    }
-    if (yScale > 0b10010001)
-    {
-        yScale = 0b10010001;
-    }
-    if (NULL == wsg->px)
-    {
-        return;
-    }
-
     q24_8 wWidth   = TO_FX_QN(wsg->w, FRAC_BITS);
     q24_8 wHeigt   = TO_FX_QN(wsg->h, FRAC_BITS);
     q24_8 newWidth = MUL_FX_QN(wWidth, xScale, FRAC_BITS);
     q24_8 newHeigt = MUL_FX_QN(wHeigt, yScale, FRAC_BITS);
-    // Only draw in bounds
-    q24_8 xMin         = TO_FX_QN(CLAMP(xOff, 0, TFT_WIDTH), FRAC_BITS);
-    q24_8 xMax         = TO_FX_QN(CLAMP(xOff + (newWidth >> FRAC_BITS), 0,
-                                        DIV_FX_QN(TO_FX_QN(TFT_WIDTH, FRAC_BITS), xScale, FRAC_BITS) >> FRAC_BITS),
-                                  FRAC_BITS);
-    q24_8 yMin         = TO_FX_QN(CLAMP(yOff, 0, TFT_HEIGHT), FRAC_BITS);
-    q24_8 yMax         = TO_FX_QN(CLAMP(yOff + (newHeigt >> FRAC_BITS), 0,
-                                        DIV_FX_QN(TO_FX_QN(TFT_HEIGHT, FRAC_BITS), yScale, FRAC_BITS) >> FRAC_BITS),
-                                  FRAC_BITS);
-    paletteColor_t* px = getPxTftFramebuffer();
-    q24_8 numX         = SUB_FX_QN(xMax, xMin, FRAC_BITS);
-    int wsgY           = ((yMin >> FRAC_BITS) - yOff);
-    int wsgX           = ((xMin >> FRAC_BITS) - xOff);
-    paletteColor_t* lineout      = &px[((yMin >> FRAC_BITS) * TFT_WIDTH) + (xMin >> FRAC_BITS)];
-    const paletteColor_t* linein = &wsg->px[wsgY * wsg->w + wsgX];
 
-    // Draw each pixel
-    for (q24_8 y = yMin; y < yMax; y += TO_FX_QN(1, FRAC_BITS))
+
+    // Portion of the scaled image that falls inside the screen.
+    q24_8 startX = TO_FX_QN(MAX(0, xOff),FRAC_BITS);
+    q24_8 endX = TO_FX_QN(MIN(TFT_WIDTH, xOff + (newWidth>>FRAC_BITS)),FRAC_BITS);
+
+    q24_8 startY = TO_FX_QN(MAX(0, yOff),FRAC_BITS);
+    q24_8 endY = TO_FX_QN(MIN(TFT_HEIGHT, yOff + (newHeigt>>FRAC_BITS)),FRAC_BITS);
+
+    paletteColor_t* px = getPxTftFramebuffer();
+    int wsgY           = 0;
+    if(yOff < 0)
     {
-        wsgY = ROUND_FX_QN(MUL_FX_QN(DIV_FX_QN(y, newHeigt, FRAC_BITS), wHeigt, FRAC_BITS), FRAC_BITS);
-        wsgY = MIN(wsgY, wsg->h - 1);
-        for (q24_8 x = xMin; x < numX; x += TO_FX_QN(1, FRAC_BITS))
+        wsgY -= yOff;
+    }
+    int wsgX           = 0;
+    if(xOff < 0)
+    {
+        wsgX -= xOff;
+    }
+
+    for (q24_8 y = startY; y < endY; y += TO_FX_QN(1, FRAC_BITS))
+    {
+        for (q24_8 x = startX; x < endX; x += TO_FX_QN(1, FRAC_BITS))
         {
-            wsgX      = ROUND_FX_QN(MUL_FX_QN(DIV_FX_QN(x, newWidth, FRAC_BITS), wWidth, FRAC_BITS), FRAC_BITS);
-            wsgX      = MIN(wsgX, wsg->w - 1);
-            int color = linein[wsgY * wsg->w + wsgX];
+            q24_8 scaledX = SUB_FX_QN(x,TO_FX_QN(xOff,FRAC_BITS), FRAC_BITS);
+            q24_8 scaledY = SUB_FX_QN(y,TO_FX_QN(yOff,FRAC_BITS), FRAC_BITS);
+
+            // Convert scaled position to source position
+            int srcX = ROUND_FX_QN(MUL_FX_QN(DIV_FX_QN(scaledX, newWidth, FRAC_BITS), wWidth, FRAC_BITS), FRAC_BITS);
+            int srcY = ROUND_FX_QN(MUL_FX_QN(DIV_FX_QN(scaledY, newHeigt, FRAC_BITS), wHeigt, FRAC_BITS), FRAC_BITS);
+
+            int color = wsg->px[srcY * wsg->w + srcX];
             if (color != cTransparent)
             {
-                lineout[x >> FRAC_BITS] = color;
+                px[(y>>FRAC_BITS) * TFT_WIDTH + (x >> FRAC_BITS)] = color;
             }
         }
-        lineout += TFT_WIDTH;
     }
 }
 

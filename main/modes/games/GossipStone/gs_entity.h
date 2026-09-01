@@ -135,6 +135,7 @@ typedef struct
 
 typedef struct
 {
+    q24_8 deltaScale;
     q24_8 scale;
 } gs_bigMoon_t;
 
