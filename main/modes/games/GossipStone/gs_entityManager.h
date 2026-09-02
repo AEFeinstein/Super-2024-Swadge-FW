@@ -41,6 +41,9 @@ void gs_destroyAllEntities(gs_entityManager_t* entityManager);
 gs_entity_t* gs_createEntity(gs_entityManager_t* entityManager, uint8_t numFrames, gs_animationType_t type, bool paused,
                              gs_assetIdx_t AssetIndex, uint8_t gameFramesPerAnimationFrame, vec_t pos,
                              gs_gameData_t* gameData);
+gs_entity_t* gs_createEntityFirst(gs_entityManager_t* entityManager, uint8_t numFrames, gs_animationType_t type, bool paused,
+                             gs_assetIdx_t assetIndex, uint8_t gameFramesPerAnimationFrame, vec_t pos,
+                             gs_gameData_t* gameData);
 gs_entity_t* gs_createEntityBefore(void* before, gs_entityManager_t* entityManager, uint8_t numFrames,
                                    gs_animationType_t type, bool paused, gs_assetIdx_t assetIndex,
                                    uint8_t gameFramesPerAnimationFrame, vec_t pos, gs_gameData_t* gameData);

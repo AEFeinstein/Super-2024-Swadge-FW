@@ -138,7 +138,7 @@ typedef struct
     q24_8 deltaScale;
     q24_8 scale;
     q24_8 targetScale;
-    gs_callbackFunction_t callback;//fires when scale greater than targetScale.
+    gs_callbackFunction_t callback; // fires when scale greater than targetScale.
 } gs_bigMoon_t;
 
 //==============================================================================

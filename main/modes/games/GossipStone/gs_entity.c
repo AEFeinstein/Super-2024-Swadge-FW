@@ -111,7 +111,7 @@ void gs_updateGossip(gs_entity_t* self)
         {
             case GS_GOSSIP_SUBMODE:
             case GS_AMA_SUBMODE:
-                data->index = gs_randomInt(1, data->arr_size - 1);
+                data->index               = gs_randomInt(1, data->arr_size - 1);
                 data->gossipStone->paused = false;
                 break;
             case GS_PROPHECY_SUBMODE:
@@ -164,8 +164,8 @@ void gs_recordProgress(gs_entity_t* self)
         writeNvs32(nvsKey, self->gameData->gossipProgress[NVSgroup]);
 
         // update the trophy
-        trophyUpdate(&(*self->gameData->trophyData)[THE_PROPHECY_TROPH], trophyGetSavedValue(&(*self->gameData->trophyData)[THE_PROPHECY_TROPH]) + 1,
-                     true);
+        trophyUpdate(&(*self->gameData->trophyData)[THE_PROPHECY_TROPH],
+                     trophyGetSavedValue(&(*self->gameData->trophyData)[THE_PROPHECY_TROPH]) + 1, true);
     }
 }
 
@@ -318,9 +318,9 @@ void gs_updateGossipStone(gs_entity_t* self)
         self->gameData->entityManager.camera.pos.y = self->pos.y - (TFT_HEIGHT << (DECIMAL_BITS - 1));
     }
     // ground collision
-    if (self->pos.y > 66847) // 0xFFFF + (82 << DECIMAL_BITS))
+    if (self->pos.y > 0xFFFF + (90 << DECIMAL_BITS)) // 0xFFFF + (82 << DECIMAL_BITS))
     {
-        self->pos.y   = 66847;
+        self->pos.y   = 0xFFFF + (90 << DECIMAL_BITS);
         gsData->vel.y = 0;
     }
     self->gameData->entityManager.camera.pos.x = self->pos.x - (TFT_WIDTH << (DECIMAL_BITS - 1));
@@ -491,13 +491,12 @@ void gs_updateBigMoon(gs_entity_t* self)
     bmData->deltaScale++;
     q24_8 increaseBy = gs_lerp(512, bmData->deltaScale, bmData->scale);
     bmData->scale += (increaseBy >> 9);
-    if(bmData->scale > bmData->targetScale)
+    if (bmData->scale > bmData->targetScale)
     {
         // update the trophy
-        trophyUpdate(&(*self->gameData->trophyData)[THE_MOON_TROPH], 1,
-                     true);
+        trophyUpdate(&(*self->gameData->trophyData)[THE_MOON_TROPH], 1, true);
         self->updateFunction = NULL;
-        if(bmData->callback)
+        if (bmData->callback)
         {
             bmData->callback(self);
         }
@@ -540,12 +539,12 @@ void gs_spawnBigMoon(gs_entity_t* self)
     gs_entity_t* moon = gs_createEntityBefore(
         gs_findLastNodeOfType(self, GS_GOSSIP_STONE_DATA), &self->gameData->entityManager, 1, GS_NO_ANIMATION, false,
         GS_HI_RES_MOON_ASSET, 1, addVec2d(self->gameData->entityManager.gossipStone->pos, moonOffset), self->gameData);
-    moon->updateFunction               = gs_updateBigMoon;
-    moon->drawFunction                 = gs_drawBigMoon;
-    moon->data                         = heap_caps_calloc(1, sizeof(gs_bigMoon_t), MALLOC_CAP_SPIRAM);
-    moon->dataType                     = GS_BIG_MOON_DATA;
-    ((gs_bigMoon_t*)moon->data)->scale = 1; // q24_8 for 0.125
-    ((gs_bigMoon_t*)moon->data)->callback = gs_spawnLanding; // q24_8 for 0.125
+    moon->updateFunction                     = gs_updateBigMoon;
+    moon->drawFunction                       = gs_drawBigMoon;
+    moon->data                               = heap_caps_calloc(1, sizeof(gs_bigMoon_t), MALLOC_CAP_SPIRAM);
+    moon->dataType                           = GS_BIG_MOON_DATA;
+    ((gs_bigMoon_t*)moon->data)->scale       = 1;               // q24_8 for 0.125
+    ((gs_bigMoon_t*)moon->data)->callback    = gs_spawnLanding; // q24_8 for 0.125
     ((gs_bigMoon_t*)moon->data)->targetScale = 700;
 }
 
@@ -554,10 +553,10 @@ void gs_spawnLanding(gs_entity_t* self)
     gs_entity_t* landing = gs_createEntityBefore(
         gs_findLastNodeOfType(self, GS_GOSSIP_STONE_DATA), &self->gameData->entityManager, 1, GS_NO_ANIMATION, false,
         GS_LANDING_ASSET, 1, self->gameData->entityManager.gossipStone->pos, self->gameData);
-    landing->updateFunction               = gs_updateBigMoon;
-    landing->drawFunction                 = gs_drawBigMoon;
-    landing->data                         = heap_caps_calloc(1, sizeof(gs_bigMoon_t), MALLOC_CAP_SPIRAM);
-    landing->dataType                     = GS_BIG_MOON_DATA;
-    ((gs_bigMoon_t*)landing->data)->scale = 1;
+    landing->updateFunction                     = gs_updateBigMoon;
+    landing->drawFunction                       = gs_drawBigMoon;
+    landing->data                               = heap_caps_calloc(1, sizeof(gs_bigMoon_t), MALLOC_CAP_SPIRAM);
+    landing->dataType                           = GS_BIG_MOON_DATA;
+    ((gs_bigMoon_t*)landing->data)->scale       = 1;
     ((gs_bigMoon_t*)landing->data)->targetScale = 800;
 }
