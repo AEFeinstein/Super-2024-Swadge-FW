@@ -35,6 +35,13 @@ typedef enum __attribute__((packed))
     GS_NO_ASSET, // Keep this one at the end of the enum. Used for entities with no wsgs.
 } gs_assetIdx_t;
 
+typedef enum __attribute((packed))
+{
+    THE_PROPHECY_TROPH,
+    THE_MOON_TROPH,
+    GS_TROPHY_COUNT,
+} gs_trophy_t;
+
 typedef enum __attribute__((packed))
 {
     GS_ONESHOT_ANIMATION,

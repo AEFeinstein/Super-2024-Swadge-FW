@@ -22,7 +22,7 @@ typedef enum __attribute__((packed))
 
 typedef struct gs_gameData_t
 {
-    const trophyData_t (*trophyData)[1];
+    const trophyData_t (*trophyData)[GS_TROPHY_COUNT];
     // Current stuff being shown
     gs_submode_t submode;
     // Main Menu

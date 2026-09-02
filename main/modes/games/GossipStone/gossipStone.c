@@ -46,14 +46,22 @@ static void gs_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 
 const trophyData_t gs_trophies[] = {
     {
-        // 0
         .title       = "The Prophecy",
-        .description = "Listen to all the gossip.",
+        .description = "listen to all the gossip",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_ADDITIVE,
         .difficulty  = TROPHY_DIFF_HARD,
         .maxVal      = GOSSIP_COUNT - 1, // Because the first message is tutorial text.
     },
+    {
+        .title = "The Moon",
+        .description = "been there",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // Because the first message is tutorial text.
+        .hidden = true,
+    }
 };
 
 // Individual mode settings
@@ -140,15 +148,21 @@ static void gs_enterMode(void)
 void gs_populateMenu(void)
 {
     removeAllItemsFromMenu(gameData->menu);
+    // The Moon
+    if (trophyGetSavedValue(&gs_trophies[THE_MOON_TROPH]) == 1)
+    {
+        addSingleItemToMenu(gameData->menu, gs_MoonStr);
+    }
+    // The Prophecy
+    if (trophyGetSavedValue(&gs_trophies[THE_PROPHECY_TROPH]) == GOSSIP_COUNT - 1)
+    {
+        addSingleItemToMenu(gameData->menu, gs_ProphecyStr);
+    }
     // Gossip
     addSingleItemToMenu(gameData->menu, gs_GossipStr);
     // Ask Me Anything
     addSingleItemToMenu(gameData->menu, gs_AskMeAnythingStr);
-    // The Prophecy
-    if (trophyGetSavedValue(&gs_trophies[0]) == GOSSIP_COUNT - 1)
-    {
-        addSingleItemToMenu(gameData->menu, gs_ProphecyStr);
-    }
+
     // The Moon
 
     // Exit
@@ -403,11 +417,21 @@ bool gs_menuCb(const char* label, bool selected, uint32_t value)
         }
         else if (label == gs_MoonStr)
         {
+            gameData->submode = GS_MOON_SUBMODE;
+            gs_gossip_t* gData = (gs_gossip_t*)gameData->entityManager.gossip->data;
+            gData->messageList = moonList;
+            gData->arr_size    = MOON_COUNT;
+            // reset a few things because the player may have exited and entered.
+            gData->index    = 0;
+            gData->progress = 0;
+
             if (gameData->entityManager.tilemap == NULL)
             {
                 gameData->entityManager.tilemap
                     = gs_createEntity(&gameData->entityManager, 15, GS_NO_ANIMATION, true, GS_MOON_TILE_ASSET, 0,
                                       (vec_t){0xffff, 0xffff}, gameData);
+                                      
+                gameData->entityManager.tilemap->data = heap_caps_calloc(1, sizeof(gs_tilemap_t), MALLOC_CAP_SPIRAM);
                 gameData->entityManager.tilemap->dataType = GS_TILEMAP_DATA;
                 // calloc the columns in layers separately to avoid a big alloc
                 for (int32_t w = 0; w < TILE_FIELD_WIDTH; w++)

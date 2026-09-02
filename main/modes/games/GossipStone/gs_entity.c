@@ -164,7 +164,7 @@ void gs_recordProgress(gs_entity_t* self)
         writeNvs32(nvsKey, self->gameData->gossipProgress[NVSgroup]);
 
         // update the trophy
-        trophyUpdate(&(*self->gameData->trophyData)[0], trophyGetSavedValue(&(*self->gameData->trophyData)[0]) + 1,
+        trophyUpdate(&(*self->gameData->trophyData)[THE_PROPHECY_TROPH], trophyGetSavedValue(&(*self->gameData->trophyData)[THE_PROPHECY_TROPH]) + 1,
                      true);
     }
 }
@@ -493,6 +493,9 @@ void gs_updateBigMoon(gs_entity_t* self)
     bmData->scale += (increaseBy >> 9);
     if(bmData->scale > bmData->targetScale)
     {
+        // update the trophy
+        trophyUpdate(&(*self->gameData->trophyData)[THE_MOON_TROPH], 1,
+                     true);
         self->updateFunction = NULL;
         if(bmData->callback)
         {

@@ -67,4 +67,8 @@ const char* prophecyEndSceneList[PROPHECY_END_SCENE_COUNT] = {
     "We must consult the Augur.",
 };
 
+const char* moonList[MOON_COUNT] = {
+    "Gotta go slow!"
+};
+
 // clang-format on

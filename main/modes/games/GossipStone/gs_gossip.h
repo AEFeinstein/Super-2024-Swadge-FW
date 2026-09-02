@@ -4,6 +4,7 @@
 #define AMA_COUNT                21
 #define PROPHECY_COUNT           15
 #define PROPHECY_END_SCENE_COUNT 5
+#define MOON_COUNT               1
 
 //==============================================================================
 // Externs
@@ -15,3 +16,5 @@ extern const char* AMAList[AMA_COUNT];
 extern const char* prophecyList[PROPHECY_COUNT];
 
 extern const char* prophecyEndSceneList[PROPHECY_END_SCENE_COUNT];
+
+extern const char* moonList[MOON_COUNT];
