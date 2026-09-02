@@ -112,6 +112,7 @@ void gs_updateGossip(gs_entity_t* self)
             case GS_GOSSIP_SUBMODE:
             case GS_AMA_SUBMODE:
                 data->index = gs_randomInt(1, data->arr_size - 1);
+                data->gossipStone->paused = false;
                 break;
             case GS_PROPHECY_SUBMODE:
                 if (data->index < data->arr_size - 1)

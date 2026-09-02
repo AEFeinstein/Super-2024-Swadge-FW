@@ -9,6 +9,11 @@ const char* gossipList[GOSSIP_COUNT] = {
     "Here is line number 3.",
     "Yeah, number four.",
     "Okay, that's number five.",
+    "sixeroni.",
+    "sevennnnnnnn.",
+    "Here is the eighth line.",
+    "NINE.",
+    "TEN!!!!!!!!",
 };
 
 const char* AMAList[AMA_COUNT] = {

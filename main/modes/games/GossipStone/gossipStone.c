@@ -262,7 +262,7 @@ static void gs_loadAssets(void)
     gs_loadAsset(HI_RES_MOON_WSG, 1, &gameData->assets[GS_HI_RES_MOON_ASSET]);
     gameData->assets[GS_HI_RES_MOON_ASSET].originX = 180;
     gameData->assets[GS_HI_RES_MOON_ASSET].originY = 127;
-    gs_loadAsset(LANDING_DITHERED_WSG, 1, &gameData->assets[GS_LANDING_ASSET]);
+    gs_loadAsset(LANDING_WSG, 1, &gameData->assets[GS_LANDING_ASSET]);
 }
 
 static void gs_initializeGame(void)
