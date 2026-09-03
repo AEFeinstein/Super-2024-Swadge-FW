@@ -9,8 +9,8 @@
 #define NUM_ASSETS        GS_NO_ASSET      // The number of gs_asset_t
 #define NUM_PALETTES      GS_COUNT_PALETTE // The number of wsgPalette_t
 #define MAX_LERP_AMOUNT   30000
-#define TILE_FIELD_WIDTH  120 // matches the level wsg graphic width
-#define TILE_FIELD_HEIGHT 120 // matches the level wsg graphic height
+#define TILE_FIELD_WIDTH  266 // matches the level wsg graphic width
+#define TILE_FIELD_HEIGHT 226 // matches the level wsg graphic height
 
 typedef struct gs_entity_t gs_entity_t;
 typedef struct gs_gameData_t gs_gameData_t;

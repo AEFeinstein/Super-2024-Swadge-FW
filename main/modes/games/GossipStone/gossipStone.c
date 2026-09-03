@@ -281,6 +281,7 @@ static void gs_initializeGame(void)
                                                             GS_MOON_TILE_ASSET, 0, (vec_t){0xffff, 0xffff}, gameData);
     gameData->entityManager.tilemap->data = heap_caps_calloc(1, sizeof(gs_tilemap_t), MALLOC_CAP_SPIRAM);
     gameData->entityManager.tilemap->dataType = GS_TILEMAP_DATA;
+    gameData->entityManager.tilemap->drawFunction = gs_drawTileMap;
     // calloc the columns in layers separately to avoid a big alloc
     for (int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
     {
