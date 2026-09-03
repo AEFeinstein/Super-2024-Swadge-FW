@@ -119,6 +119,7 @@ typedef struct
     int value;
     const char* title;
     const char* desc;
+    const char* abbr;
 } ciItem_t;
 
 /// @brief Used to pack the inventory as tightly as possible
@@ -197,4 +198,4 @@ extern const ciItem_t ciItemData[];
 // Functions
 //==============================================================================
 
-int ciGetArrayLength(void);
+int ciGetItemArrayLength(void);

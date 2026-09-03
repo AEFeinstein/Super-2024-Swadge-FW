@@ -20,4 +20,4 @@ void ciFreeInventory(ciCampData_t* ccd);
 
 void ciDrawItemPanel(ciCampData_t* ccd, int idx);
 
-void ciDrawItemIcon(ciCampData_t* ccd, int idx, int xStart, int yStart, bool selected);
+void ciDrawItemIcon(ciCampData_t* ccd, int idx, int xStart, int yStart, bool selected, bool showQty);
