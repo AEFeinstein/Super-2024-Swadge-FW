@@ -19,6 +19,7 @@ const ciItem_t ciItemData[] = {
         .value  = -10,
         .title  = "Floor Pizza",
         .desc   = "Pizza from the floor. Let's hope nobody stepped on it.",
+        .abbr   = "FLPZ",
     },
     {
         .image  = CI_FURRY_MILK_WSG,
@@ -29,6 +30,7 @@ const ciItem_t ciItemData[] = {
         .value  = -30,
         .title  = "Furry Milk",
         .desc   = "Please don't think about where it came from.",
+        .abbr   = "FMLK",
     },
     {
         .image  = CI_ICBINB_WSG,
@@ -39,6 +41,7 @@ const ciItem_t ciItemData[] = {
         .value  = -50,
         .title  = "I Can't Believe It's Not Margarine!",
         .desc   = "It appears to be all natural butterfly.",
+        .abbr   = "MARG",
     },
     {
         .image  = CI_MALORT_WSG,
@@ -49,6 +52,7 @@ const ciItem_t ciItemData[] = {
         .value  = -50,
         .title  = "Malort",
         .desc   = "There are things that taste worse, but not by much.",
+        .abbr   = "MALO",
     },
     {
         .image  = CI_PILK_WSG,
@@ -59,6 +63,7 @@ const ciItem_t ciItemData[] = {
         .value  = -30,
         .title  = "Pilk",
         .desc   = "On one hand, it's disgusting. On the other hand, PILK!",
+        .abbr   = "PILK",
     },
     {
         .image  = CI_RAVER_SWEAT_WSG,
@@ -69,6 +74,7 @@ const ciItem_t ciItemData[] = {
         .value  = -20,
         .title  = "Raver Sweat",
         .desc   = "Ethically sourced, but may contain psychoactive chemicals.",
+        .abbr   = "RSWT",
     },
     {
         .image  = CI_SQUIRREL_NUTS_WSG,
@@ -79,6 +85,7 @@ const ciItem_t ciItemData[] = {
         .value  = -10,
         .title  = "Squirrel Nuts",
         .desc   = "Think one those cosplayers dropped these?",
+        .abbr   = "SQNT",
     },
     {
         .image  = CI_YPLA_WSG,
@@ -89,6 +96,7 @@ const ciItem_t ciItemData[] = {
         .value  = -1,
         .title  = "Your Parent's Lingering Affection",
         .desc   = "'Of course we love you, honey, but maybe if you'd settle down-'",
+        .abbr   = "YPLA",
     },
     {
         .image  = CI_CLOTH_WSG,
@@ -99,6 +107,7 @@ const ciItem_t ciItemData[] = {
         .value  = 2,
         .title  = "Cloth",
         .desc   = "A small bit of cloth",
+        .abbr   = "CLTH",
     },
     {
         .image  = CI_CUT_ROCK_WSG,
@@ -109,6 +118,7 @@ const ciItem_t ciItemData[] = {
         .value  = 0,
         .title  = "Cut Blocks",
         .desc   = "Much easier to build with",
+        .abbr   = "CBLK",
     },
     {
         .image  = CI_DIAMOND_WSG,
@@ -119,6 +129,7 @@ const ciItem_t ciItemData[] = {
         .value  = 0,
         .title  = "Diamond",
         .desc   = "Ooooo. Shiny.",
+        .abbr   = "DMND",
     },
     {
         .image  = CI_DIAMOND_POWDER_WSG,
@@ -129,6 +140,7 @@ const ciItem_t ciItemData[] = {
         .value  = 0,
         .title  = "Diamond Powder",
         .desc   = "Try not to inhale it",
+        .abbr   = "DPWD",
     },
     {
         .image  = CI_GEAR_WSG,
@@ -139,6 +151,7 @@ const ciItem_t ciItemData[] = {
         .value  = 2,
         .title  = "Gears",
         .desc   = "Useful for all manner of mechanical contraptions",
+        .abbr   = "GEAR",
     },
     {
         .image  = CI_IRON_WSG,
@@ -149,6 +162,7 @@ const ciItem_t ciItemData[] = {
         .value  = 0,
         .title  = "Iron",
         .desc   = "Iron ready to use",
+        .abbr   = "IRON",
     },
     {
         .image  = CI_HIDE_WSG,
@@ -159,6 +173,7 @@ const ciItem_t ciItemData[] = {
         .value  = 0,
         .title  = "Pelts",
         .desc   = "Yeah, this is definitely pleather",
+        .abbr   = "HIDE",
     },
     {
         .image  = CI_POLISHED_ROCK_WSG,
@@ -169,6 +184,7 @@ const ciItem_t ciItemData[] = {
         .value  = 0,
         .title  = "Polished Blocks",
         .desc   = "Perfect for a countertop",
+        .abbr   = "PBLK",
     },
     {
         .image  = CI_POLISHED_CRYSTAL_WSG,
@@ -179,6 +195,7 @@ const ciItem_t ciItemData[] = {
         .value  = 0,
         .title  = "Polished Crystals",
         .desc   = "You can feel a buzz of mysterious energy flowing through it",
+        .abbr   = "PCRY",
     },
     {
         .image  = CI_ROPE_WSG,
@@ -189,6 +206,7 @@ const ciItem_t ciItemData[] = {
         .value  = 1,
         .title  = "Rope",
         .desc   = "I can't believe you didn't start with at least 50ft of rope",
+        .abbr   = "ROPE",
     },
     {
         .image  = CI_SALT_WSG,
@@ -199,6 +217,7 @@ const ciItem_t ciItemData[] = {
         .value  = 0,
         .title  = "Salt",
         .desc   = "Na: Explosive. Cl: Highly Acidic. NaCl: Tasty!",
+        .abbr   = "SALT",
     },
     {
         .image  = CI_STRING_WSG,
@@ -209,6 +228,7 @@ const ciItem_t ciItemData[] = {
         .value  = 1,
         .title  = "String",
         .desc   = "If you could dye it red, you might find someone important",
+        .abbr   = "STRG",
     },
     {
         .image  = CI_APPLE_WSG,
@@ -219,6 +239,7 @@ const ciItem_t ciItemData[] = {
         .value  = 5,
         .title  = "Apple",
         .desc   = "It looks kinda... smooshed, but it should still taste good",
+        .abbr   = "APPL",
     },
     {
         .image  = CI_BEANS_WSG,
@@ -229,6 +250,7 @@ const ciItem_t ciItemData[] = {
         .value  = 100,
         .title  = "Beans",
         .desc   = "I sure hope you brought a can opener",
+        .abbr   = "BEAN",
     },
     {
         .image  = CI_BERRIES_WSG,
@@ -239,6 +261,7 @@ const ciItem_t ciItemData[] = {
         .value  = 5,
         .title  = "Berries",
         .desc   = "A rich assortment of hopefully non-toxic berries",
+        .abbr   = "BRRY",
     },
     {
         .image  = CI_DONUT_WSG,
@@ -249,6 +272,7 @@ const ciItem_t ciItemData[] = {
         .value  = 10,
         .title  = "Donuts",
         .desc   = "Donuts are classically a fall fruit, but occasionally you can find them out of season",
+        .abbr   = "DNUT",
     },
     {
         .image  = CI_ENERGY_DRINK_WSG,
@@ -259,6 +283,7 @@ const ciItem_t ciItemData[] = {
         .value  = 30,
         .title  = "Energy Drink",
         .desc   = "Monster Bang Bull: Unleash your Winged Destiny!",
+        .abbr   = "DRNK",
     },
     {
         .image  = CI_HONEY_WSG,
@@ -269,6 +294,7 @@ const ciItem_t ciItemData[] = {
         .value  = 30,
         .title  = "Honey",
         .desc   = "Honey? Where is my superfood?",
+        .abbr   = "HNY",
     },
     {
         .image  = CI_MRE_WSG,
@@ -279,6 +305,7 @@ const ciItem_t ciItemData[] = {
         .value  = 50,
         .title  = "MRE",
         .desc   = "Meal, Ready-to-Eat. Hopefully not the vegetable omelet meal",
+        .abbr   = "MRE",
     },
     {
         .image  = CI_MUSHROOMS_WSG,
@@ -289,6 +316,7 @@ const ciItem_t ciItemData[] = {
         .value  = 20,
         .title  = "Mushrooms",
         .desc   = "Anything is edible at least once",
+        .abbr   = "MUSH",
     },
     {
         .image  = CI_MYSTERY_MEAT_WSG,
@@ -299,6 +327,7 @@ const ciItem_t ciItemData[] = {
         .value  = 30,
         .title  = "Mystery Meat",
         .desc   = "It was just lying there on the ground. Are you sure you want to eat it?",
+        .abbr   = "MYST",
     },
     {
         .image  = CI_PAN_PIZZA_WSG,
@@ -309,6 +338,7 @@ const ciItem_t ciItemData[] = {
         .value  = 30,
         .title  = "Pan Pizza",
         .desc   = "Hot, fresh and ready. Nobody knows who made it",
+        .abbr   = "PNPZ",
     },
     {
         .image  = CI_PICKLES_WSG,
@@ -319,6 +349,7 @@ const ciItem_t ciItemData[] = {
         .value  = 30,
         .title  = "Pickles",
         .desc   = "The pickles are reasonable, but where did the jar come from?",
+        .abbr   = "PCKL",
     },
     {
         .image  = CI_PROTEIN_POWDER_WSG,
@@ -329,6 +360,7 @@ const ciItem_t ciItemData[] = {
         .value  = 10,
         .title  = "Protein Powder",
         .desc   = "GOTTA GO TO THE GYM BRAH. GOTTA GET THEM GAINS BRAH.",
+        .abbr   = "PPOW",
     },
     {
         .image  = CI_PUDDING_WSG,
@@ -339,6 +371,7 @@ const ciItem_t ciItemData[] = {
         .value  = 60,
         .title  = "Pudding",
         .desc   = "Delicious pudding, good thing you have a spoon",
+        .abbr   = "PDNG",
     },
     {
         .image  = CI_ROAST_TURKEY_WSG,
@@ -349,6 +382,7 @@ const ciItem_t ciItemData[] = {
         .value  = 40,
         .title  = "Roast Turkey",
         .desc   = "There aren't even turkeys in the mountains...",
+        .abbr   = "RTRK",
     },
     {
         .image  = CI_SQUEEZY_PEANUT_BUTTER_WSG,
@@ -359,6 +393,7 @@ const ciItem_t ciItemData[] = {
         .value  = 5,
         .title  = "Squeezy Peanut Butter",
         .desc   = "Now you just need some jelly and two slices of bread",
+        .abbr   = "SQPB",
     },
     {
         .image  = CI_STRING_CHEESE_WSG,
@@ -369,6 +404,7 @@ const ciItem_t ciItemData[] = {
         .value  = 20,
         .title  = "String Cheese",
         .desc   = "Best consumed between the hours of 3 and 4 AM next to a fountain",
+        .abbr   = "STRC",
     },
     {
         .image  = CI_TASTEFUL_NOODZ_WSG,
@@ -379,6 +415,7 @@ const ciItem_t ciItemData[] = {
         .value  = 35,
         .title  = "Tasty Noods",
         .desc   = "This wasn't what you expected, but it's still a nice find",
+        .abbr   = "NOOD",
     },
     {
         .image  = CI_BAMBOO_WSG,
@@ -389,6 +426,7 @@ const ciItem_t ciItemData[] = {
         .value  = 1,
         .title  = "Bamboo",
         .desc   = "All fall before the might of the bamboo pole",
+        .abbr   = "BMBO",
     },
     {
         .image  = CI_HONEY_COMB_WSG,
@@ -399,6 +437,7 @@ const ciItem_t ciItemData[] = {
         .value  = 0,
         .title  = "Beehive",
         .desc   = "Did you know, according to all known laws of physics-",
+        .abbr   = "BHVE",
     },
     {
         .image  = CI_BIRCH_BARK_WSG,
@@ -409,6 +448,7 @@ const ciItem_t ciItemData[] = {
         .value  = 10,
         .title  = "Birch Bark",
         .desc   = "A thin bark that's got a variety of uses",
+        .abbr   = "BBRK",
     },
     {
         .image  = CI_COAL_WSG,
@@ -419,6 +459,7 @@ const ciItem_t ciItemData[] = {
         .value  = 50,
         .title  = "Coal",
         .desc   = "Maybe if you're bad, a secular icon will sneak into your house and give you more",
+        .abbr   = "COAL",
     },
     {
         .image  = CI_CRYSTAL_WSG,
@@ -429,6 +470,7 @@ const ciItem_t ciItemData[] = {
         .value  = 255,
         .title  = "Crystal",
         .desc   = "If only it wasn't so rough it would be extremely pretty",
+        .abbr   = "CRYS",
     },
     {
         .image  = CI_DRIED_GRASS_WSG,
@@ -439,6 +481,7 @@ const ciItem_t ciItemData[] = {
         .value  = 2,
         .title  = "Dried Grasses",
         .desc   = "Extremely flammable, but very useful",
+        .abbr   = "DGRS",
     },
     {
         .image  = CI_IRON_ORE_WSG,
@@ -449,6 +492,7 @@ const ciItem_t ciItemData[] = {
         .value  = 0,
         .title  = "Iron Ore",
         .desc   = "Raw iron clawed straight from the earth",
+        .abbr   = "IORE",
     },
     {
         .image  = CI_LARGE_LEAF_WSG,
@@ -459,6 +503,7 @@ const ciItem_t ciItemData[] = {
         .value  = 2,
         .title  = "Large Leaves",
         .desc   = "Any bigger and you could use it a parachute",
+        .abbr   = "LRGL",
     },
     {
         .image  = CI_LATEX_WSG,
@@ -469,6 +514,7 @@ const ciItem_t ciItemData[] = {
         .value  = 0,
         .title  = "Latex",
         .desc   = "Latex comes from a rubber tree. It's not the weirdest thing to find out here",
+        .abbr   = "LTX",
     },
     {
         .image  = CI_LOG_WSG,
@@ -479,6 +525,7 @@ const ciItem_t ciItemData[] = {
         .value  = 50,
         .title  = "Logs",
         .desc   = "Make sure to send this along with your bug report",
+        .abbr   = "LOGS",
     },
     {
         .image  = CI_RESIN_WSG,
@@ -489,6 +536,7 @@ const ciItem_t ciItemData[] = {
         .value  = 0,
         .title  = "Resin",
         .desc   = "Everything is now sticky. Fingers. Clothes. The tree. Your pockets.",
+        .abbr   = "RSIN",
     },
     {
         .image  = CI_ROCKS_WSG,
@@ -499,6 +547,7 @@ const ciItem_t ciItemData[] = {
         .value  = 0,
         .title  = "Rocks",
         .desc   = "Sure, there's lots of rocks around but these ones are special!",
+        .abbr   = "ROCK",
     },
     {
         .image  = CI_ROCK_SALT_WSG,
@@ -509,6 +558,7 @@ const ciItem_t ciItemData[] = {
         .value  = 0,
         .title  = "Rock Salt",
         .desc   = "If you heat this up, exactly nothing magical will happen",
+        .abbr   = "RSLT",
     },
     {
         .image  = CI_SPIDER_WEB_WSG,
@@ -519,6 +569,7 @@ const ciItem_t ciItemData[] = {
         .value  = 0,
         .title  = "Spiderweb",
         .desc   = "Sorry I'm not at home right now. Leave a message and I'll call you back",
+        .abbr   = "SWEB",
     },
     {
         .image  = CI_STICK_WSG,
@@ -529,6 +580,7 @@ const ciItem_t ciItemData[] = {
         .value  = 5,
         .title  = "Sticks",
         .desc   = "If you break your bones, getting out of here is going to suck",
+        .abbr   = "STCK",
     },
     {
         .image  = CI_UNCURED_HIDE_WSG,
@@ -539,6 +591,7 @@ const ciItem_t ciItemData[] = {
         .value  = 0,
         .title  = "Uncured Hides",
         .desc   = "This was just lying there on the floor... wait, isn't this pleather?",
+        .abbr   = "UHID",
     },
     {
         .image  = CI_VINE_WSG,
@@ -549,6 +602,7 @@ const ciItem_t ciItemData[] = {
         .value  = 0,
         .title  = "Vines",
         .desc   = "Make sure to yell while you swing",
+        .abbr   = "VINE",
     },
     {
         .image  = CI_TAR_WSG,
@@ -559,6 +613,7 @@ const ciItem_t ciItemData[] = {
         .value  = 20,
         .title  = "Tar",
         .desc   = "Try not to sink",
+        .abbr   = "TAR",
     },
     {
         .image  = CI_HEALING_POWDER_WSG,
@@ -569,6 +624,7 @@ const ciItem_t ciItemData[] = {
         .value  = 30,
         .title  = "Healing Powder",
         .desc   = "Usage instructions: Inhale deeply and ignore the pretty lights",
+        .abbr   = "HPOW",
     },
     {
         .image  = CI_BANDAGES_WSG,
@@ -579,6 +635,7 @@ const ciItem_t ciItemData[] = {
         .value  = 50,
         .title  = "Bandages",
         .desc   = "If you get enough of these, you can pretend to be a mummy",
+        .abbr   = "BNDG",
     },
     {
         .image  = CI_POULTICE_WSG,
@@ -589,6 +646,7 @@ const ciItem_t ciItemData[] = {
         .value  = 35,
         .title  = "Healing Poultice",
         .desc   = "Looking at the ingredient list, it's a surprise this heals you up",
+        .abbr   = "HPLT",
     },
     {
         .image  = CI_HEALING_POTION_WSG,
@@ -599,6 +657,7 @@ const ciItem_t ciItemData[] = {
         .value  = 100,
         .title  = "Potion",
         .desc   = "It's not... glowing, is it?",
+        .abbr   = "POTN",
     },
     {
         .image  = CI_HEART_WSG,
@@ -609,6 +668,7 @@ const ciItem_t ciItemData[] = {
         .value  = 75,
         .title  = "Healing Heart",
         .desc   = "Legend says these could be ripped out of monsters once upon a time",
+        .abbr   = "HRT",
     },
 };
 
@@ -616,7 +676,7 @@ const ciItem_t ciItemData[] = {
 // Functions
 //==============================================================================
 
-int ciGetArrayLength()
+int ciGetItemArrayLength()
 {
     return ARRAY_SIZE(ciItemData);
 }
