@@ -473,7 +473,7 @@ void gs_submodeStateEnter(gs_submode_t submode)
             gs_gossipStone_t* gsData = (gs_gossipStone_t*)gameData->entityManager.gossipStone->data;
             gsData->vel = (vec_t){0,0};
             gsData->angVel = 0;
-            gsData->rotateDeg = 0;
+            gsData->rotateDeg = (360 - 45) << DECIMAL_BITS;
             gsData->grounded = true;
             break;
         }

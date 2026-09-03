@@ -262,6 +262,25 @@ void gs_updatePhysicsObject(gs_entity_t* self)
 
 void gs_drawTileMap(gs_entity_t* self)
 {
+    int8_t shiftBy = 6+self->gameData->entityManager.zoom;
+    int camPixelX = (self->gameData->entityManager.camera.pos.x>>DECIMAL_BITS);
+    int camPixelY = (self->gameData->entityManager.camera.pos.y>>DECIMAL_BITS);
+    int tileYIdx = camPixelY >> shiftBy;
+    while((tileYIdx<<shiftBy) < camPixelY+TFT_HEIGHT)
+    {
+        int tileXIdx = camPixelX >> shiftBy;
+        while((tileXIdx<<shiftBy) < camPixelX+TFT_WIDTH)
+        {
+            if(tileXIdx >= 0 && tileYIdx >= 0 && tileXIdx < TILE_FIELD_WIDTH && tileYIdx < TILE_FIELD_HEIGHT)
+            {
+                int drawX = (tileXIdx << shiftBy) - camPixelX;
+                int drawY = (tileYIdx << shiftBy) - camPixelY;
+                drawWsgSimpleScaled(&self->gameData->assets[self->assetIndex].frames[13], drawX, drawY, self->gameData->entityManager.zoom, self->gameData->entityManager.zoom);
+            }
+            tileXIdx++;
+        }
+        tileYIdx++;
+    }
 }
 
 void gs_collisionCheck(gs_entity_t* tilemap, gs_entity_t* ent, gs_hitInfo_t* hitInfo)

@@ -336,6 +336,10 @@ void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t x
     {
         drawWsgSimpleScaledDown(wsg, xOff, yOff, -xScale, -yScale);
     }
+    else
+    {
+        drawWsgSimple(wsg, xOff, yOff);
+    }
 }
 
 /**

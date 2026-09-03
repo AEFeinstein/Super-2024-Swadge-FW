@@ -23,6 +23,7 @@ typedef struct
     gs_camera_t camera;
     gs_entity_t* gossip;
     gs_entity_t* gossipStone;
+    int8_t zoom;//0 is normal scale, each positive step doubles sprite sizes, negative halves sprites.
 } gs_entityManager_t;
 
 //==============================================================================
