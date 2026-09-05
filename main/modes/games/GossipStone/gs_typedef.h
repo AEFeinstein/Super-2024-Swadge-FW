@@ -32,6 +32,7 @@ typedef enum __attribute__((packed))
     GS_SPACE_GRADIENT_ASSET,
     GS_HI_RES_MOON_ASSET,
     GS_LANDING_ASSET,
+    GS_WAVE_ASSET,
     GS_NO_ASSET, // Keep this one at the end of the enum. Used for entities with no wsgs.
 } gs_assetIdx_t;
 
@@ -73,6 +74,25 @@ typedef enum __attribute__((packed))
     GS_CIRCLE,
     GS_AABB,
 } gs_colliderType_t;
+
+typedef enum __attribute__((packed))
+{
+    GS_NO_TILE,
+    GS_ASTRO_1,
+    GS_ASTRO_2,
+    GS_ASTRO_3,
+    GS_ASTRO_4,
+    GS_ASTRO_5,
+    GS_ASTRO_6,
+    GS_ASTRO_7,
+    GS_ASTRO_8,
+    GS_ASTRO_9,
+    GS_ASTRO_10,
+    GS_ASTRO_11,
+    GS_ASTRO_12,
+    GS_WALL_FORE,
+    GS_WALL_BACK,
+} gs_tileType_t;
 
 typedef struct
 {

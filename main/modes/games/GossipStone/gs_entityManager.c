@@ -16,8 +16,7 @@
 void gs_initializeEntityManager(gs_entityManager_t* entityManager, gs_gameData_t* gameData)
 {
     // set the camera to the center of positive ints
-    entityManager->camera.pos
-        = (vec_t){0xFFFF - (TFT_WIDTH << (DECIMAL_BITS - 1)), 0xFFFF - (TFT_HEIGHT << (DECIMAL_BITS - 1))};
+    entityManager->camera.pos = (vec_t){0xFFFF, 0xFFFF};
     // allocate the linked list for entities
     entityManager->entities = heap_caps_calloc_tag(1, sizeof(list_t), MALLOC_CAP_SPIRAM, "entities");
 
@@ -122,9 +121,7 @@ void gs_updateEntities(gs_entityManager_t* entityManager)
         if (entity->updateFarFunction)
         {
             // 2752 = (140+32) << 4; 2432 = (120+32) << 4
-            if (!gs_AABBPointCheck(&(gs_entity_t){.pos = addVec2d(entityManager->camera.pos,
-                                                                  (vec_t){.x = TFT_WIDTH << (DECIMAL_BITS - 1),
-                                                                          .y = TFT_HEIGHT << (DECIMAL_BITS - 1)}),
+            if (!gs_AABBPointCheck(&(gs_entity_t){.pos          = entityManager->camera.pos,
                                                   .colliderType = GS_AABB,
                                                   .collider     = {.AABB = {.halfWidth = 2752, .halfHeight = 2432}}},
                                    &(gs_entity_t){.pos = entity->pos, .colliderType = GS_POINT}))
@@ -243,13 +240,12 @@ gs_entity_t* gs_createEntity(gs_entityManager_t* entityManager, uint8_t numFrame
     return entity;
 }
 
-gs_entity_t* gs_createEntityFirst(gs_entityManager_t* entityManager, uint8_t numFrames, gs_animationType_t type, bool paused,
-                             gs_assetIdx_t assetIndex, uint8_t gameFramesPerAnimationFrame, vec_t pos,
-                             gs_gameData_t* gameData)
+gs_entity_t* gs_createEntityFirst(gs_entityManager_t* entityManager, uint8_t numFrames, gs_animationType_t type,
+                                  bool paused, gs_assetIdx_t assetIndex, uint8_t gameFramesPerAnimationFrame, vec_t pos,
+                                  gs_gameData_t* gameData)
 {
-    return gs_createEntityBefore(entityManager->entities->first, entityManager, numFrames, type, paused,
-                             assetIndex, gameFramesPerAnimationFrame, pos,
-                             gameData);
+    return gs_createEntityBefore(entityManager->entities->first, entityManager, numFrames, type, paused, assetIndex,
+                                 gameFramesPerAnimationFrame, pos, gameData);
 }
 
 gs_entity_t* gs_createEntityBefore(void* before, gs_entityManager_t* entityManager, uint8_t numFrames,

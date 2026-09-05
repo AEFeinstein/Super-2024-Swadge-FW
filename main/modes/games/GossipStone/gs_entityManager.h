@@ -23,7 +23,7 @@ typedef struct
     gs_camera_t camera;
     gs_entity_t* gossip;
     gs_entity_t* gossipStone;
-    int8_t zoom;//0 is normal scale, each positive step doubles sprite sizes, negative halves sprites.
+    int8_t zoom; // 0 is normal scale, each positive step doubles sprite sizes, negative halves sprites.
 } gs_entityManager_t;
 
 //==============================================================================
@@ -42,9 +42,9 @@ void gs_destroyAllEntities(gs_entityManager_t* entityManager);
 gs_entity_t* gs_createEntity(gs_entityManager_t* entityManager, uint8_t numFrames, gs_animationType_t type, bool paused,
                              gs_assetIdx_t AssetIndex, uint8_t gameFramesPerAnimationFrame, vec_t pos,
                              gs_gameData_t* gameData);
-gs_entity_t* gs_createEntityFirst(gs_entityManager_t* entityManager, uint8_t numFrames, gs_animationType_t type, bool paused,
-                             gs_assetIdx_t assetIndex, uint8_t gameFramesPerAnimationFrame, vec_t pos,
-                             gs_gameData_t* gameData);
+gs_entity_t* gs_createEntityFirst(gs_entityManager_t* entityManager, uint8_t numFrames, gs_animationType_t type,
+                                  bool paused, gs_assetIdx_t assetIndex, uint8_t gameFramesPerAnimationFrame, vec_t pos,
+                                  gs_gameData_t* gameData);
 gs_entity_t* gs_createEntityBefore(void* before, gs_entityManager_t* entityManager, uint8_t numFrames,
                                    gs_animationType_t type, bool paused, gs_assetIdx_t assetIndex,
                                    uint8_t gameFramesPerAnimationFrame, vec_t pos, gs_gameData_t* gameData);

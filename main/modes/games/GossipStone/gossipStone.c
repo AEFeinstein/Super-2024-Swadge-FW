@@ -257,7 +257,6 @@ static void gs_loadAssets(void)
     gs_loadAsset(FLAME_0_WSG, 6, &gameData->assets[GS_FLAME_ASSET]);
     gs_loadAsset(MOON_TILE_0_WSG, 15, &gameData->assets[GS_MOON_TILE_ASSET]);
     gs_loadAsset(STAR_0_WSG, 14, &gameData->assets[GS_STAR_ASSET]); // anim sequences 0-5, 6, 7-12, 13, 10
-
 }
 
 static void gs_initializeGame(void)
@@ -267,7 +266,7 @@ static void gs_initializeGame(void)
     {
         gs_entity_t* star = gs_createEntity(&gameData->entityManager, 0, GS_NO_ANIMATION, false, GS_STAR_ASSET, 0,
                                             (vec_t){0xFFFF + (gs_randomInt(-(TFT_WIDTH >> 1), TFT_WIDTH >> 1) * 16),
-                                                    0xFFFF + (gs_randomInt(0, 90) << DECIMAL_BITS)},
+                                                    0xFFFF + (gs_randomInt(0, 85) << DECIMAL_BITS)},
                                             gameData);
         star->data        = heap_caps_calloc(1, sizeof(gs_star_t), MALLOC_CAP_SPIRAM);
         gs_randomizeStarData(star);
@@ -280,7 +279,7 @@ static void gs_initializeGame(void)
     gameData->entityManager.tilemap       = gs_createEntity(&gameData->entityManager, 15, GS_NO_ANIMATION, true,
                                                             GS_MOON_TILE_ASSET, 0, (vec_t){0xffff, 0xffff}, gameData);
     gameData->entityManager.tilemap->data = heap_caps_calloc(1, sizeof(gs_tilemap_t), MALLOC_CAP_SPIRAM);
-    gameData->entityManager.tilemap->dataType = GS_TILEMAP_DATA;
+    gameData->entityManager.tilemap->dataType     = GS_TILEMAP_DATA;
     gameData->entityManager.tilemap->drawFunction = gs_drawTileMap;
     // calloc the columns in layers separately to avoid a big alloc
     for (int32_t w = 0; w < TILE_FIELD_WIDTH; w++)
@@ -289,25 +288,25 @@ static void gs_initializeGame(void)
             = heap_caps_calloc_tag(TILE_FIELD_HEIGHT, sizeof(gs_tileInfo_t), MALLOC_CAP_SPIRAM, "fgTile");
     }
 
-    //Position is in 2 places. :(
+    // Position is in 2 places. :(
     gs_entity_t* gossipStone
         = gs_createEntity(&gameData->entityManager, 3, GS_LOOPING_ANIMATION, false, GS_GOSSIP_STONE_ASSET, 5,
                           (vec_t){0xFFFF, 0xFFFF + (90 << DECIMAL_BITS)}, gameData);
-    gameData->entityManager.gossipStone = gossipStone;
+    gameData->entityManager.gossipStone              = gossipStone;
     gossipStone->data                                = heap_caps_calloc(1, sizeof(gs_gossipStone_t), MALLOC_CAP_SPIRAM);
     gossipStone->dataType                            = GS_GOSSIP_STONE_DATA;
     ((gs_gossipStone_t*)gossipStone->data)->grounded = true;
     ((gs_gossipStone_t*)gossipStone->data)->gravity  = 100;
 
-    gs_entity_t* flame = gs_createEntity(&gameData->entityManager, 6, GS_NO_ANIMATION, false,
-                                            GS_FLAME_ASSET, 0, (vec_t){0xffff, 0xffff}, gameData);
+    gs_entity_t* flame = gs_createEntity(&gameData->entityManager, 6, GS_NO_ANIMATION, false, GS_FLAME_ASSET, 0,
+                                         (vec_t){0xffff, 0xffff}, gameData);
     flame->data        = heap_caps_calloc(1, sizeof(gs_flame_t), MALLOC_CAP_SPIRAM);
     gossipStone->updateFunction                       = gs_updateGossipStone;
     gossipStone->drawFunction                         = gs_drawGossipStone;
     ((gs_gossipStone_t*)gossipStone->data)->flame     = flame;
     ((gs_gossipStone_t*)gossipStone->data)->rotateDeg = (360 - 45) << DECIMAL_BITS;
-    flame->dataType     = GS_FLAME_DATA;
-    flame->drawFunction = gs_drawFlame;
+    flame->dataType                                   = GS_FLAME_DATA;
+    flame->drawFunction                               = gs_drawFlame;
 
     gs_entity_t* gossip = gs_createEntity(&gameData->entityManager, 0, GS_NO_ANIMATION, false, GS_NO_ASSET, 0,
                                           (vec_t){0xffff, 0xffff}, gameData);
@@ -341,7 +340,7 @@ static void gs_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
     // Fill the flat background color
     paletteColor_t* frameBuf = getPxTftFramebuffer();
     paletteColor_t col       = c011;
-    if (gameData->entityManager.camera.pos.y < 0xFFFF - (370 << DECIMAL_BITS))
+    if (gameData->entityManager.camera.pos.y < 0xFFFF - (490 << DECIMAL_BITS))
     {
         col = c000;
     }
@@ -422,15 +421,15 @@ void gs_submodeStateExit(void)
     gData->messageList = moonList;
     gData->arr_size    = MOON_COUNT;
     // reset a few things because the player may have exited and entered.
-    gData->index    = 0;
-    gData->progress = 0;
+    gData->index              = 0;
+    gData->progress           = 0;
     gData->onDialogueFinished = NULL;
-    gs_gossipStone_t* gsData = (gs_gossipStone_t*)gameData->entityManager.gossipStone->data;
-    gsData->rcsEnabled                 = false;
-    gsData->throttleEnabled            = false;
-    //Position is in 3 places. :(
+    gs_gossipStone_t* gsData  = (gs_gossipStone_t*)gameData->entityManager.gossipStone->data;
+    gsData->rcsEnabled        = false;
+    gsData->throttleEnabled   = false;
+    // Position is in 3 places. :(
     gameData->entityManager.gossipStone->pos = (vec_t){0xFFFF, 0xFFFF + (90 << DECIMAL_BITS)};
-    gameData->entityManager.camera.pos = (vec_t){0xFFFF - (TFT_WIDTH << (DECIMAL_BITS - 1)), 0xFFFF - (TFT_HEIGHT << (DECIMAL_BITS - 1))};
+    gameData->entityManager.camera.pos       = (vec_t){0xFFFF, 0xFFFF};
 }
 
 // Sets up entities for a new submode
@@ -438,8 +437,8 @@ void gs_submodeStateEnter(gs_submode_t submode)
 {
     gs_gossip_t* gData = (gs_gossip_t*)gameData->entityManager.gossip->data;
     // reset a few things because the player may have exited and entered.
-    gData->index    = 0;
-    gData->progress = 0;
+    gData->index            = 0;
+    gData->progress         = 0;
     gData->dialogueFinished = false;
     // shared steps
     switch (submode)
@@ -452,29 +451,30 @@ void gs_submodeStateEnter(gs_submode_t submode)
             gs_loadAsset(SPACE_GRADIENT_WSG, 1, &gameData->assets[GS_SPACE_GRADIENT_ASSET]);
             gs_loadAsset(HILL_WSG, 1, &gameData->assets[GS_HILL_ASSET]);
             gs_loadAsset(MOON_WSG, 1, &gameData->assets[GS_MOON_ASSET]);
+            gs_loadAsset(WAVE_0_WSG, 5, &gameData->assets[GS_WAVE_ASSET]);
 
             node_t* gossipStoneNode = gs_findLastNodeOfType(gameData->entityManager.gossipStone, GS_GOSSIP_STONE_DATA);
             gs_entity_t* skyGradient
                 = gs_createEntityFirst(&gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_SKY_GRADIENT_ASSET, 1,
-                                  (vec_t){0xFFFF - (0 << DECIMAL_BITS), 0xFFFF + (25 << DECIMAL_BITS)}, gameData);
+                                       (vec_t){0xFFFF, 0xFFFF + (32 << DECIMAL_BITS)}, gameData);
             skyGradient->drawFunction = gs_drawSkyGradient;
 
             gs_entity_t* spaceGradient
                 = gs_createEntityFirst(&gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_SPACE_GRADIENT_ASSET, 1,
-                                  (vec_t){0xFFFF - (0 << DECIMAL_BITS), 0xFFFF - (250 << DECIMAL_BITS)}, gameData);
+                                       (vec_t){0xFFFF, 0xFFFF - (490 << DECIMAL_BITS)}, gameData);
             spaceGradient->drawFunction = gs_drawSkyGradient;
-            gs_entity_t* moon
-                = gs_createEntityBefore(gossipStoneNode, &gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_MOON_ASSET, 1,
-                                  (vec_t){0xFFFF - (90 << DECIMAL_BITS), 0xFFFF - (0 << DECIMAL_BITS)}, gameData);
+            gs_entity_t* moon           = gs_createEntityBefore(
+                gossipStoneNode, &gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_MOON_ASSET, 1,
+                (vec_t){0xFFFF - (87 << DECIMAL_BITS), 0xFFFF + (25 << DECIMAL_BITS)}, gameData);
             moon->updateFunction = gs_updateMoon;
-            gs_createEntityBefore(gossipStoneNode, &gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_HILL_ASSET, 1,
-                            (vec_t){0xFFFF, 0xFFFF + (102 << DECIMAL_BITS)}, gameData);
+            gs_createEntityBefore(gossipStoneNode, &gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_HILL_ASSET,
+                                  1, (vec_t){0xFFFF, 0xFFFF + (102 << DECIMAL_BITS)}, gameData);
 
             gs_gossipStone_t* gsData = (gs_gossipStone_t*)gameData->entityManager.gossipStone->data;
-            gsData->vel = (vec_t){0,0};
-            gsData->angVel = 0;
-            gsData->rotateDeg = (360 - 45) << DECIMAL_BITS;
-            gsData->grounded = true;
+            gsData->vel              = (vec_t){0, 0};
+            gsData->angVel           = 0;
+            gsData->rotateDeg        = (360 - 45) << DECIMAL_BITS;
+            gsData->grounded         = true;
             break;
         }
         case GS_MOON_SUBMODE:
@@ -495,8 +495,8 @@ void gs_submodeStateEnter(gs_submode_t submode)
     }
     else if (submode == GS_PROPHECY_SUBMODE)
     {
-        gData->messageList = prophecyList;
-        gData->arr_size    = PROPHECY_COUNT;
+        gData->messageList        = prophecyList;
+        gData->arr_size           = PROPHECY_COUNT;
         gData->onDialogueFinished = gs_enableFlightControls;
 
         gs_loadAsset(HI_RES_MOON_WSG, 1, &gameData->assets[GS_HI_RES_MOON_ASSET]);

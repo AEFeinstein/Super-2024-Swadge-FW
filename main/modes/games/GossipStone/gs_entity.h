@@ -141,6 +141,12 @@ typedef struct
     gs_callbackFunction_t callback; // fires when scale greater than targetScale.
 } gs_bigMoon_t;
 
+typedef struct
+{
+    bool reverseAnim;
+    vec_t vel;
+} gs_wave_t;
+
 //==============================================================================
 // Prototypes
 //==============================================================================
@@ -170,3 +176,6 @@ void gs_updateBigMoon(gs_entity_t* self);
 void gs_drawBigMoon(gs_entity_t* self);
 void gs_spawnBigMoon(gs_entity_t* self);
 void gs_spawnLanding(gs_entity_t* self);
+void gs_positionWave(gs_entity_t* self);
+void gs_updateWave(gs_entity_t* self);
+void gs_drawWave(gs_entity_t* self);
