@@ -8,6 +8,7 @@
 // Subcomponents
 #include "ci_genericData.h"
 #include "ci_items.h"
+#include "ci_container.h"
 #include "ci_menu.h"
 
 //==============================================================================
@@ -120,7 +121,6 @@ static void campMainLoop(int64_t elapsedUs)
             buttonEvt_t evt;
             while (checkButtonQueueWrapper(&evt))
             {
-                // Allow backing out
             }
             break;
         }

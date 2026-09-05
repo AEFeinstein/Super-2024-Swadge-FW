@@ -223,7 +223,7 @@ static void drawEncyclopedia(ciCampData_t* ccd)
         {
             idxDiv %= (start * (ENC_COL * ENC_ROW));
         }
-        ciDrawItemIcon(ccd, idx, 20 + (idxDiv % ENC_COL) * 40, 24 + (idxDiv / ENC_COL) * 54, (ccd->selection == idx),
+        ciDrawItemIcon(ccd, idx, 20 + (idxDiv % ENC_COL) * 40, 24 + (idxDiv / ENC_COL) * 54, ccd->qtys[idx], (ccd->selection == idx),
                        false);
     }
     int yStart = (TFT_HEIGHT - ccd->uiImages[CI_UI_ARROW].h) / 2;

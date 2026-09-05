@@ -11,8 +11,6 @@
 //==============================================================================
 
 // Drawing
-#define ICON_WIDTH           40
-#define ICON_HEIGHT          54
 #define ICON_BUFFER          4
 #define ICON_MAX_SIZE        32
 #define ICON_TEXT_Y          40
@@ -188,24 +186,28 @@ void ciDrawItemPanel(ciCampData_t* ccd, int idx)
              yStart + ICON_BUFFER + 7 * PANEL_TEXT_OFFSET + PANEL_TEXT_Y_SPACING * 5);
 }
 
-void ciDrawItemIcon(ciCampData_t* ccd, int idx, int xStart, int yStart, bool selected, bool showQty)
+void ciDrawItemIcon(ciCampData_t* ccd, int idx, int xStart, int yStart, int qty, bool selected, bool showQty)
 {
     drawRectFilled(xStart, yStart, xStart + ICON_WIDTH, yStart + ICON_HEIGHT, (selected) ? c330 : c111);
     drawRectFilled(xStart + ICON_BUFFER, yStart + ICON_BUFFER, xStart + ICON_BUFFER + ICON_MAX_SIZE,
                    yStart + ICON_BUFFER + ICON_MAX_SIZE, c222);
-    drawWsgSimple(&ccd->itemImages[idx], xStart + ICON_BUFFER + (ICON_MAX_SIZE - ccd->itemImages[idx].w) / 2,
-                  yStart + ICON_BUFFER + (ICON_MAX_SIZE - ccd->itemImages[idx].h) / 2);
-    if (showQty)
+    if (idx != CI_NO_ITEM)
     {
-        char buffer[12];
-        snprintf(buffer, sizeof(buffer) - 1, "%" PRId8, ccd->qtys[idx]);
-        drawText(&ccd->smallFont, c555, buffer, xStart + (ICON_WIDTH - textWidth(&ccd->smallFont, buffer)) / 2,
-                 yStart + ICON_TEXT_Y);
-    }
-    else
-    {
-        drawText(&ccd->smallFont, c555, ciItemData[idx].abbr,
-                 xStart + (ICON_WIDTH - textWidth(&ccd->smallFont, ciItemData[idx].abbr)) / 2, yStart + ICON_TEXT_Y);
+        drawWsgSimple(&ccd->itemImages[idx], xStart + ICON_BUFFER + (ICON_MAX_SIZE - ccd->itemImages[idx].w) / 2,
+                      yStart + ICON_BUFFER + (ICON_MAX_SIZE - ccd->itemImages[idx].h) / 2);
+        if (showQty)
+        {
+            char buffer[12];
+            snprintf(buffer, sizeof(buffer) - 1, "%" PRId8, qty);
+            drawText(&ccd->smallFont, c555, buffer, xStart + (ICON_WIDTH - textWidth(&ccd->smallFont, buffer)) / 2,
+                     yStart + ICON_TEXT_Y);
+        }
+        else
+        {
+            drawText(&ccd->smallFont, c555, ciItemData[idx].abbr,
+                     xStart + (ICON_WIDTH - textWidth(&ccd->smallFont, ciItemData[idx].abbr)) / 2,
+                     yStart + ICON_TEXT_Y);
+        }
     }
     drawRect(xStart, yStart, xStart + ICON_WIDTH, yStart + ICON_HEIGHT, c000);
 }
