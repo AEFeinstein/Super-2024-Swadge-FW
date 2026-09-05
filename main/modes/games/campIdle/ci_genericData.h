@@ -62,6 +62,5 @@ typedef struct
     int64_t timer;
 
     // Items
-    // ciInvQtys_t qtys;
     uint8_t* qtys;
 } ciCampData_t;

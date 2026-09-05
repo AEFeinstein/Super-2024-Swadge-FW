@@ -43,6 +43,7 @@ typedef enum
 /// @brief Must stay in the same order as ciItemData's items
 typedef enum
 {
+    CI_NO_ITEM = -1,
     CI_FLOOR_PIZZA,
     CI_FURRY_MILK,
     CI_ICBINB,
@@ -191,6 +192,24 @@ typedef struct __attribute__((packed))
     uint8_t healingPotion : 8;
     uint8_t heart         : 8;
 } ciInvQtysPacked_t;
+
+typedef struct
+{
+    ciItemIdx_t item;
+    uint8_t qty;
+} ciContainerItem_t;
+
+typedef struct
+{
+    int sizeLim;
+    int weightLim;
+    int slotsLim;
+    ciContainerItem_t* items;
+} ciContainer_t;
+
+//==============================================================================
+// Consts
+//==============================================================================
 
 extern const ciItem_t ciItemData[];
 
