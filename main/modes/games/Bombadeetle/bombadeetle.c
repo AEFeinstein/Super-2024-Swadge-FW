@@ -112,7 +112,7 @@ static const cnfsFileIdx_t bombadeetleGoal[] = {
 };
 
 static const cnfsFileIdx_t bombadeetleLevels[] = {
-   BOMB_LVL_ONE_BIN, BOMB_LVL_HELLO_BIN, BOMB_LVL_NOHOLES_BIN, BOMB_LVL_MAG_1_BIN, BOMB_LVL_SPYRL_BIN,BOMB_LVL_DODGEIT_BIN,BOMB_LVL_UNDERDEFEAT_BIN,BOMB_LVL_CREPUSCULAR_BIN,BOMB_LVL_MOWWOW_BIN , BOMB_LVL_JERO_BIN, BOMB_LVL_NARROW_BIN, BOMB_LVL_DELEPORT_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_BIN, BOMB_LVL_TRAP_BIN,
+   BOMB_LVL_MOTRAINING_BIN,BOMB_LVL_WOGER_BIN,BOMB_LVL_ONE_BIN, BOMB_LVL_HELLO_BIN, BOMB_LVL_RIDEIT_BIN, BOMB_LVL_NOHOLES_BIN, BOMB_LVL_MAG_1_BIN, BOMB_LVL_SPYRL_BIN,BOMB_LVL_DODGEIT_BIN,BOMB_LVL_UNDERDEFEAT_BIN,BOMB_LVL_CREPUSCULAR_BIN,BOMB_LVL_MOWWOW_BIN , BOMB_LVL_JERO_BIN,  BOMB_LVL_DELEPORT_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_BIN, BOMB_LVL_NARROW_BIN, BOMB_LVL_TRAP_BIN,
 };
 
 static const cnfsFileIdx_t bombadeetleTeleporter[] = {
@@ -148,6 +148,7 @@ static void bombadeetleDrawSelect();
 static void bombadeetleGameLoop(int64_t elapsedUs);
 static void bombadeetleStageSelectLoop(int64_t elapsedUs);
 
+static void bombadeetleOnCollision();
 
 
 
@@ -219,6 +220,7 @@ typedef struct
     wsg_t* goal;
     wsg_t backgroundTile;
     wsg_t success;
+    wsg_t unsuccessful;
     wsg_t stageSelect;
     wsg_t stageSelectButton;
     wsg_t stageActiveSelectButton;
@@ -229,6 +231,7 @@ typedef struct
 
     bool building;
     bool goalAnimating;
+    bool losePrompt;
     
     bombadeetleBackground_t background;
     int8_t cursorFrame;
@@ -262,9 +265,11 @@ typedef struct
     int8_t shloogMoveAmount;
     font_t mainFont;
 
+    int16_t menuTimer;
+
     int16_t cursorMoveTime;
     int16_t gameMoveTime;
-    int8_t gameMoveTick;
+    int16_t gameMoveTick;
     int8_t gameSpeed;
 
     int8_t grid[GRIDHEIGHT * GRIDWIDTH]; // I don't like this.
@@ -297,6 +302,7 @@ static void bombadeetleEnterMode()
     bombadeetle->backgroundOffset = 0;
     bombadeetle->stageSelectIndex = 0;
     bombadeetle->backgroundSpeed = 1;
+    bombadeetle->menuTimer = 0;
     
     
     bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT;
@@ -312,6 +318,7 @@ static void bombadeetleEnterMode()
     bombadeetle->levelIndex = 3;
 
     loadWsg(BOMB_SUCCESS_WSG, &bombadeetle->success, true);
+    loadWsg(BOMB_TRYAGAIN_WSG, &bombadeetle->unsuccessful, true);
     loadWsg(BOMB_STAGE_SELECT_BACKGROUND_WSG, &bombadeetle->stageSelect, true);
     loadWsg(BOMB_STAGE_SELECT_INDEX_BUTTON_WSG, &bombadeetle->stageSelectButton, true);
     loadWsg(BOMB_STAGE_SELECT_INDEX_ACTIVE_BUTTON_WSG, &bombadeetle->stageActiveSelectButton, true);
@@ -473,7 +480,7 @@ static void bombadeetleCheckBombadeetles(bool update)
         if (bombadeetle->map[checkTile] & HOLE)
         {
             ESP_LOGI(TAG, "OMG! HOLE!");
-             bombadeetle->state = STATE_COLLISION;
+            bombadeetleOnCollision();
 
             bombadeetle->collisionX = bombadeetle->bombadeetles[idx].locX;
             bombadeetle->collisionY = bombadeetle->bombadeetles[idx].locY;
@@ -636,7 +643,9 @@ static void bombadeetleCheckShloogs(bool update)
         {
 
             ESP_LOGI(TAG, "BAD GOAL :(!");
-            bombadeetle->state = STATE_COLLISION;
+            bombadeetleOnCollision();
+
+
                             
             bombadeetle->collisionX = (bombadeetle->shloogs[idx].locX - 8) ;
             bombadeetle->collisionY = (bombadeetle->shloogs[idx].locY  - SHLOOG_HEIGHT_OFFSET - 8);
@@ -674,7 +683,9 @@ static void bombadeetleCheckShloogs(bool update)
 
             if (bombadeetle->bombadeetles[ndx].tileX == bombadeetle->shloogs[idx].tileX && ABS(bombadeetle->bombadeetles[ndx].locY - (bombadeetle->shloogs[idx].locY - SHLOOG_HEIGHT_OFFSET)) < COLLISION_RANGE)
             {
-                bombadeetle->state = STATE_COLLISION;
+                bombadeetleOnCollision();
+
+
                             
                 bombadeetle->collisionX = (bombadeetle->bombadeetles[ndx].locX + bombadeetle->shloogs[idx].locX - 16)/2 ;
                 bombadeetle->collisionY = (bombadeetle->bombadeetles[ndx].locY + bombadeetle->shloogs[idx].locY - SHLOOG_HEIGHT_OFFSET - 8)/2;
@@ -683,16 +694,24 @@ static void bombadeetleCheckShloogs(bool update)
             
             if (bombadeetle->bombadeetles[ndx].tileY == bombadeetle->shloogs[idx].tileY && ABS(bombadeetle->bombadeetles[ndx].locX - bombadeetle->shloogs[idx].locX) < COLLISION_RANGE)
             {
-                ESP_LOGI(TAG, "COLLISION!");
-                bombadeetle->state = STATE_COLLISION;
+                bombadeetleOnCollision();
+
 
                 bombadeetle->collisionX = (bombadeetle->bombadeetles[ndx].locX + bombadeetle->shloogs[idx].locX - 16)/2 ;
                 bombadeetle->collisionY = (bombadeetle->bombadeetles[ndx].locY + bombadeetle->shloogs[idx].locY - SHLOOG_HEIGHT_OFFSET - 8)/2;
-            
+                continue;
             }
         }
 
     }
+}
+
+static void bombadeetleOnCollision()
+{
+    ESP_LOGI(TAG, "COLLISION! %d",  bombadeetle->gameMoveTick);
+    bombadeetle->state = STATE_COLLISION;
+    bombadeetle->menuTimer = 3000;
+    bombadeetle->successTime = 0;
 }
 
 
@@ -794,10 +813,13 @@ static void bombadeetleLoadMap()
     
     bombadeetle->state = STATE_PLACING;    
     bombadeetle->gameMoveTime = 0;
+    bombadeetle->gameMoveTime = 0;
     bombadeetle->bombadeetleMoveAmount = 0;
+    bombadeetle->shloogMoveAmount = 0;
     bombadeetle->goalCount = 0;
     bombadeetle->goalAnimating = false;
     bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT;
+    bombadeetle->losePrompt = false;
 
     bombadeetle->collisionX = -1;
     bombadeetle->collisionY = -1;
@@ -1110,6 +1132,15 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                 {
                     if (evt.button & PB_A)
                     {
+                        
+                        
+                        bombadeetle->levelIndex++;
+                        if (bombadeetle->levelIndex > bombadeetle->levelMax)
+                        {
+                            bombadeetle->levelMax = bombadeetle->levelIndex;
+                            //Save max level
+                        }
+
                         if (bombadeetle->successTime < TIMING_SUCCESS)
                         {
                             bombadeetle->successTime = TIMING_SUCCESS;
@@ -1132,6 +1163,14 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
 
                     if (evt.button & PB_B)
                     {
+                        
+            
+                        bombadeetle->levelIndex++;
+                        if (bombadeetle->levelIndex > bombadeetle->levelMax)
+                        {
+                            bombadeetle->levelMax = bombadeetle->levelIndex;
+                            //Save max level
+                        }
                         //Reset map
                         bombadeetle->state = STATE_STAGESELECT;
                     }
@@ -1233,6 +1272,7 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                     if (evt.button & PB_B && !bombadeetle->building)
                     {                        
                         bombadeetle->state = STATE_RUNNING;
+                        bombadeetle->gameMoveTick = 0;
                         bombadeetleCheckShloogs(false);
                         bombadeetleCheckBombadeetles(false);
 
@@ -1284,6 +1324,17 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
             }
             break;
         case STATE_COLLISION:
+            if (bombadeetle->menuTimer > 0)
+            {
+                bombadeetle->menuTimer -= tick;
+                if (bombadeetle->menuTimer < 0)
+                {
+                    bombadeetle->menuTimer = 0;
+                    bombadeetle->losePrompt = true;
+                }
+
+
+            }
             while(checkButtonQueueWrapper(&evt))
             {
                 if (evt.down)
@@ -1292,6 +1343,15 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                     {
                         //Reset map
                         bombadeetleLoadMap();
+                    }
+
+                    if (bombadeetle->menuTimer <= 0)
+                    {
+                        if (evt.button & PB_A)
+                        {
+                            //Reset map                        
+                            bombadeetle->state = STATE_STAGESELECT;
+                        }
                     }
                 }
             }
@@ -1304,7 +1364,7 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
     if (bombadeetle->state == STATE_RUNNING)
     {
         bombadeetle->gameMoveTime += tick;
-
+        ESP_LOGI(TAG, "%d %d    ", bombadeetle->gameMoveTime, bombadeetle->gameMoveTick);
         while (bombadeetle->gameMoveTime >= GAME_MOVE_TIME)
         {
             bombadeetle->gameMoveTime -= GAME_MOVE_TIME;
@@ -1337,6 +1397,11 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
             bombadeetleCheckBombadeetles(bombadeetleUpdate);
             bombadeetleCheckShloogs(shloogUpdate);
 
+            
+            if (bombadeetle->state == STATE_COLLISION) 
+            {
+                break;
+            }
         }        
 
         if (bombadeetle->goalAnimating)
@@ -1368,21 +1433,14 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
         {
             ESP_LOGI(TAG, "WIN!");
             bombadeetle->state = STATE_WIN;
-            
-            bombadeetle->levelIndex++;
             bombadeetle->successTime = 0;
             
-            if (bombadeetle->levelIndex > bombadeetle->levelMax)
-            {
-                bombadeetle->levelMax = bombadeetle->levelIndex;
-                //Save max level
-            }
 
         }
-
+        
     }
 
-    if (bombadeetle->state == STATE_WIN)
+    if (bombadeetle->state == STATE_WIN || (bombadeetle->state == STATE_COLLISION && bombadeetle->losePrompt))
     {
         bombadeetle->successTime += tick;
         if (bombadeetle->successTime > TIMING_SUCCESS)
@@ -1422,6 +1480,11 @@ static void bombadeetleDrawBackground()
         }
 
     }
+
+
+    char buffer[64];
+    sprintf(buffer, "%d %d %d", bombadeetle->gameMoveTime, bombadeetle->gameMoveTick, bombadeetle->gameSpeed);
+    drawText(&bombadeetle->mainFont, c000, buffer, 16, 200);
 
 }
 
@@ -1621,7 +1684,9 @@ static void bombadeetleDrawGame()
     }
 
     drawWsgSimple(&bombadeetle->levelNameBackground, BG_LEVELNAME_X, BG_LEVELNAME_Y);
-    drawText(&bombadeetle->mainFont, c225, bombadeetle->mapFile.name, BG_LEVELNAME_X + 10, BG_LEVELNAME_Y + 8);
+    
+    sprintf(buffer, "%d %s", (bombadeetle->levelIndex + 1), bombadeetle->mapFile.name); 
+    drawText(&bombadeetle->mainFont, c225, buffer, BG_LEVELNAME_X + 10, BG_LEVELNAME_Y + 8);
     
     
     if (bombadeetle->state == STATE_PLACING) 
@@ -1639,6 +1704,11 @@ static void bombadeetleDrawGame()
     if (bombadeetle->state == STATE_COLLISION)
     {
         drawWsgSimple(&bombadeetle->collisionSprite, OFFSETMAP_X + bombadeetle->collisionX,OFFSETMAP_Y +  bombadeetle->collisionY);
+
+        float successTime = 1 - ((float)bombadeetle->successTime/TIMING_SUCCESS);
+        drawWsgSimple(&bombadeetle->unsuccessful, 33,61 + (200 * successTime));            
+
+        
     }
     
     if (bombadeetle->state == STATE_WIN) 
@@ -1709,6 +1779,7 @@ static void bombadeetleExitMode()
     
     freeWsg(&bombadeetle->backgroundTile);
     freeWsg( &bombadeetle->success);
+    freeWsg( &bombadeetle->unsuccessful);
     freeWsg( &bombadeetle->levelNameBackground);
     freeWsg( &bombadeetle->tools);
     freeWsg( &bombadeetle->collisionSprite);
