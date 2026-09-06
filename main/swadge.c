@@ -252,6 +252,25 @@
     #define GPIO_BTN_LEFT  GPIO_NUM_2
     #define GPIO_BTN_RIGHT GPIO_NUM_1
 
+    #define GPIO_BTN_A      GPIO_NUM_16
+    #define GPIO_BTN_B      GPIO_NUM_15
+    #define GPIO_BTN_START  GPIO_NUM_8
+    #define GPIO_BTN_SELECT GPIO_NUM_5
+
+    #define GPIO_TFT_SCLK GPIO_NUM_36              
+    #define GPIO_TFT_MOSI GPIO_NUM_37           
+    #define GPIO_TFT_DC   GPIO_NUM_21              
+    #define GPIO_TFT_CS   GPIO_NUM_34               
+    #define GPIO_TFT_RST  GPIO_NUM_38                
+    #define GPIO_TFT_BL   GPIO_NUM_35   
+
+    #define GPIO_LEDS     GPIO_NUM_39
+
+    #define GPIO_MIC      GPIO_NUM_7
+    #define GPIO_VMON     GPIO_NUM_6
+    #define GPIO_SDA     GPIO_NUM_3  
+    #define GPIO_SCL     GPIO_NUM_41
+
 #elif defined(CONFIG_HARDWARE_HOTDOG_PRODUCTION)
     #define GPIO_SAO_1 GPIO_NUM_40
     #define GPIO_SAO_2 GPIO_NUM_42
@@ -260,6 +279,25 @@
     #define GPIO_BTN_DOWN  GPIO_NUM_4
     #define GPIO_BTN_LEFT  GPIO_NUM_2
     #define GPIO_BTN_RIGHT GPIO_NUM_1
+
+    #define GPIO_BTN_A      GPIO_NUM_16
+    #define GPIO_BTN_B      GPIO_NUM_15
+    #define GPIO_BTN_START  GPIO_NUM_8
+    #define GPIO_BTN_SELECT GPIO_NUM_5
+
+    #define GPIO_TFT_SCLK GPIO_NUM_36              
+    #define GPIO_TFT_MOSI GPIO_NUM_37           
+    #define GPIO_TFT_DC   GPIO_NUM_21              
+    #define GPIO_TFT_CS   GPIO_NUM_34               
+    #define GPIO_TFT_RST  GPIO_NUM_38                
+    #define GPIO_TFT_BL   GPIO_NUM_35  
+
+    #define GPIO_LEDS     GPIO_NUM_39
+
+    #define GPIO_MIC      GPIO_NUM_7
+    #define GPIO_VMON     GPIO_NUM_6
+    #define GPIO_SDA     GPIO_NUM_3  
+    #define GPIO_SCL     GPIO_NUM_41
 
 #elif defined(CONFIG_HARDWARE_HOTDOG_PROTO)
     #define GPIO_SAO_1 GPIO_NUM_40
@@ -270,6 +308,25 @@
     #define GPIO_BTN_LEFT  GPIO_NUM_0
     #define GPIO_BTN_RIGHT GPIO_NUM_2
 
+    #define GPIO_BTN_A      GPIO_NUM_16
+    #define GPIO_BTN_B      GPIO_NUM_15
+    #define GPIO_BTN_START  GPIO_NUM_8
+    #define GPIO_BTN_SELECT GPIO_NUM_5
+
+    #define GPIO_TFT_SCLK GPIO_NUM_36              
+    #define GPIO_TFT_MOSI GPIO_NUM_37           
+    #define GPIO_TFT_DC   GPIO_NUM_21              
+    #define GPIO_TFT_CS   GPIO_NUM_34               
+    #define GPIO_TFT_RST  GPIO_NUM_38                
+    #define GPIO_TFT_BL   GPIO_NUM_35   
+
+    #define GPIO_LEDS     GPIO_NUM_39
+
+    #define GPIO_MIC      GPIO_NUM_7
+    #define GPIO_VMON     GPIO_NUM_6
+    #define GPIO_SDA     GPIO_NUM_3  
+    #define GPIO_SCL     GPIO_NUM_41
+
 #elif defined(CONFIG_HARDWARE_PULSE)
     #define GPIO_SAO_1 GPIO_NUM_42 // Flip SAO GPIOs relative to Hotdog
     #define GPIO_SAO_2 GPIO_NUM_40
@@ -278,6 +335,63 @@
     #define GPIO_BTN_DOWN  GPIO_NUM_4
     #define GPIO_BTN_LEFT  GPIO_NUM_2
     #define GPIO_BTN_RIGHT GPIO_NUM_1
+
+    #define GPIO_BTN_A      GPIO_NUM_16
+    #define GPIO_BTN_B      GPIO_NUM_15
+    #define GPIO_BTN_START  GPIO_NUM_8
+    #define GPIO_BTN_SELECT GPIO_NUM_5
+
+    #define GPIO_TFT_SCLK GPIO_NUM_36              
+    #define GPIO_TFT_MOSI GPIO_NUM_37           
+    #define GPIO_TFT_DC   GPIO_NUM_21              
+    #define GPIO_TFT_CS   GPIO_NUM_34               
+    #define GPIO_TFT_RST  GPIO_NUM_38                
+    #define GPIO_TFT_BL   GPIO_NUM_35   
+
+    #define GPIO_LEDS     GPIO_NUM_39
+
+    #define GPIO_MIC      GPIO_NUM_7
+    #define GPIO_VMON     GPIO_NUM_6
+
+    #define GPIO_SDA     GPIO_NUM_3  
+    #define GPIO_SCL     GPIO_NUM_41
+
+#elif defined(CONFIG_HARDWARE_FAIRY)
+//todo
+
+    #define GPIO_SAO_1 GPIO_NUM_16 
+    #define GPIO_SAO_2 GPIO_NUM_15
+
+    #define GPIO_BTN_UP    GPIO_NUM_XXX //todo ch32
+    #define GPIO_BTN_DOWN  GPIO_NUM_XXX //todo ch32
+    #define GPIO_BTN_LEFT  GPIO_NUM_XXX //todo ch32
+    #define GPIO_BTN_RIGHT GPIO_NUM_XXX //todo ch32
+
+    #define GPIO_BTN_A      GPIO_NUM_XXX //todo ch32
+    #define GPIO_BTN_B      GPIO_NUM_XXX //todo ch32
+    #define GPIO_BTN_START  GPIO_NUM_XXX //todo ch32
+    #define GPIO_BTN_SELECT GPIO_NUM_XXX //todo ch32
+
+    #define GPIO_TRI1 GPIO_NUM_XX      // Touch tri1  todo ch32
+    #define GPIO_TRI2 GPIO_NUM_YY      // Touch tri2  todo ch32
+    #define GPIO_TRI3 GPIO_NUM_ZZ      // Touch tri3  todo ch32
+    #define GPIO_BACK GPIO_NUM_AA      // Touch back  todo ch32
+
+    #define GPIO_TFT_SCLK GPIO_NUM_12 //tft scl              
+    #define GPIO_TFT_MOSI GPIO_NUM_11 //tft sda           
+    #define GPIO_TFT_DC   GPIO_NUM_38 //tft rs              
+    #define GPIO_TFT_CS   GPIO_NUM_10 //tft cs              
+    #define GPIO_TFT_RST  GPIO_NUM_18 //tft reset                
+    #define GPIO_TFT_BL   GPIO_NUM_13 //tft atp               
+ 
+    #define GPIO_LEDS     GPIO_NUM_42 //leds
+
+    #define GPIO_MIC      GPIO_NUM_17 // mic
+    #define GPIO_VMON     GPIO_NUM_XXX //todo ch32
+
+    #define GPIO_SDA     GPIO_NUM_40 //i2c sda 
+    #define GPIO_SCL     GPIO_NUM_41 //i2c scl
+
 #else
     #error "Define what hardware is being built for"
 #endif
@@ -411,31 +525,36 @@ void app_main(void)
     initCnfs();
 
     // Init buttons and touch pads
+    //TODO: CH32 buttons will probably modify how this is done, also need to add resistive touch stuff
     gpio_num_t pushButtons[] = {
         GPIO_BTN_UP,    // Up
         GPIO_BTN_DOWN,  // Down
         GPIO_BTN_LEFT,  // Left
         GPIO_BTN_RIGHT, // Right
-        GPIO_NUM_16,    // A
-        GPIO_NUM_15,    // B
-        GPIO_NUM_8,     // Start
-        GPIO_NUM_5      // Select
+        GPIO_BTN_A,    // A
+        GPIO_BTN_B,    // B
+        GPIO_BTN_START, // Start
+        GPIO_BTN_SELECT, // Select
     };
     initButtons(pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]));
 
+#ifdef CONFIG_HARDWARE_FAIRY
+
     touch_pad_t touchPads[] = {
-        TOUCH_PAD_NUM9,  // GPIO_NUM_9
-        TOUCH_PAD_NUM10, // GPIO_NUM_10
-        TOUCH_PAD_NUM11, // GPIO_NUM_11
-        TOUCH_PAD_NUM12, // GPIO_NUM_12
-        TOUCH_PAD_NUM13, // GPIO_NUM_13
+        TOUCH_PAD_NUM1,  // GPIO_NUM_1
+        TOUCH_PAD_NUM2, // GPIO_NUM_2
+        TOUCH_PAD_NUM3, // GPIO_NUM_3
+        TOUCH_PAD_NUM4, // GPIO_NUM_4
+        TOUCH_PAD_NUM5, // GPIO_NUM_5
+        TOUCH_PAD_NUM6, // GPIO_NUM_6
+        TOUCH_PAD_NUM7, // GPIO_NUM_7
+        TOUCH_PAD_NUM8, // GPIO_NUM_8
+        TOUCH_PAD_NUM9, // GPIO_NUM_9
         TOUCH_PAD_NUM14, // GPIO_NUM_14
     };
-    initTouchPads(touchPads, sizeof(touchPads) / sizeof(touchPads[0]), 0.2f, true);
-    // const uint8_t touchRingIdxs[] = {3, 0, 1, 4, 5};
-    // initTouchJoystick(2, touchRingIdxs);
-    static const uint8_t horzIdxs[]           = {0, 1, 2};
-    static const uint8_t vertIdxs[]           = {3, 4, 5};
+
+    static const uint8_t horzIdxs[]           = {0, 1, 2, 3};
+    static const uint8_t vertIdxs[]           = {4, 5, 6, 7};
     static const touchLinearCfg_t linearCfg[] = {
         {
             .numTouchPads = ARRAY_SIZE(horzIdxs),
@@ -446,21 +565,36 @@ void app_main(void)
             .touchPadIdxs = vertIdxs,
         },
     };
+
     initTouchLinear(linearCfg, ARRAY_SIZE(linearCfg));
+#else
+    touch_pad_t touchPads[] = {
+        TOUCH_PAD_NUM9,  // GPIO_NUM_9
+        TOUCH_PAD_NUM10, // GPIO_NUM_10
+        TOUCH_PAD_NUM11, // GPIO_NUM_11
+        TOUCH_PAD_NUM12, // GPIO_NUM_12
+        TOUCH_PAD_NUM13, // GPIO_NUM_13
+        TOUCH_PAD_NUM14, // GPIO_NUM_14
+    };
+
+    const uint8_t touchRingIdxs[] = {3, 0, 1, 4, 5};
+    initTouchJoystick(2, touchRingIdxs);
+#endif
+
+    initTouchPads(touchPads, sizeof(touchPads) / sizeof(touchPads[0]), 0.2f, true);
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
-            GPIO_NUM_36,                // sclk
-            GPIO_NUM_37,                // mosi
-            GPIO_NUM_21,                // dc
-            GPIO_NUM_34,                // cs
-            GPIO_NUM_38,                // rst
-            GPIO_NUM_35,                // backlight
+            GPIO_TFT_SCLK,                // sclk
+            GPIO_TFT_MOSI,                // mosi
+            GPIO_TFT_DC,                // dc
+            GPIO_TFT_CS,                // cs
+            GPIO_TFT_RST,                // rst
+            GPIO_TFT_BL,                // backlight
             true,                       // PWM backlight
             LEDC_CHANNEL_2,             // Channel to use for PWM backlight
             LEDC_TIMER_2,               // Timer to use for PWM backlight
             getTftBrightnessSetting()); // TFT Brightness
-
     initShapes();
 
     // Initialize the RGB LEDs
@@ -472,7 +606,7 @@ void app_main(void)
     }
 #endif
 
-    initLeds(GPIO_NUM_39, ledMirrorGpio, getLedBrightnessSetting());
+    initLeds(GPIO_LEDS, ledMirrorGpio, getLedBrightnessSetting());
 
     initCh32v003(GPIO_SAO_1);
 
@@ -679,7 +813,8 @@ static void initOptionalPeripherals(void)
         setDacShutdown(true);
 
         // Initialize and start the mic as a continuous ADC
-        initMic(GPIO_NUM_7);
+
+        initMic(GPIO_MIC);
         startMic();
     }
     else
@@ -687,16 +822,20 @@ static void initOptionalPeripherals(void)
         setDacShutdown(false);
 
         // Otherwise initialize the battery monitor as a oneshot ADC
-        initBattmon(GPIO_NUM_6);
+        initBattmon(GPIO_VMON);
 
         // Initialize sound output if there is no input
 #if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
-        // Initialize the speaker. The DAC uses the same DMA controller for continuous output,
-        // so it can't be initialized at the same time as the microphone
-        initDac(DAC_CHANNEL_MASK_CH0, // GPIO_NUM_17
-                GPIO_NUM_18, dacCallback);
-        dacStart();
-        initGlobalMidiPlayer();
+        #if defined(CONFIG_HARDWARE_FAIRY)
+            //TODO add PDM stuff here probably?
+        #else
+                // Initialize the speaker. The DAC uses the same DMA controller for continuous output FOR THE S2,
+                // so it can't be initialized at the same time as the microphone
+                initDac(DAC_CHANNEL_MASK_CH0, // GPIO_NUM_17
+                        GPIO_NUM_18, dacCallback);
+                dacStart();
+                initGlobalMidiPlayer();
+        #endif        
 #elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
     #error "Buzzer is no longer supported, get with the times!"
 #endif
@@ -711,9 +850,9 @@ static void initOptionalPeripherals(void)
 
     // Init accelerometer
     if (cSwadgeMode->usesAccelerometer)
-    {
-        initAccelerometer(GPIO_NUM_3,  // SDA
-                          GPIO_NUM_41, // SCL
+    {   
+        initAccelerometer(GPIO_SDA,  // SDA
+                          GPIO_SCL, // SCL
                           GPIO_PULLUP_ENABLE);
         accelIntegrate();
     }
@@ -725,6 +864,7 @@ static void initOptionalPeripherals(void)
     }
 
     // Load some default firmware that blinks eyes
+    //TODO replace
     ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
 }
 
@@ -990,13 +1130,14 @@ void switchToSpeaker(void)
     deinitMic();
 
     // Start the speaker
+    //TODO add PDM stuff here probably?
     initDac(DAC_CHANNEL_MASK_CH0, // GPIO_NUM_17
             GPIO_NUM_18, dacCallback);
     setDacShutdown(false);
     initGlobalMidiPlayer();
 
     // Start battery monitoring
-    initBattmon(GPIO_NUM_6);
+    initBattmon(GPIO_VMON);
 }
 
 /**
@@ -1017,7 +1158,7 @@ void switchToMicrophone(void)
     samp_iir = 0;
 
     // Initialize and start the mic as a continuous ADC
-    initMic(GPIO_NUM_7);
+    initMic(GPIO_MIC);
     startMic();
 }
 
