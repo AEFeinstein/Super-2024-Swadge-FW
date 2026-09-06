@@ -162,13 +162,16 @@ typedef struct __attribute__((packed)) swadgePassPacket
     uint8_t version;   ///< A version byte to differentiate packets per-year
     struct
     {
-        uint16_t highScore;
-    } cosCrunch;
+        uint32_t packedProfile; // card select 0-3, fact0 4-7, fact1 8-11, fact2 12-15
+        uint32_t points;
+    } atrium;
     struct
     {
-        int8_t reactHs;
-        int8_t memHs;
-    } swadgeIt;
+        int8_t maxLevels;
+        int16_t accuracy;
+        int32_t totalScore;
+        int32_t adjScore;
+    } gottaGo;
     struct
     {
         uint16_t highScore;
@@ -177,17 +180,6 @@ typedef struct __attribute__((packed)) swadgePassPacket
     {
         swadgesonaCore_t core;
     } swadgesona;
-
-    struct
-    {
-        uint32_t packedProfile; // card select 0-3, fact0 4-7, fact1 8-11, fact2 12-15
-        uint32_t points;
-    } atrium;
-
-    struct
-    {
-        uint16_t highScore;
-    } megaPulseEx;
 } swadgePassPacket_t;
 
 /**

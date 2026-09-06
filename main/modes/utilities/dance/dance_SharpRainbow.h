@@ -15,7 +15,26 @@ void danceSharpRainbow(uint32_t tElapsedUs, uint32_t arg __attribute__((unused))
  */
 void danceSharpRainbow(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset)
 {
-    const int8_t ledMap[CONFIG_NUM_LEDS] = {0, 2, 1, 4, 3, 5};
+    const int8_t ledMap[CONFIG_NUM_LEDS] = {
+        // Down the right side
+        8,
+        9,
+        7,
+        6,
+        5,
+        10,
+        // Across the bottom
+        4,
+        // Up the left side
+        11,
+        3,
+        2,
+        1,
+        12,
+        13,
+        // Across the top
+        0,
+    };
 
     static int32_t ledCount      = 0;
     static uint32_t tAccumulated = 0;

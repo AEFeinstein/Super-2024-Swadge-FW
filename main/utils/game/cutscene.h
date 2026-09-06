@@ -3,7 +3,7 @@
  * \section cutscene_design Design Philosophy
  *
  * A cutscene takes the data in the cutscene_t data structure and renders it to the display. Using cutscene should feel
- * similar in some ways to using menuMegaRenderer, and it handles all its own memory management. You shouldn't need to
+ * similar in some ways to using a menu renderer, and it handles all its own memory management. You shouldn't need to
  * malloc/calloc any of the structs found in cutscene.h. The cutscenes also make sounds as you press A to progress, or
  * mash the arrow keys to jam out. Many default midi values are internally set up for you to quickly get testing.
  * Although a musically inclined ear would do well to tactfully assign certain instruments and effects to characters and

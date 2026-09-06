@@ -417,11 +417,11 @@ If all else fails, try searching the error message on the internet, or contact t
 
 Now, we're going to have to modify a few other files. Fortunately, only two more for now.
 
-First up, we need to tell the other modes about our mode. Open `main/modeIncludeList.h` and add our header file to the list of includes.
+First up, we need to tell the other modes about our mode. Open `main/utils/menu/modeIncludeList.h` and add our header file to the list of includes.
 
 ![Include List](./TutorialImages/includeList.png)
 
-Next, open `main/modeIncludeList.c` and add the following:
+Next, open `main/utils/menu/modeIncludeList.c` and add the following:
 
 - Inside the `allSwadgeModes[]` list, add `&roboRunnerMode,` at the end of the list before the end curly brace.
 - Add `addSingleItemToMenu(menu, roboRunnerMode.modeName);` inside one of the submenus. Whichever submenu you put this in is where it'll be in the main menu. It's best to put games in the games section, obviously.

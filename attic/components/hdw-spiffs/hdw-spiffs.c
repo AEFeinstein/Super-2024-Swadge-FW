@@ -76,11 +76,6 @@ bool deinitSpiffs(void)
  */
 uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
 {
-    // Pause the buzzer before SPIFFS reads
-#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
-    bool bzrPaused = bzrPause();
-#endif
-
     uint8_t* output;
 
     // Read and display the contents of a small text file
@@ -121,13 +116,6 @@ uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
         // Display the read contents from the file
         ESP_LOGI("SPIFFS", "Read from %s: %u bytes", fname, *outsize);
     }
-#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
-    // Resume the buzzer if it was paused
-    if (bzrPaused)
-    {
-        bzrResume();
-    }
-#endif
     return output;
 }
 

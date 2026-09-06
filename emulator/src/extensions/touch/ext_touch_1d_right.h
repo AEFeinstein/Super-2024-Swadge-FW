@@ -1,5 +1,5 @@
 /**
- * @file ext_touch_1d_vert.h
+ * @file ext_touch_1d_right.h
  * @author gelakinetic
  * @brief
  * @date 2026-06-01
@@ -10,4 +10,4 @@
 #include "emu_ext.h"
 #include "ext_touch_linear.h"
 
-extern emuExtension_t touchEmu1DVertExtension;
+extern emuExtension_t touchEmu1DRightExtension;

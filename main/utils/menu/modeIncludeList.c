@@ -16,10 +16,11 @@
 
 /// @brief Add swadgeMode_t pointers to this struct to include them in emulator and main menu
 swadgeMode_t* const allSwadgeModes[] = {
-    &accelTestMode, &atriumMode,   &canvasTestMode, &colorchordMode, &danceMode,          &factoryTestMode,
-    &gamepadMode,   &introMode,    &jukeboxMode,    &keebTestMode,   &mainMenuMode,       &modeCh32v003test,
-    &modeCredits,   &nameTestMode, &roboRunnerMode, &sonaTestMode,   &swadgePassTestMode, &swsnCreatorMode,
-    &synthMode,     &tCaseMode,    &touchTestMode,  &trophyTestMode, &tunernomeMode, &bombadeetleMode,
+    &accelTestMode,   &atriumMode,         &bombadeetleMode,  &canvasTestMode, &colorchordMode, &danceMode,
+    &factoryTestMode, &gamepadMode,        &gottaGoMode,      &heyListenMode,  &introMode,      &jukeboxMode,
+    &keebTestMode,    &mainMenuMode,       &modeCh32v003test, &modeCredits,    &nameTestMode,   &roboRunnerMode,
+    &sonaTestMode,    &swadgePassTestMode, &swsnCreatorMode,  &synthMode,      &tCaseMode,      &touchTestMode,
+    &trophyTestMode,  &tunernomeMode,
 };
 
 //==============================================================================
@@ -35,6 +36,7 @@ void modeListSetMenu(menu_t* menu)
 {
     // Games sub menu
     menu = startSubMenu(menu, "Games");
+    addSingleItemToMenu(menu, gottaGoMode.modeName);
     addSingleItemToMenu(menu, roboRunnerMode.modeName);
     addSingleItemToMenu(menu, bombadeetleMode.modeName);
     menu = endSubMenu(menu);
@@ -48,11 +50,14 @@ void modeListSetMenu(menu_t* menu)
 
     // Utilities sub menu
     menu = startSubMenu(menu, "Utilities");
+
     addSingleItemToMenu(menu, tCaseMode.modeName);
     addSingleItemToMenu(menu, danceMode.modeName);
+    addSingleItemToMenu(menu, heyListenMode.modeName);
     addSingleItemToMenu(menu, gamepadMode.modeName);
     addSingleItemToMenu(menu, modeCredits.modeName);
     addSingleItemToMenu(menu, introMode.modeName);
+
     menu = endSubMenu(menu);
 
     // Swadgepass

@@ -15,9 +15,15 @@ extern const midiTimbre_t* const mmxTimbres[];
 extern const uint8_t mmxTimbreMap[];
 extern const size_t mmxTimbreCount;
 
+extern const midiTimbre_t z3PianoTimbre;
+extern const midiTimbre_t* const z3Timbres[];
+extern const uint8_t z3TimbreMap[];
+extern const size_t z3TimbreCount;
+
 // extern const midiTimbre_t gmInstruments[128];
 
 // Drumkits
 extern const midiTimbre_t defaultDrumkitTimbre;
 extern const midiTimbre_t donutDrumkitTimbre;
 extern const midiTimbre_t mmxDrumkitTimbre;
+extern const midiTimbre_t z3DrumkitTimbre;

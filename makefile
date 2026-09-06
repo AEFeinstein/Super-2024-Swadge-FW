@@ -35,10 +35,13 @@ ifeq ($(HOST_OS),Windows)
 	FIND:=$(shell cygpath `where find | grep bin | grep -v " "`)
 endif
 
-# clang-format may actually be clang-format-22
+# clang-format may actually be clang-format-22. Push stderr to null if which returns nothing.
 CLANG_FORMAT:=clang-format-22
-ifeq (, $(shell which $(CLANG_FORMAT)))
+ifeq (, $(shell which $(CLANG_FORMAT) 2>/dev/null))
 	CLANG_FORMAT:=clang-format
+ifneq ($(shell clang-format --version | grep -Pc "22\.\d+\.\d+"), 1)
+$(warning Your clang-format version is not 22. Formatting may be inconsistent)
+endif
 endif
 
 ifeq ($(HOST_OS),Linux)
@@ -49,6 +52,12 @@ ifeq ($(HOST_OS),Linux)
 	else
 		UDEV_GROUP:=$(USER)
 	endif
+endif
+
+# if user has not configured their esp idf and launched the virtual environment idf.py doesnt
+# give good errors
+ifndef IDF_PATH
+$(info NOTICE: Environment Variable IDF_PATH is not set, target "firmware" is unavailable)
 endif
 
 ################################################################################
@@ -235,8 +244,8 @@ DEFINES_LIST = \
 	CONFIG_ESP_SYSTEM_PANIC=y\
 	CONFIG_ESP_SYSTEM_GDBSTUB_RUNTIME=y\
 	CONFIG_DEBUG_OUTPUT_USB=y\
-	CONFIG_HARDWARE_PULSE=y \
-	CONFIG_IDF_TARGET_ESP32S2=y \
+	CONFIG_HARDWARE_FAIRY_PROTO=y \
+	CONFIG_IDF_TARGET_ESP32S3=y \
 	SOC_RMT_CHANNELS_PER_GROUP=4 \
 	SOC_TOUCH_SENSOR_NUM=15 \
 	SOC_ULP_SUPPORTED=y \
@@ -254,16 +263,16 @@ DEFINES_LIST = \
 	CONFIG_GC9307_240x280=y \
 	CONFIG_TFT_MAX_BRIGHTNESS=200 \
 	CONFIG_TFT_MIN_BRIGHTNESS=10 \
-	CONFIG_NUM_LEDS=6 \
+	CONFIG_NUM_LEDS=14 \
 	configENABLE_FREERTOS_DEBUG_OCDAWARE=1 \
 	_GNU_SOURCE \
-	IDF_VER="v5.2.7" \
+	IDF_VER="v5.2.8" \
 	ESP_PLATFORM \
 	_POSIX_READER_WRITER_LOCKS \
 	CFG_TUSB_MCU=OPT_MCU_ESP32S2 \
-	CONFIG_SOUND_OUTPUT_SPEAKER=y \
 	CONFIG_FACTORY_TEST_NORMAL=y \
-	SOC_TOUCH_PAD_THRESHOLD_MAX=0x1FFFFF
+	SOC_TOUCH_PAD_THRESHOLD_MAX=0x1FFFFF \
+	SOC_DAC_SUPPORTED=0
 
 # If this is not WSL
 ifeq ($(IS_WSL),0)

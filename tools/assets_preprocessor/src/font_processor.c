@@ -133,7 +133,7 @@ bool process_font(processorInput_t* arg)
     }
 
     /* Check for leftovers */
-    if (charStartX != charEndX)
+    if (isCountingChar)
     {
         appendCharToFile(fp, data, w, h, charStartX, charEndX);
         charsWritten++;

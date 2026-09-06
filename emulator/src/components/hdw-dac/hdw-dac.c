@@ -30,11 +30,11 @@ static bool dacWriting       = false;
 /**
  * @brief Initialize the DAC
  *
- * @param channel
+ * @param spk_gpio
  * @param shdn_gpio
  * @param cb
  */
-void initDac(dac_channel_mask_t channel, gpio_num_t shdn_gpio, fnDacCallback_t cb)
+void initDac(gpio_num_t spk_gpio, gpio_num_t shdn_gpio, fnDacCallback_t cb)
 {
     ESP_LOGI(DAC_TAG, " ");
     dacCb         = cb;
