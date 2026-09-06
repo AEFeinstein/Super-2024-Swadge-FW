@@ -75,8 +75,7 @@ void gs_drawSkyGradient(gs_entity_t* self)
     for (int i = 0; i < TFT_WIDTH / self->gameData->assets[self->assetIndex].frames[0].w + 1; i++)
     {
         int32_t x = i * self->gameData->assets[self->assetIndex].frames[0].w + offset;
-        drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped,
-                false, 0);
+        drawWsgTile(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y);
     }
 }
 
@@ -267,10 +266,10 @@ void gs_drawTileMap(gs_entity_t* self)
     int topLeftCamPixelX = (self->gameData->entityManager.camera.pos.x >> DECIMAL_BITS) - (TFT_WIDTH >> 1);
     int topLeftCamPixelY = (self->gameData->entityManager.camera.pos.y >> DECIMAL_BITS) - (TFT_HEIGHT >> 1);
     int tileYIdx         = topLeftCamPixelY >> shiftBy;
-    while ((tileYIdx << shiftBy) < topLeftCamPixelY + TFT_HEIGHT)
+    while ((tileYIdx * (1 << shiftBy)) < topLeftCamPixelY + TFT_HEIGHT)
     {
         int tileXIdx = topLeftCamPixelX >> shiftBy;
-        while ((tileXIdx << shiftBy) < topLeftCamPixelX + TFT_WIDTH)
+        while ((tileXIdx * (1 << shiftBy)) < topLeftCamPixelX + TFT_WIDTH)
         {
             if (tileXIdx >= 0 && tileYIdx >= 0 && tileXIdx < TILE_FIELD_WIDTH && tileYIdx < TILE_FIELD_HEIGHT)
             {
@@ -470,8 +469,7 @@ void gs_drawStar(gs_entity_t* self)
                 - self->gameData->assets[self->assetIndex].originX;
     int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1)
                 - self->gameData->assets[self->assetIndex].originY;
-    drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped, false,
-            0);
+    drawWsgSimple(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y);
 }
 
 void gs_enableFlightControls(gs_entity_t* self)
@@ -593,10 +591,37 @@ void gs_spawnLanding(gs_entity_t* self)
 
 void gs_positionWave(gs_entity_t* self)
 {
+    ((gs_wave_t*)self->data)->reverseAnim = false;
+    self->currentAnimationFrame           = 0;
+    self->animationTimer                  = 0;
     self->pos = addVec2d(self->gameData->entityManager.camera.pos,
-                         (vec_t){gs_randomInt(TFT_WIDTH << (DECIMAL_BITS - 1), TFT_HEIGHT << (DECIMAL_BITS - 1)),
-                                 gs_randomInt(100 << DECIMAL_BITS, 120 << DECIMAL_BITS)});
-    ;
+                         (vec_t){gs_randomInt(-(TFT_WIDTH << (DECIMAL_BITS - 1)), TFT_WIDTH << (DECIMAL_BITS - 1)),
+                                 gs_randomInt(92 << DECIMAL_BITS, 115 << DECIMAL_BITS)});
+}
+
+void gs_randomizeWaveData(gs_entity_t* self)
+{
+    self->data                            = heap_caps_calloc(1, sizeof(gs_star_t), MALLOC_CAP_SPIRAM);
+    self->currentAnimationFrame           = gs_randomInt(0, 4);
+    self->gameFramesPerAnimationFrame     = self->currentAnimationFrame * 3 + 3;
+    self->animationTimer                  = gs_randomInt(0, (self->currentAnimationFrame - 1) * 3 + 3);
+    ((gs_wave_t*)self->data)->reverseAnim = gs_randomInt(0, 1);
+}
+
+void gs_updateFarWave(gs_entity_t* self)
+{
+    gs_randomizeWaveData(self);
+    gs_positionWave(self);
+    if (self->gameData->entityManager.camera.vel.x < 0)
+    {
+        self->pos.x
+            = self->gameData->entityManager.camera.pos.x - (TFT_WIDTH << (DECIMAL_BITS - 1)) - (19 << DECIMAL_BITS);
+    }
+    else
+    {
+        self->pos.x
+            = self->gameData->entityManager.camera.pos.x + (TFT_WIDTH << (DECIMAL_BITS - 1)) + (19 << DECIMAL_BITS);
+    }
 }
 
 void gs_updateWave(gs_entity_t* self)
@@ -613,7 +638,7 @@ void gs_drawWave(gs_entity_t* self)
         if (!wData->reverseAnim)
         {
             self->currentAnimationFrame++;
-            self->gameFramesPerAnimationFrame++;
+            self->gameFramesPerAnimationFrame += 3;
             if (self->currentAnimationFrame == self->gameData->assets[self->assetIndex].numFrames - 1)
             {
                 wData->reverseAnim = true;
@@ -622,10 +647,11 @@ void gs_drawWave(gs_entity_t* self)
         else
         {
             self->currentAnimationFrame--;
-            self->gameFramesPerAnimationFrame--;
+            self->gameFramesPerAnimationFrame -= 3;
             if (self->currentAnimationFrame == 0)
             {
                 wData->reverseAnim = false;
+                gs_positionWave(self);
             }
         }
         self->currentAnimationFrame
@@ -637,6 +663,5 @@ void gs_drawWave(gs_entity_t* self)
     int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1)
                 - self->gameData->assets[self->assetIndex].originY;
 
-    drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped,
-            false, 0);
+    drawWsgSimple(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y);
 }

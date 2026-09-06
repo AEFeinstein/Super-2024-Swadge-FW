@@ -264,15 +264,29 @@ static void gs_initializeGame(void)
     // stars
     for (int i = 0; i < 20; i++)
     {
-        gs_entity_t* star = gs_createEntity(&gameData->entityManager, 0, GS_NO_ANIMATION, false, GS_STAR_ASSET, 0,
-                                            (vec_t){0xFFFF + (gs_randomInt(-(TFT_WIDTH >> 1), TFT_WIDTH >> 1) * 16),
-                                                    0xFFFF + (gs_randomInt(0, 85) << DECIMAL_BITS)},
-                                            gameData);
-        star->data        = heap_caps_calloc(1, sizeof(gs_star_t), MALLOC_CAP_SPIRAM);
+        gs_entity_t* star = gs_createEntity(
+            &gameData->entityManager, 0, GS_NO_ANIMATION, false, GS_STAR_ASSET, 0,
+            addVec2d(gameData->entityManager.camera.pos, (vec_t){(gs_randomInt(-(TFT_WIDTH >> 1), TFT_WIDTH >> 1) * 16),
+                                                                 (gs_randomInt(0, 85) << DECIMAL_BITS)}),
+            gameData);
+        star->data = heap_caps_calloc(1, sizeof(gs_star_t), MALLOC_CAP_SPIRAM);
         gs_randomizeStarData(star);
         star->updateFunction    = gs_updateStar;
         star->updateFarFunction = gs_updateFarStar;
         star->drawFunction      = gs_drawStar;
+    }
+    // waves
+    for (int i = 0; i < 20; i++)
+    {
+        gs_entity_t* wave       = gs_createEntity(&gameData->entityManager, 5, GS_NO_ANIMATION, true, GS_WAVE_ASSET, 3,
+                                                  (vec_t){0, 0}, gameData);
+        wave->data              = heap_caps_calloc(1, sizeof(gs_wave_t), MALLOC_CAP_SPIRAM);
+        wave->updateFunction    = gs_updateWave;
+        wave->updateFarFunction = gs_updateFarWave;
+        wave->drawFunction      = gs_drawWave;
+
+        gs_randomizeWaveData(wave);
+        gs_positionWave(wave);
     }
 
     // tilemap

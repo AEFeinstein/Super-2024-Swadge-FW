@@ -144,7 +144,7 @@ typedef struct
 typedef struct
 {
     bool reverseAnim;
-    vec_t vel;
+    int32_t velX;
 } gs_wave_t;
 
 //==============================================================================
@@ -177,5 +177,7 @@ void gs_drawBigMoon(gs_entity_t* self);
 void gs_spawnBigMoon(gs_entity_t* self);
 void gs_spawnLanding(gs_entity_t* self);
 void gs_positionWave(gs_entity_t* self);
+void gs_randomizeWaveData(gs_entity_t* self);
 void gs_updateWave(gs_entity_t* self);
+void gs_updateFarWave(gs_entity_t* self);
 void gs_drawWave(gs_entity_t* self);
