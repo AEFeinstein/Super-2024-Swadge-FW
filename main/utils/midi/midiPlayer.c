@@ -894,6 +894,8 @@ const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, uint8_t p
     {
         switch (bank)
         {
+            case 3:
+                return &z3DrumkitTimbre;
             case 2:
                 return &mmxDrumkitTimbre;
             case 1:
@@ -908,6 +910,22 @@ const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, uint8_t p
     {
         switch (bank)
         {
+            case 3:
+            {
+                for (size_t n = 0; n < z3TimbreCount; n++)
+                {
+                    if (program == z3TimbreMap[n])
+                    {
+                        return z3Timbres[n];
+                    }
+                    else if (program < z3TimbreMap[n])
+                    {
+                        return &z3PianoTimbre;
+                    }
+                }
+                return &z3PianoTimbre;
+            }
+
             case 2:
             {
                 for (size_t n = 0; n < mmxTimbreCount; n++)

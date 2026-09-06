@@ -472,7 +472,7 @@ typedef struct
 
     // Menu
     menu_t* menu;
-    menuMegaRenderer_t* renderer;
+    menuZorldoRenderer_t* renderer;
     char savedNames[MAX_SWSN_SLOTS][MAX_STR_LEN + 12];
 
     // Creator
@@ -643,7 +643,7 @@ static void swsnExitMode(void)
     unloadMidiFile(&scd->bgm);
     unloadMidiFile(&scd->sfxClick);
     unloadMidiFile(&scd->sfxMove);
-    deinitMenuMegaRenderer(scd->renderer);
+    deinitMenuZorldoRenderer(scd->renderer);
     deinitMenu(scd->menu);
     freeWsg(&scd->noGo);
     freeFont(&scd->fnt);
@@ -667,7 +667,7 @@ static void swsnLoop(int64_t elapsedUs)
             {
                 scd->menu = menuButton(scd->menu, evt);
             }
-            drawMenuMega(scd->menu, scd->renderer, elapsedUs);
+            drawMenuZorldo(scd->menu, scd->renderer, elapsedUs);
             break;
         }
         case CREATING:
@@ -1025,7 +1025,7 @@ static void swsnResetMenu()
 {
     // Menu
     scd->menu     = initMenu(sonaMenuName, swsnMenuCb);
-    scd->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    scd->renderer = initMenuZorldoRenderer(NULL, NULL);
     scd->menu     = startSubMenu(scd->menu, menuOptions[0]);
     for (int8_t idx = 0; idx < MAX_SWSN_SLOTS; idx++)
     {

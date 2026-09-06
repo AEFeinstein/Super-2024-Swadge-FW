@@ -176,6 +176,7 @@
  * - Renderers
  *     - menuMegaRenderer.h: Render a menu in the Mega style
  *     - menuManiaRenderer.h: Render a menu in the Mania style
+ *     - menuZorldoRenderer.h: Render a menu in the Zorldo style
  *     - menuSimpleRenderer.h: Render a menu in a simple style
  *
  * \subsection ds_api Data Structures

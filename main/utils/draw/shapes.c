@@ -605,21 +605,21 @@ void drawRoundedRect(int x0, int y0, int x1, int y1, int r, paletteColor_t fillC
         // Top-left circle
         drawCircleFilledQuadrants(x0 + r, y0 + r, r, false, true, false, false, fillColor);
         // Top-right
-        drawCircleFilledQuadrants(x1 - r, y0 + r, r, true, false, false, false, fillColor);
+        drawCircleFilledQuadrants(x1 - r - 1, y0 + r, r, true, false, false, false, fillColor);
         // Bottom-left
-        drawCircleFilledQuadrants(x0 + r, y1 - r, r, false, false, true, false, fillColor);
+        drawCircleFilledQuadrants(x0 + r, y1 - r - 1, r, false, false, true, false, fillColor);
         // Bottom-right
-        drawCircleFilledQuadrants(x1 - r, y1 - r, r, false, false, false, true, fillColor);
+        drawCircleFilledQuadrants(x1 - r - 1, y1 - r - 1, r, false, false, false, true, fillColor);
 
         // Boxes
         // Top portion (between two circles)
-        drawRectFilled(x0 + r, y0, x1 - r, y0 + r, fillColor);
+        drawRectFilled(x0 + r, y0, x1 - r - 1, y0 + r, fillColor);
 
         // Middle
-        drawRectFilled(x0, y0 + r, x1, y1 - r, fillColor);
+        drawRectFilled(x0, y0 + r, x1, y1 - r - 1, fillColor);
 
         // Bottom (between circles)
-        drawRectFilled(x0 + r, y1 - r, x1 - r, y1, fillColor);
+        drawRectFilled(x0 + r, y1 - r - 1, x1 - r - 1, y1, fillColor);
     }
 
     if (outlineColor != cTransparent)
@@ -627,20 +627,20 @@ void drawRoundedRect(int x0, int y0, int x1, int y1, int r, paletteColor_t fillC
         // Top-left circle
         drawCircleQuadrants(x0 + r, y0 + r, r, false, false, true, false, outlineColor);
         // Top-right
-        drawCircleQuadrants(x1 - r, y0 + r, r, false, false, false, true, outlineColor);
+        drawCircleQuadrants(x1 - r - 1, y0 + r, r, false, false, false, true, outlineColor);
         // Bottom-left
-        drawCircleQuadrants(x0 + r, y1 - r, r, false, true, false, false, outlineColor);
+        drawCircleQuadrants(x0 + r, y1 - r - 1, r, false, true, false, false, outlineColor);
         // Bottom-right
-        drawCircleQuadrants(x1 - r, y1 - r, r, true, false, false, false, outlineColor);
+        drawCircleQuadrants(x1 - r - 1, y1 - r - 1, r, true, false, false, false, outlineColor);
 
         // Top
-        drawLineFast(x0 + r, y0, x1 - r, y0, outlineColor);
+        drawLineFast(x0 + r, y0, x1 - r - 1, y0, outlineColor);
         // Left
-        drawLineFast(x0, y0 + r, x0, y1 - r, outlineColor);
+        drawLineFast(x0, y0 + r, x0, y1 - r - 1, outlineColor);
         // Right
-        drawLineFast(x1, y0 + r, x1, y1 - r, outlineColor);
+        drawLineFast(x1 - 1, y0 + r, x1 - 1, y1 - r - 1, outlineColor);
         // Bottom
-        drawLineFast(x0 + r, y1, x1 - r, y1, outlineColor);
+        drawLineFast(x0 + r, y1 - 1, x1 - r - 1, y1 - 1, outlineColor);
     }
 }
 

@@ -86,12 +86,12 @@ typedef struct
 
 menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);
 void deinitMenuMegaRenderer(menuMegaRenderer_t* renderer);
-void drawMenuBody(uint16_t topLeftX, uint16_t topLeftY, uint8_t expansionHeight, bool flipLR,
-                  menuMegaRenderer_t* renderer);
+void drawMenuMegaBody(uint16_t topLeftX, uint16_t topLeftY, uint8_t expansionHeight, bool flipLR,
+                      menuMegaRenderer_t* renderer);
 void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs);
 void setMegaLedsOn(menuMegaRenderer_t* renderer, bool ledsOn);
-void setDrawBody(menuMegaRenderer_t* renderer, bool drawBody);
-void setBodyHeight(menuMegaRenderer_t* renderer, int16_t height);
+void setDrawMenuMegaBody(menuMegaRenderer_t* renderer, bool drawBody);
+void setMenuMegaBodyHeight(menuMegaRenderer_t* renderer, int16_t height);
 void recolorMenuMegaRenderer(menuMegaRenderer_t* renderer, paletteColor_t textFill, paletteColor_t textOutline,
                              paletteColor_t hexaBackground, paletteColor_t bodyBackground,
                              paletteColor_t bodyAccentDark, paletteColor_t bodyAccentLight, paletteColor_t bodyArrowBg,

@@ -103,7 +103,7 @@ int main(int32_t argc, char** argv)
     }
 
     // Pick out the arguments
-    char* fontFile     = argv[1];
+    char* fontFile   = argv[1];
     float fontSizePx = atof(argv[2]);
 
     // Validate size
@@ -137,12 +137,13 @@ int main(int32_t argc, char** argv)
     uint32_t codepoints[sizeof(text)];
     int32_t n = utf8_to_utf32((unsigned char*)text, codepoints, sizeof(text)); // (const uint8_t *)
 
-    // Declarare variable for measurement
-    int32_t totalWidth = 0;
-    int32_t avgWidth   = 0;
-    int32_t minStartY  = 0;
-    int32_t maxEndY    = 0;
-    int32_t spaceWidth = 0;
+    // Declare variable for measurement
+    int32_t totalWidth    = 0;
+    int32_t avgWidth      = 0;
+    int32_t renderedChars = 0;
+    int32_t minStartY     = 0;
+    int32_t maxEndY       = 0;
+    int32_t spaceWidth    = 0;
 
     // Iterate over all characters and measure them
     for (int32_t i = 0; i < n; i++)
@@ -158,9 +159,18 @@ int main(int32_t argc, char** argv)
         }
 
         // Find the total width for all characters for the output image
-        totalWidth += (glyph.actualWidth + 1);
-        // Keep a running total width to find the average width
-        avgWidth += glyph.actualWidth;
+        if (glyph.actualWidth > 0)
+        {
+            totalWidth += glyph.actualWidth;
+            // Keep a running total width to find the average width
+            avgWidth += glyph.actualWidth;
+            renderedChars++;
+        }
+        else if (text[i] != ' ')
+        {
+            // Render missing glyphs as a 1-pixel-wide space
+            totalWidth++;
+        }
 
         // Find upper and lower Y bounds
         if (-glyph.yOff < minStartY)
@@ -177,10 +187,13 @@ int main(int32_t argc, char** argv)
     }
 
     // Find the average width of a character, used for ' '
-    avgWidth /= n;
+    avgWidth /= renderedChars;
 
     // Adjust width for the space character
     totalWidth += (avgWidth - spaceWidth);
+
+    // Account for padding between characters
+    totalWidth += n - 1;
 
     // Find the height for the output image, the characters and two pixels for underlining
     int32_t maxHeight = maxEndY - minStartY + 2;
@@ -200,8 +213,9 @@ int main(int32_t argc, char** argv)
         glyph_t glyph;
         renderGlyphToMem(&sft, codepoints[i], (' ' == text[i]) ? avgWidth : -1, &glyph);
 
+        int32_t glyphRenderedWidth = glyph.actualWidth > 0 ? glyph.actualWidth : 1;
         // Draw the underline for this glyph to the PNG
-        for (int32_t x = 0; x < glyph.actualWidth; x++)
+        for (int32_t x = 0; x < glyphRenderedWidth; x++)
         {
             int32_t pngY = maxHeight - 1;
             int32_t pngX = imgXoff + x;
@@ -235,7 +249,7 @@ int main(int32_t argc, char** argv)
                 }
             }
         }
-        imgXoff += (glyph.actualWidth + 1);
+        imgXoff += (glyphRenderedWidth + 1);
 
         // Cleanup
         free(glyph.img.pixels);
@@ -355,7 +369,7 @@ int actualCharWidth(SFT_Image* img, int32_t* minX, int32_t* maxX)
     }
 
     // No pixels set
-    if(100000 == *minX)
+    if (100000 == *minX)
     {
         *minX = 0;
     }

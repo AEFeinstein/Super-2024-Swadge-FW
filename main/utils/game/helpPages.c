@@ -31,7 +31,7 @@
  * @param numPages The total number of pages
  * @return An initialized helpPageVars_t*
  */
-helpPageVars_t* initHelpScreen(menu_t* bgMenu, menuMegaRenderer_t* menuRenderer, const helpPage_t* pages,
+helpPageVars_t* initHelpScreen(menu_t* bgMenu, menuZorldoRenderer_t* menuRenderer, const helpPage_t* pages,
                                int32_t numPages)
 {
     helpPageVars_t* help = heap_caps_calloc(1, sizeof(helpPageVars_t), MALLOC_CAP_SPIRAM);
@@ -66,7 +66,7 @@ void drawHelp(helpPageVars_t* help, int32_t elapsedUs)
     // Draw background, without animation
     int16_t oldHeight              = help->menuRenderer->bodyHeight;
     help->menuRenderer->bodyHeight = TFT_HEIGHT;
-    drawMenuMega(help->bgMenu, help->menuRenderer, elapsedUs);
+    drawMenuZorldo(help->bgMenu, help->menuRenderer, elapsedUs);
     help->menuRenderer->bodyHeight = oldHeight;
 
     font_t* f = help->menuRenderer->menuFont;
