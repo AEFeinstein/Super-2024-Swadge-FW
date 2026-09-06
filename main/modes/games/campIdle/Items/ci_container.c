@@ -122,6 +122,29 @@ int ciFindItemInContainer(ciContainer_t* cont, ciItemIdx_t item, int* slotLoc)
     return total;
 }
 
+bool ciTransferBetweenContainers(ciContainer_t* cont1, ciContainer_t* cont2, ciItemIdx_t item, int qty)
+{
+    int fromVal = 0;
+    for (int idx = 0; idx < cont1->slotsLim; idx++)
+    {
+        if(cont1->items[idx].item == item)
+        {
+            fromVal += cont1->items[idx].item;
+            if (fromVal >= qty)
+            {
+                break;
+            }
+        }
+    }
+    if (fromVal < qty)
+    {
+        return false;
+    }
+    ciRemoveFromContainer(cont1, item, qty);
+    ciAddItemToContainer(cont2, item, qty);
+    return true;
+}
+
 void ciDrawContainer(ciCampData_t* ccd, ciContainer_t* cont, int x, int y, int maxCols, int maxRows, font_t* fnt)
 {
     int calcXSize = 2 * EDGE_BUFFER + maxCols * ICON_WIDTH;

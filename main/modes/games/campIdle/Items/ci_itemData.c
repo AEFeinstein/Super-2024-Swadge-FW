@@ -462,6 +462,17 @@ const ciItem_t ciItemData[] = {
         .abbr   = "COAL",
     },
     {
+        .image  = CI_COTTON_WSG,
+        .type   = CI_FORAGED,
+        .loc    = CI_MOUNTAIN,
+        .size   = CI_SMALL,
+        .weight = 3,
+        .value  = 0,
+        .title  = "Cotton",
+        .desc   = "How does something so sharp end up so comfy?",
+        .abbr   = "COTN",
+    },
+    {
         .image  = CI_CRYSTAL_WSG,
         .type   = CI_FORAGED,
         .loc    = CI_M_FOREST,

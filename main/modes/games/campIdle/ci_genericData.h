@@ -7,6 +7,7 @@
 #include "swadge.h"
 
 #include "ci_itemData.h"
+#include "ci_craftingData.h"
 
 //==============================================================================
 // Consts
