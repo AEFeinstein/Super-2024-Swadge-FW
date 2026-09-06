@@ -85,6 +85,7 @@ typedef enum
     CI_HONEY_COMB,
     CI_BIRCH_BARK,
     CI_COAL,
+    CI_COTTON,
     CI_CRYSTAL,
     CI_DRIED_GRASS,
     CI_IRON_ORE,
