@@ -1,4 +1,4 @@
-/*! \mainpage Swadge ESP32-S2
+/*! \mainpage Swadge ESP32-S3
  *
  * Generated on \showdate "%A, %B %-d, %H:%M:%S"
  *
@@ -19,6 +19,8 @@
  * href="https://github.com/AEFeinstein/Super-2025-Swadge-HW">https://github.com/AEFeinstein/Super-2025-Swadge-HW</a>
  * - Alpha Pulse - <a
  * href="https://github.com/AEFeinstein/Super-2026-Swadge-HW">https://github.com/AEFeinstein/Super-2026-Swadge-HW</a>
+ * - Fairy - <a
+ * href="https://github.com/emilyanthony4244/Super-2027-Swadge-HW">https://github.com/emilyanthony4244/Super-2027-Swadge-HW</a>
  *
  * This is living documentation, so if you notice that something is incorrect or incomplete, please fix or complete it,
  * and <a href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/pulls">submit a pull request</a>.
@@ -50,7 +52,7 @@
  * productive way.
  * -# If you want to bring a mode forward from last year's Swadge, take a look at \ref porting.
  * -# Finally, if you want to do lower level or \c component programming, read the \ref espressif_doc to understand the
- * full capability of the ESP32-S2 chip.
+ * full capability of the ESP32-S2 and ESP32-S3 chips.
  *
  * If you want to learn about creating MIDI song files for the Swadge, see the \ref MIDI guide. See also the
  * \ref emulator which you can use to listen to MIDI files.
@@ -196,16 +198,16 @@
  *
  * \section espressif_doc Espressif Documentation
  *
- * The Swadge uses an ESP32-S2 micro-controller with firmware built on IDF 5.0. The goal of this project is to enable
+ * The 2027 Swadge uses an ESP32-S3 micro-controller with firmware built on IDF 5.0. Previous Swadges used the ESP32-S2. The goal of this project is to enable
  * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
  * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
  * is useful:
- * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.7/esp32s2/api-reference/index.html">ESP-IDF API
+ * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.7/esp32s3/api-reference/index.html">ESP-IDF API
  * Reference</a>
- * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-S2 Series
+ * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf">ESP32-S3 Series
  * Datasheet</a>
  * - <a
- * href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf">ESP32-S2
+ * href="https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf">ESP32-S3
  * Technical Reference Manual</a>
  */
 
@@ -356,7 +358,7 @@
     #define GPIO_SDA     GPIO_NUM_3  
     #define GPIO_SCL     GPIO_NUM_41
 
-#elif defined(CONFIG_HARDWARE_FAIRY)
+    #elif defined(CONFIG_HARDWARE_FAIRY)
 //todo
 
     #define GPIO_SAO_1 GPIO_NUM_16 
@@ -391,6 +393,8 @@
 
     #define GPIO_SDA     GPIO_NUM_40 //i2c sda 
     #define GPIO_SCL     GPIO_NUM_41 //i2c scl
+
+    #define GPIO_CH32V003 GPIO_NUM_39 //ch32v003
 
 #else
     #error "Define what hardware is being built for"
@@ -525,7 +529,7 @@ void app_main(void)
     initCnfs();
 
     // Init buttons and touch pads
-    //TODO: CH32 buttons will probably modify how this is done, also need to add resistive touch stuff
+    //TODO: CH32 buttons will probably modify how this is done, also need to add capacitive touch "buttons"
     gpio_num_t pushButtons[] = {
         GPIO_BTN_UP,    // Up
         GPIO_BTN_DOWN,  // Down
@@ -539,7 +543,7 @@ void app_main(void)
     initButtons(pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]));
 
 #ifdef CONFIG_HARDWARE_FAIRY
-
+    //the fairy has two touchstrips made of 5 copper pads each. They are linear touch strips.
     touch_pad_t touchPads[] = {
         TOUCH_PAD_NUM1,  // GPIO_NUM_1
         TOUCH_PAD_NUM2, // GPIO_NUM_2
@@ -588,11 +592,11 @@ void app_main(void)
     initTFT(SPI2_HOST,
             GPIO_TFT_SCLK,                // sclk
             GPIO_TFT_MOSI,                // mosi
-            GPIO_TFT_DC,                // dc
-            GPIO_TFT_CS,                // cs
-            GPIO_TFT_RST,                // rst
-            GPIO_TFT_BL,                // backlight
-            true,                       // PWM backlight
+            GPIO_TFT_DC,                  // dc
+            GPIO_TFT_CS,                  // cs
+            GPIO_TFT_RST,                  // rst
+            GPIO_TFT_BL,                  // backlight
+            true,                         // PWM backlight
             LEDC_CHANNEL_2,             // Channel to use for PWM backlight
             LEDC_TIMER_2,               // Timer to use for PWM backlight
             getTftBrightnessSetting()); // TFT Brightness
@@ -609,7 +613,12 @@ void app_main(void)
 
     initLeds(GPIO_LEDS, ledMirrorGpio, getLedBrightnessSetting());
 
-    initCh32v003(GPIO_SAO_1);
+    // Define GPIO_CH32V003 as the SAO output; pre-pulse swadges would have to use an SAO to talk to the ch32
+    #ifndef GPIO_CH32V003
+    #define GPIO_CH32V003 GPIO_SAO_1
+    #endif
+
+    initCh32v003(GPIO_CH32V003);
 
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();
