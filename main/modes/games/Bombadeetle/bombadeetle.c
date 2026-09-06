@@ -112,7 +112,7 @@ static const cnfsFileIdx_t bombadeetleGoal[] = {
 };
 
 static const cnfsFileIdx_t bombadeetleLevels[] = {
-    BOMB_LVL_ONE_BIN, BOMB_LVL_HELLO_BIN, BOMB_LVL_NOHOLES_BIN, BOMB_LVL_MAG_1_BIN, BOMB_LVL_SPYRL_BIN,BOMB_LVL_CREPUSCULAR_BIN,BOMB_LVL_MOWWOW_BIN , BOMB_LVL_JERO_BIN,  BOMB_LVL_DELEPORT_BIN,
+   BOMB_LVL_ONE_BIN, BOMB_LVL_HELLO_BIN, BOMB_LVL_NOHOLES_BIN, BOMB_LVL_MAG_1_BIN, BOMB_LVL_SPYRL_BIN,BOMB_LVL_DODGEIT_BIN,BOMB_LVL_UNDERDEFEAT_BIN,BOMB_LVL_CREPUSCULAR_BIN,BOMB_LVL_MOWWOW_BIN , BOMB_LVL_JERO_BIN, BOMB_LVL_NARROW_BIN, BOMB_LVL_DELEPORT_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_BIN, BOMB_LVL_TRAP_BIN,
 };
 
 static const cnfsFileIdx_t bombadeetleTeleporter[] = {
@@ -784,7 +784,6 @@ static void bombadeetleImportMap(int64_t index)
     bombadeetle->mapFile.up = levelFile[offset+ 1];
     bombadeetle->mapFile.down = levelFile[offset+ 2];
     bombadeetle->mapFile.right = levelFile[offset+ 3];
-    //ESP_LOGI(TAG, "%d %d %d %d", levelFile[offset +0], levelFile[offset +1], levelFile[offset +2], levelFile[offset +3] );
 }
 
 static void bombadeetleLoadMap()
@@ -933,9 +932,13 @@ static void bombadeetleStageSelectLoop(int64_t elapsedUs)
             if (speed < 0) speed = 0;
             if (speed > 8) speed = 8;
 
-            bombadeetle->backgroundSpeed = speed;
+            if (bombadeetle->backgroundSpeed != speed)
+            {
 
-            ESP_LOGI(TAG, "Background speed = %d", speed );
+                bombadeetle->backgroundSpeed = speed;
+                
+                ESP_LOGI(TAG, "Background speed = %d", speed );
+            }
         }
     }
     
