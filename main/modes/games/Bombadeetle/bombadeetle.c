@@ -112,7 +112,7 @@ static const cnfsFileIdx_t bombadeetleGoal[] = {
 };
 
 static const cnfsFileIdx_t bombadeetleLevels[] = {
-    BOMB_ONE_BIN, BOMB_HELLO_BIN, BOMB_NOHOLES_BIN, BOMB_MAG_1_BIN, BOMB_CREPUSCULAR_BIN,BOMB_MOWWOW_BIN , BOMB_JERO_BIN,
+    BOMB_LVL_ONE_BIN, BOMB_LVL_HELLO_BIN, BOMB_LVL_NOHOLES_BIN, BOMB_LVL_MAG_1_BIN, BOMB_LVL_SPYRL_BIN,BOMB_LVL_CREPUSCULAR_BIN,BOMB_LVL_MOWWOW_BIN , BOMB_LVL_JERO_BIN,  BOMB_LVL_DELEPORT_BIN,
 };
 
 static const cnfsFileIdx_t bombadeetleTeleporter[] = {
@@ -248,6 +248,7 @@ typedef struct
     int8_t levelMax;
 
     int8_t backgroundOffset;
+    int8_t backgroundSpeed;
 
     int16_t successTime;
 
@@ -295,6 +296,7 @@ static void bombadeetleEnterMode()
     bombadeetle->teleporterFrame = 0;
     bombadeetle->backgroundOffset = 0;
     bombadeetle->stageSelectIndex = 0;
+    bombadeetle->backgroundSpeed = 1;
     
     
     bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT;
@@ -306,7 +308,7 @@ static void bombadeetleEnterMode()
     bombadeetle->shloogs = (bombadeetleEntity_t*)heap_caps_calloc(SHLOOG_MAX_COUNT, sizeof(bombadeetleEntity_t), MALLOC_CAP_8BIT);
     
     //Load from disk to see what the current level max is
-    bombadeetle->levelMax = 3;
+    bombadeetle->levelMax = 50;
     bombadeetle->levelIndex = 3;
 
     loadWsg(BOMB_SUCCESS_WSG, &bombadeetle->success, true);
@@ -598,15 +600,51 @@ static void bombadeetleCheckShloogs(bool update)
         }
         
         //Check direction
-        int8_t tile;
+        int8_t tile, checkTile;
         tile = bombadeetle->map[(bombadeetle->shloogs[idx].tileX) + (bombadeetle->shloogs[idx].tileY * GRIDWIDTH)];
+        checkTile = (bombadeetle->shloogs[idx].tileX) + (bombadeetle->shloogs[idx].tileY * GRIDWIDTH);
+
+        
+        if (bombadeetle->map[checkTile] & TELEPORT && update)
+        {
+            ESP_LOGI(TAG, "SHLOOG TELEPORT!");
+            for (int ndx = 1; ndx < 108; ndx++)
+            {
+                if (bombadeetle->map[(checkTile + ndx) % 108] & TELEPORT)
+                {
+                    bombadeetle->shloogs[idx].tileX = ((checkTile + ndx) % 108) % GRIDWIDTH;
+                    bombadeetle->shloogs[idx].tileY = ((checkTile + ndx) % 108) / GRIDWIDTH;
+                    ESP_LOGI(TAG, "TELEPORT FOUND! %d %d", checkTile, (checkTile + ndx)%108);
+
+                    break;
+                }
+            }            
+        }
+
+        //Check if on hole tile
+        if (bombadeetle->map[checkTile] & HOLE)
+        {
+            ESP_LOGI(TAG, "SHLOOG IN HOLE!");
+
+            bombadeetle->collisionX = bombadeetle->shloogs[idx].locX;
+            bombadeetle->collisionY = bombadeetle->shloogs[idx].locY;
+            bombadeetle->shloogs[idx].direction = DIRECTION_NONE;
+            bombadeetle->shloogs[idx].doomed = true;
+        }
+
         if (tile & GOAL)
         {
-            bombadeetle->shloogs[idx].direction = GOAL;
-            bombadeetle->shloogs[idx].goal = true;
 
-            ESP_LOGI(TAG, "GOAL!");
+            ESP_LOGI(TAG, "BAD GOAL :(!");
+            bombadeetle->state = STATE_COLLISION;
+                            
+            bombadeetle->collisionX = (bombadeetle->shloogs[idx].locX - 8) ;
+            bombadeetle->collisionY = (bombadeetle->shloogs[idx].locY  - SHLOOG_HEIGHT_OFFSET - 8);
+            continue;
         }
+        /*
+        //Check if on teleport tile
+        */
 
 
         if (bombadeetleMove(tile, bombadeetle->shloogs[idx].direction))
@@ -879,8 +917,26 @@ static void bombadeetleStageSelectLoop(int64_t elapsedUs)
     {
         bombadeetle->animationTime -= ANIMATIONSPEED;
 
-        bombadeetle->backgroundOffset++;
+        bombadeetle->backgroundOffset += bombadeetle->backgroundSpeed;
         bombadeetle->backgroundOffset %=16;        
+    }
+
+    //TODO: Fix this so you're not doing it in two different places.
+    linearTouch_t touches[2] = {0};    
+    getTouchLinear(touches, ARRAY_SIZE(touches));
+    for (uint8_t tIdx = 0; tIdx < ARRAY_SIZE(touches); tIdx++)
+    {
+        
+        if (touches[tIdx].touched && tIdx == 1)
+        {            
+            int speed = touches[tIdx].position / 125;
+            if (speed < 0) speed = 0;
+            if (speed > 8) speed = 8;
+
+            bombadeetle->backgroundSpeed = speed;
+
+            ESP_LOGI(TAG, "Background speed = %d", speed );
+        }
     }
     
     while(checkButtonQueueWrapper(&evt))
@@ -965,6 +1021,7 @@ static void bombadeetleStageSelectLoop(int64_t elapsedUs)
     bombadeetleDrawSelect();
 }
 
+
 static void bombadeetleGameLoop(int64_t elapsedUs)
 {
     buttonEvt_t evt;
@@ -981,7 +1038,7 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
     {
         bombadeetle->animationTime -= ANIMATIONSPEED;
 
-        bombadeetle->backgroundOffset++;
+        bombadeetle->backgroundOffset += bombadeetle->backgroundSpeed;
         bombadeetle->backgroundOffset %=16;
         
         bombadeetle->teleporterFrame++;
@@ -1019,9 +1076,28 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
     {
         bombadeetle->cursorMoveTime -= tick;
     }
-    
 
+    
     //Controls
+
+    //TODO: Fix this so you're not doing it in two different places.
+    linearTouch_t touches[2] = {0};    
+    getTouchLinear(touches, ARRAY_SIZE(touches));
+    for (uint8_t tIdx = 0; tIdx < ARRAY_SIZE(touches); tIdx++)
+    {
+        
+        if (touches[tIdx].touched && tIdx == 1)
+        {            
+            int speed = touches[tIdx].position / 125;
+            if (speed < 0) speed = 0;
+            if (speed > 8) speed = 8;
+
+            bombadeetle->backgroundSpeed = speed;
+
+            ESP_LOGI(TAG, "Background speed = %d", speed );
+        }
+    }
+    
     switch (bombadeetle->state)
     {
         case STATE_WIN:
@@ -1077,14 +1153,12 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                 }
             }
 
-            linearTouch_t touches[2] = {0};
-            getTouchLinear(touches, ARRAY_SIZE(touches));
             for (uint8_t tIdx = 0; tIdx < ARRAY_SIZE(touches); tIdx++)
             {
+                int speed = touches[tIdx].position / 125;
                 if (touches[tIdx].touched && tIdx == 0)
                 {
 
-                    int speed = touches[tIdx].position / 125;
                     if (speed % 2 == 1) speed--;
 
                     if (speed < 2) speed = 2;

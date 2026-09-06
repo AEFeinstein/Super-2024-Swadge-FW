@@ -12,9 +12,10 @@ CELL = 48
 EDGE = 8
 
 N,E,S,W = 8,4,2,1
+TELEPORTER = 16
 GOAL = 32
 HOLE = 64
-SPECIAL = GOAL | HOLE
+SPECIAL = TELEPORTER | GOAL | HOLE
 NAME_MAX = 16
 DIR_NONE = 0
 DIR_W = 1
@@ -30,7 +31,24 @@ entities=[0]*(GRID_W*GRID_H)
 enemies=[0]*(GRID_W*GRID_H)
 selected=[0]
 current_path=[None]
+last_export_path=[None]
 last_direction=[DIR_W]
+
+def export_dialog_kwargs():
+    kwargs={
+        "title":"Export Binary File",
+        "defaultextension":".bin",
+        "filetypes":[("Bombadeetle binary","*.bin"),("All files","*.*")],
+    }
+    if last_export_path[0]:
+        directory=os.path.dirname(last_export_path[0])
+        kwargs["initialdir"]=directory if directory else APP_DIR
+        filename=os.path.basename(last_export_path[0])
+        if filename:
+            kwargs["initialfile"]=filename
+    else:
+        kwargs["initialdir"]=APP_DIR
+    return kwargs
 
 def idx(x,y): return y*GRID_W+x
 
@@ -51,14 +69,18 @@ def toggle_wall(x,y,bit):
     redraw()
 
 def sanitize_maze_cell(value):
-    return int(value)&0xFF&~LEGACY_BOMBADEETLE&~LEGACY_ENEMY
+    return int(value)&0xFF&~LEGACY_ENEMY
 
 def sanitize_maze_specials(value):
     value=sanitize_maze_cell(value)
     walls=value&(N|E|S|W)
-    if value&GOAL and value&HOLE:
+    if value&GOAL:
         return walls|GOAL
-    return walls|(value&SPECIAL)
+    if value&HOLE:
+        return walls|HOLE
+    if value&TELEPORTER:
+        return walls|TELEPORTER
+    return walls
 
 def sanitize_facing(value):
     value=int(value)&0xFF&DIR_ALL
@@ -89,7 +111,8 @@ def migrate_legacy_map(cells):
         cell=int(v)&0xFF
         entities[i]=DIR_W if cell&LEGACY_BOMBADEETLE else 0
         enemies[i]=DIR_W if cell&LEGACY_ENEMY else 0
-        maze[i]=sanitize_maze_cell(cell)
+        # Old maps used bit 16 as Bombadeetle, not Teleporter
+        maze[i]=cell&~(LEGACY_BOMBADEETLE|LEGACY_ENEMY)&0xFF
 
 def update_title():
     name=current_path[0] if current_path[0] else "Untitled"
@@ -148,6 +171,9 @@ def redraw():
                 draw_bombadeetle(x0,y0,x1,y1,entities[i]&DIR_ALL)
             if enemies[i]&DIR_ALL:
                 draw_enemy(x0,y0,x1,y1,enemies[i]&DIR_ALL)
+            if bits&TELEPORTER:
+                canvas.create_oval(x0+12,y0+12,x1-12,y1-12,
+                                   outline="#1565c0",width=2,fill="#90caf9")
             if bits&GOAL:
                 canvas.create_oval(x0+10,y0+10,x1-10,y1-10,
                                    outline="#2e7d32",width=2,fill="#a5d6a7")
@@ -217,6 +243,9 @@ def toggle_goal():
 def toggle_hole():
     toggle_special(HOLE)
 
+def toggle_teleporter():
+    toggle_special(TELEPORTER)
+
 def set_selected_direction(direction):
     last_direction[0]=direction
     i=selected[0]
@@ -251,6 +280,9 @@ def new_map():
     selected[0]=0
     current_path[0]=None
     set_name("")
+    if last_export_path[0]:
+        # Keep last export folder, but clear the remembered filename
+        last_export_path[0]=os.path.join(os.path.dirname(last_export_path[0]),"")
     set_arrow_counts(0,0,0,0)
     update_title()
     redraw()
@@ -395,33 +427,6 @@ def export_grid(out,name,grid):
         out.append("    "+", ".join(row)+",")
     out.append("};")
 
-def export():
-    try:
-        arrows=get_arrow_counts()
-        name=get_name()
-    except Exception as e:
-        messagebox.showerror("Export failed",str(e))
-        return
-
-    win=tk.Toplevel(root)
-    win.title("Export C Array")
-    txt=tk.Text(win,width=110,height=32)
-    txt.pack(fill="both",expand=True)
-
-    escaped=name.replace("\\","\\\\").replace('"','\\"')
-    out=['char level_name[%d] = "%s";'%(NAME_MAX+1,escaped),""]
-    export_grid(out,"maze",maze)
-    out.append("")
-    export_grid(out,"entities",entities)
-    out.append("")
-    export_grid(out,"enemies",enemies)
-    out.append("")
-    out.append("int8_t arrows_left = %d;"%arrows["left"])
-    out.append("int8_t arrows_up = %d;"%arrows["up"])
-    out.append("int8_t arrows_down = %d;"%arrows["down"])
-    out.append("int8_t arrows_right = %d;"%arrows["right"])
-    txt.insert("1.0","\n".join(out))
-
 def export_binary():
     try:
         arrows=get_arrow_counts()
@@ -434,12 +439,7 @@ def export_binary():
         messagebox.showerror("Export failed",str(e))
         return
 
-    path=filedialog.asksaveasfilename(
-        title="Export Binary File",
-        initialdir=APP_DIR,
-        defaultextension=".bin",
-        filetypes=[("Bombadeetle binary","*.bin"),("All files","*.*")],
-    )
+    path=filedialog.asksaveasfilename(**export_dialog_kwargs())
     if not path:
         return
 
@@ -457,6 +457,7 @@ def export_binary():
         )
         with open(path,"wb") as f:
             f.write(payload)
+        last_export_path[0]=path
     except Exception as e:
         messagebox.showerror("Export failed",str(e))
 
@@ -465,7 +466,6 @@ file_menu.add_command(label="Open...",command=open_map,accelerator="Ctrl+O")
 file_menu.add_command(label="Save",command=save_map,accelerator="Ctrl+S")
 file_menu.add_command(label="Save As...",command=save_map_as,accelerator="Ctrl+Shift+S")
 file_menu.add_separator()
-file_menu.add_command(label="Export C Array",command=export)
 file_menu.add_command(label="Export Binary File",command=export_binary)
 file_menu.add_separator()
 file_menu.add_command(label="Exit",command=root.destroy)
@@ -494,6 +494,7 @@ btns.pack(pady=5)
 tk.Button(btns,text="Bombadeetle",command=toggle_bombadeetle).pack(side="left",padx=4)
 tk.Button(btns,text="Goal",command=toggle_goal).pack(side="left",padx=4)
 tk.Button(btns,text="Hole",command=toggle_hole).pack(side="left",padx=4)
+tk.Button(btns,text="Teleporter",command=toggle_teleporter).pack(side="left",padx=4)
 tk.Button(btns,text="Enemy",command=toggle_enemy).pack(side="left",padx=4)
 
 hint=tk.Label(root,text="Select a Bombadeetle/Enemy tile, then use W/A/S/D to set facing.")
