@@ -565,7 +565,7 @@ void app_main(void)
             .touchPadIdxs = vertIdxs,
         },
     };
-
+    initTouchPads(touchPads, sizeof(touchPads) / sizeof(touchPads[0]), 0.2f, true);
     initTouchLinear(linearCfg, ARRAY_SIZE(linearCfg));
 #else
     touch_pad_t touchPads[] = {
@@ -578,10 +578,11 @@ void app_main(void)
     };
 
     const uint8_t touchRingIdxs[] = {3, 0, 1, 4, 5};
+    initTouchPads(touchPads, sizeof(touchPads) / sizeof(touchPads[0]), 0.2f, true);
     initTouchJoystick(2, touchRingIdxs);
 #endif
 
-    initTouchPads(touchPads, sizeof(touchPads) / sizeof(touchPads[0]), 0.2f, true);
+
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
