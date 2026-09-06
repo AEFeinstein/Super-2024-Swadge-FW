@@ -5,6 +5,7 @@
 #include "ci_menu.h"
 
 #include "ci_items.h"
+#include "ci_helpers.h"
 #include "mainMenu.h"
 
 //==============================================================================
@@ -131,47 +132,17 @@ void ciRunEncyclopedia(ciCampData_t* ccd)
     {
         if (evt.down)
         {
+            ccd->selection = ciMenu2DNavigate(&evt, ccd->selection, ENC_COL, ciGetItemCount());
             if (evt.button & PB_A)
             {
                 ccd->state = CI_ENCYC_DESC;
             }
-            else if (evt.button & PB_RIGHT)
-            {
-                ccd->selection++;
-                if (ccd->selection % ENC_COL == 0)
-                {
-                    ccd->selection -= ENC_COL;
-                }
-                ccd->selection %= ciGetItemArrayLength();
-            }
-            else if (evt.button & PB_LEFT)
-            {
-                ccd->selection--;
-                if (ccd->selection == -1 || ccd->selection % ENC_COL == 5)
-                {
-                    ccd->selection += ENC_COL;
-                }
-            }
-            else if (evt.button & PB_DOWN)
-            {
-                ccd->selection += ENC_COL;
-                ccd->selection %= ciGetItemArrayLength();
-            }
-            else if (evt.button & PB_UP)
-            {
-                ccd->selection -= ENC_COL;
-                if (ccd->selection < 0)
-                {
-                    ccd->selection += ciGetItemArrayLength();
-                }
-            }
-            else
+            else if (evt.button & PB_B)
             {
                 ciInitMenu(ccd);
             }
         }
     }
-
     drawEncyclopedia(ccd);
 }
 
@@ -215,23 +186,22 @@ static void drawEncyclopedia(ciCampData_t* ccd)
              (TFT_WIDTH - textWidth(&ccd->largeText, menuText[CI_MENU_ENCYCLOPEDIA])) / 2, 2);
     // Groups
     int start = (ccd->selection / (ENC_COL * ENC_ROW));
-    for (int idx = start * (ENC_COL * ENC_ROW); idx < MIN((start + 1) * (ENC_COL * ENC_ROW), ciGetItemArrayLength());
-         idx++)
+    for (int idx = start * (ENC_COL * ENC_ROW); idx < MIN((start + 1) * (ENC_COL * ENC_ROW), ciGetItemCount()); idx++)
     {
         int idxDiv = idx;
         if (start != 0)
         {
             idxDiv %= (start * (ENC_COL * ENC_ROW));
         }
-        ciDrawItemIcon(ccd, idx, 20 + (idxDiv % ENC_COL) * 40, 24 + (idxDiv / ENC_COL) * 54, ccd->qtys[idx], (ccd->selection == idx),
-                       false);
+        ciDrawItemIcon(ccd, idx, 20 + (idxDiv % ENC_COL) * 40, 24 + (idxDiv / ENC_COL) * 54, ccd->qtys[idx],
+                       (ccd->selection == idx), false);
     }
     int yStart = (TFT_HEIGHT - ccd->uiImages[CI_UI_ARROW].h) / 2;
     if (start != 0)
     {
         drawWsg(&ccd->uiImages[CI_UI_ARROW], 1, yStart, false, true, 0);
     }
-    if (ciGetItemArrayLength() > (start + 1) * (ENC_COL * ENC_ROW))
+    if (ciGetItemCount() > (start + 1) * (ENC_COL * ENC_ROW))
     {
         drawWsgSimple(&ccd->uiImages[CI_UI_ARROW], TFT_WIDTH - (ccd->uiImages[CI_UI_ARROW].w + 1), yStart);
     }
