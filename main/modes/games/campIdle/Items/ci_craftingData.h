@@ -61,7 +61,7 @@ typedef struct
     ciCraftingStation_t craftingStation;
     ciContainerItem_t items[MAX_CRAFT_ITEM_COUNT];
     ciItemTypes_t result;
-    int16_t time; ///< time that it takes to craft in quater-minutes
+    int16_t time; ///< time that it takes to craft in quarter-minutes
 } ciRecipeProto_t;
 
 // TODO: Add Workbench data

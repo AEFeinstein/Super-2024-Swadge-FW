@@ -22,7 +22,7 @@
  *
  * @param evt button_evt event to check
  * @param selection Current value selected
- * @param colLim How wide the colums are
+ * @param colLim How wide the columns are
  * @param maxVal The limit of the array
  * @return int New value of selection
  */

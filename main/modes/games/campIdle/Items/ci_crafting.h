@@ -25,7 +25,7 @@ void ciLoadCraftFromNVS(ciCampData_t* ccd);
 void ciSaveCraftFromNVS(ciCampData_t* ccd);
 
 /**
- * @brief Initializes the Craftign selections screen
+ * @brief Initializes the Crafting selections screen
  *
  * @param ccd Game Data
  */
@@ -69,7 +69,7 @@ void ciInitCraftTimer(ciCampData_t* ccd);
 void ciCraft(ciCampData_t* ccd);
 
 /**
- * @brief Loads the wrokbenches from NVS
+ * @brief Loads the workbenches from NVS
  *
  * @param ccd Game Data
  */

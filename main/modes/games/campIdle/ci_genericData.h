@@ -73,7 +73,7 @@ typedef struct
 
     // Craft
     list_t craftQueue;  ///< Queue of items to be autocrafted
-    int64_t timerUnits; ///< Units of time to partition out. Shared betweeen craft and forage
+    int64_t timerUnits; ///< Units of time to partition out. Shared between craft and forage
     int64_t timerUs;    ///< Microseconds for crafting queue
     int16_t benches;    ///< What workbenches are currently bought
 
