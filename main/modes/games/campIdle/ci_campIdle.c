@@ -68,9 +68,13 @@ static void campEnterMode()
     loadFont(RODIN_EB_FONT, &ccd->largeText, true);
     ciInitInventory(ccd);
     clear(&ccd->craftQueue);
+    ciLoadWorkbenches(ccd);
 
     // Start
     ciInitSplash(ccd);
+
+    // test
+    //ciAddWorkbench(ccd, CI_CRAFT_MAGIC_WORKBENCH);
 }
 
 static void campExitMode()
@@ -122,7 +126,7 @@ static void campMainLoop(int64_t elapsedUs)
         }
         case CI_CRAFTING:
         {
-            if (ciRunCraft(ccd, elapsedUs))
+            if (ciRunCraft(ccd))
             {
                 ciInitMenu(ccd);
             }

@@ -165,6 +165,17 @@ const ciItem_t ciItemData[] = {
         .abbr   = "IRON",
     },
     {
+        .image  = CI_IRON_WSG,
+        .type   = CI_CRAFTED,
+        .loc    = CI_NONE,
+        .size   = CI_SMALL,
+        .weight = 2,
+        .value  = 0,
+        .title  = "Iron Nail",
+        .desc   = "Nails to keep things together",
+        .abbr   = "NAIL",
+    },
+    {
         .image  = CI_HIDE_WSG,
         .type   = CI_CRAFTED,
         .loc    = CI_NONE,

@@ -44,7 +44,9 @@ static const char* const craftingText[]
  * @return true If the item was created successfully
  * @return false If the item was not created
  */
-static bool ciTryToCraft(ciCampData_t* ccd, const ciRecipeProto_t* recipe);
+static bool tryToCraft(ciCampData_t* ccd, const ciRecipeProto_t* recipe);
+
+static bool tryToCraftWorkbench(ciCampData_t* ccd, const ciWorkbench_t* bench);
 
 /**
  * @brief Draws the crafting selection screen
@@ -94,8 +96,6 @@ void ciLoadCraftFromNVS(ciCampData_t* ccd)
     // Load blob from nvs
     // Double load, don't know the length beforehand
     // Construct queue
-
-    
 }
 
 void ciSaveCraftFromNVS(ciCampData_t* ccd)
@@ -131,7 +131,7 @@ void ciRunCraftSelection(ciCampData_t* ccd)
                       && (recipeList[ccd->selection].items[1].item == CI_NO_ITEM
                           || (ccd->qtys[recipeList[ccd->selection].items[1].item]
                               >= recipeList[ccd->selection].items[1].qty));
-                // TODO: Check if req crafting station exists
+                ableToCraft = ableToCraft && CHECK_BIT(ccd->benches, recipeList[ccd->selection].craftingStation);
                 if (ableToCraft)
                 {
                     push(&ccd->craftQueue, (intptr_t*)ccd->selection);
@@ -195,7 +195,7 @@ void ciCraft(ciCampData_t* ccd)
     if (ccd->timerUnits >= r->time)
     {
         ccd->timerUnits -= r->time;
-        if (ciTryToCraft(ccd, r))
+        if (tryToCraft(ccd, r))
         {
             // Do nothing...?
         }
@@ -207,11 +207,32 @@ void ciCraft(ciCampData_t* ccd)
     }
 }
 
+void ciLoadWorkbenches(ciCampData_t* ccd)
+{
+    int outVal = 0;
+    readNamespaceNvs32(ciNVSKeys[CI_NVS_NAMESPACE], ciNVSKeys[CI_NVS_WORKBENCHES], &outVal);
+    ccd->benches = outVal;
+}
+
+void ciAddWorkbench(ciCampData_t* ccd, ciCraftingStation_t wb)
+{
+    const ciWorkbench_t* w = &workbenchList[wb];
+    if (CHECK_BIT(ccd->benches, wb))
+    {
+        return; // Already owned
+    }
+    if (tryToCraftWorkbench(ccd, w))
+    {
+        SET_BIT(ccd->benches, wb);
+        writeNamespaceNvs32(ciNVSKeys[CI_NVS_NAMESPACE], ciNVSKeys[CI_NVS_WORKBENCHES], ccd->benches);
+    }
+}
+
 //==============================================================================
 // Static Functions
 //==============================================================================
 
-static bool ciTryToCraft(ciCampData_t* ccd, const ciRecipeProto_t* recipe)
+static bool tryToCraft(ciCampData_t* ccd, const ciRecipeProto_t* recipe)
 {
     // Check if materials are available in container
     if (ciRemoveFromInv(ccd, recipe->items[0].item, recipe->items[0].qty))
@@ -223,6 +244,26 @@ static bool ciTryToCraft(ciCampData_t* ccd, const ciRecipeProto_t* recipe)
         }
         // Restore if the second half isn't there
         ciAddToInv(ccd, recipe->items[0].item, recipe->items[0].qty);
+    }
+    return false;
+}
+
+static bool tryToCraftWorkbench(ciCampData_t* ccd, const ciWorkbench_t* bench)
+{
+    bool items[3] = {false};
+    items[0]      = ciRemoveFromInv(ccd, bench->items[0].item, bench->items[0].qty);
+    items[1]      = ciRemoveFromInv(ccd, bench->items[1].item, bench->items[1].qty);
+    items[2]      = ciRemoveFromInv(ccd, bench->items[2].item, bench->items[2].qty);
+    if (items[0] && items[1] && items[2])
+    {
+        return true;
+    }
+    for (int idx = 0; idx < 3; idx++)
+    {
+        if (items[idx])
+        {
+            ciAddToInv(ccd, bench->items[idx].item, bench->items[idx].qty);
+        }
     }
     return false;
 }
