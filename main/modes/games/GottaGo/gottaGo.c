@@ -878,7 +878,7 @@ static void doChoice(int64_t elapsedUs)
 static void doRules()
 {
     buttonEvt_t evt;
-    int size = ARRAY_SIZE(rulesText) / 2;
+    int size = ggGetRulesLenText() / 2;
     while (checkButtonQueueWrapper(&evt))
     {
         midiNoteOn(ggd->sfxPlayer, 9, ggd->clickSound, 0x7F);
@@ -1077,7 +1077,7 @@ static void handleGameEnd(bool lose, bool stall)
     }
     else
     {
-        trophyUpdateMilestone(&ggTrophies[T_CASUAL], trophyGetSavedValue(&ggTrophies[T_CASUAL]) + 1, MILE_ROUNDS);
+        trophyUpdateMilestone(&ggTrophies[T_CASUAL], trophyGetSavedValue(&ggTrophies[T_CASUAL]) + 1, MILE_CASUAL);
     }
 
     // Reset
