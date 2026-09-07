@@ -273,7 +273,7 @@ void gs_drawTileMap(gs_entity_t* self)
         {
             if (tileXIdx >= 0 && tileYIdx >= 0 && tileXIdx < TILE_FIELD_WIDTH && tileYIdx < TILE_FIELD_HEIGHT)
             {
-                if (tData->tiles[tileYIdx][tileXIdx].framePlus1 == GS_WALL_FORE)
+                if (tData->tiles[tileXIdx][tileYIdx].framePlus1 == GS_WALL_FORE)
                 {
                     int drawX = (tileXIdx << shiftBy) - topLeftCamPixelX;
                     int drawY = (tileYIdx << shiftBy) - topLeftCamPixelY;
@@ -594,9 +594,8 @@ void gs_positionWave(gs_entity_t* self)
     ((gs_wave_t*)self->data)->reverseAnim = false;
     self->currentAnimationFrame           = 0;
     self->animationTimer                  = 0;
-    self->pos = addVec2d(self->gameData->entityManager.camera.pos,
-                         (vec_t){gs_randomInt(-(TFT_WIDTH << (DECIMAL_BITS - 1)), TFT_WIDTH << (DECIMAL_BITS - 1)),
-                                 gs_randomInt(92 << DECIMAL_BITS, 115 << DECIMAL_BITS)});
+    self->pos.x = self->gameData->entityManager.camera.pos.x + gs_randomInt(-(TFT_WIDTH << (DECIMAL_BITS - 1)), TFT_WIDTH << (DECIMAL_BITS - 1));
+    self->pos.y = 0xFFFF + gs_randomInt(92 << DECIMAL_BITS, 115 << DECIMAL_BITS);
     ((gs_wave_t*)self->data)->velX = gs_randomInt(20,30);
 }
 
@@ -627,7 +626,7 @@ void gs_updateFarWave(gs_entity_t* self)
 void gs_updateWave(gs_entity_t* self)
 {
     int parallax = (( self->pos.y - (self->gameData->entityManager.camera.pos.y - (TFT_HEIGHT<<(DECIMAL_BITS - 1))))>>DECIMAL_BITS) - 223;
-    printf("%d\n", parallax);
+    //printf("%d\n", parallax);
     self->pos.x += ((gs_wave_t*)self->data)->velX * self->gameData->elapsedUs >> 17;
     self->pos.x += self->gameData->entityManager.camera.vel.x * (parallax) / 12;
 }
