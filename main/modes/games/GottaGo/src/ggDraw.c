@@ -95,7 +95,7 @@ static const char* titleText = "Press 'A' to start!";
 static const char* const warningText[] = {
     "ATTENTION",
     "This game contains 'suggestive themes' and may not be suitable for all audiences. Press A to continue and "
-    "anything other button to back out.",
+    "any other button to back out.",
     "Suggestive themes is a stupid way to put 'this game shows butts.' Saturday morning cartoons shows butts. "
     "Everyone has one, this isn't going to cause someone to have some sort of awakening or turn your children into "
     "perverts, it's just some very low pixel count butts. Getting you underwear in a twist over this says more about "
@@ -112,7 +112,7 @@ static const char* const levelText[] = {
     "Good choice!",
     "You used a stall.",
     "Press any button to advance to next round",
-    "You peed yourself",
+    "You pee'd yourself",
     "You used a broken toilet",
     "All the stalls were filled",
     "You gave up",
@@ -148,11 +148,68 @@ static const char* const hydrateText[] = {
     "Drink loooooots of water.",
 };
 
+static const char* const rulesText[] = {
+    "Rules",
+    "Here is a compendium fo the rules of picking a urinal. Some of these will feel pretty intuitive.",
+    "Controls",
+    "A: Select Urinal\nB: Use a stall\nLeft/right: Pick a urinal\nLeft swipe pad can also be used\nStart/select: Pause "
+    "game",
+    "Mechanics",
+    "There's more that goes into choosing a urinal than you might expect or think about when you use the little boy's "
+    "room, but all the details are included in these rules.",
+    "Timer/Need to Pee",
+    "There's a timer at the top of the screen with a numeric readout above it. This is how long you can hold your "
+    "bladder for. Let it build up too much and you'll pee yourself.",
+    "Number of Urinals",
+    "There's always at least three urinals, and up to seven. The number is random. The urinals on the ends are more "
+    "desirable.",
+    "People",
+    "There's a wide variety of people.",
+    "Weird people",
+    "You want to stay away from the weirder people.",
+    "Major issues",
+    "All of the following options result in a failure. You'll get pee everywhere or at least damage the sign.",
+    "Minor issues",
+    "All of the following options are not deal-breakers. Still, you'd rather a clean toilet.",
+    "Dividers",
+    "Dividers provide a bit of privacy unless they're missing. The one next to the door can go missing too.",
+    "Puddles",
+    "Puddles suck to stand in, and even next to. Avoid them if possible.",
+    "Low Urinals",
+    "The low toilets are an accessability toilet. Use it only when the other options are really bad.",
+    "Autoflusher",
+    "Some urinals include an autoflusher, and with how disgusting these things get, you're probably going to want to "
+    "use that one over the others.",
+    "Stalls",
+    "Use a stall if you have no good options or the situation is too confusing. Press 'B' to use a stall. You fail if "
+    "you don't have any uses left, however.",
+    "Helper mode",
+    "If you want to be shown the best and worst options after each level, activate helper mode. The best ones have a green check, "
+    "worst ones have a red X.",
+    "Casual mode",
+    "Don't really need to go? Play without the timer looming over your head and spend your time picking the best "
+    "option.\n\n Scores are not tallied, and you can keep playing until you're done.",
+    "Scoring",
+    "There are four metrics tracked: Game count, accuracy, total score, and adjusted score.",
+    "Game count",
+    "Game count is straightforward. The highest level a player has completed. It doesn't count the final round which "
+    "is inevitably a loss, and the score is not counted for that round.",
+    "Accuracy",
+    "Accuracy is how well the player's choices match the best option in any given situation. 100% means the player "
+    "always picks the best option. Turn on helper mode if you find yourself confused with what is the best option.",
+    "Total Score",
+    "Total raw score, calculated as per-level accuracy subtract time taken. The longer you take, the less of your "
+    "score you get to keep.",
+    "Adjusted score",
+    "Total score multiplied by the overall accuracy for a single overall number to compare the performance of a player "
+    "vs others.\n\nAll four scores are sent through swadgepass, compare with your friends!",
+};
+
 static const char* const scoreTypeText[] = {
     "Max Level",
     "Best Accuracy",
     "Highest Score",
-    "HIghest Adjusted Score",
+    "Highest Adjusted Score",
 };
 
 static const paletteColor_t skinColors[] = {
@@ -775,6 +832,11 @@ void ggDrawOptions(ggData_t* ggd)
 int ggGetDrinkTextLen()
 {
     return ARRAY_SIZE(hydrateText);
+}
+
+int ggGetRulesLenText()
+{
+    return ARRAY_SIZE(rulesText);
 }
 
 //==============================================================================
