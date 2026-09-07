@@ -22,6 +22,7 @@ static const char* const ciNVSKeys[] = {
 // Enum
 //==============================================================================
 
+/// @brief NOTE: Match to NVS Key string array above
 typedef enum
 {
     CI_NVS_NAMESPACE,
@@ -52,26 +53,26 @@ typedef enum
 typedef struct
 {
     // WSGs
-    wsg_t* itemImages;
-    wsg_t* uiImages;
+    wsg_t* itemImages; ///< Item Icons
+    wsg_t* uiImages;   ///< All UI images
 
     // Fonts
-    font_t smallFont;
-    font_t largeText;
+    font_t smallFont; ///< Smaller font used for dense text
+    font_t largeText; ///< Larger font used for titles
 
     // Current state
-    ciState_t state;
-    intptr_t selection;
-    int64_t timer;
+    ciState_t state;    ///< Current game state
+    intptr_t selection; ///< Current selection
+    int64_t timer;      ///< Generic timer
 
     // Items
-    int16_t* qtys;
+    int16_t* qtys; ///< Array of ints used as the inventory
 
     // Craft
-    list_t craftQueue;
-    int64_t timerUnits; // Shared betweeen craft and forage
-    int64_t timerUs;
+    list_t craftQueue;  ///< Queue of items to be autocrafted
+    int64_t timerUnits; ///< Units of time to partition out. Shared betweeen craft and forage
+    int64_t timerUs;    ///< Microseconds for crafting queue
 
     // Foraging
-    bool foraging;
+    bool foraging; ///< If player is foraging
 } ciCampData_t;

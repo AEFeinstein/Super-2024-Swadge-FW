@@ -32,6 +32,10 @@ Endless mode gives you a amount of days survived and time taken, and players can
     - [ ] Idle
     - [ ] Attack
   - [ ] Camp/Upgrades
+    - [ ] Workbenches
+    - [ ] Upgrades
+      - [ ] Camp
+      - [ ] Tools/weapons
 - [ ] Sounds
   - [ ] Calm BGM
   - [ ] Frantic BGM
@@ -39,8 +43,11 @@ Endless mode gives you a amount of days survived and time taken, and players can
   - [ ] Miss sound
   - [ ] Damage sound
   - [ ] Craft sound
+  - [ ] UI sounds
+    - [ ] Good click
+    - [ ] Bad click
 - [ ] Menus
-  - [ ] Custom grid system
+  - [x] Custom grid system
   - [ ] Crafting
 - [ ] Scavenging
   - [ ] RTC based item scavenging
@@ -62,6 +69,7 @@ Endless mode gives you a amount of days survived and time taken, and players can
     - [ ] Enemies
     - [ ] Attacking
 - [ ] Misc
+  - [ ] Tutorial
   - [ ] Trophies
   - [ ] LEDs
 
@@ -96,7 +104,7 @@ Endless mode gives you a amount of days survived and time taken, and players can
 
 #### Fighting
 
-Monsters come from the left side of the screen. The player is on the right side fo the screen. There's only so much visible depending on the amount of light. Player must use their items while waiting out hte timer.
+Monsters come from the right side of the screen. The player is on the left side fo the screen. There's only so much visible depending on the amount of light. Battles are resolved automatically.
 
 The UI must display the following items:
 - HP/MAX HP

@@ -35,12 +35,36 @@ static const char* const panelText[] = {
 // Function Definitions
 //==============================================================================
 
+/**
+ * @brief Copy data from packed to data struct
+ * 
+ * @param ccd Game Data
+ * @param packed Packed version of the data
+ */
 static void invNVSToCCD(ciCampData_t* ccd, ciInvQtysPacked_t* packed);
 
+/**
+ * @brief Copy data from data struct to packed
+ * 
+ * @param ccd Game Data
+ * @param packed Packed version of the data
+ */
 static void invCCDToNVS(ciCampData_t* ccd, ciInvQtysPacked_t* packed);
 
+/**
+ * @brief Loads inventory from NVS
+ * 
+ * @param ccd Game Data
+ * @param packed Packed version of the data
+ */
 static void loadInvFromNVS(ciCampData_t* ccd, ciInvQtysPacked_t* packed);
 
+/**
+ * @brief Saves inventory to NVS
+ * 
+ * @param ccd Game Data
+ * @param packed Packed version of the data
+ */
 static void saveInvToNVS(ciCampData_t* ccd);
 
 //==============================================================================

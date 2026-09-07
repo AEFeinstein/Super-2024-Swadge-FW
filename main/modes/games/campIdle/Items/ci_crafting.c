@@ -29,25 +29,81 @@
 // Consts
 //==============================================================================
 
-static const char* const craftingText[] = {
-    "Add to queue", "Crafting", "Owned", "Queue: ", "+", "Press A to add to queue"
-};
+static const char* const craftingText[]
+    = {"Add to queue", "Crafting", "Owned", "Queue: ", "+", "Press A to add to queue"};
 
 //==============================================================================
 // Function declarations
 //==============================================================================
 
+/**
+ * @brief Attempts to craft an item
+ *
+ * @param ccd Game Data
+ * @param recipe The recipe to follow
+ * @return true If the item was created successfully
+ * @return false If the item was not created
+ */
 static bool ciTryToCraft(ciCampData_t* ccd, const ciRecipeProto_t* recipe);
+
+/**
+ * @brief Draws the crafting selection screen
+ *
+ * @param ccd Game data
+ */
 static void drawCraftSelection(ciCampData_t* ccd);
+
+/**
+ * @brief Draws the crafting screen
+ *
+ * @param ccd Game Data
+ */
 static void drawCraft(ciCampData_t* ccd);
+
+/**
+ * @brief Draws the arrow from start to craft
+ *
+ * @param dual If there's two items as part of the recipe
+ */
 static void drawArrow(bool dual);
+
+/**
+ * @brief Draws the progress along the arrow
+ *
+ * @param ccd Game Data
+ * @param dual If there's two items as part of the recipe
+ */
 static void drawArrowProg(ciCampData_t* ccd, bool dual);
+
+/**
+ * @brief Draws the inventory qty over the required qty
+ *
+ * @param ccd Game Data
+ * @param yPos Center Y position toi start at
+ * @param idx If asking about recipe item 0 or 1
+ */
 static void drawQtys(ciCampData_t* ccd, int yPos, int idx);
-static void drawPlus(ciCampData_t* ccd);
 
 //==============================================================================
 // Functions
 //==============================================================================
+
+void ciLoadCraftFromNVS(ciCampData_t* ccd)
+{
+    // TODO: Implement
+    // Load blob from nvs
+    // Double load, don't know the length beforehand
+    // Construct queue
+
+    
+}
+
+void ciSaveCraftFromNVS(ciCampData_t* ccd)
+{
+    // TODO: Implement
+    // Convert queue into array of ints (unknown length)
+    // Save to NVS
+}
 
 void ciInitCraftSelection(ciCampData_t* ccd)
 {
@@ -79,6 +135,8 @@ void ciRunCraftSelection(ciCampData_t* ccd)
                 if (ableToCraft)
                 {
                     push(&ccd->craftQueue, (intptr_t*)ccd->selection);
+                    // TODO: Save to NVS (Figure out way to avoid hammering NVS)
+                    //  - Only save on backing out?
                     // TODO: Add positive beep sound
                 }
                 else
@@ -96,7 +154,7 @@ void ciRunCraftSelection(ciCampData_t* ccd)
     drawCraftSelection(ccd);
 }
 
-bool ciRunCraft(ciCampData_t* ccd, int64_t elapsedUs)
+bool ciRunCraft(ciCampData_t* ccd)
 {
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
@@ -117,6 +175,14 @@ bool ciRunCraft(ciCampData_t* ccd, int64_t elapsedUs)
     }
     drawCraft(ccd);
     return false;
+}
+
+void ciInitCraftTimer(ciCampData_t* ccd)
+{
+    // TODO: Implement
+    // Load previous time from NVS
+    // Compare to current time
+    // Add units based
 }
 
 void ciCraft(ciCampData_t* ccd)
@@ -235,7 +301,9 @@ static void drawCraft(ciCampData_t* ccd)
         if (pos == 12)
         {
             node = NULL;
-            drawPlus(ccd);
+            drawText(&ccd->smallFont, c555, craftingText[4],
+                     TFT_WIDTH - (textWidth(&ccd->smallFont, craftingText[4]) + 5),
+                     TFT_HEIGHT / 2 - (ccd->smallFont.height + 5));
             continue;
         }
         const ciRecipeProto_t* rq = &recipeList[(intptr_t)node->val];
@@ -325,12 +393,6 @@ static void drawArrowProg(ciCampData_t* ccd, bool dual)
         drawLineFast(xStart, LINE_MIDDLE, xStart + curr, LINE_MIDDLE, c040);
         drawLineFast(xStart, LINE_MIDDLE + 1, xStart + curr, LINE_MIDDLE + 1, c040);
     }
-}
-
-static void drawPlus(ciCampData_t* ccd)
-{
-    drawText(&ccd->smallFont, c555, craftingText[4], TFT_WIDTH - (textWidth(&ccd->smallFont, craftingText[4]) + 5),
-             TFT_HEIGHT / 2 - (ccd->smallFont.height + 5));
 }
 
 static void drawQtys(ciCampData_t* ccd, int yPos, int idx)
