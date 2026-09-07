@@ -1,6 +1,7 @@
 idf_component_register(SRCS "modes/games/atrium/atrium.c"
                             "modes/games/RoboRunner/roboRunner.c"
                             "modes/games/campIdle/ci_campIdle.c"
+                            "modes/games/campIdle/ci_genericTypes.c"
                             "modes/games/campIdle/Helpers/ci_helpers.c"
                             "modes/games/campIdle/Items/ci_container.c"
                             "modes/games/campIdle/Items/ci_crafting.c"
