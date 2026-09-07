@@ -67,12 +67,15 @@ static void campEnterMode()
     loadFont(IBM_VGA_8_FONT, &ccd->smallFont, true);
     loadFont(RODIN_EB_FONT, &ccd->largeText, true);
     ciInitInventory(ccd);
-    ciInitSplash(ccd);
     clear(&ccd->craftQueue);
+
+    // Start
+    ciInitSplash(ccd);
 }
 
 static void campExitMode()
 {
+    // Save Crafting queue
     clear(&ccd->craftQueue);
     ciFreeInventory(ccd);
     freeFont(&ccd->largeText);

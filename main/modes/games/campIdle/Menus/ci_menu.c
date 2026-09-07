@@ -27,8 +27,26 @@
 // Function Definitions
 //==============================================================================
 
+/**
+ * @brief Draws the Spalch screen
+ * 
+ * @param ccd Game Data
+ * @param elaspsedUs Time since last frame
+ */
 static void drawSplash(ciCampData_t* ccd, int64_t elaspsedUs);
+
+/**
+ * @brief Draws the menus
+ * 
+ * @param ccd Game Data
+ */
 static void drawMenu(ciCampData_t* ccd);
+
+/**
+ * @brief Draws the encyclopedia
+ * 
+ * @param ccd Game Data
+ */
 static void drawEncyclopedia(ciCampData_t* ccd);
 
 //==============================================================================
