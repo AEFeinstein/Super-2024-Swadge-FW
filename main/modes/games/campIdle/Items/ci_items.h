@@ -25,6 +25,10 @@ void ciInitInventory(ciCampData_t* ccd);
 
 void ciFreeInventory(ciCampData_t* ccd);
 
-void ciDrawItemPanel(ciCampData_t* ccd, int idx);
+int32_t ciAddToInv(ciCampData_t* ccd, ciItemIdx_t item, int qty);
 
-void ciDrawItemIcon(ciCampData_t* ccd, int idx, int xStart, int yStart, int qty, bool selected, bool showQty);
+bool ciRemoveFromInv(ciCampData_t* ccd, ciItemIdx_t item, int qty);
+
+void ciDrawItemPanel(ciCampData_t* ccd, ciItemIdx_t idx);
+
+void ciDrawItemIcon(ciCampData_t* ccd, ciItemIdx_t idx, int xStart, int yStart, int qty, bool selected, bool showQty);

@@ -7,6 +7,8 @@
 // Core
 #include "cnfs.h"
 
+#define MAX_ITEM_BITS 16
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -128,76 +130,77 @@ typedef struct
 typedef struct __attribute__((packed))
 {
     // Bad Food
-    uint8_t floorPizza   : 8;
-    uint8_t furryMilk    : 8;
-    uint8_t notMargarine : 8;
-    uint8_t malort       : 8;
-    uint8_t pilk         : 8;
-    uint8_t raverSweat   : 8;
-    uint8_t squirrelNuts : 8;
-    uint8_t ypla         : 8;
+    int16_t floorPizza : MAX_ITEM_BITS;
+    int16_t furryMilk : MAX_ITEM_BITS;
+    int16_t notMargarine : MAX_ITEM_BITS;
+    int16_t malort : MAX_ITEM_BITS;
+    int16_t pilk : MAX_ITEM_BITS;
+    int16_t raverSweat : MAX_ITEM_BITS;
+    int16_t squirrelNuts : MAX_ITEM_BITS;
+    int16_t ypla : MAX_ITEM_BITS;
     // Crafted
-    uint8_t cloth            : 8;
-    uint8_t cutBlocks        : 8;
-    uint8_t diamond          : 8;
-    uint8_t diamondPowder    : 8;
-    uint8_t gears            : 8;
-    uint8_t iron             : 8;
-    uint8_t pelts            : 8;
-    uint8_t polishedBlocks   : 8;
-    uint8_t polishedCrystals : 8;
-    uint8_t rope             : 8;
-    uint8_t salt             : 8;
-    uint8_t string           : 8;
+    int16_t cloth : MAX_ITEM_BITS;
+    int16_t cutBlocks : MAX_ITEM_BITS;
+    int16_t diamond : MAX_ITEM_BITS;
+    int16_t diamondPowder : MAX_ITEM_BITS;
+    int16_t gears : MAX_ITEM_BITS;
+    int16_t iron : MAX_ITEM_BITS;
+    int16_t pelts : MAX_ITEM_BITS;
+    int16_t polishedBlocks : MAX_ITEM_BITS;
+    int16_t polishedCrystals : MAX_ITEM_BITS;
+    int16_t rope : MAX_ITEM_BITS;
+    int16_t salt : MAX_ITEM_BITS;
+    int16_t string : MAX_ITEM_BITS;
     // Food
-    uint8_t apple         : 8;
-    uint8_t beans         : 8;
-    uint8_t berries       : 8;
-    uint8_t donut         : 8;
-    uint8_t energyDrink   : 8;
-    uint8_t honey         : 8;
-    uint8_t MRE           : 8;
-    uint8_t mushrooms     : 8;
-    uint8_t mysteryMeat   : 8;
-    uint8_t panPizza      : 8;
-    uint8_t pickles       : 8;
-    uint8_t proteinPowder : 8;
-    uint8_t pudding       : 8;
-    uint8_t roastTurkey   : 8;
-    uint8_t squeezyPB     : 8;
-    uint8_t stringCheese  : 8;
-    uint8_t noodz         : 8;
+    int16_t apple : MAX_ITEM_BITS;
+    int16_t beans : MAX_ITEM_BITS;
+    int16_t berries : MAX_ITEM_BITS;
+    int16_t donut : MAX_ITEM_BITS;
+    int16_t energyDrink : MAX_ITEM_BITS;
+    int16_t honey : MAX_ITEM_BITS;
+    int16_t MRE : MAX_ITEM_BITS;
+    int16_t mushrooms : MAX_ITEM_BITS;
+    int16_t mysteryMeat : MAX_ITEM_BITS;
+    int16_t panPizza : MAX_ITEM_BITS;
+    int16_t pickles : MAX_ITEM_BITS;
+    int16_t proteinPowder : MAX_ITEM_BITS;
+    int16_t pudding : MAX_ITEM_BITS;
+    int16_t roastTurkey : MAX_ITEM_BITS;
+    int16_t squeezyPB : MAX_ITEM_BITS;
+    int16_t stringCheese : MAX_ITEM_BITS;
+    int16_t noodz : MAX_ITEM_BITS;
     // Foraged
-    uint8_t bamboo      : 8;
-    uint8_t honeyComb   : 8;
-    uint8_t birchBark   : 8;
-    uint8_t coal        : 8;
-    uint8_t crystal     : 8;
-    uint8_t driedGrass  : 8;
-    uint8_t ironOre     : 8;
-    uint8_t largeLeaf   : 8;
-    uint8_t latex       : 8;
-    uint8_t log         : 8;
-    uint8_t resin       : 8;
-    uint8_t rocks       : 8;
-    uint8_t rockSalt    : 8;
-    uint8_t spiderWeb   : 8;
-    uint8_t stick       : 8;
-    uint8_t uncuredHide : 8;
-    uint8_t vine        : 8;
-    uint8_t tar         : 8;
+    int16_t bamboo : MAX_ITEM_BITS;
+    int16_t honeyComb : MAX_ITEM_BITS;
+    int16_t birchBark : MAX_ITEM_BITS;
+    int16_t coal : MAX_ITEM_BITS;
+    int16_t cotton : MAX_ITEM_BITS;
+    int16_t crystal : MAX_ITEM_BITS;
+    int16_t driedGrass : MAX_ITEM_BITS;
+    int16_t ironOre : MAX_ITEM_BITS;
+    int16_t largeLeaf : MAX_ITEM_BITS;
+    int16_t latex : MAX_ITEM_BITS;
+    int16_t log : MAX_ITEM_BITS;
+    int16_t resin : MAX_ITEM_BITS;
+    int16_t rocks : MAX_ITEM_BITS;
+    int16_t rockSalt : MAX_ITEM_BITS;
+    int16_t spiderWeb : MAX_ITEM_BITS;
+    int16_t stick : MAX_ITEM_BITS;
+    int16_t uncuredHide : MAX_ITEM_BITS;
+    int16_t vine : MAX_ITEM_BITS;
+    int16_t tar : MAX_ITEM_BITS;
     // Health
-    uint8_t healingPowder : 8;
-    uint8_t bandages      : 8;
-    uint8_t poultice      : 8;
-    uint8_t healingPotion : 8;
-    uint8_t heart         : 8;
+    int16_t healingPowder : MAX_ITEM_BITS;
+    int16_t bandages : MAX_ITEM_BITS;
+    int16_t poultice : MAX_ITEM_BITS;
+    int16_t healingPotion : MAX_ITEM_BITS;
+    int16_t heart : MAX_ITEM_BITS;
 } ciInvQtysPacked_t;
 
 typedef struct
 {
     ciItemIdx_t item;
-    uint8_t qty;
+    int qty;
 } ciContainerItem_t;
 
 typedef struct
@@ -218,4 +221,4 @@ extern const ciItem_t ciItemData[];
 // Functions
 //==============================================================================
 
-int ciGetItemArrayLength(void);
+int ciGetItemCount(void);

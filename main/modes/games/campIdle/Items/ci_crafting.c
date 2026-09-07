@@ -3,12 +3,345 @@
 //==============================================================================
 
 #include "ci_crafting.h"
+#include "ci_container.h"
+#include "ci_items.h"
+#include "ci_helpers.h"
+
+#include "linked_list.h"
+
+//==============================================================================
+// Defines
+//==============================================================================
+
+// Select Craft
+#define MAX_COLS       4
+#define ICON_X_BUFFER  10
+#define ICON_Y_BUFFER  10
+#define ICON_Y_START   (18 + ICON_Y_BUFFER)
+#define CRAFT_X_BUFFER 48
+#define CRAFT_Y_CENTER 153
+#define LINE_MIDDLE    ((TFT_HEIGHT * 3) / 4)
+#define ARROW_START    (TFT_WIDTH - (ICON_WIDTH + CRAFT_X_BUFFER + 23))
+#define ARROW_NOSE     15
+#define DUAL_OFFSET    ((4 + ICON_HEIGHT) / 2)
+
+//==============================================================================
+// Consts
+//==============================================================================
+
+static const char* const craftingText[] = {
+    "Add to queue", "Crafting", "Owned", "Queue: ", "+", "Press A to add to queue"
+};
+
+//==============================================================================
+// Function declarations
+//==============================================================================
+
+static bool ciTryToCraft(ciCampData_t* ccd, const ciRecipeProto_t* recipe);
+static void drawCraftSelection(ciCampData_t* ccd);
+static void drawCraft(ciCampData_t* ccd);
+static void drawArrow(bool dual);
+static void drawArrowProg(ciCampData_t* ccd, bool dual);
+static void drawQtys(ciCampData_t* ccd, int yPos, int idx);
+static void drawPlus(ciCampData_t* ccd);
 
 //==============================================================================
 // Functions
 //==============================================================================
 
-void ciCreateRecipe(ciRecipe_t* r, ciRecipesEnum_t recipe)
+void ciInitCraftSelection(ciCampData_t* ccd)
 {
-    
+    ccd->state     = CI_CRAFTING_PREP;
+    ccd->selection = 0;
+}
+
+void ciInitCraft(ciCampData_t* ccd)
+{
+    ccd->state = CI_CRAFTING;
+}
+
+void ciRunCraftSelection(ciCampData_t* ccd)
+{
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down)
+        {
+            ccd->selection = ciMenu2DNavigate(&evt, ccd->selection, MAX_COLS, ciGetRecipeCount());
+            if (evt.button & PB_A)
+            {
+                bool ableToCraft
+                    = (ccd->qtys[recipeList[ccd->selection].items[0].item] >= recipeList[ccd->selection].items[0].qty)
+                      && (recipeList[ccd->selection].items[1].item == CI_NO_ITEM
+                          || (ccd->qtys[recipeList[ccd->selection].items[1].item]
+                              >= recipeList[ccd->selection].items[1].qty));
+                // TODO: Check if req crafting station exists
+                if (ableToCraft)
+                {
+                    push(&ccd->craftQueue, (intptr_t*)ccd->selection);
+                    // TODO: Add positive beep sound
+                }
+                else
+                {
+                    // TODO: Add negative beep sound
+                }
+            }
+            else if (evt.button & PB_B)
+            {
+                ciInitCraft(ccd);
+                // TODO: Add positive beep sound
+            }
+        }
+    }
+    drawCraftSelection(ccd);
+}
+
+bool ciRunCraft(ciCampData_t* ccd, int64_t elapsedUs)
+{
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down)
+        {
+            if (evt.button & PB_A || evt.button & PB_LEFT)
+            {
+                ciInitCraftSelection(ccd);
+                // TODO: Add positive beep sound
+            }
+            else if (evt.button & PB_B)
+            {
+                // TODO: Add positive beep sound
+                return true;
+            }
+        }
+    }
+    drawCraft(ccd);
+    return false;
+}
+
+void ciCraft(ciCampData_t* ccd)
+{
+    if (ccd->craftQueue.first == NULL)
+    {
+        return;
+    }
+    const ciRecipeProto_t* r = &recipeList[(intptr_t)ccd->craftQueue.first->val];
+    if (ccd->timerUnits >= r->time)
+    {
+        ccd->timerUnits -= r->time;
+        if (ciTryToCraft(ccd, r))
+        {
+            // Do nothing...?
+        }
+        else
+        {
+            // TODO: Alert user of number of failures
+        }
+        shift(&ccd->craftQueue);
+    }
+}
+
+//==============================================================================
+// Static Functions
+//==============================================================================
+
+static bool ciTryToCraft(ciCampData_t* ccd, const ciRecipeProto_t* recipe)
+{
+    // Check if materials are available in container
+    if (ciRemoveFromInv(ccd, recipe->items[0].item, recipe->items[0].qty))
+    {
+        if (ciRemoveFromInv(ccd, recipe->items[1].item, recipe->items[1].qty))
+        {
+            ciAddToInv(ccd, recipe->result, 1);
+            return true;
+        }
+        // Restore if the second half isn't there
+        ciAddToInv(ccd, recipe->items[0].item, recipe->items[0].qty);
+    }
+    return false;
+}
+
+static void drawCraftSelection(ciCampData_t* ccd)
+{
+    // Draw background
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c010);
+    // Draw title
+    drawText(&ccd->largeText, c555, craftingText[0], (TFT_WIDTH - textWidth(&ccd->largeText, craftingText[0])) / 2, 4);
+    // Draw recipes / selection
+    for (int idx = 0; idx < ciGetRecipeCount(); idx++)
+    {
+        int x     = ICON_X_BUFFER + (ICON_X_BUFFER + ICON_WIDTH) * (idx % MAX_COLS);
+        int y     = ICON_Y_START + (ICON_Y_BUFFER + ICON_HEIGHT) * (idx / MAX_COLS);
+        node_t* n = ccd->craftQueue.first;
+        int total = 0;
+        while (n != NULL)
+        {
+            if (idx == (intptr_t)n->val)
+            {
+                total++;
+            }
+            n = n->next;
+        }
+        ciDrawItemIcon(ccd, recipeList[idx].result, x, y, total, (ccd->selection == idx), (total != 0));
+    }
+    // TODO: Add in workbenches
+}
+
+static void drawCraft(ciCampData_t* ccd)
+{
+    // Draw Background
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT / 2, c100);
+    // Draw Title
+    drawText(&ccd->largeText, c555, craftingText[1], (TFT_WIDTH - textWidth(&ccd->largeText, craftingText[1])) / 2, 4);
+    // Craft area
+    fillDisplayArea(0, TFT_HEIGHT / 2, TFT_WIDTH, TFT_HEIGHT, c222);
+    if (ccd->craftQueue.first == NULL)
+    {
+        return;
+    }
+    const ciRecipeProto_t* r = &recipeList[(intptr_t)ccd->craftQueue.first->val];
+    if (r->items[1].item != CI_NO_ITEM)
+    {
+        ciDrawItemIcon(ccd, r->items[0].item, CRAFT_X_BUFFER, CRAFT_Y_CENTER - DUAL_OFFSET, 0, false, false);
+        drawQtys(ccd, LINE_MIDDLE - DUAL_OFFSET, 0);
+        ciDrawItemIcon(ccd, r->items[1].item, CRAFT_X_BUFFER, CRAFT_Y_CENTER + DUAL_OFFSET, 0, false, false);
+        drawQtys(ccd, LINE_MIDDLE + DUAL_OFFSET, 1);
+        // Combo Arrow
+        drawArrow(true);
+        drawArrowProg(ccd, true);
+    }
+    else
+    {
+        ciDrawItemIcon(ccd, r->items[0].item, CRAFT_X_BUFFER, CRAFT_Y_CENTER, 0, false, false);
+        drawQtys(ccd, LINE_MIDDLE, 0);
+        // Arrow
+        drawArrow(false);
+        drawArrowProg(ccd, false);
+    }
+    ciDrawItemIcon(ccd, r->result, TFT_WIDTH - (ICON_WIDTH + CRAFT_X_BUFFER), CRAFT_Y_CENTER, ccd->qtys[r->result],
+                   false, false);
+    drawText(&ccd->smallFont, c555, craftingText[2],
+             (TFT_WIDTH - CRAFT_X_BUFFER / 2) - (textWidth(&ccd->smallFont, craftingText[2]) / 2),
+             LINE_MIDDLE - (ccd->smallFont.height + 2));
+    char buffer[10];
+    snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, ccd->qtys[r->result]);
+    drawText(&ccd->smallFont, c555, buffer, (TFT_WIDTH - CRAFT_X_BUFFER / 2) - (textWidth(&ccd->smallFont, buffer) / 2),
+             LINE_MIDDLE + 2);
+    drawText(&ccd->smallFont, c555, craftingText[3], 2, TFT_HEIGHT / 2 - (2 + ccd->smallFont.height));
+    node_t* node = ccd->craftQueue.first;
+    int pos      = 0;
+    while (node != NULL)
+    {
+        if (pos == 12)
+        {
+            node = NULL;
+            drawPlus(ccd);
+            continue;
+        }
+        const ciRecipeProto_t* rq = &recipeList[(intptr_t)node->val];
+        drawWsgSimpleHalf(&ccd->itemImages[rq->result], 2 + textWidth(&ccd->smallFont, craftingText[3]) + pos * 18,
+                          TFT_HEIGHT / 2 - 17);
+        pos++;
+        node = node->next;
+    }
+}
+
+static void drawArrow(bool dual)
+{
+    int xStart = CRAFT_X_BUFFER * 2;
+    if (dual)
+    {
+        drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 31, CRAFT_X_BUFFER * 3, LINE_MIDDLE - 31, c000);
+        drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 30, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE - 30, c111);
+        drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 29, CRAFT_X_BUFFER * 3 - 2, LINE_MIDDLE - 29, c111);
+        drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 28, CRAFT_X_BUFFER * 3 - 3, LINE_MIDDLE - 28, c111);
+        drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 27, CRAFT_X_BUFFER * 3 - 4, LINE_MIDDLE - 27, c000);
+        drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 31, CRAFT_X_BUFFER * 3, LINE_MIDDLE + 31, c000);
+        drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 30, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE + 30, c111);
+        drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 29, CRAFT_X_BUFFER * 3 - 2, LINE_MIDDLE + 29, c111);
+        drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 28, CRAFT_X_BUFFER * 3 - 3, LINE_MIDDLE + 28, c111);
+        drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 27, CRAFT_X_BUFFER * 3 - 4, LINE_MIDDLE + 27, c000);
+        drawLineFast(CRAFT_X_BUFFER * 3, LINE_MIDDLE - 31, CRAFT_X_BUFFER * 3, LINE_MIDDLE - 3, c000);
+        drawLineFast(CRAFT_X_BUFFER * 3, LINE_MIDDLE + 31, CRAFT_X_BUFFER * 3, LINE_MIDDLE + 3, c000);
+        drawLineFast(CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE - 30, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE + 30, c111);
+        drawLineFast(CRAFT_X_BUFFER * 3 - 2, LINE_MIDDLE - 29, CRAFT_X_BUFFER * 3 - 2, LINE_MIDDLE + 29, c111);
+        drawLineFast(CRAFT_X_BUFFER * 3 - 3, LINE_MIDDLE - 28, CRAFT_X_BUFFER * 3 - 3, LINE_MIDDLE + 28, c111);
+        drawLineFast(CRAFT_X_BUFFER * 3 - 4, LINE_MIDDLE - 27, CRAFT_X_BUFFER * 3 - 4, LINE_MIDDLE + 27, c000);
+        xStart = CRAFT_X_BUFFER * 3;
+    }
+    drawLineFast(xStart, LINE_MIDDLE - 2, ARROW_START + ARROW_NOSE, LINE_MIDDLE - 2, c000);
+    drawLineFast(xStart, LINE_MIDDLE - 1, ARROW_START + ARROW_NOSE, LINE_MIDDLE - 1, c111);
+    drawLineFast(xStart, LINE_MIDDLE, ARROW_START + ARROW_NOSE, LINE_MIDDLE, c111);
+    drawLineFast(xStart, LINE_MIDDLE + 1, ARROW_START + ARROW_NOSE, LINE_MIDDLE + 1, c111);
+    drawLineFast(xStart, LINE_MIDDLE + 2, ARROW_START + ARROW_NOSE, LINE_MIDDLE + 2, c000);
+}
+
+static void drawArrowProg(ciCampData_t* ccd, bool dual)
+{
+    int xStart               = CRAFT_X_BUFFER * 2;
+    int len                  = ARROW_START + ARROW_NOSE - xStart;
+    const ciRecipeProto_t* r = &recipeList[(intptr_t)ccd->craftQueue.first->val];
+    int unit                 = len / r->time;
+    int curr                 = unit * ccd->timerUnits + (unit * ccd->timerUs) / UNIT;
+    if (dual)
+    {
+        if (xStart + curr >= CRAFT_X_BUFFER * 3)
+        {
+            drawLineFast(CRAFT_X_BUFFER * 3, LINE_MIDDLE - 1, xStart + curr, LINE_MIDDLE - 1, c040);
+            drawLineFast(CRAFT_X_BUFFER * 3, LINE_MIDDLE, xStart + curr, LINE_MIDDLE, c040);
+            drawLineFast(CRAFT_X_BUFFER * 3, LINE_MIDDLE + 1, xStart + curr, LINE_MIDDLE + 1, c040);
+            drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 30, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE - 30, c040);
+            drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 29, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE - 29, c040);
+            drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 28, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE - 28, c040);
+            drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 30, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE + 30, c040);
+            drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 29, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE + 29, c040);
+            drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 28, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE + 28, c040);
+        }
+        else if (xStart + curr < CRAFT_X_BUFFER * 3)
+        {
+            drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 30, xStart + curr, LINE_MIDDLE - 30, c040);
+            drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 29, xStart + curr, LINE_MIDDLE - 29, c040);
+            drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 28, xStart + curr, LINE_MIDDLE - 28, c040);
+            drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 30, xStart + curr, LINE_MIDDLE + 30, c040);
+            drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 29, xStart + curr, LINE_MIDDLE + 29, c040);
+            drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 28, xStart + curr, LINE_MIDDLE + 28, c040);
+        }
+        if (xStart + curr > CRAFT_X_BUFFER * 3 - 4)
+        {
+            drawLineFast(CRAFT_X_BUFFER * 3 - 3, LINE_MIDDLE - 30, CRAFT_X_BUFFER * 3 - 3, LINE_MIDDLE + 30, c040);
+        }
+        if (xStart + curr > CRAFT_X_BUFFER * 3 - 3)
+        {
+            drawLineFast(CRAFT_X_BUFFER * 3 - 2, LINE_MIDDLE - 30, CRAFT_X_BUFFER * 3 - 2, LINE_MIDDLE + 30, c040);
+        }
+        if (xStart + curr > CRAFT_X_BUFFER * 3 - 2)
+        {
+            drawLineFast(CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE - 30, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE + 30, c040);
+        }
+    }
+    else
+    {
+        drawLineFast(xStart, LINE_MIDDLE - 1, xStart + curr, LINE_MIDDLE - 1, c040);
+        drawLineFast(xStart, LINE_MIDDLE, xStart + curr, LINE_MIDDLE, c040);
+        drawLineFast(xStart, LINE_MIDDLE + 1, xStart + curr, LINE_MIDDLE + 1, c040);
+    }
+}
+
+static void drawPlus(ciCampData_t* ccd)
+{
+    drawText(&ccd->smallFont, c555, craftingText[4], TFT_WIDTH - (textWidth(&ccd->smallFont, craftingText[4]) + 5),
+             TFT_HEIGHT / 2 - (ccd->smallFont.height + 5));
+}
+
+static void drawQtys(ciCampData_t* ccd, int yPos, int idx)
+{
+    char buffer[10];
+    const ciRecipeProto_t* r = &recipeList[(intptr_t)ccd->craftQueue.first->val];
+    paletteColor_t col       = (ccd->qtys[r->items[idx].item] >= r->items[idx].qty) ? c040 : c400;
+    snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, ccd->qtys[r->items[idx].item]);
+    drawText(&ccd->smallFont, col, buffer, (CRAFT_X_BUFFER - textWidth(&ccd->smallFont, buffer)) / 2,
+             yPos - (2 + ccd->smallFont.height));
+    snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, r->items[idx].qty);
+    drawText(&ccd->smallFont, col, buffer, (CRAFT_X_BUFFER - textWidth(&ccd->smallFont, buffer)) / 2, yPos + 2);
+    drawLineFast(CRAFT_X_BUFFER / 3, yPos, (CRAFT_X_BUFFER * 2) / 3, yPos, col);
 }

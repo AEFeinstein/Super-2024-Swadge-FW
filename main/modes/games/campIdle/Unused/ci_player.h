@@ -1,3 +1,0 @@
-// Player:
-// - Stats
-// - Game state

@@ -687,7 +687,7 @@ const ciItem_t ciItemData[] = {
 // Functions
 //==============================================================================
 
-int ciGetItemArrayLength()
+int ciGetItemCount()
 {
     return ARRAY_SIZE(ciItemData);
 }
