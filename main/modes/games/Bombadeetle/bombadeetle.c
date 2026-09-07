@@ -53,6 +53,9 @@
 #define BG_LEVELNAME_X              44
 #define BG_LEVELNAME_Y              166
 
+#define BG_POPUP_X                  8
+#define BG_POPUP_Y                  10
+
 #define BOMBADEETLE_FRAMECOUNT       4
 #define BOMBADEETLE_COUNT            100
 #define SHLOOG_MAX_COUNT             16
@@ -70,7 +73,7 @@ const char bombadeetleModeName[] = "Bombadeetle";
 
 typedef enum
 {
-    MENU,
+    STATE_MENU,
     STATE_STAGESELECT,
     STATE_PLACING,
     STATE_RUNNING,
@@ -112,7 +115,9 @@ static const cnfsFileIdx_t bombadeetleGoal[] = {
 };
 
 static const cnfsFileIdx_t bombadeetleLevels[] = {
-   BOMB_LVL_MOTRAINING_BIN,BOMB_LVL_WOGER_BIN,BOMB_LVL_ONE_BIN, BOMB_LVL_HELLO_BIN, BOMB_LVL_RIDEIT_BIN, BOMB_LVL_NOHOLES_BIN, BOMB_LVL_MAG_1_BIN, BOMB_LVL_SPYRL_BIN,BOMB_LVL_DODGEIT_BIN,BOMB_LVL_UNDERDEFEAT_BIN,BOMB_LVL_CREPUSCULAR_BIN,BOMB_LVL_MOWWOW_BIN , BOMB_LVL_JERO_BIN,  BOMB_LVL_DELEPORT_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_BIN, BOMB_LVL_NARROW_BIN, BOMB_LVL_TRAP_BIN,
+    BOMB_LVL_ONE_BIN, BOMB_LVL_HELLO_BIN, BOMB_LVL_RIDEIT_BIN, BOMB_LVL_NOHOLES_BIN, BOMB_LVL_MAG_1_BIN, BOMB_LVL_SPYRL_BIN,BOMB_LVL_MOTRAINING_BIN,BOMB_LVL_UNDERDEFEAT_BIN,BOMB_LVL_CREPUSCULAR_BIN,BOMB_LVL_MOWWOW_BIN , BOMB_LVL_JERO_BIN,
+    BOMB_LVL_DOOBLY_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_BIN,BOMB_LVL_DELEPORT_BIN, BOMB_LVL_ROGER_BIN,BOMB_LVL_NARROW_BIN, BOMB_LVL_TRAP_BIN,BOMB_LVL_DODGEIT_BIN, BOMB_LVL_MAG_2_BIN, BOMB_LVL_DIPDIPDIP_BIN,
+    BOMB_LVL_WOOBLY_BIN, BOMB_LVL_RABBIT_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_2_BIN,
 };
 
 static const cnfsFileIdx_t bombadeetleTeleporter[] = {
@@ -130,6 +135,10 @@ static const int bombadeetleGoalAnimation[] ={
     0, 1, 2, 3, 4, 5, 4, 3,
 };
 
+static const int bombadeetleTitleXLocations[] ={
+    110, 75, 115
+};
+
 
 static void bombadeetleEnterMode(void);
 static void bombadeetleExitMode(void);
@@ -145,7 +154,9 @@ static void bombadeetleCheckBombadeetles(bool update);
 static void bombadeetleDrawBackground();
 static void bombadeetleDrawGame();
 static void bombadeetleDrawSelect();
+static void bombadeetleDrawMenu();
 static void bombadeetleGameLoop(int64_t elapsedUs);
+static void bombadeetleMenuLoop(int64_t elapsedUS);
 static void bombadeetleStageSelectLoop(int64_t elapsedUs);
 
 static void bombadeetleOnCollision();
@@ -221,6 +232,10 @@ typedef struct
     wsg_t backgroundTile;
     wsg_t success;
     wsg_t unsuccessful;
+    wsg_t genericBackground;
+    wsg_t mainTitle;
+    wsg_t mainSelect;
+    wsg_t mainOptions;
     wsg_t stageSelect;
     wsg_t stageSelectButton;
     wsg_t stageActiveSelectButton;
@@ -257,6 +272,8 @@ typedef struct
 
     int16_t collisionX;
     int16_t collisionY;
+
+    int8_t mainSelectIndex;
 
     int8_t stageSelectIndex;
     int8_t stageSelectPageIndex;
@@ -303,12 +320,14 @@ static void bombadeetleEnterMode()
     bombadeetle->stageSelectIndex = 0;
     bombadeetle->backgroundSpeed = 1;
     bombadeetle->menuTimer = 0;
+    bombadeetle->mainSelectIndex = 0;
+    bombadeetle->stageSelectPageIndex = 0;
     
     
     bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT;
     bombadeetle->cursorMoveTime = 0;
 
-    bombadeetle->state = STATE_STAGESELECT;
+    bombadeetle->state = STATE_MENU;
 
     bombadeetle->bombadeetles = (bombadeetleEntity_t*)heap_caps_calloc(BOMBADEETLE_COUNT, sizeof(bombadeetleEntity_t), MALLOC_CAP_8BIT);
     bombadeetle->shloogs = (bombadeetleEntity_t*)heap_caps_calloc(SHLOOG_MAX_COUNT, sizeof(bombadeetleEntity_t), MALLOC_CAP_8BIT);
@@ -319,10 +338,13 @@ static void bombadeetleEnterMode()
 
     loadWsg(BOMB_SUCCESS_WSG, &bombadeetle->success, true);
     loadWsg(BOMB_TRYAGAIN_WSG, &bombadeetle->unsuccessful, true);
-    loadWsg(BOMB_STAGE_SELECT_BACKGROUND_WSG, &bombadeetle->stageSelect, true);
+    loadWsg(BOMB_UI_POPUP_WSG, &bombadeetle->genericBackground, true);
+    loadWsg(BOMB_MAIN_TITLE_WSG, &bombadeetle->mainTitle, true);
+    loadWsg(BOMB_STAGE_SELECT_TITLE_WSG, &bombadeetle->stageSelect, true);
     loadWsg(BOMB_STAGE_SELECT_INDEX_BUTTON_WSG, &bombadeetle->stageSelectButton, true);
     loadWsg(BOMB_STAGE_SELECT_INDEX_ACTIVE_BUTTON_WSG, &bombadeetle->stageActiveSelectButton, true);
-
+    loadWsg(BOMB_MAIN_SELECT_WSG, &bombadeetle->mainSelect, true);
+    loadWsg(BOMB_MAIN_OPTIONS_WSG, &bombadeetle->mainOptions, true);
 
     loadWsg(BOMB_LEVEL_NAME_WSG, &bombadeetle->levelNameBackground, true);
     loadWsg(BOMB_TOOLS_WSG, &bombadeetle->tools, true);
@@ -382,7 +404,7 @@ static void bombadeetleEnterMode()
     {
         loadWsg(bombadeetleGoal[idx], &bombadeetle->goal[idx], true);
     }
-    loadFont(BOMBBADEETLE_FONT, &bombadeetle->mainFont, true);
+    loadFont(BOMB_BOMBADEETLE_FONT, &bombadeetle->mainFont, true);
 
     
     for (int idx = 0; idx < GRIDHEIGHT * GRIDWIDTH; idx++)
@@ -684,8 +706,6 @@ static void bombadeetleCheckShloogs(bool update)
             if (bombadeetle->bombadeetles[ndx].tileX == bombadeetle->shloogs[idx].tileX && ABS(bombadeetle->bombadeetles[ndx].locY - (bombadeetle->shloogs[idx].locY - SHLOOG_HEIGHT_OFFSET)) < COLLISION_RANGE)
             {
                 bombadeetleOnCollision();
-
-
                             
                 bombadeetle->collisionX = (bombadeetle->bombadeetles[ndx].locX + bombadeetle->shloogs[idx].locX - 16)/2 ;
                 bombadeetle->collisionY = (bombadeetle->bombadeetles[ndx].locY + bombadeetle->shloogs[idx].locY - SHLOOG_HEIGHT_OFFSET - 8)/2;
@@ -695,7 +715,6 @@ static void bombadeetleCheckShloogs(bool update)
             if (bombadeetle->bombadeetles[ndx].tileY == bombadeetle->shloogs[idx].tileY && ABS(bombadeetle->bombadeetles[ndx].locX - bombadeetle->shloogs[idx].locX) < COLLISION_RANGE)
             {
                 bombadeetleOnCollision();
-
 
                 bombadeetle->collisionX = (bombadeetle->bombadeetles[ndx].locX + bombadeetle->shloogs[idx].locX - 16)/2 ;
                 bombadeetle->collisionY = (bombadeetle->bombadeetles[ndx].locY + bombadeetle->shloogs[idx].locY - SHLOOG_HEIGHT_OFFSET - 8)/2;
@@ -813,7 +832,7 @@ static void bombadeetleLoadMap()
     
     bombadeetle->state = STATE_PLACING;    
     bombadeetle->gameMoveTime = 0;
-    bombadeetle->gameMoveTime = 0;
+    bombadeetle->gameMoveTick = 0;
     bombadeetle->bombadeetleMoveAmount = 0;
     bombadeetle->shloogMoveAmount = 0;
     bombadeetle->goalCount = 0;
@@ -843,6 +862,7 @@ static void bombadeetleLoadMap()
             bombadeetle->bombadeetles[bombadeetleIndex].tileY = idx / GRIDWIDTH;
             bombadeetle->bombadeetles[bombadeetleIndex].locX = bombadeetle->bombadeetles[bombadeetleIndex].tileX * TILESIZE;
             bombadeetle->bombadeetles[bombadeetleIndex].locY = (bombadeetle->bombadeetles[bombadeetleIndex].tileY * TILESIZE);
+            bombadeetle->bombadeetles[bombadeetleIndex].frame = 0;
             bombadeetleIndex++;          
 
         }
@@ -853,12 +873,13 @@ static void bombadeetleLoadMap()
         {
             if (shloogIndex >= SHLOOG_MAX_COUNT) continue;
            
-
+            
             bombadeetle->shloogs[shloogIndex].direction = tileIndex;
             bombadeetle->shloogs[shloogIndex].tileX = idx % GRIDWIDTH;
             bombadeetle->shloogs[shloogIndex].tileY = idx / GRIDWIDTH;
             bombadeetle->shloogs[shloogIndex].locX = bombadeetle->shloogs[shloogIndex].tileX * TILESIZE;
             bombadeetle->shloogs[shloogIndex].locY = (bombadeetle->shloogs[shloogIndex].tileY * TILESIZE) + SHLOOG_HEIGHT_OFFSET;
+            bombadeetle->shloogs[shloogIndex].frame = 0;
             
             shloogIndex++;
 
@@ -914,6 +935,9 @@ static void bombadeetleMainLoop(int64_t elapsedUs)
 {
     switch (bombadeetle->state)
     {
+        case STATE_MENU:
+            bombadeetleMenuLoop(elapsedUs);
+            break;
         case STATE_STAGESELECT:
             bombadeetleStageSelectLoop(elapsedUs);
             break;
@@ -922,6 +946,101 @@ static void bombadeetleMainLoop(int64_t elapsedUs)
             break;
     }
 
+}
+
+static void bombadeetleMenuLoop(int64_t elapsedUs)
+{
+    
+    buttonEvt_t evt;
+    int16_t tick = elapsedUs / 1000;
+
+    
+    bombadeetle->animationTime += tick;
+    if (bombadeetle->animationTime > ANIMATIONSPEED)
+    {
+        bombadeetle->animationTime -= ANIMATIONSPEED;
+
+        bombadeetle->backgroundOffset += bombadeetle->backgroundSpeed;
+        bombadeetle->backgroundOffset %=16;        
+    }
+
+        //TODO: Fix this so you're not doing it in three different places.
+    linearTouch_t touches[2] = {0};    
+    getTouchLinear(touches, ARRAY_SIZE(touches));
+    for (uint8_t tIdx = 0; tIdx < ARRAY_SIZE(touches); tIdx++)
+    {
+        
+        if (touches[tIdx].touched && tIdx == 1)
+        {            
+            int8_t speed = touches[tIdx].position / 125;
+            if (speed < 0) speed = 0;
+            if (speed > 8) speed = 8;
+
+            if (bombadeetle->backgroundSpeed != speed)
+            {
+                bombadeetle->backgroundSpeed = speed;                
+            }
+        }
+    }
+
+    while(checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down)
+        {
+            if (evt.button & PB_DOWN)
+            {
+                
+               bombadeetle->mainSelectIndex++;
+
+               if (bombadeetle->mainSelectIndex > 2)
+               {
+                bombadeetle->mainSelectIndex = 2;
+               }
+
+            }
+
+            if (evt.button & PB_UP)
+            {
+                bombadeetle->mainSelectIndex--;
+
+               if (bombadeetle->mainSelectIndex < 0)
+               {
+                bombadeetle->mainSelectIndex = 0;
+               }
+
+            }
+
+            if (evt.button & PB_UP)
+            {
+               
+                           
+            }
+
+            
+
+            if (evt.button & PB_A)
+            {
+                switch (bombadeetle->mainSelectIndex)
+                {
+                    case 0:
+                        bombadeetle->state = STATE_STAGESELECT;
+                        break;
+                    case 1:
+                        //instructions
+                    default:
+                        break;
+                }
+
+            }
+
+
+
+        }
+    }
+    
+
+    
+    bombadeetleDrawMenu();
 }
 
 static void bombadeetleStageSelectLoop(int64_t elapsedUs)
@@ -942,7 +1061,7 @@ static void bombadeetleStageSelectLoop(int64_t elapsedUs)
         bombadeetle->backgroundOffset %=16;        
     }
 
-    //TODO: Fix this so you're not doing it in two different places.
+    //TODO: Fix this so you're not doing it in three different places.
     linearTouch_t touches[2] = {0};    
     getTouchLinear(touches, ARRAY_SIZE(touches));
     for (uint8_t tIdx = 0; tIdx < ARRAY_SIZE(touches); tIdx++)
@@ -950,7 +1069,7 @@ static void bombadeetleStageSelectLoop(int64_t elapsedUs)
         
         if (touches[tIdx].touched && tIdx == 1)
         {            
-            int speed = touches[tIdx].position / 125;
+            int8_t speed = touches[tIdx].position / 125;
             if (speed < 0) speed = 0;
             if (speed > 8) speed = 8;
 
@@ -959,7 +1078,7 @@ static void bombadeetleStageSelectLoop(int64_t elapsedUs)
 
                 bombadeetle->backgroundSpeed = speed;
                 
-                ESP_LOGI(TAG, "Background speed = %d", speed );
+                //ESP_LOGI(TAG, "Background speed = %d", speed );
             }
         }
     }
@@ -992,7 +1111,12 @@ static void bombadeetleStageSelectLoop(int64_t elapsedUs)
 
             if (evt.button & PB_LEFT)
             {
-                if (bombadeetle->stageSelectIndex % 5 != 0)
+                if (bombadeetle->stageSelectIndex == 0 && bombadeetle->stageSelectPageIndex > 0)
+                {
+                    bombadeetle->stageSelectPageIndex--;
+                    bombadeetle->stageSelectIndex = 19;
+                }
+                else if (bombadeetle->stageSelectIndex % 5 != 0)
                 {
                     bombadeetle->stageSelectIndex--;
                 }
@@ -1005,7 +1129,15 @@ static void bombadeetleStageSelectLoop(int64_t elapsedUs)
 
             if (evt.button & PB_RIGHT)
             {
-                if (bombadeetle->stageSelectIndex % 5 != 4)
+                // if (bombadeetle->stageSelectIndex )
+                ESP_LOGI(TAG,"%d - > %d",  bombadeetle->stageSelectIndex ,bombadeetle->stageSelectPageIndex);
+
+                if (bombadeetle->stageSelectIndex == 19 && (bombadeetle->stageSelectPageIndex * 20) < bombadeetle->levelMax)
+                {
+                    bombadeetle->stageSelectPageIndex ++;
+                    bombadeetle->stageSelectIndex = 0;
+                }
+                else if (bombadeetle->stageSelectIndex % 5 != 4)
                 {
                     bombadeetle->stageSelectIndex++;
                 }
@@ -1013,6 +1145,7 @@ static void bombadeetleStageSelectLoop(int64_t elapsedUs)
                 {
                     bombadeetle->stageSelectIndex -= 4;
                 }
+
             }
 
             if (evt.button & PB_A)
@@ -1022,6 +1155,11 @@ static void bombadeetleStageSelectLoop(int64_t elapsedUs)
                 bombadeetleImportMap(bombadeetle->levelIndex);
                 bombadeetleLoadMap();
 
+            }
+
+            if (evt.button & PB_B)
+            {
+                bombadeetle->state = STATE_MENU;
             }
 
 
@@ -1105,7 +1243,7 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
     
     //Controls
 
-    //TODO: Fix this so you're not doing it in two different places.
+    //TODO: Fix this so you're not doing it in three different places.
     linearTouch_t touches[2] = {0};    
     getTouchLinear(touches, ARRAY_SIZE(touches));
     for (uint8_t tIdx = 0; tIdx < ARRAY_SIZE(touches); tIdx++)
@@ -1364,16 +1502,19 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
     if (bombadeetle->state == STATE_RUNNING)
     {
         bombadeetle->gameMoveTime += tick;
-        ESP_LOGI(TAG, "%d %d    ", bombadeetle->gameMoveTime, bombadeetle->gameMoveTick);
+
         while (bombadeetle->gameMoveTime >= GAME_MOVE_TIME)
         {
+
+            //TODO: REmove this Troy it may break things
             bombadeetle->gameMoveTime -= GAME_MOVE_TIME;
+            
             bombadeetle->gameMoveTick++;
             bombadeetle->gameMoveTick %= 200;
             shloogUpdate = false;
             bombadeetleUpdate = false;
 
-            if (bombadeetle->gameMoveTime % BOMBADEETLE_MOVE_TIME == 0)
+            if (bombadeetle->gameMoveTick % BOMBADEETLE_MOVE_TIME == 0)
             {
                 bombadeetle->bombadeetleMoveAmount += bombadeetle->gameSpeed;
                 if (bombadeetle->bombadeetleMoveAmount >= TILESIZE)
@@ -1383,7 +1524,7 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                 }
             }
 
-            if (bombadeetle->gameMoveTime % SHLOOG_MOVE_TIME == 0)
+            if (bombadeetle->gameMoveTick % SHLOOG_MOVE_TIME == 0)
             {
                 bombadeetle->shloogMoveAmount += bombadeetle->gameSpeed;
                             
@@ -1393,7 +1534,8 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                     shloogUpdate = true;
                 }
             }            
-
+            
+            ESP_LOGI(TAG, "%d",bombadeetle->gameMoveTime);
             bombadeetleCheckBombadeetles(bombadeetleUpdate);
             bombadeetleCheckShloogs(shloogUpdate);
 
@@ -1481,11 +1623,7 @@ static void bombadeetleDrawBackground()
 
     }
 
-
-    char buffer[64];
-    sprintf(buffer, "%d %d %d", bombadeetle->gameMoveTime, bombadeetle->gameMoveTick, bombadeetle->gameSpeed);
-    drawText(&bombadeetle->mainFont, c000, buffer, 16, 200);
-
+   
 }
 
 static void bombadeetleDrawSelect()
@@ -1493,8 +1631,8 @@ static void bombadeetleDrawSelect()
     
     bombadeetleDrawBackground();
 
-    
-    drawWsgSimple(&bombadeetle->stageSelect, 15, 14);
+    drawWsgSimple(&bombadeetle->genericBackground, BG_POPUP_X, BG_POPUP_Y);
+    drawWsgSimple(&bombadeetle->stageSelect, 40, 37);
     
     char buffer[32];
     int displayIndex = 0;
@@ -1502,7 +1640,6 @@ static void bombadeetleDrawSelect()
     
     for (int8_t idx = 0; idx < 20; idx++)
     {
-        //stageActiveSelectButton
         displayIndex = (idx + (bombadeetle->stageSelectPageIndex * 20)) + 1;
 
         if (displayIndex > maxLevels) continue;
@@ -1531,6 +1668,17 @@ static void bombadeetleDrawSelect()
 
         drawText(&bombadeetle->mainFont, c555, buffer, OFFSETSELECTBUTTON_X + ((idx % 5) * 42) + 10, OFFSETSELECTBUTTON_Y + ((idx / 5) * 32) + 5);
     }
+}
+
+static void bombadeetleDrawMenu()
+{
+    bombadeetleDrawBackground();
+
+    drawWsgSimple(&bombadeetle->genericBackground, BG_POPUP_X, BG_POPUP_Y);
+    drawWsgSimple(&bombadeetle->mainTitle, 40, 37);
+    drawWsgSimple(&bombadeetle->mainOptions, 95, 110);
+    drawWsgSimple(&bombadeetle->mainSelect, bombadeetleTitleXLocations[bombadeetle->mainSelectIndex], 110 + (bombadeetle->mainSelectIndex * 24));
+
 }
 
 static void bombadeetleDrawGame()
@@ -1767,6 +1915,7 @@ static void bombadeetleExitMode()
         freeWsg(&bombadeetle->background.tiles[idx]);
     }
     
+    
     freeWsg(bombadeetle->shloogSprites);
     freeWsg(bombadeetle->goal);
     freeWsg(bombadeetle->bombadeetleSprites);
@@ -1777,13 +1926,21 @@ static void bombadeetleExitMode()
     freeWsg(bombadeetle->arrows);
     freeWsg(bombadeetle->background.tiles);
     
+    freeWsg(&bombadeetle->mainSelect);
     freeWsg(&bombadeetle->backgroundTile);
-    freeWsg( &bombadeetle->success);
-    freeWsg( &bombadeetle->unsuccessful);
-    freeWsg( &bombadeetle->levelNameBackground);
-    freeWsg( &bombadeetle->tools);
-    freeWsg( &bombadeetle->collisionSprite);
-    freeWsg( &bombadeetle->holeSprite);
+    freeWsg(&bombadeetle->mainTitle);
+    freeWsg(&bombadeetle->mainOptions);
+
+    freeWsg(&bombadeetle->stageSelect);
+    freeWsg(&bombadeetle->stageSelectButton);
+    freeWsg(&bombadeetle->stageActiveSelectButton);
+    freeWsg(&bombadeetle->genericBackground);
+    freeWsg(&bombadeetle->unsuccessful);
+    freeWsg(&bombadeetle->success);
+    freeWsg(&bombadeetle->levelNameBackground);
+    freeWsg(&bombadeetle->tools);
+    freeWsg(&bombadeetle->collisionSprite);
+    freeWsg(&bombadeetle->holeSprite);
 
     heap_caps_free(bombadeetle->bombadeetles);
     heap_caps_free(bombadeetle->shloogs);
