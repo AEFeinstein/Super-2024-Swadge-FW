@@ -169,10 +169,6 @@ void ggLevelReset(ggData_t* ggd)
         points -= URINAL_SIZE_COST;
         ggd->urinals[esp_random() % ggd->numActive].small = 1;
     }
-    /* if (esp_random() % 100 == 0)
-    {
-        ggd->urinals[esp_random() % ggd->numActive].height += 15;
-    } */
     // Adjust urinal
     while (points > 0)
     {
@@ -207,7 +203,7 @@ void ggLevelReset(ggData_t* ggd)
         else if (esp_random() % URINAL_CHANCE == 0)
         {
             int selection = esp_random() % ggd->numActive;
-            int result = esp_random() % GRAFFITI_COUNT + GG_CRACK_COUNT + 1; // (Num graffiti + num cracks + waterleak)
+            int result = esp_random() % GRAFFITI_COUNT + GG_CRACK_COUNT + 1; // (Num graffiti + num cracks + water leak)
 
             switch (result)
             {
