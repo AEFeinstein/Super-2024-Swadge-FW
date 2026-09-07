@@ -1,4 +1,5 @@
 idf_component_register(SRCS "modes/games/atrium/atrium.c"
+                            "modes/games/GottaGo/Data/ggCommonTypes.c"
                             "modes/games/GottaGo/gottaGo.c"
                             "modes/games/GottaGo/src/ggDraw.c"
                             "modes/games/GottaGo/src/ggLevel.c"
