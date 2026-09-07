@@ -104,6 +104,10 @@ void ciLoadCraftFromNVS(ciCampData_t* ccd)
 
 void ciSaveCraftFromNVS(ciCampData_t* ccd)
 {
+    if (ccd->craftQueue.length < 1)
+    {
+        return;
+    }
     node_t* n = ccd->craftQueue.first;
     int8_t idxs[ccd->craftQueue.length];
     int idx = 0;
@@ -429,7 +433,18 @@ static void drawQtys(ciCampData_t* ccd, int yPos, int idx)
     char buffer[10];
     const ciRecipeProto_t* r = &recipeList[(intptr_t)ccd->craftQueue.first->val];
     paletteColor_t col       = (ccd->qtys[r->items[idx].item] >= r->items[idx].qty) ? c040 : c400;
-    snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, ccd->qtys[r->items[idx].item]);
+    int total                = ccd->qtys[r->items[idx].item];
+    node_t* n                = ccd->craftQueue.first;
+    while (n != NULL)
+    {
+        const ciRecipeProto_t* re = &recipeList[(intptr_t)n->val];
+        if (re->items[idx].item == r->items[idx].item)
+        {
+            total += re->items[idx].qty;
+            n = n->next;
+        }
+    }
+    snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, total);
     drawText(&ccd->smallFont, col, buffer, (CRAFT_X_BUFFER - textWidth(&ccd->smallFont, buffer)) / 2,
              yPos - (2 + ccd->smallFont.height));
     snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, r->items[idx].qty);
