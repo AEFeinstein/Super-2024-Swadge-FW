@@ -34,11 +34,13 @@ typedef enum
     CI_MENU,
     CI_ENCYC,
     CI_ENCYC_DESC,
+    CI_CRAFTING,
+    CI_CRAFTING_PREP,
     CI_DAY,
     CI_NIGHT,
 } ciState_t;
 
-typedef enum 
+typedef enum
 {
     CI_UI_ARROW,
 } ciUIImgs_t;
@@ -59,9 +61,17 @@ typedef struct
 
     // Current state
     ciState_t state;
-    int selection;
+    intptr_t selection;
     int64_t timer;
 
     // Items
-    uint8_t* qtys;
+    int16_t* qtys;
+
+    // Craft
+    list_t craftQueue;
+    int64_t timerUnits; // Shared betweeen craft and forage
+    int64_t timerUs;
+
+    // Foraging
+    bool foraging;
 } ciCampData_t;

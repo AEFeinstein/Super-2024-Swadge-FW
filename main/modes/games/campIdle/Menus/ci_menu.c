@@ -5,7 +5,9 @@
 #include "ci_menu.h"
 
 #include "ci_items.h"
+#include "ci_crafting.h"
 #include "ci_helpers.h"
+
 #include "mainMenu.h"
 
 //==============================================================================
@@ -93,6 +95,7 @@ void ciRunMenu(ciCampData_t* ccd)
                 {
                     case CI_MENU_PLAY:
                     {
+                        ciInitCraft(ccd);
                         break;
                     }
                     case CI_ENCYC:

@@ -6,7 +6,15 @@
 
 #include "ci_itemData.h"
 
+//==============================================================================
+// Defines
+//==============================================================================
+
 #define MAX_CRAFT_ITEM_COUNT 2
+#define SECOND 1000000
+#define UNIT_LEN 15
+#define UNIT (UNIT_LEN * SECOND)
+
 
 //==============================================================================
 // Enums
@@ -28,7 +36,7 @@ typedef enum
     CI_RECIPE_STRING,
 } ciRecipesEnum_t;
 
-typedef enum 
+typedef enum
 {
     CI_CRAFT_CRYSTAL_POLISHER,
     CI_CRAFT_HEARTMAKER,
@@ -45,10 +53,22 @@ typedef enum
 // Structs
 //==============================================================================
 
-typedef struct 
+typedef struct
 {
-    const char* name;
-    ciCraftingStation_t cs;
+    ciCraftingStation_t craftingStation;
     ciContainerItem_t items[MAX_CRAFT_ITEM_COUNT];
     ciItemTypes_t result;
+    int16_t time; ///< time that it takes to craft in quater-minutes
 } ciRecipeProto_t;
+
+//==============================================================================
+// Const
+//==============================================================================
+
+extern const ciRecipeProto_t recipeList[];
+
+//==============================================================================
+// Function Definitions
+//==============================================================================
+
+int ciGetRecipeCount(void);

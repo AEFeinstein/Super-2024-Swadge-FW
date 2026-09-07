@@ -6,9 +6,8 @@
 #include "ci_campIdle.h"
 
 // Subcomponents
-#include "ci_genericData.h"
 #include "ci_items.h"
-#include "ci_container.h"
+#include "ci_crafting.h"
 #include "ci_menu.h"
 
 //==============================================================================
@@ -69,10 +68,12 @@ static void campEnterMode()
     loadFont(RODIN_EB_FONT, &ccd->largeText, true);
     ciInitInventory(ccd);
     ciInitSplash(ccd);
+    clear(&ccd->craftQueue);
 }
 
 static void campExitMode()
 {
+    clear(&ccd->craftQueue);
     ciFreeInventory(ccd);
     freeFont(&ccd->largeText);
     freeFont(&ccd->smallFont);
@@ -116,6 +117,19 @@ static void campMainLoop(int64_t elapsedUs)
             ciDrawItemPanel(ccd, ccd->selection);
             break;
         }
+        case CI_CRAFTING:
+        {
+            if (ciRunCraft(ccd, elapsedUs))
+            {
+                ciInitMenu(ccd);
+            }
+            break;
+        }
+        case CI_CRAFTING_PREP:
+        {
+            ciRunCraftSelection(ccd);
+            break;
+        }
         default:
         {
             buttonEvt_t evt;
@@ -124,5 +138,16 @@ static void campMainLoop(int64_t elapsedUs)
             }
             break;
         }
+    }
+    if (ccd->craftQueue.first != NULL || ccd->foraging)
+    {
+        ccd->timerUs += elapsedUs;
+        if (ccd->timerUs > UNIT)
+        {
+            ccd->timerUs = 0;
+            ccd->timerUnits += 1;
+        }
+        ciCraft(ccd);
+        // TODO: Add forage
     }
 }

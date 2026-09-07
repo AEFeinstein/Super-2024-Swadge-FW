@@ -30,7 +30,15 @@ int ciMenu2DNavigate(buttonEvt_t* evt, int selection, int colLim, int maxVal)
     else if (evt->button & PB_DOWN)
     {
         outVal += colLim;
-        outVal %= maxVal;
+        if (outVal >= maxVal)
+        {
+            outVal %= maxVal;
+            outVal += maxVal % colLim;
+            if (outVal > colLim - 1)
+            {
+                outVal -= colLim;
+            }
+        }
     }
     else if (evt->button & PB_UP)
     {
@@ -38,6 +46,11 @@ int ciMenu2DNavigate(buttonEvt_t* evt, int selection, int colLim, int maxVal)
         if (outVal < 0)
         {
             outVal += maxVal;
+            outVal -= maxVal % colLim;
+            if (outVal + colLim < maxVal)
+            {
+                outVal += colLim;
+            }
         }
     }
     return outVal;

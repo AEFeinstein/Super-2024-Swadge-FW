@@ -52,11 +52,11 @@ static void saveInvToNVS(ciCampData_t* ccd);
 void ciInitInventory(ciCampData_t* ccd)
 {
     // Load static data
-    ccd->qtys                 = (uint8_t*)heap_caps_calloc(ciGetItemArrayLength(), sizeof(uint8_t), MALLOC_CAP_8BIT);
+    ccd->qtys                 = (int16_t*)heap_caps_calloc(ciGetItemCount(), sizeof(int16_t), MALLOC_CAP_8BIT);
     ciInvQtysPacked_t qtyPack = {0};
     loadInvFromNVS(ccd, &qtyPack);
-    ccd->itemImages = heap_caps_calloc(ciGetItemArrayLength(), sizeof(wsg_t), MALLOC_CAP_8BIT);
-    for (int idx = 0; idx < ciGetItemArrayLength(); idx++)
+    ccd->itemImages = heap_caps_calloc(ciGetItemCount(), sizeof(wsg_t), MALLOC_CAP_8BIT);
+    for (int idx = 0; idx < ciGetItemCount(); idx++)
     {
         loadWsg(ciItemData[idx].image, &ccd->itemImages[idx], true);
     }
@@ -65,7 +65,7 @@ void ciInitInventory(ciCampData_t* ccd)
 void ciFreeInventory(ciCampData_t* ccd)
 {
     saveInvToNVS(ccd);
-    for (int idx = 0; idx < ciGetItemArrayLength(); idx++)
+    for (int idx = 0; idx < ciGetItemCount(); idx++)
     {
         freeWsg(&ccd->itemImages[idx]);
     }
@@ -73,7 +73,34 @@ void ciFreeInventory(ciCampData_t* ccd)
     free(ccd->qtys);
 }
 
-void ciDrawItemPanel(ciCampData_t* ccd, int idx)
+int32_t ciAddToInv(ciCampData_t* ccd, ciItemIdx_t item, int qty)
+{
+    if (item != CI_NO_ITEM)
+    {
+        if (INT16_MAX < ccd->qtys[item] + qty)
+        {
+            ccd->qtys[item] = INT16_MAX;
+            return ccd->qtys[item] + qty;
+        }
+        ccd->qtys[item] += qty;
+    }
+    return 0;
+}
+
+bool ciRemoveFromInv(ciCampData_t* ccd, ciItemIdx_t item, int qty)
+{
+    if (item != CI_NO_ITEM)
+    {
+        if (ccd->qtys[item] < qty)
+        {
+            return false;
+        }
+        ccd->qtys[item] -= qty;
+    }
+    return true;
+}
+
+void ciDrawItemPanel(ciCampData_t* ccd, ciItemIdx_t idx)
 {
     // Draw shadowbox
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c111);
@@ -186,7 +213,7 @@ void ciDrawItemPanel(ciCampData_t* ccd, int idx)
              yStart + ICON_BUFFER + 7 * PANEL_TEXT_OFFSET + PANEL_TEXT_Y_SPACING * 5);
 }
 
-void ciDrawItemIcon(ciCampData_t* ccd, int idx, int xStart, int yStart, int qty, bool selected, bool showQty)
+void ciDrawItemIcon(ciCampData_t* ccd, ciItemIdx_t idx, int xStart, int yStart, int qty, bool selected, bool showQty)
 {
     drawRectFilled(xStart, yStart, xStart + ICON_WIDTH, yStart + ICON_HEIGHT, (selected) ? c330 : c111);
     drawRectFilled(xStart + ICON_BUFFER, yStart + ICON_BUFFER, xStart + ICON_BUFFER + ICON_MAX_SIZE,
@@ -259,6 +286,7 @@ static void invNVSToCCD(ciCampData_t* ccd, ciInvQtysPacked_t* packed)
     ccd->qtys[CI_HONEY_COMB]            = packed->honeyComb;
     ccd->qtys[CI_BIRCH_BARK]            = packed->birchBark;
     ccd->qtys[CI_COAL]                  = packed->coal;
+    ccd->qtys[CI_COTTON]                = packed->cotton;
     ccd->qtys[CI_CRYSTAL]               = packed->crystal;
     ccd->qtys[CI_DRIED_GRASS]           = packed->driedGrass;
     ccd->qtys[CI_IRON_ORE]              = packed->iron;
@@ -323,6 +351,7 @@ static void invCCDToNVS(ciCampData_t* ccd, ciInvQtysPacked_t* packed)
     packed->honeyComb        = ccd->qtys[CI_HONEY_COMB];
     packed->birchBark        = ccd->qtys[CI_BIRCH_BARK];
     packed->coal             = ccd->qtys[CI_COAL];
+    packed->cotton           = ccd->qtys[CI_COTTON];
     packed->crystal          = ccd->qtys[CI_CRYSTAL];
     packed->driedGrass       = ccd->qtys[CI_DRIED_GRASS];
     packed->iron             = ccd->qtys[CI_IRON_ORE];
