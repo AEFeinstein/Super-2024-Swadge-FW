@@ -7,24 +7,34 @@ menu "Swadge Configuration"
 			Select the hardware being built for
 		config HARDWARE_WAVEBIRD
 			bool "HARDWARE_WAVEBIRD"
+			depends on IDF_TARGET_ESP32S2
 			help
 				Build for the Squarewavebird Swadge (2023)
 		config HARDWARE_GUNSHIP
 			bool "HARDWARE_GUNSHIP"
+			depends on IDF_TARGET_ESP32S2
 			help
 				Build for the Gunship Swadge (2024)
 		config HARDWARE_HOTDOG_PROTO
 			bool "HARDWARE_HOTDOG_PROTO"
+			depends on IDF_TARGET_ESP32S2
 			help
 				Build for the Protoype Hotdog Swadge (2025)
 		config HARDWARE_HOTDOG_PRODUCTION
 			bool "HARDWARE_HOTDOG_PRODUCTION"
+			depends on IDF_TARGET_ESP32S2
 			help
 				Build for the Production Hotdog Swadge (2025)		
 		config HARDWARE_PULSE
 			bool "HARDWARE_PULSE"
+			depends on IDF_TARGET_ESP32S2
 			help
 				Build for the Pulse Swadge (2026)		
+		config HARDWARE_FAIRY_PROTO
+			bool "HARDWARE_FAIRY_PROTO"
+			depends on IDF_TARGET_ESP32S3
+			help
+				Build for the prototype Fairy Swadge (2027)		
 	endchoice
 	choice DEBUG_OUTPUT_TYPE
 		prompt "Select Debug Output"
