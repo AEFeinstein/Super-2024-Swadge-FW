@@ -10,9 +10,7 @@
 // Consts
 //==============================================================================
 
-static const char* const menuText[] = {
-    "Main Menu", "Play!", "Encyclopedia", "Tutorial", "Quit", "Cozy Camper", "Press 'A' to play!",
-};
+extern const char* const menuText[];
 
 //==============================================================================
 // Enums
