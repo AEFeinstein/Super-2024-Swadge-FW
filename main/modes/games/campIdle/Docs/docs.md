@@ -357,3 +357,5 @@ Use Healing by swiping toward the character on slide bar 1
 ## Trophies
 
 - Bad apple spoils the bunch: Add bad food to your stores. (Use bad apple image for icon)
+
+# Known bugs

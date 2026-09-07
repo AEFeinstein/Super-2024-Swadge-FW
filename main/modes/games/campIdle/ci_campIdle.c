@@ -58,8 +58,8 @@ ciCampData_t* ccd;
 
 static void campEnterMode()
 {
-    ccd           = (ciCampData_t*)heap_caps_calloc(1, sizeof(ciCampData_t), MALLOC_CAP_8BIT);
-    
+    ccd = (ciCampData_t*)heap_caps_calloc(1, sizeof(ciCampData_t), MALLOC_CAP_8BIT);
+
     // Load assets
     ccd->uiImages = (wsg_t*)heap_caps_calloc(ARRAY_SIZE(uiImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(uiImages); idx++)
@@ -77,12 +77,13 @@ static void campEnterMode()
     ciLoadWorkbenches(ccd);
     ciLoadCraftFromNVS(ccd);
     readNamespaceNvs32(ciNVSKeys[CI_NVS_NAMESPACE], ciNVSKeys[CI_NVS_SAVED_UNITS], &ccd->timerUnits);
+    ciInitCraftTimer(ccd);
 
     // Start
     ciInitSplash(ccd);
 
     // test
-    // ciAddWorkbench(ccd, CI_CRAFT_MAGIC_WORKBENCH);
+    // ciAddWorkbench(ccd, CI_CRAFT_WORKBENCH);
 }
 
 static void campExitMode()
@@ -157,16 +158,23 @@ static void campMainLoop(int64_t elapsedUs)
     if (ccd->craftQueue.first != NULL || ccd->foraging)
     {
         ccd->timerUs += elapsedUs;
+        bool update = false;
         if (ccd->timerUs > UNIT)
         {
             ccd->timerUs = 0;
             ccd->timerUnits += 1;
+            update = true;
         }
-        while (ccd->craftQueue.first != NULL && recipeList[(intptr_t)ccd->craftQueue.first->val].time < ccd->timerUnits)
+        while (ccd->craftQueue.first != NULL
+               && recipeList[(intptr_t)ccd->craftQueue.first->val].time <= ccd->timerUnits)
         {
             ciCraft(ccd);
         }
         // TODO: Add forage
-        writeNamespaceNvs32(ciNVSKeys[CI_NVS_NAMESPACE], ciNVSKeys[CI_NVS_SAVED_UNITS], ccd->timerUnits);
+        if (update)
+        {
+            ciSaveCraftFromNVS(ccd);
+            writeNamespaceNvs32(ciNVSKeys[CI_NVS_NAMESPACE], ciNVSKeys[CI_NVS_SAVED_UNITS], ccd->timerUnits);
+        }
     }
 }

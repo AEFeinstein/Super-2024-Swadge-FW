@@ -38,16 +38,6 @@ static const char* const craftingText[] = {
 //==============================================================================
 
 /**
- * @brief Attempts to craft an item
- *
- * @param ccd Game Data
- * @param recipe The recipe to follow
- * @return true If the item was created successfully
- * @return false If the item was not created
- */
-static bool tryToCraft(ciCampData_t* ccd, const ciRecipeProto_t* recipe);
-
-/**
  * @brief Attempts to make a workbench
  *
  * @param ccd Game Data
@@ -147,14 +137,15 @@ void ciRunCraftSelection(ciCampData_t* ccd)
             ccd->selection = ciMenu2DNavigate(&evt, ccd->selection, MAX_COLS, ciGetRecipeCount());
             if (evt.button & PB_A)
             {
+                const ciRecipeProto_t* r = &recipeList[ccd->selection];
                 bool ableToCraft
-                    = (ccd->qtys[recipeList[ccd->selection].items[0].item] >= recipeList[ccd->selection].items[0].qty)
-                      && (recipeList[ccd->selection].items[1].item == CI_NO_ITEM
-                          || (ccd->qtys[recipeList[ccd->selection].items[1].item]
-                              >= recipeList[ccd->selection].items[1].qty));
-                ableToCraft = ableToCraft && CHECK_BIT(ccd->benches, recipeList[ccd->selection].craftingStation);
+                    = (ccd->qtys[r->items[0].item] >= r->items[0].qty)
+                      && (r->items[1].item == CI_NO_ITEM || (ccd->qtys[r->items[1].item] >= r->items[1].qty));
+                ableToCraft = ableToCraft && CHECK_BIT(ccd->benches, r->craftingStation);
                 if (ableToCraft)
                 {
+                    ciRemoveFromInv(ccd, r->items[0].item, r->items[0].qty);
+                    ciRemoveFromInv(ccd, r->items[1].item, r->items[1].qty);
                     push(&ccd->craftQueue, (intptr_t*)ccd->selection);
                     // TODO: Add positive beep sound
                 }
@@ -199,10 +190,10 @@ bool ciRunCraft(ciCampData_t* ccd)
 
 void ciInitCraftTimer(ciCampData_t* ccd)
 {
-    // TODO: Implement
+    // TODO:
     // Load previous time from NVS
-    // Compare to current time
-    // Add units based
+    // Compare with RTC
+    // Add units based on difference
 }
 
 void ciCraft(ciCampData_t* ccd)
@@ -214,14 +205,8 @@ void ciCraft(ciCampData_t* ccd)
     const ciRecipeProto_t* r = &recipeList[(intptr_t)ccd->craftQueue.first->val];
     if (ccd->timerUnits >= r->time)
     {
-        if (tryToCraft(ccd, r))
-        {
-            ccd->timerUnits -= r->time;
-        }
-        else
-        {
-            // TODO: Alert user of number of failures
-        }
+        ciAddToInv(ccd, r->result, 1);
+        ccd->timerUnits -= r->time;
         shift(&ccd->craftQueue);
     }
 }
@@ -250,22 +235,6 @@ void ciAddWorkbench(ciCampData_t* ccd, ciCraftingStation_t wb)
 //==============================================================================
 // Static Functions
 //==============================================================================
-
-static bool tryToCraft(ciCampData_t* ccd, const ciRecipeProto_t* recipe)
-{
-    // Check if materials are available in container
-    if (ciRemoveFromInv(ccd, recipe->items[0].item, recipe->items[0].qty))
-    {
-        if (ciRemoveFromInv(ccd, recipe->items[1].item, recipe->items[1].qty))
-        {
-            ciAddToInv(ccd, recipe->result, 1);
-            return true;
-        }
-        // Restore if the second half isn't there
-        ciAddToInv(ccd, recipe->items[0].item, recipe->items[0].qty);
-    }
-    return false;
-}
 
 static bool tryToCraftWorkbench(ciCampData_t* ccd, const ciWorkbench_t* bench)
 {

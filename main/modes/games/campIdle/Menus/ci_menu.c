@@ -113,6 +113,7 @@ void ciRunMenu(ciCampData_t* ccd)
                 {
                     case CI_MENU_PLAY:
                     {
+                        // FIXME: Need to add the rest of the menu substructure
                         ciInitCraft(ccd);
                         break;
                     }
