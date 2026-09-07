@@ -76,7 +76,9 @@ static void campEnterMode()
     // Load from NVS
     ciLoadWorkbenches(ccd);
     ciLoadCraftFromNVS(ccd);
-    readNamespaceNvs32(ciNVSKeys[CI_NVS_NAMESPACE], ciNVSKeys[CI_NVS_SAVED_UNITS], &ccd->timerUnits);
+    int outVal = 0;
+    readNamespaceNvs32(ciNVSKeys[CI_NVS_NAMESPACE], ciNVSKeys[CI_NVS_SAVED_UNITS], &outVal);
+    ccd->timerUnits += outVal;
     ciInitCraftTimer(ccd);
 
     // Start
