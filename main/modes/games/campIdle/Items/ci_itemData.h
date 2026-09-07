@@ -60,6 +60,7 @@ typedef enum
     CI_DIAMOND_POWDER,
     CI_GEAR,
     CI_IRON,
+    CI_IRON_NAIL,
     CI_HIDE,
     CI_POLISHED_ROCK,
     CI_POLISHED_CRYSTAL,
@@ -145,6 +146,7 @@ typedef struct __attribute__((packed))
     int16_t diamondPowder : MAX_ITEM_BITS;
     int16_t gears : MAX_ITEM_BITS;
     int16_t iron : MAX_ITEM_BITS;
+    int16_t ironNails : MAX_ITEM_BITS;
     int16_t pelts : MAX_ITEM_BITS;
     int16_t polishedBlocks : MAX_ITEM_BITS;
     int16_t polishedCrystals : MAX_ITEM_BITS;

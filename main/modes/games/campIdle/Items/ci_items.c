@@ -37,7 +37,7 @@ static const char* const panelText[] = {
 
 /**
  * @brief Copy data from packed to data struct
- * 
+ *
  * @param ccd Game Data
  * @param packed Packed version of the data
  */
@@ -45,7 +45,7 @@ static void invNVSToCCD(ciCampData_t* ccd, ciInvQtysPacked_t* packed);
 
 /**
  * @brief Copy data from data struct to packed
- * 
+ *
  * @param ccd Game Data
  * @param packed Packed version of the data
  */
@@ -53,7 +53,7 @@ static void invCCDToNVS(ciCampData_t* ccd, ciInvQtysPacked_t* packed);
 
 /**
  * @brief Loads inventory from NVS
- * 
+ *
  * @param ccd Game Data
  * @param packed Packed version of the data
  */
@@ -61,7 +61,7 @@ static void loadInvFromNVS(ciCampData_t* ccd, ciInvQtysPacked_t* packed);
 
 /**
  * @brief Saves inventory to NVS
- * 
+ *
  * @param ccd Game Data
  * @param packed Packed version of the data
  */
@@ -283,6 +283,7 @@ static void invNVSToCCD(ciCampData_t* ccd, ciInvQtysPacked_t* packed)
     ccd->qtys[CI_DIAMOND_POWDER]        = packed->diamondPowder;
     ccd->qtys[CI_GEAR]                  = packed->gears;
     ccd->qtys[CI_IRON]                  = packed->iron;
+    ccd->qtys[CI_IRON_NAIL]             = packed->ironNails;
     ccd->qtys[CI_HIDE]                  = packed->pelts;
     ccd->qtys[CI_POLISHED_ROCK]         = packed->polishedBlocks;
     ccd->qtys[CI_POLISHED_CRYSTAL]      = packed->polishedCrystals;
@@ -348,6 +349,7 @@ static void invCCDToNVS(ciCampData_t* ccd, ciInvQtysPacked_t* packed)
     packed->diamondPowder    = ccd->qtys[CI_DIAMOND_POWDER];
     packed->gears            = ccd->qtys[CI_GEAR];
     packed->iron             = ccd->qtys[CI_IRON];
+    packed->ironNails        = ccd->qtys[CI_IRON_NAIL];
     packed->pelts            = ccd->qtys[CI_HIDE];
     packed->polishedBlocks   = ccd->qtys[CI_POLISHED_ROCK];
     packed->polishedCrystals = ccd->qtys[CI_POLISHED_CRYSTAL];

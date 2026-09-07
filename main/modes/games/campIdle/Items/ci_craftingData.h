@@ -10,11 +10,14 @@
 // Defines
 //==============================================================================
 
+// Sizes
 #define MAX_CRAFT_ITEM_COUNT 2
-#define SECOND 1000000
-#define UNIT_LEN 15
-#define UNIT (UNIT_LEN * SECOND)
+#define MAX_WORKBENCH_ITEMS  3
 
+// Time
+#define SECOND   1000000
+#define UNIT_LEN 15
+#define UNIT     (UNIT_LEN * SECOND)
 
 //==============================================================================
 // Enums
@@ -62,11 +65,16 @@ typedef struct
 } ciRecipeProto_t;
 
 // TODO: Add Workbench data
-// - Name
-// - Crafting materials needed
 // - Associated images
 // - etc
 // Also need functions
+
+typedef struct
+{
+    const char* title;
+    const char* desc;
+    ciContainerItem_t items[MAX_WORKBENCH_ITEMS];
+} ciWorkbench_t;
 
 //==============================================================================
 // Const
@@ -74,8 +82,12 @@ typedef struct
 
 extern const ciRecipeProto_t recipeList[];
 
+extern const ciWorkbench_t workbenchList[];
+
 //==============================================================================
 // Function Definitions
 //==============================================================================
 
 int ciGetRecipeCount(void);
+
+int ciGetWorkbenchCount(void);

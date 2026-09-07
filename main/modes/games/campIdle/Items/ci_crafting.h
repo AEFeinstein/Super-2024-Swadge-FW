@@ -67,3 +67,9 @@ void ciInitCraftTimer(ciCampData_t* ccd);
  * @param ccd Game Data
  */
 void ciCraft(ciCampData_t* ccd);
+
+
+void ciLoadWorkbenches(ciCampData_t* ccd);
+
+
+void ciAddWorkbench(ciCampData_t* ccd, ciCraftingStation_t wb);

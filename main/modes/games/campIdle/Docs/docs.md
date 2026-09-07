@@ -217,7 +217,7 @@ Crafting stations
 | Smelter | 20 Rocks/10 Coal | Melts down ores |
 | Stone Cutter | 4 logs/10 Rocks | Allows for creation of Cut Stone |
 | Tanning Rack | 10 Sticks/4 Rope | Allows for the creation of pelts |
-| Weaver | 20 sticks/4 gears/10 nails | Allows for creation of cloth |
+| Weaver | 20 sticks/4 gears/10 Nails | Allows for creation of cloth |
 | Workbench | 2 Logs/10 Sticks/2 Resin | Allows complex crafting |
 
 ## Materials/Items
@@ -272,6 +272,7 @@ Crafted materials
 | Diamond Powder | 1 Diamonds | Smasher |
 | Gears | 8 Sticks/5 Resin | Workbench |
 | Iron | 1 Iron Ore/1 Coal | Smelter |
+| Iron Nails | 1 Iron | Workbench |
 | Pelts | 1 Uncured Hide | Tanning Rack |
 | Polished Blocks | 1 Cut Stone/1 Diamond Powder | Crystal Polisher |
 | Polished Crystal | 1 Crystal/1 Diamond Powder | Crystal Polisher |

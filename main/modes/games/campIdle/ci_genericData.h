@@ -16,6 +16,7 @@
 static const char* const ciNVSKeys[] = {
     "cozyCamping",
     "Inventory",
+    "Workbenches",
 };
 
 //==============================================================================
@@ -27,6 +28,7 @@ typedef enum
 {
     CI_NVS_NAMESPACE,
     CI_NVS_INVENTORY,
+    CI_NVS_WORKBENCHES,
 } ciNVSKeyEnum_t;
 
 typedef enum
@@ -72,6 +74,7 @@ typedef struct
     list_t craftQueue;  ///< Queue of items to be autocrafted
     int64_t timerUnits; ///< Units of time to partition out. Shared betweeen craft and forage
     int64_t timerUs;    ///< Microseconds for crafting queue
+    int16_t benches;    ///< What workbenches are currently bought
 
     // Foraging
     bool foraging; ///< If player is foraging
