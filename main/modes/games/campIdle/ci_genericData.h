@@ -13,9 +13,7 @@
 // Consts
 //==============================================================================
 
-static const char* const ciNVSKeys[] = {
-    "cozyCamping", "Inventory", "Workbenches", "Queue", "savedUnits", "lastSaved",
-};
+extern const char* const ciNVSKeys[];
 
 //==============================================================================
 // Enum
