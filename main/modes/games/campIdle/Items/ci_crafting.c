@@ -29,8 +29,9 @@
 // Consts
 //==============================================================================
 
-static const char* const craftingText[]
-    = {"Add to queue", "Crafting", "Owned", "Queue: ", "+", "Press A to add to queue"};
+static const char* const craftingText[] = {
+    "Add to queue", "Crafting", "Owned", "Queue: ", "+", "Press A to add to queue",
+};
 
 //==============================================================================
 // Function declarations
@@ -46,6 +47,14 @@ static const char* const craftingText[]
  */
 static bool tryToCraft(ciCampData_t* ccd, const ciRecipeProto_t* recipe);
 
+/**
+ * @brief Attempts to make a workbench
+ *
+ * @param ccd Game Data
+ * @param bench The workbench to make
+ * @return true If workbech was ssuccesfully made
+ * @return false If workbech failed
+ */
 static bool tryToCraftWorkbench(ciCampData_t* ccd, const ciWorkbench_t* bench);
 
 /**
@@ -92,17 +101,29 @@ static void drawQtys(ciCampData_t* ccd, int yPos, int idx);
 
 void ciLoadCraftFromNVS(ciCampData_t* ccd)
 {
-    // TODO: Implement
-    // Load blob from nvs
-    // Double load, don't know the length beforehand
-    // Construct queue
+    size_t len = 0;
+    readNamespaceNvsBlob(ciNVSKeys[CI_NVS_NAMESPACE], ciNVSKeys[CI_NVS_QUEUE], NULL, &len);
+    int8_t toEnqueue[len];
+    readNamespaceNvsBlob(ciNVSKeys[CI_NVS_NAMESPACE], ciNVSKeys[CI_NVS_QUEUE], toEnqueue, &len);
+    for (int idx = 0; idx < len; idx++)
+    {
+        intptr_t temp = toEnqueue[idx];
+        push(&ccd->craftQueue, (intptr_t*)temp);
+    }
 }
 
 void ciSaveCraftFromNVS(ciCampData_t* ccd)
 {
-    // TODO: Implement
-    // Convert queue into array of ints (unknown length)
-    // Save to NVS
+    node_t* n = ccd->craftQueue.first;
+    int8_t idxs[ccd->craftQueue.length];
+    int idx = 0;
+    while (n != NULL)
+    {
+        idxs[idx] = (intptr_t)n->val;
+        idx++;
+        n = n->next;
+    }
+    writeNamespaceNvsBlob(ciNVSKeys[CI_NVS_NAMESPACE], ciNVSKeys[CI_NVS_QUEUE], idxs, ccd->craftQueue.length);
 }
 
 void ciInitCraftSelection(ciCampData_t* ccd)
@@ -135,8 +156,6 @@ void ciRunCraftSelection(ciCampData_t* ccd)
                 if (ableToCraft)
                 {
                     push(&ccd->craftQueue, (intptr_t*)ccd->selection);
-                    // TODO: Save to NVS (Figure out way to avoid hammering NVS)
-                    //  - Only save on backing out?
                     // TODO: Add positive beep sound
                 }
                 else
@@ -147,6 +166,7 @@ void ciRunCraftSelection(ciCampData_t* ccd)
             else if (evt.button & PB_B)
             {
                 ciInitCraft(ccd);
+                ciSaveCraftFromNVS(ccd);
                 // TODO: Add positive beep sound
             }
         }
@@ -194,10 +214,9 @@ void ciCraft(ciCampData_t* ccd)
     const ciRecipeProto_t* r = &recipeList[(intptr_t)ccd->craftQueue.first->val];
     if (ccd->timerUnits >= r->time)
     {
-        ccd->timerUnits -= r->time;
         if (tryToCraft(ccd, r))
         {
-            // Do nothing...?
+            ccd->timerUnits -= r->time;
         }
         else
         {

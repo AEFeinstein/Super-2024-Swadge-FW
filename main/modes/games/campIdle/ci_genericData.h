@@ -17,6 +17,8 @@ static const char* const ciNVSKeys[] = {
     "cozyCamping",
     "Inventory",
     "Workbenches",
+    "Queue",
+    "savedUnits",
 };
 
 //==============================================================================
@@ -29,6 +31,8 @@ typedef enum
     CI_NVS_NAMESPACE,
     CI_NVS_INVENTORY,
     CI_NVS_WORKBENCHES,
+    CI_NVS_QUEUE,
+    CI_NVS_SAVED_UNITS,
 } ciNVSKeyEnum_t;
 
 typedef enum
