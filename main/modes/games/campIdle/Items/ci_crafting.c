@@ -33,6 +33,14 @@ static const char* const craftingText[] = {
     "Add to queue", "Crafting", "Owned", "Queue: ", "+", "Press A to add to queue",
 };
 
+const cnfsFileIdx_t workbenchImages[] = {
+    CC_HEARTMAKER_1_WSG,   CC_HEARTMAKER_2_WSG,   CC_HEARTMAKER_3_WSG, CC_HEARTMAKER_4_WSG,      CCM_SPHERE_1_WSG,
+    CCM_SPHERE_2_WSG,      CCM_SPHERE_3_WSG,      CCM_WORKBENCH_WSG,   CC_POLISHER_WSG,          CC_POLISHER_BOX_WSG,
+    CC_SMASHER_WSG,        CC_SMASHER_HAMMER_WSG, CC_SMELTER_WSG,      CC_SMELTER_FIRE_1_WSG,    CC_SMELTER_FIRE_2_WSG,
+    CC_SMELTER_FIRE_3_WSG, CC_SMELTER_WOOD_WSG,   CC_TANNING_RACK_WSG, CC_TANNING_RACK_PELT_WSG, CC_WEAVER_WSG,
+    CC_WORKBENCH_WSG,
+};
+
 //==============================================================================
 // Function declarations
 //==============================================================================
@@ -85,9 +93,29 @@ static void drawArrowProg(ciCampData_t* ccd, bool dual);
  */
 static void drawQtys(ciCampData_t* ccd, int yPos, int idx);
 
+static void drawWorkbench(ciCampData_t* ccd, int x, int y, ciWorkbenchEnum_t wb, int scale, int stage);
+
 //==============================================================================
 // Functions
 //==============================================================================
+
+void ciInitWorkbenches(ciCampData_t* ccd)
+{
+    ccd->workbenchImages = (wsg_t*)heap_caps_calloc(ARRAY_SIZE(workbenchImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
+    for (int idx = 0; idx < ARRAY_SIZE(workbenchImages); idx++)
+    {
+        loadWsg(workbenchImages[idx], &ccd->workbenchImages[idx], true);
+    }
+}
+
+void ciFreeWorkbenches(ciCampData_t* ccd)
+{
+    for (int idx = 0; idx < ARRAY_SIZE(workbenchImages); idx++)
+    {
+        freeWsg(&ccd->workbenchImages[idx]);
+    }
+    free(ccd->workbenchImages);
+}
 
 void ciLoadCraftFromNVS(ciCampData_t* ccd)
 {
@@ -283,7 +311,7 @@ static void drawCraftSelection(ciCampData_t* ccd)
         }
         ciDrawItemIcon(ccd, recipeList[idx].result, x, y, total, (ccd->selection == idx), (total != 0));
     }
-    // TODO: Add in workbenches
+    drawWorkbench(ccd, 32, 32, CI_WORKBENCH, 2, 0);
 }
 
 static void drawCraft(ciCampData_t* ccd)
@@ -345,6 +373,7 @@ static void drawCraft(ciCampData_t* ccd)
         pos++;
         node = node->next;
     }
+    
 }
 
 static void drawArrow(bool dual)
@@ -450,4 +479,20 @@ static void drawQtys(ciCampData_t* ccd, int yPos, int idx)
     snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, r->items[idx].qty);
     drawText(&ccd->smallFont, col, buffer, (CRAFT_X_BUFFER - textWidth(&ccd->smallFont, buffer)) / 2, yPos + 2);
     drawLineFast(CRAFT_X_BUFFER / 3, yPos, (CRAFT_X_BUFFER * 2) / 3, yPos, col);
+}
+
+static void drawWorkbench(ciCampData_t* ccd, int x, int y, ciWorkbenchEnum_t wb, int scale, int stage)
+{
+    switch (wb)
+    {
+        case CI_SMELTER:
+        {
+            break;
+        }
+        case CI_WORKBENCH:
+        {
+            drawWsgSimpleScaled(&ccd->workbenchImages[wb], x, y, scale, scale);
+            break;
+        }
+    }
 }

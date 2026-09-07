@@ -54,8 +54,9 @@ typedef enum
 typedef struct
 {
     // WSGs
-    wsg_t* itemImages; ///< Item Icons
-    wsg_t* uiImages;   ///< All UI images
+    wsg_t* itemImages;      ///< Item Icons
+    wsg_t* uiImages;        ///< All UI images
+    wsg_t* workbenchImages; ///< All Workbench images
 
     // Fonts
     font_t smallFont; ///< Smaller font used for dense text
