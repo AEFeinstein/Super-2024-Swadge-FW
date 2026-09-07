@@ -42,8 +42,8 @@ static const char* const craftingText[] = {
  *
  * @param ccd Game Data
  * @param bench The workbench to make
- * @return true If workbech was ssuccesfully made
- * @return false If workbech failed
+ * @return true If workbench was successfully made
+ * @return false If workbench failed
  */
 static bool tryToCraftWorkbench(ciCampData_t* ccd, const ciWorkbench_t* bench);
 
