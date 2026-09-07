@@ -35,8 +35,8 @@ void modeListSetMenu(menu_t* menu)
 {
     // Games sub menu
     menu = startSubMenu(menu, "Games");
-    addSingleItemToMenu(menu, roboRunnerMode.modeName);
     addSingleItemToMenu(menu, campIdleMode.modeName);
+    addSingleItemToMenu(menu, roboRunnerMode.modeName);
     menu = endSubMenu(menu);
 
     // Music sub menu
