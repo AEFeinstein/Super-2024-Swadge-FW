@@ -626,9 +626,10 @@ void gs_updateFarWave(gs_entity_t* self)
 
 void gs_updateWave(gs_entity_t* self)
 {
-    int parallax = 115 - (self->pos.y>>DECIMAL_BITS);
-    
+    int parallax = (( self->pos.y - (self->gameData->entityManager.camera.pos.y - (TFT_HEIGHT<<(DECIMAL_BITS - 1))))>>DECIMAL_BITS) - 223;
+    printf("%d\n", parallax);
     self->pos.x += ((gs_wave_t*)self->data)->velX * self->gameData->elapsedUs >> 17;
+    self->pos.x += self->gameData->entityManager.camera.vel.x * (parallax) / 12;
 }
 
 void gs_drawWave(gs_entity_t* self)
