@@ -127,7 +127,7 @@ bool ciTransferBetweenContainers(ciContainer_t* cont1, ciContainer_t* cont2, ciI
     int fromVal = 0;
     for (int idx = 0; idx < cont1->slotsLim; idx++)
     {
-        if(cont1->items[idx].item == item)
+        if (cont1->items[idx].item == item)
         {
             fromVal += cont1->items[idx].item;
             if (fromVal >= qty)

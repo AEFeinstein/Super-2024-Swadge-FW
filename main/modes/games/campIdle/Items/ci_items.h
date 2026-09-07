@@ -12,8 +12,8 @@
 // Defines
 //==============================================================================
 
-#define ICON_WIDTH           40
-#define ICON_HEIGHT          54
+#define ICON_WIDTH  40
+#define ICON_HEIGHT 54
 
 //==============================================================================
 // Function Definitions
@@ -21,21 +21,21 @@
 
 /**
  * @brief Initilaizes the inventory
- * 
+ *
  * @param ccd Game Data
  */
 void ciInitInventory(ciCampData_t* ccd);
 
 /**
  * @brief Frees the inventory
- * 
+ *
  * @param ccd Game Data
  */
 void ciFreeInventory(ciCampData_t* ccd);
 
 /**
  * @brief Adds an item to the inventory
- * 
+ *
  * @param ccd Game Data
  * @param item Item ID to add
  * @param qty How many of itme to add
@@ -45,7 +45,7 @@ int32_t ciAddToInv(ciCampData_t* ccd, ciItemIdx_t item, int qty);
 
 /**
  * @brief Removes an item from the inventory if it exists
- * 
+ *
  * @param ccd Game data
  * @param item Item to remove
  * @param qty How many of item to remove
@@ -56,7 +56,7 @@ bool ciRemoveFromInv(ciCampData_t* ccd, ciItemIdx_t item, int qty);
 
 /**
  * @brief Draws the item blurb
- * 
+ *
  * @param ccd Game Data
  * @param idx Item to draw
  */
@@ -64,7 +64,7 @@ void ciDrawItemPanel(ciCampData_t* ccd, ciItemIdx_t idx);
 
 /**
  * @brief Draws a small icon for a particualr item
- * 
+ *
  * @param ccd Game Data
  * @param idx Item to draw
  * @param xStart Starting x position

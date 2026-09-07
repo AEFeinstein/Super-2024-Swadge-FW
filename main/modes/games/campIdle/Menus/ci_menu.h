@@ -35,43 +35,43 @@ typedef enum
 
 /**
  * @brief Initializes the Splash state
- * 
+ *
  * @param ccd Game Data
  */
 void ciInitSplash(ciCampData_t* ccd);
 
 /**
  * @brief Initializes the Menu state
- * 
+ *
  * @param ccd Game Data
  */
 void ciInitMenu(ciCampData_t* ccd);
 
 /**
  * @brief Initializes the Encyclopedia state
- * 
+ *
  * @param ccd Game Data
  */
 void ciInitEncyclopedia(ciCampData_t* ccd);
 
 /**
  * @brief Runs the Splash state
- * 
+ *
  * @param ccd Game Data
- * @param elapsedUs 
+ * @param elapsedUs
  */
 void ciRunSplash(ciCampData_t* ccd, int64_t elapsedUs);
 
 /**
  * @brief Runs the Menu state
- * 
+ *
  * @param ccd Game Data
  */
 void ciRunMenu(ciCampData_t* ccd);
 
 /**
  * @brief Runs the Encyclopedia state
- * 
+ *
  * @param ccd Game Data
  */
 void ciRunEncyclopedia(ciCampData_t* ccd);
