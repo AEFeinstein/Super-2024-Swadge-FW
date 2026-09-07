@@ -7,8 +7,41 @@
 #include "ci_genericData.h"
 
 //==============================================================================
+// Enums
+//==============================================================================
+
+typedef enum
+{
+    CI_HEARTMAKER_1,
+    CI_HEARTMAKER_2,
+    CI_HEARTMAKER_3,
+    CI_HEARTMAKER_4,
+    CI_M_SPHERE_1,
+    CI_M_SPHERE_2,
+    CI_M_SPHERE_3,
+    CI_M_WORKBENCH,
+    CI_POLISHER,
+    CI_POLISHER_BOX,
+    CI_SMASHER,
+    CI_SMASHER_HAMMER,
+    CI_SMELTER,
+    CI_SMELTER_FIRE_1,
+    CI_SMELTER_FIRE_2,
+    CI_SMELTER_FIRE_3,
+    C_SMELTER_WOOD,
+    CI_TANNING_RACK,
+    CI_TANNING_RACK_PELT,
+    CI_WEAVER,
+    CI_WORKBENCH,
+} ciWorkbenchEnum_t;
+
+//==============================================================================
 // Function Definitions
 //==============================================================================
+
+void ciInitWorkbenches(ciCampData_t* ccd);
+
+void ciFreeWorkbenches(ciCampData_t* ccd);
 
 /**
  * @brief Loads current crafting queue fro NVS
@@ -82,3 +115,4 @@ void ciLoadWorkbenches(ciCampData_t* ccd);
  * @param wb Workbench idx
  */
 void ciAddWorkbench(ciCampData_t* ccd, ciCraftingStation_t wb);
+

@@ -213,6 +213,10 @@ const ciWorkbench_t workbenchList[] = {
     },
 };
 
+//==============================================================================
+// Functions
+//==============================================================================
+
 int ciGetRecipeCount(void)
 {
     return ARRAY_SIZE(recipeList);

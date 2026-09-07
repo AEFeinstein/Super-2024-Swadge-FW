@@ -32,7 +32,7 @@ Endless mode gives you a amount of days survived and time taken, and players can
     - [ ] Idle
     - [ ] Attack
   - [ ] Camp/Upgrades
-    - [ ] Workbenches
+    - [x] Workbenches
     - [ ] Upgrades
       - [ ] Camp
       - [ ] Tools/weapons
@@ -210,7 +210,7 @@ Types and effects
 Crafting stations
 | Station | Required resources | Usage |
 | ------- | ------------------ | ----- |
-| Crystal Polisher | 20 Stone/10 Diamond Powder | Polishes magical crystals | 
+| Crystal Polisher | 20 Cut Stone/10 Diamond Powder | Polishes magical crystals | 
 | Heartmaker | 10 Polished Crystals/10 Cloth/3 Rope | Creates Healing hearts |
 | Magic Workbench | 4 Polished Crystals/4 Logs | Allows crafting of magical items |
 | Smasher | 10 Rocks/10 Sticks/5 gears | Crushes items | 

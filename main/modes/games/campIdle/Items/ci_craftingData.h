@@ -84,6 +84,8 @@ extern const ciRecipeProto_t recipeList[];
 
 extern const ciWorkbench_t workbenchList[];
 
+extern const cnfsFileIdx_t workbenchImages[];
+
 //==============================================================================
 // Function Definitions
 //==============================================================================
