@@ -183,7 +183,7 @@ const ciWorkbench_t workbenchList[] = {
     },
     {
         .title         = "Tanning rack",
-        .desc          = "The hides may be pleather, but you stil need to tan them",
+        .desc          = "The hides may be pleather, but you still need to tan them",
         .items[0].item = CI_STICK,
         .items[0].qty  = 10,
         .items[1].item = CI_ROPE,

@@ -28,12 +28,12 @@
 //==============================================================================
 
 /**
- * @brief Draws the Spalch screen
+ * @brief Draws the splash screen
  *
  * @param ccd Game Data
- * @param elaspsedUs Time since last frame
+ * @param elapsedUs Time since last frame
  */
-static void drawSplash(ciCampData_t* ccd, int64_t elaspsedUs);
+static void drawSplash(ciCampData_t* ccd, int64_t elapsedUs);
 
 /**
  * @brief Draws the menus
@@ -71,7 +71,7 @@ void ciInitEncyclopedia(ciCampData_t* ccd)
     ccd->state     = CI_MENU_ENCYCLOPEDIA;
 }
 
-void ciRunSplash(ciCampData_t* ccd, int64_t elaspsedUs)
+void ciRunSplash(ciCampData_t* ccd, int64_t elapsedUs)
 {
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
@@ -81,7 +81,7 @@ void ciRunSplash(ciCampData_t* ccd, int64_t elaspsedUs)
             ciInitMenu(ccd);
         }
     }
-    drawSplash(ccd, elaspsedUs);
+    drawSplash(ccd, elapsedUs);
 }
 
 void ciRunMenu(ciCampData_t* ccd)
