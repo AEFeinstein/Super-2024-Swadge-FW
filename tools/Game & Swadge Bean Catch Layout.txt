@@ -1,0 +1,60 @@
+Game & Swadge Layout
+
+LCD Segments
+
+ID | Name       | X | Y
+------------------------
+00 | Bean UL 00 |  8| 73
+01 | Bean UL 01 | 24| 83
+02 | Bean UL 02 | 39| 93
+03 | Bean UL 03 | 54|101
+04 | Bean UL 04 | 69|112
+05 | Bean DL 00 |  9|107
+06 | Bean DL 01 | 24|116
+07 | Bean DL 02 | 38|126
+08 | Bean DL 03 | 55|135
+09 | Bean DL 04 | 71|146
+10 | Bean UR 00 |264| 74
+11 | Bean UR 01 |246| 83
+12 | Bean UR 02 |232| 93
+13 | Bean UR 03 |216|102
+14 | Bean UR 04 |119|113
+15 | Bean DR 00 |261|106
+16 | Bean DR 01 |244|116
+17 | Bean DR 02 |229|126
+18 | Bean DR 03 |214|134
+19 | Bean DR 04 |197|145
+20 | Bean DropL | 73|178
+21 | Bean DropR |178|178
+22 | Player UL  | 71|123
+23 | Player DL  | 76|151
+24 | Player UR  |181|123
+25 | Player DR  |180|123
+26 | Beanbert L |100|107
+27 | Beanbert R |136|107
+28 | Swearing   |104| 73
+29 | BubblePtrL |124| 99
+30 | BubblePtrR |142| 99
+31 | EggyDevito |179| 52
+32 | StrikeLbl  |128|172
+33 | StrikeIcon |119|188
+34 | StrikeIcon |137|188
+35 | StrikeIcon |155|188
+36 | Game A Lbl |155|188
+37 | Game B Lbl |217|187
+38 | AM Label   | 21| 53
+39 | Alarm Icon |126| 51
+40 | AlarmAnim1 |128| 46
+41 | AlarmAnim2 |127| 39
+42 | Hours_Sep  | 67| 56
+   | Hours      | 25| 53
+   | Minutes    | 68| 53
+
+
+Background
+
+ID | Name       | X | Y
+------------------------
+   | Background |  0| 28
+   | Top_Label  |  0|  5
+   | Bottom_Lbl |  0|226
