@@ -20,7 +20,7 @@
 //==============================================================================
 
 /**
- * @brief Initilaizes the inventory
+ * @brief Initializes the inventory
  *
  * @param ccd Game Data
  */
@@ -38,7 +38,7 @@ void ciFreeInventory(ciCampData_t* ccd);
  *
  * @param ccd Game Data
  * @param item Item ID to add
- * @param qty How many of itme to add
+ * @param qty How many of item to add
  * @return int32_t Remainder (If overflowed)
  */
 int32_t ciAddToInv(ciCampData_t* ccd, ciItemIdx_t item, int qty);
@@ -63,7 +63,7 @@ bool ciRemoveFromInv(ciCampData_t* ccd, ciItemIdx_t item, int qty);
 void ciDrawItemPanel(ciCampData_t* ccd, ciItemIdx_t idx);
 
 /**
- * @brief Draws a small icon for a particualr item
+ * @brief Draws a small icon for a particular item
  *
  * @param ccd Game Data
  * @param idx Item to draw
@@ -71,6 +71,6 @@ void ciDrawItemPanel(ciCampData_t* ccd, ciItemIdx_t idx);
  * @param yStart Starting y position
  * @param qty Quantity to display
  * @param selected If true, it is highlighted
- * @param showQty If true, draws qty. If false, draws abbrieviation
+ * @param showQty If true, draws qty. If false, draws abbreviation
  */
 void ciDrawItemIcon(ciCampData_t* ccd, ciItemIdx_t idx, int xStart, int yStart, int qty, bool selected, bool showQty);
