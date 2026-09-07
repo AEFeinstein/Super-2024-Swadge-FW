@@ -182,18 +182,18 @@ typedef struct
 {
     int8_t randOffset;
     // Functional
-    uint8_t active : 1;
+    bool active : 1;
     // Colors
     uint8_t skinColor  : 3;
     uint8_t shirtColor : 3;
     uint8_t pantsColor : 3;
     uint8_t shoeColor  : 2;
     // Attributes
-    uint8_t small : 1;
-    uint8_t stink : 1;
-    uint8_t shirt : 1;
+    bool small    : 1;
+    bool stink    : 1;
+    bool shirt    : 1;
     uint8_t pants : 3;
-    uint8_t shoes : 1;
+    bool shoes    : 1;
 } ggNPC_t;
 
 /// @brief Urinal data
@@ -201,20 +201,20 @@ typedef struct
 {
     int height; // Height of actual unit (default: 35)
     // Bonuses
-    uint8_t autoFlush : 1;
+    bool autoFlush : 1;
     // Minor
-    uint8_t cracks    : 2;
-    uint8_t graffiti  : 3;
-    uint8_t waterLeak : 1;
+    uint8_t cracks   : 2;
+    uint8_t graffiti : 3;
+    bool waterLeak   : 1;
     // Major
-    uint8_t brokenBowl   : 1;
-    uint8_t brokenDrain  : 1;
-    uint8_t outOfOrder   : 1;
-    uint8_t pluggedDrain : 1;
+    bool brokenBowl   : 1;
+    bool brokenDrain  : 1;
+    bool outOfOrder   : 1;
+    bool pluggedDrain : 1;
     // Additional factors
     uint8_t puddle  : 2;
     uint8_t divider : 2;
-    uint8_t small   : 1;
+    bool small      : 1;
     ggNPC_t npc;
 } ggUrinal_t;
 
