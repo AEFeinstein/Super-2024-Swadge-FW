@@ -167,6 +167,13 @@ typedef struct __attribute__((packed)) swadgePassPacket
     } atrium;
     struct
     {
+        int8_t maxLevels;
+        int16_t accuracy;
+        int32_t totalScore;
+        int32_t adjScore;
+    } gottaGo;
+    struct
+    {
         uint16_t highScore;
     } roboRunner;
     struct
