@@ -597,11 +597,11 @@ void gs_positionWave(gs_entity_t* self)
     self->pos = addVec2d(self->gameData->entityManager.camera.pos,
                          (vec_t){gs_randomInt(-(TFT_WIDTH << (DECIMAL_BITS - 1)), TFT_WIDTH << (DECIMAL_BITS - 1)),
                                  gs_randomInt(92 << DECIMAL_BITS, 115 << DECIMAL_BITS)});
+    ((gs_wave_t*)self->data)->velX = gs_randomInt(20,30);
 }
 
 void gs_randomizeWaveData(gs_entity_t* self)
 {
-    self->data                            = heap_caps_calloc(1, sizeof(gs_star_t), MALLOC_CAP_SPIRAM);
     self->currentAnimationFrame           = gs_randomInt(0, 4);
     self->gameFramesPerAnimationFrame     = self->currentAnimationFrame * 3 + 3;
     self->animationTimer                  = gs_randomInt(0, (self->currentAnimationFrame - 1) * 3 + 3);
@@ -626,6 +626,9 @@ void gs_updateFarWave(gs_entity_t* self)
 
 void gs_updateWave(gs_entity_t* self)
 {
+    int parallax = 115 - (self->pos.y>>DECIMAL_BITS);
+    
+    self->pos.x += ((gs_wave_t*)self->data)->velX * self->gameData->elapsedUs >> 17;
 }
 
 void gs_drawWave(gs_entity_t* self)
