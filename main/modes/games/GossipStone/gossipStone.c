@@ -9,6 +9,7 @@
 #include "hdw-ch32v003.h"
 #include "gs_gossip.h"
 #include "gs_utility.h"
+#include "hdw-tft.h"
 
 //==============================================================================
 // Defines
@@ -144,6 +145,8 @@ static void gs_enterMode(void)
         sprintf(nvsKey, "gossipProgress%d", i);
         readNvs32(nvsKey, &gameData->gossipProgress[i]);
     }
+
+    SETUP_FOR_TURBO();
 }
 
 void gs_populateMenu(void)
@@ -551,6 +554,15 @@ void gs_submodeStateEnter(gs_submode_t submode)
         gameData->assets[GS_HI_RES_MOON_ASSET].originX = 180;
         gameData->assets[GS_HI_RES_MOON_ASSET].originY = 127;
         gs_loadAsset(LANDING_WSG, 1, &gameData->assets[GS_LANDING_ASSET]);
+
+        for (int i = 0; i < 200; i++)
+        {
+            gs_entity_t* particle = gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_NO_ASSET, 1,
+                                                    (vec_t){0, 0}, gameData);
+            particle->data        = heap_caps_calloc(1, sizeof(gs_particle_t), MALLOC_CAP_SPIRAM);
+            particle->dataType    = GS_PARTICLE_DATA;
+            particle->drawFunction = NULL;
+        }
     }
     else if (submode == GS_MOON_SUBMODE)
     {

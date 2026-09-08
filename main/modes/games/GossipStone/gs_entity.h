@@ -23,6 +23,7 @@ typedef enum
     GS_GOSSIP_STONE_DATA,
     GS_BIG_MOON_DATA,
     GS_OCEAN_DATA,
+    GS_PARTICLE_DATA,
 } gs_dataType_t;
 
 //==============================================================================
@@ -154,6 +155,12 @@ typedef struct
     bool stoneAboveOcean;
 } gs_ocean_t;
 
+typedef struct
+{
+    vec_t vel;
+    int32_t despawnAtY;
+} gs_particle_t;
+
 //==============================================================================
 // Prototypes
 //==============================================================================
@@ -191,3 +198,5 @@ void gs_drawWave(gs_entity_t* self);
 void gs_drawOcean(gs_entity_t* self);
 void gs_updateOcean(gs_entity_t* self);
 void gs_drawHill(gs_entity_t* self);
+void gs_updateParticle(gs_entity_t* self);
+void gs_drawParticle(gs_entity_t* self);
