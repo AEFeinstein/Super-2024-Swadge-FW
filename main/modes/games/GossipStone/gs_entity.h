@@ -22,6 +22,7 @@ typedef enum
     GS_FLAME_DATA,
     GS_GOSSIP_STONE_DATA,
     GS_BIG_MOON_DATA,
+    GS_OCEAN_DATA,
 } gs_dataType_t;
 
 //==============================================================================
@@ -145,7 +146,14 @@ typedef struct
 {
     bool reverseAnim;
     int32_t velX;
+    bool fore;
 } gs_wave_t;
+
+typedef struct
+{
+    bool stoneAboveOcean;
+} gs_ocean_t;
+
 
 //==============================================================================
 // Prototypes
@@ -181,3 +189,6 @@ void gs_randomizeWaveData(gs_entity_t* self);
 void gs_updateWave(gs_entity_t* self);
 void gs_updateFarWave(gs_entity_t* self);
 void gs_drawWave(gs_entity_t* self);
+void gs_drawOcean(gs_entity_t* self);
+void gs_updateOcean(gs_entity_t* self);
+void gs_drawHill(gs_entity_t* self);

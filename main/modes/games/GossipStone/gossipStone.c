@@ -275,19 +275,7 @@ static void gs_initializeGame(void)
         star->updateFarFunction = gs_updateFarStar;
         star->drawFunction      = gs_drawStar;
     }
-    // waves
-    for (int i = 0; i < 20; i++)
-    {
-        gs_entity_t* wave       = gs_createEntity(&gameData->entityManager, 5, GS_NO_ANIMATION, true, GS_WAVE_ASSET, 3,
-                                                  (vec_t){0, 0}, gameData);
-        wave->data              = heap_caps_calloc(1, sizeof(gs_wave_t), MALLOC_CAP_SPIRAM);
-        wave->updateFunction    = gs_updateWave;
-        wave->updateFarFunction = gs_updateFarWave;
-        wave->drawFunction      = gs_drawWave;
 
-        gs_randomizeWaveData(wave);
-        gs_positionWave(wave);
-    }
 
     // tilemap
     gameData->entityManager.tilemap       = gs_createEntity(&gameData->entityManager, 15, GS_NO_ANIMATION, true,
@@ -300,6 +288,41 @@ static void gs_initializeGame(void)
     {
         ((gs_tilemap_t*)gameData->entityManager.tilemap->data)->tiles[w]
             = heap_caps_calloc_tag(TILE_FIELD_HEIGHT, sizeof(gs_tileInfo_t), MALLOC_CAP_SPIRAM, "fgTile");
+    }
+
+    // waves
+    for (int i = 0; i < 10; i++)
+    {
+        gs_entity_t* wave       = gs_createEntity(&gameData->entityManager, 5, GS_NO_ANIMATION, true, GS_WAVE_ASSET, 3,
+                                                  (vec_t){0, 0}, gameData);
+        wave->data              = heap_caps_calloc(1, sizeof(gs_wave_t), MALLOC_CAP_SPIRAM);
+        wave->updateFunction    = gs_updateWave;
+        wave->updateFarFunction = gs_updateFarWave;
+        wave->drawFunction      = gs_drawWave;
+
+        gs_randomizeWaveData(wave);
+        gs_positionWave(wave);
+    }
+
+    gs_entity_t* ocean = gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_NO_ASSET, 1,
+                        (vec_t){0xFFFF, 0xFFFF + (104 << DECIMAL_BITS)}, gameData);
+    ocean->drawFunction = gs_drawOcean;
+    ocean->updateFunction = gs_updateOcean;
+    ocean->data = heap_caps_calloc(1, sizeof(gs_ocean_t), MALLOC_CAP_SPIRAM);
+    ocean->dataType = GS_OCEAN_DATA;
+
+    for (int i = 0; i < 10; i++)
+    {
+        gs_entity_t* wave       = gs_createEntity(&gameData->entityManager, 5, GS_NO_ANIMATION, true, GS_WAVE_ASSET, 3,
+                                                  (vec_t){0, 0}, gameData);
+        wave->data              = heap_caps_calloc(1, sizeof(gs_wave_t), MALLOC_CAP_SPIRAM);
+        ((gs_wave_t*)wave->data)->fore = true;
+        wave->updateFunction    = gs_updateWave;
+        wave->updateFarFunction = gs_updateFarWave;
+        wave->drawFunction      = gs_drawWave;
+
+        gs_randomizeWaveData(wave);
+        gs_positionWave(wave);
     }
 
     // Position is in 2 places. :(
@@ -331,6 +354,16 @@ static void gs_initializeGame(void)
     gossip->drawFunction                      = gs_drawGossip;
     ((gs_gossip_t*)gossip->data)->gossipStone = gossipStone;
     gameData->entityManager.gossipStone       = gossipStone;
+    node_t* curNode = gameData->entityManager.entities->first;
+    while(curNode != NULL)
+    {
+        if(((gs_entity_t*)curNode->val)->dataType == GS_GOSSIP_STONE_DATA)
+        {
+            gameData->entityManager.gossipStoneNode = curNode;
+            break;
+        }
+        curNode = curNode->next;
+    }
 }
 
 static void gs_freeAssets(void)
@@ -481,8 +514,9 @@ void gs_submodeStateEnter(gs_submode_t submode)
                 gossipStoneNode, &gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_MOON_ASSET, 1,
                 (vec_t){0xFFFF - (87 << DECIMAL_BITS), 0xFFFF + (25 << DECIMAL_BITS)}, gameData);
             moon->updateFunction = gs_updateMoon;
-            gs_createEntityBefore(gossipStoneNode, &gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_HILL_ASSET,
+            gs_entity_t* hill = gs_createEntityBefore(gossipStoneNode, &gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_HILL_ASSET,
                                   1, (vec_t){0xFFFF, 0xFFFF + (102 << DECIMAL_BITS)}, gameData);
+            hill->drawFunction = gs_drawHill;
 
             gs_gossipStone_t* gsData = (gs_gossipStone_t*)gameData->entityManager.gossipStone->data;
             gsData->vel              = (vec_t){0, 0};
