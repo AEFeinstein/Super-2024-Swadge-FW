@@ -120,9 +120,9 @@ static const cnfsFileIdx_t bombadeetleGoal[] = {
 };
 
 static const cnfsFileIdx_t bombadeetleLevels[] = {
-    BOMB_LVL_ONE_BIN, BOMB_LVL_HELLO_BIN, BOMB_LVL_RIDEIT_BIN, BOMB_LVL_NOHOLES_BIN, BOMB_LVL_MAG_1_BIN, BOMB_LVL_SPYRL_BIN,BOMB_LVL_MOTRAINING_BIN,BOMB_LVL_UNDERDEFEAT_BIN,BOMB_LVL_CREPUSCULAR_BIN,BOMB_LVL_MOWWOW_BIN , BOMB_LVL_JERO_BIN,
-    BOMB_LVL_DOOBLY_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_BIN,BOMB_LVL_DELEPORT_BIN, BOMB_LVL_ROGER_BIN,BOMB_LVL_NARROW_BIN, BOMB_LVL_TRAP_BIN,BOMB_LVL_DODGEIT_BIN, BOMB_LVL_MAG_2_BIN, BOMB_LVL_DIPDIPDIP_BIN,
-    BOMB_LVL_WOOBLY_BIN, BOMB_LVL_RABBIT_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_2_BIN,
+    BOMB_LVL_ONE_BIN, BOMB_LVL_HELLO_BIN, BOMB_LVL_RIDEIT_BIN, BOMB_LVL_NOHOLES_BIN, BOMB_LVL_MAG_1_BIN, BOMB_LVL_SPYRL_BIN,BOMB_LVL_MOTRAINING_BIN,BOMB_LVL_NARROW_BIN ,BOMB_LVL_CREPUSCULAR_BIN,BOMB_LVL_MOWWOW_BIN , BOMB_LVL_JERO_BIN,
+    BOMB_LVL_DOOBLY_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_BIN,BOMB_LVL_MELLOR_BIN,BOMB_LVL_DELEPORT_BIN, BOMB_LVL_ROGER_BIN,BOMB_LVL_UNDERDEFEAT_BIN, BOMB_LVL_LERNDELEPORT_BIN,BOMB_LVL_DODGEIT_BIN, BOMB_LVL_MAG_2_BIN, BOMB_LVL_DIPDIPDIP_BIN,
+    BOMB_LVL_WOOBLY_BIN, BOMB_LVL_TRAP_BIN, BOMB_LVL_RABBIT_BIN, BOMB_LVL_ASTLE_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_2_BIN,
 };
 
 static const cnfsFileIdx_t bombadeetleTeleporter[] = {
@@ -858,7 +858,7 @@ static void bombadeetleLoadMap()
     bombadeetle->shloogMoveAmount = 0;
     bombadeetle->goalCount = 0;
     bombadeetle->goalAnimating = false;
-    bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT;
+    // bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT; // See if it covers cross levels
     bombadeetle->losePrompt = false;
 
     bombadeetle->collisionX = -1;
@@ -954,6 +954,8 @@ static int bombadeetleTurnAround(int direction)
 
 static void bombadeetleMainLoop(int64_t elapsedUs)
 {
+    
+    bombadeetleBackgroundUpdate(elapsedUs);
     switch (bombadeetle->state)
     {
         case STATE_MENU:
@@ -976,7 +978,6 @@ static void bombadeetleMenuLoop(int64_t elapsedUs)
 {
     
     buttonEvt_t evt;
-    bombadeetleBackgroundUpdate(elapsedUs);
 
 
     while(checkButtonQueueWrapper(&evt))
@@ -1013,6 +1014,7 @@ static void bombadeetleMenuLoop(int64_t elapsedUs)
                 {
                     case 0:
                         bombadeetle->state = STATE_STAGESELECT;
+                        bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT;
                         break;
                     case 1:
                         bombadeetle->state = STATE_INSTRUCTIONS;
@@ -1064,6 +1066,19 @@ static void bombadeetleBackgroundUpdate(int64_t elapsedUs)
                 bombadeetle->backgroundSpeed = speed;                
             }
         }
+
+        int speed = touches[tIdx].position / 125;
+        if (touches[tIdx].touched && tIdx == 0)
+        {
+
+            if (speed % 2 == 1) speed--;
+
+            if (speed < 2) speed = 2;
+            if (speed > 8) speed = 8;
+            ESP_LOGI(TAG, "Game speed %d", speed);
+            bombadeetle->gameSpeed = speed;
+
+        }
     }
 
 }
@@ -1071,10 +1086,6 @@ static void bombadeetleBackgroundUpdate(int64_t elapsedUs)
 static void bombadeetleInstructionsLoop(int64_t elapsedUs)
 {
     buttonEvt_t evt;
-
-    bombadeetleBackgroundUpdate(elapsedUs);
-
-
     while(checkButtonQueueWrapper(&evt))
     {
         if (evt.down)
@@ -1110,7 +1121,6 @@ static void bombadeetleStageSelectLoop(int64_t elapsedUs)
 {
     
     buttonEvt_t evt;
-    bombadeetleBackgroundUpdate(elapsedUs);
     
     while(checkButtonQueueWrapper(&evt))
     {
@@ -1250,6 +1260,7 @@ static void bombadeetlePauseMenu(int64_t elapsedUs)
                     case 1:
                         bombadeetle->state = STATE_STAGESELECT;
                         bombadeetle->paused = false;
+                        bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT;
                         break;
                 }
             }
@@ -1321,25 +1332,6 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
     }
 
     
-    //Controls
-
-    //TODO: Fix this so you're not doing it in three different places.
-    linearTouch_t touches[2] = {0};    
-    getTouchLinear(touches, ARRAY_SIZE(touches));
-    for (uint8_t tIdx = 0; tIdx < ARRAY_SIZE(touches); tIdx++)
-    {
-        
-        if (touches[tIdx].touched && tIdx == 1)
-        {            
-            int speed = touches[tIdx].position / 125;
-            if (speed < 0) speed = 0;
-            if (speed > 8) speed = 8;
-
-            bombadeetle->backgroundSpeed = speed;
-
-            ESP_LOGI(TAG, "Background speed = %d", speed );
-        }
-    }
     
     switch (bombadeetle->state)
     {
@@ -1397,6 +1389,9 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                         }
                         //Reset map
                         bombadeetle->state = STATE_STAGESELECT;
+                        bombadeetle->paused = false;
+                        bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT;
+
                     }
                 }
             }
@@ -1420,21 +1415,7 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                 }
             }
 
-            for (uint8_t tIdx = 0; tIdx < ARRAY_SIZE(touches); tIdx++)
-            {
-                int speed = touches[tIdx].position / 125;
-                if (touches[tIdx].touched && tIdx == 0)
-                {
-
-                    if (speed % 2 == 1) speed--;
-
-                    if (speed < 2) speed = 2;
-                    if (speed > 8) speed = 8;
-                    ESP_LOGI(TAG, "Game speed %d", speed);
-                    bombadeetle->gameSpeed = speed;
-
-                }
-            }
+            
         case STATE_PLACING:
             while(checkButtonQueueWrapper(&evt))
             {
@@ -1504,16 +1485,16 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                         
                     }
 
-
+                        
+                    if (evt.button & PB_START)
+                    {
+                        bombadeetle->paused = !bombadeetle->paused;
+                        bombadeetle->lastState = bombadeetle->state;
+                        
+                    }
                 }
 
                 
-                if (evt.button & PB_START)
-                {
-                    bombadeetle->paused = !bombadeetle->paused;
-                    bombadeetle->lastState = bombadeetle->state;
-                    
-                }
                 
                 if (evt.button & PB_A)
                 {
@@ -1586,6 +1567,7 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                         {
                             //Reset map                        
                             bombadeetle->state = STATE_STAGESELECT;
+                            bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT;
                         }
                     }
                 }
