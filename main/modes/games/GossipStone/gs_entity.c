@@ -327,7 +327,7 @@ void gs_updateGossipStone(gs_entity_t* self)
         gsData->vel = addVec2d(gsData->vel, divVec2d(rocketForce, 10000000));
     }
     // gravity
-    gsData->vel.y += gsData->gravity * self->gameData->elapsedUs >> 18;
+    gsData->vel.y += gsData->gravity * self->gameData->elapsedUs >> 17;
     self->pos.x += gsData->vel.x * self->gameData->elapsedUs >> 20;
     self->pos.y += gsData->vel.y * self->gameData->elapsedUs >> 20;
 
@@ -339,12 +339,6 @@ void gs_updateGossipStone(gs_entity_t* self)
     if (self->pos.y < 0xFFFF)
     {
         self->gameData->entityManager.camera.pos.y = self->pos.y;
-    }
-    // ground collision
-    if (self->pos.y > 0xFFFF + (90 << DECIMAL_BITS)) // 0xFFFF + (82 << DECIMAL_BITS))
-    {
-        self->pos.y   = 0xFFFF + (90 << DECIMAL_BITS);
-        gsData->vel.y = 0;
     }
     self->gameData->entityManager.camera.pos.x = self->pos.x;
     self->gameData->entityManager.camera.vel
@@ -591,14 +585,15 @@ void gs_spawnLanding(gs_entity_t* self)
 
 void gs_positionWave(gs_entity_t* self)
 {
-    gs_wave_t* wData = (gs_wave_t*)self->data;
-    wData->reverseAnim = false;
-    self->currentAnimationFrame           = 0;
-    self->animationTimer                  = 0;
-    self->pos.x = self->gameData->entityManager.camera.pos.x + gs_randomInt(-(TFT_WIDTH << (DECIMAL_BITS - 1)), TFT_WIDTH << (DECIMAL_BITS - 1));
-    self->pos.y = 0xFFFF + gs_randomInt(92 << DECIMAL_BITS, 103 << DECIMAL_BITS);
-    self->pos.y += wData->fore * (11<<DECIMAL_BITS);
-    wData->velX = gs_randomInt(20,30);
+    gs_wave_t* wData            = (gs_wave_t*)self->data;
+    wData->reverseAnim          = false;
+    self->currentAnimationFrame = 0;
+    self->animationTimer        = 0;
+    self->pos.x                 = self->gameData->entityManager.camera.pos.x
+                                  + gs_randomInt(-(TFT_WIDTH << (DECIMAL_BITS - 1)), TFT_WIDTH << (DECIMAL_BITS - 1));
+    self->pos.y                 = 0xFFFF + gs_randomInt(92 << DECIMAL_BITS, 103 << DECIMAL_BITS);
+    self->pos.y += wData->fore * (11 << DECIMAL_BITS);
+    wData->velX = gs_randomInt(20, 30);
 }
 
 void gs_randomizeWaveData(gs_entity_t* self)
@@ -627,10 +622,20 @@ void gs_updateFarWave(gs_entity_t* self)
 
 void gs_updateWave(gs_entity_t* self)
 {
-    int parallax = (( self->pos.y - (self->gameData->entityManager.camera.pos.y - (TFT_HEIGHT<<(DECIMAL_BITS - 1))))>>DECIMAL_BITS) - 223;
-    //printf("%d\n", parallax);
+    int parallax = ((self->pos.y - (self->gameData->entityManager.camera.pos.y - (TFT_HEIGHT << (DECIMAL_BITS - 1))))
+                    >> DECIMAL_BITS)
+                   - 223;
+    // printf("%d\n", parallax);
     self->pos.x += ((gs_wave_t*)self->data)->velX * self->gameData->elapsedUs >> 17;
-    self->pos.x += self->gameData->entityManager.camera.vel.x * (parallax*3) / 120;
+    int denominator = 120;
+    if (!((gs_wave_t*)self->data)->fore)
+    {
+        denominator *= parallax / 3;
+    }
+    if (denominator != 0)
+    {
+        self->pos.x += self->gameData->entityManager.camera.vel.x * (parallax * 3) / denominator;
+    }
 }
 
 void gs_drawWave(gs_entity_t* self)
@@ -673,35 +678,38 @@ void gs_drawWave(gs_entity_t* self)
 
 void gs_drawOcean(gs_entity_t* self)
 {
-    //printf("cam y %d\n", self->gameData->entityManager.camera.pos.y);
-    //if(self->gameData->entityManager.camera.pos.y < ?)
-    // {
-    //     return;
-    // }
-    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1)
-                - self->gameData->assets[self->assetIndex].originY;
-    drawRectFilled(0,y,TFT_WIDTH,y+16,c011);
+    // printf("cam y %d\n", self->gameData->entityManager.camera.pos.y);
+    // if(self->gameData->entityManager.camera.pos.y < ?)
+    //  {
+    //      return;
+    //  }
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1);
+    drawRectFilled(0, y, TFT_WIDTH, y + 16, c011);
 }
 
-//Sorts the player where it needs to be for rendering.
+// Sorts the player where it needs to be for rendering.
 void gs_updateOcean(gs_entity_t* self)
 {
-    gs_ocean_t* oData = (gs_ocean_t*) self->data;
-    bool stoneAboveOcean = self->gameData->entityManager.gossipStone->pos.x < 62015 || self->gameData->entityManager.gossipStone->pos.x > 69055;
-    if(stoneAboveOcean != oData->stoneAboveOcean)
+    // resort for rendering order
+    gs_ocean_t* oData    = (gs_ocean_t*)self->data;
+    bool stoneAboveOcean = self->gameData->entityManager.gossipStone->pos.x < 62015
+                           || self->gameData->entityManager.gossipStone->pos.x > 69055;
+    if (stoneAboveOcean != oData->stoneAboveOcean)
     {
         oData->stoneAboveOcean = stoneAboveOcean;
-        gs_entity_t* flame = removeEntry(self->gameData->entityManager.entities, self->gameData->entityManager.gossipStoneNode->next);
+        gs_entity_t* flame
+            = removeEntry(self->gameData->entityManager.entities, self->gameData->entityManager.gossipStoneNode->next);
         removeEntry(self->gameData->entityManager.entities, self->gameData->entityManager.gossipStoneNode);
-        if(stoneAboveOcean)
-        {   
-            //add it before the ocean
+        if (stoneAboveOcean)
+        {
+            // add it before the ocean
             node_t* curNode = self->gameData->entityManager.entities->first;
-            while(curNode != NULL)
+            while (curNode != NULL)
             {
-                if(((gs_entity_t*)curNode->val)->dataType == GS_OCEAN_DATA)
+                if (((gs_entity_t*)curNode->val)->dataType == GS_OCEAN_DATA)
                 {
-                    addBefore(self->gameData->entityManager.entities, self->gameData->entityManager.gossipStone, curNode);
+                    addBefore(self->gameData->entityManager.entities, self->gameData->entityManager.gossipStone,
+                              curNode);
                     break;
                 }
                 curNode = curNode->next;
@@ -709,23 +717,24 @@ void gs_updateOcean(gs_entity_t* self)
         }
         else
         {
-            //add it after the hill
+            // add it after the hill
             node_t* curNode = self->gameData->entityManager.entities->first;
-            while(curNode != NULL)
+            while (curNode != NULL)
             {
-                if(((gs_entity_t*)curNode->val)->assetIndex == GS_HILL_ASSET)
+                if (((gs_entity_t*)curNode->val)->assetIndex == GS_HILL_ASSET)
                 {
-                    addAfter(self->gameData->entityManager.entities, self->gameData->entityManager.gossipStone, curNode);
+                    addAfter(self->gameData->entityManager.entities, self->gameData->entityManager.gossipStone,
+                             curNode);
                     break;
                 }
                 curNode = curNode->next;
             }
         }
-        //add the flame after the gossip stone
+        // add the flame after the gossip stone
         node_t* curNode = self->gameData->entityManager.entities->first;
-        while(curNode != NULL)
+        while (curNode != NULL)
         {
-            if(((gs_entity_t*)curNode->val)->dataType == GS_GOSSIP_STONE_DATA)
+            if (((gs_entity_t*)curNode->val)->dataType == GS_GOSSIP_STONE_DATA)
             {
                 self->gameData->entityManager.gossipStoneNode = curNode;
                 break;
@@ -733,6 +742,24 @@ void gs_updateOcean(gs_entity_t* self)
             curNode = curNode->next;
         }
         addAfter(self->gameData->entityManager.entities, flame, self->gameData->entityManager.gossipStoneNode);
+    }
+
+    gs_entity_t* gossipStone = self->gameData->entityManager.gossipStone;
+    gs_gossipStone_t* gsData = (gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data;
+    // ground and water physics for the player. (bouancy)
+    //  ground collision
+    if (gossipStone->pos.y > 0xFFFF + (90 << DECIMAL_BITS)) // 0xFFFF + (82 << DECIMAL_BITS))
+    {
+        if (!stoneAboveOcean)
+        {
+            gossipStone->gameData->entityManager.gossipStone->pos.y = 0xFFFF + (90 << DECIMAL_BITS);
+            gsData->vel.y                                           = 0;
+        }
+        else
+        {
+            int64_t height = (gossipStone->gameData->entityManager.gossipStone->pos.y - 0xFFFF) >> DECIMAL_BITS;
+            gsData->vel.y -= (int32_t)(pow(height, 1.13) * self->gameData->elapsedUs) >> 18;
+        }
     }
 }
 
