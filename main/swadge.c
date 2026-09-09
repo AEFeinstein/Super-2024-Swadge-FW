@@ -441,7 +441,7 @@ void app_main(void)
 
     initLeds(GPIO_LED, ledMirrorGpio, getLedBrightnessSetting());
 
-    initCh32v003(GPIO_SAO_A);
+    initCh32v003(GPIO_CH32_PROG);
 
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();
