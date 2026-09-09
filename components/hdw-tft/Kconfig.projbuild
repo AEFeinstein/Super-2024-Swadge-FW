@@ -1,7 +1,7 @@
 menu "TFT Configuration"
 	choice TFT_TYPE
 		prompt "Select TFT"
-		default ST7735_160x80
+		default GC9307_240x280
 		help
 			Select Display Driver.
 		config ST7735_160x80
@@ -30,17 +30,16 @@ menu "TFT Configuration"
 		int
 		range 0 255
 		default 200
-		prompt "Select TFT Default Brigthness (0..255)"
+		prompt "Select TFT Default Brightness (0..255)"
 
 	config TFT_MIN_BRIGHTNESS
 		int
-		prompt "Selects the minimum brigthness for this paticular swadge"
+		prompt "Selects the minimum brightness for this particular swadge"
 		default 10
 
 	config TFT_MAX_BRIGHTNESS
 		int
-		prompt "Selects the maximum safe brigthness for this paticular swadge"
+		prompt "Selects the maximum safe brightness for this particular swadge"
 		default 200
 
 endmenu
-
