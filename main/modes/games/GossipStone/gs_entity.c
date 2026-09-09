@@ -110,6 +110,10 @@ void gs_updateGossip(gs_entity_t* self)
         {
             case GS_GOSSIP_SUBMODE:
             case GS_AMA_SUBMODE:
+                if (data->advanceScene)
+                {
+                    self->gameData->newSubmode = GS_PROPHECY_SUBMODE;
+                }
                 data->index               = gs_randomInt(1, data->arr_size - 1);
                 data->gossipStone->paused = false;
                 break;
@@ -165,11 +169,20 @@ void gs_recordProgress(gs_entity_t* self)
         // update the trophy
         trophyUpdate(&(*self->gameData->trophyData)[THE_PROPHECY_TROPH],
                      trophyGetSavedValue(&(*self->gameData->trophyData)[THE_PROPHECY_TROPH]) + 1, true);
+
+        if (trophyGetSavedValue(&(*self->gameData->trophyData)[THE_PROPHECY_TROPH]) == GOSSIP_COUNT - 1)
+        {
+            data->advanceScene = true;
+        }
     }
 }
 
 void gs_drawGossip(gs_entity_t* self)
 {
+    if (self->gameData->submode == GS_CRYSTAL_SUBMODE)
+    {
+        return;
+    }
     gs_gossip_t* data = ((gs_gossip_t*)self->data);
     if (data->dialogueFinished)
     {
@@ -820,4 +833,14 @@ void gs_drawParticle(gs_entity_t* self)
     int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS) + (TFT_WIDTH >> 1);
     int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1);
     setPxTft(x, y, c344);
+}
+
+void gs_drawCrystalBall(gs_entity_t* self)
+{
+    drawWsgSimple(&self->gameData->assets[self->assetIndex].frames[0], 7, 122);
+    drawWsg(&self->gameData->assets[self->assetIndex].frames[0], 140, 122, true, false, 0);
+    drawWsg(&self->gameData->assets[self->assetIndex].frames[1], 76, 3, false, false, 0);
+    drawRectFilled(0, 122, 7, 207, c000);
+    drawRectFilled(273, 122, TFT_WIDTH, 207, c000);
+    drawRectFilled(0, 207, TFT_WIDTH, TFT_HEIGHT, c000);
 }

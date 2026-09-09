@@ -14,6 +14,7 @@ typedef enum __attribute__((packed))
     GS_AMA_SUBMODE,
     GS_PROPHECY_SUBMODE,
     GS_MOON_SUBMODE,
+    GS_CRYSTAL_SUBMODE,
 } gs_submode_t;
 
 //==============================================================================
@@ -25,6 +26,7 @@ typedef struct gs_gameData_t
     const trophyData_t (*trophyData)[GS_TROPHY_COUNT];
     // Current stuff being shown
     gs_submode_t submode;
+    gs_submode_t newSubmode;
     // Main Menu
     menu_t* menu;
     menuMegaRenderer_t* menuRenderer;
@@ -40,11 +42,11 @@ typedef struct gs_gameData_t
     gs_asset_t assets[NUM_ASSETS];
     led_t leds[CONFIG_NUM_LEDS];
 
-    cnfsFileIdx_t songs[1];
-    int8_t currentSongIdx;
-    midiFile_t songMidi;
-    int32_t headroom; // volume fade from 0x4000 to 0x0
-    bool songFading;
+    // cnfsFileIdx_t songs[1];
+    // int8_t currentSongIdx;
+    // midiFile_t songMidi;
+    // int32_t headroom; // volume fade from 0x4000 to 0x0
+    // bool songFading;
 
     // NVS related
     // Usage: Each bit is a gossip seen or unseen.

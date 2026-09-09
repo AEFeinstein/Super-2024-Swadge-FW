@@ -23,7 +23,8 @@
 const char gs_ModeName[]                = "Talky Rocky";
 const char gs_trophyNVS[]               = "OreatorTroph";
 static const char gs_GossipStr[]        = "Gossip";
-static const char gs_AskMeAnythingStr[] = "Ask Me Anything";
+static const char gs_AskMeAnythingStr[] = "Fortune";
+static const char gs_CrystalBallStr[]   = "Crystal Ball";
 static const char gs_ProphecyStr[]      = "The Prophecy";
 static const char gs_MoonStr[]          = "The Moon";
 static const char gs_ExitStr[]          = "Exit";
@@ -128,8 +129,9 @@ static void gs_enterMode(void)
     gameData->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
 
     // Initialize the main menu
-    gameData->submode = GS_MENU_SUBMODE;
-    gameData->menu    = initMenu(gs_ModeName, gs_menuCb);
+    gameData->submode    = GS_MENU_SUBMODE;
+    gameData->newSubmode = GS_MENU_SUBMODE;
+    gameData->menu       = initMenu(gs_ModeName, gs_menuCb);
 
     gs_populateMenu();
 
@@ -164,11 +166,10 @@ void gs_populateMenu(void)
     }
     // Gossip
     addSingleItemToMenu(gameData->menu, gs_GossipStr);
-    // Ask Me Anything
+    // Fortune
     addSingleItemToMenu(gameData->menu, gs_AskMeAnythingStr);
-
-    // The Moon
-
+    // Crystal Ball
+    addSingleItemToMenu(gameData->menu, gs_CrystalBallStr);
     // Exit
     addSingleItemToMenu(gameData->menu, gs_ExitStr);
 }
@@ -206,6 +207,7 @@ static void gs_mainLoop(int64_t elapsedUs)
             case GS_AMA_SUBMODE:
             case GS_PROPHECY_SUBMODE:
             case GS_MOON_SUBMODE:
+            case GS_CRYSTAL_SUBMODE:
             {
                 if (evt.down)
                 {
@@ -235,16 +237,21 @@ static void gs_mainLoop(int64_t elapsedUs)
         case GS_AMA_SUBMODE:
         case GS_PROPHECY_SUBMODE:
         case GS_MOON_SUBMODE:
+        case GS_CRYSTAL_SUBMODE:
         {
+            gameData->elapsedUs = elapsedUs;
             if (gameData->btnDownState & PB_B)
             {
-                gs_submodeStateExit();
-                break;
+                gameData->newSubmode = GS_MENU_SUBMODE;
             }
-            gameData->elapsedUs = elapsedUs;
             // update the whole engine via entity management
             gs_updateEntities(&gameData->entityManager);
             gs_drawEntities(&gameData->entityManager);
+            if (gameData->submode != gameData->newSubmode)
+            {
+                gs_submodeStateExit();
+                gs_submodeStateEnter(gameData->newSubmode);
+            }
             break;
         }
         default:
@@ -267,12 +274,9 @@ static void gs_initializeGame(void)
     // stars
     for (int i = 0; i < 20; i++)
     {
-        gs_entity_t* star = gs_createEntity(
-            &gameData->entityManager, 0, GS_NO_ANIMATION, false, GS_STAR_ASSET, 0,
-            addVec2d(gameData->entityManager.camera.pos, (vec_t){(gs_randomInt(-(TFT_WIDTH >> 1), TFT_WIDTH >> 1) * 16),
-                                                                 (gs_randomInt(0, 85) << DECIMAL_BITS)}),
-            gameData);
-        star->data = heap_caps_calloc(1, sizeof(gs_star_t), MALLOC_CAP_SPIRAM);
+        gs_entity_t* star = gs_createEntity(&gameData->entityManager, 0, GS_NO_ANIMATION, false, GS_STAR_ASSET, 0,
+                                            addVec2d(gameData->entityManager.camera.pos, (vec_t){0, 0}), gameData);
+        star->data        = heap_caps_calloc(1, sizeof(gs_star_t), MALLOC_CAP_SPIRAM);
         gs_randomizeStarData(star);
         star->updateFunction    = gs_updateStar;
         star->updateFarFunction = gs_updateFarStar;
@@ -415,6 +419,10 @@ bool gs_menuCb(const char* label, bool selected, uint32_t value)
         {
             gs_submodeStateEnter(GS_AMA_SUBMODE);
         }
+        else if (label == gs_CrystalBallStr)
+        {
+            gs_submodeStateEnter(GS_CRYSTAL_SUBMODE);
+        }
         else if (label == gs_ProphecyStr)
         {
             gs_submodeStateEnter(GS_PROPHECY_SUBMODE);
@@ -440,7 +448,6 @@ void gs_switchState(gs_submode_t submode)
 // Frees up any entities that are specific to the current submode
 void gs_submodeStateExit(void)
 {
-    gameData->submode = GS_MENU_SUBMODE;
     gs_populateMenu();
     // the default scene state INCLUDES stars, gossip, gossip stone, flame, tilemap
     node_t* curNode = (node_t*)gameData->entityManager.entities->last;
@@ -455,6 +462,7 @@ void gs_submodeStateExit(void)
             case GS_MOON_ASSET:
             case GS_HI_RES_MOON_ASSET:
             case GS_LANDING_ASSET:
+            case GS_CRYSTAL_ASSET:
                 gs_freeData(curNode->val);
                 gs_freeAsset(&gameData->assets[((gs_entity_t*)curNode->val)->assetIndex]);
                 removeEntry(gameData->entityManager.entities, curNode);
@@ -470,31 +478,53 @@ void gs_submodeStateExit(void)
     gData->messageList = moonList;
     gData->arr_size    = MOON_COUNT;
     // reset a few things because the player may have exited and entered.
-    gData->index              = 0;
-    gData->progress           = 0;
-    gData->onDialogueFinished = NULL;
-    gs_gossipStone_t* gsData  = (gs_gossipStone_t*)gameData->entityManager.gossipStone->data;
-    gsData->rcsEnabled        = false;
-    gsData->throttleEnabled   = false;
+    gData->index                                        = 0;
+    gData->progress                                     = 0;
+    gData->onDialogueFinished                           = NULL;
+    gData->advanceScene                                 = false;
+    gameData->entityManager.gossipStone->updateFunction = gs_updateGossipStone;
+    gs_gossipStone_t* gsData                            = (gs_gossipStone_t*)gameData->entityManager.gossipStone->data;
+    gsData->rcsEnabled                                  = false;
+    gsData->throttleEnabled                             = false;
     // Position is in 3 places. :(
     gameData->entityManager.gossipStone->pos = (vec_t){0xFFFF, 0xFFFF + (90 << DECIMAL_BITS)};
     gameData->entityManager.camera.pos       = (vec_t){0xFFFF, 0xFFFF};
+
+    gameData->submode = GS_MENU_SUBMODE;
 }
 
 // Sets up entities for a new submode
 void gs_submodeStateEnter(gs_submode_t submode)
 {
-    gs_gossip_t* gData = (gs_gossip_t*)gameData->entityManager.gossip->data;
+    gameData->submode    = submode;
+    gameData->newSubmode = submode;
+    gs_gossip_t* gData   = (gs_gossip_t*)gameData->entityManager.gossip->data;
     // reset a few things because the player may have exited and entered.
     gData->index            = 0;
     gData->progress         = 0;
     gData->dialogueFinished = false;
+
+    gameData->entityManager.camera.pos = (vec_t){0xFFFF, 0xFFFF};
+    node_t* curNode                    = gameData->entityManager.entities->first;
+    while (curNode != NULL)
+    {
+        gs_entity_t* curEntity = (gs_entity_t*)curNode->val;
+        if (curEntity->assetIndex == GS_STAR_ASSET)
+        {
+            curEntity->pos = addVec2d(
+                gameData->entityManager.camera.pos,
+                (vec_t){(gs_randomInt(-(TFT_WIDTH >> 1), TFT_WIDTH >> 1) * 16), (gs_randomInt(0, 85) << DECIMAL_BITS)});
+        }
+        curNode = curNode->next;
+    }
+
     // shared steps
     switch (submode)
     {
         case GS_GOSSIP_SUBMODE:
         case GS_AMA_SUBMODE:
         case GS_PROPHECY_SUBMODE:
+        case GS_CRYSTAL_SUBMODE:
         {
             gs_loadAsset(SKY_GRADIENT_WSG, 1, &gameData->assets[GS_SKY_GRADIENT_ASSET]);
             gs_loadAsset(SPACE_GRADIENT_WSG, 1, &gameData->assets[GS_SPACE_GRADIENT_ASSET]);
@@ -544,6 +574,28 @@ void gs_submodeStateEnter(gs_submode_t submode)
         gData->messageList = AMAList;
         gData->arr_size    = AMA_COUNT;
     }
+    else if (submode == GS_CRYSTAL_SUBMODE)
+    {
+        gameData->entityManager.gossipStone->updateFunction = NULL;
+        gameData->entityManager.camera.pos                  = (vec_t){0, 0};
+        node_t* curNode                                     = gameData->entityManager.entities->first;
+        while (curNode != NULL)
+        {
+            gs_entity_t* curEntity = (gs_entity_t*)curNode->val;
+            if (curEntity->assetIndex == GS_STAR_ASSET)
+            {
+                curEntity->pos = (vec_t){gs_randomInt(-(TFT_WIDTH >> 1), TFT_WIDTH >> 1) << DECIMAL_BITS,
+                                         gs_randomInt(-(TFT_HEIGHT >> 1), 2) << DECIMAL_BITS};
+            }
+            curNode = curNode->next;
+        }
+        gData->messageList = AMAList;
+        gData->arr_size    = AMA_COUNT;
+        gs_loadAsset(CRYSTAL_BALL_0_WSG, 2, &gameData->assets[GS_CRYSTAL_ASSET]);
+        gs_entity_t* crystalBall  = gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, false,
+                                                    GS_CRYSTAL_ASSET, 1, (vec_t){0, 0}, gameData);
+        crystalBall->drawFunction = gs_drawCrystalBall;
+    }
     else if (submode == GS_PROPHECY_SUBMODE)
     {
         gData->messageList        = prophecyList;
@@ -569,6 +621,4 @@ void gs_submodeStateEnter(gs_submode_t submode)
         gData->messageList = moonList;
         gData->arr_size    = MOON_COUNT;
     }
-
-    gameData->submode = submode;
 }
