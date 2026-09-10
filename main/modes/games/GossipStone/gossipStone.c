@@ -599,21 +599,25 @@ void gs_submodeStateEnter(gs_submode_t submode)
         gs_entity_t* crystalBall = gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, false,
                                                    GS_CRYSTAL_ASSET, 1, (vec_t){0, 0}, gameData);
         crystalBall->data        = heap_caps_calloc(1, sizeof(gs_crystalBall_t), MALLOC_CAP_SPIRAM);
+        gs_crystalBall_t* cbData = (gs_crystalBall_t*)crystalBall->data;
 
+        crystalBall->drawFunction = gs_drawCrystalBall;
         if (gameData->attendeesMisery >= 0)
         {
+            cbData->colorScaling = 102;
             sprintf(
-                ((gs_crystalBall_t*)crystalBall->data)->dynamicText, "%.1f%%\n",
+                cbData->dynamicText, "%.1f%%\n",
                 (float)100
                     * (float)((GOSSIP_COUNT - 1) - trophyGetSavedValue(&(*gameData->trophyData)[THE_PROPHECY_TROPH]))
                     / (float)(GOSSIP_COUNT - 1));
-            crystalBall->drawFunction = gs_drawCrystalBall;
+            crystalBall->updateFunction = NULL;
         }
         else
         {
-            sprintf(((gs_crystalBall_t*)crystalBall->data)->dynamicText,
-                    "After %d shakes, a new item appeared in the menu.\n", gameData->attendeesMisery * -1);
-            crystalBall->drawFunction = gs_drawCrystalBallWacky;
+            cbData->colorScaling = 27;
+            sprintf(cbData->dynamicText, "After %d shakes, a new item appeared in the menu.\n",
+                    gameData->attendeesMisery * -1);
+            crystalBall->updateFunction = gs_updateCrystalBall;
         }
     }
     else if (submode == GS_PROPHECY_SUBMODE)

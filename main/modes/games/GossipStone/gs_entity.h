@@ -165,6 +165,7 @@ typedef struct
 typedef struct
 {
     char dynamicText[60];
+    uint8_t colorScaling;
 } gs_crystalBall_t;
 
 //==============================================================================
@@ -206,5 +207,5 @@ void gs_updateOcean(gs_entity_t* self);
 void gs_drawHill(gs_entity_t* self);
 void gs_updateParticle(gs_entity_t* self);
 void gs_drawParticle(gs_entity_t* self);
+void gs_updateCrystalBall(gs_entity_t* self);
 void gs_drawCrystalBall(gs_entity_t* self);
-void gs_drawCrystalBallWacky(gs_entity_t* self);

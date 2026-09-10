@@ -844,26 +844,17 @@ void gs_drawParticle(gs_entity_t* self)
     setPxTft(x, y, c344);
 }
 
-void gs_drawCrystalBall(gs_entity_t* self)
+void gs_updateCrystalBall(gs_entity_t* self)
 {
-    drawWsgSimple(&self->gameData->assets[self->assetIndex].frames[0], 7, 122);
-    drawWsg(&self->gameData->assets[self->assetIndex].frames[0], 140, 122, true, false, 0);
-    drawWsg(&self->gameData->assets[self->assetIndex].frames[1], 76, 3, false, false, 0);
-    drawRectFilled(0, 122, 7, 207, c000);
-    drawRectFilled(273, 122, TFT_WIDTH, 207, c000);
-    drawRectFilled(0, 207, TFT_WIDTH, TFT_HEIGHT, c000);
-    int16_t xOff = 5;
-    int16_t yOff = 50;
-    drawTextWordWrapCentered(&self->gameData->font_big, c543, ((gs_crystalBall_t*)self->data)->dynamicText, &xOff,
-                             &yOff, 275, yOff + 80);
-    xOff = 5;
-    yOff = 212;
-    drawTextWordWrapCentered(&self->gameData->font_gossip, c445, "chance to hear new gossip", &xOff, &yOff, 275,
-                             TFT_HEIGHT);
+    if (self->gameData->touchState[0].touched)
+    {
+        ((gs_crystalBall_t*)self->data)->colorScaling = self->gameData->touchState[0].position / 10;
+    }
 }
 
-void gs_drawCrystalBallWacky(gs_entity_t* self)
+void gs_drawCrystalBall(gs_entity_t* self)
 {
+    gs_crystalBall_t* cbData = (gs_crystalBall_t*)self->data;
     SETUP_FOR_TURBO();
 
     int w = 128;
@@ -886,7 +877,7 @@ void gs_drawCrystalBallWacky(gs_entity_t* self)
                           + sin(sqrt((double)(x * x + y * y)) / 8.0f + self->gameData->clock * 0.007f);
 
             // We've added four sine waves, so -4 thru 4 must become 0 thru 216 (number of colors)
-            color = (int)((color + 4.0f) * 27.0f);
+            color = (int)((color + 4.0f) * cbData->colorScaling);
 
             if (color > 216)
                 color = 216;
@@ -900,7 +891,20 @@ void gs_drawCrystalBallWacky(gs_entity_t* self)
     drawWsg(&self->gameData->assets[self->assetIndex].frames[1], 76, 3, false, false, 0);
 
     int16_t xOff = 5;
-    int16_t yOff = 212;
-    drawTextWordWrapCentered(&self->gameData->font_gossip, c445, ((gs_crystalBall_t*)self->data)->dynamicText, &xOff,
-                             &yOff, 275, TFT_HEIGHT);
+    int16_t yOff = 50;
+    if (self->gameData->attendeesMisery >= 0)
+    {
+        drawTextWordWrapCentered(&self->gameData->font_big, c543, cbData->dynamicText, &xOff, &yOff, 275, yOff + 80);
+        xOff = 5;
+        yOff = 212;
+        drawTextWordWrapCentered(&self->gameData->font_gossip, c543, "chance to hear new gossip", &xOff, &yOff, 275,
+                                 TFT_HEIGHT);
+    }
+    else
+    {
+        xOff = 5;
+        yOff = 212;
+        drawTextWordWrapCentered(&self->gameData->font_gossip, c543, cbData->dynamicText, &xOff, &yOff, 275,
+                                 TFT_HEIGHT);
+    }
 }
