@@ -60,7 +60,11 @@ void initMic(gpio_num_t gpio)
             adc_continuous_config_t dig_cfg = {
                 .sample_freq_hz = ADC_SAMPLE_RATE_HZ,
                 .conv_mode      = conv,
-                .format         = ADC_DIGI_OUTPUT_FORMAT_TYPE1,
+#if CONFIG_IDF_TARGET_ESP32S2
+                .format = ADC_DIGI_OUTPUT_FORMAT_TYPE1,
+#elif CONFIG_IDF_TARGET_ESP32S3
+                .format = ADC_DIGI_OUTPUT_FORMAT_TYPE2,
+#endif
             };
 
             adc_digi_pattern_config_t adc_pattern[SOC_ADC_PATT_LEN_MAX] = {0};
@@ -143,7 +147,7 @@ uint32_t loopMic(uint16_t* outSamples, uint32_t outSamplesMax)
             // Loop, but don't go over the number of read samples or number of samples to return
             for (int i = 0; (i < ret_num) && (samplesRead < outSamplesMax); i += SOC_ADC_DIGI_RESULT_BYTES)
             {
-// ADC_DIGI_OUTPUT_FORMAT_TYPE1 is specified in continuous_adc_init()
+                // ADC_DIGI_OUTPUT_FORMAT_TYPE1 or 2 is specified in continuous_adc_init()
 #if CONFIG_IDF_TARGET_ESP32S2
                 *(outSamples++) = ((adc_digi_output_data_t*)(&result[i]))->type1.data;
 #elif CONFIG_IDF_TARGET_ESP32S3
