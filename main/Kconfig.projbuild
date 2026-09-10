@@ -56,23 +56,6 @@ menu "Swadge Configuration"
 				printf() is sent over the SAO connector instead of LED mirroring.
 	endchoice
 
-	choice SOUND_OUTPUT_TYPE
-		prompt "Select Sound Output"
-		default SOUND_OUTPUT_SPEAKER
-		help
-			Select sound output, either the buzzers or the speaker.
-		config SOUND_OUTPUT_BUZZER
-			bool "SOUND_OUTPUT_BUZZER"
-			depends on HARDWARE_WAVEBIRD || HARDWARE_GUNSHIP
-			help
-				Sound comes out the two buzzers
-		config SOUND_OUTPUT_SPEAKER
-			bool "SOUND_OUTPUT_SPEAKER"
-			depends on HARDWARE_HOTDOG_PROTO || HARDWARE_HOTDOG_PRODUCTION || HARDWARE_PULSE || HARDWARE_FAIRY_PROTO
-			help
-				Sound comes out the speaker
-	endchoice
-
 	choice FACTORY_TEST_TYPE
 		prompt "Select Factory Test Type"
 		default FACTORY_TEST_NORMAL

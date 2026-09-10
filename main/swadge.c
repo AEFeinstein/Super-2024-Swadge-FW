@@ -460,7 +460,7 @@ void app_main(void)
     initLeds(GPIO_LED, ledMirrorGpio, getLedBrightnessSetting());
 
     // Initialize CH32, if it exists
-    if (GPIO_NUM_NC != GPIO_CH32_PROG)
+    if (GPIO_NUM_NC != (gpio_num_t)GPIO_CH32_PROG)
     {
         initCh32v003(GPIO_CH32_PROG);
     }
@@ -527,13 +527,8 @@ void app_main(void)
             }
         }
 
-#if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
         // Check if a DAC buffer needs to be filled
         dacPoll();
-#elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
-        // Check for buzzer callback flags from the ISR
-        bzrCheckSongDone();
-#endif
 
         if (NO_WIFI != cSwadgeMode->wifiMode)
         {
@@ -679,15 +674,11 @@ static void initOptionalPeripherals(void)
         initBattmon(GPIO_VMON);
 
         // Initialize sound output if there is no input
-#if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
         // Initialize the speaker. The DAC uses the same DMA controller for continuous output,
         // so it can't be initialized at the same time as the microphone
         initDac(DAC_CHANNEL_MASK_CH0, GPIO_SPK, dacCallback);
         dacStart();
         initGlobalMidiPlayer();
-#elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
-    #error "Buzzer is no longer supported, get with the times!"
-#endif
     }
 
     // Init esp-now if requested by the mode
@@ -734,12 +725,8 @@ void deinitSystem(void)
     // Deinitialize everything
     deinitButtons();
     deinitTouchPads();
-#if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
     deinitGlobalMidiPlayer();
     deinitDac();
-#elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
-    deinitBuzzer();
-#endif
     deinitEspNow();
     deinitLeds();
     deinitMic();
