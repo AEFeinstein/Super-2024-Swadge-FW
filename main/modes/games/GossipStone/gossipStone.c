@@ -126,6 +126,16 @@ static void gs_enterMode(void)
     loadFont(IBM_VGA_8_FONT, &gameData->font_gossip, true);
     loadFont(OXANIUM_FONT, &gameData->font_big, true);
 
+    // read NVS
+    gameData->gossipProgress = heap_caps_calloc((GOSSIP_COUNT / 32) + 1, sizeof(int32_t), MALLOC_CAP_SPIRAM);
+    for (int i = 0; i < (GOSSIP_COUNT / 32) + 1; i++)
+    {
+        char nvsKey[20];
+        sprintf(nvsKey, "gossipProgress%d", i);
+        readNvs32(nvsKey, &gameData->gossipProgress[i]);
+    }
+    readNvs32("attendeesMisery", &gameData->attendeesMisery);
+
     // Initialize a menu renderer
     gameData->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
 
@@ -140,15 +150,6 @@ static void gs_enterMode(void)
 
     gs_initializeGame();
 
-    // read NVS
-    gameData->gossipProgress = heap_caps_calloc((GOSSIP_COUNT / 32) + 1, sizeof(int32_t), MALLOC_CAP_SPIRAM);
-    for (int i = 0; i < (GOSSIP_COUNT / 32) + 1; i++)
-    {
-        char nvsKey[20];
-        sprintf(nvsKey, "gossipProgress%d", i);
-        readNvs32(nvsKey, &gameData->gossipProgress[i]);
-    }
-
     SETUP_FOR_TURBO();
 }
 
@@ -161,7 +162,7 @@ void gs_populateMenu(void)
         addSingleItemToMenu(gameData->menu, gs_MoonStr);
     }
     // The Prophecy
-    if (trophyGetSavedValue(&gs_trophies[THE_PROPHECY_TROPH]) == GOSSIP_COUNT - 1)
+    if (gameData->attendeesMisery < 0)
     {
         addSingleItemToMenu(gameData->menu, gs_ProphecyStr);
     }
@@ -598,17 +599,21 @@ void gs_submodeStateEnter(gs_submode_t submode)
         gs_entity_t* crystalBall = gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, false,
                                                    GS_CRYSTAL_ASSET, 1, (vec_t){0, 0}, gameData);
         crystalBall->data        = heap_caps_calloc(1, sizeof(gs_crystalBall_t), MALLOC_CAP_SPIRAM);
-        sprintf(((gs_crystalBall_t*)crystalBall->data)->prettyPercent, "%.1f%%\n",
+
+        if (gameData->attendeesMisery >= 0)
+        {
+            sprintf(
+                ((gs_crystalBall_t*)crystalBall->data)->dynamicText, "%.1f%%\n",
                 (float)100
                     * (float)((GOSSIP_COUNT - 1) - trophyGetSavedValue(&(*gameData->trophyData)[THE_PROPHECY_TROPH]))
                     / (float)(GOSSIP_COUNT - 1));
-        if (trophyGetSavedValue(&(*gameData->trophyData)[THE_PROPHECY_TROPH]) == GOSSIP_COUNT - 1)
-        {
-            crystalBall->drawFunction = gs_drawCrystalBallWacky;
+            crystalBall->drawFunction = gs_drawCrystalBall;
         }
         else
         {
-            crystalBall->drawFunction = gs_drawCrystalBall;
+            sprintf(((gs_crystalBall_t*)crystalBall->data)->dynamicText,
+                    "After %d shakes, a new item appeared in the menu.\n", gameData->attendeesMisery * -1);
+            crystalBall->drawFunction = gs_drawCrystalBallWacky;
         }
     }
     else if (submode == GS_PROPHECY_SUBMODE)

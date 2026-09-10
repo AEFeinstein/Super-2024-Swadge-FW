@@ -164,7 +164,7 @@ typedef struct
 
 typedef struct
 {
-    char prettyPercent[8];
+    char dynamicText[60];
 } gs_crystalBall_t;
 
 //==============================================================================

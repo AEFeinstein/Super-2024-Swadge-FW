@@ -172,8 +172,17 @@ void gs_recordProgress(gs_entity_t* self)
 
         if (trophyGetSavedValue(&(*self->gameData->trophyData)[THE_PROPHECY_TROPH]) == GOSSIP_COUNT - 1)
         {
+            self->gameData->attendeesMisery++;
+            self->gameData->attendeesMisery *= -1; // set the negative bit
+            writeNvs32("attendeesMisery", self->gameData->attendeesMisery);
             data->advanceScene = true;
         }
+    }
+
+    if (self->gameData->attendeesMisery >= 0)
+    {
+        self->gameData->attendeesMisery++;
+        writeNvs32("attendeesMisery", self->gameData->attendeesMisery);
     }
 }
 
@@ -845,7 +854,7 @@ void gs_drawCrystalBall(gs_entity_t* self)
     drawRectFilled(0, 207, TFT_WIDTH, TFT_HEIGHT, c000);
     int16_t xOff = 5;
     int16_t yOff = 50;
-    drawTextWordWrapCentered(&self->gameData->font_big, c543, ((gs_crystalBall_t*)self->data)->prettyPercent, &xOff,
+    drawTextWordWrapCentered(&self->gameData->font_big, c543, ((gs_crystalBall_t*)self->data)->dynamicText, &xOff,
                              &yOff, 275, yOff + 80);
     xOff = 5;
     yOff = 212;
@@ -856,29 +865,42 @@ void gs_drawCrystalBall(gs_entity_t* self)
 void gs_drawCrystalBallWacky(gs_entity_t* self)
 {
     SETUP_FOR_TURBO();
-    for (int x = 77; x < 204; x++)
+
+    int w = 128;
+    int h = 128;
+    for (int x = 0; x < w; x++)
     {
-        for (int y = 4; y < 123; y++)
+        // we can skip the bottom 5 pixels which would be behind the globe holder
+        for (int y = 0; y < 123; y++)
         {
-            if (sqMagVec2d(subVec2d((vec_t){x, y}, (vec_t){140, 67})) > 4050)
+            // don't draw outside the crystal ball (circle check)
+            if (sqMagVec2d(subVec2d((vec_t){x, y}, (vec_t){64, 64})) > 4090)
             {
                 continue;
             }
-            float v = sinf(x * 0.10f + self->gameData->clock * 0.04f)
-                      + sinf(y * 0.1f * sinf(self->gameData->clock * 0.005f) + self->gameData->clock * 0.05f)
-                      + sinf((x + y) * 0.05f + self->gameData->clock * 0.03f);
 
-            // -3 thru 3 -> 0 thru 216
-            int color = (int)((v + 3.0f) * 36.0f);
+            // https://lodev.org/cgtutor/plasma.html
+            float color = sin(x / 8.0f + self->gameData->clock * 0.04f) + sin(y / 16.0f + self->gameData->clock * 0.02f)
+                          + sin(sqrt((double)((x - w / 2.0f) * (x - w / 2.0f) + (y - h / 2.0f) * (y - h / 2.0f))) / 8.0f
+                                + self->gameData->clock * 0.03f)
+                          + sin(sqrt((double)(x * x + y * y)) / 8.0f + self->gameData->clock * 0.007f);
+
+            // We've added four sine waves, so -4 thru 4 must become 0 thru 216 (number of colors)
+            color = (int)((color + 4.0f) * 27.0f);
 
             if (color > 216)
                 color = 216;
 
-            TURBO_SET_PIXEL(x, y, (paletteColor_t)color);
+            TURBO_SET_PIXEL(x + 76, y + 3, (paletteColor_t)color);
         }
     }
 
     drawWsgSimple(&self->gameData->assets[self->assetIndex].frames[0], 7, 122);
     drawWsg(&self->gameData->assets[self->assetIndex].frames[0], 140, 122, true, false, 0);
     drawWsg(&self->gameData->assets[self->assetIndex].frames[1], 76, 3, false, false, 0);
+
+    int16_t xOff = 5;
+    int16_t yOff = 212;
+    drawTextWordWrapCentered(&self->gameData->font_gossip, c445, ((gs_crystalBall_t*)self->data)->dynamicText, &xOff,
+                             &yOff, 275, TFT_HEIGHT);
 }

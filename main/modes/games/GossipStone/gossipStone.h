@@ -53,6 +53,9 @@ typedef struct gs_gameData_t
     // NVS related
     // Usage: Each bit is a gossip seen or unseen.
     int32_t* gossipProgress;
+    // The number of shakes so far. Stops counting when the prophecy is complete. Set the negative bit for completing
+    // the prophecy.
+    int32_t attendeesMisery;
 } gs_gameData_t;
 
 //==============================================================================
