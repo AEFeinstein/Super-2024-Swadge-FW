@@ -843,4 +843,42 @@ void gs_drawCrystalBall(gs_entity_t* self)
     drawRectFilled(0, 122, 7, 207, c000);
     drawRectFilled(273, 122, TFT_WIDTH, 207, c000);
     drawRectFilled(0, 207, TFT_WIDTH, TFT_HEIGHT, c000);
+    int16_t xOff = 5;
+    int16_t yOff = 50;
+    drawTextWordWrapCentered(&self->gameData->font_big, c543, ((gs_crystalBall_t*)self->data)->prettyPercent, &xOff,
+                             &yOff, 275, yOff + 80);
+    xOff = 5;
+    yOff = 212;
+    drawTextWordWrapCentered(&self->gameData->font_gossip, c445, "chance to hear new gossip", &xOff, &yOff, 275,
+                             TFT_HEIGHT);
+}
+
+void gs_drawCrystalBallWacky(gs_entity_t* self)
+{
+    SETUP_FOR_TURBO();
+    for (int x = 77; x < 204; x++)
+    {
+        for (int y = 4; y < 123; y++)
+        {
+            if (sqMagVec2d(subVec2d((vec_t){x, y}, (vec_t){140, 67})) > 4050)
+            {
+                continue;
+            }
+            float v = sinf(x * 0.10f + self->gameData->clock * 0.04f)
+                      + sinf(y * 0.1f * sinf(self->gameData->clock * 0.005f) + self->gameData->clock * 0.05f)
+                      + sinf((x + y) * 0.05f + self->gameData->clock * 0.03f);
+
+            // -3 thru 3 -> 0 thru 216
+            int color = (int)((v + 3.0f) * 36.0f);
+
+            if (color > 216)
+                color = 216;
+
+            TURBO_SET_PIXEL(x, y, (paletteColor_t)color);
+        }
+    }
+
+    drawWsgSimple(&self->gameData->assets[self->assetIndex].frames[0], 7, 122);
+    drawWsg(&self->gameData->assets[self->assetIndex].frames[0], 140, 122, true, false, 0);
+    drawWsg(&self->gameData->assets[self->assetIndex].frames[1], 76, 3, false, false, 0);
 }

@@ -93,6 +93,7 @@ typedef struct
     gs_entity_t* gossipStone; // Reference to make it start and stop animating.
     bool dialogueFinished;
     gs_callbackFunction_t onDialogueFinished;
+    bool advanceScene; // When true, changes the scene upon the next shake.
 } gs_gossip_t;
 
 typedef struct // parent class
@@ -161,6 +162,11 @@ typedef struct
     int32_t despawnAtY;
 } gs_particle_t;
 
+typedef struct
+{
+    char prettyPercent[8];
+} gs_crystalBall_t;
+
 //==============================================================================
 // Prototypes
 //==============================================================================
@@ -200,3 +206,5 @@ void gs_updateOcean(gs_entity_t* self);
 void gs_drawHill(gs_entity_t* self);
 void gs_updateParticle(gs_entity_t* self);
 void gs_drawParticle(gs_entity_t* self);
+void gs_drawCrystalBall(gs_entity_t* self);
+void gs_drawCrystalBallWacky(gs_entity_t* self);

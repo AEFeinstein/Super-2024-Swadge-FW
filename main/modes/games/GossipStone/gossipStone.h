@@ -31,6 +31,7 @@ typedef struct gs_gameData_t
     menu_t* menu;
     menuMegaRenderer_t* menuRenderer;
     font_t font_gossip; // IBM VGA 8 font
+    font_t font_big;    // Oxanium
     // All buttons states
     uint16_t btnState;
     // Momentary downpresses on each button
@@ -38,6 +39,7 @@ typedef struct gs_gameData_t
     // The state of two linear touchpads.
     linearTouch_t touchState[2];
     int32_t elapsedUs; // Time elapsed since the last frame in microseconds
+    uint32_t clock;    // Increments forever by elapsedUs>>10, and overflows.
     gs_entityManager_t entityManager;
     gs_asset_t assets[NUM_ASSETS];
     led_t leds[CONFIG_NUM_LEDS];

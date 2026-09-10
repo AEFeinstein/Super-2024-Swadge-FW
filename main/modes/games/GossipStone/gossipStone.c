@@ -124,6 +124,7 @@ static void gs_enterMode(void)
     gs_decodeSpace
         = heap_caps_malloc_tag(99328, MALLOC_CAP_SPIRAM, "decodeSpace"); // TODO change the size to the largest sprite
     loadFont(IBM_VGA_8_FONT, &gameData->font_gossip, true);
+    loadFont(OXANIUM_FONT, &gameData->font_big, true);
 
     // Initialize a menu renderer
     gameData->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
@@ -184,6 +185,7 @@ static void gs_exitMode(void)
     gs_freeEntityManager(&gameData->entityManager);
     // Free the fonts
     freeFont(&gameData->font_gossip);
+    freeFont(&gameData->font_big);
     // unloadMidiFile(&gameData->songMidi);
     heap_caps_free(gameData);
 }
@@ -240,6 +242,7 @@ static void gs_mainLoop(int64_t elapsedUs)
         case GS_CRYSTAL_SUBMODE:
         {
             gameData->elapsedUs = elapsedUs;
+            gameData->clock += elapsedUs >> 14;
             if (gameData->btnDownState & PB_B)
             {
                 gameData->newSubmode = GS_MENU_SUBMODE;
@@ -592,9 +595,21 @@ void gs_submodeStateEnter(gs_submode_t submode)
         gData->messageList = AMAList;
         gData->arr_size    = AMA_COUNT;
         gs_loadAsset(CRYSTAL_BALL_0_WSG, 2, &gameData->assets[GS_CRYSTAL_ASSET]);
-        gs_entity_t* crystalBall  = gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, false,
-                                                    GS_CRYSTAL_ASSET, 1, (vec_t){0, 0}, gameData);
-        crystalBall->drawFunction = gs_drawCrystalBall;
+        gs_entity_t* crystalBall = gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, false,
+                                                   GS_CRYSTAL_ASSET, 1, (vec_t){0, 0}, gameData);
+        crystalBall->data        = heap_caps_calloc(1, sizeof(gs_crystalBall_t), MALLOC_CAP_SPIRAM);
+        sprintf(((gs_crystalBall_t*)crystalBall->data)->prettyPercent, "%.1f%%\n",
+                (float)100
+                    * (float)((GOSSIP_COUNT - 1) - trophyGetSavedValue(&(*gameData->trophyData)[THE_PROPHECY_TROPH]))
+                    / (float)(GOSSIP_COUNT - 1));
+        if (trophyGetSavedValue(&(*gameData->trophyData)[THE_PROPHECY_TROPH]) == GOSSIP_COUNT - 1)
+        {
+            crystalBall->drawFunction = gs_drawCrystalBallWacky;
+        }
+        else
+        {
+            crystalBall->drawFunction = gs_drawCrystalBall;
+        }
     }
     else if (submode == GS_PROPHECY_SUBMODE)
     {

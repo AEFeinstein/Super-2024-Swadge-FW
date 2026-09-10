@@ -5,7 +5,7 @@
 const char* gossipList[GOSSIP_COUNT] = {
     "Shake the rock to make it talk. Testers can press A.",
     "Yo, this is the first line.",
-    "Number 2 here.",
+    "In Gaylordia, rocks float.",
     "Here is line number 3.",
     "Yeah, number four.",
     "Okay, that's number five.",
