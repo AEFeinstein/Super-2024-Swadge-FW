@@ -184,7 +184,8 @@ static const char* const rulesText[] = {
     "Use a stall if you have no good options or the situation is too confusing. Press 'B' to use a stall. You fail if "
     "you don't have any uses left, however.",
     "Helper mode",
-    "If you want to be shown the best and worst options after each level, activate helper mode. The best ones have a green check, "
+    "If you want to be shown the best and worst options after each level, activate helper mode. The best ones have a "
+    "green check, "
     "worst ones have a red X.",
     "Casual mode",
     "Don't really need to go? Play without the timer looming over your head and spend your time picking the best "
@@ -315,7 +316,7 @@ static void drawSolution(ggData_t* ggd);
 
 /**
  * @brief Draws the scoreboard
- * 
+ *
  * @param ggd Game data
  * @param hs High score table
  * @param percent If the score needs to be modified into a percent
