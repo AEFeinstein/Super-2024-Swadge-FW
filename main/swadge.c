@@ -381,7 +381,7 @@ void app_main(void)
     };
     initButtons(pushButtons, ARRAY_SIZE(pushButtons));
 #else
-    #warning "Handle CH32 Buttons on Fairy"
+    #warning "TODO Handle CH32 Buttons on Fairy"
 #endif
 
 #if defined(CONFIG_HARDWARE_WAVEBIRD)
@@ -676,7 +676,7 @@ static void initOptionalPeripherals(void)
         // Initialize sound output if there is no input
         // Initialize the speaker. The DAC uses the same DMA controller for continuous output,
         // so it can't be initialized at the same time as the microphone
-        initDac(DAC_CHANNEL_MASK_CH0, GPIO_SPK, dacCallback);
+        initDac(GPIO_SPK, GPIO_SPK_SHDN, dacCallback);
         dacStart();
         initGlobalMidiPlayer();
     }
@@ -703,8 +703,12 @@ static void initOptionalPeripherals(void)
         initTemperatureSensor();
     }
 
+#if defined(CONFIG_HARDWARE_PULSE)
     // Load some default firmware that blinks eyes
     ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
+#elif defined(CONFIG_HARDWARE_FAIRY_PROTO)
+    #warning "TODO load CH32 firmware for button handling with ch32v003RunBinaryAsset()"
+#endif
 }
 
 /**
@@ -965,7 +969,7 @@ void switchToSpeaker(void)
     deinitMic();
 
     // Start the speaker
-    initDac(DAC_CHANNEL_MASK_CH0, GPIO_SPK, dacCallback);
+    initDac(GPIO_SPK, GPIO_SPK_SHDN, dacCallback);
     setDacShutdown(false);
     initGlobalMidiPlayer();
 

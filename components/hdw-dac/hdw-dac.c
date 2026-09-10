@@ -35,10 +35,14 @@ static fnDacCallback_t dacCb = NULL;
 /** A temporary buffer for the application to fill with audio samples before */
 static uint8_t tmpDacBuf[DAC_BUF_SIZE] = {0};
 
-/** The GPIO which controls amplifier shutdown */
-static gpio_num_t shdnGpio;
+#else
+
+    #warning "TODO: define variables for PDM output"
 
 #endif
+
+/** The GPIO which controls amplifier shutdown */
+static gpio_num_t shdnGpio = GPIO_NUM_NC;
 
 //==============================================================================
 // Functions
@@ -73,18 +77,47 @@ static bool IRAM_ATTR dac_on_convert_done_callback(dac_continuous_handle_t handl
 /**
  * @brief Initialize the DAC
  *
- * @param channel The output channel (pin) for the ADC
+ * @param spk_gpio The output pin for the speaker (DAC or PDM)
  * @param shdn_gpio The GPIO that controls the amplifier's shutdown
  * @param cb A callback function which will be called to request samples from the application
  */
-void initDac(dac_channel_mask_t channel, gpio_num_t shdn_gpio, fnDacCallback_t cb)
+void initDac(gpio_num_t spk_gpio, gpio_num_t shdn_gpio, fnDacCallback_t cb)
 {
+    // Both DAC and PDM use the amplifier's shutdown pin
+    if (GPIO_NUM_NC == shdnGpio)
+    {
+        /* Initialize the GPIO of shutdown pin */
+        shdnGpio                       = shdn_gpio;
+        gpio_config_t shdn_gpio_config = {
+            .mode         = GPIO_MODE_OUTPUT,
+            .pin_bit_mask = 1ULL << shdn_gpio,
+        };
+        ESP_ERROR_CHECK(gpio_config(&shdn_gpio_config));
+        ESP_ERROR_CHECK(gpio_set_level(shdn_gpio, 0));
+    }
+
 #if SOC_DAC_SUPPORTED
     // If the DAC isn't initialized
     if (!dac_handle)
     {
         /* Save the callback */
         dacCb = cb;
+
+        /* Pick the channel from the GPIO */
+        dac_channel_mask_t channel = 0;
+        if (GPIO_NUM_17 == spk_gpio)
+        {
+            channel = DAC_CHANNEL_MASK_CH0;
+        }
+        else if (GPIO_NUM_18 == spk_gpio)
+        {
+            channel = DAC_CHANNEL_MASK_CH1;
+        }
+        else
+        {
+            // Not a valid configuration
+            return;
+        }
 
         /* Configure the DAC */
         dac_continuous_config_t cont_cfg = {
@@ -110,16 +143,9 @@ void initDac(dac_channel_mask_t channel, gpio_num_t shdn_gpio, fnDacCallback_t c
             .on_stop         = NULL,
         };
         ESP_ERROR_CHECK(dac_continuous_register_event_callback(dac_handle, &cbs, dacIsrQueue));
-
-        /* Initialize the GPIO of shutdown pin */
-        shdnGpio                       = shdn_gpio;
-        gpio_config_t shdn_gpio_config = {
-            .mode         = GPIO_MODE_OUTPUT,
-            .pin_bit_mask = 1ULL << shdn_gpio,
-        };
-        ESP_ERROR_CHECK(gpio_config(&shdn_gpio_config));
-        ESP_ERROR_CHECK(gpio_set_level(shdn_gpio, 0));
     }
+#else
+    #warning "TODO: Init PDM output"
 #endif
 }
 
@@ -143,6 +169,8 @@ void deinitDac(void)
         /* NULL the callback */
         dacCb = NULL;
     }
+#else
+    #warning "TODO: Deinit PDM output"
 #endif
 }
 
@@ -175,6 +203,8 @@ void dacStart(void)
         ESP_ERROR_CHECK(dac_continuous_start_async_writing(dac_handle));
         dacWriting = true;
     }
+#else
+    #warning "TODO: Start PDM output"
 #endif
 }
 
@@ -191,6 +221,8 @@ void dacStop(void)
         ESP_ERROR_CHECK(dac_continuous_disable(dac_handle));
         dacWriting = false;
     }
+#else
+    #warning "TODO: Stop PDM output"
 #endif
 }
 
@@ -216,6 +248,8 @@ void dacPoll(void)
             /* assume loaded_bytes == DAC_BUF_SIZE */
         }
     }
+#else
+    #warning "TODO: Main loop for PDM output"
 #endif
 }
 
@@ -226,7 +260,6 @@ void dacPoll(void)
  */
 void setDacShutdown(bool shutdown)
 {
-#if SOC_DAC_SUPPORTED
     if (shutdown)
     {
         dacStop();
@@ -237,5 +270,4 @@ void setDacShutdown(bool shutdown)
         ESP_ERROR_CHECK(gpio_set_level(shdnGpio, 0));
         dacStart();
     }
-#endif
 }
