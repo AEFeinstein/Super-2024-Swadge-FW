@@ -58,7 +58,7 @@
  *
  * {
  *     initEspNow(&swadgeModeEspNowRecvCb, &swadgeModeEspNowSendCb,
- *         GPIO_NUM_19, GPIO_NUM_20, UART_NUM_1, ESP_NOW);
+ *         GPIO_USB_DM, GPIO_USB_DP, UART_NUM_1, ESP_NOW);
  *
  *     while(1)
  *     {

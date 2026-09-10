@@ -384,18 +384,25 @@ void app_main(void)
     #warning "Handle CH32 Buttons on Fairy"
 #endif
 
-#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
-
+#if defined(CONFIG_HARDWARE_WAVEBIRD)
+    // Squarewavebird has one linear touch strip
     touch_pad_t touchPads[] = {
-        GPIO_TOUCH_1, GPIO_TOUCH_2, GPIO_TOUCH_3, GPIO_TOUCH_4, GPIO_TOUCH_5, GPIO_TOUCH_6,
+        GPIO_TOUCH_1, GPIO_TOUCH_2, GPIO_TOUCH_3, GPIO_TOUCH_4, GPIO_TOUCH_5,
     };
     initTouchPads(touchPads, ARRAY_SIZE(touchPads), 0.2f, true);
 
-    const uint8_t touchRingIdxs[] = {3, 0, 1, 4, 5};
-    initTouchJoystick(2, touchRingIdxs);
+    static const uint8_t idxs[]               = {0, 1, 2, 3, 4};
+    static const touchLinearCfg_t linearCfg[] = {
+        {
+            .numTouchPads = ARRAY_SIZE(idxs),
+            .touchPadIdxs = idxs,
+        },
+    };
+    initTouchLinear(linearCfg, ARRAY_SIZE(linearCfg));
 
-#else
+#elif defined(CONFIG_HARDWARE_FAIRY_PROTO)
 
+    // Fairy has two linear touch strips
     touch_pad_t touchPads[] = {
         GPIO_TOUCH_1, GPIO_TOUCH_2, GPIO_TOUCH_3, GPIO_TOUCH_4, GPIO_TOUCH_5,
         GPIO_TOUCH_6, GPIO_TOUCH_7, GPIO_TOUCH_8, GPIO_TOUCH_9, GPIO_TOUCH_14,
@@ -416,6 +423,17 @@ void app_main(void)
     };
     initTouchLinear(linearCfg, ARRAY_SIZE(linearCfg));
 
+#else
+
+    // All others have a circular touchpad
+    touch_pad_t touchPads[] = {
+        GPIO_TOUCH_1, GPIO_TOUCH_2, GPIO_TOUCH_3, GPIO_TOUCH_4, GPIO_TOUCH_5, GPIO_TOUCH_6,
+    };
+    initTouchPads(touchPads, ARRAY_SIZE(touchPads), 0.2f, true);
+
+    const uint8_t touchRingIdxs[] = {3, 0, 1, 4, 5};
+    initTouchJoystick(2, touchRingIdxs);
+
 #endif
 
     // Init TFT, use a different LEDC channel than buzzer
@@ -431,6 +449,7 @@ void app_main(void)
             LEDC_TIMER_2,               // Timer to use for PWM backlight
             getTftBrightnessSetting()); // TFT Brightness
 
+    // Initialize speed optimizations for drawing shapes
     initShapes();
 
     // Initialize the RGB LEDs
@@ -438,10 +457,13 @@ void app_main(void)
 #if !defined(CONFIG_DEBUG_OUTPUT_UART_SAO)
     ledMirrorGpio = GPIO_SAO_B;
 #endif
-
     initLeds(GPIO_LED, ledMirrorGpio, getLedBrightnessSetting());
 
-    initCh32v003(GPIO_CH32_PROG);
+    // Initialize CH32, if it exists
+    if (GPIO_NUM_NC != GPIO_CH32_PROG)
+    {
+        initCh32v003(GPIO_CH32_PROG);
+    }
 
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();
