@@ -5,6 +5,7 @@
 #include <inttypes.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
+#include "driver/dac_continuous.h"
 #include "hdw-dac.h"
 
 //==============================================================================

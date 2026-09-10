@@ -68,7 +68,6 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "driver/dac_continuous.h"
 #include "driver/gpio.h"
 
 //==============================================================================
