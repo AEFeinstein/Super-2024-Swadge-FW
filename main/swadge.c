@@ -196,13 +196,13 @@
  *
  * \section espressif_doc Espressif Documentation
  *
- * The Swadge uses an ESP32-S2 or ESP32-S3 micro-controller with firmware built on IDF 5.2.7. The goal of this project
+ * The Swadge uses an ESP32-S2 or ESP32-S3 micro-controller with firmware built on IDF 5.2.8. The goal of this project
  is to enable
  * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
  * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
  * is useful.
  * - ESP32-S2
- *   - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.7/esp32s2/api-reference/index.html">ESP-IDF API
+ *   - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.8/esp32s2/api-reference/index.html">ESP-IDF API
  Reference (S2)</a>
  *   - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-S2 Series
  Datasheet</a>
@@ -210,7 +210,7 @@
  href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf">ESP32-S2
  Technical Reference Manual</a>
  * - ESP32-S3
- *   - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.7/esp32s3/api-reference/index.html">ESP-IDF API
+ *   - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.8/esp32s3/api-reference/index.html">ESP-IDF API
  Reference (S3)</a>
  *   - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf">ESP32-S3 Series
  Datasheet</a>
