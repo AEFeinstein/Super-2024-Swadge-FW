@@ -1,6 +1,7 @@
 #include "ray_enemy_box.h"
 #include "ray_object.h"
 #include "ray_tex_manager.h"
+#include "ray_script.h"
 
 void rayEnemyBoxCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY);
 
@@ -35,8 +36,24 @@ void rayEnemyBoxCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t 
             if (rayBoundingBoxFitsInMap(ray, enemyBB))
             {
                 // If it fits, update the position
+
+                vec_t oldCell = {
+                    .x = FROM_FX(enemy->c.posX),
+                    .y = FROM_FX(enemy->c.posY),
+                };
+
                 enemy->c.posX += *deltaX;
                 enemy->c.posY += *deltaY;
+
+                vec_t newCell = {
+                    .x = FROM_FX(enemy->c.posX),
+                    .y = FROM_FX(enemy->c.posY),
+                };
+
+                if (oldCell.x != newCell.x || oldCell.y != newCell.y)
+                {
+                    checkScriptObjEnter(ray, enemy->c.id, newCell.x, newCell.y, enemy->c.sprite);
+                }
             }
             else
             {
