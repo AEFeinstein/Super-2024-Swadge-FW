@@ -134,6 +134,36 @@ void loadScripts(ray_t* ray, const uint8_t* fileData, uint32_t fileSize, uint32_
                 }
                 break;
             }
+            case OBJ_ENTER:
+            {
+                // [IDs]
+                newScript->ifArgs.idCellList.numIds = fileData[fileIdx++];
+                newScript->ifArgs.idCellList.ids
+                    = heap_caps_calloc(newScript->ifArgs.idCellList.numIds, sizeof(uint8_t), caps);
+                for (uint8_t i = 0; i < newScript->ifArgs.idCellList.numIds; i++)
+                {
+                    newScript->ifArgs.idCellList.ids[i] = fileData[fileIdx++];
+                }
+
+                // [CELLs]
+                newScript->ifArgs.idCellList.numCells = fileData[fileIdx++];
+                newScript->ifArgs.idCellList.cells
+                    = heap_caps_calloc(newScript->ifArgs.idCellList.numCells, sizeof(rayMapCoordinates_t), caps);
+                for (uint8_t i = 0; i < newScript->ifArgs.idCellList.numCells; i++)
+                {
+                    newScript->ifArgs.idCellList.cells[i].x = fileData[fileIdx++];
+                    newScript->ifArgs.idCellList.cells[i].y = fileData[fileIdx++];
+                }
+
+                // Allocate this list for state tracking
+                newScript->ifArgs.idCellList.idsOnCells
+                    = heap_caps_calloc(newScript->ifArgs.idCellList.numCells, sizeof(uint8_t), caps);
+
+                // ONE_TIME
+                newScript->ifArgs.idCellList.oneTime = fileData[fileIdx++];
+
+                break;
+            }
             default:
             case NUM_IF_OP_TYPES:
             {
@@ -286,6 +316,14 @@ static void freeScript(rayScript_t* script)
         case PLAY:
         {
             heap_caps_free(script->ifArgs.playSong.cells);
+            break;
+        }
+        case OBJ_ENTER:
+        {
+            heap_caps_free(script->ifArgs.idCellList.ids);
+            heap_caps_free(script->ifArgs.idCellList.cells);
+            heap_caps_free(script->ifArgs.idCellList.idsOnCells);
+            break;
         }
         default:
         case NUM_IF_OP_TYPES:
@@ -782,6 +820,95 @@ bool checkScriptSong(ray_t* ray, int32_t x, int32_t y, songType_t song, wsg_t* p
             }
         }
 
+        currentNode = currentNode->next;
+    }
+    return executed;
+}
+
+/**
+ * @brief Check scripts when an object moves into or out of a cell
+ *
+ * @param ray The entire game state
+ * @param id The ID to check
+ * @param x The X coordinate of the cell
+ * @param y The Y coordinate of the cell
+ * @param portrait A portrait to draw on dialogs
+ * @return true if a script executed, false if it didn't
+ */
+bool checkScriptObjEnter(ray_t* ray, int32_t id, int32_t x, int32_t y, wsg_t* portrait)
+{
+    bool executed = false;
+    // Iterate over all nodes
+    node_t* currentNode = ray->scripts[OBJ_ENTER].first;
+    while (currentNode != NULL)
+    {
+        // Get the script
+        rayScript_t* script = currentNode->val;
+
+        // Only check if the script is active
+        if (script->isActive)
+        {
+            // Check if the ID of the object is valid for this script
+            bool idFound = false;
+            for (uint8_t iIdx = 0; iIdx < script->ifArgs.idCellList.numIds; iIdx++)
+            {
+                if (id == script->ifArgs.idCellList.ids[iIdx])
+                {
+                    idFound = true;
+                    break;
+                }
+            }
+
+            if (idFound)
+            {
+                // Clear any instance of this ID first
+                for (uint8_t cIdx = 0; cIdx < script->ifArgs.idCellList.numCells; cIdx++)
+                {
+                    if (id == script->ifArgs.idCellList.idsOnCells[cIdx])
+                    {
+                        script->ifArgs.idCellList.idsOnCells[cIdx] = 0;
+                        break;
+                    }
+                }
+
+                // Set any instance of this ID next
+                for (uint8_t cIdx = 0; cIdx < script->ifArgs.idCellList.numCells; cIdx++)
+                {
+                    if ((x == script->ifArgs.idCellList.cells[cIdx].x) && //
+                        (y == script->ifArgs.idCellList.cells[cIdx].y))
+                    {
+                        script->ifArgs.idCellList.idsOnCells[cIdx] = id;
+                        break;
+                    }
+                }
+
+                // Check if all cells have valid IDs
+                bool allCellsValid = true;
+                for (uint8_t iIdx = 0; iIdx < script->ifArgs.idCellList.numCells; iIdx++)
+                {
+                    if (0 == script->ifArgs.idCellList.idsOnCells[iIdx])
+                    {
+                        allCellsValid = false;
+                        break;
+                    }
+                }
+
+                if (allCellsValid)
+                {
+                    // Execute the script if all cells have objects with valid IDs on them
+                    executeScriptEvent(ray, script, portrait);
+                    executed = true;
+
+                    if (ONCE == script->ifArgs.idCellList.oneTime)
+                    {
+                        script->isActive      = false;
+                        script->resetTimerSec = 0;
+                    }
+                }
+            }
+        }
+
+        // Iterate
         currentNode = currentNode->next;
     }
     return executed;

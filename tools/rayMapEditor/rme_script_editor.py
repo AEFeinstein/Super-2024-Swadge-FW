@@ -27,6 +27,7 @@ class ifOpType(Enum):
     ENTER = 5
     TIME_ELAPSED = 6
     PLAY = 7
+    OBJ_ENTER = 8
 
 
 class thenOpType(Enum):
@@ -298,7 +299,12 @@ class rme_script:
                 self.ifArgs[kSong] = self.__parseSong(argParts[0])
                 self.ifArgs[kCells] = [self.__parseCell(
                     s) for s in self.__parseArray(argParts[1])]
-
+            elif (ifOpType.OBJ_ENTER == self.ifOp):
+                self.ifArgs[kIds] = [self.__parseInt(
+                    s) for s in self.__parseArray(argParts[0])]
+                self.ifArgs[kCells] = [self.__parseCell(
+                    s) for s in self.__parseArray(argParts[1])]
+                self.ifArgs[kOneTime] = self.__parseOneTime(argParts[2])
             else:
                 self.resetScript()
                 return False
@@ -511,6 +517,28 @@ class rme_script:
             for cell in range(numCells):
                 self.ifArgs[kCells].append([bytes[idx], bytes[idx + 1]])
                 idx = idx + 2
+        elif ifOpType.OBJ_ENTER:
+            # Read number of IDs
+            numIds: int = bytes[idx]
+            idx = idx + 1
+            # Read IDs
+            self.ifArgs[kIds] = []
+            for id in range(numIds):
+                self.ifArgs[kIds].append(bytes[idx])
+                idx = idx + 1
+
+            # Read number of cells
+            numCells: int = bytes[idx]
+            idx = idx + 1
+            # Read cells
+            self.ifArgs[kCells] = []
+            for cell in range(numCells):
+                self.ifArgs[kCells].append([bytes[idx], bytes[idx + 1]])
+                idx = idx + 2
+
+            # Read one time
+            self.ifArgs[kOneTime] = oneTimeType._value2member_map_[bytes[idx]]
+            idx = idx + 1
         else:
             self.resetScript()
             return
