@@ -340,7 +340,7 @@ static void ggEnterMode(void)
     loadMidiFile(ROBO_RUNNER_BGM_MID, &ggd->bgm, true);
 
     // NVS
-    int outVal = 0;
+    int32_t outVal = 0;
     readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_HELPER], &outVal);
     ggd->helper = outVal;
     readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_TOUCH], &outVal);
