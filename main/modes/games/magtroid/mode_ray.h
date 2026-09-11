@@ -321,6 +321,7 @@ typedef enum
     ENTER        = 5, ///< Map cells were entered
     TIME_ELAPSED = 6, ///< Time elapsed
     PLAY         = 7, ///< A song was played
+    OBJ_ENTER    = 8, ///< An object entered a map cell
     NUM_IF_OP_TYPES,  ///< The number of IF operation types
 } ifOp_t;
 
@@ -473,13 +474,23 @@ typedef struct
             bool* cellsTriggered;       ///< A list of triggered cells
         } cellList;
         /// A struct for arguments when playing a song
-        struct mode_ray
+        struct
         {
             /* data */
             songType_t song;            ///< The song played
             uint8_t numCells;           ///< The number of cells in the list (should be 2)
             rayMapCoordinates_t* cells; ///< A list of cells
         } playSong;
+        /// A struct for arguments when objects enter cells
+        struct
+        {
+            uint8_t numIds;             ///< The number of IDs in the list
+            uint8_t* ids;               ///< A list of IDs
+            uint8_t numCells;           ///< The number of cells in the list
+            rayMapCoordinates_t* cells; ///< A list of cells
+            uint8_t* idsOnCells;        ///< The list of which ID is on which cell
+            repeat_t oneTime;           ///< Whether or not the script triggers once or repeatedly
+        } idCellList;
     } ifArgs;
 
     thenOp_t thenOp; ///< The type of event that happens
