@@ -87,6 +87,7 @@ These are the conditions which can trigger scripts.
 | ENTER        | 5     | AND_OR, \[CELLs\], ORDER, ONE_TIME | Triggered when the player enters one or all of the given cells. If all, may be in the given order or any order. May reset after triggering.  |
 | TIME_ELAPSED | 6     | TIME                               | Triggered after the given time, in seconds, elapses from the start of the level.                                                        |
 | PLAY | 7 | SONG, \[CELLs\] | Triggered when the given song is played within the bounding rectangle given by two cells |
+| OBJ_ENTER | 8 | \[IDs\], \[CELLs\], ONE_TIME | Triggered when all of the given objects are in all of the given cells. The number of `IDs` _must_ match the number of `CELLs`. |
 
 ### THEN Operations
 
