@@ -42,7 +42,7 @@ void ggSaveFinalToNVS(ggData_t* ggd);
 // High score
 /**
  * @brief Initializes the high score tables
- * 
+ *
  * @param mode Swadgemode_t* mode to get .modeName
  * @param ggd Game data
  */
@@ -50,7 +50,7 @@ void ggInitHighScores(swadgeMode_t* mode, ggData_t* ggd);
 
 /**
  * @brief Applies a new user score to the HS tables
- * 
+ *
  * @param ggd Game data
  */
 void ggNewUserScore(ggData_t* ggd);

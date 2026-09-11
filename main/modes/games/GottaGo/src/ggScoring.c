@@ -53,7 +53,7 @@ static void getBestWorstOption(ggUrinal_t* urinals, int numActive, int* urinalSc
 
 /**
  * @brief Set up all data for HS tables at the start of the mode
- * 
+ *
  * @param hs score table
  * @param table Which table to reference
  */
@@ -61,7 +61,7 @@ static void initHSTable(ggHSTable_t* hs, ggNVSEnum_t table);
 
 /**
  * @brief Initializes a table with the best five of each score type
- * 
+ *
  * @param mode Swadgemode to provide modename
  * @param tables A set of tables to fill up
  */
@@ -69,7 +69,7 @@ static void initHSTableFomSwadgepass(swadgeMode_t* mode, ggHSTable_t* tables);
 
 /**
  * @brief Updates the table via bubble sort (?)
- * 
+ *
  * @param hs score table
  * @param newScore Newest score to add
  * @param packedName Packed representation of the username
@@ -80,7 +80,7 @@ static bool updateHSTable(ggHSTable_t* hs, int newScore, int32_t packedName);
 
 /**
  * @brief Updates score of user
- * 
+ *
  * @param hs score table
  * @param newScore Newest score to add
  * @param table Which table to reference

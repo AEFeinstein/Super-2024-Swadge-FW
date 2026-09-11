@@ -1,4 +1,4 @@
-/*! \mainpage Swadge ESP32-S2
+/*! \mainpage Swadge ESP32-S2/S3
  *
  * Generated on \showdate "%A, %B %-d, %H:%M:%S"
  *
@@ -50,7 +50,7 @@
  * productive way.
  * -# If you want to bring a mode forward from last year's Swadge, take a look at \ref porting.
  * -# Finally, if you want to do lower level or \c component programming, read the \ref espressif_doc to understand the
- * full capability of the ESP32-S2 chip.
+ * full capability of the ESP32-S2 or ESP32-S3 chips.
  *
  * If you want to learn about creating MIDI song files for the Swadge, see the \ref MIDI guide. See also the
  * \ref emulator which you can use to listen to MIDI files.
@@ -196,17 +196,27 @@
  *
  * \section espressif_doc Espressif Documentation
  *
- * The Swadge uses an ESP32-S2 micro-controller with firmware built on IDF 5.0. The goal of this project is to enable
+ * The Swadge uses an ESP32-S2 or ESP32-S3 micro-controller with firmware built on IDF 5.2.7. The goal of this project
+ is to enable
  * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
  * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
- * is useful:
- * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.7/esp32s2/api-reference/index.html">ESP-IDF API
- * Reference</a>
- * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-S2 Series
- * Datasheet</a>
- * - <a
- * href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf">ESP32-S2
- * Technical Reference Manual</a>
+ * is useful.
+ * - ESP32-S2
+ *   - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.7/esp32s2/api-reference/index.html">ESP-IDF API
+ Reference (S2)</a>
+ *   - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-S2 Series
+ Datasheet</a>
+ *   - <a
+ href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf">ESP32-S2
+ Technical Reference Manual</a>
+ * - ESP32-S3
+ *   - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.7/esp32s3/api-reference/index.html">ESP-IDF API
+ Reference (S3)</a>
+ *   - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf">ESP32-S3 Series
+ Datasheet</a>
+ *   - <a
+ href="https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf">ESP32-S3
+ Technical Reference Manual</a>
  */
 
 //==============================================================================
@@ -225,6 +235,7 @@
 #include "advanced_usb_control.h"
 #include "shapes.h"
 #include "swadge.h"
+#include "swadge_gpio.h"
 
 #include "factoryTest.h"
 #include "mainMenu.h"
@@ -240,46 +251,6 @@
 // Define RTC_DATA_ATTR if it doesn't exist
 #ifndef RTC_DATA_ATTR
     #define RTC_DATA_ATTR
-#endif
-
-// Define hardware-specific GPIOs
-#if defined(CONFIG_HARDWARE_WAVEBIRD) || defined(CONFIG_HARDWARE_GUNSHIP)
-    #define GPIO_SAO_1 GPIO_NUM_17
-    #define GPIO_SAO_2 GPIO_NUM_18
-
-    #define GPIO_BTN_UP    GPIO_NUM_0
-    #define GPIO_BTN_DOWN  GPIO_NUM_4
-    #define GPIO_BTN_LEFT  GPIO_NUM_2
-    #define GPIO_BTN_RIGHT GPIO_NUM_1
-
-#elif defined(CONFIG_HARDWARE_HOTDOG_PRODUCTION)
-    #define GPIO_SAO_1 GPIO_NUM_40
-    #define GPIO_SAO_2 GPIO_NUM_42
-
-    #define GPIO_BTN_UP    GPIO_NUM_0
-    #define GPIO_BTN_DOWN  GPIO_NUM_4
-    #define GPIO_BTN_LEFT  GPIO_NUM_2
-    #define GPIO_BTN_RIGHT GPIO_NUM_1
-
-#elif defined(CONFIG_HARDWARE_HOTDOG_PROTO)
-    #define GPIO_SAO_1 GPIO_NUM_40
-    #define GPIO_SAO_2 GPIO_NUM_42
-
-    #define GPIO_BTN_UP    GPIO_NUM_1
-    #define GPIO_BTN_DOWN  GPIO_NUM_4
-    #define GPIO_BTN_LEFT  GPIO_NUM_0
-    #define GPIO_BTN_RIGHT GPIO_NUM_2
-
-#elif defined(CONFIG_HARDWARE_PULSE)
-    #define GPIO_SAO_1 GPIO_NUM_42 // Flip SAO GPIOs relative to Hotdog
-    #define GPIO_SAO_2 GPIO_NUM_40
-
-    #define GPIO_BTN_UP    GPIO_NUM_0
-    #define GPIO_BTN_DOWN  GPIO_NUM_4
-    #define GPIO_BTN_LEFT  GPIO_NUM_2
-    #define GPIO_BTN_RIGHT GPIO_NUM_1
-#else
-    #error "Define what hardware is being built for"
 #endif
 
 //==============================================================================
@@ -334,13 +305,9 @@ static void dacCallback(uint8_t* samples, int16_t len);
  */
 void app_main(void)
 {
-#ifdef CONFIG_DEBUG_OUTPUT_UART_SAO
-    // Make sure there isn't a pin conflict
-    if (GPIO_SAO_2 != GPIO_NUM_18)
-    {
-        // Redirect UART if configured and able
-        uart_set_pin(UART_NUM_0, GPIO_SAO_2, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-    }
+#if defined(CONFIG_DEBUG_OUTPUT_UART_SAO)
+    // Redirect UART if configured and able
+    uart_set_pin(UART_NUM_0, GPIO_SAO_B, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 #endif
 
     // Init NVS. Do this first to get test mode status and crashwrap logs
@@ -410,71 +377,103 @@ void app_main(void)
     // Init file system
     initCnfs();
 
+#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
     // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
         GPIO_BTN_UP,    // Up
         GPIO_BTN_DOWN,  // Down
         GPIO_BTN_LEFT,  // Left
         GPIO_BTN_RIGHT, // Right
-        GPIO_NUM_16,    // A
-        GPIO_NUM_15,    // B
-        GPIO_NUM_8,     // Start
-        GPIO_NUM_5      // Select
+        GPIO_BTN_A,     // A
+        GPIO_BTN_B,     // B
+        GPIO_BTN_MENU,  // Start
+        GPIO_BTN_PAUSE, // Select
     };
-    initButtons(pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]));
+    initButtons(pushButtons, ARRAY_SIZE(pushButtons));
+#else
+    #warning "TODO Handle CH32 Buttons on Fairy"
+#endif
 
+#if defined(CONFIG_HARDWARE_WAVEBIRD)
+    // Squarewavebird has one linear touch strip
     touch_pad_t touchPads[] = {
-        TOUCH_PAD_NUM9,  // GPIO_NUM_9
-        TOUCH_PAD_NUM10, // GPIO_NUM_10
-        TOUCH_PAD_NUM11, // GPIO_NUM_11
-        TOUCH_PAD_NUM12, // GPIO_NUM_12
-        TOUCH_PAD_NUM13, // GPIO_NUM_13
-        TOUCH_PAD_NUM14, // GPIO_NUM_14
+        GPIO_TOUCH_1, GPIO_TOUCH_2, GPIO_TOUCH_3, GPIO_TOUCH_4, GPIO_TOUCH_5,
     };
-    initTouchPads(touchPads, sizeof(touchPads) / sizeof(touchPads[0]), 0.2f, true);
-    // const uint8_t touchRingIdxs[] = {3, 0, 1, 4, 5};
-    // initTouchJoystick(2, touchRingIdxs);
-    static const uint8_t horzIdxs[]           = {0, 1, 2};
-    static const uint8_t vertIdxs[]           = {3, 4, 5};
+    initTouchPads(touchPads, ARRAY_SIZE(touchPads), 0.2f, true);
+
+    static const uint8_t idxs[]               = {0, 1, 2, 3, 4};
     static const touchLinearCfg_t linearCfg[] = {
         {
-            .numTouchPads = ARRAY_SIZE(horzIdxs),
-            .touchPadIdxs = horzIdxs,
-        },
-        {
-            .numTouchPads = ARRAY_SIZE(vertIdxs),
-            .touchPadIdxs = vertIdxs,
+            .numTouchPads = ARRAY_SIZE(idxs),
+            .touchPadIdxs = idxs,
         },
     };
     initTouchLinear(linearCfg, ARRAY_SIZE(linearCfg));
 
+#elif defined(CONFIG_HARDWARE_FAIRY_PROTO)
+
+    // Fairy has two linear touch strips
+    touch_pad_t touchPads[] = {
+        GPIO_TOUCH_1, GPIO_TOUCH_2, GPIO_TOUCH_3, GPIO_TOUCH_4, GPIO_TOUCH_5,
+        GPIO_TOUCH_6, GPIO_TOUCH_7, GPIO_TOUCH_8, GPIO_TOUCH_9, GPIO_TOUCH_14,
+    };
+    initTouchPads(touchPads, ARRAY_SIZE(touchPads), 0.2f, true);
+
+    static const uint8_t rightIdxs[]          = {0, 1, 2, 3, 4};
+    static const uint8_t leftIdxs[]           = {5, 6, 7, 8, 9};
+    static const touchLinearCfg_t linearCfg[] = {
+        {
+            .numTouchPads = ARRAY_SIZE(rightIdxs),
+            .touchPadIdxs = rightIdxs,
+        },
+        {
+            .numTouchPads = ARRAY_SIZE(leftIdxs),
+            .touchPadIdxs = leftIdxs,
+        },
+    };
+    initTouchLinear(linearCfg, ARRAY_SIZE(linearCfg));
+
+#else
+
+    // All others have a circular touchpad
+    touch_pad_t touchPads[] = {
+        GPIO_TOUCH_1, GPIO_TOUCH_2, GPIO_TOUCH_3, GPIO_TOUCH_4, GPIO_TOUCH_5, GPIO_TOUCH_6,
+    };
+    initTouchPads(touchPads, ARRAY_SIZE(touchPads), 0.2f, true);
+
+    const uint8_t touchRingIdxs[] = {3, 0, 1, 4, 5};
+    initTouchJoystick(2, touchRingIdxs);
+
+#endif
+
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
-            GPIO_NUM_36,                // sclk
-            GPIO_NUM_37,                // mosi
-            GPIO_NUM_21,                // dc
-            GPIO_NUM_34,                // cs
-            GPIO_NUM_38,                // rst
-            GPIO_NUM_35,                // backlight
+            GPIO_TFT_SCL,               // sclk
+            GPIO_TFT_SDA,               // mosi
+            GPIO_TFT_RS,                // dc
+            GPIO_TFT_CS,                // cs
+            GPIO_TFT_RESET,             // rst
+            GPIO_TFT_ATP,               // backlight
             true,                       // PWM backlight
             LEDC_CHANNEL_2,             // Channel to use for PWM backlight
             LEDC_TIMER_2,               // Timer to use for PWM backlight
             getTftBrightnessSetting()); // TFT Brightness
 
+    // Initialize speed optimizations for drawing shapes
     initShapes();
 
     // Initialize the RGB LEDs
     gpio_num_t ledMirrorGpio = GPIO_NUM_NC;
-#ifndef CONFIG_DEBUG_OUTPUT_UART_SAO
-    if (GPIO_SAO_2 != GPIO_NUM_18)
-    {
-        ledMirrorGpio = GPIO_SAO_2;
-    }
+#if !defined(CONFIG_DEBUG_OUTPUT_UART_SAO)
+    ledMirrorGpio = GPIO_SAO_B;
 #endif
+    initLeds(GPIO_LED, ledMirrorGpio, getLedBrightnessSetting());
 
-    initLeds(GPIO_NUM_39, ledMirrorGpio, getLedBrightnessSetting());
-
-    initCh32v003(GPIO_SAO_1);
+    // Initialize CH32, if it exists
+    if (GPIO_NUM_NC != (gpio_num_t)GPIO_CH32_PROG)
+    {
+        initCh32v003(GPIO_CH32_PROG);
+    }
 
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();
@@ -538,13 +537,8 @@ void app_main(void)
             }
         }
 
-#if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
         // Check if a DAC buffer needs to be filled
         dacPoll();
-#elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
-        // Check for buzzer callback flags from the ISR
-        bzrCheckSongDone();
-#endif
 
         if (NO_WIFI != cSwadgeMode->wifiMode)
         {
@@ -679,7 +673,7 @@ static void initOptionalPeripherals(void)
         setDacShutdown(true);
 
         // Initialize and start the mic as a continuous ADC
-        initMic(GPIO_NUM_7);
+        initMic(GPIO_MIC);
         startMic();
     }
     else
@@ -687,19 +681,14 @@ static void initOptionalPeripherals(void)
         setDacShutdown(false);
 
         // Otherwise initialize the battery monitor as a oneshot ADC
-        initBattmon(GPIO_NUM_6);
+        initBattmon(GPIO_VMON);
 
         // Initialize sound output if there is no input
-#if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
         // Initialize the speaker. The DAC uses the same DMA controller for continuous output,
         // so it can't be initialized at the same time as the microphone
-        initDac(DAC_CHANNEL_MASK_CH0, // GPIO_NUM_17
-                GPIO_NUM_18, dacCallback);
+        initDac(GPIO_SPK, GPIO_SPK_SHDN, dacCallback);
         dacStart();
         initGlobalMidiPlayer();
-#elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
-    #error "Buzzer is no longer supported, get with the times!"
-#endif
     }
 
     // Init esp-now if requested by the mode
@@ -712,8 +701,8 @@ static void initOptionalPeripherals(void)
     // Init accelerometer
     if (cSwadgeMode->usesAccelerometer)
     {
-        initAccelerometer(GPIO_NUM_3,  // SDA
-                          GPIO_NUM_41, // SCL
+        initAccelerometer(GPIO_I2C_SDA, // SDA
+                          GPIO_I2C_SCL, // SCL
                           GPIO_PULLUP_ENABLE);
         accelIntegrate();
     }
@@ -724,8 +713,12 @@ static void initOptionalPeripherals(void)
         initTemperatureSensor();
     }
 
+#if defined(CONFIG_HARDWARE_PULSE)
     // Load some default firmware that blinks eyes
     ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
+#elif defined(CONFIG_HARDWARE_FAIRY_PROTO)
+    #warning "TODO load CH32 firmware for button handling with ch32v003RunBinaryAsset()"
+#endif
 }
 
 /**
@@ -746,12 +739,8 @@ void deinitSystem(void)
     // Deinitialize everything
     deinitButtons();
     deinitTouchPads();
-#if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
     deinitGlobalMidiPlayer();
     deinitDac();
-#elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
-    deinitBuzzer();
-#endif
     deinitEspNow();
     deinitLeds();
     deinitMic();
@@ -990,13 +979,12 @@ void switchToSpeaker(void)
     deinitMic();
 
     // Start the speaker
-    initDac(DAC_CHANNEL_MASK_CH0, // GPIO_NUM_17
-            GPIO_NUM_18, dacCallback);
+    initDac(GPIO_SPK, GPIO_SPK_SHDN, dacCallback);
     setDacShutdown(false);
     initGlobalMidiPlayer();
 
     // Start battery monitoring
-    initBattmon(GPIO_NUM_6);
+    initBattmon(GPIO_VMON);
 }
 
 /**
@@ -1017,7 +1005,7 @@ void switchToMicrophone(void)
     samp_iir = 0;
 
     // Initialize and start the mic as a continuous ADC
-    initMic(GPIO_NUM_7);
+    initMic(GPIO_MIC);
     startMic();
 }
 

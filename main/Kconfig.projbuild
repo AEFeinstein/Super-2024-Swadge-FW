@@ -7,25 +7,36 @@ menu "Swadge Configuration"
 			Select the hardware being built for
 		config HARDWARE_WAVEBIRD
 			bool "HARDWARE_WAVEBIRD"
+			depends on IDF_TARGET_ESP32S2
 			help
 				Build for the Squarewavebird Swadge (2023)
 		config HARDWARE_GUNSHIP
 			bool "HARDWARE_GUNSHIP"
+			depends on IDF_TARGET_ESP32S2
 			help
 				Build for the Gunship Swadge (2024)
 		config HARDWARE_HOTDOG_PROTO
 			bool "HARDWARE_HOTDOG_PROTO"
+			depends on IDF_TARGET_ESP32S2
 			help
 				Build for the Protoype Hotdog Swadge (2025)
 		config HARDWARE_HOTDOG_PRODUCTION
 			bool "HARDWARE_HOTDOG_PRODUCTION"
+			depends on IDF_TARGET_ESP32S2
 			help
-				Build for the Production Hotdog Swadge (2025)		
+				Build for the Production Hotdog Swadge (2025)
 		config HARDWARE_PULSE
 			bool "HARDWARE_PULSE"
+			depends on IDF_TARGET_ESP32S2
 			help
-				Build for the Pulse Swadge (2026)		
+				Build for the Pulse Swadge (2026)
+		config HARDWARE_FAIRY_PROTO
+			bool "HARDWARE_FAIRY_PROTO"
+			depends on IDF_TARGET_ESP32S3
+			help
+				Build for the prototype Fairy Swadge (2027)
 	endchoice
+
 	choice DEBUG_OUTPUT_TYPE
 		prompt "Select Debug Output"
 		default DEBUG_OUTPUT_USB
@@ -44,20 +55,7 @@ menu "Swadge Configuration"
 			help
 				printf() is sent over the SAO connector instead of LED mirroring.
 	endchoice
-	choice SOUND_OUTPUT_TYPE
-		prompt "Select Sound Output"
-		default SOUND_OUTPUT_BUZZER
-		help
-			Select sound output, either the buzzers or the speaker.
-		config SOUND_OUTPUT_BUZZER
-			bool "SOUND_OUTPUT_BUZZER"
-			help
-				Sound comes out the two buzzers
-		config SOUND_OUTPUT_SPEAKER
-			bool "SOUND_OUTPUT_SPEAKER"
-			help
-				Sound comes out the speaker
-	endchoice
+
 	choice FACTORY_TEST_TYPE
 		prompt "Select Factory Test Type"
 		default FACTORY_TEST_NORMAL
@@ -72,4 +70,13 @@ menu "Swadge Configuration"
 			help
 				Show a warning after factory test
 	endchoice
+
+	config NUM_LEDS
+		int "Select the number of RGB LEDs"
+		range 6 14
+		default 8 if HARDWARE_WAVEBIRD
+		default 9 if HARDWARE_GUNSHIP || HARDWARE_HOTDOG_PROTO || HARDWARE_HOTDOG_PRODUCTION
+		default 6 if HARDWARE_PULSE
+		default 14 if HARDWARE_FAIRY_PROTO
+
 endmenu
