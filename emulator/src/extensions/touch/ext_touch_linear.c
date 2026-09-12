@@ -45,7 +45,7 @@ static void calcCirclePoly(RDPoint* buf, uint32_t tris, uint32_t xo, uint32_t yo
  * @param et The data to initialize
  * @param ext The extension to initialize
  * @param emuArgs The arguments to use for initialization
- * @param isLeft true for a left touchpad, false for a left one
+ * @param isLeft true for a left touchpad, false for a right one
  * @param keys A list of keyboard keys to use for simulated touch. This memory is not copied, so it must be accessible
  * for the lifetime of the extension
  * @param numKeys The number of keyboard keys used for simulated touch
