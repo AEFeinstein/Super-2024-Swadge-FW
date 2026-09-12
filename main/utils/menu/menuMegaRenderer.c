@@ -34,9 +34,11 @@ static const paletteColor_t defaultBgColors[] = {
     c024, c025, c035, c034, c033, c043, c143, c254, c453, c553,
 };
 // Routes through the helmet M, with three extra numbers slapped on the end so the hotdog won't crash.
-static const uint8_t ledConveyorOrder[] = {
-    1, 0, 2, 3, 5, 4, 6, 7, 8,
-};
+static const uint8_t ledConveyorOrder[CONFIG_NUM_LEDS] = {
+    // Clockwise around the circle
+    7, 6, 5, 4, 3, 2, 1, 0,
+    // Clockwise around the wings
+    8, 9, 10, 11, 12, 13};
 
 //==============================================================================
 // Function Prototypes

@@ -46,5 +46,7 @@ typedef enum
     GPIO_NUM_44 = 44, /*!< GPIO44, input and output */
     GPIO_NUM_45 = 45, /*!< GPIO45, input and output */
     GPIO_NUM_46 = 46, /*!< GPIO46, input mode only */
+    GPIO_NUM_47 = 47, /*!< GPIO47, input and output (S3 only) */
+    GPIO_NUM_48 = 48, /*!< GPIO48, input and output (S3 only) */
     GPIO_NUM_MAX,
 } gpio_num_t;

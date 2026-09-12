@@ -692,13 +692,8 @@ static void EmuSoundCb(struct CNFADriver* sd, short* out, short* in, int framesp
     // Pass to microphone
     micHandleSoundInput(in, framesr, sd->channelsRec);
 
-#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
-    // Pass to buzzer
-    bzrHandleSoundOutput(out, framesp, sd->channelsPlay);
-#elif defined(CONFIG_SOUND_OUTPUT_SPEAKER)
     // Pass to speaker
     dacHandleSoundOutput(out, framesp, sd->channelsPlay);
-#endif
 }
 
 #if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__APPLE__)

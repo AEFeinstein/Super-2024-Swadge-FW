@@ -3,7 +3,7 @@
  * \section tft_design Design Philosophy
  *
  * TFT code is based on <a
- * href="https://github.com/espressif/esp-idf/tree/v5.2.7/examples/peripherals/lcd/tjpgd">Espressif's LCD tjpgd
+ * href="https://github.com/espressif/esp-idf/tree/v5.2.8/examples/peripherals/lcd/tjpgd">Espressif's LCD tjpgd
  * example</a>.
  *
  * Each pixel in the frame-buffer is of type ::paletteColor_t.
@@ -99,6 +99,9 @@
     #define TFT_HEIGHT 135
 #elif defined(CONFIG_ST7789_240x240)
     #define TFT_WIDTH  240
+    #define TFT_HEIGHT 240
+#elif defined(CONFIG_ST7789_320x240)
+    #define TFT_WIDTH  320
     #define TFT_HEIGHT 240
 #elif defined(CONFIG_GC9307_240x280)
     #define TFT_WIDTH  280

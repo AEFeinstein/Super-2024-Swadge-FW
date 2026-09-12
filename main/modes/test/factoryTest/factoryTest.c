@@ -874,7 +874,7 @@ void testReadAndValidateAccelerometer(void)
 
 static void touchFillCircleSegments(int16_t x, int16_t y, int16_t r, int16_t segs, bool center)
 {
-    uint8_t numTouchElem = (sizeof(test->touchStates) / sizeof(test->touchStates[0]));
+    uint8_t numTouchElem = (ARRAY_SIZE(test->touchStates));
     for (uint8_t touchIdx = 0; touchIdx < numTouchElem; touchIdx++)
     {
         paletteColor_t color;

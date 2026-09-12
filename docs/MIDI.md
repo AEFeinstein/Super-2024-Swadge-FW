@@ -8,7 +8,7 @@ commands are simply ignored and the rest of the file will play normally.
 
 ## Utilities
 
-For editing MIDI files, [signal](https://signal.vercel.app) is a browser-based MIDI editor. It supports uploading custom SoundFont
+For editing MIDI files, [signal](https://signalmidi.app/edit) is a browser-based MIDI editor. It supports uploading custom SoundFont
 files (`.sf2` format). It can also connect to physical MIDI devices such as keyboards, as well as both the physical Swadge and the
 Swadge Emulator when the "MIDI Player" mode is active and in Streaming mode.
 
@@ -72,26 +72,26 @@ By default, this drum kit is available on MIDI Channel 11.
 ### MMX Instruments (Bank 2) {#MMXPrograms}
 These instruments are based on the MMX SoundFont.
 
-| Program# | Name             |
-| -------- | ---------------- |
-|       11 | Vibraphone       |
-|       17 | Organ            |
-|       24 | Acoustic Guitar  |
-|       29 | Overdrive Guitar |
-|       30 | Distorted Guitar |
-|       36 | Slap Bas         |
-|       38 | Synth Bass       |
-|       48 | Strings          |
-|       55 | Orchestra Hit    |
-|       62 | Synth Brass      |
-|       80 | Square Wave      |
-|       81 | Saw Wave         |
-|       82 | Synth Lead       |
-|       83 | Synth Lead 2     |
-|      119 | Reverse Cymbal   |
+| Program# | Name              |
+| -------- | ----------------- |
+|       11 | Vibraphone        |
+|       17 | Organ             |
+|       24 | Acoustic Guitar   |
+|       29 | Overdriven Guitar |
+|       30 | Distorted Guitar  |
+|       36 | Slap Bass         |
+|       38 | Synth Bass        |
+|       48 | Strings           |
+|       55 | Orchestra Hit     |
+|       62 | Synth Brass       |
+|       80 | Square Lead       |
+|       81 | Saw Lead          |
+|       82 | Calliope Lead     |
+|       83 | Chiff Lead        |
+|      119 | Reverse Cymbal    |
 
 #### MMX Drum Kit
-The MMX drum kit is also available for percussion channels using Bank 2.
+The MMX drum kit is also available for percussion channels using Bank 2, and Channel 10. The Patch parameter is ignored here.
 
 | Note       | Note Number | Description  |
 | ---------- | ----------- | ------------ |
@@ -123,7 +123,7 @@ These instruments are based on the LTTP SoundFont.
 |      122 | Water          |
 
 ### LTTP Drum Kit
-The LTTP drum kit is also available for percussion channels using Bank 3.
+The LTTP drum kit is also available for percussion channels using Bank 3, and Channel 10. The Patch parameter is ignored here.
 
 | Note       | Note Number | Description  |
 | ---------- | ----------- | ------------ |
