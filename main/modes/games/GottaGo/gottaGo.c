@@ -168,7 +168,7 @@ const trophyData_t ggTrophies[] = {
 
 const trophySettings_t ggTrophySettings = {
     .drawFromBottom   = false,
-    .staticDurationUs = DRAW_STATIC_US * 2,
+    .staticDurationUs = DRAW_STATIC_US * 5,
     .slideDurationUs  = DRAW_SLIDE_US,
     .namespaceKey     = ggModeName,
 };
