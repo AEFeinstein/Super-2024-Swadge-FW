@@ -391,7 +391,10 @@ void app_main(void)
     };
     initButtons(pushButtons, ARRAY_SIZE(pushButtons));
 #else
-    #warning "TODO Handle CH32 Buttons on Fairy"
+    #warning "TODO Handle CH32 Buttons on Fairy. Classic button init left in place for the emulator"
+    #if !defined(__XTENSA__)
+    initButtons(NULL, 0);
+    #endif
 #endif
 
 #if defined(CONFIG_HARDWARE_WAVEBIRD)

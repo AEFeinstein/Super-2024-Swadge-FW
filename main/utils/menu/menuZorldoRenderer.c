@@ -51,9 +51,11 @@
 //==============================================================================
 
 // TODO: Figure out LEDs once we have prototype boards
-static const uint8_t ledConveyorOrder[] = {
-    1, 0, 2, 3, 5, 4, 6, 7, 8,
-};
+static const uint8_t ledConveyorOrder[CONFIG_NUM_LEDS] = {
+    // Clockwise around the circle
+    7, 6, 5, 4, 3, 2, 1, 0,
+    // Clockwise around the wings
+    8, 9, 10, 11, 12, 13};
 
 //==============================================================================
 // Function Prototypes
@@ -62,7 +64,7 @@ static const uint8_t ledConveyorOrder[] = {
 static void initCloud(menuZorldoCloud_t* cloud, bool offscreenOnly);
 static void drawMenuText(menuZorldoRenderer_t* renderer, const char* text, int16_t x, int16_t y, bool isSelected,
                          bool leftArrow, bool rightArrow, bool doubleArrows);
-static void setLedsFromBg(menuZorldoRenderer_t* renderer);
+static void setLedsFromBg(menuZorldoRenderer_t* renderer, uint32_t elapsedUs);
 
 //==============================================================================
 // Functions
@@ -132,7 +134,7 @@ menuZorldoRenderer_t* initMenuZorldoRenderer(font_t* titleFont, font_t* menuFont
     }
 
     // Initialize LEDs
-    setLedsFromBg(renderer);
+    setLedsFromBg(renderer, 0);
     setLeds(renderer->leds, CONFIG_NUM_LEDS);
 
     // LEDs on by default
@@ -423,7 +425,7 @@ void drawMenuZorldo(menu_t* menu, menuZorldoRenderer_t* renderer, int64_t elapse
     if (renderer->ledsOn)
     {
         // Set LEDs
-        setLedsFromBg(renderer);
+        setLedsFromBg(renderer, elapsedUs);
         setLeds(renderer->leds, CONFIG_NUM_LEDS);
     }
 
@@ -615,7 +617,7 @@ void setZorldoLedsOn(menuZorldoRenderer_t* renderer, bool ledsOn)
     renderer->ledsOn = ledsOn;
     if (false == ledsOn)
     {
-        setLedsFromBg(renderer);
+        setLedsFromBg(renderer, 0);
         setLeds(renderer->leds, CONFIG_NUM_LEDS);
     }
 }
@@ -625,18 +627,23 @@ void setZorldoLedsOn(menuZorldoRenderer_t* renderer, bool ledsOn)
  *
  * @param renderer The renderer to set LEDs in
  */
-static void setLedsFromBg(menuZorldoRenderer_t* renderer)
+static void setLedsFromBg(menuZorldoRenderer_t* renderer, uint32_t elapsedUs)
 {
-    // Set all LEDs
-    for (int32_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
-    {
-        // Extract LED color from bg color
+    RUN_TIMER_EVERY(renderer->ledTimer, 500000, elapsedUs, {
+        // Turn prior LED off
+        renderer->leds[ledConveyorOrder[renderer->ledIdx]].r = 0;
+        renderer->leds[ledConveyorOrder[renderer->ledIdx]].g = 0;
+        renderer->leds[ledConveyorOrder[renderer->ledIdx]].b = 0;
+
+        // Increment IDX
+        renderer->ledIdx = (renderer->ledIdx + 1) % CONFIG_NUM_LEDS;
+
+        // Extract color from background
         int32_t rgb = paletteToRGB(c344);
-        led_t led   = {
-            .r = (rgb >> 16) & 0xFF,
-            .g = (rgb >> 8) & 0xFF,
-            .b = (rgb >> 0) & 0xFF,
-        };
-        renderer->leds[ledConveyorOrder[idx]] = led;
-    }
+
+        // Turn new LED on
+        renderer->leds[ledConveyorOrder[renderer->ledIdx]].r = (rgb >> 16) & 0xFF;
+        renderer->leds[ledConveyorOrder[renderer->ledIdx]].g = (rgb >> 8) & 0xFF;
+        renderer->leds[ledConveyorOrder[renderer->ledIdx]].b = (rgb >> 0) & 0xFF;
+    });
 }

@@ -314,7 +314,7 @@ void ggCalcUrinalScores(ggUrinal_t* urinals, int numActive, int* urinalScores, i
 // NVS
 void ggSaveFinalToNVS(ggData_t* ggd)
 {
-    int outVal;
+    int32_t outVal;
     if (!readNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_LEVELS], &outVal))
     {
         writeNamespaceNvs32(ggNVSSpace[GG_NAMESPACE], ggNVSSpace[GG_MAX_LEVELS], ggd->numLevels);
@@ -482,7 +482,7 @@ static bool updateHSTable(ggHSTable_t* hs, int newScore, int32_t packedName)
 {
     int currScore = MAX_SCORES - 1;
     bool new      = false;
-    while (hs->scores[currScore].score < newScore && currScore >= 0)
+    while (currScore >= 0 && hs->scores[currScore].score < newScore)
     {
         // Swap
         int tempScore                    = hs->scores[currScore].score;

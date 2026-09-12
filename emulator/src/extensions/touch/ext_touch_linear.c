@@ -45,16 +45,17 @@ static void calcCirclePoly(RDPoint* buf, uint32_t tris, uint32_t xo, uint32_t yo
  * @param et The data to initialize
  * @param ext The extension to initialize
  * @param emuArgs The arguments to use for initialization
- * @param isHorz true for a horizontal touchpad, false for a vertical one
+ * @param isLeft true for a left touchpad, false for a right one
  * @param keys A list of keyboard keys to use for simulated touch. This memory is not copied, so it must be accessible
  * for the lifetime of the extension
  * @param numKeys The number of keyboard keys used for simulated touch
  * @return true if the extension was initialized, false otherwise
  */
-bool touchLinearInit(emuTouch_t* et, emuExtension_t* ext, const emuArgs_t* emuArgs, bool isHorz, const char* keys,
+bool touchLinearInit(emuTouch_t* et, emuExtension_t* ext, const emuArgs_t* emuArgs, bool isLeft, const char* keys,
                      uint8_t numKeys)
 {
-    et->isHorz = isHorz;
+    et->isHorz = false;
+    et->isLeft = isLeft;
 
     // Setup mouse
     et->clickState = NOT_CLICKED;
@@ -68,9 +69,9 @@ bool touchLinearInit(emuTouch_t* et, emuExtension_t* ext, const emuArgs_t* emuAr
 
     if (emuArgs->emulateTouch)
     {
-        if (isHorz)
+        if (isLeft)
         {
-            requestPane(ext, PANE_BOTTOM, TOUCH_PANE_MIN_SIZE, TOUCH_PANE_MIN_SIZE);
+            requestPane(ext, PANE_LEFT, TOUCH_PANE_MIN_SIZE, TOUCH_PANE_MIN_SIZE);
         }
         else
         {

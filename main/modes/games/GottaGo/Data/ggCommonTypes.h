@@ -278,11 +278,11 @@ typedef struct
     bool stallUsed;        ///< If a stall was used this level
 
     // Trophies
-    int accLevel1; ///< Highest accuracy requirement
-    int accLevel2; ///< Middle accuracy requirement
-    int accLevel3; ///< Lowest accuracy requirement
-    int numWorst;  ///< Number of levels picked worst option
-    int textOrder; ///< Uncover Adraxian sabotage
+    int accLevel1;     ///< Highest accuracy requirement
+    int accLevel2;     ///< Middle accuracy requirement
+    int accLevel3;     ///< Lowest accuracy requirement
+    int numWorst;      ///< Number of levels picked worst option
+    int32_t textOrder; ///< Uncover Adraxian sabotage
 
     // Drawing
     bool toggle;             ///< Used for all toggle

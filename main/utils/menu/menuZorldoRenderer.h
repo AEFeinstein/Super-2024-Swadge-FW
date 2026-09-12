@@ -78,6 +78,8 @@ typedef struct
 
     led_t leds[CONFIG_NUM_LEDS]; ///< An array with the RGB LED state to be output
     bool ledsOn;                 ///< true if LEDs should be set by this renderer, false to leave LEDs alone
+    uint32_t ledTimer;           ///< A timer to run for LED animations
+    uint8_t ledIdx;              ///< The current LED being lit for animations
 
     bool drawBody;       ///< true to draw the body background, false to skip it
     uint16_t bodyHeight; ///< the height of the middle portion of the body, between top and bottom decorated parts
