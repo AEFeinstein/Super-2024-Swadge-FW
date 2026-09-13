@@ -7,7 +7,8 @@ class model:
 
     def __init__(self, width: int, height: int):
         self.tileMap: list[list[tile]] = [
-            [tile() for y in range(height)] for x in range(width)]
+            [tile() for y in range(height)] for x in range(width)
+        ]
         self.selectedTileType: tileType = None
         self.scripts: list[rme_script] = []
         self.splitter: rme_scriptSplitter = rme_scriptSplitter()
@@ -18,14 +19,16 @@ class model:
 
     def setView(self, v):
         from rme_view import view
+
         self.v: view = v
 
     def setMapSize(self, newWidth: int, newHeight: int):
-        print(str(newWidth) + ' x ' + str(newHeight))
+        print(str(newWidth) + " x " + str(newHeight))
 
         # Make a new map
         newTileMap: list[list[tile]] = [
-            [tile() for y in range(newHeight)] for x in range(newWidth)]
+            [tile() for y in range(newHeight)] for x in range(newWidth)
+        ]
 
         # Copy as much as one can from old to new
         minWidth: int = min(newWidth, self.getMapWidth())
@@ -44,15 +47,15 @@ class model:
         return len(self.tileMap[0])
 
     def setMapTileBg(self, x: int, y: int, bg: tileType):
-        if (0 <= x and x < len(self.tileMap)):
-            if (0 <= y and y < len(self.tileMap[x])):
+        if 0 <= x and x < len(self.tileMap):
+            if 0 <= y and y < len(self.tileMap[x]):
                 if not self.tileMap[x][y].background == bg:
                     self.tileMap[x][y].setBg(bg)
                     self.v.drawMapCell(x, y)
 
     def setMapTileObj(self, x: int, y: int, obj: tileType):
-        if (0 <= x and x < len(self.tileMap)):
-            if (0 <= y and y < len(self.tileMap[x])):
+        if 0 <= x and x < len(self.tileMap):
+            if 0 <= y and y < len(self.tileMap[x]):
                 if tileType.DELETE == obj:
                     if tileType.EMPTY != self.tileMap[x][y].object:
                         self.usedIds.remove(self.tileMap[x][y].objectId)
@@ -94,16 +97,15 @@ class model:
         return self.selectedTileType
 
     def setSelectedCell(self, x, y):
-        if (0 <= x and x < len(self.tileMap)):
-            if (0 <= y and y < len(self.tileMap[x])):
+        if 0 <= x and x < len(self.tileMap):
+            if 0 <= y and y < len(self.tileMap[x]):
                 self.v.selectCell(x, y, self.tileMap[x][y].objectId)
 
     def setScripts(self, scripts: list[str]) -> None:
         self.scripts: list[rme_script] = []
         for script in scripts:
             if script.strip():
-                self.scripts.append(rme_script(
-                    string=script, splitter=self.splitter))
+                self.scripts.append(rme_script(string=script, splitter=self.splitter))
 
     def save(self, outFile: TextIOWrapper) -> bool:
         # Construct file bytes
@@ -127,8 +129,7 @@ class model:
                     fileBytes.append(self.tileMap[x][y].objectId)
 
         # Write number of scripts
-        numScripts: int = sum(x is not None and x.isValid()
-                              for x in self.scripts)
+        numScripts: int = sum(x is not None and x.isValid() for x in self.scripts)
         if numScripts > 255:
             # TODO display error
             print("TOO MANY SCRIPTS!!")
@@ -139,7 +140,7 @@ class model:
         for script in self.scripts:
             if script is not None and script.isValid():
                 sb = script.toBytes()
-                if (len(sb) > 65535):
+                if len(sb) > 65535:
                     # TODO display error
                     print("SCRIPT TOO BIG!!")
                     return False
@@ -164,8 +165,7 @@ class model:
         idx = idx + 1
 
         # Make empty tiles and used IDs
-        self.tileMap = [
-            [tile() for y in range(mapHeight)] for x in range(mapWidth)]
+        self.tileMap = [[tile() for y in range(mapHeight)] for x in range(mapWidth)]
         self.usedIds = []
         self.currentId = 0
 
@@ -176,12 +176,10 @@ class model:
         for y in range(self.getMapHeight()):
             for x in range(self.getMapWidth()):
                 # Read background
-                self.tileMap[x][y].background = tileType._value2member_map_[
-                    data[idx]]
+                self.tileMap[x][y].background = tileType._value2member_map_[data[idx]]
                 idx = idx + 1
                 # Read Object
-                self.tileMap[x][y].object = tileType._value2member_map_[
-                    data[idx]]
+                self.tileMap[x][y].object = tileType._value2member_map_[data[idx]]
                 idx = idx + 1
                 # Read optional object ID
                 if tileType.EMPTY is not self.tileMap[x][y].object:
@@ -203,7 +201,7 @@ class model:
             sLen: int = (data[idx] << 8) | (data[idx + 1])
             idx = idx + 2
             # Read script
-            newScript = rme_script(bytes=data[idx: idx + sLen])
+            newScript = rme_script(bytes=data[idx : idx + sLen])
             self.scripts.append(newScript)
             # Mark spawned IDs as used
             for sp in newScript.getThenSpawns():
@@ -237,7 +235,11 @@ class model:
         self.v.highlightScriptCells()
 
     def finishEnemyScriptCreation(self):
-        if self.enemyScript.isValid() and 0 < len(self.enemyScript.getIfCells()) and 0 < len(self.enemyScript.getThenSpawns()):
+        if (
+            self.enemyScript.isValid()
+            and 0 < len(self.enemyScript.getIfCells())
+            and 0 < len(self.enemyScript.getThenSpawns())
+        ):
             self.scripts.append(self.enemyScript)
             self.enemyScript = None
             self.v.reloadScriptText()
@@ -259,7 +261,11 @@ class model:
         self.v.highlightScriptCells()
 
     def finishCameraScriptCreation(self):
-        if self.cameraScript.isValid() and 0 < len(self.cameraScript.getIfCells()) and 0 < len(self.cameraScript.getThenCells()):
+        if (
+            self.cameraScript.isValid()
+            and 0 < len(self.cameraScript.getIfCells())
+            and 0 < len(self.cameraScript.getThenCells())
+        ):
             self.scripts.append(self.cameraScript)
             self.cameraScript = None
             self.v.reloadScriptText()

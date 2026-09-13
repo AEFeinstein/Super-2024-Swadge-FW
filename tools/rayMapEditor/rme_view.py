@@ -16,6 +16,7 @@ from enum import Enum
 
 from pathlib import Path
 
+
 class clickMode(Enum):
     NORMAL_EDIT = 1
     SET_SPAWN_TRIGGER_ZONE = 2
@@ -25,9 +26,9 @@ class clickMode(Enum):
 
 
 class CustomText(tk.Text):
-    '''
+    """
     This class is a tk.Text which can also report when the cursor moves
-    '''
+    """
 
     def __init__(self, *args, **kwargs):
         tk.Text.__init__(self, *args, **kwargs)
@@ -44,8 +45,11 @@ class CustomText(tk.Text):
 
             # generate an event if something was added or deleted,
             # or the cursor position changed
-            if (args[0] in ("insert", "delete") or
-                    args[0:3] == ("mark", "set", "insert")):
+            if args[0] in ("insert", "delete") or args[0:3] == (
+                "mark",
+                "set",
+                "insert",
+            ):
                 self.event_generate("<<CursorChange>>", when="tail")
 
             return result
@@ -77,90 +81,182 @@ class view:
         self.scriptRects = []
         self.gridLines = []
 
-        frameBgColor: str = '#181818'
-        elemBgColor: str = '#1F1F1F'
-        borderColor: str = '#2A2A2A'
-        borderHighlightColor: str = '#2B79D7'
-        fontColor: str = '#CCCCCC'
-        fontStyle = ('Courier New', 14)
+        frameBgColor: str = "#181818"
+        elemBgColor: str = "#1F1F1F"
+        borderColor: str = "#2A2A2A"
+        borderHighlightColor: str = "#2B79D7"
+        fontColor: str = "#CCCCCC"
+        fontStyle = ("Courier New", 14)
         borderThickness: int = 2
         padding: int = 4
 
-        self.buttonColor: str = '#2B79D7'
+        self.buttonColor: str = "#2B79D7"
         buttonWidth: int = 12
 
         # Setup the root and main frames
         self.root: tk.Tk = tk.Tk()
         self.root.title("Ray Map Editor")
-        self.root.bind('<KeyPress>', self.key_press)
+        self.root.bind("<KeyPress>", self.key_press)
         content = tk.Frame(self.root, background=frameBgColor)
         frame = tk.Frame(content, background=frameBgColor)
 
         # Setup the button frame and buttons
-        self.buttonFrame: tk.Frame = tk.Frame(content, height=0, background=elemBgColor,
-                                              highlightthickness=borderThickness, highlightbackground=borderColor, padx=padding, pady=padding)
-        self.loadButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Load", bd=0, highlightbackground=self.buttonColor,
-                                               command=self.clickLoad)
-        self.saveButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Save", bd=0, highlightbackground=self.buttonColor,
-                                               command=self.clickSave)
-        self.saveAsButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Save As", bd=0, highlightbackground=self.buttonColor,
-                                                 command=self.clickSaveAs)
-        self.resizeMap: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Resize Map", bd=0, highlightbackground=self.buttonColor,
-                                              command=self.clickResizeMap)
-        self.scriptSpawn: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Set E.Triggers", bd=0, highlightbackground=self.buttonColor,
-                                                command=self.clickScriptSpawn)
-        self.scriptCamera: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Set C.Triggers", bd=0, highlightbackground=self.buttonColor,
-                                                command=self.clickScriptCamera)
+        self.buttonFrame: tk.Frame = tk.Frame(
+            content,
+            height=0,
+            background=elemBgColor,
+            highlightthickness=borderThickness,
+            highlightbackground=borderColor,
+            padx=padding,
+            pady=padding,
+        )
+        self.loadButton: tk.Button = tk.Button(
+            self.buttonFrame,
+            height=1,
+            width=buttonWidth,
+            text="Load",
+            bd=0,
+            highlightbackground=self.buttonColor,
+            command=self.clickLoad,
+        )
+        self.saveButton: tk.Button = tk.Button(
+            self.buttonFrame,
+            height=1,
+            width=buttonWidth,
+            text="Save",
+            bd=0,
+            highlightbackground=self.buttonColor,
+            command=self.clickSave,
+        )
+        self.saveAsButton: tk.Button = tk.Button(
+            self.buttonFrame,
+            height=1,
+            width=buttonWidth,
+            text="Save As",
+            bd=0,
+            highlightbackground=self.buttonColor,
+            command=self.clickSaveAs,
+        )
+        self.resizeMap: tk.Button = tk.Button(
+            self.buttonFrame,
+            height=1,
+            width=buttonWidth,
+            text="Resize Map",
+            bd=0,
+            highlightbackground=self.buttonColor,
+            command=self.clickResizeMap,
+        )
+        self.scriptSpawn: tk.Button = tk.Button(
+            self.buttonFrame,
+            height=1,
+            width=buttonWidth,
+            text="Set E.Triggers",
+            bd=0,
+            highlightbackground=self.buttonColor,
+            command=self.clickScriptSpawn,
+        )
+        self.scriptCamera: tk.Button = tk.Button(
+            self.buttonFrame,
+            height=1,
+            width=buttonWidth,
+            text="Set C.Triggers",
+            bd=0,
+            highlightbackground=self.buttonColor,
+            command=self.clickScriptCamera,
+        )
         self.scriptState: clickMode = clickMode.NORMAL_EDIT
-        self.exitButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Exit", bd=0, highlightbackground=self.buttonColor,
-                                               command=self.clickExit)
+        self.exitButton: tk.Button = tk.Button(
+            self.buttonFrame,
+            height=1,
+            width=buttonWidth,
+            text="Exit",
+            bd=0,
+            highlightbackground=self.buttonColor,
+            command=self.clickExit,
+        )
 
         # Set up the canvasses
         self.paletteCanvas: tk.Canvas = tk.Canvas(
-            content, background=elemBgColor, width=self.paletteCellSize * 6, height=self.paletteCellSize * 8,
-            highlightthickness=borderThickness, highlightbackground=borderColor)
+            content,
+            background=elemBgColor,
+            width=self.paletteCellSize * 6,
+            height=self.paletteCellSize * 8,
+            highlightthickness=borderThickness,
+            highlightbackground=borderColor,
+        )
         self.mapCanvas: tk.Canvas = tk.Canvas(
-            content, background=elemBgColor, highlightthickness=borderThickness, highlightbackground=borderColor)
+            content,
+            background=elemBgColor,
+            highlightthickness=borderThickness,
+            highlightbackground=borderColor,
+        )
 
         # Set up the text
-        self.cellMetaData: CustomText = CustomText(content, width=10, state="disabled",
-                                                   undo=True, autoseparators=True, maxundo=-1,
-                                                   background=elemBgColor, foreground=fontColor, insertbackground=fontColor, font=fontStyle,
-                                                   highlightthickness=borderThickness, highlightbackground=borderColor,
-                                                   highlightcolor=borderHighlightColor, borderwidth=0, bd=0)
+        self.cellMetaData: CustomText = CustomText(
+            content,
+            width=10,
+            state="disabled",
+            undo=True,
+            autoseparators=True,
+            maxundo=-1,
+            background=elemBgColor,
+            foreground=fontColor,
+            insertbackground=fontColor,
+            font=fontStyle,
+            highlightthickness=borderThickness,
+            highlightbackground=borderColor,
+            highlightcolor=borderHighlightColor,
+            borderwidth=0,
+            bd=0,
+        )
 
-        self.scriptTextEntry: CustomText = CustomText(content, height=10,
-                                                      undo=True, autoseparators=True, maxundo=-1,
-                                                      background=elemBgColor, foreground=fontColor, insertbackground=fontColor, font=fontStyle,
-                                                      highlightthickness=borderThickness, highlightbackground=borderColor,
-                                                      highlightcolor=borderHighlightColor, borderwidth=0, bd=0, wrap='none')
-        self.scriptTextEntry.bind(
-            "<<CursorChange>>", self.scriptTextCursorChange)
+        self.scriptTextEntry: CustomText = CustomText(
+            content,
+            height=10,
+            undo=True,
+            autoseparators=True,
+            maxundo=-1,
+            background=elemBgColor,
+            foreground=fontColor,
+            insertbackground=fontColor,
+            font=fontStyle,
+            highlightthickness=borderThickness,
+            highlightbackground=borderColor,
+            highlightcolor=borderHighlightColor,
+            borderwidth=0,
+            bd=0,
+            wrap="none",
+        )
+        self.scriptTextEntry.bind("<<CursorChange>>", self.scriptTextCursorChange)
 
         # Configure the main frame
         content.grid(column=0, row=0, sticky=(tk.NSEW))
         frame.grid(column=0, row=0, columnspan=3, rowspan=4, sticky=(tk.NSEW))
 
         # Place the button bar
-        self.buttonFrame.grid(column=0, row=0, columnspan=4,
-                              rowspan=1, sticky=tk.NSEW, padx=padding, pady=padding)
+        self.buttonFrame.grid(
+            column=0,
+            row=0,
+            columnspan=4,
+            rowspan=1,
+            sticky=tk.NSEW,
+            padx=padding,
+            pady=padding,
+        )
 
         # Place the buttons in the button bar
-        self.loadButton.grid(column=0, row=0, sticky=tk.NW,
-                             padx=padding, pady=padding)
-        self.saveButton.grid(column=1, row=0, sticky=tk.NW,
-                             padx=padding, pady=padding)
-        self.saveAsButton.grid(column=2, row=0, sticky=tk.NW,
-                               padx=padding, pady=padding)
-        self.resizeMap.grid(column=3, row=0, sticky=tk.NW,
-                            padx=padding, pady=padding)
-        self.scriptSpawn.grid(column=4, row=0, sticky=tk.NW,
-                              padx=padding, pady=padding)
-        self.scriptCamera.grid(column=5, row=0, sticky=tk.NW,
-                              padx=padding, pady=padding)
+        self.loadButton.grid(column=0, row=0, sticky=tk.NW, padx=padding, pady=padding)
+        self.saveButton.grid(column=1, row=0, sticky=tk.NW, padx=padding, pady=padding)
+        self.saveAsButton.grid(
+            column=2, row=0, sticky=tk.NW, padx=padding, pady=padding
+        )
+        self.resizeMap.grid(column=3, row=0, sticky=tk.NW, padx=padding, pady=padding)
+        self.scriptSpawn.grid(column=4, row=0, sticky=tk.NW, padx=padding, pady=padding)
+        self.scriptCamera.grid(
+            column=5, row=0, sticky=tk.NW, padx=padding, pady=padding
+        )
         # Place this button in the top right
-        self.exitButton.grid(column=6, row=0, sticky=tk.NE,
-                             padx=padding, pady=padding)
+        self.exitButton.grid(column=6, row=0, sticky=tk.NE, padx=padding, pady=padding)
 
         # Configure button column weights
         self.buttonFrame.columnconfigure(0, weight=0)
@@ -171,36 +267,40 @@ class view:
         self.buttonFrame.columnconfigure(5, weight=1)
 
         # Place the palette and bind events
-        self.paletteCanvas.grid(column=0, row=1, sticky=(
-            tk.NSEW), padx=padding, pady=padding)
+        self.paletteCanvas.grid(
+            column=0, row=1, sticky=(tk.NSEW), padx=padding, pady=padding
+        )
         self.paletteCanvas.bind("<Button-1>", self.paletteLeftClick)
-        self.paletteCanvas.bind('<ButtonRelease-1>', self.clickRelease)
-        self.paletteCanvas.bind('<Motion>', self.paletteMouseMotion)
+        self.paletteCanvas.bind("<ButtonRelease-1>", self.clickRelease)
+        self.paletteCanvas.bind("<Motion>", self.paletteMouseMotion)
         self.paletteCanvas.bind("<MouseWheel>", self.paletteMouseWheel)
         self.paletteCanvas.bind("<Button-4>", self.paletteMouseWheel)
         self.paletteCanvas.bind("<Button-5>", self.paletteMouseWheel)
 
         # Place the map and bind events
-        self.mapCanvas.grid(column=1, row=1, rowspan=2, sticky=(
-            tk.NSEW), padx=padding, pady=padding)
+        self.mapCanvas.grid(
+            column=1, row=1, rowspan=2, sticky=(tk.NSEW), padx=padding, pady=padding
+        )
         self.mapCanvas.bind("<Button-1>", self.mapLeftClick)
         self.mapCanvas.bind("<Button-2>", self.mapMiddleClick)
         self.mapCanvas.bind("<Button-3>", self.mapRightClick)
-        self.mapCanvas.bind('<ButtonRelease-1>', self.clickRelease)
-        self.mapCanvas.bind('<ButtonRelease-2>', self.clickRelease)
-        self.mapCanvas.bind('<ButtonRelease-3>', self.clickRelease)
-        self.mapCanvas.bind('<Motion>', self.mapMouseMotion)
+        self.mapCanvas.bind("<ButtonRelease-1>", self.clickRelease)
+        self.mapCanvas.bind("<ButtonRelease-2>", self.clickRelease)
+        self.mapCanvas.bind("<ButtonRelease-3>", self.clickRelease)
+        self.mapCanvas.bind("<Motion>", self.mapMouseMotion)
         self.mapCanvas.bind("<MouseWheel>", self.mapMouseWheel)
         self.mapCanvas.bind("<Button-4>", self.mapMouseWheel)
         self.mapCanvas.bind("<Button-5>", self.mapMouseWheel)
 
         # Place the cell metadata text window
-        self.cellMetaData.grid(column=2, row=1, rowspan=2, sticky=(
-            tk.NSEW), padx=padding, pady=padding)
+        self.cellMetaData.grid(
+            column=2, row=1, rowspan=2, sticky=(tk.NSEW), padx=padding, pady=padding
+        )
 
         # Place the script editor text window
-        self.scriptTextEntry.grid(column=0, row=3, columnspan=3, sticky=(
-            tk.NSEW), padx=padding, pady=padding)
+        self.scriptTextEntry.grid(
+            column=0, row=3, columnspan=3, sticky=(tk.NSEW), padx=padding, pady=padding
+        )
         self.scriptTextEntry.bind("<KeyRelease>", self.scriptTextChanged)
 
         # Set root weights so the UI scales
@@ -219,7 +319,7 @@ class view:
         self.loadAllTextures()
 
         # Start maximized
-        self.root.wm_state('normal')  # 'zoomed' works for windows
+        self.root.wm_state("normal")  # 'zoomed' works for windows
 
     def loadAllTextures(self):
 
@@ -246,24 +346,24 @@ class view:
             # if not loaded:
             #     print(f"No texture loaded for {tt.name} ({tt.value})")
 
-        
     def loadTexture(self, pMap, mMap, key, texFile):
         img = Image.open(texFile)
 
         # Resize for the palette
-        if (img.width < img.height):
+        if img.width < img.height:
             newHeight = self.paletteCellSize
             newWidth = img.width * (newHeight / img.height)
         else:
             newWidth = self.paletteCellSize
             newHeight = img.height * (newWidth / img.width)
         pResize = img.resize(
-            size=(int(newWidth), int(newHeight)), resample=Image.LANCZOS)
+            size=(int(newWidth), int(newHeight)), resample=Image.LANCZOS
+        )
 
         pMap[key] = ImageTk.PhotoImage(pResize)
 
         # Resize for the map
-        if (img.width < img.height):
+        if img.width < img.height:
             newHeight = self.mapCellSize
             newWidth = img.width * (newHeight / img.height)
         else:
@@ -271,15 +371,18 @@ class view:
             newHeight = img.height * (newWidth / img.width)
 
         mResize = img.resize(
-            size=(int(newWidth), int(newHeight)), resample=Image.LANCZOS)
+            size=(int(newWidth), int(newHeight)), resample=Image.LANCZOS
+        )
         mMap[key] = ImageTk.PhotoImage(mResize)
 
     def setController(self, c):
         from rme_controller import controller
+
         self.c: controller = c
 
     def setModel(self, m):
         from rme_model import model
+
         self.m: model = m
 
     def mainloop(self):
@@ -306,7 +409,7 @@ class view:
         SUPER_MASK = 0x40
 
         # Clear all but the masks we care about
-        e.state &= (SHIFT_MASK | CTRL_MASK | ALT_MASK | SUPER_MASK)
+        e.state &= SHIFT_MASK | CTRL_MASK | ALT_MASK | SUPER_MASK
 
         # ctrl+o opens
         if (e.state == CTRL_MASK) and (e.keycode == 32):
@@ -329,31 +432,31 @@ class view:
             self.clickScriptCamera()
 
         # ctrl+= zooms in
-        if (e.state == CTRL_MASK and e.keycode == 20):
-            tke  = tk.Event()
+        if e.state == CTRL_MASK and e.keycode == 20:
+            tke = tk.Event()
             tke.num = 5
             tke.delta = 1
             self.mapMouseWheel(tke)
         # ctrl+- zooms out
-        if (e.state == CTRL_MASK and e.keycode == 21):
-            tke  = tk.Event()
+        if e.state == CTRL_MASK and e.keycode == 21:
+            tke = tk.Event()
             tke.num = 4
             tke.delta = 1
             self.mapMouseWheel(tke)
 
         if SHIFT_MASK == e.state and e.keycode == 111:
-            tke  = tk.Event()
+            tke = tk.Event()
             tke.num = 5
             tke.delta = 1
             self.paletteMouseWheel(tke)
         if SHIFT_MASK == e.state and e.keycode == 116:
-            tke  = tk.Event()
+            tke = tk.Event()
             tke.num = 4
             tke.delta = 1
             self.paletteMouseWheel(tke)
 
         # Arrow keys move the map
-        mTKe  = tk.Event()
+        mTKe = tk.Event()
         mTKe.x = 0
         mTKe.y = 0
         if 0 == e.state and e.keycode == 111:
@@ -380,19 +483,20 @@ class view:
             mTKe.y = 0
             self.mapMouseMotion(mTKe)
             self.clickRelease(mTKe)
-        
 
     def paletteLeftClick(self, event: tk.Event):
         x: int = self.paletteCanvas.canvasx(event.x)
         y: int = self.paletteCanvas.canvasy(event.y)
-        self.c.clickPalette(int(x / self.paletteCellSize),
-                            int(y / self.paletteCellSize))
+        self.c.clickPalette(
+            int(x / self.paletteCellSize), int(y / self.paletteCellSize)
+        )
 
     def paletteMouseMotion(self, event: tk.Event):
         x: int = self.paletteCanvas.canvasx(event.x)
         y: int = self.paletteCanvas.canvasy(event.y)
-        self.c.moveMousePalette(int(x / self.paletteCellSize),
-                                int(y / self.paletteCellSize))
+        self.c.moveMousePalette(
+            int(x / self.paletteCellSize), int(y / self.paletteCellSize)
+        )
 
     def paletteMouseWheel(self, event: tk.Event):
         if (4 == event.num) or (event.delta < 0):
@@ -407,15 +511,15 @@ class view:
     def mapLeftClick(self, event: tk.Event):
         x: int = self.mapCanvas.canvasx(event.x)
         y: int = self.mapCanvas.canvasy(event.y)
-        self.c.leftClickMap(int(x / self.mapCellSize),
-                            int(y / self.mapCellSize), self.scriptState)
+        self.c.leftClickMap(
+            int(x / self.mapCellSize), int(y / self.mapCellSize), self.scriptState
+        )
 
     def mapRightClick(self, event: tk.Event):
         self.isMapRightClicked = True
         x: int = self.mapCanvas.canvasx(event.x)
         y: int = self.mapCanvas.canvasy(event.y)
-        self.c.rightClickMap(int(x / self.mapCellSize),
-                             int(y / self.mapCellSize))
+        self.c.rightClickMap(int(x / self.mapCellSize), int(y / self.mapCellSize))
 
     def mapMiddleClick(self, event: tk.Event):
         self.isMapMiddleClicked = True
@@ -429,8 +533,9 @@ class view:
         else:
             x: int = self.mapCanvas.canvasx(event.x)
             y: int = self.mapCanvas.canvasy(event.y)
-            self.c.moveMouseMap(int(x / self.mapCellSize),
-                                int(y / self.mapCellSize), self.scriptState)
+            self.c.moveMouseMap(
+                int(x / self.mapCellSize), int(y / self.mapCellSize), self.scriptState
+            )
 
     def mapMouseWheel(self, event: tk.Event):
         if (4 == event.num) or (event.delta < 0):
@@ -467,117 +572,165 @@ class view:
             # Get all the if cells and highlight them yellow
             for cell in self.m.scripts[scriptNum].getIfCells():
                 if cell is not None:
-                    self.scriptRects.append(self.mapCanvas.create_rectangle(
-                        (cell[0] * self.mapCellSize),
-                        (cell[1] * self.mapCellSize),
-                        ((cell[0] + 1) * self.mapCellSize),
-                        ((cell[1] + 1) * self.mapCellSize),
-                        outline='yellow', width=lineWidth, dash=dashPattern))
+                    self.scriptRects.append(
+                        self.mapCanvas.create_rectangle(
+                            (cell[0] * self.mapCellSize),
+                            (cell[1] * self.mapCellSize),
+                            ((cell[0] + 1) * self.mapCellSize),
+                            ((cell[1] + 1) * self.mapCellSize),
+                            outline="yellow",
+                            width=lineWidth,
+                            dash=dashPattern,
+                        )
+                    )
 
             # Get all object references and also highlight them yellow
             for id in self.m.scripts[scriptNum].getIfIds():
                 for y in range(self.m.getMapHeight()):
                     for x in range(self.m.getMapWidth()):
-                        if (id == self.m.tileMap[x][y].objectId):
-                            self.scriptRects.append(self.mapCanvas.create_rectangle(
-                                (x * self.mapCellSize),
-                                (y * self.mapCellSize),
-                                ((x + 1) * self.mapCellSize),
-                                ((y + 1) * self.mapCellSize),
-                                outline='yellow', width=lineWidth, dash=dashPattern))
+                        if id == self.m.tileMap[x][y].objectId:
+                            self.scriptRects.append(
+                                self.mapCanvas.create_rectangle(
+                                    (x * self.mapCellSize),
+                                    (y * self.mapCellSize),
+                                    ((x + 1) * self.mapCellSize),
+                                    ((y + 1) * self.mapCellSize),
+                                    outline="yellow",
+                                    width=lineWidth,
+                                    dash=dashPattern,
+                                )
+                            )
 
             # Get all the then cells and highlight them DeepPink
             for cell in self.m.scripts[scriptNum].getThenCells():
                 if cell is not None:
-                    self.scriptRects.append(self.mapCanvas.create_rectangle(
-                        (cell[0] * self.mapCellSize),
-                        (cell[1] * self.mapCellSize),
-                        ((cell[0] + 1) * self.mapCellSize),
-                        ((cell[1] + 1) * self.mapCellSize),
-                        outline='DeepPink', width=lineWidth, dash=dashPattern))
+                    self.scriptRects.append(
+                        self.mapCanvas.create_rectangle(
+                            (cell[0] * self.mapCellSize),
+                            (cell[1] * self.mapCellSize),
+                            ((cell[0] + 1) * self.mapCellSize),
+                            ((cell[1] + 1) * self.mapCellSize),
+                            outline="DeepPink",
+                            width=lineWidth,
+                            dash=dashPattern,
+                        )
+                    )
 
             # Get all object references and also highlight them DeepPink
             for id in self.m.scripts[scriptNum].getThenIds():
                 for y in range(self.m.getMapHeight()):
                     for x in range(self.m.getMapWidth()):
-                        if (id == self.m.tileMap[x][y].objectId):
-                            self.scriptRects.append(self.mapCanvas.create_rectangle(
-                                (x * self.mapCellSize),
-                                (y * self.mapCellSize),
-                                ((x + 1) * self.mapCellSize),
-                                ((y + 1) * self.mapCellSize),
-                                outline='DeepPink', width=lineWidth, dash=dashPattern))
+                        if id == self.m.tileMap[x][y].objectId:
+                            self.scriptRects.append(
+                                self.mapCanvas.create_rectangle(
+                                    (x * self.mapCellSize),
+                                    (y * self.mapCellSize),
+                                    ((x + 1) * self.mapCellSize),
+                                    ((y + 1) * self.mapCellSize),
+                                    outline="DeepPink",
+                                    width=lineWidth,
+                                    dash=dashPattern,
+                                )
+                            )
 
             for spawn in self.m.scripts[scriptNum].getThenSpawns():
                 imgWidth: int = self.texMapMap[spawn.type].width()
                 hOffset = int((self.mapCellSize - imgWidth) / 2)
-                self.scriptRects.append(self.mapCanvas.create_image(
-                    (spawn.x * self.mapCellSize) + hOffset, (spawn.y * self.mapCellSize), image=self.texMapMap[spawn.type], anchor=tk.NW))
+                self.scriptRects.append(
+                    self.mapCanvas.create_image(
+                        (spawn.x * self.mapCellSize) + hOffset,
+                        (spawn.y * self.mapCellSize),
+                        image=self.texMapMap[spawn.type],
+                        anchor=tk.NW,
+                    )
+                )
 
         # If the enemy script is being built
         if self.m.enemyScript is not None:
             # Highlight the trigger cells
             for cell in self.m.enemyScript.getIfCells():
                 if cell is not None:
-                    self.scriptRects.append(self.mapCanvas.create_rectangle(
-                        (cell[0] * self.mapCellSize),
-                        (cell[1] * self.mapCellSize),
-                        ((cell[0] + 1) * self.mapCellSize),
-                        ((cell[1] + 1) * self.mapCellSize),
-                        outline='blue', width=4))
+                    self.scriptRects.append(
+                        self.mapCanvas.create_rectangle(
+                            (cell[0] * self.mapCellSize),
+                            (cell[1] * self.mapCellSize),
+                            ((cell[0] + 1) * self.mapCellSize),
+                            ((cell[1] + 1) * self.mapCellSize),
+                            outline="blue",
+                            width=4,
+                        )
+                    )
             # Draw the spawns
             for spawn in self.m.enemyScript.getThenSpawns():
                 imgWidth: int = self.texMapMap[spawn.type].width()
                 hOffset = int((self.mapCellSize - imgWidth) / 2)
-                self.scriptRects.append(self.mapCanvas.create_image(
-                    (spawn.x * self.mapCellSize) + hOffset, (spawn.y * self.mapCellSize), image=self.texMapMap[spawn.type], anchor=tk.NW))
+                self.scriptRects.append(
+                    self.mapCanvas.create_image(
+                        (spawn.x * self.mapCellSize) + hOffset,
+                        (spawn.y * self.mapCellSize),
+                        image=self.texMapMap[spawn.type],
+                        anchor=tk.NW,
+                    )
+                )
 
         # If the camera script is being built
         if self.m.cameraScript is not None:
             # Highlight the trigger cells
             for cell in self.m.cameraScript.getIfCells():
                 if cell is not None:
-                    self.scriptRects.append(self.mapCanvas.create_rectangle(
-                        (cell[0] * self.mapCellSize),
-                        (cell[1] * self.mapCellSize),
-                        ((cell[0] + 1) * self.mapCellSize),
-                        ((cell[1] + 1) * self.mapCellSize),
-                        outline='blue', width=4))
+                    self.scriptRects.append(
+                        self.mapCanvas.create_rectangle(
+                            (cell[0] * self.mapCellSize),
+                            (cell[1] * self.mapCellSize),
+                            ((cell[0] + 1) * self.mapCellSize),
+                            ((cell[1] + 1) * self.mapCellSize),
+                            outline="blue",
+                            width=4,
+                        )
+                    )
             # Draw the focus
             for cell in self.m.cameraScript.getThenCells():
                 if cell is not None:
-                    self.scriptRects.append(self.mapCanvas.create_rectangle(
-                        (cell[0] * self.mapCellSize),
-                        (cell[1] * self.mapCellSize),
-                        ((cell[0] + 1) * self.mapCellSize),
-                        ((cell[1] + 1) * self.mapCellSize),
-                        outline='yellow', width=4))
+                    self.scriptRects.append(
+                        self.mapCanvas.create_rectangle(
+                            (cell[0] * self.mapCellSize),
+                            (cell[1] * self.mapCellSize),
+                            ((cell[0] + 1) * self.mapCellSize),
+                            ((cell[1] + 1) * self.mapCellSize),
+                            outline="yellow",
+                            width=4,
+                        )
+                    )
 
     def scriptTextChanged(self, event: tk.Event):
 
-        self.m.setScripts(self.scriptTextEntry.get(
-            "1.0", tk.END).splitlines(keepends=False))
+        self.m.setScripts(
+            self.scriptTextEntry.get("1.0", tk.END).splitlines(keepends=False)
+        )
 
         line = 1
         for script in self.m.scripts:
-            tag: str = 'highlight' + str(line)
+            tag: str = "highlight" + str(line)
             self.scriptTextEntry.tag_remove(
-                tag, str(line) + '.0', str(line) + '.0 lineend')
+                tag, str(line) + ".0", str(line) + ".0 lineend"
+            )
             self.scriptTextEntry.tag_add(
-                tag, str(line) + '.0', str(line) + '.0 lineend')
+                tag, str(line) + ".0", str(line) + ".0 lineend"
+            )
             if script.isValid():
                 # self.scriptTextEntry.tag_configure(
                 #     tag, background="green", foreground="black")
                 pass
             else:
                 self.scriptTextEntry.tag_configure(
-                    tag, background="red", foreground="black")
+                    tag, background="red", foreground="black"
+                )
             line = line + 1
         self.highlightScriptCells()
 
     def redraw(self):
-        self.paletteCanvas.delete('all')
-        self.mapCanvas.delete('all')
+        self.paletteCanvas.delete("all")
+        self.mapCanvas.delete("all")
 
         # Draw backgrounds in the palette
         x: int = 0
@@ -586,9 +739,13 @@ class view:
             for bg in col:
                 if bg is not tileType.EMPTY:
                     self.paletteCanvas.create_image(
-                        x*self.paletteCellSize, y*self.paletteCellSize, image=self.texMapPalette[bg], anchor=tk.NW)
-                y = y+1
-            x = x+1
+                        x * self.paletteCellSize,
+                        y * self.paletteCellSize,
+                        image=self.texMapPalette[bg],
+                        anchor=tk.NW,
+                    )
+                y = y + 1
+            x = x + 1
             y = 0
 
         # Draw objects in the palette into two columns
@@ -600,9 +757,13 @@ class view:
                     hOffset = int((self.paletteCellSize - imgWidth) / 2)
 
                     self.paletteCanvas.create_image(
-                        x*self.paletteCellSize + hOffset, y*self.paletteCellSize, image=self.texMapPalette[obj], anchor=tk.NW)
-                y = y+1
-            x = x+1
+                        x * self.paletteCellSize + hOffset,
+                        y * self.paletteCellSize,
+                        image=self.texMapPalette[obj],
+                        anchor=tk.NW,
+                    )
+                y = y + 1
+            x = x + 1
             y = 0
 
         # Draw the map
@@ -617,38 +778,73 @@ class view:
 
         # Draw room grid lines on the map
         for x in range(0, self.m.getMapWidth(), 14):
-            self.gridLines.append(self.mapCanvas.create_line(x * self.mapCellSize, 0, x * self.mapCellSize, self.mapCellSize * self.m.getMapHeight(), fill='yellow'));
+            self.gridLines.append(
+                self.mapCanvas.create_line(
+                    x * self.mapCellSize,
+                    0,
+                    x * self.mapCellSize,
+                    self.mapCellSize * self.m.getMapHeight(),
+                    fill="yellow",
+                )
+            )
 
         for y in range(0, self.m.getMapHeight(), 12):
-            self.gridLines.append(self.mapCanvas.create_line(0, y * self.mapCellSize, self.m.getMapWidth() * self.mapCellSize, y * self.mapCellSize, fill='yellow'));
+            self.gridLines.append(
+                self.mapCanvas.create_line(
+                    0,
+                    y * self.mapCellSize,
+                    self.m.getMapWidth() * self.mapCellSize,
+                    y * self.mapCellSize,
+                    fill="yellow",
+                )
+            )
 
         # Clear highlight from old cell
         self.mapCanvas.delete(self.highlightRect)
         # Highlight new cell
         self.highlightRect = self.mapCanvas.create_rectangle(
-            (self.selRectX * self.mapCellSize), (self.selRectY * self.mapCellSize), ((self.selRectX + 1) * self.mapCellSize), ((self.selRectY + 1) * self.mapCellSize), outline='yellow')
+            (self.selRectX * self.mapCellSize),
+            (self.selRectY * self.mapCellSize),
+            ((self.selRectX + 1) * self.mapCellSize),
+            ((self.selRectY + 1) * self.mapCellSize),
+            outline="yellow",
+        )
 
     def drawMapCell(self, x, y):
         t: tile = self.m.tileMap[x][y]
-        if (t.background is not tileType.EMPTY):
+        if t.background is not tileType.EMPTY:
             imgWidth: int = self.texMapMap[t.background].width()
             hOffset = int((self.mapCellSize - imgWidth) / 2)
 
             self.mapCanvas.create_image(
-                (x * self.mapCellSize) + hOffset, (y * self.mapCellSize), image=self.texMapMap[t.background], anchor=tk.NW)
-        if (t.object is not tileType.EMPTY):
+                (x * self.mapCellSize) + hOffset,
+                (y * self.mapCellSize),
+                image=self.texMapMap[t.background],
+                anchor=tk.NW,
+            )
+        if t.object is not tileType.EMPTY:
             imgWidth: int = self.texMapMap[t.object].width()
             hOffset = int((self.mapCellSize - imgWidth) / 2)
 
             self.mapCanvas.create_image(
-                (x * self.mapCellSize) + hOffset, (y * self.mapCellSize), image=self.texMapMap[t.object], anchor=tk.NW)
+                (x * self.mapCellSize) + hOffset,
+                (y * self.mapCellSize),
+                image=self.texMapMap[t.object],
+                anchor=tk.NW,
+            )
 
     def drawSelectedTile(self, selectedTile: tileType, x, y):
         # Clear highlight from old cell
         self.paletteCanvas.delete(self.paletteHighlightRect)
         # Highlight new cell
         self.paletteHighlightRect = self.paletteCanvas.create_rectangle(
-            (x * self.paletteCellSize), (y * self.paletteCellSize), ((x + 1) * self.paletteCellSize), ((y + 1) * self.paletteCellSize), outline='yellow', width=5)
+            (x * self.paletteCellSize),
+            (y * self.paletteCellSize),
+            ((x + 1) * self.paletteCellSize),
+            ((y + 1) * self.paletteCellSize),
+            outline="yellow",
+            width=5,
+        )
         pass
 
     def selectCell(self, x, y, objId):
@@ -659,52 +855,50 @@ class view:
         self.mapCanvas.delete(self.highlightRect)
         # Highlight new cell
         self.highlightRect = self.mapCanvas.create_rectangle(
-            (x * self.mapCellSize), (y * self.mapCellSize), ((x + 1) * self.mapCellSize), ((y + 1) * self.mapCellSize), outline='yellow')
+            (x * self.mapCellSize),
+            (y * self.mapCellSize),
+            ((x + 1) * self.mapCellSize),
+            ((y + 1) * self.mapCellSize),
+            outline="yellow",
+        )
 
         # Enable the text for writing
-        self.cellMetaData.configure(state='normal')
+        self.cellMetaData.configure(state="normal")
 
         # Delete is going to erase anything
         # in the range of 0 and end of file,
         # The respective range given here
-        self.cellMetaData.delete('1.0', 'end')
+        self.cellMetaData.delete("1.0", "end")
 
         # Insert method inserts the text at
         # specified position, Here it is the
         # beginning
-        self.cellMetaData.insert(
-            '1.0', "{" + str(x) + "." + str(y) + "}")
+        self.cellMetaData.insert("1.0", "{" + str(x) + "." + str(y) + "}")
         if objId >= 0:
-            self.cellMetaData.insert(
-                '2.0', "\nID: " + str(objId))
+            self.cellMetaData.insert("2.0", "\nID: " + str(objId))
 
         # Disable the text for writing
-        self.cellMetaData.configure(state='normal')
+        self.cellMetaData.configure(state="normal")
 
     def clickSave(self):
         if self.currentFilePath is None:
             self.clickSaveAs()
         else:
-            with open(self.currentFilePath, 'wb') as saveFile:
+            with open(self.currentFilePath, "wb") as saveFile:
                 self.m.save(saveFile)
 
     def clickSaveAs(self):
-        fts = (
-            ('Ray Map Data', '*.rmd'),
-            ('All files', '*.*')
-        )
+        fts = (("Ray Map Data", "*.rmd"), ("All files", "*.*"))
         saveFile: TextIOWrapper = asksaveasfile(
-            mode='wb', filetypes=fts, defaultextension='rmd')
+            mode="wb", filetypes=fts, defaultextension="rmd"
+        )
         if saveFile is not None:
             self.currentFilePath = os.path.abspath(saveFile.name)
             self.m.save(saveFile)
 
     def clickLoad(self):
-        fts = (
-            ('Ray Map Data', '*.rmd'),
-            ('All files', '*.*')
-        )
-        fileToLoad: TextIOWrapper = askopenfile(mode='rb', filetypes=fts)
+        fts = (("Ray Map Data", "*.rmd"), ("All files", "*.*"))
+        fileToLoad: TextIOWrapper = askopenfile(mode="rb", filetypes=fts)
         self.loadFile(fileToLoad)
 
     def loadFile(self, fileToLoad):
@@ -722,23 +916,26 @@ class view:
 
     def reloadScriptText(self):
         # Clear and set script text
-        self.scriptTextEntry.delete('1.0', tk.END)
+        self.scriptTextEntry.delete("1.0", tk.END)
         for script in self.m.scripts:
-            self.scriptTextEntry.insert(tk.END, script.toString() + '\n')
+            self.scriptTextEntry.insert(tk.END, script.toString() + "\n")
         # Highlight text
         self.scriptTextChanged(None)
 
     def clickResizeMap(self):
-        inputStr: str = str(self.m.getMapWidth()) + 'x' + \
-            str(self.m.getMapHeight())
+        inputStr: str = str(self.m.getMapWidth()) + "x" + str(self.m.getMapHeight())
         validInput: bool = True
         while True:
             if validInput:
                 inputStr = simpledialog.askstring(
-                    'Map Size', 'Enter the map size (w x h)', initialvalue=inputStr)
+                    "Map Size", "Enter the map size (w x h)", initialvalue=inputStr
+                )
             else:
                 inputStr = simpledialog.askstring(
-                    'Map Size', 'Invalid value\nEnter the map size (w x h)', initialvalue=inputStr)
+                    "Map Size",
+                    "Invalid value\nEnter the map size (w x h)",
+                    initialvalue=inputStr,
+                )
 
             if None is inputStr:
                 # Cancel pressed
@@ -747,7 +944,7 @@ class view:
             # Validate value
             try:
                 # Pick out the dimensions
-                parts: list[str] = inputStr.split('x')
+                parts: list[str] = inputStr.split("x")
                 newW: int = int(parts[0].strip())
                 newH: int = int(parts[1].strip())
                 if 0 < newW and newW < 256 and 0 < newH and newH < 256:
@@ -767,12 +964,12 @@ class view:
         if clickMode.NORMAL_EDIT == self.scriptState:
             self.scriptState = clickMode.SET_SPAWN_TRIGGER_ZONE
             self.scriptSpawn.config(text="Set Enemies")
-            self.scriptSpawn.config(highlightbackground='green')
+            self.scriptSpawn.config(highlightbackground="green")
             self.m.startEnemyScriptCreation()
         elif clickMode.SET_SPAWN_TRIGGER_ZONE == self.scriptState:
             self.scriptState = clickMode.SET_ENEMIES
             self.scriptSpawn.config(text="Finish Script")
-            self.scriptSpawn.config(highlightbackground='red')
+            self.scriptSpawn.config(highlightbackground="red")
         elif clickMode.SET_ENEMIES == self.scriptState:
             self.scriptState = clickMode.NORMAL_EDIT
             self.scriptSpawn.config(text="Set E.Triggers")
@@ -783,12 +980,12 @@ class view:
         if clickMode.NORMAL_EDIT == self.scriptState:
             self.scriptState = clickMode.SET_CAMERA_TRIGGER_ZONE
             self.scriptCamera.config(text="Set Camera")
-            self.scriptCamera.config(highlightbackground='green')
+            self.scriptCamera.config(highlightbackground="green")
             self.m.startCameraScriptCreation()
         elif clickMode.SET_CAMERA_TRIGGER_ZONE == self.scriptState:
             self.scriptState = clickMode.SET_CAMERA_FOCUS
             self.scriptCamera.config(text="Finish Script")
-            self.scriptCamera.config(highlightbackground='red')
+            self.scriptCamera.config(highlightbackground="red")
         elif clickMode.SET_CAMERA_FOCUS == self.scriptState:
             self.scriptState = clickMode.NORMAL_EDIT
             self.scriptCamera.config(text="Set C.Triggers")
@@ -800,6 +997,6 @@ class view:
         if self.currentFilePath is not None:
             self.clickSave()
         else:
-            with open('autosave.rmd', 'wb') as outFile:
+            with open("autosave.rmd", "wb") as outFile:
                 self.m.save(outFile)
         self.root.destroy()
