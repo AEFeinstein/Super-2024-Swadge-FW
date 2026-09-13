@@ -714,14 +714,10 @@ class view:
             self.scriptTextEntry.tag_remove(
                 tag, str(line) + ".0", str(line) + ".0 lineend"
             )
-            self.scriptTextEntry.tag_add(
-                tag, str(line) + ".0", str(line) + ".0 lineend"
-            )
-            if script.isValid():
-                # self.scriptTextEntry.tag_configure(
-                #     tag, background="green", foreground="black")
-                pass
-            else:
+            if not script.isValid():
+                self.scriptTextEntry.tag_add(
+                    tag, str(line) + ".0", str(line) + ".0 lineend"
+                )
                 self.scriptTextEntry.tag_configure(
                     tag, background="red", foreground="black"
                 )
