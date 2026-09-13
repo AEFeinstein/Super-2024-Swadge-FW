@@ -10,6 +10,7 @@ class controller:
 
     def setModel(self, m):
         from rme_model import model
+
         self.m: model = m
 
     def clickPalette(self, x, y):
@@ -20,7 +21,12 @@ class controller:
 
     def leftClickMap(self, x, y, mode: clickMode):
         type: tileType = self.m.getSelectedTileType()
-        if None == type and (clickMode.SET_SPAWN_TRIGGER_ZONE != mode) and (clickMode.SET_CAMERA_TRIGGER_ZONE != mode) and (clickMode.SET_CAMERA_FOCUS != mode):
+        if (
+            None == type
+            and (clickMode.SET_SPAWN_TRIGGER_ZONE != mode)
+            and (clickMode.SET_CAMERA_TRIGGER_ZONE != mode)
+            and (clickMode.SET_CAMERA_FOCUS != mode)
+        ):
             return
         self.isMapLeftClicked = True
 
@@ -38,7 +44,6 @@ class controller:
             self.m.addTileTriggerToCameraScript(x, y, (tileType.DELETE == type))
         elif clickMode.SET_CAMERA_FOCUS == mode:
             self.m.addCameraToScript(x, y, type)
-
 
     def releaseClick(self):
         self.isMapLeftClicked = False
