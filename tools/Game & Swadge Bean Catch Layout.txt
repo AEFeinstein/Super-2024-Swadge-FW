@@ -29,7 +29,7 @@ ID | Name       | X | Y
 22 | Player UL  | 71|123
 23 | Player DL  | 76|151
 24 | Player UR  |181|123
-25 | Player DR  |180|123
+25 | Player DR  |180|151
 26 | Beanbert L |100|107
 27 | Beanbert R |136|107
 28 | Swearing   |104| 73
@@ -40,7 +40,7 @@ ID | Name       | X | Y
 33 | StrikeIcon |119|188
 34 | StrikeIcon |137|188
 35 | StrikeIcon |155|188
-36 | Game A Lbl |155|188
+36 | Game A Lbl |155|187
 37 | Game B Lbl |217|187
 38 | AM Label   | 21| 53
 39 | Alarm Icon |126| 51
