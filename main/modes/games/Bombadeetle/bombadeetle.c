@@ -349,9 +349,9 @@ static void bombadeetleEnterMode()
     bombadeetle->bombadeetles = (bombadeetleEntity_t*)heap_caps_calloc(BOMBADEETLE_COUNT, sizeof(bombadeetleEntity_t), MALLOC_CAP_8BIT);
     bombadeetle->shloogs = (bombadeetleEntity_t*)heap_caps_calloc(SHLOOG_MAX_COUNT, sizeof(bombadeetleEntity_t), MALLOC_CAP_8BIT);
     
-    //Load from disk to see what the current level max is
-    bombadeetle->levelMax = 18;
-    bombadeetle->levelIndex = 3;
+    //TODO: Load from disk to see what the current level max is
+    bombadeetle->levelMax = 0;
+    bombadeetle->levelIndex = 0;
 
     loadWsg(BOMB_SUCCESS_WSG, &bombadeetle->success, true);
     loadWsg(BOMB_TRYAGAIN_WSG, &bombadeetle->unsuccessful, true);
