@@ -74,6 +74,8 @@
 
 
 const char bombadeetleModeName[] = "Bombadeetle";
+const char bombadeetleNVSNamespaceKey[] = "bombadeetle";
+const char bombadeetleNVSLevelMaxKey[] = "levelMax";
 
 typedef enum
 {
@@ -156,11 +158,11 @@ static int bombadeetleLeft(int direction);
 static int bombadeetleTurnAround(int direction);
 static void bombadeetleCheckShloogs(bool update);
 static void bombadeetleCheckBombadeetles(bool update);
-static void bombadeetleDrawBackground();
-static void bombadeetleDrawGame();
-static void bombadeetleDrawSelect();
-static void bombadeetleDrawMenu();
-static void bombadeetleDrawPause();
+static void bombadeetleDrawBackground(void);
+static void bombadeetleDrawGame(void);
+static void bombadeetleDrawSelect(void);
+static void bombadeetleDrawMenu(void);
+static void bombadeetleDrawPause(void);
 
 static void bombadeetleGameLoop(int64_t elapsedUs);
 static void bombadeetleMenuLoop(int64_t elapsedUs);
@@ -169,7 +171,10 @@ static void bombadeetleInstructionsLoop(int64_t elapsedUs);
 static void bombadeetleBackgroundUpdate(int64_t elapsedUs);
 static void bombadeetlePauseMenu(int64_t elapsedUs);
 
-static void bombadeetleOnCollision();
+static void bombadeetleOnCollision(void);
+
+bool bombadeetleLoadLevelMax(void);
+bool bombadeetleSaveLevelMax(void);
 
 
 
@@ -349,8 +354,13 @@ static void bombadeetleEnterMode()
     bombadeetle->bombadeetles = (bombadeetleEntity_t*)heap_caps_calloc(BOMBADEETLE_COUNT, sizeof(bombadeetleEntity_t), MALLOC_CAP_8BIT);
     bombadeetle->shloogs = (bombadeetleEntity_t*)heap_caps_calloc(SHLOOG_MAX_COUNT, sizeof(bombadeetleEntity_t), MALLOC_CAP_8BIT);
     
-    //TODO: Load from disk to see what the current level max is
-    bombadeetle->levelMax = 0;
+    
+    //Load current level max from NVS
+    if (!bombadeetleLoadLevelMax())
+    {
+        bombadeetle->levelMax = 0;
+    }
+
     bombadeetle->levelIndex = 0;
 
     loadWsg(BOMB_SUCCESS_WSG, &bombadeetle->success, true);
@@ -453,6 +463,28 @@ static void bombadeetleEnterMode()
             bombadeetle->map[idx] |= WALL_S;
         }
     }
+}
+
+bool bombadeetleLoadLevelMax(void)
+{
+    int32_t levelMaxI32 = 0;
+    bool success = readNamespaceNvs32(bombadeetleNVSNamespaceKey, bombadeetleNVSLevelMaxKey, &levelMaxI32);
+    if (success)
+    {
+        bombadeetle->levelMax = CLAMP(levelMaxI32, INT8_MIN, INT8_MAX);
+
+        if (levelMaxI32 != bombadeetle->levelMax)
+        {
+            ESP_LOGI(TAG, "Level max value from NVS (%d) out of bounds. Clamped to %d", levelMaxI32, bombadeetle->levelMax);
+        }
+    }
+
+    return success;
+}
+
+bool bombadeetleSaveLevelMax(void)
+{
+    return writeNamespaceNvs32(bombadeetleNVSNamespaceKey, bombadeetleNVSLevelMaxKey, bombadeetle->levelMax);
 }
 
 
@@ -783,7 +815,7 @@ static void bombadeetleImportMap(int64_t index)
     //Bring in new map
     size_t levelSize = 0;
     int offset = 0;
-    uint8_t *levelFile = cnfsGetFile(bombadeetleLevels[index], &levelSize);
+    const uint8_t *levelFile = cnfsGetFile(bombadeetleLevels[index], &levelSize);
     bombadeetle->goalCount = 0;
 
     for (int idx = 0; idx < 16; idx ++)
@@ -1351,6 +1383,7 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                         {
                             bombadeetle->levelMax = bombadeetle->levelIndex;
                             //Save max level
+                            bombadeetleSaveLevelMax();
                         }
 
                         if (bombadeetle->successTime < TIMING_SUCCESS)
@@ -1386,6 +1419,7 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                         {
                             bombadeetle->levelMax = bombadeetle->levelIndex;
                             //Save max level
+                            bombadeetleSaveLevelMax();
                         }
                         //Reset map
                         bombadeetle->state = STATE_STAGESELECT;
