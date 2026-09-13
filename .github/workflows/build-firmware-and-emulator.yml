@@ -75,7 +75,7 @@ jobs:
 
     #### Basic Steps
     - name: Check out repository code
-      uses: actions/checkout@v6.0.3
+      uses: actions/checkout@v7.0.1
       with:
         submodules: recursive
 
@@ -101,7 +101,7 @@ jobs:
     - name: Restore IDF Cache
       id: cache-esp-idf
       if: matrix.firmware
-      uses: actions/cache@v5.0.5
+      uses: actions/cache@v6.1.0
       with:
         path: |
           ${{ matrix.idf_install }}
@@ -157,7 +157,7 @@ jobs:
     - name: Install msys64 packages
       id: install-msys64
       if: matrix.emulator && matrix.family == 'windows'
-      uses: msys2/setup-msys2@v2.31.1
+      uses: msys2/setup-msys2@v2.32.0
       with:
         msystem: MINGW64
         update: true
@@ -264,12 +264,13 @@ jobs:
     - name: Post to a Slack channel
       if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
       id: slack
-      uses: slackapi/slack-github-action@v3.0.3
+      uses: slackapi/slack-github-action@v4.0.0
       with:
         method: chat.postMessage
         token: ${{ secrets.SLACK_BOT_TOKEN }}
         payload: |
           channel: 'C6FNXU6KX'
+          text: "${{ github.event.head_commit.author.username }}: ${{ github.event.head_commit.message }}"
           blocks:
           - type: rich_text
             elements:
