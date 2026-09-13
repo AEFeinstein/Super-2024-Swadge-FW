@@ -117,6 +117,10 @@ static const cnfsFileIdx_t bombadeetleShloogSprite[] = {
     BOMB_SHLOOG_101_WSG, BOMB_SHLOOG_102_WSG, BOMB_SHLOOG_103_WSG, BOMB_SHLOOG_201_WSG, BOMB_SHLOOG_202_WSG, BOMB_SHLOOG_203_WSG, BOMB_SHLOOG_301_WSG, BOMB_SHLOOG_302_WSG, BOMB_SHLOOG_303_WSG,
 };
 
+static const cnfsFileIdx_t bombadeetleInstructions[] = {BOMB_INSTRUCTIONS_1_WSG, BOMB_INSTRUCTIONS_2_WSG, BOMB_INSTRUCTIONS_3_WSG,
+
+};
+
 static const cnfsFileIdx_t bombadeetleGoal[] = {
     BOMB_GOAL_001_WSG, BOMB_GOAL_002_WSG, BOMB_GOAL_003_WSG, BOMB_GOAL_004_WSG, BOMB_GOAL_005_WSG, BOMB_GOAL_006_WSG,
 };
@@ -244,6 +248,7 @@ typedef struct
     wsg_t* bombadeetleSprites;
     wsg_t* shloogSprites;
     wsg_t* teleporterSprites;
+    wsg_t* instructionsPages;
     wsg_t* goal;
     wsg_t backgroundTile;
     wsg_t success;
@@ -257,8 +262,6 @@ typedef struct
     wsg_t stageActiveSelectButton;
     wsg_t pausedBackground;
     wsg_t levelNameBackground;
-    wsg_t instructions1;
-    wsg_t instructions2;
     wsg_t tools;
     wsg_t collisionSprite;
     wsg_t holeSprite;
@@ -373,9 +376,6 @@ static void bombadeetleEnterMode()
     loadWsg(BOMB_MAIN_SELECT_WSG, &bombadeetle->mainSelect, true);
     loadWsg(BOMB_MAIN_OPTIONS_WSG, &bombadeetle->mainOptions, true);
 
-    loadWsg(BOMB_INSTRUCTIONS_1_WSG, &bombadeetle->instructions1, true);
-    loadWsg(BOMB_INSTRUCTIONS_2_WSG, &bombadeetle->instructions2, true);
-
     loadWsg(BOMB_PAUSED_WSG, &bombadeetle->pausedBackground, true);
     loadWsg(BOMB_LEVEL_NAME_WSG, &bombadeetle->levelNameBackground, true);
     loadWsg(BOMB_TOOLS_WSG, &bombadeetle->tools, true);
@@ -398,6 +398,12 @@ static void bombadeetleEnterMode()
     for (int idx = 0; idx < ARRAY_SIZE(bombadeetleTeleporter); idx++)
     {
         loadWsg(bombadeetleTeleporter[idx], &bombadeetle->teleporterSprites[idx], true);
+    }
+
+    bombadeetle->instructionsPages = heap_caps_calloc(ARRAY_SIZE(bombadeetleInstructions), sizeof(wsg_t), MALLOC_CAP_8BIT);
+    for (int idx = 0; idx <ARRAY_SIZE(bombadeetleInstructions); idx++)
+    {
+        loadWsg(bombadeetleInstructions[idx], &bombadeetle->instructionsPages[idx], true);
     }
 
     bombadeetle->cursor = heap_caps_calloc(ARRAY_SIZE(bombadeetleCursor), sizeof(wsg_t), MALLOC_CAP_8BIT);
@@ -1128,10 +1134,19 @@ static void bombadeetleInstructionsLoop(int64_t elapsedUs)
                 bombadeetle->state = bombadeetle->lastState;
             }
 
-            if (evt.button & PB_LEFT || evt.button & PB_RIGHT)
+            if (evt.button & PB_LEFT)
+            {
+                bombadeetle->instructionsPage--;
+                if(bombadeetle->instructionsPage < 0)
+                {
+                    bombadeetle->instructionsPage = ARRAY_SIZE(bombadeetleInstructions) - 1;
+                }
+            }
+
+            if (evt.button & PB_RIGHT || evt.button & PB_A)
             {
                 bombadeetle->instructionsPage++;
-                bombadeetle->instructionsPage %= 2;
+                bombadeetle->instructionsPage %= ARRAY_SIZE(bombadeetleInstructions);
             }
         }
 
@@ -1139,14 +1154,7 @@ static void bombadeetleInstructionsLoop(int64_t elapsedUs)
 
     bombadeetleDrawBackground();
     
-    if (bombadeetle->instructionsPage == 0)
-    {
-        drawWsgSimple(&bombadeetle->instructions1, 15, 15);
-    }
-    else
-    {
-        drawWsgSimple(&bombadeetle->instructions2, 15, 15);
-    }
+    drawWsgSimple(&bombadeetle->instructionsPages[bombadeetle->instructionsPage], 15, 15);
 }
 
 static void bombadeetleStageSelectLoop(int64_t elapsedUs)
@@ -2049,6 +2057,11 @@ static void bombadeetleExitMode()
     {
         freeWsg(&bombadeetle->background.tiles[idx]);
     }
+
+    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleInstructions); idx++)
+    {
+        freeWsg(&bombadeetle->instructionsPages[idx]);
+    }
     
     
     freeWsg(bombadeetle->shloogSprites);
@@ -2060,9 +2073,7 @@ static void bombadeetleExitMode()
     freeWsg(bombadeetle->teleporterSprites);
     freeWsg(bombadeetle->arrows);
     freeWsg(bombadeetle->background.tiles);
-
-    freeWsg(&bombadeetle->instructions1);
-    freeWsg(&bombadeetle->instructions2);
+    freeWsg(bombadeetle->instructionsPages);
     freeWsg(&bombadeetle->pausedBackground);
     
     freeWsg(&bombadeetle->mainSelect);
