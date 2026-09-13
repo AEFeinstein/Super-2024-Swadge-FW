@@ -122,7 +122,7 @@ static const cnfsFileIdx_t bombadeetleGoal[] = {
 };
 
 static const cnfsFileIdx_t bombadeetleLevels[] = {
-    BOMB_LVL_ONE_BIN, BOMB_LVL_HELLO_BIN, BOMB_LVL_RIDEIT_BIN, BOMB_LVL_NOHOLES_BIN, BOMB_LVL_MAG_1_BIN, BOMB_LVL_SPYRL_BIN,BOMB_LVL_MOTRAINING_BIN,BOMB_LVL_NARROW_BIN ,BOMB_LVL_CREPUSCULAR_BIN,BOMB_LVL_MOWWOW_BIN , BOMB_LVL_JERO_BIN,
+    BOMB_LVL_ONE_BIN, BOMB_LVL_HELLO_BIN, BOMB_LVL_RIDEIT_BIN, BOMB_LVL_NOHOLES_BIN, BOMB_LVL_NARROW_BIN, BOMB_LVL_MAG_1_BIN, BOMB_LVL_SPYRL_BIN, BOMB_LVL_MOTRAINING_BIN,BOMB_LVL_CREPUSCULAR_BIN,BOMB_LVL_MOWWOW_BIN , BOMB_LVL_JERO_BIN,
     BOMB_LVL_DOOBLY_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_BIN,BOMB_LVL_MELLOR_BIN,BOMB_LVL_DELEPORT_BIN, BOMB_LVL_ROGER_BIN,BOMB_LVL_UNDERDEFEAT_BIN, BOMB_LVL_LERNDELEPORT_BIN,BOMB_LVL_DODGEIT_BIN, BOMB_LVL_MAG_2_BIN, BOMB_LVL_DIPDIPDIP_BIN,
     BOMB_LVL_WOOBLY_BIN, BOMB_LVL_TRAP_BIN, BOMB_LVL_RABBIT_BIN, BOMB_LVL_ASTLE_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_2_BIN,
 };
@@ -1849,6 +1849,18 @@ static void bombadeetleDrawGame()
             {
                 drawWsgSimple(&bombadeetle->teleporterSprites[bombadeetle->teleporterFrame], OFFSETMAP_X + (x * TILESIZE), OFFSETMAP_Y + (y * TILESIZE));
             }
+            
+        }
+    }
+    //
+    //Have to draw the walls on top of everything
+    for (int y = 0; y < GRIDHEIGHT; y++)
+    {
+        for (int x = 0; x < GRIDWIDTH; x++)
+        {
+            tileIndex = (y * GRIDWIDTH)+ x;
+            
+
 
             if (y == 0)
             {
@@ -1876,7 +1888,6 @@ static void bombadeetleDrawGame()
             
         }
     }
-    //
     
     for( int idx =0; idx < BOMBADEETLE_COUNT; idx++)
     {
