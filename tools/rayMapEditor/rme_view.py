@@ -87,8 +87,6 @@ class view:
         padding: int = 4
 
         self.buttonColor: str = '#2B79D7'
-        self.buttonPressedColor: str = '#5191DE'
-        self.buttonFontColor: str = '#FFFFFF'
         buttonWidth: int = 12
 
         # Setup the root and main frames
@@ -101,27 +99,20 @@ class view:
         # Setup the button frame and buttons
         self.buttonFrame: tk.Frame = tk.Frame(content, height=0, background=elemBgColor,
                                               highlightthickness=borderThickness, highlightbackground=borderColor, padx=padding, pady=padding)
-        self.loadButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Load", font=fontStyle, background=self.buttonColor,
-                                               foreground=self.buttonFontColor, activebackground=self.buttonPressedColor, activeforeground=self.buttonFontColor, bd=0,
+        self.loadButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Load", bd=0, highlightbackground=self.buttonColor,
                                                command=self.clickLoad)
-        self.saveButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Save", font=fontStyle, background=self.buttonColor,
-                                               foreground=self.buttonFontColor, activebackground=self.buttonPressedColor, activeforeground=self.buttonFontColor, bd=0,
+        self.saveButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Save", bd=0, highlightbackground=self.buttonColor,
                                                command=self.clickSave)
-        self.saveAsButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Save As", font=fontStyle, background=self.buttonColor,
-                                                 foreground=self.buttonFontColor, activebackground=self.buttonPressedColor, activeforeground=self.buttonFontColor, bd=0,
+        self.saveAsButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Save As", bd=0, highlightbackground=self.buttonColor,
                                                  command=self.clickSaveAs)
-        self.resizeMap: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Resize Map", font=fontStyle, background=self.buttonColor,
-                                              foreground=self.buttonFontColor, activebackground=self.buttonPressedColor, activeforeground=self.buttonFontColor, bd=0,
+        self.resizeMap: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Resize Map", bd=0, highlightbackground=self.buttonColor,
                                               command=self.clickResizeMap)
-        self.scriptSpawn: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Set E.Triggers", font=fontStyle, background=self.buttonColor,
-                                                foreground=self.buttonFontColor, activebackground=self.buttonPressedColor, activeforeground=self.buttonFontColor, bd=0,
+        self.scriptSpawn: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Set E.Triggers", bd=0, highlightbackground=self.buttonColor,
                                                 command=self.clickScriptSpawn)
-        self.scriptCamera: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Set C.Triggers", font=fontStyle, background=self.buttonColor,
-                                                foreground=self.buttonFontColor, activebackground=self.buttonPressedColor, activeforeground=self.buttonFontColor, bd=0,
+        self.scriptCamera: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Set C.Triggers", bd=0, highlightbackground=self.buttonColor,
                                                 command=self.clickScriptCamera)
         self.scriptState: clickMode = clickMode.NORMAL_EDIT
-        self.exitButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Exit", font=fontStyle, background=self.buttonColor,
-                                               foreground=self.buttonFontColor, activebackground=self.buttonPressedColor, activeforeground=self.buttonFontColor, bd=0,
+        self.exitButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Exit", bd=0, highlightbackground=self.buttonColor,
                                                command=self.clickExit)
 
         # Set up the canvasses
@@ -776,38 +767,32 @@ class view:
         if clickMode.NORMAL_EDIT == self.scriptState:
             self.scriptState = clickMode.SET_SPAWN_TRIGGER_ZONE
             self.scriptSpawn.config(text="Set Enemies")
-            self.scriptSpawn.config(background='green')
-            self.scriptSpawn.config(activebackground='green')
+            self.scriptSpawn.config(highlightbackground='green')
             self.m.startEnemyScriptCreation()
         elif clickMode.SET_SPAWN_TRIGGER_ZONE == self.scriptState:
             self.scriptState = clickMode.SET_ENEMIES
             self.scriptSpawn.config(text="Finish Script")
-            self.scriptSpawn.config(background='red')
-            self.scriptSpawn.config(activebackground='red')
+            self.scriptSpawn.config(highlightbackground='red')
         elif clickMode.SET_ENEMIES == self.scriptState:
             self.scriptState = clickMode.NORMAL_EDIT
             self.scriptSpawn.config(text="Set E.Triggers")
-            self.scriptSpawn.config(background=self.buttonColor)
-            self.scriptSpawn.config(activebackground=self.buttonPressedColor)
+            self.scriptSpawn.config(highlightbackground=self.buttonColor)
             self.m.finishEnemyScriptCreation()
 
     def clickScriptCamera(self):
         if clickMode.NORMAL_EDIT == self.scriptState:
             self.scriptState = clickMode.SET_CAMERA_TRIGGER_ZONE
             self.scriptCamera.config(text="Set Camera")
-            self.scriptCamera.config(background='green')
-            self.scriptCamera.config(activebackground='green')
+            self.scriptCamera.config(highlightbackground='green')
             self.m.startCameraScriptCreation()
         elif clickMode.SET_CAMERA_TRIGGER_ZONE == self.scriptState:
             self.scriptState = clickMode.SET_CAMERA_FOCUS
             self.scriptCamera.config(text="Finish Script")
-            self.scriptCamera.config(background='red')
-            self.scriptCamera.config(activebackground='red')
+            self.scriptCamera.config(highlightbackground='red')
         elif clickMode.SET_CAMERA_FOCUS == self.scriptState:
             self.scriptState = clickMode.NORMAL_EDIT
             self.scriptCamera.config(text="Set C.Triggers")
-            self.scriptCamera.config(background=self.buttonColor)
-            self.scriptCamera.config(activebackground=self.buttonPressedColor)
+            self.scriptCamera.config(highlightbackground=self.buttonColor)
             self.m.finishCameraScriptCreation()
         pass
 
