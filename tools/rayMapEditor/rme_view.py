@@ -96,7 +96,23 @@ class view:
         # Setup the root and main frames
         self.root: tk.Tk = tk.Tk()
         self.root.title("Ray Map Editor")
-        self.root.bind("<KeyPress>", self.key_press)
+
+        # Bind key presses for the whole window
+        self.root.bind("<Control-o>", self.open_map)
+        self.root.bind("<Control-s>", self.save_map)
+        self.root.bind("<Control-Shift-S>", self.save_map_as)
+        self.root.bind("<Control-r>", self.resize_map)
+        self.root.bind("<Control-e>", self.script_spawn_advance)
+        self.root.bind("<Control-w>", self.script_camera_advance)
+        self.root.bind("<Control-equal>", self.zoom_in)
+        self.root.bind("<Control-minus>", self.zoom_out)
+        self.root.bind("<Control-Up>", self.pan_up)
+        self.root.bind("<Control-Down>", self.pan_down)
+        self.root.bind("<Control-Left>", self.pan_left)
+        self.root.bind("<Control-Right>", self.pan_right)
+        self.root.bind("<Alt-Up>", self.pan_palette_up)
+        self.root.bind("<Alt-Down>", self.pan_palette_down)
+
         content = tk.Frame(self.root, background=frameBgColor)
         frame = tk.Frame(content, background=frameBgColor)
 
@@ -402,87 +418,69 @@ class view:
         # Redraw the UI
         self.redraw()
 
-    def key_press(self, e: Event):
-        SHIFT_MASK = 0x01
-        CTRL_MASK = 0x04
-        ALT_MASK = 0x08
-        SUPER_MASK = 0x40
+    def open_map(self, e: tk.Event):
+        self.clickLoad()
 
-        # Clear all but the masks we care about
-        e.state &= SHIFT_MASK | CTRL_MASK | ALT_MASK | SUPER_MASK
+    def save_map(self, e: tk.Event):
+        self.clickSave()
 
-        # ctrl+o opens
-        if (e.state == CTRL_MASK) and (e.keycode == 32):
-            self.clickLoad()
-        # ctrl+S saves
-        if (e.state == CTRL_MASK) and (e.keycode == 39):
-            self.clickSave()
-        # ctrl+shift+S save as
-        if (e.state == (CTRL_MASK | SHIFT_MASK)) and (e.keycode == 39):
-            self.clickSaveAs()
-        # ctrl+r resize
-        if (e.state == CTRL_MASK) and (e.keycode == 27):
-            self.clickResizeMap()
+    def save_map_as(self, e: tk.Event):
+        self.clickSaveAs()
 
-        # ctrl+e is the same as the script button
-        if (e.state == CTRL_MASK) and (e.keycode == 26):
-            self.clickScriptSpawn()
-        # ctrl+c is the same as the script button
-        if (e.state == CTRL_MASK) and (e.keycode == 54):
-            self.clickScriptCamera()
+    def resize_map(self, e: tk.Event):
+        self.clickResizeMap()
 
-        # ctrl+= zooms in
-        if e.state == CTRL_MASK and e.keycode == 20:
-            tke = tk.Event()
-            tke.num = 5
-            tke.delta = 1
-            self.mapMouseWheel(tke)
-        # ctrl+- zooms out
-        if e.state == CTRL_MASK and e.keycode == 21:
-            tke = tk.Event()
-            tke.num = 4
-            tke.delta = 1
-            self.mapMouseWheel(tke)
+    def script_spawn_advance(self, e: tk.Event):
+        self.clickScriptSpawn()
 
-        if SHIFT_MASK == e.state and e.keycode == 111:
-            tke = tk.Event()
-            tke.num = 5
-            tke.delta = 1
-            self.paletteMouseWheel(tke)
-        if SHIFT_MASK == e.state and e.keycode == 116:
-            tke = tk.Event()
-            tke.num = 4
-            tke.delta = 1
-            self.paletteMouseWheel(tke)
+    def script_camera_advance(self, e: tk.Event):
+        self.clickScriptCamera()
 
-        # Arrow keys move the map
+    def zoom_in(self, e: tk.Event):
+        tke = tk.Event()
+        tke.num = 5
+        tke.delta = 1
+        self.mapMouseWheel(tke)
+
+    def zoom_out(self, e: tk.Event):
+        tke = tk.Event()
+        tke.num = 4
+        tke.delta = 1
+        self.mapMouseWheel(tke)
+
+    def pan(self, x: int, y: int):
         mTKe = tk.Event()
         mTKe.x = 0
         mTKe.y = 0
-        if 0 == e.state and e.keycode == 111:
-            self.mapMiddleClick(mTKe)
-            mTKe.x = 0
-            mTKe.y = 20
-            self.mapMouseMotion(mTKe)
-            self.clickRelease(mTKe)
-        if 0 == e.state and e.keycode == 116:
-            self.mapMiddleClick(mTKe)
-            mTKe.x = 0
-            mTKe.y = -20
-            self.mapMouseMotion(mTKe)
-            self.clickRelease(mTKe)
-        if 0 == e.state and e.keycode == 113:
-            self.mapMiddleClick(mTKe)
-            mTKe.x = 20
-            mTKe.y = 0
-            self.mapMouseMotion(mTKe)
-            self.clickRelease(mTKe)
-        if 0 == e.state and e.keycode == 114:
-            self.mapMiddleClick(mTKe)
-            mTKe.x = -20
-            mTKe.y = 0
-            self.mapMouseMotion(mTKe)
-            self.clickRelease(mTKe)
+        self.mapMiddleClick(mTKe)
+        mTKe.x = x
+        mTKe.y = y
+        self.mapMouseMotion(mTKe)
+        self.clickRelease(mTKe)
+
+    def pan_up(self, e: tk.Event):
+        self.pan(0, 20)
+
+    def pan_down(self, e: tk.Event):
+        self.pan(0, -20)
+
+    def pan_left(self, e: tk.Event):
+        self.pan(20, 0)
+
+    def pan_right(self, e: tk.Event):
+        self.pan(-20, 0)
+
+    def pan_palette_up(self, e: tk.Event):
+        tke = tk.Event()
+        tke.num = 5
+        tke.delta = 1
+        self.paletteMouseWheel(tke)
+
+    def pan_palette_down(self, e: tk.Event):
+        tke = tk.Event()
+        tke.num = 4
+        tke.delta = 1
+        self.paletteMouseWheel(tke)
 
     def paletteLeftClick(self, event: tk.Event):
         x: int = self.paletteCanvas.canvasx(event.x)

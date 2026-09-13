@@ -44,11 +44,11 @@ Load, save, or 'save as' the current map and scripts with the buttons on the top
 | `ctrl` + `shift` + `s` | Save the map as a different name |
 | `ctrl` + `r` | Resize the map |
 | `ctrl` + `e` | Advance the script spawn helper |
-| `ctrl` + `c` | Advance the script camera helper |
+| `ctrl` + `w` | Advance the script camera helper |
 | `ctrl` + `=` | Zoom the map in |
 | `ctrl` + `-` | Zoom the map out |
-| arrow keys | Move the map around |
-| `shift` + up or down arrow | Scroll the palette up and down |
+| `ctrl` + arrow keys | Move the map around |
+| `alt` + up or down arrow | Scroll the palette up and down |
 
 ## Tiles
 
