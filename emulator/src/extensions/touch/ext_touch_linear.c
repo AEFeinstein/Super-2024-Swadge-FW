@@ -54,7 +54,7 @@ static void calcCirclePoly(RDPoint* buf, uint32_t tris, uint32_t xo, uint32_t yo
 bool touchLinearInit(emuTouch_t* et, emuExtension_t* ext, const emuArgs_t* emuArgs, bool isLeft, const char* keys,
                      uint8_t numKeys)
 {
-    et->isHorz = false;
+    et->isHorz = false; // Functionally unused, but left for the future, maybe
     et->isLeft = isLeft;
 
     // Setup mouse
@@ -69,9 +69,13 @@ bool touchLinearInit(emuTouch_t* et, emuExtension_t* ext, const emuArgs_t* emuAr
 
     if (emuArgs->emulateTouch)
     {
-        if (isLeft)
+        if (et->isLeft)
         {
             requestPane(ext, PANE_LEFT, TOUCH_PANE_MIN_SIZE, TOUCH_PANE_MIN_SIZE);
+        }
+        else if (et->isHorz)
+        {
+            requestPane(ext, PANE_BOTTOM, TOUCH_PANE_MIN_SIZE, TOUCH_PANE_MIN_SIZE);
         }
         else
         {
@@ -125,12 +129,19 @@ static bool updateTouchLinear(emuTouch_t* et, int32_t x, int32_t y, mouseButton_
             // Update mouse state
             et->clickState = (EMU_MOUSE_LEFT == clicked) ? LEFT_CLICKED : RIGHT_CLICKED;
             // Pressed down
-            if (et->isHorz)
+            if (et->isLeft)
             {
+                // Vertical mouse to index 0
+                emulatorSetTouchLinear(0, (et->mouseY * 1024) / et->paneH, et->intensity);
+            }
+            else if (et->isHorz)
+            {
+                // Horizontal mouse to index 0
                 emulatorSetTouchLinear(0, (et->mouseX * 1024) / et->paneW, et->intensity);
             }
             else
             {
+                // Vertical mouse to index 1
                 emulatorSetTouchLinear(1, (et->mouseY * 1024) / et->paneH, et->intensity);
             }
         }
@@ -141,7 +152,7 @@ static bool updateTouchLinear(emuTouch_t* et, int32_t x, int32_t y, mouseButton_
                 // Update mouse state
                 et->clickState = LEFT_RELEASED;
                 // Release
-                emulatorSetTouchLinear(et->isHorz ? 0 : 1, 0, 0);
+                emulatorSetTouchLinear((et->isHorz || et->isLeft) ? 0 : 1, 0, 0);
             }
             else if (RIGHT_CLICKED == et->clickState)
             {
@@ -210,7 +221,7 @@ int32_t touchLinearKey(emuTouch_t* et, uint32_t key, bool down, modKey_t modifie
         simX          = et->paneX + (zoneW / 2) + (keyDigit * zoneW);
         simY          = et->paneY + (et->paneH / 2);
     }
-    else
+    else // for both left and right vertical strips
     {
         int32_t zoneH = et->paneH / et->numKeys;
         simX          = et->paneX + (et->paneW / 2);
@@ -391,7 +402,7 @@ void touchLinearRender(emuTouch_t* et, uint32_t winW, uint32_t winH, const emuPa
         {
             CNFGTackSegment(x, et->paneY, x, et->paneY + et->paneH);
         }
-        else
+        else // for both left and right vertical strips
         {
             CNFGTackSegment(et->paneX, y, et->paneX + et->paneW, y);
         }
