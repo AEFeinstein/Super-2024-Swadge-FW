@@ -64,11 +64,6 @@ typedef struct
     int16_t time; ///< time that it takes to craft in quarter-minutes
 } ciRecipeProto_t;
 
-// TODO: Add Workbench data
-// - Associated images
-// - etc
-// Also need functions
-
 typedef struct
 {
     const char* title;

@@ -75,6 +75,7 @@ typedef struct
     int64_t timerUnits; ///< Units of time to partition out. Shared between craft and forage
     int64_t timerUs;    ///< Microseconds for crafting queue
     int16_t benches;    ///< What workbenches are currently bought
+    int stage;
 
     // Foraging
     bool foraging; ///< If player is foraging

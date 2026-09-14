@@ -13,17 +13,17 @@
 // Defines
 //==============================================================================
 
-// Select Craft
-#define MAX_COLS       4
-#define ICON_X_BUFFER  10
-#define ICON_Y_BUFFER  10
-#define ICON_Y_START   (18 + ICON_Y_BUFFER)
-#define CRAFT_X_BUFFER 48
-#define CRAFT_Y_CENTER 153
-#define LINE_MIDDLE    ((TFT_HEIGHT * 3) / 4)
-#define ARROW_START    (TFT_WIDTH - (ICON_WIDTH + CRAFT_X_BUFFER + 23))
-#define ARROW_NOSE     15
-#define DUAL_OFFSET    ((4 + ICON_HEIGHT) / 2)
+#define MAX_COLS        4
+#define ICON_X_BUFFER   10
+#define ICON_Y_BUFFER   10
+#define ICON_Y_START    (18 + ICON_Y_BUFFER)
+#define CRAFT_X_BUFFER  48
+#define CRAFT_Y_CENTER  153
+#define LINE_MIDDLE     ((TFT_HEIGHT * 3) / 4)
+#define ARROW_START     (TFT_WIDTH - (ICON_WIDTH + CRAFT_X_BUFFER + 23))
+#define ARROW_NOSE      15
+#define DUAL_OFFSET     ((4 + ICON_HEIGHT) / 2)
+#define WORKBENCH_SPACE 80
 
 //==============================================================================
 // Consts
@@ -34,11 +34,10 @@ static const char* const craftingText[] = {
 };
 
 const cnfsFileIdx_t workbenchImages[] = {
-    CC_HEARTMAKER_1_WSG,   CC_HEARTMAKER_2_WSG,   CC_HEARTMAKER_3_WSG, CC_HEARTMAKER_4_WSG,      CCM_SPHERE_1_WSG,
-    CCM_SPHERE_2_WSG,      CCM_SPHERE_3_WSG,      CCM_WORKBENCH_WSG,   CC_POLISHER_WSG,          CC_POLISHER_BOX_WSG,
-    CC_SMASHER_WSG,        CC_SMASHER_HAMMER_WSG, CC_SMELTER_WSG,      CC_SMELTER_FIRE_1_WSG,    CC_SMELTER_FIRE_2_WSG,
-    CC_SMELTER_FIRE_3_WSG, CC_SMELTER_WOOD_WSG,   CC_TANNING_RACK_WSG, CC_TANNING_RACK_PELT_WSG, CC_WEAVER_WSG,
-    CC_WORKBENCH_WSG,
+    CC_HEARTMAKER_WSG,        CCM_SPHERE_1_WSG,      CCM_SPHERE_2_WSG,      CCM_SPHERE_3_WSG,      CCM_WORKBENCH_WSG,
+    CC_POLISHER_WSG,          CC_POLISHER_BOX_WSG,   CC_SMASHER_WSG,        CC_SMASHER_HAMMER_WSG, CC_SMELTER_WSG,
+    CC_SMELTER_FIRE_1_WSG,    CC_SMELTER_FIRE_2_WSG, CC_SMELTER_FIRE_3_WSG, CC_SMELTER_WOOD_WSG,   CC_TANNING_RACK_WSG,
+    CC_TANNING_RACK_PELT_WSG, CC_WEAVER_WSG,         CC_WORKBENCH_WSG,
 };
 
 //==============================================================================
@@ -311,7 +310,7 @@ static void drawCraftSelection(ciCampData_t* ccd)
         }
         ciDrawItemIcon(ccd, recipeList[idx].result, x, y, total, (ccd->selection == idx), (total != 0));
     }
-    drawWorkbench(ccd, 32, 32, CI_WORKBENCH, 2, 0);
+    drawWorkbench(ccd, TFT_WIDTH - WORKBENCH_SPACE, 50, recipeList[ccd->selection].craftingStation, 2, 1);
 }
 
 static void drawCraft(ciCampData_t* ccd)
@@ -373,7 +372,6 @@ static void drawCraft(ciCampData_t* ccd)
         pos++;
         node = node->next;
     }
-    
 }
 
 static void drawArrow(bool dual)
@@ -485,13 +483,91 @@ static void drawWorkbench(ciCampData_t* ccd, int x, int y, ciWorkbenchEnum_t wb,
 {
     switch (wb)
     {
-        case CI_SMELTER:
+        case CI_CRAFT_CRYSTAL_POLISHER:
         {
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_POLISHER], x, y, scale, scale);
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_POLISHER_BOX], x + (scale * 20), y + (scale * 9), scale,
+                                scale);
             break;
         }
-        case CI_WORKBENCH:
+        case CI_CRAFT_HEARTMAKER:
         {
-            drawWsgSimpleScaled(&ccd->workbenchImages[wb], x, y, scale, scale);
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_HEARTMAKER], x, y, scale, scale);
+            break;
+        }
+        case CI_CRAFT_MAGIC_WORKBENCH:
+        {
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_M_WORKBENCH], x, y, scale, scale);
+            switch (stage)
+            {
+                case 1:
+                case 2:
+                case 3:
+                {
+                    drawWsgSimpleScaled(&ccd->workbenchImages[CI_M_SPHERE_1 + stage - 1], x + (scale * 8),
+                                        y + (scale * 7), scale, scale);
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+            break;
+        }
+        case CI_CRAFT_SMASHER:
+        {
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_SMASHER], x, y, scale, scale);
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_SMASHER_HAMMER], x + (scale * 5), y + (scale * 3), scale,
+                                scale);
+            // TODO: Smashing animation
+            break;
+        }
+        case CI_CRAFT_SMELTER:
+        {
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_SMELTER], x, y, scale, scale);
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_SMELTER_WOOD], x + (scale * 15), y + (scale * 23), scale,
+                                scale);
+            switch (stage)
+            {
+                case 1:
+                case 2:
+                case 3:
+                {
+                    drawWsgSimpleScaled(&ccd->workbenchImages[CI_SMELTER + stage], x + (scale * 17), y + (scale * 16),
+                                        scale, scale);
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+            break;
+        }
+        case CI_CRAFT_STONE_CUTTER:
+        {
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_WORKBENCH], x, y, scale, scale);
+            break;
+        }
+        case CI_CRAFT_TANNING_RACK:
+        {
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_TANNING_RACK], x, y, scale, scale);
+            if (stage > 0)
+            {
+                drawWsgSimpleScaled(&ccd->workbenchImages[CI_TANNING_RACK_PELT], x + (scale * 5), y + (scale * 4),
+                                    scale, scale);
+            }
+            break;
+        }
+        case CI_CRAFT_WEAVER:
+        {
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_WEAVER], x, y, scale, scale);
+            break;
+        }
+        case CI_CRAFT_WORKBENCH:
+        {
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_WORKBENCH], x, y, scale, scale);
             break;
         }
     }

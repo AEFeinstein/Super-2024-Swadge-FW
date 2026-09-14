@@ -13,6 +13,15 @@
 #define CHECK_BIT(var, pos) ((var) & (1 << (pos)))
 #define SET_BIT(var, pos)   (var) |= (1 << (pos))
 
+// NOTE: These have been included purely because VSC's intellisense can't find the defines inside of
+// c_cpp_properties.json for some reason
+#ifndef TFT_HEIGHT
+    #define TFT_HEIGHT 240
+#endif
+#ifndef TFT_WIDTH
+    #define TFT_WIDTH 280
+#endif
+
 //==============================================================================
 // Function Definitions
 //==============================================================================
