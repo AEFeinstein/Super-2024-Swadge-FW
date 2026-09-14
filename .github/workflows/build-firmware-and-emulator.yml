@@ -265,10 +265,13 @@ jobs:
     steps:
     - name: Format commit message to be one line
       id: format_commit
+      shell: powershell
       run: |
-        COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
-        ESCAPED_MESSAGE="${COMMIT_MESSAGE//$'\n'/\\n}"
-        echo "one_line_commit=$ESCAPED_MESSAGE" >> $GITHUB_OUTPUT
+        $COMMIT_MESSAGE = @"
+        ${{ github.event.head_commit.message }}
+        "@
+        $ESCAPED_MESSAGE = $COMMIT_MESSAGE -replace "\r?\n", "\n"
+        "one_line_commit=$ESCAPED_MESSAGE" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
   Post-Slack-Message:
     runs-on: windows-latest
