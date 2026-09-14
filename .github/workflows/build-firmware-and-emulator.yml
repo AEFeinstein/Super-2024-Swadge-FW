@@ -257,11 +257,12 @@ jobs:
         body: |
           # Latest Development Snapshot
 
-  Format-Commit-One-Line:
+  Format-Commit-Message:
     runs-on: windows-latest
     needs: Build-Firmware-And-Emulator
     outputs:
-      one_line_commit: ${{ steps.format_commit.outputs.one_line_commit }}
+      commit_title: ${{ steps.format_commit.outputs.commit_title }}
+      commit_body: ${{ steps.format_commit.outputs.commit_body }}
     steps:
     - name: Format commit message to be one line
       id: format_commit
@@ -270,16 +271,20 @@ jobs:
         $COMMIT_MESSAGE = @"
         ${{ github.event.head_commit.message }}
         "@
-        $ESCAPED_MESSAGE = $COMMIT_MESSAGE -replace "\r?\n", "\\n"
-        "one_line_commit=$ESCAPED_MESSAGE" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+        $COMMIT_LINES = ($COMMIT_MESSAGE -split "`r?`n")
+        $TITLE_LINE = $COMMIT_LINES[0]
+        "commit_title=$TITLE_LINE" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+        $BODY_LINES = $COMMIT_LINES[1..($COMMIT_LINES.length - 1)] -join "\n"
+        "commit_body=$BODY_LINES" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
   Post-Slack-Message:
     runs-on: windows-latest
-    needs: Format-Commit-One-Line
+    needs: Format-Commit-Message
     steps:
     - name: Post to a Slack channel
       env:
-        ONE_LINE_COMMIT: ${{ needs.Format-Commit-One-Line.outputs.one_line_commit }}
+        COMMIT_TITLE: ${{ needs.Format-Commit-Message.outputs.commit_title }}
+        COMMIT_BODY: ${{ needs.Format-Commit-Message.outputs.commit_body }}
       if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
       id: slack
       uses: slackapi/slack-github-action@v4.0.0
@@ -288,45 +293,35 @@ jobs:
         token: ${{ secrets.SLACK_BOT_TOKEN }}
         payload: |
           channel: 'C6FNXU6KX'
-          text: "${{ github.event.head_commit.author.username }}: ${{ github.event.head_commit.message }}"
+          text: '${{ github.event.head_commit.author.username }}: ${{ env.COMMIT_TITLE }}'
           blocks:
-          - type: rich_text
-            elements:
-            - type: rich_text_section
-              elements:
-              - type: text
-                text: 'Author: '
-                style:
-                  bold: true
-              - type: text
-                text: ${{ github.event.head_commit.author.username }}
-          - type: markdown
-            text: "```\n${{ needs.Format-Commit-One-Line.outputs.one_line_commit }}\n```"
-          - type: divider
-          - type: section
-            text:
+          - type: card
+            title:
               type: mrkdwn
-              text: Comparison
-            accessory:
-              type: button
+              text: '${{ env.COMMIT_TITLE }}'
+              verbatim: false
+            subtitle:
+              type: mrkdwn
+              text: '${{ github.event.head_commit.author.username }}'
+              verbatim: false
+            body:
+              type: mrkdwn
+              text: '${{ env.COMMIT_BODY }}'
+              verbatim: false
+            actions:
+            - type: button
               text:
                 type: plain_text
-                text: View
-                emoji: true
+                text: View Comparison
+                emoji: false
               value: view_comparison
               url: ${{ github.event.compare }}
-              action_id: button-action
-          - type: divider
-          - type: section
-            text:
-              type: mrkdwn
-              text: Build Artifacts
-            accessory:
-              type: button
+              action_id: view-button-action
+            - type: button
               text:
                 type: plain_text
-                text: Download
-                emoji: true
+                text: Download Artifacts
+                emoji: false
               value: download_artifacts
               url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-              action_id: button-action
+              action_id: download-button-action
