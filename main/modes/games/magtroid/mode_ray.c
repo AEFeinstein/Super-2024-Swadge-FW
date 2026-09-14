@@ -58,8 +58,7 @@ const paletteColor_t rayMapColors[] = {
 };
 
 /// @brief The songs to play, must be in map order
-const cnfsFileIdx_t songFiles[]
-    = {BASE_0_MID, JUNGLE_0_MID, CAVE_0_MID, BASE_1_MID, JUNGLE_1_MID, CAVE_1_MID, RAY_BOSS_MID};
+const cnfsFileIdx_t songFiles[NUM_MAPS + 1] = {BASE_0_MID, JUNGLE_0_MID, CAVE_0_MID, BASE_1_MID, JUNGLE_1_MID};
 
 /// @brief The NVS key to save and load player data
 const char RAY_NVS_KEY[] = "ray";
@@ -168,6 +167,14 @@ static void rayEnterMode(void)
 
     // Set frame rate to 30 FPS
     setFrameRateUs(33333);
+
+    // Check if a custom level should be loaded from NVS (a local file)
+    size_t fLen = 0;
+    if (cnfsGetFile(CNFS_NUM_FILES, &fLen) && fLen > 0)
+    {
+        // Immediately start the game if a custom level is provided
+        rayStartGame();
+    }
 }
 
 /**

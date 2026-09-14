@@ -84,8 +84,8 @@ typedef struct
     // Joystick config preset name
     const char* jsPreset;
 
-    // Mega Pulse EX level file
-    const char* megaPulseFile;
+    // Tomi's Quest EX level file
+    const char* tomiFile;
 } emuArgs_t;
 
 //==============================================================================
