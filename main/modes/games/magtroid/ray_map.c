@@ -42,13 +42,34 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
     // Convenience pointers
     rayMap_t* map = &ray->map;
 
-    // Construct map name
-    cnfsFileIdx_t mapFiles[] = {_0_RMH, _1_RMH, _2_RMH, _3_RMH, _4_RMH, _5_RMH};
+    // The map file data, may be loaded from compressed file or CNFS injection
+    uint32_t fileSize         = 0;
+    const uint8_t* fileData   = NULL;
+    uint8_t* decompressedData = NULL;
 
-    // Read and decompress the file
-    uint32_t decompressedSize = 0;
-    uint8_t* fileData         = readHeatshrinkFile(mapFiles[mapId], &decompressedSize, spiRam);
-    uint32_t fileIdx          = 0;
+    // Check if a custom map cam be loaded from CNFS
+    const uint8_t* userLevel = NULL;
+    size_t userLevelLen      = 0;
+    // CNFS_NUM_FILES is usually invalid, but is the index used for injected data
+    if ((userLevel = cnfsGetFile(CNFS_NUM_FILES, &userLevelLen)) && userLevelLen > 0)
+    {
+        // Load from the injected file
+        fileSize = userLevelLen;
+        fileData = userLevel;
+    }
+    else // Load a map normally from compressed data
+    {
+        // Construct map name
+        cnfsFileIdx_t mapFiles[] = {_0_RMH, _1_RMH, _2_RMH, _3_RMH, _4_RMH, _5_RMH};
+
+        // Read and decompress the file
+        fileSize = 0;
+        // Save this as a separate pointer for freeing later
+        decompressedData = readHeatshrinkFile(mapFiles[mapId], &fileSize, spiRam);
+        fileData         = decompressedData;
+    }
+
+    uint32_t fileIdx = 0;
 
     // Read the width and height
     map->w = fileData[fileIdx++];
@@ -210,10 +231,13 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
     ray->secondsSinceStart = 0;
 
     // Load Scripts
-    loadScripts(ray, &fileData[fileIdx], decompressedSize - fileIdx, caps);
+    loadScripts(ray, &fileData[fileIdx], fileSize - fileIdx, caps);
 
-    // Free the file data
-    heap_caps_free(fileData);
+    // Only free data which was decompressed
+    if (decompressedData)
+    {
+        heap_caps_free(decompressedData);
+    }
 
     // Play this map's music
     globalMidiPlayerPlaySong(&ray->songs[ray->p.mapId], MIDI_BGM);

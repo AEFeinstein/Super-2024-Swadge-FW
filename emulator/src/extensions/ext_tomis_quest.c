@@ -1,4 +1,4 @@
-#include "ext_mega_pulse_ex.h"
+#include "ext_tomis_quest.h"
 #include "emu_ext.h"
 #include "emu_main.h"
 #include "emu_utils.h"
@@ -6,7 +6,7 @@
 #include "hdw-nvs_emu.h"
 #include "emu_cnfs.h"
 #include "ext_modes.h"
-#include "megaPulseEx.h"
+#include "mode_ray.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -37,9 +37,9 @@ typedef struct
 // Function Prototypes
 //==============================================================================
 
-static bool megaPulseInitCb(emuArgs_t* emuArgs);
-static void megaPulsePreFrameCb(uint64_t frame);
-static bool megaPulseInjectFile(const char* path);
+static bool tomiInitCb(emuArgs_t* emuArgs);
+static void tomiPreFrameCb(uint64_t frame);
+static bool tomiInjectFile(const char* path);
 
 #ifdef EMU_MACOS
 // Exists but isn't declared in the headers
@@ -58,10 +58,10 @@ static void doFileOpenCb(const char* path);
 // Variables
 //==============================================================================
 
-emuExtension_t megaPulseEmuExtension = {
-    .name            = "megaPulse",
-    .fnInitCb        = megaPulseInitCb,
-    .fnPreFrameCb    = megaPulsePreFrameCb,
+emuExtension_t tomiEmuExtension = {
+    .name            = "tomi",
+    .fnInitCb        = tomiInitCb,
+    .fnPreFrameCb    = tomiPreFrameCb,
     .fnPostFrameCb   = NULL,
     .fnKeyCb         = NULL,
     .fnMouseMoveCb   = NULL,
@@ -70,9 +70,9 @@ emuExtension_t megaPulseEmuExtension = {
 };
 
 #ifdef EMU_MACOS
-static char megaPulsePathBuffer[1024];
+static char tomiPathBuffer[1024];
 #endif
-static const char* megaPulseFile = NULL;
+static const char* tomiFile = NULL;
 
 #ifdef EMU_MACOS
 static const EventTypeSpec eventTypes[] = {{.eventClass = kEventClassAppleEvent, .eventKind = kEventAppleEvent}};
@@ -86,11 +86,11 @@ static MacOpenFileHandler macOpenFileHandler;
 // Functions
 //==============================================================================
 
-static bool megaPulseInitCb(emuArgs_t* emuArgs)
+static bool tomiInitCb(emuArgs_t* emuArgs)
 {
-    if (emuArgs->megaPulseFile)
+    if (emuArgs->tomiFile)
     {
-        megaPulseFile = emuArgs->megaPulseFile;
+        tomiFile = emuArgs->tomiFile;
     }
 
 #ifdef EMU_MACOS
@@ -100,12 +100,12 @@ static bool megaPulseInitCb(emuArgs_t* emuArgs)
     emulatorStarted = true;
 #endif
 
-    if (megaPulseFile)
+    if (tomiFile)
     {
-        printf("Opening Mega Pulse level file: %s\n", megaPulseFile);
-        if (!megaPulseInjectFile(megaPulseFile))
+        printf("Opening Tomi's Quest level file: %s\n", tomiFile);
+        if (!tomiInjectFile(tomiFile))
         {
-            printf("Could not read Mega Pulse level file!\n");
+            printf("Could not read Tomi's Quest level file!\n");
             emulatorQuit();
             return false;
         }
@@ -116,7 +116,7 @@ static bool megaPulseInitCb(emuArgs_t* emuArgs)
     return false;
 }
 
-void megaPulsePreFrameCb(uint64_t frame)
+void tomiPreFrameCb(uint64_t frame)
 {
 #ifdef EMU_MACOS
     if (handlerInstalled)
@@ -127,12 +127,12 @@ void megaPulsePreFrameCb(uint64_t frame)
 #endif
 }
 
-static bool megaPulseInjectFile(const char* path)
+static bool tomiInjectFile(const char* path)
 {
-    if (emuCnfsInjectFile(megaPulseFile, megaPulseFile))
+    if (emuCnfsInjectFile(tomiFile, tomiFile))
     {
-        emuNvsInjectBlobFile("storage", "user_level", megaPulseFile);
-        emulatorSetSwadgeModeByName(modePlatformer.modeName);
+        emuNvsInjectBlobFile("storage", "user_level", tomiFile);
+        emulatorSetSwadgeModeByName(rayMode.modeName);
 
         return true;
     }
@@ -145,14 +145,14 @@ static bool megaPulseInjectFile(const char* path)
 #ifdef EMU_MACOS
 static void doFileOpenCb(const char* path)
 {
-    strncpy(megaPulsePathBuffer, path, sizeof(megaPulsePathBuffer));
-    megaPulseFile = megaPulsePathBuffer;
+    strncpy(tomiPathBuffer, path, sizeof(tomiPathBuffer));
+    tomiFile = tomiPathBuffer;
 
     if (emulatorStarted)
     {
-        if (!megaPulseInjectFile(path))
+        if (!tomiInjectFile(path))
         {
-            printf("Error: could not read Mega Pulse level file %s!\n", path);
+            printf("Error: could not read Tomi's Quest level file %s!\n", path);
         }
     }
 }
