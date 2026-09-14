@@ -108,7 +108,6 @@ int32_t ciAddToInv(ciCampData_t* ccd, ciItemIdx_t item, int qty)
         }
         ccd->qtys[item] += qty;
     }
-    saveInvToNVS(ccd);
     return 0;
 }
 
@@ -122,7 +121,6 @@ bool ciRemoveFromInv(ciCampData_t* ccd, ciItemIdx_t item, int qty)
         }
         ccd->qtys[item] -= qty;
     }
-    saveInvToNVS(ccd);
     return true;
 }
 

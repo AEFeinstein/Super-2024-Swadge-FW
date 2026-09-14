@@ -91,7 +91,10 @@ static void campEnterMode()
 
 static void campExitMode()
 {
-    // Save Crafting queue
+    // Save everything
+    writeNamespaceNvs32(ciNVSKeys[CI_NVS_NAMESPACE], ciNVSKeys[CI_NVS_SAVED_UNITS], ccd->timerUnits);
+    ciSaveCraftToNVS(ccd);
+    // Clear
     clear(&ccd->craftQueue);
     ciFreeWorkbenches(ccd);
     ciFreeInventory(ccd);
@@ -162,12 +165,10 @@ static void campMainLoop(int64_t elapsedUs)
     if (ccd->craftQueue.first != NULL || ccd->foraging)
     {
         ccd->timerUs += elapsedUs;
-        bool update = false;
         if (ccd->timerUs > UNIT)
         {
             ccd->timerUs = 0;
             ccd->timerUnits += 1;
-            update = true;
         }
         while (ccd->craftQueue.first != NULL
                && recipeList[(intptr_t)ccd->craftQueue.first->val].time <= ccd->timerUnits)
@@ -175,10 +176,5 @@ static void campMainLoop(int64_t elapsedUs)
             ciCraft(ccd);
         }
         // TODO: Add forage
-        if (update)
-        {
-            ciSaveCraftFromNVS(ccd);
-            writeNamespaceNvs32(ciNVSKeys[CI_NVS_NAMESPACE], ciNVSKeys[CI_NVS_SAVED_UNITS], ccd->timerUnits);
-        }
     }
 }

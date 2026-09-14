@@ -37,8 +37,18 @@ typedef enum
 // Function Definitions
 //==============================================================================
 
+/**
+ * @brief Loads workbench data
+ *
+ * @param ccd Game Data
+ */
 void ciInitWorkbenches(ciCampData_t* ccd);
 
+/**
+ * @brief Fress the workbench data
+ *
+ * @param ccd Game Data
+ */
 void ciFreeWorkbenches(ciCampData_t* ccd);
 
 /**
@@ -53,7 +63,7 @@ void ciLoadCraftFromNVS(ciCampData_t* ccd);
  *
  * @param ccd Game Data
  */
-void ciSaveCraftFromNVS(ciCampData_t* ccd);
+void ciSaveCraftToNVS(ciCampData_t* ccd);
 
 /**
  * @brief Initializes the Crafting selections screen
@@ -114,4 +124,14 @@ void ciLoadWorkbenches(ciCampData_t* ccd);
  */
 void ciAddWorkbench(ciCampData_t* ccd, ciCraftingStation_t wb);
 
+/**
+ * @brief Draws a workbench at the deisred location
+ *
+ * @param ccd Game Data
+ * @param x x Position
+ * @param y y position
+ * @param wb Workbench to draw
+ * @param scale Scale to draw at
+ * @param stage Used for animations
+ */
 void drawWorkbench(ciCampData_t* ccd, int x, int y, ciWorkbenchEnum_t wb, int scale, int stage);

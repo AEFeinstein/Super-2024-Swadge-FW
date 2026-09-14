@@ -102,6 +102,14 @@ static void drawQueueQtys(ciCampData_t* ccd, int yPos, int idx);
  */
 static wsg_t* getWsg(ciCampData_t* ccd, ciWorkbenchEnum_t wb);
 
+/**
+ * @brief Draws the qty owned over qty required
+ *
+ * @param ccd Game Data
+ * @param r Recipe
+ * @param idx Which item slot
+ * @param yPos Y start position
+ */
 static void drawQty(ciCampData_t* ccd, const ciRecipeProto_t* r, int idx, int yPos);
 
 //==============================================================================
@@ -139,7 +147,7 @@ void ciLoadCraftFromNVS(ciCampData_t* ccd)
     }
 }
 
-void ciSaveCraftFromNVS(ciCampData_t* ccd)
+void ciSaveCraftToNVS(ciCampData_t* ccd)
 {
     if (ccd->craftQueue.length < 1)
     {
@@ -198,7 +206,6 @@ void ciRunCraftSelection(ciCampData_t* ccd)
             else if (evt.button & PB_B)
             {
                 ciInitCraft(ccd);
-                ciSaveCraftFromNVS(ccd);
                 // TODO: Add positive beep sound
             }
         }
@@ -421,7 +428,7 @@ static void drawCraftSelection(ciCampData_t* ccd)
     int16_t yOff = yStart + 66;
     wsg_t* temp  = getWsg(ccd, recipeList[ccd->selection].craftingStation);
     fillDisplayArea(xStart - 2, yStart, TFT_WIDTH - 2, TFT_HEIGHT - 2, c111);
-    drawText(&ccd->smallFont, c555, "Requires:", xStart, yStart + 2);
+    drawText(&ccd->smallFont, c555, craftingText[6], xStart, yStart + 2);
     drawWorkbench(ccd, xStart + (WORKBENCH_SPACE - (4 + temp->w)) / 2,
                   yStart + 4 + ccd->smallFont.height + (50 - temp->h) / 2, recipeList[ccd->selection].craftingStation,
                   1, 1);
