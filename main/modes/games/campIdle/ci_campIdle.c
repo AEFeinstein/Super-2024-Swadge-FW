@@ -59,7 +59,6 @@ ciCampData_t* ccd;
 static void campEnterMode()
 {
     ccd = (ciCampData_t*)heap_caps_calloc(1, sizeof(ciCampData_t), MALLOC_CAP_8BIT);
-
     // Load assets
     ccd->uiImages = (wsg_t*)heap_caps_calloc(ARRAY_SIZE(uiImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(uiImages); idx++)
@@ -70,10 +69,8 @@ static void campEnterMode()
     loadFont(RODIN_EB_FONT, &ccd->largeText, true);
     ciInitInventory(ccd);
     ciInitWorkbenches(ccd);
-
     // Init
     clear(&ccd->craftQueue);
-
     // Load from NVS
     ciLoadWorkbenches(ccd);
     ciLoadCraftFromNVS(ccd);
@@ -81,7 +78,6 @@ static void campEnterMode()
     readNamespaceNvs32(ciNVSKeys[CI_NVS_NAMESPACE], ciNVSKeys[CI_NVS_SAVED_UNITS], &outVal);
     ccd->timerUnits += outVal;
     ciInitCraftTimer(ccd);
-
     // Start
     ciInitSplash(ccd);
 
