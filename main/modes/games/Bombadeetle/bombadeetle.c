@@ -70,6 +70,10 @@
 
 #define TIMING_SUCCESS               500
 
+#define NOMORE_X_OFFSET              13
+#define NOMORE_Y_OFFSET              55
+#define NOMORE_Y_SPACING             35
+#define NOMORE_DURATION              750
 
 
 
@@ -126,8 +130,8 @@ static const cnfsFileIdx_t bombadeetleGoal[] = {
 };
 
 static const cnfsFileIdx_t bombadeetleLevels[] = {
-    BOMB_LVL_ONE_BIN, BOMB_LVL_HELLO_BIN, BOMB_LVL_RIDEIT_BIN, BOMB_LVL_NOHOLES_BIN, BOMB_LVL_NARROW_BIN, BOMB_LVL_MAG_1_BIN, BOMB_LVL_SPYRL_BIN, BOMB_LVL_MOTRAINING_BIN,BOMB_LVL_CREPUSCULAR_BIN,BOMB_LVL_MOWWOW_BIN , BOMB_LVL_JERO_BIN,
-    BOMB_LVL_DOOBLY_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_BIN,BOMB_LVL_MELLOR_BIN,BOMB_LVL_DELEPORT_BIN, BOMB_LVL_ROGER_BIN,BOMB_LVL_UNDERDEFEAT_BIN, BOMB_LVL_LERNDELEPORT_BIN,BOMB_LVL_DODGEIT_BIN, BOMB_LVL_MAG_2_BIN, BOMB_LVL_DIPDIPDIP_BIN,
+    BOMB_LVL_ONE_BIN, BOMB_LVL_HELLO_BIN, BOMB_LVL_RIDEIT_BIN, BOMB_LVL_NOHOLES_BIN, BOMB_LVL_GONOHOLE_BIN, BOMB_LVL_SHLOOG_BIN,BOMB_LVL_SPYRL_BIN, BOMB_LVL_NARROW_BIN, BOMB_LVL_MAG_1_BIN, BOMB_LVL_MOTRAINING_BIN,BOMB_LVL_CREPUSCULAR_BIN, BOMB_LVL_JERO_BIN,
+    BOMB_LVL_DOOBLY_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_BIN, BOMB_LVL_MOWWOW_BIN ,BOMB_LVL_MELLOR_BIN,BOMB_LVL_DELEPORT_BIN, BOMB_LVL_ROGER_BIN,BOMB_LVL_UNDERDEFEAT_BIN, BOMB_LVL_LERNDELEPORT_BIN,BOMB_LVL_DODGEIT_BIN, BOMB_LVL_MAG_2_BIN, BOMB_LVL_DIPDIPDIP_BIN,
     BOMB_LVL_WOOBLY_BIN, BOMB_LVL_TRAP_BIN, BOMB_LVL_RABBIT_BIN, BOMB_LVL_ASTLE_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_2_BIN,
 };
 
@@ -265,6 +269,7 @@ typedef struct
     wsg_t tools;
     wsg_t collisionSprite;
     wsg_t holeSprite;
+    wsg_t noMoreIcon;
 
     bool building;
     bool goalAnimating;
@@ -307,6 +312,7 @@ typedef struct
     font_t mainFont;
 
     int16_t menuTimer;
+    int32_t dontHaveArrowTimer[4];
 
     int16_t cursorMoveTime;
     int16_t gameMoveTime;
@@ -375,6 +381,8 @@ static void bombadeetleEnterMode()
     loadWsg(BOMB_STAGE_SELECT_INDEX_ACTIVE_BUTTON_WSG, &bombadeetle->stageActiveSelectButton, true);
     loadWsg(BOMB_MAIN_SELECT_WSG, &bombadeetle->mainSelect, true);
     loadWsg(BOMB_MAIN_OPTIONS_WSG, &bombadeetle->mainOptions, true);
+
+    loadWsg(BOMB_UI_X_WSG, &bombadeetle->noMoreIcon, true);
 
     loadWsg(BOMB_PAUSED_WSG, &bombadeetle->pausedBackground, true);
     loadWsg(BOMB_LEVEL_NAME_WSG, &bombadeetle->levelNameBackground, true);
@@ -899,6 +907,11 @@ static void bombadeetleLoadMap()
     // bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT; // See if it covers cross levels
     bombadeetle->losePrompt = false;
 
+    for(int i =0 ;i < 4; i++)
+    {
+        bombadeetle->dontHaveArrowTimer[i] = 0;
+    }
+
     bombadeetle->collisionX = -1;
     bombadeetle->collisionY = -1;
 
@@ -1061,11 +1074,7 @@ static void bombadeetleMenuLoop(int64_t elapsedUs)
                         switchToSwadgeMode(&mainMenuMode);
                         break;
                 }
-
             }
-
-
-
         }
     }
     
@@ -1321,6 +1330,16 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
     bool shloogUpdate = false;
     int8_t winCount = 0;
 
+    
+    for(int i =0 ;i < 4; i++)
+    {
+        if (bombadeetle->dontHaveArrowTimer[i] > 0)
+        {
+            bombadeetle->dontHaveArrowTimer[i] -= tick;
+        }
+    }
+
+
     if (bombadeetle->paused) 
     {
         bombadeetlePauseMenu(elapsedUs);
@@ -1466,33 +1485,69 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
 
                     if (bombadeetle->building)
                     {
-                        if (evt.button & PB_DOWN && bombadeetle->mapFile.down)
+                        if (evt.button & PB_DOWN )
                         {
-                            bombadeetle->mapFile.down--;
-                            bombadeetle->grid[gridIndex] = DIRECTION_S;   
+                            if (bombadeetle->mapFile.down)
+                            {
+
+                                bombadeetle->mapFile.down--;
+                                bombadeetle->grid[gridIndex] = DIRECTION_S;   
+                                
+                                bombadeetle->building = false;                    
+                            }
+                            else {
                             
-                            bombadeetle->building = false;                    
+                                bombadeetle->dontHaveArrowTimer[2] = NOMORE_DURATION;
+                                //Play sfx ZIRO!
+                            }
                         }
-                        else if (evt.button & PB_UP && bombadeetle->mapFile.up)
+                        else if (evt.button & PB_UP)
                         {
-                            bombadeetle->mapFile.up--;
-                            bombadeetle->grid[gridIndex] = DIRECTION_N;
-                            
-                            bombadeetle->building = false;
+                            if (bombadeetle->mapFile.up)
+                            {
+
+                                bombadeetle->mapFile.up--;
+                                bombadeetle->grid[gridIndex] = DIRECTION_N;
+                                
+                                bombadeetle->building = false;
+                            }
+                            else {
+                                bombadeetle->dontHaveArrowTimer[3] = NOMORE_DURATION;
+                                //Play sfx ZIRO!
+
+                            }
                         }
-                        else if (evt.button & PB_LEFT && bombadeetle->mapFile.left)
+                        else if (evt.button & PB_LEFT)
                         {
-                            bombadeetle->grid[gridIndex] = DIRECTION_W;
-                            bombadeetle->mapFile.left--;
-                            
-                            bombadeetle->building = false;
+                            if (bombadeetle->mapFile.left)
+                            {
+
+                                bombadeetle->grid[gridIndex] = DIRECTION_W;
+                                bombadeetle->mapFile.left--;
+                                
+                                bombadeetle->building = false;
+                            }
+                            else
+                            {
+                                bombadeetle->dontHaveArrowTimer[1] = NOMORE_DURATION;
+                                //Play sfx ZIRO!
+
+                            }
                         }
-                        else if (evt.button & PB_RIGHT && bombadeetle->mapFile.right)
+                        else if (evt.button & PB_RIGHT)
                         {
-                            bombadeetle->grid[gridIndex] = DIRECTION_E;
-                            bombadeetle->mapFile.right--;
+                            if (bombadeetle->mapFile.right)
+                            {
+                                bombadeetle->grid[gridIndex] = DIRECTION_E;
+                                bombadeetle->mapFile.right--;
+                                
+                                bombadeetle->building = false;
+                            }
+                            else {
                             
-                            bombadeetle->building = false;
+                                bombadeetle->dontHaveArrowTimer[0] = NOMORE_DURATION;
+                                //Play sfx ZIRO!
+                            }
                         }
                     }
                     else {
@@ -1980,6 +2035,15 @@ static void bombadeetleDrawGame()
     drawText(&bombadeetle->mainFont, c225, buffer, BG_LEVELNAME_X + 10, BG_LEVELNAME_Y + 8);
     
     
+    for(int i =0 ;i < 4; i++)
+    {
+        if (bombadeetle->dontHaveArrowTimer[i] > 0)
+        {
+            drawWsgSimple(&bombadeetle->noMoreIcon, NOMORE_X_OFFSET, NOMORE_Y_OFFSET + (i * NOMORE_Y_SPACING));
+        }
+    }
+
+    
     if (bombadeetle->state == STATE_PLACING) 
     {
         if (bombadeetle->building)
@@ -2075,6 +2139,8 @@ static void bombadeetleExitMode()
     freeWsg(bombadeetle->background.tiles);
     freeWsg(bombadeetle->instructionsPages);
     freeWsg(&bombadeetle->pausedBackground);
+
+    freeWsg(&bombadeetle->noMoreIcon);
     
     freeWsg(&bombadeetle->mainSelect);
     freeWsg(&bombadeetle->backgroundTile);
