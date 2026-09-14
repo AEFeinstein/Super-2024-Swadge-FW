@@ -113,3 +113,4 @@ void ciLoadWorkbenches(ciCampData_t* ccd);
  */
 void ciAddWorkbench(ciCampData_t* ccd, ciCraftingStation_t wb);
 
+void drawWorkbench(ciCampData_t* ccd, int x, int y, ciWorkbenchEnum_t wb, int scale, int stage);

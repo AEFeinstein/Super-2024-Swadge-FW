@@ -24,13 +24,14 @@
 #define ARROW_NOSE      15
 #define DUAL_OFFSET     ((4 + ICON_HEIGHT) / 2)
 #define WORKBENCH_SPACE 80
+#define QTY_LEFT_SIZE   30
 
 //==============================================================================
 // Consts
 //==============================================================================
 
 static const char* const craftingText[] = {
-    "Add to queue", "Crafting", "Owned", "Queue: ", "+", "Press A to add to queue",
+    "Add to queue", "Crafting", "Owned", "Queue: ", "+", "Press A to add to queue", "Requires:",
 };
 
 const cnfsFileIdx_t workbenchImages[] = {
@@ -87,12 +88,21 @@ static void drawArrowProg(ciCampData_t* ccd, bool dual);
  * @brief Draws the inventory qty over the required qty
  *
  * @param ccd Game Data
- * @param yPos Center Y position toi start at
+ * @param yPos Center Y position to start at
  * @param idx If asking about recipe item 0 or 1
  */
-static void drawQtys(ciCampData_t* ccd, int yPos, int idx);
+static void drawQueueQtys(ciCampData_t* ccd, int yPos, int idx);
 
-static void drawWorkbench(ciCampData_t* ccd, int x, int y, ciWorkbenchEnum_t wb, int scale, int stage);
+/**
+ * @brief Get the Wsg for a crafting station
+ *
+ * @param ccd Game Data
+ * @param wb Workbench
+ * @return wsg_t* Image found. NULL if not found
+ */
+static wsg_t* getWsg(ciCampData_t* ccd, ciWorkbenchEnum_t wb);
+
+static void drawQty(ciCampData_t* ccd, const ciRecipeProto_t* r, int idx, int yPos);
 
 //==============================================================================
 // Functions
@@ -263,6 +273,100 @@ void ciAddWorkbench(ciCampData_t* ccd, ciCraftingStation_t wb)
     }
 }
 
+void drawWorkbench(ciCampData_t* ccd, int x, int y, ciWorkbenchEnum_t wb, int scale, int stage)
+{
+    switch (wb)
+    {
+        case CI_CRAFT_CRYSTAL_POLISHER:
+        {
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_POLISHER], x, y, scale, scale);
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_POLISHER_BOX], x + (scale * 20), y + (scale * 9), scale,
+                                scale);
+            break;
+        }
+        case CI_CRAFT_HEARTMAKER:
+        {
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_HEARTMAKER], x, y, scale, scale);
+            break;
+        }
+        case CI_CRAFT_MAGIC_WORKBENCH:
+        {
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_M_WORKBENCH], x, y, scale, scale);
+            switch (stage)
+            {
+                case 1:
+                case 2:
+                case 3:
+                {
+                    drawWsgSimpleScaled(&ccd->workbenchImages[CI_M_SPHERE_1 + stage - 1], x + (scale * 8),
+                                        y + (scale * 7), scale, scale);
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+            break;
+        }
+        case CI_CRAFT_SMASHER:
+        {
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_SMASHER], x, y, scale, scale);
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_SMASHER_HAMMER], x + (scale * 5), y + (scale * 3), scale,
+                                scale);
+            // TODO: Smashing animation
+            break;
+        }
+        case CI_CRAFT_SMELTER:
+        {
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_SMELTER], x, y, scale, scale);
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_SMELTER_WOOD], x + (scale * 15), y + (scale * 23), scale,
+                                scale);
+            switch (stage)
+            {
+                case 1:
+                case 2:
+                case 3:
+                {
+                    drawWsgSimpleScaled(&ccd->workbenchImages[CI_SMELTER + stage], x + (scale * 17), y + (scale * 16),
+                                        scale, scale);
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+            break;
+        }
+        case CI_CRAFT_STONE_CUTTER:
+        {
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_WORKBENCH], x, y, scale, scale);
+            break;
+        }
+        case CI_CRAFT_TANNING_RACK:
+        {
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_TANNING_RACK], x, y, scale, scale);
+            if (stage > 0)
+            {
+                drawWsgSimpleScaled(&ccd->workbenchImages[CI_TANNING_RACK_PELT], x + (scale * 5), y + (scale * 4),
+                                    scale, scale);
+            }
+            break;
+        }
+        case CI_CRAFT_WEAVER:
+        {
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_WEAVER], x, y, scale, scale);
+            break;
+        }
+        case CI_CRAFT_WORKBENCH:
+        {
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_WORKBENCH], x, y, scale, scale);
+            break;
+        }
+    }
+}
+
 //==============================================================================
 // Static Functions
 //==============================================================================
@@ -310,7 +414,28 @@ static void drawCraftSelection(ciCampData_t* ccd)
         }
         ciDrawItemIcon(ccd, recipeList[idx].result, x, y, total, (ccd->selection == idx), (total != 0));
     }
-    drawWorkbench(ccd, TFT_WIDTH - WORKBENCH_SPACE, 50, recipeList[ccd->selection].craftingStation, 2, 1);
+    // Draw small box
+    int xStart   = TFT_WIDTH + 4 - WORKBENCH_SPACE;
+    int yStart   = ICON_Y_START;
+    int16_t xOff = xStart;
+    int16_t yOff = yStart + 66;
+    wsg_t* temp  = getWsg(ccd, recipeList[ccd->selection].craftingStation);
+    fillDisplayArea(xStart - 2, yStart, TFT_WIDTH - 2, TFT_HEIGHT - 2, c111);
+    drawText(&ccd->smallFont, c555, "Requires:", xStart, yStart + 2);
+    drawWorkbench(ccd, xStart + (WORKBENCH_SPACE - (4 + temp->w)) / 2,
+                  yStart + 4 + ccd->smallFont.height + (50 - temp->h) / 2, recipeList[ccd->selection].craftingStation,
+                  1, 1);
+    drawTextWordWrapCentered(
+        &ccd->smallFont, (CHECK_BIT(ccd->benches, recipeList[ccd->selection].craftingStation)) ? c040 : c400,
+        workbenchList[recipeList[ccd->selection].craftingStation].title, &xOff, &yOff, TFT_WIDTH - 2, TFT_HEIGHT - 2);
+    ciDrawItemIcon(ccd, recipeList[ccd->selection].items[0].item, xStart, yStart + 95, 0, false, false);
+    drawQty(ccd, &recipeList[ccd->selection], 0, 150);
+    if (recipeList[ccd->selection].items[1].item != CI_NO_ITEM)
+    {
+        ciDrawItemIcon(ccd, recipeList[ccd->selection].items[1].item, xStart, yStart + 150, 0, false, false);
+        drawQty(ccd, &recipeList[ccd->selection], 1, 200);
+    }
+    drawRect(xStart - 2, yStart, TFT_WIDTH - 2, TFT_HEIGHT - 2, c000);
 }
 
 static void drawCraft(ciCampData_t* ccd)
@@ -329,9 +454,9 @@ static void drawCraft(ciCampData_t* ccd)
     if (r->items[1].item != CI_NO_ITEM)
     {
         ciDrawItemIcon(ccd, r->items[0].item, CRAFT_X_BUFFER, CRAFT_Y_CENTER - DUAL_OFFSET, 0, false, false);
-        drawQtys(ccd, LINE_MIDDLE - DUAL_OFFSET, 0);
+        drawQueueQtys(ccd, LINE_MIDDLE - DUAL_OFFSET, 0);
         ciDrawItemIcon(ccd, r->items[1].item, CRAFT_X_BUFFER, CRAFT_Y_CENTER + DUAL_OFFSET, 0, false, false);
-        drawQtys(ccd, LINE_MIDDLE + DUAL_OFFSET, 1);
+        drawQueueQtys(ccd, LINE_MIDDLE + DUAL_OFFSET, 1);
         // Combo Arrow
         drawArrow(true);
         drawArrowProg(ccd, true);
@@ -339,7 +464,7 @@ static void drawCraft(ciCampData_t* ccd)
     else
     {
         ciDrawItemIcon(ccd, r->items[0].item, CRAFT_X_BUFFER, CRAFT_Y_CENTER, 0, false, false);
-        drawQtys(ccd, LINE_MIDDLE, 0);
+        drawQueueQtys(ccd, LINE_MIDDLE, 0);
         // Arrow
         drawArrow(false);
         drawArrowProg(ccd, false);
@@ -455,7 +580,7 @@ static void drawArrowProg(ciCampData_t* ccd, bool dual)
     }
 }
 
-static void drawQtys(ciCampData_t* ccd, int yPos, int idx)
+static void drawQueueQtys(ciCampData_t* ccd, int yPos, int idx)
 {
     char buffer[10];
     const ciRecipeProto_t* r = &recipeList[(intptr_t)ccd->craftQueue.first->val];
@@ -468,8 +593,8 @@ static void drawQtys(ciCampData_t* ccd, int yPos, int idx)
         if (re->items[idx].item == r->items[idx].item)
         {
             total += re->items[idx].qty;
-            n = n->next;
         }
+        n = n->next;
     }
     snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, total);
     drawText(&ccd->smallFont, col, buffer, (CRAFT_X_BUFFER - textWidth(&ccd->smallFont, buffer)) / 2,
@@ -479,96 +604,59 @@ static void drawQtys(ciCampData_t* ccd, int yPos, int idx)
     drawLineFast(CRAFT_X_BUFFER / 3, yPos, (CRAFT_X_BUFFER * 2) / 3, yPos, col);
 }
 
-static void drawWorkbench(ciCampData_t* ccd, int x, int y, ciWorkbenchEnum_t wb, int scale, int stage)
+static void drawQty(ciCampData_t* ccd, const ciRecipeProto_t* r, int idx, int yPos)
+{
+    char buffer[10];
+    paletteColor_t col = (ccd->qtys[r->items[idx].item] >= r->items[idx].qty) ? c040 : c400;
+    snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, ccd->qtys[r->items[idx].item]);
+    drawText(&ccd->smallFont, col, buffer, TFT_WIDTH - (QTY_LEFT_SIZE + textWidth(&ccd->smallFont, buffer)) / 2,
+             yPos - (2 + ccd->smallFont.height));
+    snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, r->items[idx].qty);
+    drawText(&ccd->smallFont, col, buffer, TFT_WIDTH - (QTY_LEFT_SIZE + textWidth(&ccd->smallFont, buffer)) / 2,
+             yPos + 2);
+    drawLineFast(TFT_WIDTH - QTY_LEFT_SIZE / 3, yPos, TFT_WIDTH - (QTY_LEFT_SIZE * 2) / 3, yPos, col);
+}
+
+static wsg_t* getWsg(ciCampData_t* ccd, ciWorkbenchEnum_t wb)
 {
     switch (wb)
     {
         case CI_CRAFT_CRYSTAL_POLISHER:
         {
-            drawWsgSimpleScaled(&ccd->workbenchImages[CI_POLISHER], x, y, scale, scale);
-            drawWsgSimpleScaled(&ccd->workbenchImages[CI_POLISHER_BOX], x + (scale * 20), y + (scale * 9), scale,
-                                scale);
-            break;
+            return &ccd->workbenchImages[CI_POLISHER];
         }
         case CI_CRAFT_HEARTMAKER:
         {
-            drawWsgSimpleScaled(&ccd->workbenchImages[CI_HEARTMAKER], x, y, scale, scale);
-            break;
+            return &ccd->workbenchImages[CI_HEARTMAKER];
         }
         case CI_CRAFT_MAGIC_WORKBENCH:
         {
-            drawWsgSimpleScaled(&ccd->workbenchImages[CI_M_WORKBENCH], x, y, scale, scale);
-            switch (stage)
-            {
-                case 1:
-                case 2:
-                case 3:
-                {
-                    drawWsgSimpleScaled(&ccd->workbenchImages[CI_M_SPHERE_1 + stage - 1], x + (scale * 8),
-                                        y + (scale * 7), scale, scale);
-                    break;
-                }
-                default:
-                {
-                    break;
-                }
-            }
-            break;
+            return &ccd->workbenchImages[CI_M_WORKBENCH];
         }
         case CI_CRAFT_SMASHER:
         {
-            drawWsgSimpleScaled(&ccd->workbenchImages[CI_SMASHER], x, y, scale, scale);
-            drawWsgSimpleScaled(&ccd->workbenchImages[CI_SMASHER_HAMMER], x + (scale * 5), y + (scale * 3), scale,
-                                scale);
-            // TODO: Smashing animation
-            break;
+            return &ccd->workbenchImages[CI_SMASHER];
         }
         case CI_CRAFT_SMELTER:
         {
-            drawWsgSimpleScaled(&ccd->workbenchImages[CI_SMELTER], x, y, scale, scale);
-            drawWsgSimpleScaled(&ccd->workbenchImages[CI_SMELTER_WOOD], x + (scale * 15), y + (scale * 23), scale,
-                                scale);
-            switch (stage)
-            {
-                case 1:
-                case 2:
-                case 3:
-                {
-                    drawWsgSimpleScaled(&ccd->workbenchImages[CI_SMELTER + stage], x + (scale * 17), y + (scale * 16),
-                                        scale, scale);
-                    break;
-                }
-                default:
-                {
-                    break;
-                }
-            }
-            break;
+            return &ccd->workbenchImages[CI_SMELTER];
         }
         case CI_CRAFT_STONE_CUTTER:
         {
-            drawWsgSimpleScaled(&ccd->workbenchImages[CI_WORKBENCH], x, y, scale, scale);
-            break;
+            return &ccd->workbenchImages[CI_HEARTMAKER];
         }
         case CI_CRAFT_TANNING_RACK:
         {
-            drawWsgSimpleScaled(&ccd->workbenchImages[CI_TANNING_RACK], x, y, scale, scale);
-            if (stage > 0)
-            {
-                drawWsgSimpleScaled(&ccd->workbenchImages[CI_TANNING_RACK_PELT], x + (scale * 5), y + (scale * 4),
-                                    scale, scale);
-            }
-            break;
+            return &ccd->workbenchImages[CI_TANNING_RACK];
         }
         case CI_CRAFT_WEAVER:
         {
-            drawWsgSimpleScaled(&ccd->workbenchImages[CI_WEAVER], x, y, scale, scale);
-            break;
+            return &ccd->workbenchImages[CI_WEAVER];
         }
         case CI_CRAFT_WORKBENCH:
         {
-            drawWsgSimpleScaled(&ccd->workbenchImages[CI_WORKBENCH], x, y, scale, scale);
-            break;
+            return &ccd->workbenchImages[CI_WORKBENCH];
         }
     }
+    return NULL;
 }
