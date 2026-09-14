@@ -130,9 +130,9 @@ static const cnfsFileIdx_t bombadeetleGoal[] = {
 };
 
 static const cnfsFileIdx_t bombadeetleLevels[] = {
-    BOMB_LVL_ONE_BIN, BOMB_LVL_HELLO_BIN, BOMB_LVL_RIDEIT_BIN, BOMB_LVL_NOHOLES_BIN, BOMB_LVL_GONOHOLE_BIN, BOMB_LVL_SHLOOG_BIN,BOMB_LVL_SPYRL_BIN, BOMB_LVL_NARROW_BIN, BOMB_LVL_MAG_1_BIN, BOMB_LVL_MOTRAINING_BIN,BOMB_LVL_CREPUSCULAR_BIN, BOMB_LVL_JERO_BIN,
-    BOMB_LVL_DOOBLY_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_BIN, BOMB_LVL_MOWWOW_BIN ,BOMB_LVL_MELLOR_BIN,BOMB_LVL_DELEPORT_BIN, BOMB_LVL_ROGER_BIN,BOMB_LVL_UNDERDEFEAT_BIN, BOMB_LVL_LERNDELEPORT_BIN,BOMB_LVL_DODGEIT_BIN, BOMB_LVL_MAG_2_BIN, BOMB_LVL_DIPDIPDIP_BIN,
-    BOMB_LVL_WOOBLY_BIN, BOMB_LVL_TRAP_BIN, BOMB_LVL_RABBIT_BIN, BOMB_LVL_ASTLE_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_2_BIN,
+    BOMB_LVL_ONE_BIN, BOMB_LVL_HELLO_BIN, BOMB_LVL_RIDEIT_BIN, BOMB_LVL_NOHOLES_BIN, BOMB_LVL_GONOHOLE_BIN, BOMB_LVL_SHLOOG_BIN,BOMB_LVL_SPYRL_BIN, BOMB_LVL_NARROW_BIN, BOMB_LVL_MAG_1_BIN, BOMB_LVL_MOTRAINING_BIN, 
+    BOMB_LVL_CREPUSCULAR_BIN,BOMB_LVL_JERO_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_BIN,BOMB_LVL_DOOBLY_BIN, BOMB_LVL_MOWWOW_BIN ,BOMB_LVL_MELLOR_BIN,BOMB_LVL_DELEPORT_BIN, BOMB_LVL_ROGER_BIN,BOMB_LVL_UNDERDEFEAT_BIN, BOMB_LVL_LERNDELEPORT_BIN,
+    BOMB_LVL_DODGEIT_BIN, BOMB_LVL_MAG_2_BIN, BOMB_LVL_DIPDIPDIP_BIN,BOMB_LVL_WOOBLY_BIN, BOMB_LVL_TRAP_BIN, BOMB_LVL_TRISKAIDEKAPHOBIA_2_BIN,BOMB_LVL_RABBIT_BIN, BOMB_LVL_ASTLE_BIN, 
 };
 
 static const cnfsFileIdx_t bombadeetleTeleporter[] = {
@@ -1667,6 +1667,12 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                             bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT;
                         }
                     }
+
+                    if (evt.button & PB_START)
+                    {
+                        bombadeetleImportMap(bombadeetle->levelIndex);
+                        bombadeetleLoadMap();
+                    }
                 }
             }
             break;
@@ -2061,7 +2067,7 @@ static void bombadeetleDrawGame()
         drawWsgSimple(&bombadeetle->collisionSprite, OFFSETMAP_X + bombadeetle->collisionX,OFFSETMAP_Y +  bombadeetle->collisionY);
 
         float successTime = 1 - ((float)bombadeetle->successTime/TIMING_SUCCESS);
-        drawWsgSimple(&bombadeetle->unsuccessful, 33,61 + (200 * successTime));            
+        drawWsgSimple(&bombadeetle->unsuccessful, 33,56 + (200 * successTime));            
 
         
     }
