@@ -257,11 +257,26 @@ jobs:
         body: |
           # Latest Development Snapshot
 
-  Post-Slack-Message:
+  Format-Commit-One-Line:
     runs-on: windows-latest
     needs: Build-Firmware-And-Emulator
+    outputs:
+      one_line_commit: ${{ steps.format_commit.outputs.one_line_commit }}
+    steps:
+    - name: Format commit message to be one line
+      id: format_commit
+      run: |
+        COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
+        ESCAPED_MESSAGE="${COMMIT_MESSAGE//$'\n'/\\n}"
+        echo "one_line_commit=$ESCAPED_MESSAGE" >> $GITHUB_OUTPUT
+
+  Post-Slack-Message:
+    runs-on: windows-latest
+    needs: Format-Commit-One-Line
     steps:
     - name: Post to a Slack channel
+      env:
+        ONE_LINE_COMMIT: ${{ needs.Format-Commit-One-Line.outputs.one_line_commit }}
       if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
       id: slack
       uses: slackapi/slack-github-action@v4.0.0
@@ -283,7 +298,7 @@ jobs:
               - type: text
                 text: ${{ github.event.head_commit.author.username }}
           - type: markdown
-            text: "```\n${{ github.event.head_commit.message }}\n```"
+            text: "```\n${{ needs.Format-Commit-One-Line.outputs.one_line_commit }}\n```"
           - type: divider
           - type: section
             text:
