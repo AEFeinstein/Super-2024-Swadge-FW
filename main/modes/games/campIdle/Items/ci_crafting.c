@@ -35,10 +35,10 @@ static const char* const craftingText[] = {
 };
 
 const cnfsFileIdx_t workbenchImages[] = {
-    CC_HEARTMAKER_WSG,        CCM_SPHERE_1_WSG,      CCM_SPHERE_2_WSG,      CCM_SPHERE_3_WSG,      CCM_WORKBENCH_WSG,
-    CC_POLISHER_WSG,          CC_POLISHER_BOX_WSG,   CC_SMASHER_WSG,        CC_SMASHER_HAMMER_WSG, CC_SMELTER_WSG,
-    CC_SMELTER_FIRE_1_WSG,    CC_SMELTER_FIRE_2_WSG, CC_SMELTER_FIRE_3_WSG, CC_SMELTER_WOOD_WSG,   CC_TANNING_RACK_WSG,
-    CC_TANNING_RACK_PELT_WSG, CC_WEAVER_WSG,         CC_WORKBENCH_WSG,
+    CC_HEARTMAKER_WSG,     CCM_SPHERE_1_WSG,         CCM_SPHERE_2_WSG,      CCM_SPHERE_3_WSG,      CCM_WORKBENCH_WSG,
+    CC_POLISHER_WSG,       CC_POLISHER_BOX_WSG,      CC_SMASHER_WSG,        CC_SMASHER_HAMMER_WSG, CC_SMELTER_WSG,
+    CC_SMELTER_FIRE_1_WSG, CC_SMELTER_FIRE_2_WSG,    CC_SMELTER_FIRE_3_WSG, CC_SMELTER_WOOD_WSG,   CC_STONECUTTER_WSG,
+    CC_TANNING_RACK_WSG,   CC_TANNING_RACK_PELT_WSG, CC_WEAVER_WSG,         CC_WORKBENCH_WSG,
 };
 
 //==============================================================================
@@ -341,7 +341,7 @@ void drawWorkbench(ciCampData_t* ccd, int x, int y, ciWorkbenchEnum_t wb, int sc
         }
         case CI_CRAFT_STONE_CUTTER:
         {
-            drawWsgSimpleScaled(&ccd->workbenchImages[CI_WORKBENCH], x, y, scale, scale);
+            drawWsgSimpleScaled(&ccd->workbenchImages[CI_STONECUTTER], x, y, scale, scale);
             break;
         }
         case CI_CRAFT_TANNING_RACK:
@@ -643,7 +643,7 @@ static wsg_t* getWsg(ciCampData_t* ccd, ciWorkbenchEnum_t wb)
         }
         case CI_CRAFT_STONE_CUTTER:
         {
-            return &ccd->workbenchImages[CI_HEARTMAKER];
+            return &ccd->workbenchImages[CI_STONECUTTER];
         }
         case CI_CRAFT_TANNING_RACK:
         {
