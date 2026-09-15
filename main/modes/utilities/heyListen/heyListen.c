@@ -13,6 +13,10 @@ const char heyListenModeName[] = "Hey, Listen!";
 static void heyListenEnterMode(void);
 static void heyListenExitMode(void);
 static void heyListenMainLoop(int64_t elapsedUs);
+static void heyListenCheckForYell(int64_t elapsedUs);
+static void heyListenDacCallback(uint8_t* samples, int16_t len);
+static void heyListenAudioCallback(uint16_t* samples, uint32_t sampleCnt);
+static void heyListenCheckSpeech(int64_t elapsedUs);
 
 //==============================================================================
 // Enums
@@ -20,6 +24,7 @@ static void heyListenMainLoop(int64_t elapsedUs);
 
 typedef enum
 {
+    HL_INTRO,
     HL_MENU,
     HL_ECHO,
     HL_RANDOM,
@@ -57,6 +62,7 @@ wsg_t* heyListenImgs;
 cnfsFileIdx_t heyListenImages;
 const paletteColor_t eyeColor;
 const led_t ledColor;
+font_t font;
 
 //Audio
     rawSample_t sfx[MAX_NUM_EVTS];
@@ -86,11 +92,11 @@ embeddedNf_data end; // Colorchord is used for spectral analysis
 static const char heyListenStrName[]       = "Hey, Listen!";
 static const char warningStrName[]         = "This mode is annoying!";
 static const char beniceStrName[]          = "Don't play this in quiet spaces!";
-static const char swadgeItStrMenu[]        = "Menu/Settings";
-static const char swadgeItStrEcho[]        = "Echo";
-static const char swadgeItStrRandom[]      = "Random";
-static const char swadgeItStrTrigger[]     = "Trigger";
-static const char swadgeItStrShake[]       = "Shake";
+static const char heyListenStrMenu[]        = "Menu/Settings";
+static const char heyListenstrEcho[]        = "Echo";
+static const char heyListenStrRandom[]      = "Random";
+static const char heyListenStrTrigger[]     = "Trigger";
+static const char heyListenStrShake[]       = "Shake";
 
 
 // Trophy Data
@@ -133,7 +139,7 @@ swadgeMode_t heyListenMode = {
     .fnEnterMode              = heyListenEnterMode, // The enter mode function
     .fnExitMode               = heyListenExitMode,  // The exit mode function
     .fnMainLoop               = heyListenMainLoop,  // The loop function
-    .fnAudioCallback          = NULL,            // If the mode uses the microphone
+    .fnAudioCallback          = heyListenAudioCallback,            // If the mode uses the microphone
     .fnBackgroundDrawCallback = NULL,            // Draws a section of the display
     .fnEspNowRecvCb           = NULL,            // If using Wifi, add the receive function here
     .fnEspNowSendCb           = NULL,            // If using Wifi, add the send function here
@@ -146,11 +152,22 @@ heyListenData_t* hld;
 static void heyListenEnterMode()
 {
     hld = (heyListenData_t*)heap_caps_calloc(1, sizeof(heyListenData_t), MALLOC_CAP_8BIT);
+    hld->screen = HL_INTRO;
+
+    // Load fonts
+    loadFont(OXANIUM_13MED_FONT, &hld->font, true);
+
+    drawText(&hld->font, c555, heyListenStrName, 20, TFT_HEIGHT/2 - 20);
+    drawText(&hld->font, c555, warningStrName, 20, TFT_HEIGHT/2 + 10);
+    drawText(&hld->font, c555, beniceStrName, 20, TFT_HEIGHT/2 + 30);
+    drawText(&hld->font, c555, "Press A to Continue", 20, TFT_HEIGHT/2 + 50);
+    //TODO: art instead of this
 }
 
 static void heyListenExitMode()
 {
     heap_caps_free(hld);
+    freeFont(&hld->font);
 }
 
 static void heyListenMainLoop(int64_t elapsedUs)
@@ -158,6 +175,28 @@ static void heyListenMainLoop(int64_t elapsedUs)
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
-        
+        if(evt.button == PB_A)
+        {
+         hld->screen = HL_MENU;
+        }
     }
+}
+
+static void heyListenCheckForYell(int64_t elapsedUs)
+{
+
+}
+
+static void heyListenDacCallback(uint8_t* samples, int16_t len)
+{
+
+}
+static void heyListenAudioCallback(uint16_t* samples, uint32_t sampleCnt)
+{
+
+}
+
+static void heyListenCheckSpeech(int64_t elapsedUs)
+{
+
 }
