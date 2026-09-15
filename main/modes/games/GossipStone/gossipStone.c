@@ -300,41 +300,6 @@ static void gs_initializeGame(void)
             = heap_caps_calloc_tag(TILE_FIELD_HEIGHT, sizeof(gs_tileInfo_t), MALLOC_CAP_SPIRAM, "fgTile");
     }
 
-    // waves
-    for (int i = 0; i < 6; i++)
-    {
-        gs_entity_t* wave       = gs_createEntity(&gameData->entityManager, 5, GS_NO_ANIMATION, true, GS_WAVE_ASSET, 3,
-                                                  (vec_t){0, 0}, gameData);
-        wave->data              = heap_caps_calloc(1, sizeof(gs_wave_t), MALLOC_CAP_SPIRAM);
-        wave->updateFunction    = gs_updateWave;
-        wave->updateFarFunction = gs_updateFarWave;
-        wave->drawFunction      = gs_drawWave;
-
-        gs_randomizeWaveData(wave);
-        gs_positionWave(wave);
-    }
-
-    gs_entity_t* ocean    = gs_createEntity(&gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_NO_ASSET, 1,
-                                            (vec_t){0xFFFF, 0xFFFF + (104 << DECIMAL_BITS)}, gameData);
-    ocean->drawFunction   = gs_drawOcean;
-    ocean->updateFunction = gs_updateOcean;
-    ocean->data           = heap_caps_calloc(1, sizeof(gs_ocean_t), MALLOC_CAP_SPIRAM);
-    ocean->dataType       = GS_OCEAN_DATA;
-
-    for (int i = 0; i < 6; i++)
-    {
-        gs_entity_t* wave = gs_createEntity(&gameData->entityManager, 5, GS_NO_ANIMATION, true, GS_WAVE_ASSET, 3,
-                                            (vec_t){0, 0}, gameData);
-        wave->data        = heap_caps_calloc(1, sizeof(gs_wave_t), MALLOC_CAP_SPIRAM);
-        ((gs_wave_t*)wave->data)->fore = true;
-        wave->updateFunction           = gs_updateWave;
-        wave->updateFarFunction        = gs_updateFarWave;
-        wave->drawFunction             = gs_drawWave;
-
-        gs_randomizeWaveData(wave);
-        gs_positionWave(wave);
-    }
-
     // Position is in 2 places. :(
     gs_entity_t* gossipStone
         = gs_createEntity(&gameData->entityManager, 3, GS_LOOPING_ANIMATION, false, GS_GOSSIP_STONE_ASSET, 5,
@@ -455,7 +420,7 @@ void gs_submodeStateExit(void)
     gs_populateMenu();
     // the default scene state INCLUDES stars, gossip, gossip stone, flame, tilemap
     node_t* curNode = (node_t*)gameData->entityManager.entities->last;
-    while (curNode->prev)
+    while (curNode)
     {
         node_t* prev = curNode->prev;
         switch (((gs_entity_t*)curNode->val)->assetIndex)
@@ -467,11 +432,21 @@ void gs_submodeStateExit(void)
             case GS_HI_RES_MOON_ASSET:
             case GS_LANDING_ASSET:
             case GS_CRYSTAL_ASSET:
+            case GS_WAVE_ASSET:
                 gs_freeData(curNode->val);
                 gs_freeAsset(&gameData->assets[((gs_entity_t*)curNode->val)->assetIndex]);
                 removeEntry(gameData->entityManager.entities, curNode);
                 break;
             default:
+                switch (((gs_entity_t*)curNode->val)->dataType)
+                {
+                    case GS_OCEAN_DATA:
+                        gs_freeData(curNode->val);
+                        removeEntry(gameData->entityManager.entities, curNode);
+                        break;
+                    default:
+                        break;
+                }
                 break;
         }
         curNode = prev;
@@ -550,10 +525,18 @@ void gs_submodeStateEnter(gs_submode_t submode)
                 gossipStoneNode, &gameData->entityManager, 1, GS_NO_ANIMATION, false, GS_MOON_ASSET, 1,
                 (vec_t){0xFFFF - (87 << DECIMAL_BITS), 0xFFFF + (25 << DECIMAL_BITS)}, gameData);
             moon->updateFunction = gs_updateMoon;
+            gs_entity_t* ocean
+                = gs_createEntityBefore(gossipStoneNode, &gameData->entityManager, 1, GS_NO_ANIMATION, false,
+                                        GS_NO_ASSET, 1, (vec_t){0xFFFF, 0xFFFF + (104 << DECIMAL_BITS)}, gameData);
+            ocean->drawFunction   = gs_drawOcean;
+            ocean->updateFunction = gs_updateOcean;
+            ocean->data           = heap_caps_calloc(1, sizeof(gs_ocean_t), MALLOC_CAP_SPIRAM);
+            ocean->dataType       = GS_OCEAN_DATA;
             gs_entity_t* hill
                 = gs_createEntityBefore(gossipStoneNode, &gameData->entityManager, 1, GS_NO_ANIMATION, false,
                                         GS_HILL_ASSET, 1, (vec_t){0xFFFF, 0xFFFF + (102 << DECIMAL_BITS)}, gameData);
             hill->drawFunction = gs_drawHill;
+            hill->dataType     = GS_HILL_DATA;
 
             gs_gossipStone_t* gsData = (gs_gossipStone_t*)gameData->entityManager.gossipStone->data;
             gsData->vel              = (vec_t){0, 0};
@@ -626,6 +609,38 @@ void gs_submodeStateEnter(gs_submode_t submode)
         gData->arr_size           = PROPHECY_COUNT;
         gData->onDialogueFinished = gs_enableFlightControls;
 
+        node_t* before = gs_findLastNodeOfType(gameData->entityManager.gossipStone, GS_OCEAN_DATA);
+
+        // waves
+        for (int i = 0; i < 6; i++)
+        {
+            gs_entity_t* wave       = gs_createEntityBefore(before, &gameData->entityManager, 5, GS_NO_ANIMATION, true,
+                                                            GS_WAVE_ASSET, 3, (vec_t){0, 0}, gameData);
+            wave->data              = heap_caps_calloc(1, sizeof(gs_wave_t), MALLOC_CAP_SPIRAM);
+            wave->updateFunction    = gs_updateWave;
+            wave->updateFarFunction = gs_updateFarWave;
+            wave->drawFunction      = gs_drawWave;
+
+            gs_randomizeWaveData(wave);
+            gs_positionWave(wave);
+        }
+
+        before = gs_findLastNodeOfType(gameData->entityManager.gossipStone, GS_HILL_DATA);
+
+        for (int i = 0; i < 6; i++)
+        {
+            gs_entity_t* wave = gs_createEntityBefore(before, &gameData->entityManager, 5, GS_NO_ANIMATION, true,
+                                                      GS_WAVE_ASSET, 3, (vec_t){0, 0}, gameData);
+            wave->data        = heap_caps_calloc(1, sizeof(gs_wave_t), MALLOC_CAP_SPIRAM);
+            ((gs_wave_t*)wave->data)->fore = true;
+            wave->updateFunction           = gs_updateWave;
+            wave->updateFarFunction        = gs_updateFarWave;
+            wave->drawFunction             = gs_drawWave;
+
+            gs_randomizeWaveData(wave);
+            gs_positionWave(wave);
+        }
+
         gs_loadAsset(HI_RES_MOON_WSG, 1, &gameData->assets[GS_HI_RES_MOON_ASSET]);
         gameData->assets[GS_HI_RES_MOON_ASSET].originX = 180;
         gameData->assets[GS_HI_RES_MOON_ASSET].originY = 127;
@@ -645,4 +660,13 @@ void gs_submodeStateEnter(gs_submode_t submode)
         gData->messageList = moonList;
         gData->arr_size    = MOON_COUNT;
     }
+    printf("entering submode %d with %d entities with the following asset IDS:\n", submode,
+           gameData->entityManager.entities->length);
+    curNode = gameData->entityManager.entities->first;
+    while (curNode != NULL)
+    {
+        printf("%d ,", ((gs_entity_t*)curNode->val)->assetIndex);
+        curNode = curNode->next;
+    }
+    printf("\n");
 }

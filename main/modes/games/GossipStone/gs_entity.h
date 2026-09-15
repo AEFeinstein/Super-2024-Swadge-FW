@@ -24,6 +24,7 @@ typedef enum
     GS_BIG_MOON_DATA,
     GS_OCEAN_DATA,
     GS_PARTICLE_DATA,
+    GS_HILL_DATA,
 } gs_dataType_t;
 
 //==============================================================================

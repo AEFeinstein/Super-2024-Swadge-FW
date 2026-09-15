@@ -10,9 +10,9 @@ const char* gossipList[GOSSIP_COUNT] = {
     "After The Prophecy is complete, you can use the left touch strip to rub the crystal ball.",
     "Okay, that's number five.",
     "sixeroni.",
-    "sevennnnnnnn.",
+    "This moon holds my future.",
     "Here is the eighth line.",
-    "NINE.",
+    "The godess of Gaylordia rearranges the stars every time you visit.",
     "TEN!!!!!!!!",
 };
 
