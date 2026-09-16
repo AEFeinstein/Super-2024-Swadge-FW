@@ -1,23 +1,15 @@
 #include "heyListen.h"
 #include "embeddedOut.h"
 #include "heatshrink_helper.h"
+#include "mainMenu.h"
+#include "esp_random.h"
+
 const char heyListenModeName[] = "Hey, Listen!";
 
 // Limits for detecting yells
 #define MIC_ENERGY_THRESHOLD  100000
 #define MIC_ENERGY_HYSTERESIS 20
-
-//==============================================================================
-// Function Declarations
-//==============================================================================
-static void heyListenEnterMode(void);
-static void heyListenExitMode(void);
-static void heyListenMainLoop(int64_t elapsedUs);
-static void heyListenCheckForYell(int64_t elapsedUs);
-static void heyListenDacCallback(uint8_t* samples, int16_t len);
-static void heyListenAudioCallback(uint16_t* samples, uint32_t sampleCnt);
-static void heyListenCheckSpeech(int64_t elapsedUs);
-
+#define WAIT_EVENT_US          1500000
 //==============================================================================
 // Enums
 //==============================================================================
@@ -30,6 +22,7 @@ typedef enum
     HL_RANDOM,
     HL_TRIGGER,
     HL_SHAKE,
+    HL_SETTINGS,
 } heyListenScreen_t;
 
 typedef enum
@@ -38,8 +31,24 @@ typedef enum
     EVT_HEY,
     EVT_HEYLISTEN,
     EVT_WHATSUP,
+    EVT_PHRASE,
     MAX_NUM_EVTS,
 } heyListenEvt_t;
+
+
+//==============================================================================
+// Function Declarations
+//==============================================================================
+static void heyListenEnterMode(void);
+static void heyListenExitMode(void);
+static void heyListenMainLoop(int64_t elapsedUs);
+static void heyListenCheckForYell(int64_t elapsedUs);
+static void heyListenDacCallback(uint8_t* samples, int16_t len);
+static void heyListenAudioCallback(uint16_t* samples, uint32_t sampleCnt);
+static void heyListenCheckSpeech(int64_t elapsedUs);
+static bool heyListenMenuCb(const char* label, bool selected, uint32_t value);
+static void heyListenSwitchToScreen(heyListenScreen_t newScreen);
+
 
 //==============================================================================
 // Structs
@@ -61,12 +70,17 @@ heyListenScreen_t screen;
 wsg_t* heyListenImgs;
 cnfsFileIdx_t heyListenImages;
 const paletteColor_t eyeColor;
+const paletteColor_t bgColor;
 const led_t ledColor;
 font_t font;
 
+//Menu
+menu_t* hlmenu;
+menuZorldoRenderer_t* menuRenderer;
+
 //Audio
-    rawSample_t sfx[MAX_NUM_EVTS];
-    int32_t sampleIdx;
+rawSample_t sfx[MAX_NUM_EVTS];
+int32_t sampleIdx;
 
 // Flag to switch from speaker to mic mode
 bool pendingSwitchToMic;
@@ -79,7 +93,17 @@ bool isYelling;
 bool yellInput;
 dft32_data dd;       // Colorchord is used for spectral analysis
 embeddedNf_data end; // Colorchord is used for spectral analysis
+int32_t timeToNextEvent;
+bool initialWait;
+int32_t nextEvtTimer;
+int32_t speechDelayUs; // Timer to pause between verbal commands
+list_t speechQueue;    // A queue of verbal commands
 
+
+// IMU Variables
+vec3d_t lastOrientation;
+list_t shakeHistory;
+bool isShook;
 
 //nvs
 //NONE FOR NOW
@@ -89,14 +113,16 @@ embeddedNf_data end; // Colorchord is used for spectral analysis
 //==============================================================================
 // Const data
 //==============================================================================
-static const char heyListenStrName[]       = "Hey, Listen!";
-static const char warningStrName[]         = "This mode is annoying!";
-static const char beniceStrName[]          = "Don't play this in quiet spaces!";
-static const char heyListenStrMenu[]        = "Menu/Settings";
-static const char heyListenstrEcho[]        = "Echo";
-static const char heyListenStrRandom[]      = "Random";
-static const char heyListenStrTrigger[]     = "Trigger";
-static const char heyListenStrShake[]       = "Shake";
+static const char heyListenStrName[]        = "Hey, Listen!";
+static const char warningStrName[]          = "This mode is annoying!";
+static const char beniceStrName[]           = "Don't play this in quiet spaces!";
+static const char heyListenStrMenu[]        = "Menu";
+static const char heyListenStrEcho[]        = "Echo Mode";
+static const char heyListenStrRandom[]      = "Random Mode";
+static const char heyListenStrTrigger[]     = "Trigger Mode";
+static const char heyListenStrShake[]       = "Shake Mode";
+static const char heyListenStrSettings[]    = "Settings";
+static const char heyListenStrExit[]          = "Exit";
 
 
 // Trophy Data
@@ -154,30 +180,134 @@ static void heyListenEnterMode()
     hld = (heyListenData_t*)heap_caps_calloc(1, sizeof(heyListenData_t), MALLOC_CAP_8BIT);
     hld->screen = HL_INTRO;
 
-    // Load fonts
-    loadFont(OXANIUM_13MED_FONT, &hld->font, true);
+// Switching to speaker disables the microphone
+    switchToSpeaker();
+// This disables speaker too
+    dacStop();
+//TODO swadgepass processing here, if anything
+// This re-enables the speakers
+    dacStart();
 
-    drawText(&hld->font, c555, heyListenStrName, 20, TFT_HEIGHT/2 - 20);
-    drawText(&hld->font, c555, warningStrName, 20, TFT_HEIGHT/2 + 10);
-    drawText(&hld->font, c555, beniceStrName, 20, TFT_HEIGHT/2 + 30);
-    drawText(&hld->font, c555, "Press A to Continue", 20, TFT_HEIGHT/2 + 50);
-    //TODO: art instead of this
+// Allocate menu
+    hld->hlmenu = initMenu(heyListenStrMenu, heyListenMenuCb);
+    addSingleItemToMenu(hld->hlmenu, heyListenStrEcho);
+    addSingleItemToMenu(hld->hlmenu, heyListenStrRandom);
+    addSingleItemToMenu(hld->hlmenu, heyListenStrTrigger);
+    addSingleItemToMenu(hld->hlmenu, heyListenStrShake);
+    addSingleItemToMenu(hld->hlmenu, heyListenStrSettings);
+    addSingleItemToMenu(hld->hlmenu, heyListenStrExit);
+    hld->menuRenderer = initMenuZorldoRenderer(NULL, NULL);
+
+
+// Load fonts
+    loadFont(OXANIUM_13MED_FONT, &hld->font, true);
+    printf("Entered Intro mode\n");
+    drawText(&hld->font, c555, heyListenStrName, 20, 40);
+    drawText(&hld->font, c555, warningStrName, 20, 60);
+    drawText(&hld->font, c555, beniceStrName, 20, 80);
+    drawText(&hld->font, c555, "Press B to Continue", 20, 100);
+
+//TODO: art instead of this
+
+
+
+// For yell detection
+InitColorChord(&hld->end, &hld->dd);
+
 }
 
 static void heyListenExitMode()
 {
-    heap_caps_free(hld);
+    deinitMenuZorldoRenderer(hld->menuRenderer);
+    deinitMenu(hld->hlmenu);
+    //TODO free sfx
+    //TODO free imgs
+    
     freeFont(&hld->font);
+    clear(&hld->shakeHistory);
+    clear(&hld->speechQueue);
+    clear(&hld->micFrameEnergyHistory);
+    heap_caps_free(hld);
 }
 
 static void heyListenMainLoop(int64_t elapsedUs)
 {
+    // Check button input
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
-        if(evt.button == PB_A)
+        switch (hld->screen)
         {
-         hld->screen = HL_MENU;
+            case HL_MENU:
+            {
+                hld->hlmenu = menuButton(hld->hlmenu, evt);
+                break;
+            }
+            case HL_ECHO:
+            case HL_TRIGGER:
+                {
+
+                }
+                break;
+            case HL_RANDOM:
+            case HL_SHAKE:
+                {
+
+                }
+                break;
+            case HL_SETTINGS:
+                {
+
+                }
+                break;
+            case HL_INTRO:
+                {
+                    if(evt.button == PB_B)
+                        {
+                        hld->screen = HL_MENU;  
+                        heyListenSwitchToScreen(hld->screen);             
+                        }
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    switch (hld->screen)
+    {
+        case HL_MENU:
+        {
+            drawMenuZorldo(hld->hlmenu, hld->menuRenderer, elapsedUs);
+            break;
+        }
+        case HL_ECHO:
+        {
+            break;
+        }
+        case HL_TRIGGER:
+        {
+            break;
+        }
+        case HL_RANDOM:
+        {
+            break;
+        }
+        case HL_SHAKE:
+        {
+            break;
+        }
+        case HL_SETTINGS:
+        {
+            break;
+        }
+        case HL_INTRO:
+        {
+            break;
+        }
+        default:
+        {
+            break;
         }
     }
 }
@@ -195,8 +325,101 @@ static void heyListenAudioCallback(uint16_t* samples, uint32_t sampleCnt)
 {
 
 }
-
 static void heyListenCheckSpeech(int64_t elapsedUs)
 {
 
+}
+
+static void heyListenSwitchToScreen(heyListenScreen_t newScreen)
+{
+    // Clear SFX & SPK variables
+    hld->sampleIdx          = 0;
+    hld->pendingSwitchToMic = true;
+
+    // Clear gameplay variables
+    hld->timeToNextEvent = WAIT_EVENT_US;
+    hld->initialWait     = true;
+    hld->nextEvtTimer    = 0;
+    hld->speechDelayUs = 0;
+
+    // Clear IMU variables
+    memset(&hld->lastOrientation, 0, sizeof(vec3d_t));
+    clear(&hld->shakeHistory);
+    hld->isShook = false;
+
+    // Set the new screen
+    hld->screen = newScreen;
+
+    // Screen-specific setup
+    switch (newScreen)
+    {
+        case HL_ECHO:
+        {
+            // Enable speaker for a new verbal command and reset sample count
+            switchToSpeaker();
+            hld->sampleIdx          = 0;
+            hld->isListening        = false;
+            hld->pendingSwitchToMic = false;
+
+            // Enqueue special event to scream
+            clear(&hld->speechQueue);
+            heyListenEvt_t newEvt = MAX_NUM_EVTS;
+            push(&hld->speechQueue, (void*)newEvt);
+
+            break;
+        }
+        case HL_MENU:
+        {
+           
+            break;
+        }
+        case HL_TRIGGER:
+        case HL_RANDOM:
+        case HL_SHAKE:
+        case HL_SETTINGS:
+        case HL_INTRO:
+        default:
+        {
+            break;
+        }
+    }
+}
+/**
+ * @brief A callback which is called when a menu changes or items are selected
+ * @param label A pointer to the label which was selected or scrolled to
+ * @param selected true if the item was selected with the A button, false if it was scrolled to
+ * @param value If a settings item was selected or scrolled, this is the new value for the setting
+ * @return true to go up a menu level, false to remain here
+ */
+static bool heyListenMenuCb(const char* label, bool selected, uint32_t value)
+{
+    if (selected)
+    {
+        if (heyListenStrEcho == label)
+        {
+            heyListenSwitchToScreen(HL_ECHO);
+        }
+        else if (heyListenStrRandom == label)
+        {
+            heyListenSwitchToScreen(HL_RANDOM);
+        }
+        else if (heyListenStrTrigger == label)
+        {
+            heyListenSwitchToScreen(HL_TRIGGER);
+        }
+        else if (heyListenStrShake == label)
+        {
+            heyListenSwitchToScreen(HL_SHAKE);
+        }
+        else if (heyListenStrSettings == label)
+        {
+            heyListenSwitchToScreen(HL_SETTINGS);
+        }
+        else if (heyListenStrExit == label)
+        {
+            // Exit to the main menu
+            switchToSwadgeMode(&mainMenuMode);
+        }
+    }
+    return false;
 }
