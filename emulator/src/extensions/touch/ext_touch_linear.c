@@ -132,17 +132,17 @@ static bool updateTouchLinear(emuTouch_t* et, int32_t x, int32_t y, mouseButton_
             if (et->isLeft)
             {
                 // Vertical mouse to index 0
-                emulatorSetTouchLinear(0, (et->mouseY * 1024) / et->paneH, et->intensity);
+                emulatorSetTouchLinear(0, (y * 1024) / et->paneH, et->intensity);
             }
             else if (et->isHorz)
             {
                 // Horizontal mouse to index 0
-                emulatorSetTouchLinear(0, (et->mouseX * 1024) / et->paneW, et->intensity);
+                emulatorSetTouchLinear(0, (x * 1024) / et->paneW, et->intensity);
             }
             else
             {
                 // Vertical mouse to index 1
-                emulatorSetTouchLinear(1, (et->mouseY * 1024) / et->paneH, et->intensity);
+                emulatorSetTouchLinear(1, (y * 1024) / et->paneH, et->intensity);
             }
         }
         else if (EMU_MOUSE_NONE == clicked)
