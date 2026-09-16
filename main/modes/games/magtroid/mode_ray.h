@@ -177,7 +177,7 @@ typedef enum __attribute__((packed))
     // Self and Enemies
     OBJ_ENEMY_START_POINT = (OBJ | ENEMY | 0),
     OBJ_ENEMY_BOX         = (OBJ | ENEMY | 1),
-    OBJ_ENEMY_2           = (OBJ | ENEMY | 2),
+    OBJ_ENEMY_GRUNT       = (OBJ | ENEMY | 2),
     OBJ_ENEMY_3           = (OBJ | ENEMY | 3),
     OBJ_ENEMY_4           = (OBJ | ENEMY | 4),
     OBJ_ENEMY_5           = (OBJ | ENEMY | 5),
@@ -640,6 +640,7 @@ typedef struct rayEnemy
 {
     rayObjCommon_t c; ///< Common object properties
     int32_t health;   ///< The enemy's health
+    vec_q24_8 vel;
     rayEnemyMain_t mainFn;
     rayEnemyCheckCollision_t collisionFn;
     rayEnemyGetShot_t getShotFn;
@@ -714,6 +715,11 @@ typedef struct
 
     bool pbaDown;           ///< If PB_A is down, used to differentiate short and long presses
     uint32_t pbaDownTimeUs; ///< The time PB_A has been held down
+
+    vec_q24_8 vel;     ///< An extra player velocity, usually from getting bumped
+    int32_t bumpTimer; ///< A timer to apply vel to the player
+
+    int32_t iFrameTimer; ///< A timer for invincibility frames
 
     wsg_t* sprite;
 } rayPlayerState_t;
