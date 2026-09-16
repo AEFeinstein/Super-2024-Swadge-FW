@@ -9,7 +9,7 @@ const char heyListenModeName[] = "Hey, Listen!";
 // Limits for detecting yells
 #define MIC_ENERGY_THRESHOLD  100000
 #define MIC_ENERGY_HYSTERESIS 20
-#define WAIT_EVENT_US          1500000
+#define WAIT_EVENT_US         5000
 //==============================================================================
 // Enums
 //==============================================================================
@@ -48,6 +48,7 @@ static void heyListenAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 static void heyListenCheckSpeech(int64_t elapsedUs);
 static bool heyListenMenuCb(const char* label, bool selected, uint32_t value);
 static void heyListenSwitchToScreen(heyListenScreen_t newScreen);
+bool heyListenCheckForShake(void);
 
 
 //==============================================================================
@@ -81,6 +82,7 @@ menuZorldoRenderer_t* menuRenderer;
 //Audio
 rawSample_t sfx[MAX_NUM_EVTS];
 int32_t sampleIdx;
+heyListenEvt_t currentEvt;
 
 // Flag to switch from speaker to mic mode
 bool pendingSwitchToMic;
@@ -202,6 +204,7 @@ static void heyListenEnterMode()
 // Load fonts
     loadFont(OXANIUM_13MED_FONT, &hld->font, true);
     printf("Entered Intro mode\n");
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
     drawText(&hld->font, c555, heyListenStrName, 20, 40);
     drawText(&hld->font, c555, warningStrName, 20, 60);
     drawText(&hld->font, c555, beniceStrName, 20, 80);
@@ -213,6 +216,7 @@ static void heyListenEnterMode()
 
 // For yell detection
 InitColorChord(&hld->end, &hld->dd);
+hld->nextEvtTimer = 0;
 
 }
 
@@ -244,15 +248,43 @@ static void heyListenMainLoop(int64_t elapsedUs)
                 break;
             }
             case HL_ECHO:
+                {
+                    
+                }
+                break;
             case HL_TRIGGER:
                 {
+                    if(evt.button == PB_UP)
+                        {
+                        hld->currentEvt = EVT_HEY;
+                        }
+                    else if(evt.button == PB_DOWN)
+                        {
+                        hld->currentEvt = EVT_HEYLISTEN;
+                        }
+                    else if(evt.button == PB_LEFT)
+                        {
+                        hld->currentEvt = EVT_WHATSUP;
+                        }
+                    else if(evt.button == PB_RIGHT)
+                        {
+                        hld->currentEvt = EVT_PHRASE;
+                        }
+                    else if(evt.button == PB_A)
+                    {
+                        hld->currentEvt = EVT_NULL;
+                    }
 
                 }
                 break;
             case HL_RANDOM:
-            case HL_SHAKE:
                 {
 
+                }
+                break;
+            case HL_SHAKE:
+                {
+                    //no buttons for HL_SHAKE
                 }
                 break;
             case HL_SETTINGS:
@@ -261,16 +293,17 @@ static void heyListenMainLoop(int64_t elapsedUs)
                 }
                 break;
             case HL_INTRO:
-                {
-                    if(evt.button == PB_B)
-                        {
-                        hld->screen = HL_MENU;  
-                        heyListenSwitchToScreen(hld->screen);             
-                        }
-                }
                 break;
             default:
                 break;
+        }
+    
+    //all modes are exited by B
+    if(evt.button == PB_B)
+        {
+        hld->nextEvtTimer = 0;
+        hld->screen = HL_MENU;  
+        heyListenSwitchToScreen(hld->screen);             
         }
     }
 
@@ -287,6 +320,13 @@ static void heyListenMainLoop(int64_t elapsedUs)
         }
         case HL_TRIGGER:
         {
+            
+            //for testing, just draw the screen and print the event:
+            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+            drawText(&hld->font, c555, "Current Event:", 20, 20);
+            drawText(&hld->font, c555, (char[]){hld->currentEvt + '0', '\0'}, 20, 40);
+            //eventually, play audio:
+            //TODO
             break;
         }
         case HL_RANDOM:
@@ -295,6 +335,22 @@ static void heyListenMainLoop(int64_t elapsedUs)
         }
         case HL_SHAKE:
         {
+            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+            bool shook = heyListenCheckForShake();
+            hld->nextEvtTimer++;
+            drawText(&hld->font, c555, "Shake Detected:", 20, 20);
+            drawText(&hld->font, c555, (char[]){shook + '0', '\0'}, 20, 40);
+            drawText(&hld->font, c555, "Next Event Timer:", 20, 60);
+            char timerStr[16];
+            sprintf(timerStr, "%ld", hld->nextEvtTimer);
+            drawText(&hld->font, c555, timerStr, 20, 80);
+            if(shook && hld->nextEvtTimer >= WAIT_EVENT_US)
+            {   
+                hld->isShook = false;
+                hld->nextEvtTimer = 0;
+                clear(&hld->shakeHistory);
+                //TODO: yell
+            }
             break;
         }
         case HL_SETTINGS:
@@ -316,7 +372,6 @@ static void heyListenCheckForYell(int64_t elapsedUs)
 {
 
 }
-
 static void heyListenDacCallback(uint8_t* samples, int16_t len)
 {
 
@@ -329,7 +384,6 @@ static void heyListenCheckSpeech(int64_t elapsedUs)
 {
 
 }
-
 static void heyListenSwitchToScreen(heyListenScreen_t newScreen)
 {
     // Clear SFX & SPK variables
@@ -422,4 +476,23 @@ static bool heyListenMenuCb(const char* label, bool selected, uint32_t value)
         }
     }
     return false;
+}
+
+bool heyListenCheckForShake(void)
+{
+    // Check if there is a shake state change
+    if (checkForShake(&hld->lastOrientation, &hld->shakeHistory, &hld->isShook))
+    {
+        // There was a change, check if it's shaking
+        if (hld->isShook)
+        {
+            // It is shaking, check if inputs are accepted
+            if (!(hld->screen == HL_SHAKE))
+            {
+                // Input not accepted, mark as not shaking
+                hld->isShook = false;
+            }
+        }
+    }
+    return hld->isShook;
 }
