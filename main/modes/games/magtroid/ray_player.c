@@ -215,37 +215,63 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
         q24_8 deltaX = 0;
         q24_8 deltaY = 0;
 
-        // If the up button is held
-        if (ray->btnState & PB_UP)
+        bool shouldNormalize = true;
+
+        if (ray->ps.vel.x || ray->ps.vel.y)
         {
-            // Move forward
-            deltaY -= 1;
+            // This vector is already normalized
+            deltaX          = ray->ps.vel.x;
+            deltaY          = ray->ps.vel.y;
+            shouldNormalize = false;
         }
-        // Else if the down button is held
-        else if (ray->btnState & PB_DOWN)
+        else
         {
-            // Move backwards
-            deltaY += 1;
+            // If the up button is held
+            if (ray->btnState & PB_UP)
+            {
+                // Move forward
+                deltaY -= TO_FX(1);
+            }
+            // Else if the down button is held
+            else if (ray->btnState & PB_DOWN)
+            {
+                // Move backwards
+                deltaY += TO_FX(1);
+            }
+
+            // If the left button is held
+            if (ray->btnState & PB_LEFT)
+            {
+                // Move left
+                deltaX -= TO_FX(1);
+            }
+            // Else if the right button is held
+            else if (ray->btnState & PB_RIGHT)
+            {
+                // Move backwards
+                deltaX += TO_FX(1);
+            }
         }
 
-        // If the left button is held
-        if (ray->btnState & PB_LEFT)
+        // Stop the bump when the timer expires
+        if (ray->ps.bumpTimer > 0)
         {
-            // Move left
-            deltaX -= 1;
-        }
-        // Else if the right button is held
-        else if (ray->btnState & PB_RIGHT)
-        {
-            // Move backwards
-            deltaX += 1;
+            ray->ps.bumpTimer -= elapsedUs;
+            if (ray->ps.bumpTimer <= 0)
+            {
+                ray->ps.vel.x = 0;
+                ray->ps.vel.y = 0;
+            }
         }
 
         // If there is movement
         if (deltaX || deltaY)
         {
-            // Normalize deltaX and deltaY before scaling with elapsedUs
-            fastNormVec(&deltaX, &deltaY);
+            if (shouldNormalize)
+            {
+                // Normalize deltaX and deltaY before scaling with elapsedUs
+                fastNormVec(&deltaX, &deltaY);
+            }
             ray->p.dirX = deltaX;
             ray->p.dirY = deltaY;
 
@@ -257,17 +283,10 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
             int16_t oldCellX = FROM_FX(ray->p.posX);
             int16_t oldCellY = FROM_FX(ray->p.posY);
 
-            // A little less than half the width of the player, for boundary checks
-            // TODO use actual player hitbox
-            // q24_8 pHalfWidth = TO_FX_FRAC(7, 16);
-
-            // TODO use actual player dimensions
-            rectangle_t movedBoundingBox = {
-                .pos.x  = ray->p.posX - TO_FX_FRAC(7, 16) + deltaX,
-                .pos.y  = ray->p.posY - TO_FX_FRAC(7, 16) + deltaY,
-                .width  = TO_FX_FRAC(14, 16),
-                .height = TO_FX_FRAC(14, 16),
-            };
+            // Make a bounding box for where the player would move
+            rectangle_t movedBoundingBox = rayGetPlayerBB(ray);
+            movedBoundingBox.pos.x += deltaX;
+            movedBoundingBox.pos.y += deltaY;
 
             // If the player's new location doesn't fit
             if (!rayBoundingBoxFitsInMap(ray, movedBoundingBox))
@@ -275,6 +294,10 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
                 // Stop movement
                 deltaX = 0;
                 deltaY = 0;
+
+                // Unmove the player's bounding box
+                movedBoundingBox.pos.x -= deltaX;
+                movedBoundingBox.pos.y -= deltaY;
 
                 // TODO allow axis aligned movement when the input is diagonal on a wall?
             }
@@ -314,6 +337,20 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
                     ray->ps.lastGoodCell.x = newCellX;
                     ray->ps.lastGoodCell.y = newCellY;
                 }
+            }
+        }
+        else
+        {
+            // No movement, but check for enemy collisions b/c enemies move
+            rectangle_t pbb = rayGetPlayerBB(ray);
+            node_t* eNode   = ray->enemies.first;
+            while (eNode)
+            {
+                rayEnemy_t* e = eNode->val;
+
+                // If the player collides with an immovable enemy (i.e. a box on a wall) this will stop movement
+                rayEnemyCheckCollision(ray, e, pbb, &deltaX, &deltaY);
+                eNode = eNode->next;
             }
         }
     }
@@ -400,6 +437,12 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
             ray->ps.jumpPos = TO_FX(0);
         }
     }
+
+    // Run the invincibility frame timer
+    if (ray->ps.iFrameTimer > 0)
+    {
+        ray->ps.iFrameTimer -= elapsedUs;
+    }
 }
 
 /**
@@ -485,7 +528,6 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
         {
             ts->drawingBow = false;
 
-            // TODO scale by touch delta
             q24_8 velX = ray->p.dirX;
             q24_8 velY = ray->p.dirY;
 
@@ -698,9 +740,23 @@ void rayPlayerCheckFloorEffect(ray_t* ray, uint32_t elapsedUs)
  *
  * @param ray The entire game state
  * @param health The amount of health to decrement
+ * @return true if health was decremented, false if it was not (invincible, jumping)
  */
-void rayPlayerDecrementHealth(ray_t* ray, int32_t health)
+bool rayPlayerDecrementHealth(ray_t* ray, int32_t health)
 {
+    // Return if the player is invincible
+    if (ray->ps.iFrameTimer > 0)
+    {
+        return false;
+    }
+    else if (rayPlayerIsJumping(ray))
+    {
+        return false;
+    }
+
+    // Start player iframes
+    ray->ps.iFrameTimer = 1000000;
+
     // Decrement health
     ray->p.health -= health;
 
@@ -713,20 +769,17 @@ void rayPlayerDecrementHealth(ray_t* ray, int32_t health)
     // Make LEDs red
     ray->ledHue = 0;
 
-    // Check for death
-    if (0 >= ray->p.health)
-    {
-        // load the last save
-        rayStartGame();
+    // Check for death happens not in the middle of processing because
+    // it can free state while it's still being used. Search for
+    // ray->p.health
 
-        // Show the death screen
-        rayShowDeathScreen(ray);
-    }
-    else if (ray->p.health > ray->p.maxHealth)
+    // Never go over the max health
+    if (ray->p.health > ray->p.maxHealth)
     {
-        // Never go over the max health
         ray->p.health = ray->p.maxHealth;
     }
+
+    return true;
 }
 
 /**
@@ -888,4 +941,32 @@ void rayFromEightWayAngle(int32_t angle, q24_8* x, q24_8* y)
 bool rayPlayerIsJumping(ray_t* ray)
 {
     return ray->ps.jumpPos || ray->ps.jumpVel;
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param ray
+ * @return true
+ * @return false
+ */
+bool rayPlayerIsHittable(ray_t* ray)
+{
+    return !(ray->ps.jumpPos || ray->ps.jumpVel) || (ray->ps.iFrameTimer > 0);
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param ray
+ * @return rectangle_t
+ */
+rectangle_t rayGetPlayerBB(ray_t* ray)
+{
+    rectangle_t bb;
+    bb.width  = (ray->ps.sprite->w * 256) / CELL_SIZE;
+    bb.height = (ray->ps.sprite->h * 256) / CELL_SIZE;
+    bb.pos.x  = (ray->p.posX) - (bb.width / 2);
+    bb.pos.y  = (ray->p.posY) - (bb.height / 2);
+    return bb;
 }

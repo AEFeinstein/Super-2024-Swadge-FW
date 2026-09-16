@@ -9,6 +9,7 @@
 #include "ray_pause.h"
 #include "ray_tex_manager.h"
 #include "ray_shop_dialog.h"
+#include "ray_enemy.h"
 
 static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait);
 static bool checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* portrait);

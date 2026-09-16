@@ -491,11 +491,12 @@ static bool objectsIntersect(const rayObjCommon_t* obj1, const rayObjCommon_t* o
 void checkRayCollisions(ray_t* ray)
 {
     // Create a 'player' for collision comparison
+    rectangle_t pbb       = rayGetPlayerBB(ray);
     rayObjCommon_t player = {
-        .posX        = ray->p.posX,
-        .posY        = ray->p.posY,
-        .bound.box.w = TO_FX(1), // TODO measure player sprite
-        .bound.box.h = TO_FX(1),
+        .posX        = pbb.pos.x,
+        .posY        = pbb.pos.y,
+        .bound.box.w = pbb.width,
+        .bound.box.h = pbb.height,
     };
 
     // Check if a bullet touches a player or cracked wall
@@ -743,7 +744,7 @@ void checkRayCollisions(ray_t* ray)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param ray
  * @param bb
