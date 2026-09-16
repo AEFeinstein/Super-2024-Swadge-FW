@@ -4,31 +4,22 @@
 // Include
 //==============================================================================
 
+// Swadge
 #include "swadge.h"
 
-#include "ci_itemData.h"
-#include "ci_craftingData.h"
-
-//==============================================================================
-// Consts
-//==============================================================================
-
-extern const char* const ciNVSKeys[];
+// Camp
+#include "ci_crafting.h"
+#include "ci_items.h"
+#include "ci_workbench.h"
 
 //==============================================================================
 // Enum
 //==============================================================================
 
-/// @brief NOTE: Match to NVS Key string array above
 typedef enum
 {
-    CI_NVS_NAMESPACE,
-    CI_NVS_INVENTORY,
-    CI_NVS_WORKBENCHES,
-    CI_NVS_QUEUE,
-    CI_NVS_SAVED_UNITS,
-    CI_NVS_lAST_SAVED,
-} ciNVSKeyEnum_t;
+    CI_UI_ARROW,
+} ciUIImgs_t;
 
 typedef enum
 {
@@ -38,14 +29,7 @@ typedef enum
     CI_ENCYC_DESC,
     CI_CRAFTING,
     CI_CRAFTING_PREP,
-    CI_DAY,
-    CI_NIGHT,
 } ciState_t;
-
-typedef enum
-{
-    CI_UI_ARROW,
-} ciUIImgs_t;
 
 //==============================================================================
 // Structs
@@ -54,9 +38,8 @@ typedef enum
 typedef struct
 {
     // WSGs
-    wsg_t* itemImages;      ///< Item Icons
+    
     wsg_t* uiImages;        ///< All UI images
-    wsg_t* workbenchImages; ///< All Workbench images
 
     // Fonts
     font_t smallFont; ///< Smaller font used for dense text
@@ -68,14 +51,16 @@ typedef struct
     int64_t timer;      ///< Generic timer
 
     // Items
-    int16_t* qtys; ///< Array of ints used as the inventory
+    ciInventory_t inv;
 
     // Craft
-    list_t craftQueue;  ///< Queue of items to be autocrafted
+    ciCrafting_t cft;
     int64_t timerUnits; ///< Units of time to partition out. Shared between craft and forage
     int64_t timerUs;    ///< Microseconds for crafting queue
-    int16_t benches;    ///< What workbenches are currently bought
     int stage;
+
+    // Camp
+    ciWorkbenchData_t wbd; ///< Workbench data
 
     // Foraging
     bool foraging; ///< If player is foraging

@@ -2,13 +2,15 @@
 // Includes
 //==============================================================================
 
-// Core
+// Main
 #include "ci_campIdle.h"
 
-// Subcomponents
-#include "ci_items.h"
-#include "ci_crafting.h"
+// Camp
+#include "ci_genericData.h"
 #include "ci_menu.h"
+#include "ci_nvs.h"
+#include "ci_recipeData.h"
+#include "ci_workbench.h"
 
 //==============================================================================
 // Consts
@@ -59,6 +61,7 @@ ciCampData_t* ccd;
 static void campEnterMode()
 {
     ccd = (ciCampData_t*)heap_caps_calloc(1, sizeof(ciCampData_t), MALLOC_CAP_8BIT);
+    
     // Load assets
     ccd->uiImages = (wsg_t*)heap_caps_calloc(ARRAY_SIZE(uiImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(uiImages); idx++)
@@ -67,33 +70,32 @@ static void campEnterMode()
     }
     loadFont(IBM_VGA_8_FONT, &ccd->smallFont, true);
     loadFont(RODIN_EB_FONT, &ccd->largeText, true);
-    ciInitInventory(ccd);
-    ciInitWorkbenches(ccd);
-    // Init
-    clear(&ccd->craftQueue);
-    // Load from NVS
-    ciLoadWorkbenches(ccd);
-    ciLoadCraftFromNVS(ccd);
+    
+    // Init subcomponents
+    clear(&ccd->cft.craftQueue);
+    ciLoadCraftFromNVS(&ccd->cft);
+    ciInitInventory(&ccd->inv);
+    ciInitWorkbenchImages(&ccd->wbd);
+    ciLoadWorkbenchFromNVS(&ccd->wbd);
+    
+    // Load Addt'l items from NVS
     int outVal = 0;
     readNamespaceNvs32(ciNVSKeys[CI_NVS_NAMESPACE], ciNVSKeys[CI_NVS_SAVED_UNITS], &outVal);
     ccd->timerUnits += outVal;
-    ciInitCraftTimer(ccd);
+    // ciInitCraftTimer(ccd); FIXME: Load from NVS
     // Start
-    ciInitSplash(ccd);
-
-    // test
-    // ciAddWorkbench(ccd, CI_CRAFT_WORKBENCH);
+    ciInitState(ccd, CI_SPLASH);
 }
 
 static void campExitMode()
 {
     // Save everything
     writeNamespaceNvs32(ciNVSKeys[CI_NVS_NAMESPACE], ciNVSKeys[CI_NVS_SAVED_UNITS], ccd->timerUnits);
-    ciSaveCraftToNVS(ccd);
+    ciSaveCraftToNVS(&ccd->cft);
     // Clear
-    clear(&ccd->craftQueue);
-    ciFreeWorkbenches(ccd);
-    ciFreeInventory(ccd);
+    clear(&ccd->cft.craftQueue);
+    ciFreeWorkbenchImages(&ccd->wbd);
+    ciFreeInventory(&ccd->inv);
     freeFont(&ccd->largeText);
     freeFont(&ccd->smallFont);
     for (int idx = 0; idx < ARRAY_SIZE(uiImages); idx++)
@@ -133,14 +135,14 @@ static void campMainLoop(int64_t elapsedUs)
                     ccd->state = CI_ENCYC;
                 }
             }
-            ciDrawItemPanel(ccd, ccd->selection);
+            ciDrawItemPanel(&ccd->inv, &ccd->largeText, &ccd->smallFont, ccd->selection);
             break;
         }
         case CI_CRAFTING:
         {
             if (ciRunCraft(ccd))
             {
-                ciInitMenu(ccd);
+                ciInitState(ccd, CI_MENU);
             }
             break;
         }
@@ -158,19 +160,20 @@ static void campMainLoop(int64_t elapsedUs)
             break;
         }
     }
-    if (ccd->craftQueue.first != NULL || ccd->foraging)
+    if (ccd->cft.craftQueue.first != NULL || ccd->foraging)
     {
         ccd->timerUs += elapsedUs;
-        if (ccd->timerUs > UNIT)
+        if (ccd->timerUs == UNIT)
         {
             ccd->timerUs = 0;
             ccd->timerUnits += 1;
         }
-        while (ccd->craftQueue.first != NULL
-               && recipeList[(intptr_t)ccd->craftQueue.first->val].time <= ccd->timerUnits)
+        while (ccd->cft.craftQueue.first != NULL
+               && recipeList[(intptr_t)ccd->cft.craftQueue.first->val].time <= ccd->timerUnits)
         {
-            ciCraft(ccd);
+            ciCraft(&ccd->cft, &ccd->inv, &ccd->timerUnits);
         }
         // TODO: Add forage
     }
 }
+

@@ -75,6 +75,12 @@ typedef struct
 } ciWorkbenchData_t;
 
 //==============================================================================
+// Const
+//==============================================================================
+
+extern const ciWorkbench_t workbenchList[];
+
+//==============================================================================
 // Function definitions
 //==============================================================================
 
@@ -118,3 +124,12 @@ void ciSetWorkbench(ciWorkbenchData_t* wbd, ciInventory_t* inv, ciWorkbenchCraft
  * @param stage Used for animations
  */
 void drawWorkbench(ciWorkbenchData_t* wbd, int x, int y, ciWorkbenchCraft_t wb, int scale, int stage);
+
+/**
+ * @brief Get the Wsg for a crafting station
+ *
+ * @param wbd Game Data
+ * @param wb Workbench
+ * @return wsg_t* Image found. NULL if not found
+ */
+wsg_t* getWsg(ciWorkbenchData_t* wbd, ciWorkbenchCraft_t wb);

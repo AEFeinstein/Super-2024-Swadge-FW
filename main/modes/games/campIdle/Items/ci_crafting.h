@@ -4,134 +4,78 @@
 // Include
 //==============================================================================
 
-#include "ci_genericData.h"
+// Swadge
+#include "font.h"
+#include "linked_list.h"
+
+// Camp
+#include "ci_items.h"
+#include "ci_workbench.h"
 
 //==============================================================================
-// Enums
+// Defines
 //==============================================================================
 
-typedef enum
+// Graphics
+#define MAX_COLS 4
+
+// Time
+#define SECOND   1000000
+#define UNIT_LEN 15
+#define UNIT     (UNIT_LEN * SECOND)
+
+//==============================================================================
+// Structs
+//==============================================================================
+
+typedef struct
 {
-    CI_HEARTMAKER,
-    CI_M_SPHERE_1,
-    CI_M_SPHERE_2,
-    CI_M_SPHERE_3,
-    CI_M_WORKBENCH,
-    CI_POLISHER,
-    CI_POLISHER_BOX,
-    CI_SMASHER,
-    CI_SMASHER_HAMMER,
-    CI_SMELTER,
-    CI_SMELTER_FIRE_1,
-    CI_SMELTER_FIRE_2,
-    CI_SMELTER_FIRE_3,
-    CI_SMELTER_WOOD,
-    CI_STONECUTTER,
-    CI_TANNING_RACK,
-    CI_TANNING_RACK_PELT,
-    CI_WEAVER,
-    CI_WORKBENCH,
-} ciWorkbenchEnum_t;
+    list_t craftQueue; ///< Queue of items to be autocrafted
+} ciCrafting_t;
 
 //==============================================================================
 // Function Definitions
 //==============================================================================
 
 /**
- * @brief Loads workbench data
- *
- * @param ccd Game Data
- */
-void ciInitWorkbenches(ciCampData_t* ccd);
-
-/**
- * @brief Fress the workbench data
- *
- * @param ccd Game Data
- */
-void ciFreeWorkbenches(ciCampData_t* ccd);
-
-/**
  * @brief Loads current crafting queue fro NVS
  *
  * @param ccd Game Data
  */
-void ciLoadCraftFromNVS(ciCampData_t* ccd);
+void ciLoadCraftFromNVS(ciCrafting_t* cft);
 
 /**
  * @brief Saves current crafting queue to NVS
  *
  * @param ccd Game Data
  */
-void ciSaveCraftToNVS(ciCampData_t* ccd);
-
-/**
- * @brief Initializes the Crafting selections screen
- *
- * @param ccd Game Data
- */
-void ciInitCraftSelection(ciCampData_t* ccd);
-
-/**
- * @brief Initializes the crafting status screen
- *
- * @param ccd Game Data
- */
-void ciInitCraft(ciCampData_t* ccd);
-
-/**
- * @brief Runs the crafting selection mode
- *
- * @param ccd Game Data
- */
-void ciRunCraftSelection(ciCampData_t* ccd);
-
-/**
- * @brief Runs the crafting mode
- *
- * @param ccd Game Data
- * @return true If mode is exiting
- * @return false If mode is not ready to exit
- */
-bool ciRunCraft(ciCampData_t* ccd);
-
-/**
- * @brief Loads the craft units and compares with the new time to craft items/Forage
- *
- * @param ccd Game Data
- */
-void ciInitCraftTimer(ciCampData_t* ccd);
+void ciSaveCraftToNVS(ciCrafting_t* cft);
 
 /**
  * @brief Attempts to craft items
  *
  * @param ccd Game Data
  */
-void ciCraft(ciCampData_t* ccd);
+void ciCraft(ciCrafting_t* cft, ciInventory_t* inv, int64_t* timeUnits);
 
 /**
- * @brief Loads the workbenches from NVS
+ * @brief Loads the craft units and compares with the new time to craft items/Forage
  *
  * @param ccd Game Data
  */
-void ciLoadWorkbenches(ciCampData_t* ccd);
+// void ciInitCraftTimer(ciCampData_t* ccd);
 
 /**
- * @brief Attempts to add a new workbench
+ * @brief Draws the crafting screen
  *
  * @param ccd Game Data
- * @param wb Workbench idx
  */
-void ciAddWorkbench(ciCampData_t* ccd, ciCraftingStation_t wb);
+void drawCraft(ciCrafting_t* cft, ciInventory_t* inv, font_t* lFont, font_t* sFont, int timeUnits, int64_t timerUs);
 
 /**
- * @brief Draws a workbench at the deisred location
+ * @brief Draws the crafting selection screen
  *
- * @param ccd Game Data
- * @param x x Position
- * @param y y position
- * @param wb Workbench to draw
- * @param scale Scale to draw at
- * @param stage Used for animations
+ * @param ccd Game data
  */
-void drawWorkbench(ciCampData_t* ccd, int x, int y, ciWorkbenchEnum_t wb, int scale, int stage);
+void drawCraftSelection(ciCrafting_t* cft, ciInventory_t* inv, ciWorkbenchData_t* wbd, font_t* lFont, font_t* sFont,
+                        int selection);

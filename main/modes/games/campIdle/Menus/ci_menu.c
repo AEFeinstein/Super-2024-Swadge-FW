@@ -2,13 +2,17 @@
 // Include
 //==============================================================================
 
+// Main
 #include "ci_menu.h"
 
+// Swadge
+#include "mainMenu.h"
+
+// Camp
 #include "ci_items.h"
 #include "ci_crafting.h"
 #include "ci_helpers.h"
-
-#include "mainMenu.h"
+#include "ci_recipeData.h"
 
 //==============================================================================
 // Defines
@@ -61,22 +65,36 @@ static void drawEncyclopedia(ciCampData_t* ccd);
 // Functions
 //==============================================================================
 
-void ciInitSplash(ciCampData_t* ccd)
+void ciInitState(ciCampData_t* ccd, ciState_t state)
 {
-    ccd->state = CI_SPLASH;
-    ccd->timer = 0;
-}
-
-void ciInitMenu(ciCampData_t* ccd)
-{
-    ccd->selection = CI_MENU_PLAY;
-    ccd->state     = CI_MENU;
-}
-
-void ciInitEncyclopedia(ciCampData_t* ccd)
-{
-    ccd->selection = 0;
-    ccd->state     = CI_MENU_ENCYCLOPEDIA;
+    ccd->state = state;
+    switch (state)
+    {
+        case CI_SPLASH:
+        {
+            ccd->timer = 0;
+            break;
+        }
+        case CI_MENU:
+        {
+            ccd->selection = CI_MENU_PLAY;
+            break;
+        }
+        case CI_ENCYC:
+        {
+            ccd->selection = 0;
+            break;
+        }
+        case CI_CRAFTING_PREP:
+        {
+            ccd->selection = 0;
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
 }
 
 void ciRunSplash(ciCampData_t* ccd, int64_t elapsedUs)
@@ -86,7 +104,7 @@ void ciRunSplash(ciCampData_t* ccd, int64_t elapsedUs)
     {
         if (evt.down && (evt.button & PB_A))
         {
-            ciInitMenu(ccd);
+            ciInitState(ccd, CI_MENU);
         }
     }
     drawSplash(ccd, elapsedUs);
@@ -121,13 +139,12 @@ void ciRunMenu(ciCampData_t* ccd)
                 {
                     case CI_MENU_PLAY:
                     {
-                        // FIXME: Need to add the rest of the menu substructure
-                        ciInitCraft(ccd);
+                        ciInitState(ccd, CI_CRAFTING); // FIXME: Need to add the rest of the menu substructure
                         break;
                     }
                     case CI_ENCYC:
                     {
-                        ciInitEncyclopedia(ccd);
+                        ciInitState(ccd, CI_ENCYC);
                         break;
                     }
                     case CI_MENU_TUTORIAL:
@@ -148,7 +165,7 @@ void ciRunMenu(ciCampData_t* ccd)
             }
             else if (evt.button & PB_B)
             {
-                ciInitSplash(ccd);
+                ciInitState(ccd, CI_SPLASH);
             }
         }
     }
@@ -169,14 +186,77 @@ void ciRunEncyclopedia(ciCampData_t* ccd)
             }
             else if (evt.button & PB_B)
             {
-                ciInitMenu(ccd);
+                ciInitState(ccd, CI_MENU);
             }
         }
     }
     drawEncyclopedia(ccd);
 }
 
-// Static
+bool ciRunCraft(ciCampData_t* ccd)
+{
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down)
+        {
+            if (evt.button & PB_A || evt.button & PB_LEFT)
+            {
+                ciInitState(ccd, CI_CRAFTING_PREP);
+                // TODO: Add positive beep sound
+            }
+            else if (evt.button & PB_B)
+            {
+                // TODO: Add positive beep sound
+                return true;
+            }
+        }
+    }
+    drawCraft(&ccd->cft, &ccd->inv, &ccd->largeText, &ccd->smallFont, ccd->timerUnits, ccd->timerUs);
+    return false;
+}
+
+void ciRunCraftSelection(ciCampData_t* ccd)
+{
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down)
+        {
+            ccd->selection = ciMenu2DNavigate(&evt, ccd->selection, MAX_COLS, ciGetRecipeCount());
+            if (evt.button & PB_A)
+            {
+                const ciRecipeProto_t* r = &recipeList[ccd->selection];
+                bool ableToCraft
+                    = (ccd->inv.qtys[r->items[0].item] >= r->items[0].qty)
+                      && (r->items[1].item == CI_NO_ITEM || (ccd->inv.qtys[r->items[1].item] >= r->items[1].qty));
+                ableToCraft = ableToCraft && CHECK_BIT(ccd->wbd.benches, r->craftingStation);
+                if (ableToCraft)
+                {
+                    ciRemoveFromInv(&ccd->inv, r->items[0].item, r->items[0].qty);
+                    ciRemoveFromInv(&ccd->inv, r->items[1].item, r->items[1].qty);
+                    push(&ccd->cft.craftQueue, (intptr_t*)ccd->selection);
+                    // TODO: Add positive beep sound
+                }
+                else
+                {
+                    // TODO: Add negative beep sound
+                }
+            }
+            else if (evt.button & PB_B)
+            {
+                ciInitState(ccd, CI_CRAFTING);
+                // TODO: Add positive beep sound
+            }
+        }
+    }
+    drawCraftSelection(&ccd->cft, &ccd->inv, &ccd->wbd, &ccd->largeText, &ccd->smallFont, ccd->selection);
+}
+
+//==============================================================================
+// Static Functions
+//==============================================================================
+
 static void drawSplash(ciCampData_t* ccd, int64_t elapsedUs)
 {
     // Draw background
@@ -223,8 +303,8 @@ static void drawEncyclopedia(ciCampData_t* ccd)
         {
             idxDiv %= (start * (ENC_COL * ENC_ROW));
         }
-        ciDrawItemIcon(ccd, idx, 20 + (idxDiv % ENC_COL) * 40, 24 + (idxDiv / ENC_COL) * 54, ccd->qtys[idx],
-                       (ccd->selection == idx), false);
+        ciDrawItemIcon(&ccd->inv, &ccd->smallFont, idx, 20 + (idxDiv % ENC_COL) * 40, 24 + (idxDiv / ENC_COL) * 54,
+                       ccd->inv.qtys[idx], (ccd->selection == idx), false);
     }
     int yStart = (TFT_HEIGHT - ccd->uiImages[CI_UI_ARROW].h) / 2;
     if (start != 0)

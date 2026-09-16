@@ -23,4 +23,4 @@ int ciFindItemInContainer(ciContainer_t* cont, ciItemIdx_t item, int* slotLoc);
 
 bool ciTransferBetweenContainers(ciContainer_t* cont1, ciContainer_t* cont2, ciItemIdx_t item, int qty);
 
-void ciDrawContainer(ciCampData_t* ccd, ciContainer_t* cont, int x, int y, int maxCols, int maxRows, font_t* fnt);
+void ciDrawContainer(ciInventory_t* inv, font_t* font, ciContainer_t* cont, int x, int y, int maxCols, int maxRows, font_t* fnt);

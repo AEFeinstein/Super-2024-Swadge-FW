@@ -25,32 +25,19 @@ typedef enum
     CI_MENU_QUIT,
     CI_MENU_SPLASH,
     CI_MENU_PRESS_A,
-} ci_menuText;
+} ciMenuTextEnum_t;
 
 //==============================================================================
 // Function Definitions
 //==============================================================================
 
 /**
- * @brief Initializes the Splash state
- *
- * @param ccd Game Data
+ * @brief 
+ * 
+ * @param ccd 
+ * @param state 
  */
-void ciInitSplash(ciCampData_t* ccd);
-
-/**
- * @brief Initializes the Menu state
- *
- * @param ccd Game Data
- */
-void ciInitMenu(ciCampData_t* ccd);
-
-/**
- * @brief Initializes the Encyclopedia state
- *
- * @param ccd Game Data
- */
-void ciInitEncyclopedia(ciCampData_t* ccd);
+void ciInitState(ciCampData_t* ccd, ciState_t state);
 
 /**
  * @brief Runs the Splash state
@@ -73,3 +60,19 @@ void ciRunMenu(ciCampData_t* ccd);
  * @param ccd Game Data
  */
 void ciRunEncyclopedia(ciCampData_t* ccd);
+
+/**
+ * @brief Runs the crafting mode
+ *
+ * @param ccd Game Data
+ * @return true If mode is exiting
+ * @return false If mode is not ready to exit
+ */
+bool ciRunCraft(ciCampData_t* ccd);
+
+/**
+ * @brief Runs the crafting selection mode
+ *
+ * @param ccd Game Data
+ */
+void ciRunCraftSelection(ciCampData_t* ccd);

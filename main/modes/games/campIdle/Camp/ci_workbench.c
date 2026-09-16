@@ -127,15 +127,6 @@ const ciWorkbench_t workbenchList[] = {
  */
 static bool tryToCraftWorkbench(ciWorkbenchData_t* wbd, ciInventory_t* inv, const ciWorkbench_t* bench);
 
-/**
- * @brief Get the Wsg for a crafting station
- *
- * @param wbd Game Data
- * @param wb Workbench
- * @return wsg_t* Image found. NULL if not found
- */
-static wsg_t* getWsg(ciWorkbenchData_t* wbd, ciWorkbenchCraft_t wb);
-
 //==============================================================================
 // Functions
 //==============================================================================
@@ -270,31 +261,7 @@ void drawWorkbench(ciWorkbenchData_t* wbd, int x, int y, ciWorkbenchCraft_t wb, 
     }
 }
 
-//==============================================================================
-// Static Functions
-//==============================================================================
-
-static bool tryToCraftWorkbench(ciWorkbenchData_t* wbd, ciInventory_t* inv, const ciWorkbench_t* bench)
-{
-    bool items[3] = {false};
-    items[0]      = ciRemoveFromInv(inv, bench->items[0].item, bench->items[0].qty);
-    items[1]      = ciRemoveFromInv(inv, bench->items[1].item, bench->items[1].qty);
-    items[2]      = ciRemoveFromInv(inv, bench->items[2].item, bench->items[2].qty);
-    if (items[0] && items[1] && items[2])
-    {
-        return true;
-    }
-    for (int idx = 0; idx < 3; idx++)
-    {
-        if (items[idx])
-        {
-            ciAddToInv(inv, bench->items[idx].item, bench->items[idx].qty);
-        }
-    }
-    return false;
-}
-
-static wsg_t* getWsg(ciWorkbenchData_t* wbd, ciWorkbenchCraft_t wb)
+wsg_t* getWsg(ciWorkbenchData_t* wbd, ciWorkbenchCraft_t wb)
 {
     switch (wb)
     {
@@ -336,4 +303,28 @@ static wsg_t* getWsg(ciWorkbenchData_t* wbd, ciWorkbenchCraft_t wb)
         }
     }
     return NULL;
+}
+
+//==============================================================================
+// Static Functions
+//==============================================================================
+
+static bool tryToCraftWorkbench(ciWorkbenchData_t* wbd, ciInventory_t* inv, const ciWorkbench_t* bench)
+{
+    bool items[3] = {false};
+    items[0]      = ciRemoveFromInv(inv, bench->items[0].item, bench->items[0].qty);
+    items[1]      = ciRemoveFromInv(inv, bench->items[1].item, bench->items[1].qty);
+    items[2]      = ciRemoveFromInv(inv, bench->items[2].item, bench->items[2].qty);
+    if (items[0] && items[1] && items[2])
+    {
+        return true;
+    }
+    for (int idx = 0; idx < 3; idx++)
+    {
+        if (items[idx])
+        {
+            ciAddToInv(inv, bench->items[idx].item, bench->items[idx].qty);
+        }
+    }
+    return false;
 }
