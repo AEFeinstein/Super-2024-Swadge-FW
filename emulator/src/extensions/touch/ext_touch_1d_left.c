@@ -39,7 +39,7 @@ static emuTouch_t emuTouch1DLeft = {0};
 
 static bool touch_1D_left_Init(emuArgs_t* emuArgs)
 {
-    static const char keys[] = {'1', '2', '3', '4', '5'};
+    static const char keys[] = {'1', '2', '3', '4'};
     return touchLinearInit(&emuTouch1DLeft, &touchEmu1DLeftExtension, emuArgs, true, keys,
                            sizeof(keys) / sizeof(keys[0]));
 }
