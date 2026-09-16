@@ -281,6 +281,30 @@ void gs_updatePhysicsObject(gs_entity_t* self)
     }
 }
 
+void gs_generateMoonTilemap(gs_entity_t* self)
+{
+    gs_tilemap_t* tData = (gs_tilemap_t*)self->data;
+    for (int x = 0; x < TILE_FIELD_WIDTH; x++)
+    {
+        for (int y = 0; y < TILE_FIELD_HEIGHT; y++)
+        {
+            tData->tiles[x][y].framePlus1 = gs_randomInt(0, 14);
+        }
+    }
+}
+
+void gs_clearMoonTilemap(gs_entity_t* self)
+{
+    gs_tilemap_t* tData = (gs_tilemap_t*)self->data;
+    for (int x = 0; x < TILE_FIELD_WIDTH; x++)
+    {
+        for (int y = 0; y < TILE_FIELD_HEIGHT; y++)
+        {
+            tData->tiles[x][y].framePlus1 = 0;
+        }
+    }
+}
+
 void gs_drawTileMap(gs_entity_t* self)
 {
     gs_tilemap_t* tData = (gs_tilemap_t*)self->data;
@@ -296,12 +320,13 @@ void gs_drawTileMap(gs_entity_t* self)
         {
             if (tileXIdx >= 0 && tileYIdx >= 0 && tileXIdx < TILE_FIELD_WIDTH && tileYIdx < TILE_FIELD_HEIGHT)
             {
-                if (tData->tiles[tileXIdx][tileYIdx].framePlus1 == GS_WALL_FORE)
+                if (tData->tiles[tileXIdx][tileYIdx].framePlus1 != GS_NO_TILE)
                 {
                     int drawX = (tileXIdx << shiftBy) - topLeftCamPixelX;
                     int drawY = (tileYIdx << shiftBy) - topLeftCamPixelY;
-                    drawWsgSimpleScaled(&self->gameData->assets[self->assetIndex].frames[13], drawX, drawY,
-                                        self->gameData->entityManager.zoom, self->gameData->entityManager.zoom);
+                    drawWsgSimpleScaled(
+                        &self->gameData->assets[self->assetIndex].frames[tData->tiles[tileXIdx][tileYIdx].framePlus1],
+                        drawX, drawY, self->gameData->entityManager.zoom, self->gameData->entityManager.zoom);
                 }
             }
             tileXIdx++;
@@ -603,6 +628,7 @@ void gs_spawnLanding(gs_entity_t* self)
     landing->data                               = heap_caps_calloc(1, sizeof(gs_bigMoon_t), MALLOC_CAP_SPIRAM);
     landing->dataType                           = GS_BIG_MOON_DATA;
     ((gs_bigMoon_t*)landing->data)->scale       = 1;
+    ((gs_bigMoon_t*)landing->data)->callback    = gs_switchMoonSubmode;
     ((gs_bigMoon_t*)landing->data)->targetScale = 800;
 }
 
@@ -907,4 +933,9 @@ void gs_drawCrystalBall(gs_entity_t* self)
         drawTextWordWrapCentered(&self->gameData->font_gossip, c543, cbData->dynamicText, &xOff, &yOff, 275,
                                  TFT_HEIGHT);
     }
+}
+
+void gs_switchMoonSubmode(gs_entity_t* self)
+{
+    self->gameData->newSubmode = GS_MOON_SUBMODE;
 }
