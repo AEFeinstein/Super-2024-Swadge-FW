@@ -42,7 +42,6 @@ typedef enum
 static void heyListenEnterMode(void);
 static void heyListenExitMode(void);
 static void heyListenMainLoop(int64_t elapsedUs);
-static void heyListenCheckForYell(int64_t elapsedUs);
 static void heyListenDacCallback(uint8_t* samples, int16_t len);
 static void heyListenAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 static void heyListenCheckSpeech(int64_t elapsedUs);
@@ -101,6 +100,7 @@ int32_t nextEvtTimer;
 int32_t speechDelayUs; // Timer to pause between verbal commands
 list_t speechQueue;    // A queue of verbal commands
 
+char timerStr[16];
 
 // IMU Variables
 vec3d_t lastOrientation;
@@ -203,14 +203,7 @@ static void heyListenEnterMode()
 
 // Load fonts
     loadFont(OXANIUM_13MED_FONT, &hld->font, true);
-    printf("Entered Intro mode\n");
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-    drawText(&hld->font, c555, heyListenStrName, 20, 40);
-    drawText(&hld->font, c555, warningStrName, 20, 60);
-    drawText(&hld->font, c555, beniceStrName, 20, 80);
-    drawText(&hld->font, c555, "Press B to Continue", 20, 100);
 
-//TODO: art instead of this
 
 
 
@@ -247,11 +240,6 @@ static void heyListenMainLoop(int64_t elapsedUs)
                 hld->hlmenu = menuButton(hld->hlmenu, evt);
                 break;
             }
-            case HL_ECHO:
-                {
-                    
-                }
-                break;
             case HL_TRIGGER:
                 {
                     if(evt.button == PB_UP)
@@ -277,23 +265,11 @@ static void heyListenMainLoop(int64_t elapsedUs)
 
                 }
                 break;
+            //no buttons for these modes:
+            case HL_ECHO:
             case HL_RANDOM:
-                {
-
-                }
-                break;
             case HL_SHAKE:
-                {
-                    //no buttons for HL_SHAKE
-                }
-                break;
             case HL_SETTINGS:
-                {
-
-                }
-                break;
-            case HL_INTRO:
-                break;
             default:
                 break;
         }
@@ -307,6 +283,7 @@ static void heyListenMainLoop(int64_t elapsedUs)
         }
     }
 
+    //actual gameplay:
     switch (hld->screen)
     {
         case HL_MENU:
@@ -316,17 +293,71 @@ static void heyListenMainLoop(int64_t elapsedUs)
         }
         case HL_ECHO:
         {
-            break;
+            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+            if(hld->nextEvtTimer == 0){
+                switchToMicrophone();
+                hld->isListening = true;
+                //ready for a new yell
+            if(hld->yellInput) // if the player is currently yelling, kick off the timer
+            {
+                hld->nextEvtTimer++;
+                if(hld->nextEvtTimer >= 100)
+                {
+                    hld->currentEvt = EVT_HEY; // trigger the "HEY" event
+                }
+                if(hld->nextEvtTimer >= 200)
+                {
+                    hld->currentEvt = EVT_HEYLISTEN; // trigger the "HEYLISTEN" event
+                }
+                if(hld->nextEvtTimer >= 400)
+                {
+                    hld->currentEvt = EVT_PHRASE; // trigger the "NULL" event
+                }
+                else
+                {
+                    hld->currentEvt = EVT_NULL; // trigger the "NULL" event
+                }
+            }
+            else
+            {
+                //done listening, time to echo
+                switchToSpeaker();
+                hld->sampleIdx          = 0;
+                hld->isListening        = false;
+                hld->pendingSwitchToMic = false;
+                //TODO: yell
+            }
+
+                sprintf(hld->timerStr, "%ld", hld->nextEvtTimer);
+                drawText(&hld->font, c555, "Timer:", 20, 60);
+                drawText(&hld->font, c555, hld->timerStr, 20, 80);
+                drawText(&hld->font, c555, "Current Event:", 20, 100);
+                drawText(&hld->font, c555, (char[]){hld->currentEvt + '0', '\0'}, 20, 120);
+                drawText(&hld->font, c555, "Is yelling?:", 20, 140);
+                drawText(&hld->font, c555, (char[]){hld->yellInput + '0', '\0'}, 20, 160);
+                drawText(&hld->font, c555, "Is listening?:", 20, 180);
+                drawText(&hld->font, c555, (char[]){hld->isListening + '0', '\0'}, 20, 200);
+            
+            }
+            
+            if(!hld->isListening)
+                {
+                    hld->nextEvtTimer = 0;
+                    //allow for another yell
+                }
+            
         }
+            break;
+
         case HL_TRIGGER:
         {
-            
             //for testing, just draw the screen and print the event:
             fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
             drawText(&hld->font, c555, "Current Event:", 20, 20);
             drawText(&hld->font, c555, (char[]){hld->currentEvt + '0', '\0'}, 20, 40);
-            //eventually, play audio:
-            //TODO
+            //end of testing stuff
+
+            //TODO yell
             break;
         }
         case HL_RANDOM:
@@ -338,12 +369,16 @@ static void heyListenMainLoop(int64_t elapsedUs)
             fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
             bool shook = heyListenCheckForShake();
             hld->nextEvtTimer++;
+
+            //for testing, just draw the screen and print the event:
             drawText(&hld->font, c555, "Shake Detected:", 20, 20);
             drawText(&hld->font, c555, (char[]){shook + '0', '\0'}, 20, 40);
             drawText(&hld->font, c555, "Next Event Timer:", 20, 60);
-            char timerStr[16];
-            sprintf(timerStr, "%ld", hld->nextEvtTimer);
-            drawText(&hld->font, c555, timerStr, 20, 80);
+            
+            sprintf(hld->timerStr, "%ld", hld->nextEvtTimer);
+            drawText(&hld->font, c555, hld->timerStr, 20, 80);
+            //end of testing stuff
+
             if(shook && hld->nextEvtTimer >= WAIT_EVENT_US)
             {   
                 hld->isShook = false;
@@ -359,6 +394,11 @@ static void heyListenMainLoop(int64_t elapsedUs)
         }
         case HL_INTRO:
         {
+            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+            drawText(&hld->font, c555, heyListenStrName, 20, 40);
+            drawText(&hld->font, c555, warningStrName, 20, 60);
+            drawText(&hld->font, c555, beniceStrName, 20, 80);
+            drawText(&hld->font, c555, "Press B to Continue", 20, 100);
             break;
         }
         default:
@@ -368,17 +408,72 @@ static void heyListenMainLoop(int64_t elapsedUs)
     }
 }
 
-static void heyListenCheckForYell(int64_t elapsedUs)
-{
-
-}
 static void heyListenDacCallback(uint8_t* samples, int16_t len)
 {
 
 }
 static void heyListenAudioCallback(uint16_t* samples, uint32_t sampleCnt)
 {
+     while (sampleCnt--)
+    {
+        // Get and process the sample
+        int16_t samp = *(samples++);
 
+        // Push to colorchord
+        PushSample32(&hld->dd, samp);
+
+        // If enough samples have been processed
+        hld->micSamplesProcessed++;
+        if (128 == hld->micSamplesProcessed)
+        {
+            // Handle the frame
+            hld->micSamplesProcessed = 0;
+            HandleFrameInfo(&hld->end, &hld->dd);
+
+            // Sum total energy
+            int32_t totalEnergy = 0;
+            for (uint16_t i = 0; i < FIX_BINS; i++)
+            {
+                totalEnergy += hld->end.fuzzed_bins[i];
+            }
+
+            // Add total energy to queue
+            push(&hld->micFrameEnergyHistory, (void*)((intptr_t)totalEnergy));
+            if (hld->micFrameEnergyHistory.length > MIC_ENERGY_HYSTERESIS)
+            {
+                shift(&hld->micFrameEnergyHistory);
+            }
+
+            // Check for yelling and not yelling
+            if (!hld->isYelling)
+            {
+                // One sample is enough to yell
+                if (totalEnergy > MIC_ENERGY_THRESHOLD)
+                {
+                    hld->isYelling = true;
+                    // Process the input on the main loop
+                    hld->yellInput = true;
+                }
+            }
+            else // Is yelling, check for return to quiet
+            {
+                // Returning to quiet takes a few samples
+                node_t* energyNode = hld->micFrameEnergyHistory.first;
+                while (energyNode)
+                {
+                    if ((intptr_t)energyNode->val > MIC_ENERGY_THRESHOLD)
+                    {
+                        // Still yelling
+                        return;
+                    }
+                    energyNode = energyNode->next;
+                }
+
+                // Looped without returning, must not be yelling
+                hld->isYelling = false;
+            }
+        }
+    }
 }
 static void heyListenCheckSpeech(int64_t elapsedUs)
 {
