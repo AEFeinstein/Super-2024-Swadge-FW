@@ -32,10 +32,10 @@ typedef enum
 //==============================================================================
 
 /**
- * @brief 
- * 
- * @param ccd 
- * @param state 
+ * @brief Initiate a new state
+ *
+ * @param ccd Game Data
+ * @param state New state to set
  */
 void ciInitState(ciCampData_t* ccd, ciState_t state);
 
@@ -43,7 +43,7 @@ void ciInitState(ciCampData_t* ccd, ciState_t state);
  * @brief Runs the Splash state
  *
  * @param ccd Game Data
- * @param elapsedUs
+ * @param elapsedUs How many micorseconds since last frame
  */
 void ciRunSplash(ciCampData_t* ccd, int64_t elapsedUs);
 

@@ -145,7 +145,8 @@ bool ciTransferBetweenContainers(ciContainer_t* cont1, ciContainer_t* cont2, ciI
     return true;
 }
 
-void ciDrawContainer(ciInventory_t* inv, font_t* font, ciContainer_t* cont, int x, int y, int maxCols, int maxRows, font_t* fnt)
+void ciDrawContainer(ciInventory_t* inv, font_t* font, ciContainer_t* cont, int x, int y, int maxCols, int maxRows,
+                     font_t* fnt)
 {
     int calcXSize = 2 * EDGE_BUFFER + maxCols * ICON_WIDTH;
     int calcYSize = 2 * EDGE_BUFFER + maxRows * ICON_HEIGHT;

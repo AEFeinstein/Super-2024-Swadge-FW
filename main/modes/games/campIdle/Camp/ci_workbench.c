@@ -120,7 +120,8 @@ const ciWorkbench_t workbenchList[] = {
 /**
  * @brief Attempts to make a workbench
  *
- * @param wbd Game Data
+ * @param wbd Workbench Data
+ * @param inv Inventory
  * @param bench The workbench to make
  * @return true If workbench was successfully made
  * @return false If workbench failed

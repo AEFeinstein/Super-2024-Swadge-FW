@@ -40,42 +40,42 @@ typedef struct
 /**
  * @brief Loads current crafting queue fro NVS
  *
- * @param ccd Game Data
+ * @param cft Crafting queue
  */
 void ciLoadCraftFromNVS(ciCrafting_t* cft);
 
 /**
  * @brief Saves current crafting queue to NVS
  *
- * @param ccd Game Data
+ * @param cft Crafting queue
  */
 void ciSaveCraftToNVS(ciCrafting_t* cft);
 
 /**
  * @brief Attempts to craft items
  *
- * @param ccd Game Data
+ * @param cft Crafting queue
  */
 void ciCraft(ciCrafting_t* cft, ciInventory_t* inv, int64_t* timeUnits);
 
 /**
  * @brief Loads the craft units and compares with the new time to craft items/Forage
  *
- * @param ccd Game Data
+ * @param cft Crafting queue
  */
 // void ciInitCraftTimer(ciCampData_t* ccd);
 
 /**
  * @brief Draws the crafting screen
  *
- * @param ccd Game Data
+ * @param cft Crafting queue
  */
 void drawCraft(ciCrafting_t* cft, ciInventory_t* inv, font_t* lFont, font_t* sFont, int timeUnits, int64_t timerUs);
 
 /**
  * @brief Draws the crafting selection screen
  *
- * @param ccd Game data
+ * @param cft Crafting queue
  */
 void drawCraftSelection(ciCrafting_t* cft, ciInventory_t* inv, ciWorkbenchData_t* wbd, font_t* lFont, font_t* sFont,
                         int selection);

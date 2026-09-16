@@ -86,4 +86,5 @@ void ciDrawItemPanel(ciInventory_t* inv, font_t* largeFont, font_t* smallFont, c
  * @param selected If true, it is highlighted
  * @param showQty If true, draws qty. If false, draws abbreviation
  */
-void ciDrawItemIcon(ciInventory_t* inv, font_t* smallFont, ciItemIdx_t idx, int xStart, int yStart, int qty, bool selected, bool showQty);
+void ciDrawItemIcon(ciInventory_t* inv, font_t* smallFont, ciItemIdx_t idx, int xStart, int yStart, int qty,
+                    bool selected, bool showQty);

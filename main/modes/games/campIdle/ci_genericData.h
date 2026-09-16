@@ -38,8 +38,8 @@ typedef enum
 typedef struct
 {
     // WSGs
-    
-    wsg_t* uiImages;        ///< All UI images
+
+    wsg_t* uiImages; ///< All UI images
 
     // Fonts
     font_t smallFont; ///< Smaller font used for dense text
@@ -51,10 +51,10 @@ typedef struct
     int64_t timer;      ///< Generic timer
 
     // Items
-    ciInventory_t inv;
+    ciInventory_t inv; ///< Item inventory
 
     // Craft
-    ciCrafting_t cft;
+    ciCrafting_t cft;   ///< Crafting queue
     int64_t timerUnits; ///< Units of time to partition out. Shared between craft and forage
     int64_t timerUs;    ///< Microseconds for crafting queue
     int stage;

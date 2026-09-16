@@ -15,7 +15,7 @@
 // Defines
 //==============================================================================
 
-#define MAX_WORKBENCH_ITEMS  3
+#define MAX_WORKBENCH_ITEMS 3
 
 //==============================================================================
 // Enums
@@ -71,7 +71,7 @@ typedef struct
 typedef struct
 {
     wsg_t* benchImages;
-    int16_t benches; 
+    int16_t benches;
 } ciWorkbenchData_t;
 
 //==============================================================================
@@ -87,28 +87,28 @@ extern const ciWorkbench_t workbenchList[];
 /**
  * @brief Loads workbench data
  *
- * @param wbd Game Data
+ * @param wbd Workbench Data
  */
 void ciInitWorkbenchImages(ciWorkbenchData_t* wbd);
 
 /**
  * @brief Fress the workbench data
  *
- * @param wbd Game Data
+ * @param wbd Workbench Data
  */
 void ciFreeWorkbenchImages(ciWorkbenchData_t* wbd);
 
 /**
  * @brief Loads the workbenches from NVS
  *
- * @param wbd Game Data
+ * @param wbd Workbench Data
  */
 void ciLoadWorkbenchFromNVS(ciWorkbenchData_t* wbd);
 
 /**
  * @brief Attempts to add a new workbench
  *
- * @param wbd Game Data
+ * @param wbd Workbench Data
  * @param wb Workbench idx
  */
 void ciSetWorkbench(ciWorkbenchData_t* wbd, ciInventory_t* inv, ciWorkbenchCraft_t wb);
@@ -116,7 +116,7 @@ void ciSetWorkbench(ciWorkbenchData_t* wbd, ciInventory_t* inv, ciWorkbenchCraft
 /**
  * @brief Draws a workbench at the desired location
  *
- * @param wbd Game Data
+ * @param wbd Workbench Data
  * @param x x Position
  * @param y y position
  * @param wb Workbench to draw
@@ -128,7 +128,7 @@ void drawWorkbench(ciWorkbenchData_t* wbd, int x, int y, ciWorkbenchCraft_t wb, 
 /**
  * @brief Get the Wsg for a crafting station
  *
- * @param wbd Game Data
+ * @param wbd Workbench Data
  * @param wb Workbench
  * @return wsg_t* Image found. NULL if not found
  */

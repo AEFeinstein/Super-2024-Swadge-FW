@@ -151,8 +151,8 @@ void ciDrawItemPanel(ciInventory_t* inv, font_t* largeFont, font_t* smallFont, c
     if (textWidth(largeFont, ciItemData[idx].title) > (TFT_WIDTH - (PANEL_CORNER_BUFFER + ICON_BUFFER) * 2))
     {
         yStart = PANEL_CORNER_BUFFER + ICON_BUFFER + (ICON_MAX_SIZE + ICON_BUFFER) / 2 - largeFont->height;
-        drawTextWordWrap(largeFont, c555, ciItemData[idx].title, &xStart, &yStart,
-                         TFT_WIDTH - PANEL_CORNER_BUFFER, TFT_HEIGHT);
+        drawTextWordWrap(largeFont, c555, ciItemData[idx].title, &xStart, &yStart, TFT_WIDTH - PANEL_CORNER_BUFFER,
+                         TFT_HEIGHT);
     }
     else
     {
@@ -164,8 +164,7 @@ void ciDrawItemPanel(ciInventory_t* inv, font_t* largeFont, font_t* smallFont, c
     drawRectFilled(xStart, yStart, TFT_WIDTH / 2, yStart + PANEL_DESC_HEIGHT, c222);
     xStart += ICON_BUFFER;
     yStart += ICON_BUFFER;
-    drawTextWordWrap(smallFont, c555, ciItemData[idx].desc, &xStart, &yStart, TFT_WIDTH / 2 - ICON_BUFFER,
-                     TFT_HEIGHT);
+    drawTextWordWrap(smallFont, c555, ciItemData[idx].desc, &xStart, &yStart, TFT_WIDTH / 2 - ICON_BUFFER, TFT_HEIGHT);
     // Draw info
     xStart = TFT_WIDTH / 2 + ICON_BUFFER;
     yStart = PANEL_CORNER_BUFFER + ICON_BUFFER * 2 + ICON_MAX_SIZE + PANEL_DESC_BUFFER;
@@ -246,7 +245,8 @@ void ciDrawItemPanel(ciInventory_t* inv, font_t* largeFont, font_t* smallFont, c
              yStart + ICON_BUFFER + 7 * PANEL_TEXT_OFFSET + PANEL_TEXT_Y_SPACING * 5);
 }
 
-void ciDrawItemIcon(ciInventory_t* inv, font_t* smallFont, ciItemIdx_t idx, int xStart, int yStart, int qty, bool selected, bool showQty)
+void ciDrawItemIcon(ciInventory_t* inv, font_t* smallFont, ciItemIdx_t idx, int xStart, int yStart, int qty,
+                    bool selected, bool showQty)
 {
     drawRectFilled(xStart, yStart, xStart + ICON_WIDTH, yStart + ICON_HEIGHT, (selected) ? c330 : c111);
     drawRectFilled(xStart + ICON_BUFFER, yStart + ICON_BUFFER, xStart + ICON_BUFFER + ICON_MAX_SIZE,
@@ -265,8 +265,7 @@ void ciDrawItemIcon(ciInventory_t* inv, font_t* smallFont, ciItemIdx_t idx, int 
         else
         {
             drawText(smallFont, c555, ciItemData[idx].abbr,
-                     xStart + (ICON_WIDTH - textWidth(smallFont, ciItemData[idx].abbr)) / 2,
-                     yStart + ICON_TEXT_Y);
+                     xStart + (ICON_WIDTH - textWidth(smallFont, ciItemData[idx].abbr)) / 2, yStart + ICON_TEXT_Y);
         }
     }
     drawRect(xStart, yStart, xStart + ICON_WIDTH, yStart + ICON_HEIGHT, c000);

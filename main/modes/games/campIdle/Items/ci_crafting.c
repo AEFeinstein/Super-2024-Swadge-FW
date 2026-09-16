@@ -44,36 +44,43 @@ static const char* const craftingText[] = {
 //==============================================================================
 
 /**
- * @brief Draws the arrow from start to craft
+ * @brief Draws the prog bar background
  *
- * @param dual If there's two items as part of the recipe
+ * @param dual If there's two items required for the craft
  */
-static void drawArrow(bool dual);
+static void drawProgBar(bool dual);
 
 /**
- * @brief Draws the progress along the arrow
+ * @brief Draws the progress along the prog bar
  *
- * @param ccd Game Data
- * @param dual If there's two items as part of the recipe
+ * @param cft Crafting queue
+ * @param dual If there's two items required for the craft
+ * @param timeUnits How many full units are saved
+ * @param timerUs How many microseconds toward a new unit have passed
  */
-static void drawArrowProg(ciCrafting_t* cft, bool dual, int timeUnits, int64_t timerUs);
+static void drawProgBarProg(ciCrafting_t* cft, bool dual, int timeUnits, int64_t timerUs);
 
 /**
- * @brief Draws the inventory qty over the required qty
+ * @brief Draws the qty of the head of the crafting queue
  *
- * @param ccd Game Data
- * @param yPos Center Y position to start at
- * @param idx If asking about recipe item 0 or 1
+ * @param cft Crafting queue
+ * @param inv Inventory
+ * @param font Font to use
+ * @param yPos y Pos
+ * @param idx Required item selection
  */
 static void drawQueueQtys(ciCrafting_t* cft, ciInventory_t* inv, font_t* font, int yPos, int idx);
 
 /**
- * @brief Draws the qty owned over qty required
+ * @brief Draws topVal over botVal at x and y position, with valid width of block
  *
- * @param ccd Game Data
- * @param r Recipe
- * @param idx Which item slot
- * @param yPos Y start position
+ * @param inv Inventory object
+ * @param font Font to use for numbers
+ * @param topVal Numerator
+ * @param botVal Denominator
+ * @param x x Pos
+ * @param y y Pos
+ * @param width Width of block
  */
 static void drawQty(ciInventory_t* inv, font_t* font, int topVal, int botVal, int x, int y, int width);
 
@@ -155,16 +162,16 @@ void drawCraft(ciCrafting_t* cft, ciInventory_t* inv, font_t* lFont, font_t* sFo
         ciDrawItemIcon(inv, sFont, r->items[1].item, CRAFT_X_BUFFER, CRAFT_Y_CENTER + DUAL_OFFSET, 0, false, false);
         drawQueueQtys(cft, inv, sFont, LINE_MIDDLE + DUAL_OFFSET, 1);
         // Combo Arrow
-        drawArrow(true);
-        drawArrowProg(cft, true, timeUnits, timerUs);
+        drawProgBar(true);
+        drawProgBarProg(cft, true, timeUnits, timerUs);
     }
     else
     {
         ciDrawItemIcon(inv, sFont, r->items[0].item, CRAFT_X_BUFFER, CRAFT_Y_CENTER, 0, false, false);
         drawQueueQtys(cft, inv, sFont, LINE_MIDDLE, 0);
         // Arrow
-        drawArrow(false);
-        drawArrowProg(cft, false, timeUnits, timerUs);
+        drawProgBar(false);
+        drawProgBarProg(cft, false, timeUnits, timerUs);
     }
     ciDrawItemIcon(inv, sFont, r->result, TFT_WIDTH - (ICON_WIDTH + CRAFT_X_BUFFER), CRAFT_Y_CENTER,
                    inv->qtys[r->result], false, false);
@@ -231,11 +238,13 @@ void drawCraftSelection(ciCrafting_t* cft, ciInventory_t* inv, ciWorkbenchData_t
     drawTextWordWrapCentered(sFont, (CHECK_BIT(wbd->benches, r->craftingStation)) ? c040 : c400,
                              workbenchList[r->craftingStation].title, &xOff, &yOff, TFT_WIDTH - 2, TFT_HEIGHT - 2);
     ciDrawItemIcon(inv, sFont, r->items[0].item, xStart, yStart + 95, 0, false, false);
-    drawQty(inv, sFont, inv->qtys[r->items[0].item], r->items[0].qty, TFT_WIDTH, 150, QTY_LEFT_SIZE);
+    drawQty(inv, sFont, inv->qtys[r->items[0].item], r->items[0].qty, TFT_WIDTH - QTY_LEFT_SIZE - 4, 150,
+            QTY_LEFT_SIZE);
     if (r->items[1].item != CI_NO_ITEM)
     {
         ciDrawItemIcon(inv, sFont, r->items[1].item, xStart, yStart + 150, 0, false, false);
-        drawQty(inv, sFont, inv->qtys[r->items[1].item], r->items[1].qty, TFT_WIDTH, 210, QTY_LEFT_SIZE);
+        drawQty(inv, sFont, inv->qtys[r->items[1].item], r->items[1].qty, TFT_WIDTH - QTY_LEFT_SIZE - 4, 210,
+                QTY_LEFT_SIZE);
     }
     drawRect(xStart - 2, yStart, TFT_WIDTH - 2, TFT_HEIGHT - 2, c000);
 }
@@ -244,29 +253,29 @@ void drawCraftSelection(ciCrafting_t* cft, ciInventory_t* inv, ciWorkbenchData_t
 // Static Functions
 //==============================================================================
 
-static void drawArrow(bool dual)
+static void drawProgBar(bool dual)
 {
     int xStart = CRAFT_X_BUFFER * 2;
     if (dual)
     {
         drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 31, CRAFT_X_BUFFER * 3, LINE_MIDDLE - 31, c000);
-        drawRect(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 30, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE - 28, c111);
+        drawRectFilled(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 30, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE - 27, c111);
         drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 27, CRAFT_X_BUFFER * 3 - 4, LINE_MIDDLE - 27, c000);
         drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 31, CRAFT_X_BUFFER * 3, LINE_MIDDLE + 31, c000);
-        drawRect(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 30, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE + 28, c111);
+        drawRectFilled(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 28, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE + 31, c111);
         drawLineFast(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 27, CRAFT_X_BUFFER * 3 - 4, LINE_MIDDLE + 27, c000);
         drawLineFast(CRAFT_X_BUFFER * 3, LINE_MIDDLE - 31, CRAFT_X_BUFFER * 3, LINE_MIDDLE - 3, c000);
         drawLineFast(CRAFT_X_BUFFER * 3, LINE_MIDDLE + 31, CRAFT_X_BUFFER * 3, LINE_MIDDLE + 3, c000);
-        drawRect(CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE - 30, CRAFT_X_BUFFER * 3 - 4, LINE_MIDDLE + 27, c111);
+        drawRectFilled(CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE - 30, CRAFT_X_BUFFER * 3 - 3, LINE_MIDDLE + 28, c111);
         drawLineFast(CRAFT_X_BUFFER * 3 - 4, LINE_MIDDLE - 27, CRAFT_X_BUFFER * 3 - 4, LINE_MIDDLE + 27, c000);
         xStart = CRAFT_X_BUFFER * 3;
     }
     drawLineFast(xStart, LINE_MIDDLE - 2, ARROW_START + ARROW_NOSE, LINE_MIDDLE - 2, c000);
-    drawRectFilled(xStart, LINE_MIDDLE - 1, ARROW_START + ARROW_NOSE, LINE_MIDDLE + 1, c111);
+    drawRectFilled(xStart, LINE_MIDDLE - 1, ARROW_START + ARROW_NOSE + 1, LINE_MIDDLE + 2, c111);
     drawLineFast(xStart, LINE_MIDDLE + 2, ARROW_START + ARROW_NOSE, LINE_MIDDLE + 2, c000);
 }
 
-static void drawArrowProg(ciCrafting_t* cft, bool dual, int timeUnits, int64_t timerUs)
+static void drawProgBarProg(ciCrafting_t* cft, bool dual, int timeUnits, int64_t timerUs)
 {
     int xStart               = CRAFT_X_BUFFER * 2;
     int len                  = ARROW_START + ARROW_NOSE - xStart;
@@ -277,14 +286,14 @@ static void drawArrowProg(ciCrafting_t* cft, bool dual, int timeUnits, int64_t t
     {
         if (xStart + curr >= CRAFT_X_BUFFER * 3)
         {
-            drawRect(CRAFT_X_BUFFER * 3, LINE_MIDDLE - 1, xStart + curr, LINE_MIDDLE + 1, c040);
-            drawRect(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 30, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE - 28, c040);
-            drawRect(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 30, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE + 28, c040);
+            drawRectFilled(CRAFT_X_BUFFER * 3, LINE_MIDDLE - 1, xStart + curr + 1, LINE_MIDDLE + 2, c040);
+            drawRectFilled(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 30, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE - 27, c040);
+            drawRectFilled(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 28, CRAFT_X_BUFFER * 3 - 1, LINE_MIDDLE + 31, c040);
         }
         else if (xStart + curr < CRAFT_X_BUFFER * 3)
         {
-            drawRect(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 30, xStart + curr, LINE_MIDDLE - 28, c040);
-            drawRect(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 30, xStart + curr, LINE_MIDDLE + 28, c040);
+            drawRectFilled(CRAFT_X_BUFFER * 2, LINE_MIDDLE - 30, xStart + curr + 1, LINE_MIDDLE - 27, c040);
+            drawRectFilled(CRAFT_X_BUFFER * 2, LINE_MIDDLE + 28, xStart + curr + 1, LINE_MIDDLE + 31, c040);
         }
         if (xStart + curr > CRAFT_X_BUFFER * 3 - 4)
         {
@@ -301,7 +310,7 @@ static void drawArrowProg(ciCrafting_t* cft, bool dual, int timeUnits, int64_t t
     }
     else
     {
-        drawRect(xStart, LINE_MIDDLE - 1, xStart + curr, LINE_MIDDLE + 1, c040);
+        drawRectFilled(xStart, LINE_MIDDLE - 1, xStart + curr + 1, LINE_MIDDLE + 2, c040);
     }
 }
 
@@ -320,11 +329,6 @@ static void drawQueueQtys(ciCrafting_t* cft, ciInventory_t* inv, font_t* font, i
         n = n->next;
     }
     drawQty(inv, font, total, r->items[idx].qty, 0, yPos, CRAFT_X_BUFFER);
-    /*     snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, total);
-        drawText(font, col, buffer, (CRAFT_X_BUFFER - textWidth(font, buffer)) / 2, yPos - (2 + font->height));
-        snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, );
-        drawText(font, col, buffer, (CRAFT_X_BUFFER - textWidth(font, buffer)) / 2, yPos + 2);
-        drawLineFast(CRAFT_X_BUFFER / 3, yPos, (CRAFT_X_BUFFER * 2) / 3, yPos, col); */
 }
 
 static void drawQty(ciInventory_t* inv, font_t* font, int topVal, int botVal, int x, int y, int width)
@@ -332,8 +336,8 @@ static void drawQty(ciInventory_t* inv, font_t* font, int topVal, int botVal, in
     char buffer[10];
     paletteColor_t col = (topVal >= botVal) ? c040 : c400;
     snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, topVal);
-    drawText(font, col, buffer, x - (width + textWidth(font, buffer)) / 2, y - (2 + font->height));
+    drawText(font, col, buffer, x + (width - textWidth(font, buffer)) / 2, y - (2 + font->height));
     drawLineFast(x + (width / 3), y, x + ((width * 2) / 3), y, col);
     snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, botVal);
-    drawText(font, col, buffer, x - (width + textWidth(font, buffer)) / 2, y + 2);
+    drawText(font, col, buffer, x + (width - textWidth(font, buffer)) / 2, y + 2);
 }
