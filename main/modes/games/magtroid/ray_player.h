@@ -10,10 +10,12 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId);
 void rayPlayerCheckFloorEffect(ray_t* ray, uint32_t elapsedUs);
 void raySavePlayer(ray_t* ray);
 void raySaveVisitedTiles(ray_t* ray);
-void rayPlayerDecrementHealth(ray_t* ray, int32_t health);
+bool rayPlayerDecrementHealth(ray_t* ray, int32_t health);
 line_t rayGetSwordLineSegment(ray_t* ray);
 int32_t rayGetEightWayAngle(q24_8 x, q24_8 y);
 void rayFromEightWayAngle(int32_t angle, q24_8* x, q24_8* y);
 bool rayPlayerIsJumping(ray_t* ray);
+bool rayPlayerIsHittable(ray_t* ray);
+rectangle_t rayGetPlayerBB(ray_t* ray);
 
 #endif

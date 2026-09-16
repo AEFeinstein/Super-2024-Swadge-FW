@@ -84,9 +84,9 @@ void drawCommonList(ray_t* ray, list_t* list, int camX, int camY, paletteColor_t
     while (node)
     {
         rayObjCommon_t* obj = node->val;
-        drawWsgSimple(obj->sprite,                                    //
-                      TO_PX(obj->posX) - camX - (obj->sprite->w / 2), //
-                      TO_PX(obj->posY) - camY - (obj->sprite->h / 2));
+        drawWsg(obj->sprite,                                    //
+                TO_PX(obj->posX) - camX - (obj->sprite->w / 2), //
+                TO_PX(obj->posY) - camY - (obj->sprite->h / 2), obj->spriteMirrored, false, obj->spriteRotation);
 
         if (cTransparent != bbColor)
         {
@@ -184,6 +184,11 @@ void drawForeground2d(ray_t* ray, uint32_t elapsedUs)
 
     drawWsg(ray->ps.sprite, pSpriteX, pSpriteY + TO_PX(ray->ps.jumpPos), false, false,
             rayGetEightWayAngle(ray->p.dirX, ray->p.dirY));
+    // rectangle_t bb = rayGetPlayerBB(ray);
+    // drawRect(TO_PX(bb.pos.x) - camX,            //
+    //          TO_PX(bb.pos.y) - camY,            //
+    //          TO_PX(bb.pos.x + bb.width) - camX, //
+    //          TO_PX(bb.pos.y + bb.height) - camY, c050);
 
     if (ray->ps.swordTimerUs > 0)
     {

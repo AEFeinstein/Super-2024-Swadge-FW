@@ -403,8 +403,17 @@ static void rayMainLoop(int64_t elapsedUs)
                 // Check for time-based scripts
                 checkScriptTime(ray, elapsedUs);
 
+                // If the player has died
+                if (0 >= ray->p.health)
+                {
+                    // load the last save
+                    rayStartGame();
+
+                    // Show the death screen
+                    rayShowDeathScreen(ray);
+                }
                 // If the warp timer is active
-                if (ray->warpTimerUs > 0)
+                else if (ray->warpTimerUs > 0)
                 {
                     // Switch to showing the warp screen
                     raySwitchToScreen(RAY_WARP_SCREEN);

@@ -123,7 +123,7 @@ class tileType(Enum):
     # Self and Enemies
     OBJ_ENEMY_START_POINT = OBJ | ENEMY | 0
     OBJ_ENEMY_BOX = OBJ | ENEMY | 1
-    OBJ_ENEMY_2 = OBJ | ENEMY | 2
+    OBJ_ENEMY_GRUNT = OBJ | ENEMY | 2
     OBJ_ENEMY_3 = OBJ | ENEMY | 3
     OBJ_ENEMY_4 = OBJ | ENEMY | 4
     OBJ_ENEMY_5 = OBJ | ENEMY | 5
@@ -398,7 +398,7 @@ objTiles: list[list[tileType]] = [
     [
         tileType.OBJ_ENEMY_START_POINT,
         tileType.OBJ_ENEMY_BOX,
-        tileType.OBJ_ENEMY_2,
+        tileType.OBJ_ENEMY_GRUNT,
         tileType.OBJ_ENEMY_3,
         tileType.OBJ_ENEMY_4,
         tileType.OBJ_ENEMY_5,

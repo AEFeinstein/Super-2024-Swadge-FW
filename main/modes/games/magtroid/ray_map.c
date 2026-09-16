@@ -244,51 +244,6 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
 }
 
 /**
- * @brief Create an enemy
- *
- * @param ray The entire game state
- * @param type The type of enemy to spawn
- * @param id The ID for this enemy
- * @param x The X position for this enemy
- * @param y The Y position for this enemy
- */
-void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_8 y)
-{
-    // Allocate the enemy
-    rayEnemy_t* newObj = (rayEnemy_t*)heap_caps_calloc(1, sizeof(rayEnemy_t), MALLOC_CAP_SPIRAM);
-
-    // Set type and ID first
-    newObj->c.type = type;
-    newObj->c.id   = id;
-
-    switch (type)
-    {
-        case OBJ_ENEMY_BOX:
-        {
-            rayInitEnemyBox(ray, newObj);
-            break;
-        }
-        default:
-        {
-            // Unknown enemy
-            heap_caps_free(newObj);
-            return;
-        }
-    }
-
-    // Set initial common state
-    newObj->c.posX        = x;
-    newObj->c.posY        = y;
-    newObj->c.bound.box.w = TO_FX_FRAC(newObj->c.sprite->w, CELL_SIZE);
-    newObj->c.bound.box.h = TO_FX_FRAC(newObj->c.sprite->h, CELL_SIZE);
-    // Don't set radius
-    newObj->c.spriteMirrored = false;
-
-    // Add it to the linked list
-    push(&ray->enemies, newObj);
-}
-
-/**
  * @brief Create an object, either scenery or item
  *
  * @param ray The entire game state
