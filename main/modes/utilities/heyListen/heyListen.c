@@ -486,18 +486,19 @@ static void heyListenDacCallback(uint8_t* samples, int16_t len)
         {
             //get raw samples
             heyListenEvt_t evt = (heyListenEvt_t)hld->speechQueue.first->val;
-            const rawSample_t* rs;
+            const rawSample_t* rs = NULL;
             if (evt < MAX_NUM_EVTS)
             {
                 rs = &hld->sfx[evt];
             }
             else
             {
-                //nothing?
+                //invalid event queued, drop it so we don't get stuck
+                shift(&hld->speechQueue);
             }
         
 
-        if(rs->samples)
+        if(rs && rs->samples)
         {
             //Make sure we don't read out of bounds
             int16_t cpLen = len;
@@ -665,7 +666,7 @@ static void heyListenSwitchToScreen(heyListenScreen_t newScreen)
 
             // Enqueue special event to yell
             clear(&hld->speechQueue);
-            heyListenEvt_t newEvt = hld->currentEvt;
+            heyListenEvt_t newEvt = (hld->currentEvt < MAX_NUM_EVTS) ? hld->currentEvt : EVT_HEY; //adding this to avoid a crash if the player backs out of the mode before finishing the yell
             push(&hld->speechQueue, (void*)newEvt);
 
             break;
