@@ -169,7 +169,7 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
             // The B button swings the sword
             if (PB_B == evt.button)
             {
-                if (ray->p.i.haveEwiOfTime && evt.down && ray->ps.swordTimerUs <= 0)
+                if (ray->p.i.haveEwiOfTime && evt.down && (false == ray->ps.swordActive))
                 {
                     // Start a sword swing
                     ray->ps.swordAngle = rayGetEightWayAngle(ray->p.dirX, ray->p.dirY);
@@ -179,6 +179,7 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
                         ray->ps.swordAngle += 360;
                     }
                     ray->ps.swordTimerUs = SWORD_SWING_TIME;
+                    ray->ps.swordActive  = true;
 
                     // Cancel any shields
                     ray->ps.shieldTimerUs = 0;
@@ -369,9 +370,10 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
         // Start the fall timer animation
         ray->ps.fallTimerUs = 2000000;
 
-        // Cancel sword & shields
+        // Cancel sword & shields immediately
         ray->ps.swordTimerUs  = 0;
         ray->ps.swordAngle    = 0;
+        ray->ps.swordActive   = false;
         ray->ps.shieldTimerUs = 0;
         ray->ps.shieldZone    = -1;
     }
@@ -414,6 +416,11 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
         {
             ray->ps.swordAngle -= 360;
         }
+    }
+    else
+    {
+        // Sword timer elapsed, sword is not active
+        ray->ps.swordActive = false;
     }
 
     // Run the shield timer
@@ -474,9 +481,10 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
             ray->ps.shieldTimerUs = 500000;
             ray->ps.shieldZone    = lTouch->position / 256;
 
-            // Cancel any swords
+            // Cancel any swords immediately
             ray->ps.swordAngle   = 0;
             ray->ps.swordTimerUs = 0;
+            ray->ps.swordActive  = false;
         }
         else if (!lTouch->touched && ray->ps.shieldTouched)
         {

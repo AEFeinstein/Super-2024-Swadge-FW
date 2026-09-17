@@ -640,7 +640,6 @@ typedef struct rayEnemy
 {
     rayObjCommon_t c; ///< Common object properties
     int32_t health;   ///< The enemy's health
-    vec_q24_8 vel;
     rayEnemyMain_t mainFn;
     rayEnemyCheckCollision_t collisionFn;
     rayEnemyGetShot_t getShotFn;
@@ -693,6 +692,7 @@ typedef struct
 {
     int32_t swordAngle;
     int32_t swordTimerUs;
+    bool swordActive;
 
     int32_t shieldZone;
     int32_t shieldTimerUs;

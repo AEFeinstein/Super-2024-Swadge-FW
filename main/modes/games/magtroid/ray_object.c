@@ -631,14 +631,16 @@ void checkRayCollisions(ray_t* ray)
         }
     }
 
-    // Get a sword line segment, but ONLY use it if swordTimerUs is positive
+    // Get a sword line segment
     line_t sword = rayGetSwordLineSegment(ray);
 
-    if (ray->ps.swordTimerUs > 0)
+    // Only check the sword if it's active
+    if (ray->ps.swordActive)
     {
         // Check for sword / background collisions
         checkBgCollision(ray, sword.p1.x, sword.p1.y, OBJ_BULLET_SWORD, 1);
         checkBgCollision(ray, sword.p2.x, sword.p2.y, OBJ_BULLET_SWORD, 1);
+        // Don't set swordActive to false so that multiple bushes can be slashed
     }
 
     // Check if a bullet touches an enemy
@@ -673,7 +675,7 @@ void checkRayCollisions(ray_t* ray)
         }
 
         // If a sword is being swung
-        if (ray->ps.swordTimerUs > 0)
+        if (ray->ps.swordActive > 0)
         {
             // Get the enemy bounding box
             // Check for a collision between bounding box and sword
@@ -681,8 +683,7 @@ void checkRayCollisions(ray_t* ray)
             {
                 rayEnemyGetShot(ray, enemy, OBJ_BULLET_SWORD);
                 // Stop the sword swing
-                ray->ps.swordAngle   = 0;
-                ray->ps.swordTimerUs = 0;
+                ray->ps.swordActive = false;
             }
         }
 
@@ -723,7 +724,7 @@ void checkRayCollisions(ray_t* ray)
         }
 
         // If a sword is being swung
-        if (ray->ps.swordTimerUs > 0)
+        if (ray->ps.swordActive > 0)
         {
             // Check if the sword touches scenery
             if (rectLineIntersection(rayGetObjBB(scenery), sword, NULL))
@@ -732,8 +733,7 @@ void checkRayCollisions(ray_t* ray)
                 if (checkScriptShootObjs(ray, scenery->id, scenery->sprite))
                 {
                     // Stop the sword swing
-                    ray->ps.swordAngle   = 0;
-                    ray->ps.swordTimerUs = 0;
+                    ray->ps.swordActive = false;
                 }
             }
         }
