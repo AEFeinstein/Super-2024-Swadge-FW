@@ -11,7 +11,10 @@
 
 typedef struct
 {
-    int32_t directionTimer;
+    vec_q24_8 dir;     ///< The direction the grunt is facing
+    int32_t dirTimer;  ///< A timer to randomly pick new directions to face
+    vec_q24_8 bumpVel; ///< The direction the grunt got bumped
+    int32_t bumpTimer; ///< A timer to use bumpVel instead of dir for movement
 } gruntState_t;
 
 //==============================================================================
@@ -62,33 +65,35 @@ void rayInitEnemyGrunt(ray_t* ray, rayEnemy_t* e)
  */
 static void rayEnemyGruntPickDirection(rayEnemy_t* enemy)
 {
+    gruntState_t* state = enemy->state;
+
     // Pick a random cardinal direction
-    enemy->vel.x            = 0;
-    enemy->vel.y            = 0;
+    state->dir.x            = 0;
+    state->dir.y            = 0;
     enemy->c.spriteRotation = 0;
     switch (esp_random() & 0x03)
     {
         case 0x00:
         {
-            enemy->vel.x            = TO_FX_FRAC(1, 2);
+            state->dir.x            = TO_FX_FRAC(1, 2);
             enemy->c.spriteRotation = 90;
             break;
         }
         case 0x01:
         {
-            enemy->vel.x            = -TO_FX_FRAC(1, 2);
+            state->dir.x            = -TO_FX_FRAC(1, 2);
             enemy->c.spriteRotation = 270;
             break;
         }
         case 0x02:
         {
-            enemy->vel.y            = TO_FX_FRAC(1, 2);
+            state->dir.y            = TO_FX_FRAC(1, 2);
             enemy->c.spriteRotation = 180;
             break;
         }
         case 0x03:
         {
-            enemy->vel.y            = -TO_FX_FRAC(1, 2);
+            state->dir.y            = -TO_FX_FRAC(1, 2);
             enemy->c.spriteRotation = 0;
             break;
         }
@@ -116,12 +121,24 @@ bool rayEnemyGruntMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
     gruntState_t* state = enemy->state;
 
     // Change direction every second
-    RUN_TIMER_EVERY(state->directionTimer, 1000000, elapsedUs, { rayEnemyGruntPickDirection(enemy); });
+    RUN_TIMER_EVERY(state->dirTimer, 1000000, elapsedUs, { rayEnemyGruntPickDirection(enemy); });
+
+    // Pick the velocity to use based on bumpTimer
+    vec_q24_8 dir;
+    if (state->bumpTimer > 0)
+    {
+        state->bumpTimer -= elapsedUs;
+        dir = state->bumpVel;
+    }
+    else
+    {
+        dir = state->dir;
+    }
 
     // Move half as fast as than the player
     vec_q24_8 delta = {
-        .x = (enemy->vel.x * (int32_t)elapsedUs) / (40000 * 6),
-        .y = (enemy->vel.y * (int32_t)elapsedUs) / (40000 * 6),
+        .x = (dir.x * (int32_t)elapsedUs) / (40000 * 6),
+        .y = (dir.y * (int32_t)elapsedUs) / (40000 * 6),
     };
 
     // Get a bounding box for where the enemy is
@@ -141,7 +158,7 @@ bool rayEnemyGruntMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
     {
         // Can't move this way, pick a new direction
         rayEnemyGruntPickDirection(enemy);
-        state->directionTimer = 0;
+        state->dirTimer = 0;
     }
 
     // Not dead yet!
@@ -190,12 +207,25 @@ void rayEnemyGruntCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_
  */
 void rayEnemyGruntGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
+    // Convenience pointer
+    gruntState_t* state = enemy->state;
+
     switch (bullet)
     {
+        case OBJ_BULLET_SWORD:
+        {
+            // Give the player a bump away from the grunt
+            state->bumpVel.x = enemy->c.posX - ray->p.posX;
+            state->bumpVel.y = enemy->c.posY - ray->p.posY;
+            fastNormVec(&state->bumpVel.x, &state->bumpVel.y);
+
+            // Bump for 250ms
+            state->bumpTimer = 250000;
+        }
+        // fall through
         case OBJ_BULLET_ARROW:
         case OBJ_BULLET_BOMB:
         case OBJ_BULLET_BOOMERANG:
-        case OBJ_BULLET_SWORD:
         {
             // TODO start enemy iframes
             // TODO visual indicator enemy was hit
