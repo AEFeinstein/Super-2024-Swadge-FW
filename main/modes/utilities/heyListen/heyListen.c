@@ -7,7 +7,7 @@
 const char heyListenModeName[] = "Hey, Listen!";
 
 // Limits for detecting yells
-#define MIC_ENERGY_THRESHOLD  100000
+#define MIC_ENERGY_THRESHOLD  50000
 #define MIC_ENERGY_HYSTERESIS 20
 #define WAIT_EVENT_US         5000
 //==============================================================================
@@ -27,7 +27,6 @@ typedef enum
 
 typedef enum
 {
-    EVT_NULL,
     EVT_HEY,
     EVT_HEYLISTEN,
     EVT_WHATSUP,
@@ -62,6 +61,13 @@ typedef struct
 
 typedef struct
 {
+    cnfsFileIdx_t sfx_fidx;
+    paletteColor_t bgColor;
+    led_t ledColor;
+} heyListenEvtData_t;
+
+typedef struct
+{
 
 //Screen
 heyListenScreen_t screen;
@@ -81,7 +87,8 @@ menuZorldoRenderer_t* menuRenderer;
 //Audio
 rawSample_t sfx[MAX_NUM_EVTS];
 int32_t sampleIdx;
-heyListenEvt_t currentEvt;
+const heyListenEvtData_t* heyListenEvt;
+int8_t currentEvt; //tracking current event
 
 // Flag to switch from speaker to mic mode
 bool pendingSwitchToMic;
@@ -126,6 +133,29 @@ static const char heyListenStrShake[]       = "Shake Mode";
 static const char heyListenStrSettings[]    = "Settings";
 static const char heyListenStrExit[]          = "Exit";
 
+/** Must match order of heyListenEvt_t */
+const heyListenEvtData_t hlEvtData[] = {
+    {
+        .sfx_fidx = BLOW_IT_RAW,
+        .bgColor  = c132,
+        .ledColor = {.r = 0x00, .g = 0xCC, .b = 0x99},
+    },
+    {
+        .sfx_fidx = SHAKE_IT_RAW,
+        .bgColor  = c030,
+        .ledColor = {.r = 0x00, .g = 0xCC, .b = 0x99},
+    },
+    {
+        .sfx_fidx = PRESS_IT_RAW,
+        .bgColor  = c002,
+        .ledColor = {.r = 0x00, .g = 0xCC, .b = 0x99},
+    },
+    {
+        .sfx_fidx = DAC_SCREAM_RAW,
+        .bgColor  = c200,
+        .ledColor = {.r = 0x00, .g = 0xCC, .b = 0x99},
+    },
+};
 
 // Trophy Data
 const trophyData_t heyListenTrophies[] = {
@@ -168,6 +198,7 @@ swadgeMode_t heyListenMode = {
     .fnExitMode               = heyListenExitMode,  // The exit mode function
     .fnMainLoop               = heyListenMainLoop,  // The loop function
     .fnAudioCallback          = heyListenAudioCallback,            // If the mode uses the microphone
+    .fnDacCb                  = heyListenDacCallback,  // If the mode fills its own DAC samples
     .fnBackgroundDrawCallback = NULL,            // Draws a section of the display
     .fnEspNowRecvCb           = NULL,            // If using Wifi, add the receive function here
     .fnEspNowSendCb           = NULL,            // If using Wifi, add the send function here
@@ -204,7 +235,12 @@ static void heyListenEnterMode()
 // Load fonts
     loadFont(OXANIUM_13MED_FONT, &hld->font, true);
 
-
+// Load all SFX samples
+    for (int8_t i = 0; i < MAX_NUM_EVTS; i++)
+    {
+        hld->sfx[i].samples = readHeatshrinkFile(hlEvtData[i].sfx_fidx, &hld->sfx[i].len, true);
+    }
+    
 
 
 // For yell detection
@@ -229,6 +265,9 @@ static void heyListenExitMode()
 
 static void heyListenMainLoop(int64_t elapsedUs)
 {
+    // Count down the pause between queued verbal commands
+    heyListenCheckSpeech(elapsedUs);
+
     // Check button input
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
@@ -242,6 +281,7 @@ static void heyListenMainLoop(int64_t elapsedUs)
             }
             case HL_TRIGGER:
                 {
+                    bool evtTriggered = true;
                     if(evt.button == PB_UP)
                         {
                         hld->currentEvt = EVT_HEY;
@@ -260,9 +300,21 @@ static void heyListenMainLoop(int64_t elapsedUs)
                         }
                     else if(evt.button == PB_A)
                     {
-                        hld->currentEvt = EVT_NULL;
+                        hld->currentEvt = 0;
+                    }
+                    else
+                    {
+                        evtTriggered = false;
                     }
 
+                    // Interrupt whatever is playing and queue up the newly triggered event
+                    if (evt.down && evtTriggered)
+                    {
+                        clear(&hld->speechQueue);
+                        hld->sampleIdx          = 0;
+                        hld->pendingSwitchToMic = false;
+                        push(&hld->speechQueue, (void*)(intptr_t)hld->currentEvt);
+                    }
                 }
                 break;
             //no buttons for these modes:
@@ -294,11 +346,14 @@ static void heyListenMainLoop(int64_t elapsedUs)
         case HL_ECHO:
         {
             fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-            if(hld->nextEvtTimer == 0){
+            if (hld->pendingSwitchToMic)
+            {
                 switchToMicrophone();
-                hld->isListening = true;
-                //ready for a new yell
-            if(hld->yellInput) // if the player is currently yelling, kick off the timer
+                hld->isListening        = true;
+                hld->pendingSwitchToMic = false;
+            }
+            //ready for a new yell
+            if(hld->isYelling) // if the player is currently yelling, keep the timer running
             {
                 hld->nextEvtTimer++;
                 if(hld->nextEvtTimer >= 100)
@@ -311,35 +366,42 @@ static void heyListenMainLoop(int64_t elapsedUs)
                 }
                 if(hld->nextEvtTimer >= 400)
                 {
-                    hld->currentEvt = EVT_PHRASE; // trigger the "NULL" event
+                    hld->currentEvt = EVT_PHRASE; // trigger the "PHRASE" event
+                }
+                else if (hld->nextEvtTimer == 1)
+                {
+                    hld->currentEvt = MAX_NUM_EVTS;
+                }
+            }
+            else if (hld->nextEvtTimer > 0)
+            {
+                if (hld->currentEvt < MAX_NUM_EVTS)
+                {
+                    //done listening, queue up the detected event and echo it back
+                    clear(&hld->speechQueue);
+                    push(&hld->speechQueue, (void*)(intptr_t)hld->currentEvt);
+                    switchToSpeaker();
+                    hld->sampleIdx          = 0;
+                    hld->isListening        = false;
+                    hld->pendingSwitchToMic = false;
                 }
                 else
                 {
-                    hld->currentEvt = EVT_NULL; // trigger the "NULL" event
+                    //yell was too short to identify, keep listening
+                    hld->nextEvtTimer = 0;
                 }
             }
-            else
-            {
-                //done listening, time to echo
-                switchToSpeaker();
-                hld->sampleIdx          = 0;
-                hld->isListening        = false;
-                hld->pendingSwitchToMic = false;
-                //TODO: yell
-            }
 
-                sprintf(hld->timerStr, "%ld", hld->nextEvtTimer);
-                drawText(&hld->font, c555, "Timer:", 20, 60);
-                drawText(&hld->font, c555, hld->timerStr, 20, 80);
-                drawText(&hld->font, c555, "Current Event:", 20, 100);
-                drawText(&hld->font, c555, (char[]){hld->currentEvt + '0', '\0'}, 20, 120);
-                drawText(&hld->font, c555, "Is yelling?:", 20, 140);
-                drawText(&hld->font, c555, (char[]){hld->yellInput + '0', '\0'}, 20, 160);
-                drawText(&hld->font, c555, "Is listening?:", 20, 180);
-                drawText(&hld->font, c555, (char[]){hld->isListening + '0', '\0'}, 20, 200);
-            
-            }
-            
+            sprintf(hld->timerStr, "%d", hld->nextEvtTimer);
+            drawText(&hld->font, c555, "Timer:", 20, 60);
+            drawText(&hld->font, c555, hld->timerStr, 20, 80);
+            drawText(&hld->font, c555, "Current Event:", 20, 100);
+            drawText(&hld->font, c555, (char[]){hld->currentEvt + '0', '\0'}, 20, 120);
+            drawText(&hld->font, c555, "Is yelling?:", 20, 140);
+            drawText(&hld->font, c555, (char[]){hld->yellInput + '0', '\0'}, 20, 160);
+            drawText(&hld->font, c555, "Is listening?:", 20, 180);
+            drawText(&hld->font, c555, (char[]){hld->isListening + '0', '\0'}, 20, 200);
+
             if(!hld->isListening)
                 {
                     hld->nextEvtTimer = 0;
@@ -357,7 +419,7 @@ static void heyListenMainLoop(int64_t elapsedUs)
             drawText(&hld->font, c555, (char[]){hld->currentEvt + '0', '\0'}, 20, 40);
             //end of testing stuff
 
-            //TODO yell
+            // Playback is queued from the button handler above and filled by heyListenDacCallback()
             break;
         }
         case HL_RANDOM:
@@ -375,7 +437,7 @@ static void heyListenMainLoop(int64_t elapsedUs)
             drawText(&hld->font, c555, (char[]){shook + '0', '\0'}, 20, 40);
             drawText(&hld->font, c555, "Next Event Timer:", 20, 60);
             
-            sprintf(hld->timerStr, "%ld", hld->nextEvtTimer);
+            sprintf(hld->timerStr, "%d", hld->nextEvtTimer);
             drawText(&hld->font, c555, hld->timerStr, 20, 80);
             //end of testing stuff
 
@@ -385,6 +447,7 @@ static void heyListenMainLoop(int64_t elapsedUs)
                 hld->nextEvtTimer = 0;
                 clear(&hld->shakeHistory);
                 //TODO: yell
+                //somefunction(hld->currentEvt);
             }
             break;
         }
@@ -399,6 +462,7 @@ static void heyListenMainLoop(int64_t elapsedUs)
             drawText(&hld->font, c555, warningStrName, 20, 60);
             drawText(&hld->font, c555, beniceStrName, 20, 80);
             drawText(&hld->font, c555, "Press B to Continue", 20, 100);
+            //TODO art instead of this
             break;
         }
         default:
@@ -407,11 +471,88 @@ static void heyListenMainLoop(int64_t elapsedUs)
         }
     }
 }
-
+/**
+ * @brief This function is called to fill sample buffers for the DAC. If this is NULL, then
+ * globalMidiPlayerFillBuffer() will be used instead to fill sample buffers
+ *
+ * @param samples The sample buffer to fill
+ * @param len The number of samples to fill
+ */
 static void heyListenDacCallback(uint8_t* samples, int16_t len)
 {
+    if(hld->speechDelayUs <= 0 && //if the delay between verbal commands isn't running and
+        !hld->pendingSwitchToMic && //we aren't about to switch to the microphone
+        hld->speechQueue.length) //there is something to say
+        {
+            //get raw samples
+            heyListenEvt_t evt = (heyListenEvt_t)hld->speechQueue.first->val;
+            const rawSample_t* rs;
+            if (evt < MAX_NUM_EVTS)
+            {
+                rs = &hld->sfx[evt];
+            }
+            else
+            {
+                //nothing?
+            }
+        
 
+        if(rs->samples)
+        {
+            //Make sure we don't read out of bounds
+            int16_t cpLen = len;
+            if (hld->sampleIdx + len > rs->len)
+            {
+                cpLen = rs->len - hld->sampleIdx;
+            }
+
+            //copy samples out to dac
+            memcpy(samples, &rs->samples[hld->sampleIdx], cpLen);
+            hld->sampleIdx += cpLen;
+
+            //advance past the copied audio so it isn't overwritten by the blank-fill below
+            samples += cpLen;
+            len -= cpLen;
+
+            //if copied and now its over
+            if (cpLen && hld->sampleIdx >= rs->len)
+            {
+                //done with this sample, dequeue it and reset for the next one
+                shift(&hld->speechQueue);
+                hld->sampleIdx = 0;
+
+                //if this is the last one
+                if(0 == hld->speechQueue.length)
+                {
+                    hld->pendingSwitchToMic = true;
+                }
+                else
+                {
+                    //set timer to pause between commands
+                    hld->speechDelayUs = 500;
+                }
+            }
+             
+        }
+    }
+
+        //anything else to write:
+        if(len)
+        {
+            //write blanks
+            memset(samples, 127, len);
+        }
 }
+
+
+
+/**
+ * @brief This function is called whenever audio samples are read from the microphone (ADC) and are ready for
+ * processing. Samples are read at 8KHz.
+ *
+ * @param samples A pointer to 12 bit audio samples
+ * @param sampleCnt The number of samples read
+ */
 static void heyListenAudioCallback(uint16_t* samples, uint32_t sampleCnt)
 {
      while (sampleCnt--)
@@ -459,25 +600,37 @@ static void heyListenAudioCallback(uint16_t* samples, uint32_t sampleCnt)
             {
                 // Returning to quiet takes a few samples
                 node_t* energyNode = hld->micFrameEnergyHistory.first;
+                bool stillYelling  = false;
                 while (energyNode)
                 {
                     if ((intptr_t)energyNode->val > MIC_ENERGY_THRESHOLD)
                     {
                         // Still yelling
-                        return;
+                        stillYelling = true;
+                        break;
                     }
                     energyNode = energyNode->next;
                 }
 
-                // Looped without returning, must not be yelling
-                hld->isYelling = false;
+                // Looped without finding a loud frame, must not be yelling
+                if (!stillYelling)
+                {
+                    hld->isYelling = false;
+                }
             }
         }
     }
 }
 static void heyListenCheckSpeech(int64_t elapsedUs)
 {
-
+    if (hld->speechDelayUs > 0)
+    {
+        hld->speechDelayUs -= elapsedUs;
+        if (hld->speechDelayUs < 0)
+        {
+            hld->speechDelayUs = 0;
+        }
+    }
 }
 static void heyListenSwitchToScreen(heyListenScreen_t newScreen)
 {
@@ -510,9 +663,9 @@ static void heyListenSwitchToScreen(heyListenScreen_t newScreen)
             hld->isListening        = false;
             hld->pendingSwitchToMic = false;
 
-            // Enqueue special event to scream
+            // Enqueue special event to yell
             clear(&hld->speechQueue);
-            heyListenEvt_t newEvt = MAX_NUM_EVTS;
+            heyListenEvt_t newEvt = hld->currentEvt;
             push(&hld->speechQueue, (void*)newEvt);
 
             break;
@@ -523,6 +676,15 @@ static void heyListenSwitchToScreen(heyListenScreen_t newScreen)
             break;
         }
         case HL_TRIGGER:
+        {
+            // Enable the speaker so triggered SFX can be played back
+            switchToSpeaker();
+            hld->sampleIdx          = 0;
+            hld->isListening        = false;
+            hld->pendingSwitchToMic = false;
+            clear(&hld->speechQueue);
+            break;
+        }
         case HL_RANDOM:
         case HL_SHAKE:
         case HL_SETTINGS:
@@ -572,7 +734,6 @@ static bool heyListenMenuCb(const char* label, bool selected, uint32_t value)
     }
     return false;
 }
-
 bool heyListenCheckForShake(void)
 {
     // Check if there is a shake state change
