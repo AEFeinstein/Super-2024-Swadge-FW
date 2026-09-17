@@ -184,7 +184,8 @@ static void bombadeetleOnCollision(void);
 bool bombadeetleLoadLevelMax(void);
 bool bombadeetleSaveLevelMax(void);
 
-
+static uint16_t bombadeetleGetTitleWidth(const font_t* font, const char* text, int max);
+static void bombadeetleGetLevelData(uint8_t index);
 
 
 swadgeMode_t bombadeetleMode = {
@@ -220,6 +221,7 @@ typedef struct{
     int8_t up;
     int8_t down;
     int8_t right;
+    uint8_t nameWidthOffset;
 
 } bombadeetleCurrentLevel_t;
 
@@ -363,6 +365,8 @@ static void bombadeetleEnterMode()
     bombadeetle->bombadeetles = (bombadeetleEntity_t*)heap_caps_calloc(BOMBADEETLE_COUNT, sizeof(bombadeetleEntity_t), MALLOC_CAP_8BIT);
     bombadeetle->shloogs = (bombadeetleEntity_t*)heap_caps_calloc(SHLOOG_MAX_COUNT, sizeof(bombadeetleEntity_t), MALLOC_CAP_8BIT);
     
+    bombadeetleGetLevelData(0);
+
     
     //Load current level max from NVS
     if (!bombadeetleLoadLevelMax())
@@ -371,7 +375,7 @@ static void bombadeetleEnterMode()
     }
 
     bombadeetle->levelIndex = 0;
-
+    
     loadWsg(BOMB_SUCCESS_WSG, &bombadeetle->success, true);
     loadWsg(BOMB_TRYAGAIN_WSG, &bombadeetle->unsuccessful, true);
     loadWsg(BOMB_UI_POPUP_WSG, &bombadeetle->genericBackground, true);
@@ -494,6 +498,23 @@ bool bombadeetleLoadLevelMax(void)
     }
 
     return success;
+}
+
+void bombadeetleGetLevelData(uint8_t index)
+{
+    size_t levelSize;
+    const uint8_t *levelFile = cnfsGetFile(bombadeetleLevels[index], &levelSize);
+    uint8_t nameLength = 3;
+    
+    for (int idx = 0; idx < 16; idx ++)
+    {
+        bombadeetle->mapFile.name[idx] = toupper(levelFile[idx]);
+        nameLength = levelFile[idx] == 32 ? nameLength : idx;
+    }
+    nameLength++;
+
+    bombadeetle->mapFile.nameWidthOffset = bombadeetleGetTitleWidth(&bombadeetle->mainFont, bombadeetle->mapFile.name, nameLength);
+
 }
 
 bool bombadeetleSaveLevelMax(void)
@@ -829,13 +850,9 @@ static void bombadeetleImportMap(int64_t index)
     //Bring in new map
     size_t levelSize = 0;
     int offset = 0;
-    const uint8_t *levelFile = cnfsGetFile(bombadeetleLevels[index], &levelSize);
     bombadeetle->goalCount = 0;
+    const uint8_t *levelFile = cnfsGetFile(bombadeetleLevels[index], &levelSize);
 
-    for (int idx = 0; idx < 16; idx ++)
-    {
-        bombadeetle->mapFile.name[idx] = toupper(levelFile[idx]);
-    }
 
 
     
@@ -925,6 +942,7 @@ static void bombadeetleLoadMap()
         tileIndex = bombadeetle->mapFile.bombadeetleSpawn[idx];
         if (tileIndex & DIRECTION_N || tileIndex & DIRECTION_E || tileIndex & DIRECTION_S || tileIndex & DIRECTION_W)
         {
+            ESP_LOGI(TAG, "Bombadeetle! %d", bombadeetle->goalCount);
             if (bombadeetleIndex >= BOMBADEETLE_COUNT) continue;
             
 
@@ -1122,7 +1140,6 @@ static void bombadeetleBackgroundUpdate(int64_t elapsedUs)
 
             if (speed < 2) speed = 2;
             if (speed > 8) speed = 8;
-            ESP_LOGI(TAG, "Game speed %d", speed);
             bombadeetle->gameSpeed = speed;
 
         }
@@ -1265,6 +1282,7 @@ static void bombadeetleStageSelectLoop(int64_t elapsedUs)
                 bombadeetle->stageSelectIndex = (ARRAY_SIZE(bombadeetleLevels)-1) % 20;
             }
 
+            bombadeetleGetLevelData(bombadeetle->stageSelectIndex + (bombadeetle->stageSelectPageIndex * 20));
         }
     }
     
@@ -1846,7 +1864,42 @@ static void bombadeetleDrawSelect()
         }
 
         drawText(&bombadeetle->mainFont, c555, buffer, OFFSETSELECTBUTTON_X + ((idx % 5) * 42) + 10, OFFSETSELECTBUTTON_Y + ((idx / 5) * 32) + 5);
+
     }
+
+    if (strlen(bombadeetle->mapFile.name) > 0)
+    {
+        //ESP_LOGI(TAG,"%i", (int)sizeof(bombadeetle->mapFile.name));
+        sprintf(buffer, "%s", bombadeetle->mapFile.name);        
+        drawText(&bombadeetle->mainFont, c124, buffer, (TFT_WIDTH  - bombadeetle->mapFile.nameWidthOffset)/2,200);
+    }
+
+    // ESP_LOGI(TAG, "%d ", bombadeetle->mapFile.nameWidthOffset);
+
+}
+
+// This is sloppy Troy, you need to be ashamed of yourself! >:(
+static uint16_t bombadeetleGetTitleWidth(const font_t* font, const char* text, int max)
+{
+    uint16_t width = 0;
+    uint8_t index = 0;
+    while (*text != 0)
+    {
+        if ((*text) >= ' ')
+        {
+            width += (font->chars[(*text) - ' '].width + 1);
+        }
+        text++;
+        index++;
+        if (index >= max) break;
+    }
+    // Delete trailing space
+    if (0 < width)
+    {
+        width--;
+    }
+
+    return width;
 }
 
 static void bombadeetleDrawPause()
