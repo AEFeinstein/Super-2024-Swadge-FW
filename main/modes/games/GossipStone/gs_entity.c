@@ -197,8 +197,6 @@ void gs_drawGossip(gs_entity_t* self)
     {
         return;
     }
-    int16_t textX = 18;
-    int16_t textY = 50;
 
     uint16_t typeAmount = data->progress / FRAMES_PER_CHAR;
     char display[typeAmount + 5];
@@ -207,8 +205,28 @@ void gs_drawGossip(gs_entity_t* self)
 
     if (typeAmount > 0)
     {
+        int16_t textX = 17;
+        int16_t textY = 50;
+        drawTextWordWrap(&self->gameData->font_gossip, c000, display, &textX, &textY, TFT_WIDTH - textX,
+                         TFT_HEIGHT - textY);
+        textX = 19;
+        textY = 50;
+        drawTextWordWrap(&self->gameData->font_gossip, c000, display, &textX, &textY, TFT_WIDTH - textX,
+                         TFT_HEIGHT - textY);
+        textX = 18;
+        textY = 49;
+        drawTextWordWrap(&self->gameData->font_gossip, c000, display, &textX, &textY, TFT_WIDTH - textX,
+                         TFT_HEIGHT - textY);
+        textX = 18;
+        textY = 51;
+        drawTextWordWrap(&self->gameData->font_gossip, c000, display, &textX, &textY, TFT_WIDTH - textX,
+                         TFT_HEIGHT - textY );
+
+        textX = 18;
+        textY = 50;
         drawTextWordWrap(&self->gameData->font_gossip, c445, display, &textX, &textY, TFT_WIDTH - textX,
                          TFT_HEIGHT - textY);
+
     }
 }
 
@@ -288,8 +306,13 @@ void gs_generateMoonTilemap(gs_entity_t* self)
     {
         for (int y = 0; y < TILE_FIELD_HEIGHT; y++)
         {
-            tData->tiles[x][y].framePlus1 = gs_randomInt(0, 14);
+            tData->tiles[x][y].framePlus1 = GS_WALL_FORE;
         }
+    }
+    for (int y = 0; y < 124; y++)
+    {
+        tData->tiles[132][y].framePlus1 = GS_WALL_BACK;
+        tData->tiles[133][y].framePlus1 = GS_WALL_BACK;
     }
 }
 
@@ -310,22 +333,45 @@ void gs_drawTileMap(gs_entity_t* self)
     gs_tilemap_t* tData = (gs_tilemap_t*)self->data;
 
     int8_t shiftBy       = 6 + self->gameData->entityManager.zoom;
+    
     int topLeftCamPixelX = (self->gameData->entityManager.camera.pos.x >> DECIMAL_BITS) - (TFT_WIDTH >> 1);
     int topLeftCamPixelY = (self->gameData->entityManager.camera.pos.y >> DECIMAL_BITS) - (TFT_HEIGHT >> 1);
-    int tileYIdx         = topLeftCamPixelY >> shiftBy;
-    while ((tileYIdx * (1 << shiftBy)) < topLeftCamPixelY + TFT_HEIGHT)
+    int newFieldPixelWidth = TILE_FIELD_WIDTH<<shiftBy;
+    int newFieldPixelHeight = TILE_FIELD_HEIGHT<<shiftBy;
+
+    vec_t tilemapPixelOffset;
+    if(self->gameData->entityManager.zoom <= 0)
     {
-        int tileXIdx = topLeftCamPixelX >> shiftBy;
-        while ((tileXIdx * (1 << shiftBy)) < topLeftCamPixelX + TFT_WIDTH)
+        tilemapPixelOffset = (vec_t){- ((TILE_FIELD_WIDTH * 64)>>(-self->gameData->entityManager.zoom+1)),
+        - ((TILE_FIELD_HEIGHT * 64)>>(-self->gameData->entityManager.zoom+1))};
+    }
+    else
+    {
+        tilemapPixelOffset = (vec_t){- ((TILE_FIELD_WIDTH * 64)<<(self->gameData->entityManager.zoom-1)),
+        - ((TILE_FIELD_HEIGHT * 64)<<(self->gameData->entityManager.zoom-1))};
+    }
+    int tileYIdx         = topLeftCamPixelY / (1 << shiftBy) + (TILE_FIELD_HEIGHT>>1);
+    if(tileYIdx <= TILE_FIELD_HEIGHT>>1){
+        tileYIdx--;
+    }
+    
+
+    while (-(newFieldPixelHeight>>1) + tileYIdx * (1 << shiftBy) < topLeftCamPixelY + TFT_HEIGHT)
+    {
+        int tileXIdx         = topLeftCamPixelX / (1 << shiftBy) + (TILE_FIELD_WIDTH>>1);
+            if(tileXIdx <= TILE_FIELD_WIDTH>>1){
+        tileXIdx--;
+    }
+        while (-(newFieldPixelWidth>>1) + tileXIdx * (1 << shiftBy) < topLeftCamPixelX + TFT_WIDTH)
         {
             if (tileXIdx >= 0 && tileYIdx >= 0 && tileXIdx < TILE_FIELD_WIDTH && tileYIdx < TILE_FIELD_HEIGHT)
             {
                 if (tData->tiles[tileXIdx][tileYIdx].framePlus1 != GS_NO_TILE)
                 {
-                    int drawX = (tileXIdx << shiftBy) - topLeftCamPixelX;
-                    int drawY = (tileYIdx << shiftBy) - topLeftCamPixelY;
+                    int drawX = tilemapPixelOffset.x + (tileXIdx << shiftBy) - topLeftCamPixelX;
+                    int drawY = tilemapPixelOffset.y + (tileYIdx << shiftBy) - topLeftCamPixelY;
                     drawWsgSimpleScaled(
-                        &self->gameData->assets[self->assetIndex].frames[tData->tiles[tileXIdx][tileYIdx].framePlus1],
+                        &self->gameData->assets[self->assetIndex].frames[tData->tiles[tileXIdx][tileYIdx].framePlus1 - 1],
                         drawX, drawY, self->gameData->entityManager.zoom, self->gameData->entityManager.zoom);
                 }
             }
@@ -384,7 +430,7 @@ void gs_updateGossipStone(gs_entity_t* self)
     // printf("pos x: %d pos y: %d\n", self->pos.x, self->pos.y);
 
     self->gameData->entityManager.camera.vel = self->gameData->entityManager.camera.pos;
-    if (self->pos.y < 0xFFFF)
+    if (self->pos.y < 0xFFFF || self->gameData->submode == GS_MOON_SUBMODE)
     {
         self->gameData->entityManager.camera.pos.y = self->pos.y;
     }

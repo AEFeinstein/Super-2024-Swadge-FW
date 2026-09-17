@@ -330,7 +330,7 @@ void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t x
 {
     if (xScale > 0 && yScale > 0)
     {
-        drawWsgSimpleScaledUp(wsg, xOff, yOff, xScale, yScale);
+        drawWsgSimpleScaledUp(wsg, xOff, yOff, xScale+1, yScale+1);
     }
     else if (xScale < 0 && yScale < 0)
     {
@@ -428,7 +428,7 @@ void drawWsgSimpleScaledDown(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16
     //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
 
-    if (NULL == wsg->px || xScale < 1 || yScale < 1)
+    if (NULL == wsg->px || xScale < 1 || yScale < 1 || xScale > 30 || yScale >> 30)
     {
         return;
     }
@@ -437,9 +437,9 @@ void drawWsgSimpleScaledDown(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16
     int dWidth                   = TFT_WIDTH;
     int wWidth                   = wsg->w;
     int xMin                     = CLAMP(xOff, 0, dWidth);
-    int xMax                     = CLAMP(xOff + (wWidth / (xScale << FRAC_BITS)), 0, dWidth);
+    int xMax                     = CLAMP(xOff + (wWidth / (1 << xScale)), 0, dWidth);
     int yMin                     = CLAMP(yOff, 0, TFT_HEIGHT);
-    int yMax                     = CLAMP(yOff + (wsg->h / (yScale << FRAC_BITS)), 0, TFT_HEIGHT);
+    int yMax                     = CLAMP(yOff + (wsg->h / (1 << yScale)), 0, TFT_HEIGHT);
     paletteColor_t* px           = getPxTftFramebuffer();
     int numX                     = xMax - xMin;
     int wsgY                     = (yMin - yOff);

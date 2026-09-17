@@ -24,7 +24,7 @@ typedef struct
     gs_entity_t* gossip;
     gs_entity_t* gossipStone;
     node_t* gossipStoneNode;
-    int8_t zoom; // 0 is normal scale, each positive step doubles sprite sizes, negative halves sprites.
+    int16_t zoom; // 0 is normal scale, each positive step doubles sprite sizes, negative halves sprites.
 } gs_entityManager_t;
 
 //==============================================================================

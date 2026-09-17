@@ -91,6 +91,7 @@ typedef enum __attribute__((packed))
     GS_ASTRO_10,
     GS_ASTRO_11,
     GS_ASTRO_12,
+    GS_WALL_FORE_GROUND,
     GS_WALL_FORE,
     GS_WALL_BACK,
 } gs_tileType_t;
@@ -99,7 +100,6 @@ typedef struct
 {
     vec_t pos;
     vec_t vel;
-    uint8_t zoom; // 0 is zoomed in for 1x scale sprites, 1 for .5x scale sprites, 2 for 0.25x scale sprites
 } gs_camera_t;
 
 typedef struct

@@ -31,6 +31,7 @@ typedef struct gs_gameData_t
     menu_t* menu;
     menuMegaRenderer_t* menuRenderer;
     font_t font_gossip; // IBM VGA 8 font
+    font_t font_outline;
     font_t font_big;    // Oxanium
     // All buttons states
     uint16_t btnState;

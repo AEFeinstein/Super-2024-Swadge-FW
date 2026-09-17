@@ -124,6 +124,7 @@ static void gs_enterMode(void)
     gs_decodeSpace
         = heap_caps_malloc_tag(99328, MALLOC_CAP_SPIRAM, "decodeSpace"); // TODO change the size to the largest sprite
     loadFont(IBM_VGA_8_FONT, &gameData->font_gossip, true);
+    makeOutlineFont(&gameData->font_gossip, &gameData->font_outline, true);
     loadFont(OXANIUM_FONT, &gameData->font_big, true);
 
     // read NVS
@@ -248,6 +249,14 @@ static void gs_mainLoop(int64_t elapsedUs)
             {
                 gameData->newSubmode = GS_MENU_SUBMODE;
             }
+            if (gameData->btnDownState & PB_UP)
+            {
+                gameData->entityManager.zoom--;
+            }
+            if (gameData->btnDownState & PB_DOWN)
+            {
+                gameData->entityManager.zoom++;
+            }
             // update the whole engine via entity management
             gs_updateEntities(&gameData->entityManager);
             gs_drawEntities(&gameData->entityManager);
@@ -289,7 +298,7 @@ static void gs_initializeGame(void)
 
     // tilemap
     gameData->entityManager.tilemap       = gs_createEntity(&gameData->entityManager, 15, GS_NO_ANIMATION, true,
-                                                            GS_MOON_TILE_ASSET, 0, (vec_t){0xffff, 0xffff}, gameData);
+                                                            GS_MOON_TILE_ASSET, 0, (vec_t){0,0}, gameData);
     gameData->entityManager.tilemap->data = heap_caps_calloc(1, sizeof(gs_tilemap_t), MALLOC_CAP_SPIRAM);
     gameData->entityManager.tilemap->dataType     = GS_TILEMAP_DATA;
     gameData->entityManager.tilemap->drawFunction = gs_drawTileMap;
@@ -557,14 +566,19 @@ void gs_submodeStateEnter(gs_submode_t submode)
     switch (submode)
     {
         case GS_GOSSIP_SUBMODE:
+        {
             gData->messageList = gossipList;
             gData->arr_size    = GOSSIP_COUNT;
             break;
+        }
         case GS_AMA_SUBMODE:
+        {
             gData->messageList = AMAList;
             gData->arr_size    = AMA_COUNT;
             break;
+        }
         case GS_CRYSTAL_SUBMODE:
+        {
             gameData->entityManager.gossipStone->updateFunction = NULL;
             gameData->entityManager.camera.pos                  = (vec_t){0, 0};
             curNode                                             = gameData->entityManager.entities->first;
@@ -605,7 +619,9 @@ void gs_submodeStateEnter(gs_submode_t submode)
                 crystalBall->updateFunction = gs_updateCrystalBall;
             }
             break;
+        }
         case GS_PROPHECY_SUBMODE:
+        {
             gData->messageList        = prophecyList;
             gData->arr_size           = PROPHECY_COUNT;
             gData->onDialogueFinished = gs_enableFlightControls;
@@ -656,17 +672,25 @@ void gs_submodeStateEnter(gs_submode_t submode)
                 particle->drawFunction = NULL;
             }
             break;
+        }
         case GS_MOON_SUBMODE:
+        {
             gData->messageList                       = moonList;
             gData->arr_size                          = MOON_COUNT;
-            gameData->entityManager.gossipStone->pos = (vec_t){(133 * 64) << DECIMAL_BITS, (6 * 64) << DECIMAL_BITS};
-            ((gs_gossipStone_t*)gameData->entityManager.gossipStone->data)->vel = (vec_t){0, 3000};
+            gameData->entityManager.gossipStone->pos = (vec_t){0, -((0 * 64) << DECIMAL_BITS)};
+            //gameData->entityManager.gossipStone->pos = (vec_t){0, -((6 * 64) << DECIMAL_BITS)};
+            //((gs_gossipStone_t*)gameData->entityManager.gossipStone->data)->vel = (vec_t){0, 3000};
             gameData->entityManager.gossipStone->updateFunction                 = gs_updateGossipStone;
             gs_enableFlightControls(gameData->entityManager.gossip);
             gs_generateMoonTilemap(gameData->entityManager.tilemap);
+            //temp
+            ((gs_gossipStone_t*)gameData->entityManager.gossipStone->data)->gravity  = 0;
             break;
+        }
         default:
+        {
             break;
+        }
     }
     printf("entering submode %d with %d entities with the following assetID/datatype:\n", submode,
            gameData->entityManager.entities->length);
