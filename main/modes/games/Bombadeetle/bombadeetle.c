@@ -75,6 +75,9 @@
 #define NOMORE_Y_SPACING             35
 #define NOMORE_DURATION              750
 
+#define MINHELD_DURATION             500
+#define HELD_SPEED                   65
+
 
 
 const char bombadeetleModeName[] = "Bombadeetle";
@@ -296,6 +299,9 @@ typedef struct
 
     int8_t backgroundOffset;
     int8_t backgroundSpeed;
+
+    int8_t holdingDir;
+    int32_t timeHeldDireciton;
 
     int16_t successTime;
 
@@ -1573,20 +1579,34 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                         if (evt.button & PB_DOWN)
                         {
                             bombadeetle->cursorY++;                        
-                            bombadeetle->cursorMoveTime = MOVETIME;       
+                            bombadeetle->cursorMoveTime = MOVETIME;   
+                            
+                            bombadeetle->timeHeldDireciton = 0;
+                            bombadeetle->holdingDir = PB_DOWN;
                         }
                         else if (evt.button & PB_UP)
                         {
                             bombadeetle->cursorY--;
                             bombadeetle->cursorMoveTime = MOVETIME;
+                            
+                            bombadeetle->timeHeldDireciton = 0;
+                            bombadeetle->holdingDir = PB_UP;
                         }
                         else if (evt.button & PB_LEFT)
                         {
                             bombadeetle->cursorX--;
+                            bombadeetle->cursorMoveTime = MOVETIME;
+                            
+                            bombadeetle->timeHeldDireciton = 0;
+                            bombadeetle->holdingDir = PB_LEFT;
                         }
                         else if (evt.button & PB_RIGHT)
                         {
                             bombadeetle->cursorX++;
+                            bombadeetle->cursorMoveTime = MOVETIME;
+                            
+                            bombadeetle->timeHeldDireciton = 0;
+                            bombadeetle->holdingDir = PB_RIGHT;
                         }
                     }
 
@@ -1613,6 +1633,9 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                 
                 if (evt.button & PB_A)
                 {
+                    
+                    bombadeetle->holdingDir = 0;
+
                     if (evt.down)
                     {
                         switch (bombadeetle->grid[gridIndex])
@@ -1651,6 +1674,45 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                         bombadeetle->building = false;
                     }
 
+                }
+                else
+                {
+                    if (!evt.down)
+                    {
+                        if (evt.button & bombadeetle->holdingDir)
+                        {
+                            bombadeetle->holdingDir = 0;
+                        }
+                    }
+                }
+
+
+            }
+
+            if (bombadeetle->holdingDir != 0)
+            {
+                bombadeetle->timeHeldDireciton += tick;
+                if (bombadeetle->timeHeldDireciton > MINHELD_DURATION)
+                {
+                    bombadeetle->timeHeldDireciton -= HELD_SPEED;
+
+                    switch (bombadeetle->holdingDir)
+                    {
+                        case PB_UP:
+                            bombadeetle->cursorY--;
+                            break;
+                        case PB_DOWN:
+                            bombadeetle->cursorY++;
+                            break;
+                        case PB_LEFT:
+                            bombadeetle->cursorX--;
+                            break;
+                        case PB_RIGHT:
+                            bombadeetle->cursorX++;
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
             break;
