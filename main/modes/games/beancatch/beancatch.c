@@ -14,6 +14,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include "esp_random.h"
+#include "esp_log.h"
 
 //==============================================================================
 // Consts
@@ -35,6 +36,8 @@ struct beancatch_t {
     bc_gameStateEnum_t state;
     gameUpdateFuncton_t update;
     bool refreshScreen;
+
+    font_t lcdNumbersFont;
     wsg_t wsgs[BC_WSG_SIZE];
 
     uint8_t waitLoopCounter;
@@ -115,6 +118,8 @@ void beancatchEnterMode(void)
         loadWsg(BC_WSGS[i], &beancatch->wsgs[i], false);
     }
 
+    loadFont(LCD_NUMBERS_FONT, &beancatch->lcdNumbersFont, false);
+
     beancatch->refreshScreen = true;
     beancatch->update = &bcUpdateAcl;
 }
@@ -125,6 +130,9 @@ void beancatchExitMode(void)
     {
         freeWsg(&beancatch->wsgs[i]);
     }
+
+    freeFont(&beancatch->lcdNumbersFont);
+
     heap_caps_free(beancatch);
 }
 
@@ -164,6 +172,14 @@ void bcUpdateAcl(void)
                 drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
             }
         }
+
+        char buffer[5];
+
+        snprintf(buffer, sizeof(buffer) - 1, "%2d", esp_random() % 18);
+        drawText(&beancatch->lcdNumbersFont, c000, buffer, 25, 53);
+
+        snprintf(buffer, sizeof(buffer) - 1, "%02d", esp_random() % 18);
+        drawText(&beancatch->lcdNumbersFont, c000, buffer, 68, 53);
 
         beancatch->refreshScreen = false;
     }
