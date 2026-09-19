@@ -9,7 +9,7 @@
 // Includes
 //==============================================================================
 
-#include "swadge2024.h"
+#include "swadge.h"
 #include "hdw-btn.h"
 #include "colorTest.h"
 #include "esp_log.h"
@@ -41,6 +41,10 @@ typedef struct
 
     uint16_t palette[39];
     uint16_t lastPalette[39];
+
+    wsgExt_t rainbowWsg, redbowWsg, greenbowWsg, bluebowWsg, graybowWsg;
+
+    int curDraw;
 } colorTest_t;
 
 //==============================================================================
@@ -104,7 +108,13 @@ static void colorTestEnterMode(void)
     colorTest = heap_caps_calloc(1, sizeof(colorTest_t), MALLOC_CAP_8BIT);
 
     // Load a font
-    loadFont("ibm_vga8.font", &colorTest->ibm, false);
+    loadFont(IBM_VGA_8_FONT, &colorTest->ibm, false);
+
+    loadWsgExt(EXT_RAINBOW_WSG, &colorTest->rainbowWsg, false);
+    loadWsgExt(EXT_REDBOW_WSG, &colorTest->redbowWsg, false);
+    loadWsgExt(EXT_GREENBOW_WSG, &colorTest->greenbowWsg, false);
+    loadWsgExt(EXT_BLUEBOW_WSG, &colorTest->bluebowWsg, false);
+    loadWsgExt(EXT_GRAYBOW_WSG, &colorTest->graybowWsg, false);
 
     setFrameRateUs(0);
 }
@@ -116,6 +126,11 @@ static void colorTestExitMode(void)
 {
     // Free the font
     freeFont(&colorTest->ibm);
+    freeWsgExt(&colorTest->rainbowWsg);
+    freeWsgExt(&colorTest->redbowWsg);
+    freeWsgExt(&colorTest->greenbowWsg);
+    freeWsgExt(&colorTest->bluebowWsg);
+    freeWsgExt(&colorTest->graybowWsg);
     heap_caps_free(colorTest);
 }
 
@@ -138,9 +153,24 @@ static void colorTestMainLoop(int64_t elapsedUs)
         {
             colorTestReset();
         }
+        else if (evt.down && PB_UP == evt.button)
+        {
+            colorTest->curDraw = (colorTest->curDraw + 1) % 5;
+        }
+        else if (evt.down && PB_DOWN == evt.button)
+        {
+            if (colorTest->curDraw > 0)
+            {
+                colorTest->curDraw--;
+            }
+            else
+            {
+                colorTest->curDraw = 4;
+            }
+        }
     }
 
-    static int32_t timer = 0;
+    /*static int32_t timer = 0;
     timer -= elapsedUs;
     while (timer <= 0)
     {
@@ -163,15 +193,15 @@ static void colorTestMainLoop(int64_t elapsedUs)
         colorTest->v++;
         if (colorTest->v == 0)
         {
-            colorTest->h++;
+            colorTest->h++;*/
             /*if (colorTest->h == 0)
             {
                 colorTest->s += 8;
             }*/
-        }
-    }
+        //}
+    //}
 
-    colorTestUpdateColors();
+    //colorTestUpdateColors();
 
     // Draw the field
     colorTestDraw();
@@ -218,11 +248,23 @@ static void colorTestBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
  */
 static void colorTestDraw(void)
 {
+    wsgExt_t* drawWsg;
+    switch (colorTest->curDraw)
+    {
+        case 0: drawWsg = &colorTest->rainbowWsg; break;
+        case 1: drawWsg = &colorTest->redbowWsg; break;
+        case 2: drawWsg = &colorTest->greenbowWsg; break;
+        case 3: drawWsg = &colorTest->bluebowWsg; break;
+        case 4:
+        default: drawWsg = &colorTest->graybowWsg; break;
+    }
+
+    drawWsgSimple(&drawWsg->wsg, (TFT_WIDTH - drawWsg->wsg.w) / 2, (TFT_HEIGHT - drawWsg->wsg.h) / 2);
 }
 
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 static void colorTestUpdateColors(void)
 {

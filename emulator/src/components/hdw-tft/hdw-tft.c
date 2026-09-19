@@ -4,10 +4,14 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <inttypes.h>
+#include <esp_log.h>
 
 #include "hdw-tft.h"
 #include "hdw-tft_emu.h"
 #include "emu_main.h"
+
+uint32_t extPaletteRefcount[EXT_PALETTE_LENGTH] = {0};
 
 //==============================================================================
 // Const variables
@@ -17,7 +21,9 @@
 
 // Each 16 bit value is rrrrrggggggbbbbb, but it's in LSB order, so it's actually gggbbbbbrrrrrggg
 // RGBA
-#define EXTENDED_PALETTE_TO_EMU(RGB) ((((RGB >> 3) & 0b11111) << 3 << 24) | ((((RGB & 0b111) << 3) | ((RGB >> 13) & 0b111)) << 2 << 16) | (((RGB >> 8) & 0b11111) << 3 << 8) | 0xFF)
+#define EXTENDED_PALETTE_TO_EMU(RGB) (((unsigned int)(((RGB >> 3) & 0b11111) << 3) << 24) | ((((RGB & 0b111) << 3) | ((RGB >> 13) & 0b111)) << 2 << 16) | (((RGB >> 8) & 0b11111) << 3 << 8) | 0xFF)
+#define REAL_PALETTE_TO_EMU(RGB) (RGB)
+#define EMU_PALETTE_TO_REAL(RGB) (RGB)
 static uint32_t paletteColorsEmu[256] = {
     0x000000FF, 0x000033FF, 0x000066FF, 0x000099FF, 0x0000CCFF, 0x0000FFFF, 0x003300FF, 0x003333FF, 0x003366FF,
     0x003399FF, 0x0033CCFF, 0x0033FFFF, 0x006600FF, 0x006633FF, 0x006666FF, 0x006699FF, 0x0066CCFF, 0x0066FFFF,
@@ -44,16 +50,18 @@ static uint32_t paletteColorsEmu[256] = {
     0xFF9900FF, 0xFF9933FF, 0xFF9966FF, 0xFF9999FF, 0xFF99CCFF, 0xFF99FFFF, 0xFFCC00FF, 0xFFCC33FF, 0xFFCC66FF,
     0xFFCC99FF, 0xFFCCCCFF, 0xFFCCFFFF, 0xFFFF00FF, 0xFFFF33FF, 0xFFFF66FF, 0xFFFF99FF, 0xFFFFCCFF, 0xFFFFFFFF,
     0x000000FF,
-    0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 
-    0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 
-    0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 
-    0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 
+    0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF,
+    0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF,
+    0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF,
+    0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF,
     0x000000FF, 0x000000FF, 0x000000FF,
 };
 
 #else
 // ARGB
 #define EXTENDED_PALETTE_TO_EMU(RGB) (0xFF000000 | (((RGB >> 3) & 0b11111) << 3 << 16) | ((((RGB & 0b111) << 3) | ((RGB >> 13) & 0b111)) << 2 << 8) | (((RGB >> 8) & 0b11111) << 3))
+#define REAL_PALETTE_TO_EMU(RGB) (((RGB & 0xFF) << 8) | ((RGB & 0xFFFFFF00) >> 8))
+#define EMU_PALETTE_TO_REAL(RGB) (((RGB & 0x00FFFFFF) << 8) | ((RGB & 0xFF000000) >> 24))
 static uint32_t paletteColorsEmu[256] = {
     0xFF000000, 0xFF000033, 0xFF000066, 0xFF000099, 0xFF0000CC, 0xFF0000FF, 0xFF003300, 0xFF003333, 0xFF003366,
     0xFF003399, 0xFF0033CC, 0xFF0033FF, 0xFF006600, 0xFF006633, 0xFF006666, 0xFF006699, 0xFF0066CC, 0xFF0066FF,
@@ -88,6 +96,29 @@ static uint32_t paletteColorsEmu[256] = {
 };
 
 #endif
+
+// We do now need this in the emulator for bookkeeping purposes
+uint16_t paletteColors[] = {
+    0x0000, 0x0600, 0x0C00, 0x1200, 0x1800, 0x1F00, 0x8001, 0x8601, 0x8C01, 0x9201, 0x9801, 0x9F01, 0x0003, 0x0603,
+    0x0C03, 0x1203, 0x1803, 0x1F03, 0x8004, 0x8604, 0x8C04, 0x9204, 0x9804, 0x9F04, 0x0006, 0x0606, 0x0C06, 0x1206,
+    0x1806, 0x1F06, 0xC007, 0xC607, 0xCC07, 0xD207, 0xD807, 0xDF07, 0x0030, 0x0630, 0x0C30, 0x1230, 0x1830, 0x1F30,
+    0x8031, 0x8631, 0x8C31, 0x9231, 0x9831, 0x9F31, 0x0033, 0x0633, 0x0C33, 0x1233, 0x1833, 0x1F33, 0x8034, 0x8634,
+    0x8C34, 0x9234, 0x9834, 0x9F34, 0x0036, 0x0636, 0x0C36, 0x1236, 0x1836, 0x1F36, 0xC037, 0xC637, 0xCC37, 0xD237,
+    0xD837, 0xDF37, 0x0060, 0x0660, 0x0C60, 0x1260, 0x1860, 0x1F60, 0x8061, 0x8661, 0x8C61, 0x9261, 0x9861, 0x9F61,
+    0x0063, 0x0663, 0x0C63, 0x1263, 0x1863, 0x1F63, 0x8064, 0x8664, 0x8C64, 0x9264, 0x9864, 0x9F64, 0x0066, 0x0666,
+    0x0C66, 0x1266, 0x1866, 0x1F66, 0xC067, 0xC667, 0xCC67, 0xD267, 0xD867, 0xDF67, 0x0090, 0x0690, 0x0C90, 0x1290,
+    0x1890, 0x1F90, 0x8091, 0x8691, 0x8C91, 0x9291, 0x9891, 0x9F91, 0x0093, 0x0693, 0x0C93, 0x1293, 0x1893, 0x1F93,
+    0x8094, 0x8694, 0x8C94, 0x9294, 0x9894, 0x9F94, 0x0096, 0x0696, 0x0C96, 0x1296, 0x1896, 0x1F96, 0xC097, 0xC697,
+    0xCC97, 0xD297, 0xD897, 0xDF97, 0x00C0, 0x06C0, 0x0CC0, 0x12C0, 0x18C0, 0x1FC0, 0x80C1, 0x86C1, 0x8CC1, 0x92C1,
+    0x98C1, 0x9FC1, 0x00C3, 0x06C3, 0x0CC3, 0x12C3, 0x18C3, 0x1FC3, 0x80C4, 0x86C4, 0x8CC4, 0x92C4, 0x98C4, 0x9FC4,
+    0x00C6, 0x06C6, 0x0CC6, 0x12C6, 0x18C6, 0x1FC6, 0xC0C7, 0xC6C7, 0xCCC7, 0xD2C7, 0xD8C7, 0xDFC7, 0x00F8, 0x06F8,
+    0x0CF8, 0x12F8, 0x18F8, 0x1FF8, 0x80F9, 0x86F9, 0x8CF9, 0x92F9, 0x98F9, 0x9FF9, 0x00FB, 0x06FB, 0x0CFB, 0x12FB,
+    0x18FB, 0x1FFB, 0x80FC, 0x86FC, 0x8CFC, 0x92FC, 0x98FC, 0x9FFC, 0x00FE, 0x06FE, 0x0CFE, 0x12FE, 0x18FE, 0x1FFE,
+    0xC0FF, 0xC6FF, 0xCCFF, 0xD2FF, 0xD8FF, 0xDFFF, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+};
 
 //==============================================================================
 // Variables
@@ -405,10 +436,84 @@ const paletteColor_t* getLastTftBitmap(void)
     return lastBuffer;
 }
 
-void extendPalette(const uint16_t palette[39])
+void extendPalette(const uint16_t palette[EXT_PALETTE_LENGTH])
 {
-    for (int i = 0; i < 39; i++)
+    for (int i = 0; i < EXT_PALETTE_LENGTH; i++)
     {
-        paletteColorsEmu[216 + i] = EXTENDED_PALETTE_TO_EMU(palette[i]);
+        paletteColors[EXT_PALETTE_START + i] = palette[i];
+        paletteColorsEmu[EXT_PALETTE_START + i] = EXTENDED_PALETTE_TO_EMU(palette[i]);
+    }
+}
+
+paletteColor_t allocateColor(uint16_t color16)
+{
+    int firstFree = -1;
+    for (int n = 0; n < EXT_PALETTE_LENGTH; n++)
+    {
+        if (extPaletteRefcount[n] == 0)
+        {
+            if (firstFree == -1)
+            {
+                firstFree = n;
+            }
+        }
+        else if (paletteColors[EXT_PALETTE_START + n] == color16)
+        {
+            extPaletteRefcount[n]++;
+            ESP_LOGD("Palette", "Palette #%d now has %" PRIu32 " references", n, extPaletteRefcount[n]);
+            return (paletteColor_t)(EXT_PALETTE_START + n);
+        }
+    }
+
+    if (firstFree >= 0)
+    {
+        paletteColors[EXT_PALETTE_START + firstFree] = color16;
+        paletteColorsEmu[EXT_PALETTE_START + firstFree] = EXTENDED_PALETTE_TO_EMU(color16);
+        extPaletteRefcount[firstFree]++;
+        ESP_LOGD("Palette", "Palette #%d now has %" PRIu32 " references", firstFree, extPaletteRefcount[firstFree]);
+        return (paletteColor_t)(EXT_PALETTE_START + firstFree);
+    }
+    else
+    {
+        // Return magic pink as an error?
+        return c505;
+    }
+}
+
+void freeColor(uint16_t color16)
+{
+    for (int n = 0; n < EXT_PALETTE_LENGTH; n++)
+    {
+        if (paletteColors[EXT_PALETTE_START + n] == color16)
+        {
+            if (0 == --extPaletteRefcount[n])
+            {
+                paletteColors[EXT_PALETTE_START + n] = 0;
+                paletteColorsEmu[EXT_PALETTE_START + n] = 0;
+            }
+            ESP_LOGD("Palette", "Palette #%d now has %" PRIu32 " references", n, extPaletteRefcount[n]);
+            break;
+        }
+    }
+}
+
+void freePaletteColor(paletteColor_t color)
+{
+    int index = (int)color - EXT_PALETTE_START;
+    if (0 == --extPaletteRefcount[index])
+    {
+        paletteColors[(int)color] = 0;
+        paletteColorsEmu[(int)color] = 0;
+    }
+    ESP_LOGD("Palette", "Palette #%d now has %" PRIu32 " references", index, extPaletteRefcount[index]);
+}
+
+void resetPalette(void)
+{
+    for (int n = 0; n < EXT_PALETTE_LENGTH; n++)
+    {
+        extPaletteRefcount[n] = 0;
+        paletteColors[EXT_PALETTE_START + n] = 0;
+        paletteColorsEmu[EXT_PALETTE_START + n] = 0;
     }
 }

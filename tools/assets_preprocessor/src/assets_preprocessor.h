@@ -118,7 +118,7 @@
  * in the same directory as the input file. If that does not exist, it will search the
  * directory containing the input file, and so on until the top-level input directory has
  * been searched. The first of these `.opts` file that exists will be used and no other
- * assets files will be searched.
+ * options files will be searched.
  *
  * An options file is an INI-style file similar to the config file, but instead of each
  * section defining a file extension mapping, in an options file each section contains

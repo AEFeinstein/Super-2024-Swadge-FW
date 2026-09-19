@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <inttypes.h>
 
 #if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
     #pragma GCC diagnostic push
@@ -44,6 +45,7 @@ typedef struct
     int eG;
     int eB;
     bool isDrawn;
+    uint8_t ext;
 } pixel_t;
 
 void shuffleArray(uint32_t* ar, uint32_t len);
@@ -107,6 +109,10 @@ bool process_image(processorInput_t* arg)
     unsigned char* data = stbi_load_from_file(arg->in.file, &w, &h, &n, 4);
 
     bool dither = getBoolOption(arg->options, "wsg.dither", false);
+    bool useExtPalette = getBoolOption(arg->options, "wsg.extendedPalette", false);
+
+    uint16_t extPalette[39];
+    int extPaletteIdx = 0;
 
     if (NULL != data)
     {
@@ -144,6 +150,34 @@ bool process_image(processorInput_t* arg)
             image8b[y][x].g = CLAMP((127 + ((sourceG + image8b[y][x].eG) * 5)) / 255, 0, 5);
             image8b[y][x].b = CLAMP((127 + ((sourceB + image8b[y][x].eB) * 5)) / 255, 0, 5);
             image8b[y][x].a = (sourceA >= 128) ? 0xFF : 0x00;
+
+            if (useExtPalette)
+            {
+                if (image8b[y][x].a && (image8b[y][x].r * 51 != sourceR || image8b[y][x].g * 51 != sourceG || image8b[y][x].b * 51 != sourceB))
+                {
+                    // Image color is not transparent and not in the web-safe palette
+                    bool newColor = true;
+
+                    // get the 16-bit color as gggbbbbb rrrrrggg
+                    uint16_t color16 = (((sourceG >> 2) & 0b111) << 13) | (((sourceB >> 3) & 0b11111) << 8) | (((sourceR >> 3) & 0b11111) << 3) | ((sourceG >> 5) & 0b111);
+                    // Image color is not in the web-safe palette, we should use the extened palette
+                    for (int j = 0; j < extPaletteIdx; j++)
+                    {
+                        if (extPalette[j] == color16)
+                        {
+                            image8b[y][x].ext = 217 + j;
+                            newColor = false;
+                            break;
+                        }
+                    }
+
+                    if (newColor)
+                    {
+                        image8b[y][x].ext = 217 + extPaletteIdx;
+                        extPalette[extPaletteIdx++] = color16;
+                    }
+                }
+            }
 
             // Don't dither small sprites, it just doesn't look good
             if (dither)
@@ -222,7 +256,12 @@ bool process_image(processorInput_t* arg)
         {
             for (int x = 0; x < w; x++)
             {
-                if (image8b[y][x].a)
+                if (useExtPalette && image8b[y][x].ext)
+                {
+                    // We're using an extended-palette color for this!
+                    paletteBuf[paletteBufIdx++] = image8b[y][x].ext;
+                }
+                else if (image8b[y][x].a)
                 {
                     /* Index math! The palette indices increase blue, then green, then red.
                      * Each has a value 0-5 (six levels)
@@ -246,13 +285,31 @@ bool process_image(processorInput_t* arg)
         free(image8b);
 
         /* Combine the header and image*/
-        uint32_t hdrAndImgSz = sizeof(uint8_t) * (4 + paletteBufSize);
+        uint32_t extPalettePad = paletteBufSize % 2;
+        uint32_t extPaletteSize = useExtPalette ? (2 + extPalettePad + extPaletteIdx * sizeof(uint16_t)) : 0;
+        uint32_t hdrAndImgSz = sizeof(uint8_t) * (4 + paletteBufSize) + extPaletteSize;
         uint8_t* hdrAndImg   = calloc(1, hdrAndImgSz);
         hdrAndImg[0]         = HI_BYTE(w);
         hdrAndImg[1]         = LO_BYTE(w);
         hdrAndImg[2]         = HI_BYTE(h);
         hdrAndImg[3]         = LO_BYTE(h);
         memcpy(&hdrAndImg[4], paletteBuf, paletteBufSize);
+
+        if (extPaletteSize)
+        {
+            // Stick the extended palette at the end of the image, for compatibility/laziness reasons
+
+            // First the length of the extended palette, in two bytes for alignment
+            hdrAndImg[4 + paletteBufSize + extPalettePad] = 0;
+            hdrAndImg[5 + paletteBufSize + extPalettePad] = (uint8_t)(extPaletteIdx & 0xFF);
+
+            uint8_t* extPaletteOut = &hdrAndImg[6 + paletteBufSize + extPalettePad];
+            for (int j = 0; j < extPaletteIdx; j++)
+            {
+                extPaletteOut[2 * j] = HI_BYTE(extPalette[j]);
+                extPaletteOut[2 * j + 1] = LO_BYTE(extPalette[j]);
+            }
+        }
         /* Write the compressed file */
 
         bool result = writeHeatshrinkFileHandle(hdrAndImg, hdrAndImgSz, arg->out.file);

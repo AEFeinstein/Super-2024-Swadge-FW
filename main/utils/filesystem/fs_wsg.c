@@ -13,6 +13,7 @@
 #include "hdw-nvs.h"
 #include "fs_wsg.h"
 #include "macros.h"
+#include "palette.h"
 
 //==============================================================================
 // Functions
@@ -72,6 +73,113 @@ bool loadWsg(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam)
         wsg->h = newH;
 
         memcpy(wsg->px, &decompressedBuf[4], decompressedSize - 4);
+        heap_caps_free(decompressedBuf);
+        return true;
+    }
+
+    // all done
+    heap_caps_free(decompressedBuf);
+    return false;
+}
+
+/**
+ * @brief Load a WSG from ROM to RAM. WSGs placed in the assets_image folder
+ * before compilation will be automatically flashed to ROM
+ *
+ * @param fIdx The cnfsFileIdx_t the WSG to load
+ * @param wsgExt  A handle to load the extended WSG to
+ * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
+ * than normal RAM
+ * @return true if the WSG was loaded successfully,
+ *         false if the WSG load failed and should not be used
+ */
+bool loadWsgExt(cnfsFileIdx_t fIdx, wsgExt_t* wsgExt, bool spiRam)
+{
+    wsg_t* wsg = &wsgExt->wsg;
+
+    // Read and decompress file
+    uint32_t decompressedSize = 0;
+    uint8_t* decompressedBuf  = readHeatshrinkFile(fIdx, &decompressedSize, spiRam);
+
+    if (NULL == decompressedBuf)
+    {
+        return false;
+    }
+
+    // Save the decompressed info to the wsg. The first four bytes are dimension
+    uint16_t newW = (decompressedBuf[0] << 8) | decompressedBuf[1];
+    uint16_t newH = (decompressedBuf[2] << 8) | decompressedBuf[3];
+
+    // If there is an existing buffer and it doesn't match, free it
+    if (wsg->px && (wsg->w * wsg->h != newW * newH))
+    {
+        heap_caps_free(wsg->px);
+        wsg->px = NULL;
+    }
+
+// The rest of the bytes are pixels
+#ifndef __XTENSA__
+    char tag[32];
+    sprintf(tag, "cnfsIdx %d", fIdx);
+#endif
+
+    // If there is no pixel buffer
+    if (!wsg->px)
+    {
+        // Allocate it
+        wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * newW * newH,
+                                                        spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, tag);
+    }
+
+    if (NULL != wsg->px)
+    {
+        // Set the size
+        wsg->w = newW;
+        wsg->h = newH;
+
+        memcpy(wsg->px, &decompressedBuf[4], newW * newH);
+
+        // Handle the colors
+        uint8_t* extStart = &decompressedBuf[4 + (((newW * newH + 1) >> 1) << 1)];
+
+
+        if ((extStart - decompressedBuf) < decompressedSize)
+        {
+            uint8_t colorCount = extStart[1];
+
+            ESP_LOGD("WSG", "extended WSG has %" PRIu8 " additional colors", colorCount);
+
+            // We'll have to replace the colors with the actual one that gets allocated later
+            uint16_t extColors[EXT_PALETTE_LENGTH];
+            paletteColor_t extPaletteMap[EXT_PALETTE_LENGTH];
+            for (int n = 0; n < colorCount; n++)
+            {
+                // Allocate the colors and map them first
+                extColors[n] = extStart[2 + 2 * n] << 8 | extStart[2 + 2 * n + 1];
+                ESP_LOGD("WSG", "extended WSG color #%d: %" PRIx16 "\n", n, extColors[n]);
+                extPaletteMap[n] = allocateColor(extColors[n]);
+            }
+
+            // Do the actual color replacement (hopefully it's fast)
+            for (int n = 0; n < newW * newH; n++)
+            {
+                if ((uint8_t)wsg->px[n] > cTransparent)
+                {
+                    // Remap
+                    wsg->px[n] = extPaletteMap[(uint8_t)wsg->px[n] - EXT_PALETTE_START];
+                }
+            }
+
+            wsgExt->colorCount = colorCount;
+            memcpy(wsgExt->extColors, extColors, sizeof(wsgExt->extColors));
+        }
+        else
+        {
+            ESP_LOGD("WSG", "extended WSG has no additional colors (extStart is %d and decompressedSize is %" PRIu32 ")", (int)(extStart - decompressedBuf), decompressedSize);
+            // This will make loading a non-extended WSG still work
+            wsgExt->colorCount = 0;
+        }
+
         heap_caps_free(decompressedBuf);
         return true;
     }
@@ -267,4 +375,21 @@ void freeWsg(wsg_t* wsg)
         wsg->h  = 0;
         wsg->w  = 0;
     }
+}
+
+/**
+ * @brief Free the memory for a loaded extended WSG and all its colors
+ *
+ * @param ext The Extended WSG handle to free memory from
+ */
+void freeWsgExt(wsgExt_t* ext)
+{
+    for (int n = 0; n < ext->colorCount; n++)
+    {
+        freeColor(ext->extColors[n]);
+    }
+
+    freeWsg(&ext->wsg);
+
+    ext->colorCount = 0;
 }

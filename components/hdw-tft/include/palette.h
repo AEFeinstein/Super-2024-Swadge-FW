@@ -18,6 +18,9 @@
 // Technically green is 6 bits per color but idk
 #define RGB_TO_16BIT_PALETTE(r,g,b) ((((g) & 0b111) << 13) | (((b) & 0b11111) << 8) | (((r) & 0b11111) << 3) | (((g) >> 3) & 0b111))
 
+#define EXT_PALETTE_LENGTH 39
+#define EXT_PALETTE_START 217
+
 extern uint16_t paletteColors[];
 
 /**
@@ -265,6 +268,10 @@ typedef enum __attribute__((packed))
     cx20,
 } paletteColor_t;
 
-void extendPalette(const uint16_t palette[39]);
+void extendPalette(const uint16_t palette[EXT_PALETTE_LENGTH]);
+paletteColor_t allocateColor(uint16_t color16);
+void freeColor(uint16_t color16);
+void freePaletteColor(paletteColor_t color);
+void resetPalette(void);
 
 #endif

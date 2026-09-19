@@ -1,6 +1,10 @@
 #include "palette.h"
 
 #include <string.h>
+#include <inttypes.h>
+#include <esp_log.h>
+
+uint32_t extPaletteRefcount[EXT_PALETTE_LENGTH] = {0};
 
 //==============================================================================
 // Colors
@@ -28,12 +32,85 @@ uint16_t paletteColors[] = {
     0x0CF8, 0x12F8, 0x18F8, 0x1FF8, 0x80F9, 0x86F9, 0x8CF9, 0x92F9, 0x98F9, 0x9FF9, 0x00FB, 0x06FB, 0x0CFB, 0x12FB,
     0x18FB, 0x1FFB, 0x80FC, 0x86FC, 0x8CFC, 0x92FC, 0x98FC, 0x9FFC, 0x00FE, 0x06FE, 0x0CFE, 0x12FE, 0x18FE, 0x1FFE,
     0xC0FF, 0xC6FF, 0xCCFF, 0xD2FF, 0xD8FF, 0xDFFF, 0x0000,
-    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
-    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
 };
 
-void extendPalette(const uint16_t palette[39])
+void extendPalette(const uint16_t palette[EXT_PALETTE_LENGTH])
 {
-    memcpy(&paletteColors[217], palette, 39 * sizeof(uint16_t));
+    memcpy(&paletteColors[EXT_PALETTE_START], palette, EXT_PALETTE_LENGTH * sizeof(uint16_t));
+    for (int n = 0; n < EXT_PALETTE_LENGTH; n++)
+    {
+        extPaletteRefcount[n] = 1;
+    }
+}
+
+paletteColor_t allocateColor(uint16_t color16)
+{
+    int firstFree = -1;
+    for (int n = 0; n < EXT_PALETTE_LENGTH; n++)
+    {
+        if (extPaletteRefcount[n] == 0)
+        {
+            if (firstFree == -1)
+            {
+                firstFree = n;
+            }
+        }
+        else if (paletteColors[EXT_PALETTE_START + n] == color16)
+        {
+            extPaletteRefcount[n]++;
+            ESP_LOGD("Palette", "Palette #%d now has %" PRIu32 " references", n, extPaletteRefcount[n]);
+            return (paletteColor_t)(EXT_PALETTE_START + n);
+        }
+    }
+
+    if (firstFree >= 0)
+    {
+        paletteColors[EXT_PALETTE_START + firstFree] = color16;
+        extPaletteRefcount[firstFree]++;
+        ESP_LOGD("Palette", "Palette #%d now has %" PRIu32 " references", firstFree, extPaletteRefcount[firstFree]);
+        return (paletteColor_t)(EXT_PALETTE_START + firstFree);
+    }
+    else
+    {
+        // Return magic pink as an error?
+        return c505;
+    }
+}
+
+void freeColor(uint16_t color16)
+{
+    for (int n = 0; n < EXT_PALETTE_LENGTH; n++)
+    {
+        if (paletteColors[EXT_PALETTE_START + n] == color16)
+        {
+            if (0 == --extPaletteRefcount[n])
+            {
+                paletteColors[EXT_PALETTE_START + n] = 0;
+            }
+            ESP_LOGD("Palette", "Palette #%d now has %" PRIu32 " references", n, extPaletteRefcount[n]);
+            break;
+        }
+    }
+}
+
+void freePaletteColor(paletteColor_t color)
+{
+    int index = (int)color - EXT_PALETTE_START;
+    if (0 == --extPaletteRefcount[index])
+    {
+        paletteColors[(int)color] = 0;
+    }
+    ESP_LOGD("Palette", "Palette #%d now has %" PRIu32 " references", index, extPaletteRefcount[index]);
+}
+
+void resetPalette(void)
+{
+    for (int n = 0; n < EXT_PALETTE_LENGTH; n++)
+    {
+        extPaletteRefcount[n] = 0;
+        paletteColors[EXT_PALETTE_START + n] = 0;
+    }
 }

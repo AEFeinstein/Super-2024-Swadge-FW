@@ -60,6 +60,17 @@ typedef struct
     uint16_t h;         ///< The height of the image
 } wsg_t;
 
+/**
+ * @brief An extended WSG, which allows colors not in the web-safe palette
+ *
+ */
+typedef struct
+{
+    wsg_t wsg;
+    uint8_t colorCount;
+    uint16_t extColors[EXT_PALETTE_LENGTH];
+} wsgExt_t;
+
 void rotatePixel(int32_t* x, int32_t* y, int32_t rotateDeg, int32_t width, int32_t height);
 void drawWsg(const wsg_t* wsg, int32_t xOff, int32_t yOff, bool flipLR, bool flipUD, int32_t rotateDeg);
 void drawWsgSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff);
