@@ -1292,7 +1292,6 @@ static void bombadeetleStageSelectLoop(int64_t elapsedUs)
         }
     }
     
-
     bombadeetleDrawSelect();
 }
 
@@ -1428,8 +1427,14 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                         
                         
                         bombadeetle->levelIndex++;
+                        if (bombadeetle->levelIndex >= ARRAY_SIZE(bombadeetleLevels))
+                        {
+                            bombadeetle->levelIndex =  ARRAY_SIZE(bombadeetleLevels) -1;
+                        }
+                        
                         bombadeetle->stageSelectPageIndex = bombadeetle->levelIndex / 20;
                         bombadeetle->stageSelectIndex = bombadeetle->levelIndex % 20;
+
                         if (bombadeetle->levelIndex > bombadeetle->levelMax)
                         {
                             bombadeetle->levelMax = bombadeetle->levelIndex;
@@ -1444,17 +1449,9 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                         else
                         {
 
-                            //Next map
-                            
-                            if (bombadeetle->levelIndex >= ARRAY_SIZE(bombadeetleLevels))
-                            {
-                                bombadeetle->levelIndex = ARRAY_SIZE(bombadeetleLevels ) - 1;
-                            }
-                            
-                            
+                            //Next map                            
                             bombadeetleImportMap(bombadeetle->levelIndex);
                             bombadeetleLoadMap();
-                            bombadeetleGetLevelData(bombadeetle->levelIndex);
                         }
                     }
 
@@ -1463,7 +1460,11 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                         
             
                         bombadeetle->levelIndex++;
-                        
+                        if (bombadeetle->levelIndex >= ARRAY_SIZE(bombadeetleLevels))
+                        {
+                            bombadeetle->levelIndex =  ARRAY_SIZE(bombadeetleLevels) -1;
+                        }
+
                         bombadeetle->stageSelectPageIndex = bombadeetle->levelIndex / 20;
                         bombadeetle->stageSelectIndex = bombadeetle->levelIndex % 20;
                         
@@ -1477,8 +1478,14 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                         bombadeetle->state = STATE_STAGESELECT;
                         bombadeetle->paused = false;
                         bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT;
-
+                        
                     }
+
+                    if (bombadeetle->levelIndex >= ARRAY_SIZE(bombadeetleLevels))
+                    {
+                        bombadeetle->levelIndex = ARRAY_SIZE(bombadeetleLevels ) - 1;
+                    }
+                    bombadeetleGetLevelData(bombadeetle->levelIndex);
                 }
             }
         case STATE_RUNNING:
