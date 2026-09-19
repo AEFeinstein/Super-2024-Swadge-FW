@@ -1454,6 +1454,7 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                             
                             bombadeetleImportMap(bombadeetle->levelIndex);
                             bombadeetleLoadMap();
+                            bombadeetleGetLevelData(bombadeetle->levelIndex);
                         }
                     }
 
