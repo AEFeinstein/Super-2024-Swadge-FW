@@ -31,6 +31,7 @@
 
 #include "accelTest.h"
 #include "atrium.h"
+#include "beancatch.h"
 #include "canvas.h"
 #include "colorchord.h"
 #include "dance.h"

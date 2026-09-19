@@ -5,11 +5,13 @@
 // Includes
 //==============================================================================
 #include <inttypes.h>
+#include "cnfs_image.h"
 
 //==============================================================================
 // Constants
 //==============================================================================
 #define BC_WSG_SIZE 44
+#define BC_SEGMENTS_SIZE 42
 
 //==============================================================================
 // Macros
@@ -41,7 +43,7 @@ typedef struct beancatch_t beancatch_t;
 
 typedef struct
 {
-    bc_wsgIndex_t wsgIndex;
+    uint16_t wsgIndex;
     uint32_t x;
     uint32_t y;
 } bc_LcdSegment_t;
@@ -170,95 +172,7 @@ typedef enum
 // Extern Variables
 //==============================================================================
 
-// extern const cnfsFileIdx_t MG_BGMS[];
-// extern const int MG_1x2_TILE_COLLISION_OFFSETS_IN_PIXELS[];
-// extern const int MG_TILE_COLLISION_OFFSETS_1x2_BOTTOM_EDGE[];
-// extern const int MG_TILE_COLLISION_OFFSETS_1x2_TOP_EDGE[];
-// extern const int MG_TILE_COLLISION_OFFSETS_1x2_RIGHT_EDGE[];
-// extern const int MG_TILE_COLLISION_OFFSETS_1x2_LEFT_EDGE[];
-// extern const char MG_cheatModeNVSKey[];
-// extern const char MG_abilitiesNVSKey[];
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_bottomEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_topEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_rightEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_leftEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_topEdge_dash_slide;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_rightEdge_dash_slide;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_leftEdge_dash_slide;
-// extern const mg_EntityTileCollider_t entityTileCollider_1x2;
-// extern const mg_EntityTileCollider_t entityTileCollider_1x2_dash_slide;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_sever_yataga_bottomEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_sever_yataga_topEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_sever_yataga_rightEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_sever_yataga_leftEdge;
-// extern const mg_EntityTileCollider_t entityTileCollider_sever_yataga;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_smash_gorilla_bottomEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_smash_gorilla_topEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_smash_gorilla_rightEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_smash_gorilla_leftEdge;
-// extern const mg_EntityTileCollider_t entityTileCollider_smash_gorilla;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_bottomEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_topEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rightEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_leftEdge;
-// extern const mg_EntityTileCollider_t entityTileCollider_grind_pangolin;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_bottomEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_topEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_rightEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_leftEdge;
-// extern const mg_EntityTileCollider_t entityTileCollider_grind_pangolin_rolling;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_drain_bat_bottomEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_drain_bat_topEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_drain_bat_rightEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_drain_bat_leftEdge;
-// extern const mg_EntityTileCollider_t entityTileCollider_drain_bat;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_kinetic_donut_bottomEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_kinetic_donut_topEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_kinetic_donut_rightEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_kinetic_donut_leftEdge;
-// extern const mg_EntityTileCollider_t entityTileCollider_kinetic_donut;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_bottomEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_topEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_rightEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_leftEdge;
-// extern const mg_EntityTileCollider_t entityTileCollider_flare_gryffyn;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_jumping_bottomEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_jumping_topEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_jumping_rightEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_jumping_leftEdge;
-// extern const mg_EntityTileCollider_t entityTileCollider_flare_gryffyn_jumping;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_deadeye_chirpzi_bottomEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_deadeye_chirpzi_topEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_deadeye_chirpzi_rightEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_deadeye_chirpzi_leftEdge;
-// extern const mg_EntityTileCollider_t entityTileCollider_deadeye_chirpzi;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_trash_man_bottomEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_trash_man_topEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_trash_man_rightEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_trash_man_leftEdge;
-// extern const mg_EntityTileCollider_t entityTileCollider_trash_man;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_bigma_bottomEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_bigma_topEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_bigma_rightEdge;
-// extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_bigma_leftEdge;
-// extern const mg_EntityTileCollider_t entityTileCollider_bigma;
-// extern const paletteColor_t bgGradientGray[];
-// extern const paletteColor_t bgGradientPurple[];
-// extern const paletteColor_t bgGradientBlue[];
-// extern const paletteColor_t bgGradientCyan[];
-// extern const paletteColor_t bgGradientGreen[];
-// extern const paletteColor_t bgGradientYellow[];
-// extern const paletteColor_t bgGradientOrange[];
-// extern const paletteColor_t bgGradientRed[];
-// extern const paletteColor_t bgGradientMenu[];
-// extern const mgLeveldef_t leveldef[];
-
-// platformerTrophies array is defined in megaPulseEx.c to avoid multiple definitions
-// extern const trophyData_t platformerTrophies[];
-
-//==============================================================================
-// Function Declarations
-//==============================================================================
-
+extern const cnfsFileIdx_t BC_WSGS[];
+extern const bc_LcdSegment_t BC_LCD_SEGMENTS[BC_SEGMENTS_SIZE];
 
 #endif

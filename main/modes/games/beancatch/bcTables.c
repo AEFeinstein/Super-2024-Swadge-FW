@@ -5,7 +5,7 @@
 // Constant Variables
 //==============================================================================
 
-static const cnfsFileIdx_t BC_WSGS[] = {
+const cnfsFileIdx_t BC_WSGS[] = {
     //WSGs in order
     BC_BEAN_UL_00_WSG,
     BC_BEAN_UL_01_WSG,
@@ -32,7 +32,7 @@ static const cnfsFileIdx_t BC_WSGS[] = {
     BC_PLAYER_UL_WSG,
     BC_PLAYER_DL_WSG,
     BC_PLAYER_UR_WSG,
-    BC_PLAYER_DL_WSG,
+    BC_PLAYER_DR_WSG,
     BC_BEANBERT_L_WSG,
     BC_BEANBERT_R_WSG,
     BC_SWEARING_WSG,
@@ -53,8 +53,8 @@ static const cnfsFileIdx_t BC_WSGS[] = {
     BC_TOP_LABEL_WSG
 };
 
-static const bc_LcdSegment_t BC_LCD_SEGMENTS[] = {
-    {.wsgIndex = BC_WSG_BEAN_UL_00,  .x =   0, .y =  73}, //BC_SEG_BEAN_UL_00
+const bc_LcdSegment_t BC_LCD_SEGMENTS[] = {
+    {.wsgIndex = BC_WSG_BEAN_UL_00,  .x =   8, .y =  73}, //BC_SEG_BEAN_UL_00
     {.wsgIndex = BC_WSG_BEAN_UL_01,  .x =  24, .y =  83}, //BC_SEG_BEAN_UL_01
     {.wsgIndex = BC_WSG_BEAN_UL_02,  .x =  39, .y =  93}, //BC_SEG_BEAN_UL_02
     {.wsgIndex = BC_WSG_BEAN_UL_03,  .x =  54, .y = 101}, //BC_SEG_BEAN_UL_03
@@ -68,7 +68,7 @@ static const bc_LcdSegment_t BC_LCD_SEGMENTS[] = {
     {.wsgIndex = BC_WSG_BEAN_UR_01,  .x = 246, .y =  83}, //BC_SEG_BEAN_UR_01
     {.wsgIndex = BC_WSG_BEAN_UR_02,  .x = 232, .y =  93}, //BC_SEG_BEAN_UR_02
     {.wsgIndex = BC_WSG_BEAN_UR_03,  .x = 216, .y = 102}, //BC_SEG_BEAN_UR_03
-    {.wsgIndex = BC_WSG_BEAN_UR_04,  .x = 119, .y = 113}, //BC_SEG_BEAN_UR_04
+    {.wsgIndex = BC_WSG_BEAN_UR_04,  .x = 199, .y = 113}, //BC_SEG_BEAN_UR_04
     {.wsgIndex = BC_WSG_BEAN_DR_00,  .x = 261, .y = 106}, //BC_SEG_BEAN_DR_00
     {.wsgIndex = BC_WSG_BEAN_DR_01,  .x = 244, .y = 116}, //BC_SEG_BEAN_DR_01
     {.wsgIndex = BC_WSG_BEAN_DR_02,  .x = 229, .y = 126}, //BC_SEG_BEAN_DR_02
@@ -86,11 +86,11 @@ static const bc_LcdSegment_t BC_LCD_SEGMENTS[] = {
     {.wsgIndex = BC_WSG_BUBBLE_PTR_L,.x = 124, .y =  99}, //BC_SEG_BUBBLE_PTR_L
     {.wsgIndex = BC_WSG_BUBBLE_PTR_R,.x = 142, .y =  99}, //BC_SEG_BUBBLE_PTR_R
     {.wsgIndex = BC_WSG_EGGY_DEVITO, .x = 178, .y =  52}, //BC_SEG_EGGY_DEVITO
-    {.wsgIndex = BC_WSG_STRIKE_LBL,  .x = 128, .y =  72}, //BC_SEG_STRIKE_LBL
+    {.wsgIndex = BC_WSG_STRIKE_LBL,  .x = 128, .y = 178}, //BC_SEG_STRIKE_LBL
     {.wsgIndex = BC_WSG_STRIKE_ICON, .x = 119, .y = 188}, //BC_SEG_STRIKE_ICON_00
     {.wsgIndex = BC_WSG_STRIKE_ICON, .x = 137, .y = 188}, //BC_SEG_STRIKE_ICON_01
     {.wsgIndex = BC_WSG_STRIKE_ICON, .x = 155, .y = 188}, //BC_SEG_STRIKE_ICON_02
-    {.wsgIndex = BC_WSG_GAME_A_LBL,  .x = 155, .y = 187}, //BC_SEG_GAME_A_LBL
+    {.wsgIndex = BC_WSG_GAME_A_LBL,  .x =  27, .y = 187}, //BC_SEG_GAME_A_LBL
     {.wsgIndex = BC_WSG_GAME_B_LBL,  .x = 217, .y = 187}, //BC_SEG_GAME_B_LBL
     {.wsgIndex = BC_WSG_AM_LABEL,    .x =  21, .y =  53}, //BC_SEG_AM_LABEL
     {.wsgIndex = BC_WSG_ALARM_ICON,  .x = 126, .y =  51}, //BC_SEG_ALARM_ICON
