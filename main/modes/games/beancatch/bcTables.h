@@ -2,8 +2,14 @@
 #define BEANCATCH_TABLES_INCLUDED
 
 //==============================================================================
+// Includes
+//==============================================================================
+#include <inttypes.h>
+
+//==============================================================================
 // Constants
 //==============================================================================
+#define BC_WSG_SIZE 44
 
 //==============================================================================
 // Macros
@@ -12,6 +18,8 @@
 //==============================================================================
 // Typedefs
 //==============================================================================
+
+typedef struct beancatch_t beancatch_t;
 
 //==============================================================================
 // Structs
@@ -33,9 +41,9 @@
 
 typedef struct
 {
-    bc_wsgIndex_t wsgIndex,
-    uint32_t x,
-    uint32_t y
+    bc_wsgIndex_t wsgIndex;
+    uint32_t x;
+    uint32_t y;
 } bc_LcdSegment_t;
 
 //==============================================================================
@@ -45,10 +53,11 @@ typedef struct
 typedef enum
 {
     BC_ST_NULL,
+    BC_ST_ACL,
     BC_ST_CLOCK,
-    BC_ST_GAME,
-    BC_ST_GAME_OVER,
-    BC_ST_SHOW_HISCORE
+    BC_ST_GAME_A,
+    BC_ST_GAME_B,
+    BC_ST_GAME_OVER
 } bc_gameStateEnum_t;
 
 typedef enum
@@ -148,6 +157,14 @@ typedef enum
     BC_SEG_BOTTOM_LBL,
     BC_SEG_TOP_LABEL
 } bc_segmentIndex_t;
+
+typedef enum
+{
+    BC_CONVEYOR_LU,
+    BC_CONVEYOR_RU,
+    BC_CONVEYOR_LD,
+    BC_CONVEYOR_RD
+} bc_conveyorIndex_t;
 
 //==============================================================================
 // Extern Variables

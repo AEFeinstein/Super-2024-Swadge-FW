@@ -1,10 +1,59 @@
 #include "bcTables.h"
+#include <cnfs_image.h>
 
 //==============================================================================
 // Constant Variables
 //==============================================================================
 
-const bc_LcdSegment_t BC_LCD_SEGMENTS[] = {
+static const cnfsFileIdx_t BC_WSGS[] = {
+    //WSGs in order
+    BC_BEAN_UL_00_WSG,
+    BC_BEAN_UL_01_WSG,
+    BC_BEAN_UL_02_WSG,
+    BC_BEAN_UL_03_WSG,
+    BC_BEAN_UL_04_WSG,
+    BC_BEAN_DL_00_WSG,
+    BC_BEAN_DL_01_WSG,
+    BC_BEAN_DL_02_WSG,
+    BC_BEAN_DL_03_WSG,
+    BC_BEAN_DL_04_WSG,
+    BC_BEAN_UR_00_WSG,
+    BC_BEAN_UR_01_WSG,
+    BC_BEAN_UR_02_WSG,
+    BC_BEAN_UR_03_WSG,
+    BC_BEAN_UR_04_WSG,
+    BC_BEAN_UL_00_WSG,
+    BC_BEAN_UL_01_WSG,
+    BC_BEAN_UL_02_WSG,
+    BC_BEAN_UL_03_WSG,
+    BC_BEAN_UL_04_WSG,
+    BC_BEAN_DROP_L_WSG,
+    BC_BEAN_DROP_R_WSG,
+    BC_PLAYER_UL_WSG,
+    BC_PLAYER_DL_WSG,
+    BC_PLAYER_UR_WSG,
+    BC_PLAYER_DL_WSG,
+    BC_BEANBERT_L_WSG,
+    BC_BEANBERT_R_WSG,
+    BC_SWEARING_WSG,
+    BC_BUBBLE_PTR_L_WSG,
+    BC_BUBBLE_PTR_R_WSG,
+    BC_EGGY_DEVITO_WSG,
+    BC_STRIKE_LBL_WSG,
+    BC_STRIKE_ICON_WSG,
+    BC_GAME_A_LBL_WSG,
+    BC_GAME_B_LBL_WSG,
+    BC_AM_LABEL_WSG,
+    BC_ALARM_ICON_WSG,
+    BC_ALARM_ANIM_1_WSG,
+    BC_ALARM_ANIN_2_WSG,
+    BC_HOURS_SEP_WSG,
+    BC_BEAN_CATCH_BG_WSG,
+    BC_BOTTOM_LBL_WSG,
+    BC_TOP_LABEL_WSG
+};
+
+static const bc_LcdSegment_t BC_LCD_SEGMENTS[] = {
     {.wsgIndex = BC_WSG_BEAN_UL_00,  .x =   0, .y =  73}, //BC_SEG_BEAN_UL_00
     {.wsgIndex = BC_WSG_BEAN_UL_01,  .x =  24, .y =  83}, //BC_SEG_BEAN_UL_01
     {.wsgIndex = BC_WSG_BEAN_UL_02,  .x =  39, .y =  93}, //BC_SEG_BEAN_UL_02
@@ -32,7 +81,7 @@ const bc_LcdSegment_t BC_LCD_SEGMENTS[] = {
     {.wsgIndex = BC_WSG_PLAYER_UR,   .x = 181, .y = 123}, //BC_SEG_PLAYER_UR
     {.wsgIndex = BC_WSG_PLAYER_DR,   .x = 180, .y = 151}, //BC_SEG_PLAYER_DR
     {.wsgIndex = BC_WSG_BEANBERT_L,  .x = 100, .y = 107}, //BC_SEG_BEANBERT_L
-    {.wsgIndex = BC_WSG_BEANBERT_R,  .x = 136, .y = 107}, //BC_SEG_BEANBERT_E
+    {.wsgIndex = BC_WSG_BEANBERT_R,  .x = 136, .y = 107}, //BC_SEG_BEANBERT_R
     {.wsgIndex = BC_WSG_SWEARING,    .x = 103, .y =  73}, //BC_SEG_SWEARING
     {.wsgIndex = BC_WSG_BUBBLE_PTR_L,.x = 124, .y =  99}, //BC_SEG_BUBBLE_PTR_L
     {.wsgIndex = BC_WSG_BUBBLE_PTR_R,.x = 142, .y =  99}, //BC_SEG_BUBBLE_PTR_R
@@ -46,6 +95,6 @@ const bc_LcdSegment_t BC_LCD_SEGMENTS[] = {
     {.wsgIndex = BC_WSG_AM_LABEL,    .x =  21, .y =  53}, //BC_SEG_AM_LABEL
     {.wsgIndex = BC_WSG_ALARM_ICON,  .x = 126, .y =  51}, //BC_SEG_ALARM_ICON
     {.wsgIndex = BC_WSG_ALARM_ANIM_1,.x = 128, .y =  46}, //BC_SEG_ALARM_ANIM_1
-    {.wsgIndex = BC_WSG_ALARM_ANIM_2,.x = 127, .y =  39}, //BC_SEG_ALARM_ANIM_2
+    {.wsgIndex = BC_WSG_ALARM_ANIN_2,.x = 127, .y =  39}, //BC_SEG_ALARM_ANIM_2
     {.wsgIndex = BC_WSG_HOURS_SEP,   .x = 67,  .y =  56}  //BC_SEG_HOURS_SEP
 };
