@@ -173,6 +173,11 @@ bool process_image(processorInput_t* arg)
 
                     if (newColor)
                     {
+                        if (extPaletteIdx >= 39)
+                        {
+                            fprintf(stderr, "ERR: Image '%s' contains too many colors for extended palette!\n", arg->inFilename);
+                            return false;
+                        }
                         image8b[y][x].ext = 217 + extPaletteIdx;
                         extPalette[extPaletteIdx++] = color16;
                     }
