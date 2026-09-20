@@ -1,6 +1,7 @@
 import json
 import os
 import struct
+import sys
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
@@ -10,6 +11,9 @@ GRID_W = 12
 GRID_H = 9
 CELL = 48
 EDGE = 8
+
+HEADLESS = False
+PROCESS = False
 
 N,E,S,W = 8,4,2,1
 TELEPORTER = 16
@@ -26,6 +30,10 @@ DIR_ALL = DIR_W | DIR_S | DIR_E | DIR_N
 LEGACY_BOMBADEETLE = 16
 LEGACY_ENEMY = 128
 
+global gData
+global gPath 
+
+gPath = None
 maze=[0]*(GRID_W*GRID_H)
 entities=[0]*(GRID_W*GRID_H)
 enemies=[0]*(GRID_W*GRID_H)
@@ -217,13 +225,16 @@ def toggle_special(bit):
         maze[i]&=~bit
     else:
         maze[i]=(maze[i]&~SPECIAL)|bit
+        entities[i] = 0
+        enemies[i] = 0
     redraw()
 
 def toggle_bombadeetle():
     i=selected[0]
+    
     if entities[i]&DIR_ALL:
         entities[i]=0
-    else:
+    elif not (maze[i] & SPECIAL):
         entities[i]=last_direction[0]
         enemies[i]=0
     redraw()
@@ -232,7 +243,7 @@ def toggle_enemy():
     i=selected[0]
     if enemies[i]&DIR_ALL:
         enemies[i]=0
-    else:
+    elif not (maze[i] & SPECIAL):
         enemies[i]=last_direction[0]
         entities[i]=0
     redraw()
@@ -316,7 +327,10 @@ def set_arrow_counts(left=0,up=0,down=0,right=0):
 
 def load_map_from_path(path):
     with open(path,"r",encoding="utf-8") as f:
+        global gData
         data=json.load(f)
+        gData = data
+        print ("Data loaded")
 
     if isinstance(data,list):
         cells=data
@@ -428,6 +442,7 @@ def export_grid(out,name,grid):
     out.append("};")
 
 def export_binary():
+    global gPath
     try:
         arrows=get_arrow_counts()
         for key,value in arrows.items():
@@ -439,7 +454,11 @@ def export_binary():
         messagebox.showerror("Export failed",str(e))
         return
 
-    path=filedialog.asksaveasfilename(**export_dialog_kwargs())
+    if (gPath is None):
+        path=filedialog.asksaveasfilename(**export_dialog_kwargs())
+    else:
+        path = gPath
+
     if not path:
         return
 
@@ -458,6 +477,7 @@ def export_binary():
         with open(path,"wb") as f:
             f.write(payload)
         last_export_path[0]=path
+
     except Exception as e:
         messagebox.showerror("Export failed",str(e))
 
@@ -512,4 +532,49 @@ for col,key,label in ((0,"left","Left"),(1,"up","Up"),(2,"down","Down"),(3,"righ
     arrow_entries[key]=entry
 
 redraw()
-root.mainloop()
+
+if (len(sys.argv) > 1):
+    p = 1
+
+    while p < len(sys.argv):
+        if (sys.argv[p] == '-o' or sys.argv[p] == "--output"):
+            PROCESS = True
+            if (p + 1 < len(sys.argv)):
+                if (sys.argv[p + 1].startswith('-') == False):
+                    gPath = sys.argv[p + 1]
+                
+        if (sys.argv[p] == '-i' or sys.argv[p] == '--input'):
+            if (p + 1 < len(sys.argv)):
+                load_map_from_path(sys.argv[p + 1])
+                if (gPath is None):
+                    gPath = sys.argv[p + 1].replace(".json", ".bin")
+                    print ("No file name set. Using " + gPath)
+
+            else:
+                print ("Error! File not provided! Opening new blank file.")
+            
+        if (sys.argv[p] == '--headless' or sys.argv[p] == '-h'):
+            print ("\n\nBombadeetle map editor")
+            print ("Running headless, type -? for help")
+            HEADLESS = True
+
+        if (sys.argv[p] == '-?' or sys.argv[p] == '--help'):
+            print ("\n\nBombadeetle map editor")
+            print("-?, --help          show this help message")
+            print("-i, --input         Import default map")
+            print("-h, --headless      Do everything from the command line")
+            print("-o, --output        Set the name of the export binary")
+            quit()
+            
+        
+        p = p + 1
+
+
+
+if (HEADLESS == False):
+    root.mainloop()
+else:
+    if (PROCESS == True) and ((gPath is None) == False):
+        export_binary()
+        print ("Export "+ gPath+ " complete")
+        
