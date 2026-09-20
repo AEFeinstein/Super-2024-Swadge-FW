@@ -12,6 +12,7 @@
 //==============================================================================
 #define BC_WSG_SIZE 44
 #define BC_SEGMENTS_SIZE 43
+#define BC_DIFFICULTY_MAX_BEANS_SIZE 18
 
 //==============================================================================
 // Macros
@@ -162,6 +163,7 @@ typedef enum
 
 typedef enum
 {
+    BC_CONVEYOR_NULL = -1,
     BC_CONVEYOR_LU,
     BC_CONVEYOR_RU,
     BC_CONVEYOR_LD,
@@ -174,5 +176,6 @@ typedef enum
 
 extern const cnfsFileIdx_t BC_WSGS[];
 extern const bc_LcdSegment_t BC_LCD_SEGMENTS[BC_SEGMENTS_SIZE];
+extern const uint16_t BC_DIFFICULTY_MAX_BEANS[BC_DIFFICULTY_MAX_BEANS_SIZE];
 
 #endif
