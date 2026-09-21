@@ -4,8 +4,6 @@
 #include "mainMenu.h"
 #include "esp_random.h"
 
-const char heyListenModeName[] = "Hey, Listen!";
-
 // Limits for detecting yells
 #define MIC_ENERGY_THRESHOLD   100000
 #define MIC_ENERGY_HYSTERESIS  20
@@ -168,7 +166,9 @@ const trophyData_t heyListenTrophies[] = {
     },
 };
 
-// Individual mode settings
+//==============================================================================
+// Individual Mode Settings
+//==============================================================================
 
 const trophySettings_t heyListenTrophySettings = {
     .drawFromBottom   = false,
@@ -183,16 +183,16 @@ const trophyDataList_t heyListenTrophyData = {
     .length   = ARRAY_SIZE(heyListenTrophies),
 };
 swadgeMode_t heyListenMode = {
-    .modeName = heyListenModeName, // Assign the name we created here
-    .wifiMode = NO_WIFI,           // If we want WiFi. WiFi is expensive computationally/battery-wise, so disable
-                                   // it if you're not going to use it.
-    .overrideUsb = false,          // Overrides the default USB behavior. This is helpful for the game controller
-                                   // mode but unlikely to be useful for your game.
-    .usesAccelerometer = true,     // If we're using motion controls
-    .usesThermometer   = false,    // If we're using the internal thermometer
-    .overrideSelectBtn = false,    // The select/Menu button has a default behavior. If you want to override it,
-                                   // you can set this to true but you'll need to re-implement the
-                                   // 'return to main menu' behavior.
+    .modeName = heyListenStrName,
+    .wifiMode = NO_WIFI,        // If we want WiFi. WiFi is expensive computationally/battery-wise, so disable
+                                // it if you're not going to use it.
+    .overrideUsb = false,       // Overrides the default USB behavior. This is helpful for the game controller
+                                // mode but unlikely to be useful for your game.
+    .usesAccelerometer = true,  // If we're using motion controls
+    .usesThermometer   = false, // If we're using the internal thermometer
+    .overrideSelectBtn = false, // The select/Menu button has a default behavior. If you want to override it,
+                                // you can set this to true but you'll need to re-implement the
+                                // 'return to main menu' behavior.
     .fnEnterMode              = heyListenEnterMode,     // The enter mode function
     .fnExitMode               = heyListenExitMode,      // The exit mode function
     .fnMainLoop               = heyListenMainLoop,      // The loop function
@@ -247,14 +247,20 @@ static void heyListenEnterMode()
 
     // for random mode
     hld->randomizer = 0;
+
+    // TODO high scores, NVS
 }
 
 static void heyListenExitMode()
 {
     deinitMenuZorldoRenderer(hld->menuRenderer);
     deinitMenu(hld->hlmenu);
-    // TODO free sfx
-    // TODO free imgs
+    // Free SFX
+    for (int8_t i = 0; i < ARRAY_SIZE(hld->sfx); i++)
+    {
+        heap_caps_free(hld->sfx[i].samples);
+    }
+    // TODO free imgs; no WSGs loaded for now, doing nothing
 
     freeFont(&hld->font);
     clear(&hld->shakeHistory);
@@ -356,17 +362,21 @@ static void heyListenMainLoop(int64_t elapsedUs)
             if (hld->isYelling) // if the player is currently yelling, keep the timer running
             {
                 hld->nextEvtTimer++;
-                if (hld->nextEvtTimer >= 100)
+                if (hld->nextEvtTimer >= 400)
                 {
-                    hld->currentEvt = EVT_HEY; // trigger the "HEY" event
+                    hld->currentEvt = EVT_PHRASE; // trigger the "PHRASE" event
                 }
                 if (hld->nextEvtTimer >= 200)
                 {
                     hld->currentEvt = EVT_HEYLISTEN; // trigger the "HEYLISTEN" event
                 }
-                if (hld->nextEvtTimer >= 400)
+                if (hld->nextEvtTimer >= 100)
                 {
-                    hld->currentEvt = EVT_PHRASE; // trigger the "PHRASE" event
+                    hld->currentEvt = EVT_HEY; // trigger the "HEY" event
+                }
+                else
+                {
+                    hld->currentEvt = MAX_NUM_EVTS; // no event triggered yet
                 }
             }
             else if (hld->nextEvtTimer > 0)
@@ -383,7 +393,7 @@ static void heyListenMainLoop(int64_t elapsedUs)
                 }
                 else
                 {
-                    // yell was too short to identify, keep listening
+                    // yell was too short to identify, keep listening and restart the timer
                     hld->nextEvtTimer = 0;
                 }
             }
@@ -403,8 +413,8 @@ static void heyListenMainLoop(int64_t elapsedUs)
                 hld->nextEvtTimer = 0;
                 // allow for another yell
             }
+            break;
         }
-        break;
 
         case HL_TRIGGER:
         {
@@ -435,6 +445,9 @@ static void heyListenMainLoop(int64_t elapsedUs)
 
             hld->randomizer = esp_random() % 10000; // generate a new random number for the next check
             hld->nextEvtTimer++;
+            // TODO evaluate better timing by uS and consider setting a framerate like Swadge-It did, You could even use
+            // the RUN_TIMER_EVERY() function macro to ramp up randomizer at a nice interval (like whatever the
+            // framerate is).
             hld->randomizer += hld->nextEvtTimer; // accelerate chaos the longer we've been waiting
 
             // for testing
