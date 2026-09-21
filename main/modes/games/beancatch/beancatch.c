@@ -206,6 +206,16 @@ void bcUpdateAcl(void)
 
 void bcUpdateClock(void)
 {
+    if (!(beancatch->prevBtnState & PB_A) && (beancatch->btnState & PB_A))
+    {
+        beancatch->refreshScreen = true;
+    }
+
+    if (!(beancatch->prevBtnState & PB_B) && (beancatch->btnState & PB_B))
+    {
+        beancatch->refreshScreen = true;
+    }
+    
     if ((beancatch->prevBtnState & PB_A) && !(beancatch->btnState & PB_A))
     {
         bcChangeStateGameA();
@@ -261,10 +271,10 @@ void bcUpdateGame(void)
                     if(
                         !bcIgnoreCurrentConveyorForGameA() //If we haven't chosen to ignore this conveyor for Game
                         && 
-                        !(beancatch->beans[beancatch->currentConveyor] & 0b1) //If there is not a bean in the first position
+                        !(beancatch->beans[beancatch->currentConveyor] & 0b10) //If there is not a bean in the second position (we just moved it out of the first one)
                         &&
                         beancatch->beanCount < beancatch->maxBeans //If beans are not maxed out according to the current difficulty scale
-                        && 
+                        &&
                         ( 
                             ((esp_random() % 10) > 5) //Random yes/no decision
                             || 
@@ -352,12 +362,12 @@ void bcUpdateGame(void)
     switch (beancatch->playerPosition)
     {
         case BC_CONVEYOR_LU:
-            if(beancatch->btnState & PB_RIGHT)
+            if((beancatch->btnState & PB_RIGHT) && !(beancatch->btnState & PB_LEFT))
             {
                 beancatch->playerPosition = BC_CONVEYOR_RU;
                 bcCheckPlayerCatchBean();
                 beancatch->refreshScreen = true;
-            } else if(beancatch->btnState & PB_DOWN)
+            } else if((beancatch->btnState & PB_DOWN) && !(beancatch->btnState & PB_UP))
             {
                 beancatch->playerPosition = BC_CONVEYOR_LD;
                 bcCheckPlayerCatchBean();
@@ -365,12 +375,12 @@ void bcUpdateGame(void)
             }
             break;
         case BC_CONVEYOR_LD:
-            if(beancatch->btnState & PB_RIGHT)
+            if((beancatch->btnState & PB_RIGHT) && !(beancatch->btnState & PB_LEFT))
             {
                 beancatch->playerPosition = BC_CONVEYOR_RD;
                 bcCheckPlayerCatchBean();
                 beancatch->refreshScreen = true;
-            } else if(beancatch->btnState & PB_UP)
+            } else if((beancatch->btnState & PB_UP) && !(beancatch->btnState & PB_DOWN))
             {
                 beancatch->playerPosition = BC_CONVEYOR_LU;
                 bcCheckPlayerCatchBean();
@@ -378,12 +388,12 @@ void bcUpdateGame(void)
             }
             break;
         case BC_CONVEYOR_RU:
-            if(beancatch->btnState & PB_LEFT)
+            if((beancatch->btnState & PB_LEFT) && !(beancatch->btnState & PB_RIGHT))
             {
                 beancatch->playerPosition = BC_CONVEYOR_LU;
                 bcCheckPlayerCatchBean();
                 beancatch->refreshScreen = true;
-            } else if(beancatch->btnState & PB_DOWN)
+            } else if((beancatch->btnState & PB_DOWN) && !(beancatch->btnState & PB_UP))
             {
                 beancatch->playerPosition = BC_CONVEYOR_RD;
                 bcCheckPlayerCatchBean();
@@ -391,12 +401,12 @@ void bcUpdateGame(void)
             }
             break;
         case BC_CONVEYOR_RD:
-            if(beancatch->btnState & PB_LEFT)
+            if((beancatch->btnState & PB_LEFT) && !(beancatch->btnState & PB_RIGHT))
             {
                 beancatch->playerPosition = BC_CONVEYOR_LD;
                 bcCheckPlayerCatchBean();
                 beancatch->refreshScreen = true;
-            } else if(beancatch->btnState & PB_UP)
+            } else if((beancatch->btnState & PB_UP) && !(beancatch->btnState & PB_DOWN))
             {
                 beancatch->playerPosition = BC_CONVEYOR_RU;
                 bcCheckPlayerCatchBean();
@@ -485,6 +495,12 @@ void bcDrawGame(void)
                 break;
         }
 
+        if(beancatch->strikes)
+        {
+            segment = BC_LCD_SEGMENTS[BC_SEG_STRIKE_LBL];
+            drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
+        }
+
         for (uint16_t i = 0; i < beancatch->strikes; i++)
         {
             if(beancatch->halfStrike && i == beancatch->strikes-1 && (beancatch->frameCounter > 29) )
@@ -543,10 +559,12 @@ void bcDrawGame(void)
             case BC_CONVEYOR_LU:
             case BC_CONVEYOR_LD:
                 segment = BC_LCD_SEGMENTS[BC_SEG_BEAN_DROP_L];
+                drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
                 break;
             case BC_CONVEYOR_RU:
             case BC_CONVEYOR_RD:
                 segment = BC_LCD_SEGMENTS[BC_SEG_BEAN_DROP_R];
+                drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
                 break;
         }
 
@@ -593,7 +611,7 @@ bool bcIgnoreCurrentConveyorForGameA(void)
         return false;
     }
 
-    return (beancatch->currentConveyor==((beancatch->strikes+2) % 4));
+    return (beancatch->currentConveyor ==((beancatch->strikes+2) % 4));
 }
 
 void bcScorePoint(void)
@@ -602,9 +620,9 @@ void bcScorePoint(void)
     beancatch->score++;
 
     uint16_t previousScoreHundredsDigit = (previousScore / 100) % 10;
-    uint16_t previousScoreTensDigit = (previousScore / 100) % 10;
+    uint16_t previousScoreTensDigit = (previousScore / 10) % 10;
     uint16_t scoreHundredsDigit = (beancatch->score / 100) % 10;
-    uint16_t scoreTensDigit = (beancatch->score / 100) % 10;
+    uint16_t scoreTensDigit = (beancatch->score / 10) % 10;
 
     if(previousScoreHundredsDigit != scoreHundredsDigit && scoreHundredsDigit != 9)
     {
