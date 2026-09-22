@@ -253,7 +253,7 @@ static void gs_mainLoop(int64_t elapsedUs)
             {
                 gameData->entityManager.zoom++;
             }
-            if ((gameData->btnDownState & PB_DOWN) && gameData->entityManager.zoom > -4)
+            if ((gameData->btnDownState & PB_DOWN) && gameData->entityManager.zoom > -5)
             {
                 gameData->entityManager.zoom--;
             }
@@ -283,7 +283,12 @@ static void gs_loadAssets(void)
     gs_loadAsset(GOSSIP_STONE_HALF_0_WSG, 3, &gameData->assets[GS_GOSSIP_STONE_HALF_ASSET]);
     gs_loadAsset(GOSSIP_STONE_0_WSG, 3, &gameData->assets[GS_GOSSIP_STONE_ASSET]);
     gs_loadAsset(GOSSIP_STONE_DOUBLE_0_WSG, 3, &gameData->assets[GS_GOSSIP_STONE_DOUBLE_ASSET]);
+    gs_loadAsset(FLAME_TINY_0_WSG, 6, &gameData->assets[GS_FLAME_TINY_ASSET]);
+    gs_loadAsset(FLAME_EIGHTH_0_WSG, 6, &gameData->assets[GS_FLAME_EIGHTH_ASSET]);
+    gs_loadAsset(FLAME_QUARTER_0_WSG, 6, &gameData->assets[GS_FLAME_QUARTER_ASSET]);
+    gs_loadAsset(FLAME_HALF_0_WSG, 6, &gameData->assets[GS_FLAME_HALF_ASSET]);
     gs_loadAsset(FLAME_0_WSG, 6, &gameData->assets[GS_FLAME_ASSET]);
+    gs_loadAsset(FLAME_DOUBLE_0_WSG, 6, &gameData->assets[GS_FLAME_DOUBLE_ASSET]);
     gs_loadAsset(MOON_TILE_0_WSG, 15, &gameData->assets[GS_MOON_TILE_ASSET]);
     gs_loadAsset(STAR_0_WSG, 14, &gameData->assets[GS_STAR_ASSET]); // anim sequences 0-5, 6, 7-12, 13, 10
 }
