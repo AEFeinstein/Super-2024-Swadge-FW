@@ -330,7 +330,7 @@ void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t x
 {
     if (xScale > 0 && yScale > 0)
     {
-        drawWsgSimpleScaledUp(wsg, xOff, yOff, xScale+1, yScale+1);
+        drawWsgSimpleScaledUp(wsg, xOff, yOff, xScale + 1, yScale + 1);
     }
     else if (xScale < 0 && yScale < 0)
     {
