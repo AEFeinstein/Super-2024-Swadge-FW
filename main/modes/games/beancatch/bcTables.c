@@ -99,6 +99,15 @@ const bc_LcdSegment_t BC_LCD_SEGMENTS[] = {
     {.wsgIndex = BC_WSG_HOURS_SEP,   .x = 67,  .y =  56}  //BC_SEG_HOURS_SEP
 };
 
+const cnfsFileIdx_t BC_SOUND_MAP[] = {
+    BC_BEEP_0_MID, 
+    BC_BEEP_1_MID, 
+    BC_BEEP_2_MID,
+    BC_BEEP_3_MID,
+    BC_SCORE_POINT_MID,
+    BC_STRIKE_MID
+};
+
 const uint16_t BC_DIFFICULTY_MAX_BEANS[] = {
 /*  0  1  2  3  4  5  6  7  9 10 11 12 13 14 15 16 MAX */
     2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 7, 7, 7, 9, 9, 9, 12

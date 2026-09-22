@@ -41,6 +41,7 @@ struct beancatch_t {
 
     font_t lcdNumbersFont;
     wsg_t wsgs[BC_WSG_SIZE];
+    midiFile_t sounds[BC_SOUND_INDEX_MAX];
 
     uint8_t waitLoopCounter;
     uint8_t waitLoopMax;
@@ -130,6 +131,12 @@ void beancatchEnterMode(void)
         loadWsg(BC_WSGS[i], &beancatch->wsgs[i], false);
     }
 
+
+    for (uint16_t i = 0; i < BC_SOUND_INDEX_MAX; i++)
+    {
+        loadMidiFile(BC_SOUND_MAP[i], &beancatch->sounds[i], false);
+    }
+
     loadFont(LCD_NUMBERS_FONT, &beancatch->lcdNumbersFont, false);
 
     beancatch->refreshScreen = true;
@@ -138,9 +145,14 @@ void beancatchEnterMode(void)
 
 void beancatchExitMode(void)
 {
-     for (uint16_t i = 0; i < BC_WSG_SIZE; i++)
+    for (uint16_t i = 0; i < BC_WSG_SIZE; i++)
     {
         freeWsg(&beancatch->wsgs[i]);
+    }
+
+    for (uint16_t i = 0; i < BC_SOUND_INDEX_MAX; i++)
+    {
+        unloadMidiFile(&beancatch->sounds[i]);
     }
 
     freeFont(&beancatch->lcdNumbersFont);
@@ -246,7 +258,7 @@ void bcUpdateGame(void)
                 beancatch->beanInDanger = BC_CONVEYOR_NULL;
                 beancatch->waitLoopCounter = 0;
 
-                //(play strike sound)
+                globalMidiPlayerPlaySong(&beancatch->sounds[BC_SOUND_STRIKE], MIDI_SFX);
                 bcClearBeans();
 
                 beancatch->eggyDevitoed = beancatch->eggyDevito;
@@ -292,7 +304,7 @@ void bcUpdateGame(void)
                     {
                         beancatch->idleConveyorCounter=0;
                         bcCheckPlayerCatchBean();
-                        //play bean move sound
+                        globalMidiPlayerPlaySong(&beancatch->sounds[beancatch->currentConveyor], MIDI_SFX);
                         beancatch->waitLoopCounter=0;
                         beancatch->refreshScreen = true;
                     }
@@ -590,6 +602,12 @@ void bcDrawScoreHud(uint16_t value)
     digitBuffer[1] = scoreBuffer[3];
     digitBuffer[2] = '\0';
     drawText(&beancatch->lcdNumbersFont, c000, digitBuffer, 68, 53);
+
+    /*
+    //Show game speed for testing
+    snprintf(scoreBuffer, sizeof(scoreBuffer) - 1, "%4d", beancatch->waitLoopMax);
+    drawText(&beancatch->lcdNumbersFont, c000, scoreBuffer, 16, 180);
+    */
 }
 
 void bcClearBeans(void)
@@ -714,7 +732,7 @@ void bcCheckPlayerCatchBean(void)
         beancatch->beanCount--;
         beancatch->beans[beancatch->playerPosition] = beancatch->beans[beancatch->playerPosition] & 0b011111;
         beancatch->beanInDanger = BC_CONVEYOR_NULL;
-        //play score sound effect
+        globalMidiPlayerPlaySong(&beancatch->sounds[BC_SOUND_SCORE_POINT], MIDI_BGM);
         bcScorePoint();
     }
 }

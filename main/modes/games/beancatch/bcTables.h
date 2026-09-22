@@ -170,6 +170,17 @@ typedef enum
     BC_CONVEYOR_RD
 } bc_conveyorIndex_t;
 
+typedef enum
+{
+    BC_SOUND_BEEP_CONVEYOR_LU_CHORD_0,
+    BC_SOUND_BEEP_CONVEYOR_RU_CHORD_0,
+    BC_SOUND_BEEP_CONVEYOR_LD_CHORD_0,
+    BC_SOUND_BEEP_CONVEYOR_RD_CHORD_0,
+    BC_SOUND_SCORE_POINT,
+    BC_SOUND_STRIKE,
+    BC_SOUND_INDEX_MAX
+} bc_soundIndex_t;
+
 //==============================================================================
 // Extern Variables
 //==============================================================================
@@ -177,5 +188,6 @@ typedef enum
 extern const cnfsFileIdx_t BC_WSGS[];
 extern const bc_LcdSegment_t BC_LCD_SEGMENTS[BC_SEGMENTS_SIZE];
 extern const uint16_t BC_DIFFICULTY_MAX_BEANS[BC_DIFFICULTY_MAX_BEANS_SIZE];
+extern const cnfsFileIdx_t BC_SOUND_MAP[];
 
 #endif
