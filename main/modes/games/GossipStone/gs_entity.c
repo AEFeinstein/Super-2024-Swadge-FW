@@ -241,28 +241,37 @@ void gs_drawFlame(gs_entity_t* self)
         = (self->gameData->assets[GS_FLAME_ASSET].numFrames) * self->gameData->touchState[1].position / 1023;
     self->currentAnimationFrame = self->gameData->assets[GS_FLAME_ASSET].numFrames - 1 - self->currentAnimationFrame;
 
-
     int assetIdx = MAX(self->assetIndex + self->gameData->entityManager.zoom, GS_FLAME_TINY_ASSET);
 
-    int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS) + (TFT_WIDTH >> 1)
-                - (self->gameData->assets[assetIdx].originX << self->gameData->entityManager.zoom);
-    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1)
-                - (self->gameData->assets[assetIdx].originY << self->gameData->entityManager.zoom);
+    int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x)
+                 >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
+                + (TFT_WIDTH >> 1) - self->gameData->assets[assetIdx].originX;
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y)
+                 >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
+                + (TFT_HEIGHT >> 1) - self->gameData->assets[assetIdx].originY;
 
-    vec_t direction       = rotateVec2d((vec_t){0, 1 << DECIMAL_BITS}, fData->rotateDeg >> DECIMAL_BITS);
-    vec_t directionScaled = mulVec2d(direction, 28 + self->currentAnimationFrame);
-    drawWsg(&self->gameData->assets[assetIdx].frames[self->currentAnimationFrame], x, y, gs_randomInt(0, 1),
-            false, fData->rotateDeg >> DECIMAL_BITS);
+    drawWsg(&self->gameData->assets[assetIdx].frames[self->currentAnimationFrame], x, y, gs_randomInt(0, 1), false,
+            fData->rotateDeg >> DECIMAL_BITS);
+
+    if (self->gameData->entityManager.zoom < 0)
+    {
+        return;
+    }
+
+    vec_t direction = rotateVec2d((vec_t){0, 1 << DECIMAL_BITS}, fData->rotateDeg >> DECIMAL_BITS);
+    vec_t directionScaled
+        = mulVec2d(direction, (28 + self->currentAnimationFrame) << self->gameData->entityManager.zoom);
+
     drawCircleFilled(x + self->gameData->assets[assetIdx].originX + (directionScaled.x >> DECIMAL_BITS),
                      y + self->gameData->assets[assetIdx].originY + (directionScaled.y >> DECIMAL_BITS),
-                     2 + self->currentAnimationFrame + gs_randomInt(-1, 1), c530);
+                     (2 + self->currentAnimationFrame + gs_randomInt(-1, 1)) << self->gameData->entityManager.zoom,
+                     c530);
 
-    directionScaled = mulVec2d(direction, 24 + self->currentAnimationFrame);
-    drawCircleFilled(x + self->gameData->assets[assetIdx].originX + (directionScaled.x >> DECIMAL_BITS)
-                         + gs_randomInt(-1, 1),
-                     y + self->gameData->assets[assetIdx].originY + (directionScaled.y >> DECIMAL_BITS)
-                         + gs_randomInt(-1, 1),
-                     1 + (self->currentAnimationFrame >> 1), c554);
+    directionScaled = mulVec2d(direction, (24 + self->currentAnimationFrame) << self->gameData->entityManager.zoom);
+    drawCircleFilled(
+        x + self->gameData->assets[assetIdx].originX + (directionScaled.x >> DECIMAL_BITS) + gs_randomInt(-1, 1),
+        y + self->gameData->assets[assetIdx].originY + (directionScaled.y >> DECIMAL_BITS) + gs_randomInt(-1, 1),
+        (1 + (self->currentAnimationFrame >> 1)) << self->gameData->entityManager.zoom, c554);
 }
 
 void gs_updatePhysicsObject(gs_entity_t* self)
@@ -338,10 +347,10 @@ void gs_drawTileMap(gs_entity_t* self)
 
     int topLeftCamPixelX
         = (self->gameData->entityManager.camera.pos.x >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
-          - (TFT_WIDTH >> (1));
+          - (TFT_WIDTH >> 1);
     int topLeftCamPixelY
         = (self->gameData->entityManager.camera.pos.y >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
-          - (TFT_HEIGHT >> (1));
+          - (TFT_HEIGHT >> 1);
     int newFieldPixelWidth  = TILE_FIELD_WIDTH << shiftBy;
     int newFieldPixelHeight = TILE_FIELD_HEIGHT << shiftBy;
 
@@ -453,23 +462,23 @@ void gs_drawGossipStone(gs_entity_t* self)
 
     int asseteIdx = MAX(self->assetIndex + self->gameData->entityManager.zoom, GS_GOSSIP_STONE_TINY_ASSET);
 
-    int32_t x        = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS) + (TFT_WIDTH >> 1)
-                       - (self->gameData->assets[asseteIdx].originX << self->gameData->entityManager.zoom);
-    int32_t y        = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1)
-                       - (self->gameData->assets[asseteIdx].originY << self->gameData->entityManager.zoom);
+    int32_t x        = ((self->pos.x - self->gameData->entityManager.camera.pos.x)
+                        >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
+                       + (TFT_WIDTH >> 1) - self->gameData->assets[asseteIdx].originX;
+    int32_t y        = ((self->pos.y - self->gameData->entityManager.camera.pos.y)
+                        >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
+                       + (TFT_HEIGHT >> 1) - self->gameData->assets[asseteIdx].originY;
     int32_t finalRot = gsData->rotateDeg >> DECIMAL_BITS;
     finalRot         = (finalRot + 45) % 360;
     if (self->palleteIdx)
     {
-        drawWsgPalette(&self->gameData->assets[asseteIdx]
-                            .frames[self->currentAnimationFrame],
-                       x, y, &self->gameData->entityManager.palettes[self->palleteIdx], self->flipped, false, finalRot);
+        drawWsgPalette(&self->gameData->assets[asseteIdx].frames[self->currentAnimationFrame], x, y,
+                       &self->gameData->entityManager.palettes[self->palleteIdx], self->flipped, false, finalRot);
     }
     else
     {
-        drawWsg(&self->gameData->assets[asseteIdx]
-                     .frames[self->currentAnimationFrame],
-                x, y, self->flipped, false, finalRot);
+        drawWsg(&self->gameData->assets[asseteIdx].frames[self->currentAnimationFrame], x, y, self->flipped, false,
+                finalRot);
     }
 }
 
