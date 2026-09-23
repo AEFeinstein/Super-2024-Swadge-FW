@@ -398,7 +398,9 @@ void gs_collisionCheck(gs_entity_t* tilemap, gs_entity_t* ent, gs_hitInfo_t* hit
         // no hit
         return;
     }
-    // subtract half the Tilemap coordinates because it's centered on the world origin.
+    // subtract half the Tilemap coordinates by bitshifting 1 because it's centered on the world origin.
+    // Any bitshifting by 6 goes between a tileIdx and pixel coordinates because tiles are 64x64 pixels.
+    // Any bitshifting by DECIMAL_BITS which is 4 goes between pixel coordinates and true coordinates.
     vec_t localPos
         = subVec2d(ent->pos, (vec_t){TILE_FIELD_WIDTH << (5 + DECIMAL_BITS), TILE_FIELD_HEIGHT << (5 + DECIMAL_BITS)});
     // get the bounds for a kernel of nearby Tiles to check
@@ -430,6 +432,7 @@ void gs_collisionCheck(gs_entity_t* tilemap, gs_entity_t* ent, gs_hitInfo_t* hit
             bottomRightTile.y = MIN((localPos.y >> (6 + DECIMAL_BITS)) + 1, TILE_FIELD_HEIGHT - 1);
         }
     }
+    gs_tilemap_t* tmData = (gs_tilemap_t*)tilemap->data;
     // Check tiles in the kernel for a collision
     int32_t closestSqDist = INT32_MAX;
     // vec_t entityPixelPos = (vec_t){ent->pos.x/(1<<DECIMAL_BITS),ent->pos.y/(1<<DECIMAL_BITS)};
@@ -445,7 +448,7 @@ void gs_collisionCheck(gs_entity_t* tilemap, gs_entity_t* ent, gs_hitInfo_t* hit
             vec_t clampDst     = (vec_t){CLAMP(distance.x, -512, 512), CLAMP(distance.y, -512, 512)};
             vec_t closestPoint = addVec2d(tilePos, clampDst);
             int32_t sqDist     = sqMagVec2d(subVec2d(closestPoint, ent->pos));
-            if (sqDist < closestSqDist && sqDist < ent->collider.circle.radius * ent->collider.circle.radius)
+            if (tmData->tiles[x][y].framePlus1 != GS_WALL_BACK && tmData->tiles[x][y].framePlus1 != GS_NO_TILE && sqDist < closestSqDist && sqDist < ent->collider.circle.radius * ent->collider.circle.radius)
             {
                 closestSqDist   = sqDist;
                 hitInfo->hit    = true;
