@@ -103,6 +103,7 @@ typedef struct // parent class
     uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
                              // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
     uint8_t bounceDenominator;
+    uint16_t gravity;
 } gs_physics_t;
 
 typedef struct // child class
@@ -111,6 +112,7 @@ typedef struct // child class
     uint8_t bounceNumerator; // numerator and denominator are used to control bounciness. 1/1 reflects velocity with the
                              // same magnitude. 1/4 absorbs 75% velocity on a bounce. 2/1 would be looney toons physics.
     uint8_t bounceDenominator;
+    uint16_t gravity;
     // child data
     bool throttleEnabled;
     bool rcsEnabled;
@@ -121,7 +123,6 @@ typedef struct // child class
     int16_t angVel; // angular velocity
     gs_entity_t* flame;
     int32_t fuel; // Remaining fuel.
-    uint16_t gravity;
 } gs_gossipStone_t;
 
 typedef struct

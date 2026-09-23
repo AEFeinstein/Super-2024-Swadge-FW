@@ -324,21 +324,26 @@ static void gs_initializeGame(void)
     gs_entity_t* gossipStone
         = gs_createEntity(&gameData->entityManager, 3, GS_LOOPING_ANIMATION, false, GS_GOSSIP_STONE_ASSET, 5,
                           (vec_t){0xFFFF, 0xFFFF + (90 << DECIMAL_BITS)}, gameData);
-    gameData->entityManager.gossipStone              = gossipStone;
-    gossipStone->data                                = heap_caps_calloc(1, sizeof(gs_gossipStone_t), MALLOC_CAP_SPIRAM);
-    gossipStone->dataType                            = GS_GOSSIP_STONE_DATA;
-    ((gs_gossipStone_t*)gossipStone->data)->grounded = true;
-    ((gs_gossipStone_t*)gossipStone->data)->gravity  = 100;
+    gameData->entityManager.gossipStone = gossipStone;
+    gossipStone->data                   = heap_caps_calloc(1, sizeof(gs_gossipStone_t), MALLOC_CAP_SPIRAM);
+    gossipStone->dataType               = GS_GOSSIP_STONE_DATA;
+    gs_gossipStone_t* gsData            = (gs_gossipStone_t*)gossipStone->data;
+    gsData->grounded                    = true;
+    gsData->gravity                     = 100;
+    gsData->bounceNumerator             = 3;
+    gsData->bounceDenominator           = 4;
+    gossipStone->colliderType           = GS_CIRCLE;
+    gossipStone->collider.circle.radius = 20 << DECIMAL_BITS;
 
     gs_entity_t* flame = gs_createEntity(&gameData->entityManager, 6, GS_NO_ANIMATION, false, GS_FLAME_ASSET, 0,
                                          (vec_t){0xffff, 0xffff}, gameData);
     flame->data        = heap_caps_calloc(1, sizeof(gs_flame_t), MALLOC_CAP_SPIRAM);
-    gossipStone->updateFunction                       = gs_updateGossipStone;
-    gossipStone->drawFunction                         = gs_drawGossipStone;
-    ((gs_gossipStone_t*)gossipStone->data)->flame     = flame;
-    ((gs_gossipStone_t*)gossipStone->data)->rotateDeg = (360 - 45) << DECIMAL_BITS;
-    flame->dataType                                   = GS_FLAME_DATA;
-    flame->drawFunction                               = gs_drawFlame;
+    gossipStone->updateFunction = gs_updateGossipStone;
+    gossipStone->drawFunction   = gs_drawGossipStone;
+    gsData->flame               = flame;
+    gsData->rotateDeg           = (360 - 45) << DECIMAL_BITS;
+    flame->dataType             = GS_FLAME_DATA;
+    flame->drawFunction         = gs_drawFlame;
 
     gs_entity_t* gossip = gs_createEntity(&gameData->entityManager, 0, GS_NO_ANIMATION, false, GS_NO_ASSET, 0,
                                           (vec_t){0xffff, 0xffff}, gameData);

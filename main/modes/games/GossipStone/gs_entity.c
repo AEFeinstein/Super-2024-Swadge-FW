@@ -277,12 +277,14 @@ void gs_drawFlame(gs_entity_t* self)
 void gs_updatePhysicsObject(gs_entity_t* self)
 {
     gs_physics_t* pData = (gs_physics_t*)self->data;
-    pData->vel.y++;
-    self->pos.x += (pData->vel.x * self->gameData->elapsedUs) >> 15;
-    self->pos.y += (pData->vel.y * self->gameData->elapsedUs) >> 15;
+
+    // gravity
+    pData->vel.y += pData->gravity * self->gameData->elapsedUs >> 17;
+    self->pos.x += pData->vel.x * self->gameData->elapsedUs >> 20;
+    self->pos.y += pData->vel.y * self->gameData->elapsedUs >> 20;
 
     gs_hitInfo_t hitInfo = {0};
-    if (self->gameData->entityManager.tilemap) // The Prophecy level doesn't have a tilemap
+    if (self->gameData->entityManager.tilemap) // Only The Moon level has a tilemap so far
     {
         gs_collisionCheck(self->gameData->entityManager.tilemap, self, &hitInfo);
         if (hitInfo.hit == false)
@@ -298,15 +300,6 @@ void gs_updatePhysicsObject(gs_entity_t* self)
             mulVec2d(subVec2d(pData->vel, mulVec2d(hitInfo.normal, (2 * dotVec2d(pData->vel, hitInfo.normal)))),
                      pData->bounceNumerator),
             pData->bounceDenominator);
-    }
-    // keep the physics object within the bounds of the level.
-    if (self->pos.x < 256)
-    {
-        self->pos.x = 256;
-    }
-    else if (self->pos.x > 38144)
-    {
-        self->pos.x = 38144;
     }
 }
 
@@ -400,6 +393,91 @@ void gs_drawTileMap(gs_entity_t* self)
 
 void gs_collisionCheck(gs_entity_t* tilemap, gs_entity_t* ent, gs_hitInfo_t* hitInfo)
 {
+    if (ent->colliderType != GS_CIRCLE)
+    {
+        // no hit
+        return;
+    }
+    // subtract half the Tilemap coordinates because it's centered on the world origin.
+    vec_t localPos
+        = subVec2d(ent->pos, (vec_t){TILE_FIELD_WIDTH << (5 + DECIMAL_BITS), TILE_FIELD_HEIGHT << (5 + DECIMAL_BITS)});
+    // get the bounds for a kernel of nearby Tiles to check
+    vec_t topLeftTile     = (vec_t){0, 0};
+    vec_t bottomRightTile = (vec_t){0, 0};
+    if (localPos.x >= 0)
+    {
+        if (localPos.x > (TILE_FIELD_WIDTH << (6 + DECIMAL_BITS)))
+        {
+            topLeftTile.x     = TILE_FIELD_WIDTH - 1;
+            bottomRightTile.x = TILE_FIELD_WIDTH - 1;
+        }
+        else
+        {
+            topLeftTile.x     = MAX((localPos.x >> (6 + DECIMAL_BITS)) - 1, 0);
+            bottomRightTile.x = MIN((localPos.x >> (6 + DECIMAL_BITS)) + 1, TILE_FIELD_WIDTH - 1);
+        }
+    }
+    if (localPos.y >= 0)
+    {
+        if (localPos.y > (TILE_FIELD_HEIGHT << (6 + DECIMAL_BITS)))
+        {
+            topLeftTile.y     = TILE_FIELD_HEIGHT - 1;
+            bottomRightTile.y = TILE_FIELD_HEIGHT - 1;
+        }
+        else
+        {
+            topLeftTile.y     = MAX((localPos.y >> (6 + DECIMAL_BITS)) - 1, 0);
+            bottomRightTile.y = MIN((localPos.y >> (6 + DECIMAL_BITS)) + 1, TILE_FIELD_HEIGHT - 1);
+        }
+    }
+    // Check tiles in the kernel for a collision
+    int32_t closestSqDist = INT32_MAX;
+    // vec_t entityPixelPos = (vec_t){ent->pos.x/(1<<DECIMAL_BITS),ent->pos.y/(1<<DECIMAL_BITS)};
+    for (int y = topLeftTile.y; y <= bottomRightTile.y; y++)
+    {
+        for (int x = topLeftTile.x; x <= bottomRightTile.x; x++)
+        {
+            // https://gamedev.stackexchange.com/questions/96337/collision-between-aabb-and-circle
+            // Add half a tile to get the center point.
+            vec_t tilePos      = (vec_t){(((x + (TILE_FIELD_WIDTH >> 1)) << 6) + 32) << DECIMAL_BITS,
+                                         (((y + (TILE_FIELD_HEIGHT >> 1)) << 6) + 32) << DECIMAL_BITS};
+            vec_t distance     = subVec2d(ent->pos, tilePos);
+            vec_t clampDst     = (vec_t){CLAMP(distance.x, -512, 512), CLAMP(distance.y, -512, 512)};
+            vec_t closestPoint = addVec2d(tilePos, clampDst);
+            int32_t sqDist     = sqMagVec2d(subVec2d(closestPoint, ent->pos));
+            if (sqDist < closestSqDist && sqDist < ent->collider.circle.radius * ent->collider.circle.radius)
+            {
+                closestSqDist   = sqDist;
+                hitInfo->hit    = true;
+                hitInfo->pos    = closestPoint;
+                hitInfo->tile_i = x;
+                hitInfo->tile_j = y;
+                // calculate the normal
+                if (ABS(distance.x) > ABS(distance.y))
+                {
+                    if (distance.x < 0)
+                    {
+                        hitInfo->normal = (vec_t){-1, 0};
+                    }
+                    else
+                    {
+                        hitInfo->normal = (vec_t){1, 0};
+                    }
+                }
+                else
+                {
+                    if (distance.y < 0)
+                    {
+                        hitInfo->normal = (vec_t){0, -1};
+                    }
+                    else
+                    {
+                        hitInfo->normal = (vec_t){0, 1};
+                    }
+                }
+            }
+        }
+    }
 }
 
 void gs_updateGossipStone(gs_entity_t* self)
@@ -437,10 +515,8 @@ void gs_updateGossipStone(gs_entity_t* self)
             = mulVec2d(rocketForce, (1024 - self->gameData->touchState[1].position) * self->gameData->elapsedUs);
         gsData->vel = addVec2d(gsData->vel, divVec2d(rocketForce, 10000000));
     }
-    // gravity
-    gsData->vel.y += gsData->gravity * self->gameData->elapsedUs >> 17;
-    self->pos.x += gsData->vel.x * self->gameData->elapsedUs >> 20;
-    self->pos.y += gsData->vel.y * self->gameData->elapsedUs >> 20;
+
+    gs_updatePhysicsObject(self);
 
     gsData->flame->pos = self->pos;
 
