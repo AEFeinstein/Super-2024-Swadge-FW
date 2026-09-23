@@ -291,8 +291,7 @@ void gs_updatePhysicsObject(gs_entity_t* self)
         {
             return;
         }
-        // self->pos.x = hitInfo.pos.x + hitInfo.normal.x * self->halfWidth;
-        // self->pos.y = hitInfo.pos.y + hitInfo.normal.y * self->halfHeight;
+        self->pos = addVec2d(hitInfo.pos, mulVec2d(hitInfo.normal, self->collider.circle.radius));
 
         // Reflect the velocity vector along the normal
         // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
@@ -402,7 +401,7 @@ void gs_collisionCheck(gs_entity_t* tilemap, gs_entity_t* ent, gs_hitInfo_t* hit
     // Any bitshifting by 6 goes between a tileIdx and pixel coordinates because tiles are 64x64 pixels.
     // Any bitshifting by DECIMAL_BITS which is 4 goes between pixel coordinates and true coordinates.
     vec_t localPos
-        = subVec2d(ent->pos, (vec_t){TILE_FIELD_WIDTH << (5 + DECIMAL_BITS), TILE_FIELD_HEIGHT << (5 + DECIMAL_BITS)});
+        = addVec2d(ent->pos, (vec_t){TILE_FIELD_WIDTH << (5 + DECIMAL_BITS), TILE_FIELD_HEIGHT << (5 + DECIMAL_BITS)});
     // get the bounds for a kernel of nearby Tiles to check
     vec_t topLeftTile     = (vec_t){0, 0};
     vec_t bottomRightTile = (vec_t){0, 0};
@@ -442,13 +441,15 @@ void gs_collisionCheck(gs_entity_t* tilemap, gs_entity_t* ent, gs_hitInfo_t* hit
         {
             // https://gamedev.stackexchange.com/questions/96337/collision-between-aabb-and-circle
             // Add half a tile to get the center point.
-            vec_t tilePos      = (vec_t){(((x + (TILE_FIELD_WIDTH >> 1)) << 6) + 32) << DECIMAL_BITS,
-                                         (((y + (TILE_FIELD_HEIGHT >> 1)) << 6) + 32) << DECIMAL_BITS};
+            vec_t tilePos = (vec_t){((x << 6) + 32) << DECIMAL_BITS, ((y << 6) + 32) << DECIMAL_BITS};
+            tilePos       = subVec2d(
+                tilePos, (vec_t){TILE_FIELD_WIDTH << (5 + DECIMAL_BITS), TILE_FIELD_HEIGHT << (5 + DECIMAL_BITS)});
             vec_t distance     = subVec2d(ent->pos, tilePos);
             vec_t clampDst     = (vec_t){CLAMP(distance.x, -512, 512), CLAMP(distance.y, -512, 512)};
             vec_t closestPoint = addVec2d(tilePos, clampDst);
             int32_t sqDist     = sqMagVec2d(subVec2d(closestPoint, ent->pos));
-            if (tmData->tiles[x][y].framePlus1 != GS_WALL_BACK && tmData->tiles[x][y].framePlus1 != GS_NO_TILE && sqDist < closestSqDist && sqDist < ent->collider.circle.radius * ent->collider.circle.radius)
+            if (tmData->tiles[x][y].framePlus1 != GS_WALL_BACK && tmData->tiles[x][y].framePlus1 != GS_NO_TILE
+                && sqDist < closestSqDist && sqDist < ent->collider.circle.radius * ent->collider.circle.radius)
             {
                 closestSqDist   = sqDist;
                 hitInfo->hit    = true;
