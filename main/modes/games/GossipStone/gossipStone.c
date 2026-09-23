@@ -695,12 +695,25 @@ void gs_submodeStateEnter(gs_submode_t submode)
             gData->arr_size    = MOON_COUNT;
             // gameData->entityManager.gossipStone->pos = (vec_t){0, 0};
             gameData->entityManager.gossipStone->pos = (vec_t){0, -((118 * 64) << DECIMAL_BITS)};
-            ((gs_gossipStone_t*)gameData->entityManager.gossipStone->data)->vel = (vec_t){0, 300}; // 3000};
+            gameData->entityManager.camera.pos       = gameData->entityManager.gossipStone->pos;
+            ((gs_gossipStone_t*)gameData->entityManager.gossipStone->data)->vel = (vec_t){0, 12000};
             gameData->entityManager.gossipStone->updateFunction                 = gs_updateGossipStone;
             gs_enableFlightControls(gameData->entityManager.gossip);
             gs_generateMoonTilemap(gameData->entityManager.tilemap);
+            curNode = gameData->entityManager.entities->first;
+            while (curNode != NULL)
+            {
+                gs_entity_t* curEntity = (gs_entity_t*)curNode->val;
+                if (curEntity->assetIndex == GS_STAR_ASSET)
+                {
+                    curEntity->pos = addVec2d(gameData->entityManager.camera.pos,
+                                              (vec_t){gs_randomInt(-(TFT_WIDTH >> 1), TFT_WIDTH >> 1) * 16,
+                                                      gs_randomInt(-(TFT_HEIGHT >> 1), TFT_HEIGHT >> 1) * 16});
+                }
+                curNode = curNode->next;
+            }
             // temp
-            ((gs_gossipStone_t*)gameData->entityManager.gossipStone->data)->gravity = 0;
+            ((gs_gossipStone_t*)gameData->entityManager.gossipStone->data)->gravity = 100;
             break;
         }
         default:
@@ -708,6 +721,7 @@ void gs_submodeStateEnter(gs_submode_t submode)
             break;
         }
     }
+
     printf("entering submode %d with %d entities with the following assetID/datatype:\n", submode,
            gameData->entityManager.entities->length);
     curNode = gameData->entityManager.entities->first;

@@ -317,6 +317,53 @@ void gs_generateMoonTilemap(gs_entity_t* self)
         tData->tiles[132][y].framePlus1 = GS_WALL_BACK;
         tData->tiles[133][y].framePlus1 = GS_WALL_BACK;
     }
+    for (int y = 120; y < 128; y++)
+    {
+        for (int x = 127; x < 137; x++)
+        {
+            tData->tiles[x][y].framePlus1 = GS_WALL_BACK;
+        }
+    }
+    for (int y = 122; y < 126; y++)
+    {
+        for (int x = 129; x < 135; x++)
+        {
+            tData->tiles[x][y].framePlus1 = GS_NO_TILE;
+        }
+    }
+    vec_t minerPos = (vec_t){133, 124};
+    for (int i = 0; i < 200; i++)
+    {
+        if (tData->tiles[minerPos.x][minerPos.y].framePlus1 != GS_NO_TILE)
+        {
+            tData->tiles[minerPos.x][minerPos.y].framePlus1 = GS_WALL_BACK;
+        }
+        switch (gs_randomInt(0, 3))
+        {
+            case 0:
+            {
+                minerPos = addVec2d(minerPos, (vec_t){0, 1});
+                break;
+            }
+            case 1:
+            {
+                minerPos = addVec2d(minerPos, (vec_t){0, -1});
+                break;
+            }
+            case 2:
+            {
+                minerPos = addVec2d(minerPos, (vec_t){1, 0});
+                break;
+            }
+            default:
+            {
+                minerPos = addVec2d(minerPos, (vec_t){-1, 0});
+                break;
+            }
+        }
+        minerPos.x = CLAMP(minerPos.x, 1, TILE_FIELD_WIDTH - 2);
+        minerPos.y = CLAMP(minerPos.y, 1, TILE_FIELD_HEIGHT - 2);
+    }
 }
 
 void gs_clearMoonTilemap(gs_entity_t* self)
