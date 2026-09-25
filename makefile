@@ -35,9 +35,9 @@ ifeq ($(HOST_OS),Windows)
 	FIND:=$(shell cygpath `where find | grep bin | grep -v " "`)
 endif
 
-# clang-format may actually be clang-format-22
+# clang-format may actually be clang-format-22. Push stderr to null if which returns nothing.
 CLANG_FORMAT:=clang-format-22
-ifeq (, $(shell which $(CLANG_FORMAT)))
+ifeq (, $(shell which $(CLANG_FORMAT) 2>/dev/null))
 	CLANG_FORMAT:=clang-format
 endif
 
