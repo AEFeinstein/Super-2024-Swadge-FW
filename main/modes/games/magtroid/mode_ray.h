@@ -18,11 +18,6 @@
 /** Time, in microseconds, to lock out buttons after showing dialog, death, or credits */
 #define RAY_BUTTON_LOCKOUT_US 1000000
 
-/** The number of total maps */
-#define NUM_MAPS 4
-/** The number of keys per map */
-#define NUM_KEYS 3
-
 /** The player's starting max health */
 #define GAME_START_HEALTH 3
 
@@ -57,6 +52,8 @@
 #define ENEMY   0x20
 #define BULLET  0x40
 #define SCENERY 0x60
+
+#define ID_MASK 0x1F
 
 // The pixel size of each cell
 #define CELL_SIZE 20
@@ -145,7 +142,7 @@ typedef enum __attribute__((packed))
     BG_DOOR_BUSH    = (BG | DOOR | 0),
     BG_DOOR_CRACK_H = (BG | DOOR | 1),
     BG_DOOR_CRACK_V = (BG | DOOR | 2),
-    BG_DOOR_3       = (BG | DOOR | 3),
+    BG_DOOR_LOCKED  = (BG | DOOR | 3),
     BG_DOOR_4       = (BG | DOOR | 4),
     BG_DOOR_5       = (BG | DOOR | 5),
     BG_DOOR_6       = (BG | DOOR | 6),
@@ -221,7 +218,7 @@ typedef enum __attribute__((packed))
     OBJ_ITEM_MPOINT_5   = (OBJ | ITEM | 10),
     OBJ_ITEM_MPOINT_10  = (OBJ | ITEM | 11),
     OBJ_ITEM_MPOINT_20  = (OBJ | ITEM | 12),
-    OBJ_ITEM_13         = (OBJ | ITEM | 13),
+    OBJ_ITEM_KEY        = (OBJ | ITEM | 13),
     OBJ_ITEM_14         = (OBJ | ITEM | 14),
     OBJ_ITEM_15         = (OBJ | ITEM | 15),
     OBJ_ITEM_16         = (OBJ | ITEM | 16),
@@ -401,8 +398,8 @@ typedef enum
  */
 typedef enum
 {
-    RP_LOCAL_MAP,   ///< The map the player is currently in
-    RP_WORLD_MAP,   ///< All the maps and how they connect
+    RP_LOCAL_MAP, ///< The map the player is currently in
+    // RP_WORLD_MAP,   ///< All the maps and how they connect
     RP_NUM_SCREENS, ///< The number of pause screens
 } rayPauseScreen_t;
 
@@ -563,6 +560,14 @@ typedef struct
     list_t crackedWalls;          ///< A list of cracked walls to check bombs against
 } rayMap_t;
 
+typedef struct
+{
+    cnfsFileIdx_t mapFile;  ///< The map to load
+    cnfsFileIdx_t bgmFile;  ///< The BGM for this map
+    const char* name;       ///< The name of this map
+    const char* visitedKey; ///< The NVS key to store which tiles have been visited on this map
+} rayMapMetadata_t;
+
 /**
  * @brief A texture with a name
  */
@@ -610,20 +615,7 @@ typedef struct
     int32_t animTimer;
 } rayBullet_t;
 
-/*
-// Forward declaration
-struct Node;
-
-// You can now use pointers to struct Node
-void processNode(struct Node* node);
-
-// Full definition later in the file or a separate source file
-struct Node {
-    int id;
-    struct Node* next; // Common use: self-referential structures
-};
-*/
-
+/* Forward declarations */
 struct rayGame;
 struct rayEnemy;
 
@@ -648,12 +640,25 @@ typedef struct rayEnemy
 } rayEnemy_t;
 
 /**
+ * @brief Data for persistent items like keys or heart pieces
+ */
+typedef struct __attribute__((packed))
+{
+    uint8_t objId   : 8; // 8 bits means IDs up to 256 per map
+    uint8_t type    : 5; // Item type, basically rayMapCellType_t with (OBJ | ITEM) stripped off
+    uint8_t mapId   : 4; // 4 bits means up to 16 maps
+    bool keyUsed    : 1; // 1 bit boolean, was this key used?
+    bool occupied   : 1; // 1 bit boolean, is this slot occupied?
+    uint8_t padding : 6; // Padding to get to three bytes
+} invItem_t;
+
+/**
  * @brief The player's inventory
  */
 typedef struct
 {
     // Persistent keys (TODO)
-    rayKeyState_t keys[NUM_MAPS][NUM_KEYS]; ///< The number of small keys the player currently has
+    invItem_t items[64]; // No more than 64 keys, heart pieces, etc for the game
     // Persistent inventory items
     bool haveEwiOfTime;
     bool haveBombs;
@@ -671,13 +676,12 @@ typedef struct
  */
 typedef struct
 {
-    q24_8 posX;                 ///< The player's X position
-    q24_8 posY;                 ///< The player's Y position
-    q24_8 dirX;                 ///< The player's X direction
-    q24_8 dirY;                 ///< The player's Y direction
-    vec_t cameraTarget;         ///< The target position of the 2D camera
-    int32_t mapId;              ///< The ID of the current map
-    bool mapsVisited[NUM_MAPS]; ///< Booleans for each map visited
+    q24_8 posX;         ///< The player's X position
+    q24_8 posY;         ///< The player's Y position
+    q24_8 dirX;         ///< The player's X direction
+    q24_8 dirY;         ///< The player's Y direction
+    vec_t cameraTarget; ///< The target position of the 2D camera
+    int32_t mapId;      ///< The ID of the current map
     // Current status
     int32_t health;    ///< The player's current health
     int32_t maxHealth; ///< The player's current max health.
@@ -722,6 +726,8 @@ typedef struct
     int32_t iFrameTimer; ///< A timer for invincibility frames
 
     wsg_t* sprite;
+
+    int32_t keyCount; ///< A count of small keys for the current map
 } rayPlayerState_t;
 
 typedef struct
@@ -789,24 +795,24 @@ typedef struct rayGame
 
     starfield_t starfield; ///< Starfield used for warp animation
 
-    midiFile_t songs[NUM_MAPS + 1]; ///< Per-map background music, plus a boss theme
-    midiFile_t sfx_door_open;       ///< SFX when a door opens
-    midiFile_t sfx_e_damage;        ///< SFX when an enemy takes damage
-    midiFile_t sfx_e_freeze;        ///< SFX when an enemy is frozen
-    midiFile_t sfx_p_charge;        ///< SFX when the charge beam is shot
-    midiFile_t sfx_p_damage;        ///< SFX when the player takes damage
-    midiFile_t sfx_p_shoot;         ///< SFX when the a normal beam is shot
-    midiFile_t sfx_e_block;         ///< SFX when an enemy blocks a shot
-    midiFile_t sfx_e_dead;          ///< SFX when an enemy dies
-    midiFile_t sfx_item_get;        ///< SFX when an item is obtained
-    midiFile_t sfx_p_charge_start;  ///< SFX when the charge beam starts to charge
-    midiFile_t sfx_p_missile;       ///< SFX when a missile is shot
-    midiFile_t sfx_p_ice;           ///< SFX when the ice beam is shot
-    midiFile_t sfx_p_xray;          ///< SFX when th xray beam is shot
-    midiFile_t sfx_warp;            ///< SFX when the player warps
-    midiFile_t sfx_lava_dmg;        ///< SFX when standing in lava
-    midiFile_t sfx_health;          ///< SFX when picking up health
-    midiFile_t sfx_game_over;       ///< SFX when the game is over
+    list_t bgmSongs;
+    midiFile_t sfx_door_open;      ///< SFX when a door opens
+    midiFile_t sfx_e_damage;       ///< SFX when an enemy takes damage
+    midiFile_t sfx_e_freeze;       ///< SFX when an enemy is frozen
+    midiFile_t sfx_p_charge;       ///< SFX when the charge beam is shot
+    midiFile_t sfx_p_damage;       ///< SFX when the player takes damage
+    midiFile_t sfx_p_shoot;        ///< SFX when the a normal beam is shot
+    midiFile_t sfx_e_block;        ///< SFX when an enemy blocks a shot
+    midiFile_t sfx_e_dead;         ///< SFX when an enemy dies
+    midiFile_t sfx_item_get;       ///< SFX when an item is obtained
+    midiFile_t sfx_p_charge_start; ///< SFX when the charge beam starts to charge
+    midiFile_t sfx_p_missile;      ///< SFX when a missile is shot
+    midiFile_t sfx_p_ice;          ///< SFX when the ice beam is shot
+    midiFile_t sfx_p_xray;         ///< SFX when th xray beam is shot
+    midiFile_t sfx_warp;           ///< SFX when the player warps
+    midiFile_t sfx_lava_dmg;       ///< SFX when standing in lava
+    midiFile_t sfx_health;         ///< SFX when picking up health
+    midiFile_t sfx_game_over;      ///< SFX when the game is over
 
     int32_t ledTimer;     ///< A timer to change LED hue
     int32_t ledHue;       ///< The current LED hue
@@ -834,12 +840,8 @@ typedef struct rayGame
 
 extern swadgeMode_t rayMode;
 
-extern const char rayName[];
-extern const char* const rayMapNames[];
-extern const paletteColor_t rayMapColors[];
 extern const char RAY_NVS_KEY[];
-extern const char* const RAY_NVS_VISITED_KEYS[];
-extern const char MAGTROID_UNLOCK_KEY[];
+extern const char TOMIS_QUEST_FINISHED[];
 
 //==============================================================================
 // Functions
@@ -849,5 +851,6 @@ void rayFreeCurrentState(ray_t* ray);
 void rayStartGame(void);
 void raySwitchToScreen(rayScreen_t newScreen);
 ray_t* getRayState(void);
+const rayMapMetadata_t* getRayMapMetadata(uint32_t idx);
 
 #endif

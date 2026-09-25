@@ -12,6 +12,7 @@
 
 // clang-format off
 /// @brief Credits text
+/// TODO update credits
 static creditsEntry_t rayCreditEntries[] = {
     {.name = "Percentage",           .color = c224},
     {.name = "Complete: 100%",       .color = c224},

@@ -59,13 +59,10 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
     }
     else // Load a map normally from compressed data
     {
-        // Construct map name
-        cnfsFileIdx_t mapFiles[] = {_0_RMH, _1_RMH, _2_RMH, _3_RMH, _4_RMH, _5_RMH};
-
         // Read and decompress the file
         fileSize = 0;
         // Save this as a separate pointer for freeing later
-        decompressedData = readHeatshrinkFile(mapFiles[mapId], &fileSize, spiRam);
+        decompressedData = readHeatshrinkFile(getRayMapMetadata(mapId)->mapFile, &fileSize, spiRam);
         fileData         = decompressedData;
     }
 
@@ -87,7 +84,7 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
 
     // Attempt to read visited tile data. It's fine if this fails
     size_t visitedTilesLen = map->w * map->h * sizeof(rayTileState_t);
-    readNvsBlob(RAY_NVS_VISITED_KEYS[mapId], map->visitedTiles, &visitedTilesLen);
+    readNvsBlob(getRayMapMetadata(mapId)->visitedKey, map->visitedTiles, &visitedTilesLen);
 
     // Read tile data
     for (uint32_t y = 0; y < map->h; y++)
@@ -98,24 +95,27 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
             map->tiles[x][y].type     = fileData[fileIdx++];
             map->tiles[x][y].doorOpen = 0;
             rayMapCellType_t oType    = fileData[fileIdx++];
-            // rayMapCellType_t cType    = map->tiles[x][y].type;
+            rayMapCellType_t cType    = map->tiles[x][y].type;
 
             // If this is a cracked door, add it to the list for later bomb checks
-            if (BG_DOOR_CRACK_H == map->tiles[x][y].type || BG_DOOR_CRACK_V == map->tiles[x][y].type)
+            if (BG_DOOR_CRACK_H == cType || BG_DOOR_CRACK_V == cType)
             {
                 intptr_t location = ((x & 0xFFFF) << 16) | (y & 0xFFFF);
                 push(&ray->map.crackedWalls, (void*)location);
             }
+            else if (BG_DOOR_LOCKED == cType)
+            {
+                // Open doors which were already unlocked
+                if (SCRIPT_DOOR_OPEN == map->visitedTiles[(y * ray->map.w) + x])
+                {
+                    // If the key was already used, open the door
+                    map->tiles[x][y].doorOpen = TO_FX(1);
 
-            // TODO Open doors which were already unlocked
-            // if ((cType == BG_DOOR_KEY_A && OPEN_KEY == ray->p.i.keys[mapId][0]) || //
-            //     (cType == BG_DOOR_KEY_B && OPEN_KEY == ray->p.i.keys[mapId][1]) || //
-            //     (cType == BG_DOOR_KEY_C && OPEN_KEY == ray->p.i.keys[mapId][2]) || //
-            //     (SCRIPT_DOOR_OPEN == map->visitedTiles[(y * ray->map.w) + x]))
-            // {
-            //     // If the key was already used, open the door
-            //     map->tiles[x][y].doorOpen = TO_FX(1);
-            // }
+                    // Turn DOOR into FLOOR
+                    map->tiles[x][y].type &= ~DOOR;
+                    map->tiles[x][y].type |= FLOOR;
+                }
+            }
 
             // If the oType isn't empty
             if (EMPTY != oType)
@@ -209,6 +209,20 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
                             }
                             default:
                             {
+                                // Check previous pickups
+                                for (int idx = 0; idx < ARRAY_SIZE(ray->p.i.items); idx++)
+                                {
+                                    invItem_t* item = &ray->p.i.items[idx];
+                                    if (item->occupied &&       //
+                                        item->mapId == mapId && //
+                                        item->objId == id)
+                                    {
+                                        // Item was already obtained
+                                        shouldCreate = false;
+                                        break;
+                                    }
+                                }
+
                                 // Create all other objects that aren't obtainable
                                 break;
                             }
@@ -239,8 +253,22 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
         heap_caps_free(decompressedData);
     }
 
+    // Get a count of unused small keys
+    ray->ps.keyCount = 0;
+    for (int idx = 0; idx < ARRAY_SIZE(ray->p.i.items); idx++)
+    {
+        invItem_t* invItem = &ray->p.i.items[idx];
+        if (invItem->occupied &&                         // Has item
+            invItem->mapId == ray->p.mapId &&            // in this map
+            invItem->type == (OBJ_ITEM_KEY & ID_MASK) && // of type key
+            !invItem->keyUsed)                           // not used yet
+        {
+            ray->ps.keyCount++;
+        }
+    }
+
     // Play this map's music
-    globalMidiPlayerPlaySong(&ray->songs[ray->p.mapId], MIDI_BGM);
+    globalMidiPlayerPlaySong(getAtIndex(&ray->bgmSongs, ray->p.mapId), MIDI_BGM);
 }
 
 /**
@@ -338,6 +366,7 @@ bool isPassableCell(rayMapCell_t* cell)
  */
 void markTileVisited(rayMap_t* map, int16_t x, int16_t y)
 {
+#define SPATIAL_VISIT
 #ifdef SPATIAL_VISIT // Uncomment to mark adjacent tiles as visited
     // Find in-bounds loop indices
     int16_t minX = MAX(0, x - 1);
