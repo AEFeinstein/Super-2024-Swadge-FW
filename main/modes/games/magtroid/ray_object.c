@@ -142,17 +142,6 @@ void moveRayObjects(ray_t* ray, uint32_t elapsedUs)
                         // Turn DOOR into FLOOR
                         cell->type &= ~DOOR;
                         cell->type |= FLOOR;
-
-                        // If the door is not a key or script door
-                        // if ((BG_DOOR_KEY_A != cell->type) && //
-                        //     (BG_DOOR_KEY_B != cell->type) && //
-                        //     (BG_DOOR_KEY_C != cell->type) && //
-                        //     (BG_DOOR_SCRIPT != cell->type))
-                        // {
-                        //     // Start a timer to close the door
-                        //     // 5s in units of 5ms (each tick of this timer)
-                        //     cell->closeTimer = 1000;
-                        // }
                     }
                 }
                 // Else if the door is closing
@@ -399,33 +388,35 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
                             // Do nothing. Explosion radius checked against crackedWalls elsewhere
                             break;
                         }
-                        // case BG_DOOR_KEY_A:
-                        // case BG_DOOR_KEY_B:
-                        // case BG_DOOR_KEY_C:
-                        // {
-                        //     // Open the door if the player has the appropriate key
-                        //     opened = (KEY == ray->p.i.keys[rayMapId][cell->type - BG_DOOR_KEY_A]);
-                        //     if (opened)
-                        //     {
-                        //         // Mark the key as used
-                        //         ray->p.i.keys[rayMapId][cell->type - BG_DOOR_KEY_A] = OPEN_KEY;
-                        //     }
-                        //     break;
-                        // }
-                        // case BG_DOOR_ARTIFACT:
-                        // {
-                        //     // Check if all artifacts have been collected
-                        //     opened = true;
-                        //     for (int16_t aIdx = 0; aIdx < ARRAY_SIZE(ray->p.i.artifacts); aIdx++)
-                        //     {
-                        //         if (!ray->p.i.artifacts[aIdx])
-                        //         {
-                        //             opened = false;
-                        //             break;
-                        //         }
-                        //     }
-                        //     break;
-                        // }
+                        case BG_DOOR_LOCKED:
+                        {
+                            // Check if the player has an unused key
+                            for (int idx = 0; idx < ARRAY_SIZE(ray->p.i.items); idx++)
+                            {
+                                invItem_t* invItem = &ray->p.i.items[idx];
+                                if (invItem->occupied &&                         // Has item
+                                    invItem->mapId == ray->p.mapId &&            // in this map
+                                    invItem->type == (OBJ_ITEM_KEY & ID_MASK) && // of type key
+                                    !invItem->keyUsed)                           // not used yet
+                                {
+                                    // Use the key
+                                    invItem->keyUsed = true;
+                                    ray->ps.keyCount--;
+
+                                    // Open the door
+                                    opened = true;
+
+                                    // Mark it as permanently open
+                                    ray->map.visitedTiles[(FROM_FX(y) * ray->map.w) + FROM_FX(x)] = SCRIPT_DOOR_OPEN;
+
+                                    // Autosave
+                                    raySavePlayer(ray);
+                                    raySaveVisitedTiles(ray);
+                                    break;
+                                }
+                            }
+                            break;
+                        }
                         default:
                         {
                             // Not a door, somehow

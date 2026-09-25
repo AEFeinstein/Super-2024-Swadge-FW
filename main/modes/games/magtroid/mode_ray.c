@@ -35,38 +35,116 @@ static void rayInstrumentDacCallback(uint8_t* samples, int16_t len);
 // Const Variables
 //==============================================================================
 
-const char rayName[]       = "Magtroid Pocket";
+const char rayName[]       = "Tomi's Quest";
 const char rayPlayStr[]    = "Play";
 const char rayResetStr[]   = "Reset Data";
 const char rayConfirmStr[] = "Really Reset Data";
 const char rayCreditsStr[] = "Credits";
 const char rayExitStr[]    = "Exit";
 
-/// @brief A list of the map names
-const char* const rayMapNames[] = {
-    "Station Zero", "Vinegrasp", "Floriss", "Station One", "Mosspire", "Scalderia",
-};
-
-/// @brief A list of the map colors, in order
-const paletteColor_t rayMapColors[] = {
-    c303, // Violet
-    c005, // Blue
-    c030, // Green
-    c550, // Yellow
-    c530, // Orange
-    c500, // Red
-};
-
-/// @brief The songs to play, must be in map order
-const cnfsFileIdx_t songFiles[NUM_MAPS + 1] = {BASE_0_MID, JUNGLE_0_MID, CAVE_0_MID, BASE_1_MID, JUNGLE_1_MID};
-
 /// @brief The NVS key to save and load player data
 const char RAY_NVS_KEY[] = "ray";
-// The NVS key to save and load visited tiles
-const char* const RAY_NVS_VISITED_KEYS[] = {"rv0", "rv1", "rv2", "rv3", "rv4", "rv5"};
 
-/// @brief The NVS key to unlock Sip on the menu
-const char MAGTROID_UNLOCK_KEY[] = "zip_unlock";
+/**
+ * @brief Metadata for each map including name, BGM, and NVS key for visited tiles
+ *
+ * Map IDs for quick reference:
+ *  0 - Secluded Woods
+ *  1 - Fairy Glen
+ *  2 - The Clearing
+ *  3 - The Great DeeJay Tree
+ *  4 - Gaylordia Field
+ *  5 - Dungeon 1
+ *  6 - Dungeon 2
+ *  7 - Dungeon 3
+ *  8 - Dungeon 4
+ *  9 - Town Square
+ * 10 - Fredward's Item Shop
+ * 11 - Mayor's House
+ * 12 - Shrine of the Great Fairies
+ */
+const rayMapMetadata_t mapMetadata[] = {
+    {
+        .name       = "Secluded Woods",
+        .visitedKey = "tqvsw",
+        .bgmFile    = BASE_0_MID,
+        .mapFile    = SECLUDED_WOODS_RMH,
+    },
+    {
+        .name       = "Fairy Glen",
+        .visitedKey = "tqvfg",
+        .bgmFile    = BASE_0_MID,
+        .mapFile    = FAIRY_GLEN_RMH,
+    },
+    {
+        .name       = "The Clearing",
+        .visitedKey = "tqvtc",
+        .bgmFile    = BASE_0_MID,
+        .mapFile    = THE_CLEARING_RMH,
+    },
+    {
+        .name       = "The Great DeeJay Tree",
+        .visitedKey = "tqvdj",
+        .bgmFile    = BASE_0_MID,
+        .mapFile    = THE_GREAT_DEEJAY_TREE_RMH,
+    },
+    {
+        .name       = "Gaylordia Field",
+        .visitedKey = "tqvgf",
+        .bgmFile    = BASE_0_MID,
+        .mapFile    = GAYLORDIA_FIELD_RMH,
+    },
+    {
+        .name       = "Dungeon 1",
+        .visitedKey = "tqvd1",
+        .bgmFile    = BASE_0_MID,
+        .mapFile    = DUNGEON_1_RMH,
+    },
+    {
+        .name       = "Dungeon 2",
+        .visitedKey = "tqvd2",
+        .bgmFile    = BASE_0_MID,
+        .mapFile    = DUNGEON_2_RMH,
+    },
+    {
+        .name       = "Dungeon 3",
+        .visitedKey = "tqvd3",
+        .bgmFile    = BASE_0_MID,
+        .mapFile    = DUNGEON_3_RMH,
+    },
+    {
+        .name       = "Dungeon 4",
+        .visitedKey = "tqvd4",
+        .bgmFile    = BASE_0_MID,
+        .mapFile    = DUNGEON_4_RMH,
+    },
+    {
+        .name       = "Town Square",
+        .visitedKey = "tqvts",
+        .bgmFile    = BASE_0_MID,
+        .mapFile    = TOWN_SQUARE_RMH,
+    },
+    {
+        .name       = "Fredward's Item Shop",
+        .visitedKey = "tqvis",
+        .bgmFile    = BASE_0_MID,
+        .mapFile    = FREDWARDS_ITEM_SHOP_RMH,
+    },
+    {
+        .name       = "Mayor's House",
+        .visitedKey = "tqvmh",
+        .bgmFile    = BASE_0_MID,
+        .mapFile    = MAYORS_HOUSE_RMH,
+    },
+    {
+        .name       = "Shrine of the Great Fairies",
+        .visitedKey = "tqvsg",
+        .bgmFile    = BASE_0_MID,
+        .mapFile    = SHRINE_OF_THE_GREAT_FAIRIES_RMH,
+    },
+};
+
+const char TOMIS_QUEST_FINISHED[] = "tq_finished";
 
 //==============================================================================
 // Variables
@@ -125,9 +203,11 @@ static void rayEnterMode(void)
     globalMidiPlayerGet(MIDI_BGM)->loop = true;
 
     // Load songs
-    for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(songFiles); sIdx++)
+    for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(mapMetadata); sIdx++)
     {
-        loadMidiFile(songFiles[sIdx], &ray->songs[sIdx], false);
+        midiFile_t* mapBgm = heap_caps_calloc(1, sizeof(midiFile_t), MALLOC_CAP_8BIT);
+        loadMidiFile(mapMetadata[sIdx].bgmFile, mapBgm, false);
+        push(&ray->bgmSongs, mapBgm);
     }
 
     // Load SFX
@@ -193,9 +273,11 @@ static void rayExitMode(void)
     freeAllTex(ray);
 
     // Free songs
-    for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(songFiles); sIdx++)
+    while (ray->bgmSongs.length)
     {
-        unloadMidiFile(&ray->songs[sIdx]);
+        midiFile_t* bgm = pop(&ray->bgmSongs);
+        unloadMidiFile(bgm);
+        heap_caps_free(bgm);
     }
 
     // Free SFX
@@ -543,9 +625,9 @@ static bool rayMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             // Wipe NVM
             eraseNvsKey(RAY_NVS_KEY);
-            for (int16_t kIdx = 0; kIdx < ARRAY_SIZE(RAY_NVS_VISITED_KEYS); kIdx++)
+            for (int16_t kIdx = 0; kIdx < ARRAY_SIZE(mapMetadata); kIdx++)
             {
-                eraseNvsKey(RAY_NVS_VISITED_KEYS[kIdx]);
+                eraseNvsKey(mapMetadata[kIdx].visitedKey);
             }
             // Return up one menu
             ray->wasReset = true;
@@ -685,7 +767,7 @@ static void rayInitMenu(void)
 
     // Only show credits if the game was beaten
     int32_t magtroidUnlocked = false;
-    readNvs32(MAGTROID_UNLOCK_KEY, &magtroidUnlocked);
+    readNvs32(TOMIS_QUEST_FINISHED, &magtroidUnlocked);
     if (magtroidUnlocked)
     {
         addSingleItemToMenu(ray->menu, rayCreditsStr);
@@ -719,4 +801,19 @@ static void rayInstrumentDacCallback(uint8_t* samples, int16_t len)
 ray_t* getRayState(void)
 {
     return ray;
+}
+
+/**
+ * @brief Get metadata for a given map index
+ *
+ * @param idx The map index, see mapMetadata[]
+ * @return A pointer to the map's metadata
+ */
+const rayMapMetadata_t* getRayMapMetadata(uint32_t idx)
+{
+    if (idx < ARRAY_SIZE(mapMetadata))
+    {
+        return &mapMetadata[idx];
+    }
+    return NULL;
 }

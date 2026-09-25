@@ -8,6 +8,7 @@
 // Constant data
 //==============================================================================
 
+// TODO update death text
 static const char* const deathTexts[] = {
     // Cheeky messages
     "GG no re",

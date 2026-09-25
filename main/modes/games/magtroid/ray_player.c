@@ -15,28 +15,12 @@
 #include "ray_dialog.h"
 #include "ray_tex_manager.h"
 
+//==============================================================================
+// Defines
+//==============================================================================
+
 #define SWORD_SWING_TIME  200000
 #define SWORD_SWING_ANGLE 120
-
-//==============================================================================
-// Const data
-//==============================================================================
-
-/** @brief random dialog when a missile expansion is acquired */
-const char* const missilePickupDialog[] = {
-    "Hey, you can hold more missiles now! Where? ...You don't want to know!",
-    "Hey, this wasn't the critical path, but at least you can express your frustration with "
-    "these additional missiles!",
-    "Watch, these five missiles are going to come in SO handy, just you wait.",
-    "Look at you, overachiever! Have some missiles for being such a good completionist.",
-    "Wow, who just leaves a bunch of missiles lying around? This is an all-ages event, come on.",
-    "Did you know that missiles go through enemy shields? Bet you thought we made them have "
-    "limited ammo for nothing, huh!",
-    "Why yes, this is a missile expansion! Mazel Tov!",
-};
-
-/** @brief special dialog for one missile */
-const char* missileSwimDialog = "All that swimming just for a missile upgrade? LAME.";
 
 //==============================================================================
 // Functions
@@ -57,8 +41,7 @@ bool initializePlayer(ray_t* ray)
         initFromScratch = true;
 
         // Start at map 0, loaded later
-        ray->p.mapId          = 0;
-        ray->p.mapsVisited[0] = true;
+        ray->p.mapId = 0;
 
         // ray->p.posX and ray->p.posY (starting position) are set by the map
 
@@ -119,7 +102,7 @@ void raySavePlayer(ray_t* ray)
  */
 void raySaveVisitedTiles(ray_t* ray)
 {
-    writeNvsBlob(RAY_NVS_VISITED_KEYS[ray->p.mapId], ray->map.visitedTiles,
+    writeNvsBlob(getRayMapMetadata(ray->p.mapId)->visitedKey, ray->map.visitedTiles,
                  sizeof(rayTileState_t) * ray->map.w * ray->map.h);
 }
 
@@ -646,29 +629,57 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
             {
                 ray->p.health++;
             }
+            // Don't save for each heart
+            saveAfterObtain = false;
             break;
         }
         case OBJ_ITEM_MPOINT_1:
         {
             ray->p.mpoints += 1;
+            // Don't save for each mpoint
+            saveAfterObtain = false;
             break;
         }
         case OBJ_ITEM_MPOINT_5:
         {
             ray->p.mpoints += 5;
+            // Don't save for each mpoint
+            saveAfterObtain = false;
             break;
         }
         case OBJ_ITEM_MPOINT_10:
         {
             ray->p.mpoints += 10;
+            // Don't save for each mpoint
+            saveAfterObtain = false;
             break;
         }
         case OBJ_ITEM_MPOINT_20:
         {
             ray->p.mpoints += 20;
+            // Don't save for each mpoint
+            saveAfterObtain = false;
             break;
         }
-        // TODO keys, heart pieces, ammo
+        case OBJ_ITEM_KEY:
+        {
+            for (int idx = 0; idx < ARRAY_SIZE(ray->p.i.items); idx++)
+            {
+                invItem_t* invItem = &ray->p.i.items[idx];
+                if (!invItem->occupied)
+                {
+                    invItem->occupied = true;
+                    invItem->keyUsed  = false;
+                    invItem->mapId    = mapId;
+                    invItem->objId    = item->id;
+                    invItem->type     = item->type & ID_MASK;
+                    ray->ps.keyCount++;
+                    break;
+                }
+            }
+            break;
+        }
+        // TODO heart pieces
         default:
         {
             // Don't care about other types
