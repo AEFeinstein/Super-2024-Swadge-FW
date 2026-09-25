@@ -182,7 +182,8 @@ CFLAGS_WARNINGS = \
 	-Wno-unused-parameter \
 	-Wno-sign-compare \
 	-Wno-enum-conversion \
-	-Wno-error=unused-but-set-variable
+	-Wno-error=unused-but-set-variable \
+	-Wno-packed-bitfield-compat
 
 # These are warning flags that I like
 CFLAGS_WARNINGS_EXTRA = \

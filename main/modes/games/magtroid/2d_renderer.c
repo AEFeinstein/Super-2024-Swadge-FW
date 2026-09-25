@@ -212,7 +212,9 @@ void drawForeground2d(ray_t* ray, uint32_t elapsedUs)
     }
 
     // Draw HUD
-#define X_MARGIN 24
+#define X_MARGIN  24
+#define X_SPACING 2
+
     int16_t xOff = X_MARGIN;
 
     // Draw hearts
@@ -221,18 +223,33 @@ void drawForeground2d(ray_t* ray, uint32_t elapsedUs)
     for (int i = 0; i < ray->p.health; i++)
     {
         drawWsgSimple(heart, xOff, yHeartOff);
-        xOff += heart->w + 2;
+        xOff += heart->w + X_SPACING;
     }
+
+    // Measure Keys
+    wsg_t* key        = getTexByType(ray, OBJ_ITEM_KEY);
+    char keyCount[32] = {0};
+    sprintf(keyCount, "%" PRIu32, ray->ps.keyCount);
+    int16_t keyTextWidth = textWidth(&ray->ibm, keyCount);
 
     // Measure MPoints
     wsg_t* mpoint        = getTexByType(ray, OBJ_ITEM_MPOINT_1);
     char mpointCount[32] = {0};
     sprintf(mpointCount, "%" PRIu32, ray->p.mpoints);
-    int16_t mPointWidth = mpoint->w + 2 + textWidth(&ray->ibm, mpointCount);
-    xOff                = TFT_WIDTH - mPointWidth - X_MARGIN;
+    int16_t mPointTextWidth = textWidth(&ray->ibm, mpointCount);
+
+    // Start drawing here
+    xOff = TFT_WIDTH - X_MARGIN - mPointTextWidth - X_SPACING - mpoint->w - keyTextWidth - X_SPACING - key->w;
+
+    // Draw Keys
+    drawWsgSimple(key, xOff, 0);
+    xOff += key->w + X_SPACING;
+    drawText(&ray->ibm, c555, keyCount, xOff, (key->h - ray->ibm.height) / 2);
+    xOff += keyTextWidth;
 
     // Draw MPoints
     drawWsgSimple(mpoint, xOff, 0);
-    xOff += mpoint->w + 2;
+    xOff += mpoint->w + X_SPACING;
     drawText(&ray->ibm, c555, mpointCount, xOff, (mpoint->h - ray->ibm.height) / 2);
+    xOff += mPointTextWidth + X_SPACING;
 }

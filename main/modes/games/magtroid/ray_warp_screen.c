@@ -40,8 +40,9 @@ void rayWarpScreenRender(ray_t* ray, uint32_t elapsedUs)
     static const char warpText[] = "Warping to";
     int16_t tWidth               = textWidth(&ray->logbook, warpText);
     drawText(&ray->logbook, c555, warpText, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) - ray->logbook.height - 4);
-    tWidth = textWidth(&ray->logbook, rayMapNames[ray->warpDestMapId]);
-    drawText(&ray->logbook, c555, rayMapNames[ray->warpDestMapId], (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) + 4);
+    const char* name = getRayMapMetadata(ray->warpDestMapId)->name;
+    tWidth           = textWidth(&ray->logbook, name);
+    drawText(&ray->logbook, c555, name, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) + 4);
 
     // Decrement the timer
     ray->warpTimerUs -= elapsedUs;
@@ -56,7 +57,7 @@ void rayWarpScreenRender(ray_t* ray, uint32_t elapsedUs)
         // ray->sfx_warp.shouldLoop = false;
         globalMidiPlayerStop(true);
         // Play music
-        globalMidiPlayerPlaySong(&ray->songs[ray->p.mapId], MIDI_BGM);
+        globalMidiPlayerPlaySong(getAtIndex(&ray->bgmSongs, ray->p.mapId), MIDI_BGM);
     }
 }
 
@@ -105,8 +106,7 @@ void warpToDestination(ray_t* ray)
     globalMidiPlayerStop(true);
 
     // Set the map ID
-    ray->p.mapId                     = ray->warpDestMapId;
-    ray->p.mapsVisited[ray->p.mapId] = true;
+    ray->p.mapId = ray->warpDestMapId;
 
     // Set the player position after the map is loaded
     ray->p.posX = ray->warpDestPosX;

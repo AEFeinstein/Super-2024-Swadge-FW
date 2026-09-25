@@ -91,7 +91,7 @@ class tileType(Enum):
     BG_DOOR_BUSH = BG | DOOR | 0
     BG_DOOR_CRACK_H = BG | DOOR | 1
     BG_DOOR_CRACK_V = BG | DOOR | 2
-    BG_DOOR_3 = BG | DOOR | 3
+    BG_DOOR_LOCKED = BG | DOOR | 3
     BG_DOOR_4 = BG | DOOR | 4
     BG_DOOR_5 = BG | DOOR | 5
     BG_DOOR_6 = BG | DOOR | 6
@@ -167,7 +167,7 @@ class tileType(Enum):
     OBJ_ITEM_MPOINT_5 = OBJ | ITEM | 10
     OBJ_ITEM_MPOINT_10 = OBJ | ITEM | 11
     OBJ_ITEM_MPOINT_20 = OBJ | ITEM | 12
-    OBJ_ITEM_13 = OBJ | ITEM | 13
+    OBJ_ITEM_KEY = OBJ | ITEM | 13
     OBJ_ITEM_14 = OBJ | ITEM | 14
     OBJ_ITEM_15 = OBJ | ITEM | 15
     OBJ_ITEM_16 = OBJ | ITEM | 16
@@ -327,7 +327,7 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_DOOR_BUSH,
         tileType.BG_DOOR_CRACK_H,
         tileType.BG_DOOR_CRACK_V,
-        tileType.BG_DOOR_3,
+        tileType.BG_DOOR_LOCKED,
         tileType.BG_DOOR_4,
         tileType.BG_DOOR_5,
         tileType.BG_DOOR_6,
@@ -375,7 +375,7 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ITEM_MPOINT_5,
         tileType.OBJ_ITEM_MPOINT_10,
         tileType.OBJ_ITEM_MPOINT_20,
-        tileType.OBJ_ITEM_13,
+        tileType.OBJ_ITEM_KEY,
         tileType.OBJ_ITEM_14,
         tileType.OBJ_ITEM_15,
         tileType.OBJ_ITEM_16,

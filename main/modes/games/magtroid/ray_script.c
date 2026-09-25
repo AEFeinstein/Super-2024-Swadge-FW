@@ -1115,7 +1115,7 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         case WIN:
         {
             // Unlock zip on the menu
-            writeNvs32(MAGTROID_UNLOCK_KEY, 1);
+            writeNvs32(TOMIS_QUEST_FINISHED, 1);
             // Jump to credits! This is either immediate or after the aforementioned dialog
             ray->shouldShowCredits = true;
             break;
