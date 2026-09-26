@@ -7,7 +7,6 @@
 
 #include "swadge.h"
 #include "fp_math.h"
-#include "starfield.h"
 #include "esp_random.h"
 #include "credits_utils.h"
 
@@ -73,41 +72,41 @@ typedef enum __attribute__((packed))
     // Special delete tile
     DELETE = (BG | META | 1),
     // Floor tiles
-    BG_FLOOR_HOLE = (BG | FLOOR | 0),
-    BG_FLOOR_1    = (BG | FLOOR | 1),
-    BG_FLOOR_2    = (BG | FLOOR | 2),
-    BG_FLOOR_3    = (BG | FLOOR | 3),
-    BG_FLOOR_4    = (BG | FLOOR | 4),
-    BG_FLOOR_5    = (BG | FLOOR | 5),
-    BG_FLOOR_6    = (BG | FLOOR | 6),
-    BG_FLOOR_7    = (BG | FLOOR | 7),
-    BG_FLOOR_8    = (BG | FLOOR | 8),
-    BG_FLOOR_9    = (BG | FLOOR | 9),
-    BG_FLOOR_10   = (BG | FLOOR | 10),
-    BG_FLOOR_11   = (BG | FLOOR | 11),
-    BG_FLOOR_12   = (BG | FLOOR | 12),
-    BG_FLOOR_13   = (BG | FLOOR | 13),
-    BG_FLOOR_14   = (BG | FLOOR | 14),
-    BG_FLOOR_15   = (BG | FLOOR | 15),
-    BG_FLOOR_16   = (BG | FLOOR | 16),
-    BG_FLOOR_17   = (BG | FLOOR | 17),
-    BG_FLOOR_18   = (BG | FLOOR | 18),
-    BG_FLOOR_19   = (BG | FLOOR | 19),
-    BG_FLOOR_20   = (BG | FLOOR | 20),
-    BG_FLOOR_21   = (BG | FLOOR | 21),
-    BG_FLOOR_22   = (BG | FLOOR | 22),
-    BG_FLOOR_23   = (BG | FLOOR | 23),
-    BG_FLOOR_24   = (BG | FLOOR | 24),
-    BG_FLOOR_25   = (BG | FLOOR | 25),
-    BG_FLOOR_26   = (BG | FLOOR | 26),
-    BG_FLOOR_27   = (BG | FLOOR | 27),
-    BG_FLOOR_28   = (BG | FLOOR | 28),
-    BG_FLOOR_29   = (BG | FLOOR | 29),
-    BG_FLOOR_30   = (BG | FLOOR | 30),
-    BG_FLOOR_31   = (BG | FLOOR | 31),
+    BG_FLOOR_HOLE  = (BG | FLOOR | 0),
+    BG_FLOOR_GRASS = (BG | FLOOR | 1),
+    BG_FLOOR_2     = (BG | FLOOR | 2),
+    BG_FLOOR_3     = (BG | FLOOR | 3),
+    BG_FLOOR_4     = (BG | FLOOR | 4),
+    BG_FLOOR_5     = (BG | FLOOR | 5),
+    BG_FLOOR_6     = (BG | FLOOR | 6),
+    BG_FLOOR_7     = (BG | FLOOR | 7),
+    BG_FLOOR_8     = (BG | FLOOR | 8),
+    BG_FLOOR_9     = (BG | FLOOR | 9),
+    BG_FLOOR_10    = (BG | FLOOR | 10),
+    BG_FLOOR_11    = (BG | FLOOR | 11),
+    BG_FLOOR_12    = (BG | FLOOR | 12),
+    BG_FLOOR_13    = (BG | FLOOR | 13),
+    BG_FLOOR_14    = (BG | FLOOR | 14),
+    BG_FLOOR_15    = (BG | FLOOR | 15),
+    BG_FLOOR_16    = (BG | FLOOR | 16),
+    BG_FLOOR_17    = (BG | FLOOR | 17),
+    BG_FLOOR_18    = (BG | FLOOR | 18),
+    BG_FLOOR_19    = (BG | FLOOR | 19),
+    BG_FLOOR_20    = (BG | FLOOR | 20),
+    BG_FLOOR_21    = (BG | FLOOR | 21),
+    BG_FLOOR_22    = (BG | FLOOR | 22),
+    BG_FLOOR_23    = (BG | FLOOR | 23),
+    BG_FLOOR_24    = (BG | FLOOR | 24),
+    BG_FLOOR_25    = (BG | FLOOR | 25),
+    BG_FLOOR_26    = (BG | FLOOR | 26),
+    BG_FLOOR_27    = (BG | FLOOR | 27),
+    BG_FLOOR_28    = (BG | FLOOR | 28),
+    BG_FLOOR_29    = (BG | FLOOR | 29),
+    BG_FLOOR_30    = (BG | FLOOR | 30),
+    BG_FLOOR_31    = (BG | FLOOR | 31),
     // Wall tiles
     BG_WALL_TARGET = (BG | WALL | 0),
-    BG_WALL_1      = (BG | WALL | 1),
+    BG_WALL_TREES  = (BG | WALL | 1),
     BG_WALL_2      = (BG | WALL | 2),
     BG_WALL_3      = (BG | WALL | 3),
     BG_WALL_4      = (BG | WALL | 4),
@@ -757,6 +756,7 @@ typedef struct rayGame
 
     vec_t camera;        ///< The position of the 2D camera
     int32_t cameraTimer; ///< A timer to move the camera from current to target positions
+    bool cameraScripted; ///< True if the camera is controlled by scripts, false to free-roam
 
     rayPlayer_t p;       ///< All the player's state, loaded from NVM
     rayPlayerState_t ps; ///< All the player's temporary state
@@ -792,8 +792,6 @@ typedef struct rayGame
     list_t scripts[NUM_IF_OP_TYPES]; ///< An array of lists of scripts
     uint32_t scriptTimer;            ///< A microsecond timer to check for time based scripts
     uint32_t secondsSinceStart;      ///< The number of seconds since this map was loaded
-
-    starfield_t starfield; ///< Starfield used for warp animation
 
     list_t bgmSongs;
     midiFile_t sfx_door_open;      ///< SFX when a door opens

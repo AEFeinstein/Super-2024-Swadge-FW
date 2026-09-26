@@ -49,32 +49,39 @@ const char RAY_NVS_KEY[] = "ray";
  * @brief Metadata for each map including name, BGM, and NVS key for visited tiles
  *
  * Map IDs for quick reference:
- *  0 - Secluded Woods
- *  1 - Fairy Glen
- *  2 - The Clearing
- *  3 - The Great DeeJay Tree
- *  4 - Gaylordia Field
- *  5 - Dungeon 1
- *  6 - Dungeon 2
- *  7 - Dungeon 3
- *  8 - Dungeon 4
- *  9 - Town Square
- * 10 - Fredward's Item Shop
- * 11 - Mayor's House
- * 12 - Shrine of the Great Fairies
+ * 0  Tomi's House
+ * 1  Fairy Glen
+ * 2  Secluded Woods
+ * 3  The Clearing
+ * 4  The Great DeeJay Tree
+ * 5  Gaylordia Field
+ * 6  Dungeon 1
+ * 7  Dungeon 2
+ * 8  Dungeon 3
+ * 9  Dungeon 4
+ * 10 Town Square
+ * 11 Fredward's Item Shop
+ * 12 Mayor's House
+ * 13 Shrine of the Great Fairies
  */
 const rayMapMetadata_t mapMetadata[] = {
     {
-        .name       = "Secluded Woods",
-        .visitedKey = "tqvsw",
+        .name       = "Tomi's House",
+        .visitedKey = "tqvth",
         .bgmFile    = BASE_0_MID,
-        .mapFile    = SECLUDED_WOODS_RMH,
+        .mapFile    = TOMIS_HOUSE_RMH,
     },
     {
         .name       = "Fairy Glen",
         .visitedKey = "tqvfg",
         .bgmFile    = BASE_0_MID,
         .mapFile    = FAIRY_GLEN_RMH,
+    },
+    {
+        .name       = "Secluded Woods",
+        .visitedKey = "tqvsw",
+        .bgmFile    = BASE_0_MID,
+        .mapFile    = SECLUDED_WOODS_RMH,
     },
     {
         .name       = "The Clearing",
@@ -462,6 +469,12 @@ static void rayMainLoop(int64_t elapsedUs)
         }
         case RAY_GAME:
         {
+            // If the camera is not scripted, follow the player
+            if (false == ray->cameraScripted)
+            {
+                rayCenterCameraOnPlayer(ray);
+            }
+
             drawForeground2d(ray, elapsedUs);
 
             // Only run this code when the camera is settled
@@ -656,9 +669,9 @@ void rayStartGame(void)
     rayFreeCurrentState(ray);
 
     // Start with an uninitialized camera
-    // This may be loaded from NVM or set via script
-    ray->camera.x = -1;
-    ray->camera.y = -1;
+    // This may be loaded from NVM set via script, or in free-roam
+    ray->camera.x = 0;
+    ray->camera.y = 0;
 
     // Load player data from NVM
     bool initFromScratch = initializePlayer(ray);

@@ -36,6 +36,9 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
     // Convenience inventory to know what not to spawn
     rayInventory_t* inv = &ray->p.i;
 
+    // Clear this flag before loading the map
+    ray->cameraScripted = false;
+
     // Pick the allocation type
     uint32_t caps = spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_DEFAULT;
 

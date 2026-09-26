@@ -253,3 +253,23 @@ void drawForeground2d(ray_t* ray, uint32_t elapsedUs)
     drawText(&ray->ibm, c555, mpointCount, xOff, (mpoint->h - ray->ibm.height) / 2);
     xOff += mPointTextWidth + X_SPACING;
 }
+
+/**
+ * @brief Center the camera on the player, keeping it in world bounds
+ *
+ * @param ray The entire game state
+ */
+void rayCenterCameraOnPlayer(ray_t* ray)
+{
+    // Center camera on player
+    ray->camera.x = TO_PX(ray->p.posX) - (TFT_WIDTH / 2) + (ray->ps.sprite->w / 2);
+    ray->camera.y = TO_PX(ray->p.posY) - (TFT_HEIGHT / 2) + (ray->ps.sprite->h / 2);
+
+    // Clamp camera to world bounds
+    ray->camera.x = CLAMP(ray->camera.x, 0, (ray->map.w * CELL_SIZE) - TFT_WIDTH);
+    ray->camera.y = CLAMP(ray->camera.y, 0, (ray->map.h * CELL_SIZE) - TFT_HEIGHT);
+
+    // Set target to camera
+    ray->p.cameraTarget.x = ray->camera.x;
+    ray->p.cameraTarget.y = ray->camera.y;
+}
