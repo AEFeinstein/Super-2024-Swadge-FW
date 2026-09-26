@@ -359,18 +359,15 @@ static void heyListenMainLoop(int64_t elapsedUs)
                 hld->pendingSwitchToMic = false;
             }
             // ready for a new yell
-            if (hld->isYelling) // if the player is currently yelling, keep the timer running
-            {
-                hld->nextEvtTimer++;
                 if (hld->nextEvtTimer >= 400)
                 {
                     hld->currentEvt = EVT_PHRASE; // trigger the "PHRASE" event
                 }
-                if (hld->nextEvtTimer >= 200)
+                else if (hld->nextEvtTimer >= 200)
                 {
                     hld->currentEvt = EVT_HEYLISTEN; // trigger the "HEYLISTEN" event
                 }
-                if (hld->nextEvtTimer >= 100)
+                else if (hld->nextEvtTimer >= 100)
                 {
                     hld->currentEvt = EVT_HEY; // trigger the "HEY" event
                 }
