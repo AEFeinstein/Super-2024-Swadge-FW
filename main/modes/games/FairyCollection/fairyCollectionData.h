@@ -5,6 +5,7 @@
 //==============================================================================
 
 #include <inttypes.h>
+#include <stdbool.h>
 
 //==============================================================================
 // Enums
@@ -177,6 +178,7 @@ typedef struct __attribute__((packed))
     uint8_t attendeeType : 4;
     uint8_t cardBG       : 4;
     uint8_t team         : 2;
+    bool unInitialized   : 1; // If fairy is initialized
 } profileCard_t;
 
 typedef struct __attribute__((packed))

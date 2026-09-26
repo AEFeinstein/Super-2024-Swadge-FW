@@ -178,58 +178,11 @@ static const jukeboxSong_t sfx_mainMenu[] = {
     },
 };
 
-static const jukeboxSong_t bgm_swadgesona[] = {
-    {
-        .fIdx = SWSN_CREATOR_BGM1_MID,
-        .name = "Creator BGM",
-    },
-};
-
-static const jukeboxSong_t sfx_swadgesona[] = {
-    {
-        .fIdx = SWSN_CHOOSE_SFX_MID,
-        .name = "Choose SFX",
-    },
-    {
-        .fIdx = SWSN_MOVE_SFX_MID,
-        .name = "Move SFX",
-    },
-};
-
-static const jukeboxSong_t bgm_atrium[] = {
-    {
-        .fIdx = ATRTHEME1_MID,
-        .name = "Atrium Theme 1",
-    },
-    {
-        .fIdx = ATRTHEME2_MID,
-        .name = "Atrium Theme 2",
-    },
-    {
-        .fIdx = ATRVIBE_MID,
-        .name = "Atrium Vibe",
-    },
-};
-
 static const jukeboxCategory_t bgmCategories[] = {
     {
         .category    = &roboRunnerMode,
         .songs       = bgm_roboRunner,
         .numSongs    = ARRAY_SIZE(bgm_roboRunner),
-        .generalMidi = true,
-        .shouldLoop  = true,
-    },
-    {
-        .category    = &swsnCreatorMode,
-        .songs       = bgm_swadgesona,
-        .numSongs    = ARRAY_SIZE(bgm_swadgesona),
-        .generalMidi = true,
-        .shouldLoop  = true,
-    },
-    {
-        .category    = &atriumMode,
-        .songs       = bgm_atrium,
-        .numSongs    = ARRAY_SIZE(bgm_atrium),
         .generalMidi = true,
         .shouldLoop  = true,
     },
@@ -250,13 +203,6 @@ static const jukeboxCategory_t bgmCategories[] = {
 };
 
 static const jukeboxCategory_t sfxCategories[] = {
-    {
-        .category    = &swsnCreatorMode,
-        .songs       = sfx_swadgesona,
-        .numSongs    = ARRAY_SIZE(sfx_swadgesona),
-        .generalMidi = true,
-        .shouldLoop  = false,
-    },
     {
         .category    = &introMode,
         .songs       = sfx_tutorial,

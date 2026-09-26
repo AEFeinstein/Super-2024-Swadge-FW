@@ -141,7 +141,7 @@
 //==============================================================================
 
 #include "swadge.h"
-#include "swadgesona.h"
+#include "fairyCollectionData.h"
 
 //==============================================================================
 // Defines
@@ -160,11 +160,13 @@ typedef struct __attribute__((packed)) swadgePassPacket
 {
     uint16_t preamble; ///< Two bytes that specifically begin a SwadgePass packet
     uint8_t version;   ///< A version byte to differentiate packets per-year
+    int32_t username;  ///< Username associated with the swadge
+                       ///< FIXME: Need to save during tutorial
     struct
     {
-        uint32_t packedProfile; // card select 0-3, fact0 4-7, fact1 8-11, fact2 12-15
-        uint32_t points;
-    } atrium;
+        fcSPP_t fairy;
+        profileCard_t card;
+    } fairyCol;
     struct
     {
         int8_t maxLevels;
@@ -176,10 +178,6 @@ typedef struct __attribute__((packed)) swadgePassPacket
     {
         uint16_t highScore;
     } roboRunner;
-    struct
-    {
-        swadgesonaCore_t core;
-    } swadgesona;
 } swadgePassPacket_t;
 
 /**
