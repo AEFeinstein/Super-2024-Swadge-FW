@@ -51,6 +51,12 @@ ifeq ($(HOST_OS),Linux)
 	endif
 endif
 
+# if user has not configured their esp idf and launched the virtual environment idf.py doesnt
+# give good errors
+ifndef IDF_PATH
+$(info NOTICE: Environment Variable IDF_PATH is not set, target "firmware" is unavailable)
+endif
+
 ################################################################################
 # Source Files
 ################################################################################
