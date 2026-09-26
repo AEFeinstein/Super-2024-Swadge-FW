@@ -60,7 +60,7 @@ void loadEnvTextures(ray_t* ray)
     LOAD_TEXTURE(ray, BG_DOOR_30);
     LOAD_TEXTURE(ray, BG_DOOR_31);
     LOAD_TEXTURE(ray, BG_FLOOR_HOLE);
-    LOAD_TEXTURE(ray, BG_FLOOR_1);
+    LOAD_TEXTURE(ray, BG_FLOOR_GRASS);
     LOAD_TEXTURE(ray, BG_FLOOR_2);
     LOAD_TEXTURE(ray, BG_FLOOR_3);
     LOAD_TEXTURE(ray, BG_FLOOR_4);
@@ -92,7 +92,7 @@ void loadEnvTextures(ray_t* ray)
     LOAD_TEXTURE(ray, BG_FLOOR_30);
     LOAD_TEXTURE(ray, BG_FLOOR_31);
     LOAD_TEXTURE(ray, BG_WALL_TARGET);
-    LOAD_TEXTURE(ray, BG_WALL_1);
+    LOAD_TEXTURE(ray, BG_WALL_TREES);
     LOAD_TEXTURE(ray, BG_WALL_2);
     LOAD_TEXTURE(ray, BG_WALL_3);
     LOAD_TEXTURE(ray, BG_WALL_4);

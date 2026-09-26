@@ -23,7 +23,7 @@ class tileType(Enum):
     DELETE = BG | META | 1
     # Floor tiles
     BG_FLOOR_HOLE = BG | FLOOR | 0
-    BG_FLOOR_1 = BG | FLOOR | 1
+    BG_FLOOR_GRASS = BG | FLOOR | 1
     BG_FLOOR_2 = BG | FLOOR | 2
     BG_FLOOR_3 = BG | FLOOR | 3
     BG_FLOOR_4 = BG | FLOOR | 4
@@ -56,7 +56,7 @@ class tileType(Enum):
     BG_FLOOR_31 = BG | FLOOR | 31
     # Wall tiles
     BG_WALL_TARGET = BG | WALL | 0
-    BG_WALL_1 = BG | WALL | 1
+    BG_WALL_TREES = BG | WALL | 1
     BG_WALL_2 = BG | WALL | 2
     BG_WALL_3 = BG | WALL | 3
     BG_WALL_4 = BG | WALL | 4
@@ -257,7 +257,7 @@ class tileType(Enum):
 bgTiles: list[list[tileType]] = [
     [
         tileType.BG_FLOOR_HOLE,
-        tileType.BG_FLOOR_1,
+        tileType.BG_FLOOR_GRASS,
         tileType.BG_FLOOR_2,
         tileType.BG_FLOOR_3,
         tileType.BG_FLOOR_4,
@@ -291,7 +291,7 @@ bgTiles: list[list[tileType]] = [
     ],
     [
         tileType.BG_WALL_TARGET,
-        tileType.BG_WALL_1,
+        tileType.BG_WALL_TREES,
         tileType.BG_WALL_2,
         tileType.BG_WALL_3,
         tileType.BG_WALL_4,

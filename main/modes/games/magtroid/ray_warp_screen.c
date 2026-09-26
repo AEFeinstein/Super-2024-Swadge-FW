@@ -5,6 +5,7 @@
 #include "ray_warp_screen.h"
 #include "ray_map.h"
 #include "ray_player.h"
+#include "2d_renderer.h"
 
 //==============================================================================
 // Functions
@@ -32,12 +33,8 @@ void drawWarpBackground(int16_t x, int16_t y, int16_t w, int16_t h)
  */
 void rayWarpScreenRender(ray_t* ray, uint32_t elapsedUs)
 {
-    // Draw the starfield
-    updateStarfield(&ray->starfield, 32);
-    drawStarfield(&ray->starfield);
-
-    // Draw text over the starfield with the destination name
-    static const char warpText[] = "Warping to";
+    // Draw text with the destination name
+    static const char warpText[] = "Traveling to";
     int16_t tWidth               = textWidth(&ray->logbook, warpText);
     drawText(&ray->logbook, c555, warpText, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) - ray->logbook.height - 4);
     const char* name = getRayMapMetadata(ray->warpDestMapId)->name;
@@ -77,7 +74,7 @@ void setWarpDestination(ray_t* ray, int32_t mapId, int16_t posX, int16_t posY)
     ray->warpDestPosY  = ADD_FX(TO_FX(posY), TO_FX_FRAC(1, 2));
 
     // Set the warp timer
-    ray->warpTimerUs = 4000000;
+    ray->warpTimerUs = 2500000;
 }
 
 /**
@@ -92,9 +89,6 @@ void warpToDestination(ray_t* ray)
 
     // Save the current map's visited tiles
     raySaveVisitedTiles(ray);
-
-    // Initialize the starfield
-    initializeStarfield(&ray->starfield, true);
 
     // Free the scripts
     rayFreeCurrentState(ray);
