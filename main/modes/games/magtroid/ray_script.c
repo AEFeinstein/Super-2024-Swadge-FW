@@ -1126,11 +1126,15 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
             ray->p.cameraTarget.x = (CELL_SIZE * script->thenArgs.cell.x);
             ray->p.cameraTarget.y = (CELL_SIZE * (script->thenArgs.cell.y));
 
-            // Also set the actual camera if it's uninitialized
-            if (ray->camera.x < 0 && ray->camera.y < 0)
+            // Also set the actual camera if it's not scripted yet
+            if (false == ray->cameraScripted)
             {
                 ray->camera = ray->p.cameraTarget;
+
+                // Mark the camera as scripted so it won't follow the player
+                ray->cameraScripted = true;
             }
+
             break;
         }
         case SHOP:
