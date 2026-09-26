@@ -36,6 +36,11 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
     // Convenience inventory to know what not to spawn
     rayInventory_t* inv = &ray->p.i;
 
+    // Start with an uninitialized camera
+    // This may be loaded from NVM set via script, or in free-roam
+    ray->camera.x = 0;
+    ray->camera.y = 0;
+
     // Clear this flag before loading the map
     ray->cameraScripted = false;
 
