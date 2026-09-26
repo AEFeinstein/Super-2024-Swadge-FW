@@ -36,6 +36,7 @@
 #include "colorchord.h"
 #include "dance.h"
 #include "factoryTest.h"
+#include "fairyCollection.h"
 #include "gamepad.h"
 #include "gossipStone.h"
 #include "gottaGo.h"

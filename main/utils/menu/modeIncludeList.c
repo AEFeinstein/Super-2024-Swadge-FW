@@ -65,6 +65,7 @@ void modeListSetMenu(menu_t* menu)
 
     // Swadgepass
     menu = startSubMenu(menu, "SwadgePass");
+    addSingleItemToMenu(menu, fairyCollectionMode.modeName);
     menu = endSubMenu(menu);
 }
 

@@ -7,9 +7,28 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
+#include "font.h"
+
+//==============================================================================
+// Defines
+//==============================================================================
+
+#define FC_MAX_NUM_FAIRIES 64
+
+#define FC_NUM_OPTIONS 12
+
 //==============================================================================
 // Enums
 //==============================================================================
+
+typedef enum
+{
+    FC_NAMESPACE,
+    FC_USER_FAIRY,
+    FC_USER_CARD,
+    FC_SPP_SAVED,
+    FC_SPP_NEXT_IDX,
+} fcNvsKeys_t;
 
 typedef enum
 {
@@ -29,6 +48,7 @@ typedef enum
     FC_AT_PARTIER,
     FC_AT_FURRY,
     FC_AT_PINBALL_WIZARD,
+    FC_AT_COUNT
 } fcAttendeeType_t;
 
 typedef enum
@@ -49,14 +69,15 @@ typedef enum
     FC_CARD_INDIGO,
     FC_CARD_VIOLET,
     FC_CARD_WHITE,
+    FC_CARD_COUNT
 } fcProfileCards_t;
 
 typedef enum
 {
-    FC_NONE,
     FC_BLUE,
     FC_RED,
     FC_YELLOW,
+    FC_NONE // Count + unset
 } fcTeams_t;
 
 typedef enum
@@ -67,8 +88,9 @@ typedef enum
     FC_SHAPE_RND_SML,
     FC_SHAPE_ERLENMEYER,
     FC_SHAPE_HEART,
-    FC_UNUSED_1,
-    FC_UNUSED_2,
+    FC_SHAPE_UNUSED_1,
+    FC_SHAPE_UNUSED_2,
+    FC_SHAPE_COUNT
 } fcShape_t;
 
 typedef enum
@@ -81,6 +103,7 @@ typedef enum
     FC_CHARM_CONTROLLER,
     FC_CHARM_GUITER,
     FC_CHARM_GEM,
+    FC_CHARM_COUNT
 } fcCharm_t;
 
 typedef enum
@@ -93,6 +116,7 @@ typedef enum
     FC_FILL_SEASHELLS,
     FC_FILL_PAINT,
     FC_FILL_TOY_CAR,
+    FC_FILL_COUNT
 } fcFilling_t;
 
 typedef enum
@@ -105,6 +129,7 @@ typedef enum
     FC_PED_STONE,
     FC_PED_PLATE,
     FC_PED_MUSHROOM,
+    FC_PED_COUNT
 } fcPedestal_t;
 
 typedef enum
@@ -117,6 +142,7 @@ typedef enum
     FC_COL_PURPLE,
     FC_COL_GRAY,
     FC_COL_ORANGE,
+    FC_COL_COUNT
 } fcColor_t;
 
 typedef enum
@@ -129,6 +155,7 @@ typedef enum
     FC_WING_BAT,
     FC_WING_CURLY,
     FC_WING_MONARCH,
+    FC_WING_COUNT
 } fcWing_t;
 
 typedef enum
@@ -141,6 +168,7 @@ typedef enum
     FC_BALL_2, // FIXME
     FC_BALL_3, // FIXME
     FC_BALL_4, // FIXME
+    FC_BALL_COUNT
 } fcBall_t;
 
 typedef enum
@@ -153,6 +181,7 @@ typedef enum
     FC_AURA_STINK,
     FC_AURA_1, // FIXME
     FC_AURA_2, // FIXME
+    FC_AURA_COUNT
 } fcAura_t;
 
 //==============================================================================
@@ -169,7 +198,7 @@ typedef struct __attribute__((packed))
     uint8_t wing     : 3;
     uint8_t ball     : 3;
     uint8_t aura     : 3;
-} fcSPP_t;
+} fairy_t;
 
 typedef struct __attribute__((packed))
 {
@@ -185,11 +214,9 @@ typedef struct __attribute__((packed))
 {
     int32_t packedName;
     profileCard_t pCard;
-    fcSPP_t fairy;
+    fairy_t fairy;
 } savedProfile_t;
 
-/*
-Trophies:
-- OLDHEAD: Find someone with 15+ years
-- Gets around: FInd one of each attendancer type
-*/
+extern const int fairyMaxList[];
+
+extern const char* const nvsStrs[];

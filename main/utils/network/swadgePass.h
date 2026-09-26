@@ -164,7 +164,7 @@ typedef struct __attribute__((packed)) swadgePassPacket
                        ///< FIXME: Need to save during tutorial
     struct
     {
-        fcSPP_t fairy;
+        fairy_t fairy;
         profileCard_t card;
     } fairyCol;
     struct
