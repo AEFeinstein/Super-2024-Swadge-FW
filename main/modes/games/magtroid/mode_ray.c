@@ -668,11 +668,6 @@ void rayStartGame(void)
     // Clear all lists
     rayFreeCurrentState(ray);
 
-    // Start with an uninitialized camera
-    // This may be loaded from NVM set via script, or in free-roam
-    ray->camera.x = 0;
-    ray->camera.y = 0;
-
     // Load player data from NVM
     bool initFromScratch = initializePlayer(ray);
 
