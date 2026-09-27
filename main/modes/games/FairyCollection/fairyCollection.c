@@ -131,7 +131,7 @@ static void fcMainLoop(int64_t elapsedUs)
         {
             if (fcRunCreation(fcd->fcdd))
             {
-                // TODO: Change mode
+                fcd->state = FC_MENU;
             }
             fcDrawCreation(fcd->fcdd, &fcd->font);
             break;
@@ -159,7 +159,7 @@ static void fcAddToSwadgePassPacket(struct swadgePassPacket* packet)
         || !readNamespaceNvsBlob(nvsStrs[FC_NAMESPACE], nvsStrs[FC_USER_CARD], &card, &sFairy))
     {
         // Uninitialized
-        card.unInitialized = true;
+        card.initialized = false;
     }
     packet->fairyCol.fairy = fairy;
     packet->fairyCol.card  = card;

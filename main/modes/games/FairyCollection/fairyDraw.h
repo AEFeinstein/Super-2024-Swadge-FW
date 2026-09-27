@@ -1,20 +1,15 @@
 #pragma once
 
 //==============================================================================
-// Define
+// Includes
 //==============================================================================
 
 #include "fairyCollectionData.h"
 
 //==============================================================================
-// Struct
+// Function Definitions
 //==============================================================================
 
-typedef struct 
-{
-    int optionSelection;
-    int options[FC_OPT_COUNT];
-    fairy_t* fairy;
-    profileCard_t* card; 
-    bool displayFairy;
-} fcCreationData_t;
+void fcDrawFairy(fairy_t* fairy, int x, int y);
+
+void fcDrawFairyCard(profileCard_t* card, fairy_t* fairy, font_t* font);

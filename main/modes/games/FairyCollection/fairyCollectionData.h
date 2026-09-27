@@ -15,7 +15,7 @@
 
 #define FC_MAX_NUM_FAIRIES 64
 
-#define FC_NUM_OPTIONS 12
+#define FC_NUM_YEAR_OPTIONS 16
 
 //==============================================================================
 // Enums
@@ -29,6 +29,23 @@ typedef enum
     FC_SPP_SAVED,
     FC_SPP_NEXT_IDX,
 } fcNvsKeys_t;
+
+typedef enum
+{
+    FC_OPT_YEAR,
+    FC_OPT_ATTENDEE,
+    FC_OPT_CARD,
+    FC_OPT_TEAM,
+    FC_OPT_SHAPE,
+    FC_OPT_CHARM,
+    FC_OPT_FILLING,
+    FC_OPT_PEDESTAL,
+    FC_OPT_COLOR,
+    FC_OPT_WING,
+    FC_OPT_BALL,
+    FC_OPT_AURA,
+    FC_OPT_COUNT
+} fcOptionTypes_t;
 
 typedef enum
 {
@@ -207,7 +224,7 @@ typedef struct __attribute__((packed))
     uint8_t attendeeType : 4;
     uint8_t cardBG       : 4;
     uint8_t team         : 2;
-    bool unInitialized   : 1; // If fairy is initialized
+    bool initialized   : 1; // If fairy is initialized
 } profileCard_t;
 
 typedef struct __attribute__((packed))
@@ -217,6 +234,21 @@ typedef struct __attribute__((packed))
     fairy_t fairy;
 } savedProfile_t;
 
-extern const int fairyMaxList[];
+//==============================================================================
+// Consts
+//==============================================================================
 
+extern const int fairyMaxList[];
 extern const char* const nvsStrs[];
+extern const char* const fcOptionTypes[];
+extern const char* const fcAttendeeText[];
+extern const char* const fcCardText[];
+extern const char* const fcTeamText[];
+extern const char* const fcShapeText[];
+extern const char* const fcCharmText[];
+extern const char* const fcFillingText[];
+extern const char* const fcPedestalText[];
+extern const char* const fcColorsText[];
+extern const char* const fcWingText[];
+extern const char* const fcBallText[];
+extern const char* const fcAuraText[];
