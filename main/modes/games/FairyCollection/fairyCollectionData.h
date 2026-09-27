@@ -28,6 +28,7 @@ typedef enum
     FC_USER_CARD,
     FC_SPP_SAVED,
     FC_SPP_NEXT_IDX,
+    FC_BG,
 } fcNvsKeys_t;
 
 typedef enum

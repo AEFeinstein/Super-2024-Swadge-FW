@@ -7,6 +7,8 @@
 #include "fairyCollectionData.h"
 #include "fairyCreation.h"
 
+#include "menu.h"
+
 //==============================================================================
 // Defines
 //==============================================================================
@@ -20,6 +22,30 @@
 //==============================================================================
 
 const char fcModeName[] = "Fairy Collection";
+
+static const char* const fcMenuText[] = {
+    "Create-a-fairy",
+    "Collection",
+    "Background: ",
+};
+static const char* const fcBGOptions[] = {
+    "Greenhouse",
+    "Forest",
+    "Bookcase",
+    "Lab",
+};
+static const int fcBGOptionVals[] = {
+    0,
+    1,
+    2,
+    3,
+};
+const settingParam_t opts = {
+    .min = 0,
+    .max = ARRAY_SIZE(fcBGOptionVals),
+    .def = 0,
+    .key = "fc-bg-key",
+};
 
 /*
 Trophies:
@@ -52,6 +78,11 @@ typedef struct
     profileCard_t userCard;
     savedProfile_t spFairies[FC_MAX_NUM_FAIRIES];
 
+    // Menu
+    menu_t* menu;
+    menuZorldoRenderer_t* zr;
+    int background;
+
     // State
     fcState_t state;
     fcCreationData_t* fcdd;
@@ -69,6 +100,7 @@ static void fcMainLoop(int64_t elapsedUs);
 static void fcAddToSwadgePassPacket(struct swadgePassPacket* packet);
 static void loadUserFairy(void);
 static void loadFromSwadgePass(void);
+static bool fcMenuCb(const char* label, bool selected, uint32_t settingVal);
 
 //==============================================================================
 // Variables
@@ -102,12 +134,22 @@ static void fcEnterMode(void)
     fcInitCreation(fcd->fcdd, &fcd->userFairy, &fcd->userCard);
     loadFromSwadgePass();
 
+    // Init menu
+    fcd->menu = initMenu(fcModeName, fcMenuCb);
+    addSingleItemToMenu(fcd->menu, fcMenuText[0]);
+    addSingleItemToMenu(fcd->menu, fcMenuText[1]);
+    addSettingsOptionsItemToMenu(fcd->menu, fcMenuText[2], fcBGOptions, fcBGOptionVals, ARRAY_SIZE(fcBGOptions), &opts,
+                                 fcd->background);
+    fcd->zr = initMenuZorldoRenderer(NULL, NULL);
+    
     // TEST
     fcd->state = FC_CREATOR;
 }
 
 static void fcExitMode(void)
 {
+    deinitMenuZorldoRenderer(fcd->zr);
+    deinitMenu(fcd->menu);
     freeFont(&fcd->font);
     free(fcd->fcdd);
     free(fcd);
@@ -119,12 +161,22 @@ static void fcMainLoop(int64_t elapsedUs)
     {
         case FC_MENU:
         {
-            // TODO: Handle Menu
+            buttonEvt_t evt;
+            while (checkButtonQueueWrapper(&evt))
+            {
+                fcd->menu = menuButton(fcd->menu, evt);
+            }
+            drawMenuZorldo(fcd->menu, fcd->zr, elapsedUs);
             break;
         }
         case FC_SP:
         {
             // TODO: Handle SP field
+            buttonEvt_t evt;
+            while (checkButtonQueueWrapper(&evt))
+            {
+                // Allows backing out
+            }
             break;
         }
         case FC_CREATOR:
@@ -134,6 +186,7 @@ static void fcMainLoop(int64_t elapsedUs)
                 fcd->state = FC_MENU;
             }
             fcDrawCreation(fcd->fcdd, &fcd->font);
+            // TODO: Draw user's fairy here
             break;
         }
         default:
@@ -205,4 +258,20 @@ static void loadFromSwadgePass(void)
     // Save to NVS
     writeNamespaceNvs32(nvsStrs[FC_NAMESPACE], nvsStrs[FC_SPP_NEXT_IDX], currIdx);
     writeNamespaceNvsBlob(nvsStrs[FC_NAMESPACE], nvsStrs[FC_SPP_SAVED], fcd->spFairies, sizeof(fcd->spFairies));
+}
+
+static bool fcMenuCb(const char* label, bool selected, uint32_t settingVal)
+{
+    if (selected)
+    {
+        if (label == fcMenuText[0])
+        {
+            fcd->state = FC_CREATOR;
+        }
+        else if (label == fcMenuText[1])
+        {
+            fcd->state = FC_SP;
+        }
+    }
+    return false;
 }
