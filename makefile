@@ -39,6 +39,9 @@ endif
 CLANG_FORMAT:=clang-format-22
 ifeq (, $(shell which $(CLANG_FORMAT) 2>/dev/null))
 	CLANG_FORMAT:=clang-format
+ifneq ($(shell clang-format --version | grep -Pc "22\.\d+\.\d+"), 1)
+$(warning Your clang-format version is not 22. Formatting may be inconsistent)
+endif
 endif
 
 ifeq ($(HOST_OS),Linux)
