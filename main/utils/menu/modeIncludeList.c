@@ -56,7 +56,7 @@ void modeListSetMenu(menu_t* menu)
     addSingleItemToMenu(menu, gamepadMode.modeName);
     addSingleItemToMenu(menu, modeCredits.modeName);
     addSingleItemToMenu(menu, introMode.modeName);
-    
+
     menu = endSubMenu(menu);
 
     // Swadgepass
