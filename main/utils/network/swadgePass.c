@@ -45,6 +45,8 @@ void fillSwadgePassPacket(swadgePassPacket_t* packet)
     // Set the preamble
     packet->preamble = SWADGE_PASS_PREAMBLE;
     packet->version  = SWADGE_PASS_VERSION;
+    nameData_t nd = *getSystemUsername(); 
+    packet->username = GET_PACKED_USERNAME(nd);
 
     // Ask each mode to fill in the rest
     int modeCount = modeListGetCount();

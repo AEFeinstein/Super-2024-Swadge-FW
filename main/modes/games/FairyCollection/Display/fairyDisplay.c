@@ -41,7 +41,7 @@ bool fcRunSPField(fcspField_t* fcspf)
             {
                 fcspf->drawingFairy = false;
             }
-            if (evt.button & PB_A)
+            else if (evt.button & PB_A)
             {
                 fcspf->drawingFairy = true;
             }
