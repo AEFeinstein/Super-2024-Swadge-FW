@@ -272,9 +272,9 @@ jobs:
         ${{ github.event.head_commit.message }}
         "@
         $COMMIT_LINES = ($COMMIT_MESSAGE -split "`r?`n")
-        $TITLE_LINE = $COMMIT_LINES[0]
+        $TITLE_LINE = $COMMIT_LINES[0] -replace "'", "''"
         "commit_title=$TITLE_LINE" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-        $BODY_LINES = $COMMIT_LINES[1..($COMMIT_LINES.length - 1)] -join "\n"
+        $BODY_LINES = $COMMIT_LINES[1..($COMMIT_LINES.length - 1)] -join "\n" -replace "'", "''"
         "commit_body=$BODY_LINES" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
   Post-Slack-Message:
