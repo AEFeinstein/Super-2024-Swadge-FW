@@ -35,10 +35,13 @@ ifeq ($(HOST_OS),Windows)
 	FIND:=$(shell cygpath `where find | grep bin | grep -v " "`)
 endif
 
-# clang-format may actually be clang-format-22
+# clang-format may actually be clang-format-22. Push stderr to null if which returns nothing.
 CLANG_FORMAT:=clang-format-22
-ifeq (, $(shell which $(CLANG_FORMAT)))
+ifeq (, $(shell which $(CLANG_FORMAT) 2>/dev/null))
 	CLANG_FORMAT:=clang-format
+ifneq ($(shell clang-format --version | grep -Pc "22\.\d+\.\d+"), 1)
+$(warning Your clang-format version is not 22. Formatting may be inconsistent)
+endif
 endif
 
 ifeq ($(HOST_OS),Linux)
@@ -49,6 +52,12 @@ ifeq ($(HOST_OS),Linux)
 	else
 		UDEV_GROUP:=$(USER)
 	endif
+endif
+
+# if user has not configured their esp idf and launched the virtual environment idf.py doesnt
+# give good errors
+ifndef IDF_PATH
+$(info NOTICE: Environment Variable IDF_PATH is not set, target "firmware" is unavailable)
 endif
 
 ################################################################################
