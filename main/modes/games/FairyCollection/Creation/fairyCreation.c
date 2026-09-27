@@ -10,6 +10,7 @@
 
 // Swadge
 #include "swadge.h"
+#include "nameList.h"
 
 //==============================================================================
 // Consts
@@ -96,7 +97,8 @@ void fcDrawCreation(fcCreationData_t* fcdd, font_t* font)
 {
     if (fcdd->displayFairy)
     {
-        fcDrawFairyCard(fcdd->card, fcdd->fairy, font);
+        nameData_t* nd = getSystemUsername();
+        fcDrawFairyCard(fcdd->card, fcdd->fairy, nd, font);
         return;
     }
     fillDisplayArea(0, 0, 280, 240, c000);

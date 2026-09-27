@@ -6,6 +6,8 @@
 
 #include "fairyCollectionData.h"
 #include "fairyCreation.h"
+#include "fairyDisplay.h"
+#include "fairyDraw.h"
 
 #include "menu.h"
 
@@ -76,8 +78,7 @@ typedef struct
     // Data
     fairy_t userFairy;
     profileCard_t userCard;
-    savedProfile_t spFairies[FC_MAX_NUM_FAIRIES];
-
+    
     // Menu
     menu_t* menu;
     menuZorldoRenderer_t* zr;
@@ -86,6 +87,7 @@ typedef struct
     // State
     fcState_t state;
     fcCreationData_t* fcdd;
+    fcspField_t* fcspf;
 } fairyCollectionData_t;
 
 //==============================================================================
@@ -127,8 +129,9 @@ fairyCollectionData_t* fcd;
 
 static void fcEnterMode(void)
 {
-    fcd       = (fairyCollectionData_t*)heap_caps_calloc(1, sizeof(fairyCollectionData_t), MALLOC_CAP_8BIT);
-    fcd->fcdd = (fcCreationData_t*)heap_caps_calloc(1, sizeof(fcCreationData_t), MALLOC_CAP_8BIT);
+    fcd        = (fairyCollectionData_t*)heap_caps_calloc(1, sizeof(fairyCollectionData_t), MALLOC_CAP_8BIT);
+    fcd->fcdd  = (fcCreationData_t*)heap_caps_calloc(1, sizeof(fcCreationData_t), MALLOC_CAP_8BIT);
+    fcd->fcspf = (fcspField_t*)heap_caps_calloc(1, sizeof(fcspField_t), MALLOC_CAP_8BIT);
     loadFont(IBM_VGA_8_FONT, &fcd->font, true);
     loadUserFairy();
     fcInitCreation(fcd->fcdd, &fcd->userFairy, &fcd->userCard);
@@ -141,9 +144,9 @@ static void fcEnterMode(void)
     addSettingsOptionsItemToMenu(fcd->menu, fcMenuText[2], fcBGOptions, fcBGOptionVals, ARRAY_SIZE(fcBGOptions), &opts,
                                  fcd->background);
     fcd->zr = initMenuZorldoRenderer(NULL, NULL);
-    
+
     // TEST
-    fcd->state = FC_CREATOR;
+    fcd->state = FC_MENU;
 }
 
 static void fcExitMode(void)
@@ -151,6 +154,7 @@ static void fcExitMode(void)
     deinitMenuZorldoRenderer(fcd->zr);
     deinitMenu(fcd->menu);
     freeFont(&fcd->font);
+    free(fcd->fcspf);
     free(fcd->fcdd);
     free(fcd);
 }
@@ -171,12 +175,11 @@ static void fcMainLoop(int64_t elapsedUs)
         }
         case FC_SP:
         {
-            // TODO: Handle SP field
-            buttonEvt_t evt;
-            while (checkButtonQueueWrapper(&evt))
+            if (fcRunSPField(fcd->fcspf))
             {
-                // Allows backing out
+                fcd->state = FC_MENU;
             }
+            fcDrawSPField(fcd->fcspf, &fcd->font, elapsedUs);
             break;
         }
         case FC_CREATOR:
@@ -186,7 +189,7 @@ static void fcMainLoop(int64_t elapsedUs)
                 fcd->state = FC_MENU;
             }
             fcDrawCreation(fcd->fcdd, &fcd->font);
-            // TODO: Draw user's fairy here
+            fcDrawFairy(&fcd->userFairy, 200, 200);
             break;
         }
         default:
@@ -208,8 +211,8 @@ static void fcAddToSwadgePassPacket(struct swadgePassPacket* packet)
     fairy_t fairy;
     size_t sCard  = sizeof(profileCard_t);
     size_t sFairy = sizeof(fairy_t);
-    if (!readNamespaceNvsBlob(nvsStrs[FC_NAMESPACE], nvsStrs[FC_USER_FAIRY], &fairy, &sCard)
-        || !readNamespaceNvsBlob(nvsStrs[FC_NAMESPACE], nvsStrs[FC_USER_CARD], &card, &sFairy))
+    if (!readNamespaceNvsBlob(nvsStrs[FC_NAMESPACE], nvsStrs[FC_USER_FAIRY], &fairy, &sFairy)
+        || !readNamespaceNvsBlob(nvsStrs[FC_NAMESPACE], nvsStrs[FC_USER_CARD], &card, &sCard))
     {
         // Uninitialized
         card.initialized = false;
@@ -233,8 +236,8 @@ static void loadFromSwadgePass(void)
     dacStop();
     int32_t currIdx = 0;
     readNamespaceNvs32(nvsStrs[FC_NAMESPACE], nvsStrs[FC_SPP_NEXT_IDX], &currIdx);
-    size_t size = sizeof(fcd->spFairies);
-    readNamespaceNvsBlob(nvsStrs[FC_NAMESPACE], nvsStrs[FC_SPP_SAVED], &fcd->spFairies, &size);
+    size_t size = sizeof(fcd->fcspf->spFairies);
+    readNamespaceNvsBlob(nvsStrs[FC_NAMESPACE], nvsStrs[FC_SPP_SAVED], &fcd->fcspf->spFairies, &size);
     list_t spList = {0};
     getSwadgePasses(&spList, &fairyCollectionMode, true);
     node_t* spNode = spList.first;
@@ -243,8 +246,9 @@ static void loadFromSwadgePass(void)
         swadgePassData_t* spd = (swadgePassData_t*)spNode->val;
         if (!isPacketUsedByMode(spd, &fairyCollectionMode))
         {
-            fcd->spFairies[currIdx].fairy = spd->data.packet.fairyCol.fairy;
-            fcd->spFairies[currIdx].pCard = spd->data.packet.fairyCol.card;
+            fcd->fcspf->spFairies[currIdx].fairy = spd->data.packet.fairyCol.fairy;
+            fcd->fcspf->spFairies[currIdx].pCard = spd->data.packet.fairyCol.card;
+            fcd->fcspf->spFairies[currIdx].packedName = spd->data.packet.username;
             setPacketUsedByMode(spd, &fairyCollectionMode, true);
             currIdx++;
             if (currIdx >= FC_MAX_NUM_FAIRIES)
@@ -257,7 +261,7 @@ static void loadFromSwadgePass(void)
     dacStart();
     // Save to NVS
     writeNamespaceNvs32(nvsStrs[FC_NAMESPACE], nvsStrs[FC_SPP_NEXT_IDX], currIdx);
-    writeNamespaceNvsBlob(nvsStrs[FC_NAMESPACE], nvsStrs[FC_SPP_SAVED], fcd->spFairies, sizeof(fcd->spFairies));
+    writeNamespaceNvsBlob(nvsStrs[FC_NAMESPACE], nvsStrs[FC_SPP_SAVED], fcd->fcspf->spFairies, sizeof(fcd->fcspf->spFairies));
 }
 
 static bool fcMenuCb(const char* label, bool selected, uint32_t settingVal)

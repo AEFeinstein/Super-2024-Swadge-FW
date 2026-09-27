@@ -25,7 +25,7 @@ void fcDrawFairy(fairy_t* fairy, int x, int y)
     // Handle if uninitialized
 }
 
-void fcDrawFairyCard(profileCard_t* card, fairy_t* fairy, font_t* font)
+void fcDrawFairyCard(profileCard_t* card, fairy_t* fairy, nameData_t* nd, font_t* font)
 {
     // TODO: 
     // Don't draw bg, use whatever is left in buffer
@@ -38,12 +38,12 @@ void fcDrawFairyCard(profileCard_t* card, fairy_t* fairy, font_t* font)
     // - Username
     // If uninitialized, only draw a jar
 
+    // FIXME: Draw some things animating
     // FIXME: Just drawing all of the text until graphics are around
     // Card
     fillDisplayArea(0, 0, 280, 240, c111);
     char buffer[64];
     // Name
-    nameData_t* nd = getSystemUsername();
     snprintf(buffer, sizeof(buffer) - 1, "Username: %s", nd->nameBuffer);
     drawText(font, c555, buffer, 12, 12);
     // Years attended
@@ -109,4 +109,5 @@ void fcDrawFairyCard(profileCard_t* card, fairy_t* fairy, font_t* font)
     snprintf(buffer, sizeof(buffer) - 1, "%s %s", fcOptionTypes[FC_OPT_AURA], fcAuraText[fairy->aura]);
     drawText(font, c555, buffer, 12, 156);
     // If Uninitialized, note it
+    // Print time since last seen
 }

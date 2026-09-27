@@ -15,7 +15,7 @@ const int fairyMaxList[FC_OPT_COUNT] = {
 const char* const nvsStrs[] = {
     "fairy-col", "user-fairy", "user-card", "spp-saved", "spp-nextIdx",
 };
-extern const char* const fcOptionTypes[] = {
+const char* const fcOptionTypes[] = {
     "Years Attended:", "Type of Attendee:", "Card Background:",  "Team:",
     "Bottle shape:",   "Bottle Charm:",     "Bottle filling:",   "Bottle Pedestal:",
     "Fairy Colors:",   "Fiary Wing Shape:", "Fairy Ball Shape:", "Fairy Aura:",
