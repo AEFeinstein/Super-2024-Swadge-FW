@@ -24,7 +24,7 @@ class tileType(Enum):
     # Floor tiles
     BG_FLOOR_HOLE = BG | FLOOR | 0
     BG_FLOOR_GRASS = BG | FLOOR | 1
-    BG_FLOOR_2 = BG | FLOOR | 2
+    BG_FLOOR_DUNGEON = BG | FLOOR | 2
     BG_FLOOR_3 = BG | FLOOR | 3
     BG_FLOOR_4 = BG | FLOOR | 4
     BG_FLOOR_5 = BG | FLOOR | 5
@@ -57,12 +57,12 @@ class tileType(Enum):
     # Wall tiles
     BG_WALL_TARGET = BG | WALL | 0
     BG_WALL_TREES = BG | WALL | 1
-    BG_WALL_2 = BG | WALL | 2
-    BG_WALL_3 = BG | WALL | 3
-    BG_WALL_4 = BG | WALL | 4
-    BG_WALL_5 = BG | WALL | 5
-    BG_WALL_6 = BG | WALL | 6
-    BG_WALL_7 = BG | WALL | 7
+    BG_WALL_DUNGEON_H = BG | WALL | 2
+    BG_WALL_DUNGEON_V = BG | WALL | 3
+    BG_WALL_DUNGEON_UL = BG | WALL | 4
+    BG_WALL_DUNGEON_UR = BG | WALL | 5
+    BG_WALL_DUNGEON_DR = BG | WALL | 6
+    BG_WALL_DUNGEON_DL = BG | WALL | 7
     BG_WALL_8 = BG | WALL | 8
     BG_WALL_9 = BG | WALL | 9
     BG_WALL_10 = BG | WALL | 10
@@ -221,8 +221,8 @@ class tileType(Enum):
     OBJ_BULLET_31 = OBJ | BULLET | 31
     # Scenery
     OBJ_SCENERY_SHOP_BOMB = OBJ | SCENERY | 0
-    OBJ_SCENERY_1 = OBJ | SCENERY | 1
-    OBJ_SCENERY_2 = OBJ | SCENERY | 2
+    OBJ_SCENERY_CAVE = OBJ | SCENERY | 1
+    OBJ_SCENERY_STAIRS = OBJ | SCENERY | 2
     OBJ_SCENERY_3 = OBJ | SCENERY | 3
     OBJ_SCENERY_4 = OBJ | SCENERY | 4
     OBJ_SCENERY_5 = OBJ | SCENERY | 5
@@ -258,7 +258,7 @@ bgTiles: list[list[tileType]] = [
     [
         tileType.BG_FLOOR_HOLE,
         tileType.BG_FLOOR_GRASS,
-        tileType.BG_FLOOR_2,
+        tileType.BG_FLOOR_DUNGEON,
         tileType.BG_FLOOR_3,
         tileType.BG_FLOOR_4,
         tileType.BG_FLOOR_5,
@@ -292,12 +292,12 @@ bgTiles: list[list[tileType]] = [
     [
         tileType.BG_WALL_TARGET,
         tileType.BG_WALL_TREES,
-        tileType.BG_WALL_2,
-        tileType.BG_WALL_3,
-        tileType.BG_WALL_4,
-        tileType.BG_WALL_5,
-        tileType.BG_WALL_6,
-        tileType.BG_WALL_7,
+        tileType.BG_WALL_DUNGEON_H,
+        tileType.BG_WALL_DUNGEON_V,
+        tileType.BG_WALL_DUNGEON_UL,
+        tileType.BG_WALL_DUNGEON_UR,
+        tileType.BG_WALL_DUNGEON_DL,
+        tileType.BG_WALL_DUNGEON_DR,
         tileType.BG_WALL_8,
         tileType.BG_WALL_9,
         tileType.BG_WALL_10,
@@ -431,8 +431,8 @@ objTiles: list[list[tileType]] = [
     ],
     [
         tileType.OBJ_SCENERY_SHOP_BOMB,
-        tileType.OBJ_SCENERY_1,
-        tileType.OBJ_SCENERY_2,
+        tileType.OBJ_SCENERY_CAVE,
+        tileType.OBJ_SCENERY_STAIRS,
         tileType.OBJ_SCENERY_3,
         tileType.OBJ_SCENERY_4,
         tileType.OBJ_SCENERY_5,
