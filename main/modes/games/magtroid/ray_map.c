@@ -255,6 +255,12 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
     // Load Scripts
     loadScripts(ray, &fileData[fileIdx], fileSize - fileIdx, caps);
 
+    // After loading scripts, check if the player has this thing
+    if (ray->p.i.haveMayorHouseTrigger)
+    {
+        checkScriptHaveThing(ray, MAYOR_HOUSE_TRIGGER, ray->ps.sprite);
+    }
+
     // Only free data which was decompressed
     if (decompressedData)
     {
