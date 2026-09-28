@@ -6,11 +6,12 @@
     "configurations": [
         {
             "name": "ray_map_editor",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "ray_map_editor.py",
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": true,
+            "args": ["--file", "../../assets/magtroid/maps/tomis_house.rmd"]
         }
     ]
 }
