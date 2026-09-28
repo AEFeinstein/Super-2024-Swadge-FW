@@ -51,7 +51,8 @@ class model:
             if 0 <= y and y < len(self.tileMap[x]):
                 if not self.tileMap[x][y].background == bg:
                     self.tileMap[x][y].setBg(bg)
-                    self.v.drawMapCell(x, y)
+                    self.v.drawMapBackground(x, y)
+                    self.v.drawMapForeground(x, y)
 
     def setMapTileObj(self, x: int, y: int, obj: tileType):
         if 0 <= x and x < len(self.tileMap):
@@ -60,12 +61,14 @@ class model:
                     if tileType.EMPTY != self.tileMap[x][y].object:
                         self.usedIds.remove(self.tileMap[x][y].objectId)
                         self.tileMap[x][y].setObj(tileType.EMPTY, -1)
-                        self.v.drawMapCell(x, y)
+                        self.v.drawMapBackground(x, y)
+                        self.v.drawMapForeground(x, y)
                 elif not self.tileMap[x][y].object == obj:
                     objId = self.getNextId()
                     if -1 != objId:
                         self.tileMap[x][y].setObj(obj, objId)
-                        self.v.drawMapCell(x, y)
+                        self.v.drawMapBackground(x, y)
+                        self.v.drawMapForeground(x, y)
 
     def getNextId(self):
         if len(self.usedIds) == 256:

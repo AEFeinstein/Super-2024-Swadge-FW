@@ -379,12 +379,9 @@ class view:
         pMap[key] = ImageTk.PhotoImage(pResize)
 
         # Resize for the map
-        if img.width < img.height:
-            newHeight = self.mapCellSize
-            newWidth = img.width * (newHeight / img.height)
-        else:
-            newWidth = self.mapCellSize
-            newHeight = img.height * (newWidth / img.width)
+        gameCellSize: int = 20
+        newHeight = (img.height * self.mapCellSize) / gameCellSize
+        newWidth = (img.width * self.mapCellSize) / gameCellSize
 
         mResize = img.resize(
             size=(int(newWidth), int(newHeight)), resample=Image.LANCZOS
@@ -763,7 +760,10 @@ class view:
         # Draw the map
         for x in range(self.m.getMapWidth()):
             for y in range(self.m.getMapHeight()):
-                self.drawMapCell(x, y)
+                self.drawMapBackground(x, y)
+        for x in range(self.m.getMapWidth()):
+            for y in range(self.m.getMapHeight()):
+                self.drawMapForeground(x, y)
 
         # Clear old grid lines
         while 0 != len(self.gridLines):
@@ -804,27 +804,24 @@ class view:
             outline="yellow",
         )
 
-    def drawMapCell(self, x, y):
+    def drawMapBackground(self, x, y):
         t: tile = self.m.tileMap[x][y]
         if t.background is not tileType.EMPTY:
-            imgWidth: int = self.texMapMap[t.background].width()
-            hOffset = int((self.mapCellSize - imgWidth) / 2)
-
             self.mapCanvas.create_image(
-                (x * self.mapCellSize) + hOffset,
-                (y * self.mapCellSize),
+                (x * self.mapCellSize) + (self.mapCellSize / 2),
+                (y * self.mapCellSize) + (self.mapCellSize / 2),
                 image=self.texMapMap[t.background],
-                anchor=tk.NW,
+                anchor=tk.CENTER,
             )
-        if t.object is not tileType.EMPTY:
-            imgWidth: int = self.texMapMap[t.object].width()
-            hOffset = int((self.mapCellSize - imgWidth) / 2)
 
+    def drawMapForeground(self, x, y):
+        t: tile = self.m.tileMap[x][y]
+        if t.object is not tileType.EMPTY:
             self.mapCanvas.create_image(
-                (x * self.mapCellSize) + hOffset,
-                (y * self.mapCellSize),
+                (x * self.mapCellSize) + (self.mapCellSize / 2),
+                (y * self.mapCellSize) + (self.mapCellSize / 2),
                 image=self.texMapMap[t.object],
-                anchor=tk.NW,
+                anchor=tk.CENTER,
             )
 
     def drawSelectedTile(self, selectedTile: tileType, x, y):
