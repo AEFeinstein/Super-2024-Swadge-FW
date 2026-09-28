@@ -392,6 +392,7 @@ typedef enum
     RAY_MENU,         ///< The main menu is being shown
     RAY_GAME,         ///< The game loop is being shown
     RAY_INSTRUMENT,   ///< An instrument is being played
+    RAY_TURNTABLE,    ///< The Turntable minigame
     RAY_SHOP_DIALOG,  ///< A shop dialog is being shown
     RAY_DIALOG,       ///< A dialog box is being shown
     RAY_PAUSE,        ///< The pause menu is being shown
@@ -762,6 +763,15 @@ typedef struct
     uint8_t notesActive;        ///< Bitmask of actively played notes
 } rayInstrumentState_t;
 
+typedef struct
+{
+    rayScript_t* turntableScript; ///< The script to execute after the turntable minigame
+    // TODO @jarettmillard to add turntable minigame state variables here
+    uint32_t rotationTimer;
+    uint32_t angle;
+    uint32_t turns;
+} rayTurntableState_t;
+
 /**
  * @brief The entire game state
  *
@@ -854,6 +864,8 @@ typedef struct rayGame
     uint32_t shopCost;        ///< The cost of the current item being purchased
     rayMapCellType_t shopObj; ///< The item currently being purchased
     char* shopDescription;    ///< A description of item and cost
+
+    rayTurntableState_t ts; // The turntable state
 } ray_t;
 
 //==============================================================================

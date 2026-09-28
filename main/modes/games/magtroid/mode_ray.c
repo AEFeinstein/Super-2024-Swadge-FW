@@ -18,6 +18,7 @@
 #include "ray_instrument.h"
 #include "2d_renderer.h"
 #include "ray_shop_dialog.h"
+#include "ray_turntable.h"
 
 //==============================================================================
 // Function Prototypes
@@ -469,13 +470,19 @@ static void rayMainLoop(int64_t elapsedUs)
         }
         case RAY_GAME:
         {
+            // Draw foreground first to line up with background
+            drawForeground2d(ray);
+
             // If the camera is not scripted, follow the player
             if (false == ray->cameraScripted)
             {
                 rayCenterCameraOnPlayer(ray);
             }
-
-            drawForeground2d(ray, elapsedUs);
+            else
+            {
+                // Otherwise move the camera to the target
+                update2dCamera(ray, elapsedUs);
+            }
 
             // Only run this code when the camera is settled
             if (ray->camera.x == ray->p.cameraTarget.x && ray->camera.y == ray->p.cameraTarget.y)
@@ -497,6 +504,7 @@ static void rayMainLoop(int64_t elapsedUs)
 
                 // Check for time-based scripts
                 checkScriptTime(ray, elapsedUs);
+                // Update the camera position
 
                 // If the player has died
                 if (0 >= ray->p.health)
@@ -530,15 +538,31 @@ static void rayMainLoop(int64_t elapsedUs)
             // Check buttons
             rayInstrumentCheckButtons(ray);
             // Draw game foreground
-            drawForeground2d(ray, elapsedUs);
+            drawForeground2d(ray);
+            update2dCamera(ray, elapsedUs);
             // Draw instrument UI on top of that
             rayInstrumentRender(ray, elapsedUs);
+            break;
+        }
+        case RAY_TURNTABLE:
+        {
+            // Check buttons
+            rayTurntableCheckButtons(ray);
+
+            // Draw game foreground
+            // TODO @jarettmillard: Remove this if you don't want to draw on top of the game screen
+            drawForeground2d(ray);
+            update2dCamera(ray, elapsedUs);
+
+            // Draw instrument UI on top of that
+            rayTurntableRender(ray, elapsedUs);
             break;
         }
         case RAY_SHOP_DIALOG:
         {
             // Draw game foreground
-            drawForeground2d(ray, elapsedUs);
+            drawForeground2d(ray);
+            update2dCamera(ray, elapsedUs);
             // Render dialog on top of that
             rayShopDialogRender(ray, elapsedUs);
             // Check buttons
@@ -607,6 +631,8 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         case RAY_SHOP_DIALOG:
         case RAY_INSTRUMENT:
         case RAY_GAME:
+        // TODO @jarettmillard: move this if you don't want to draw on top of the game screen
+        case RAY_TURNTABLE:
         {
             drawBackground2d(ray, y, y + h);
             break;
@@ -735,6 +761,12 @@ void raySwitchToScreen(rayScreen_t newScreen)
             globalMidiPlayerPauseAll();
 
             rayMode.fnDacCb = rayInstrumentDacCallback;
+            break;
+        }
+        case RAY_TURNTABLE:
+        {
+            // Clear turntable state
+            memset(&ray->ts, 0, sizeof(ray->ts));
             break;
         }
         case RAY_GAME:

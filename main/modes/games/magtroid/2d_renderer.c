@@ -1,13 +1,39 @@
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include "fp_math.h"
 #include "2d_renderer.h"
 #include "ray_tex_manager.h"
 #include "ray_player.h"
 #include "ray_enemy.h"
 
+//==============================================================================
+// Defines
+//==============================================================================
+
+/**
+ * @brief Convert fixed point units to pixel units
+ */
 #define TO_PX(x) ((CELL_SIZE * (x)) / 256)
 
-void drawCommonList(ray_t* ray, list_t* list, int camX, int camY, paletteColor_t bbColor);
+//==============================================================================
+// Function Declarations
+//==============================================================================
 
+static void drawCommonList(list_t* list, int camX, int camY, paletteColor_t bbColor);
+
+//==============================================================================
+// Functions
+//==============================================================================
+
+/**
+ * @brief Callback function to draw the 2D background
+ *
+ * @param ray The entire game state
+ * @param firstRow The first row of pixels to draw
+ * @param lastRow The last row of pixels to draw
+ */
 void drawBackground2d(ray_t* ray, int32_t firstRow, int32_t lastRow)
 {
     // Get the framebuffer at this row
@@ -78,7 +104,15 @@ void drawBackground2d(ray_t* ray, int32_t firstRow, int32_t lastRow)
     }
 }
 
-void drawCommonList(ray_t* ray, list_t* list, int camX, int camY, paletteColor_t bbColor)
+/**
+ * @brief Draw a list of common objects
+ *
+ * @param list The list of rayObjCommon_t to draw
+ * @param camX The X camera position
+ * @param camY The Y camera position
+ * @param bbColor A color to draw the bounding box, may be cTransparent
+ */
+static void drawCommonList(list_t* list, int camX, int camY, paletteColor_t bbColor)
 {
     node_t* node = list->first;
     while (node)
@@ -107,7 +141,13 @@ void drawCommonList(ray_t* ray, list_t* list, int camX, int camY, paletteColor_t
     }
 }
 
-void drawForeground2d(ray_t* ray, uint32_t elapsedUs)
+/**
+ * @brief Smoothly move the 2D camera to the target
+ *
+ * @param ray The entire game state
+ * @param elapsedUs The time elapsed since last call
+ */
+void update2dCamera(ray_t* ray, uint32_t elapsedUs)
 {
     // Run timers for camera movement
     RUN_TIMER_EVERY(ray->cameraTimer, (1000000 / TFT_WIDTH), elapsedUs, {
@@ -129,13 +169,21 @@ void drawForeground2d(ray_t* ray, uint32_t elapsedUs)
             ray->camera.y--;
         }
     });
+}
 
+/**
+ * @brief Draw the game foreground (scenery, sprites, etc.)
+ *
+ * @param ray The entire game state
+ */
+void drawForeground2d(ray_t* ray)
+{
     int32_t camX = ray->camera.x;
     int32_t camY = ray->camera.y;
 
-    drawCommonList(ray, &ray->scenery, camX, camY, cTransparent);
-    drawCommonList(ray, &ray->items, camX, camY, cTransparent);
-    drawCommonList(ray, &ray->enemies, camX, camY, cTransparent);
+    drawCommonList(&ray->scenery, camX, camY, cTransparent);
+    drawCommonList(&ray->items, camX, camY, cTransparent);
+    drawCommonList(&ray->enemies, camX, camY, cTransparent);
 
     for (int bIdx = 0; bIdx < MAX_RAY_BULLETS; bIdx++)
     {

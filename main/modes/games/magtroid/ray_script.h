@@ -18,4 +18,6 @@ bool checkScriptObjEnter(ray_t* ray, int32_t id, int32_t x, int32_t y, wsg_t* po
 bool checkScriptHaveThing(ray_t* ray, thing_t thing, wsg_t* portrait);
 bool checkScriptTurntables(ray_t* ray, uint32_t id, wsg_t* portrait);
 
+void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait);
+
 #endif
