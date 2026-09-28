@@ -520,7 +520,7 @@ void bcDrawGame(void)
                 break;
             }
             
-            segment = BC_LCD_SEGMENTS[BC_SEG_STRIKE_ICON_00];
+            segment = BC_LCD_SEGMENTS[BC_SEG_STRIKE_ICON_00 + i];
             drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
         }
 
