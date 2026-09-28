@@ -384,6 +384,7 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
                         }
                         case BG_DOOR_CRACK_H:
                         case BG_DOOR_CRACK_V:
+                        case BG_DOOR_ROCKS:
                         {
                             // Do nothing. Explosion radius checked against crackedWalls elsewhere
                             break;
