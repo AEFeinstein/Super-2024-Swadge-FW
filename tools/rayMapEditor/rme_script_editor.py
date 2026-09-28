@@ -30,6 +30,7 @@ class ifOpType(Enum):
     PLAY = 7
     OBJ_ENTER = 8
     HAVE_THING = 9
+    TURNTABLE = 10
 
 
 class thenOpType(Enum):
@@ -251,6 +252,8 @@ class rme_script:
             ifArgArray.append(str(self.ifArgs[kAndOr].name))
         if kIds in self.ifArgs.keys():
             ifArgArray.append("[" + ", ".join(str(e) for e in self.ifArgs[kIds]) + "]")
+        if kCell in self.ifArgs.keys():
+            ifArgArray.append(f"{{{self.ifArgs[kCell][0]}.{self.ifArgs[kCell][1]}}}")
         if kCells in self.ifArgs.keys():
             ifArgArray.append(
                 "["
@@ -401,6 +404,10 @@ class rme_script:
                 self.ifArgs[kOneTime] = self.__parseOneTime(argParts[2])
             elif ifOpType.HAVE_THING == self.ifOp:
                 self.ifArgs[kThing] = self.__parseThing(argParts[0])
+            elif ifOpType.TURNTABLE == self.ifOp:
+                self.ifArgs[kIds] = [
+                    self.__parseInt(s) for s in self.__parseArray(argParts[0])
+                ]
             else:
                 self.resetScript()
                 return False
@@ -500,6 +507,9 @@ class rme_script:
             bytes.append(len(self.ifArgs[kIds]))
             for id in self.ifArgs[kIds]:
                 bytes.append(id)
+        if kCell in self.ifArgs.keys():
+            bytes.append(self.ifArgs[kCell][0])
+            bytes.append(self.ifArgs[kCell][1])
         if kCells in self.ifArgs.keys():
             bytes.append(len(self.ifArgs[kCells]))
             for cell in self.ifArgs[kCells]:
@@ -655,6 +665,15 @@ class rme_script:
             # Read thing
             self.ifArgs[kThing] = thingType._value2member_map_[bytes[idx]]
             idx = idx + 1
+        elif ifOpType.TURNTABLE == self.ifOp:
+            # Read number of IDs
+            numIds: int = bytes[idx]
+            idx = idx + 1
+            # Read IDs
+            self.ifArgs[kIds] = []
+            for id in range(numIds):
+                self.ifArgs[kIds].append(bytes[idx])
+                idx = idx + 1
         else:
             self.resetScript()
             return

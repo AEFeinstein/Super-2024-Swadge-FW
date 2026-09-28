@@ -170,6 +170,18 @@ void loadScripts(ray_t* ray, const uint8_t* fileData, uint32_t fileSize, uint32_
                 newScript->ifArgs.haveThing.thing = fileData[fileIdx++];
                 break;
             }
+            case TURNTABLE:
+            {
+                // [IDs]
+                newScript->ifArgs.turntableList.numIds = fileData[fileIdx++];
+                newScript->ifArgs.turntableList.ids
+                    = heap_caps_calloc(newScript->ifArgs.turntableList.numIds, sizeof(uint8_t), caps);
+                for (uint8_t i = 0; i < newScript->ifArgs.turntableList.numIds; i++)
+                {
+                    newScript->ifArgs.turntableList.ids[i] = fileData[fileIdx++];
+                }
+                break;
+            }
             default:
             case NUM_IF_OP_TYPES:
             {
@@ -336,6 +348,11 @@ static void freeScript(rayScript_t* script)
             heap_caps_free(script->ifArgs.idCellList.ids);
             heap_caps_free(script->ifArgs.idCellList.cells);
             heap_caps_free(script->ifArgs.idCellList.idsOnCells);
+            break;
+        }
+        case TURNTABLE:
+        {
+            heap_caps_free(script->ifArgs.turntableList.ids);
             break;
         }
         default:
@@ -526,7 +543,7 @@ static bool checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* por
  */
 bool checkScriptShootObjs(ray_t* ray, int32_t id, wsg_t* portrait)
 {
-    return checkScriptId(ray, &ray->scripts[SHOOT_OBJS], id, portrait);
+    return checkScriptId(ray, &ray->scripts[SHOOT_OBJS], id, portrait) || checkScriptTurntables(ray, id, portrait);
 }
 
 /**
@@ -957,6 +974,57 @@ bool checkScriptHaveThing(ray_t* ray, thing_t thing, wsg_t* portrait)
         }
         currentNode = currentNode->next;
     }
+    return executed;
+}
+
+/**
+ * @brief Check scripts when an object is shot, but don't execute it immediately.
+ * Instead, start a turntable minigame and execute the script if successful.
+ *
+ * @param ray The entire game state
+ * @param id The ID of the shot object
+ * @param portrait A portrait to draw on dialogs
+ * @return true if a minigame started, false if it didn't
+ */
+bool checkScriptTurntables(ray_t* ray, uint32_t id, wsg_t* portrait)
+{
+    // Make sure the player has turntables first
+    if (false == ray->p.i.haveTurntables)
+    {
+        return false;
+    }
+
+    bool executed = false;
+    // Iterate over all nodes
+    node_t* currentNode = ray->scripts[TURNTABLE].first;
+    while (currentNode != NULL)
+    {
+        // Get the script
+        rayScript_t* script = currentNode->val;
+
+        // Only check if the script is active
+        if (script->isActive)
+        {
+            // For each ID
+            for (int32_t idx = 0; idx < script->ifArgs.turntableList.numIds; idx++)
+            {
+                // Check if the ID matches
+                if (id == script->ifArgs.turntableList.ids[idx])
+                {
+                    // TODO start the minigame
+                    printf("START TURNTABLE MINIGAME\n");
+                    // Execute the script
+                    executeScriptEvent(ray, script, portrait);
+                    executed = true;
+                    break;
+                }
+            }
+        }
+
+        // Iterate
+        currentNode = currentNode->next;
+    }
+
     return executed;
 }
 

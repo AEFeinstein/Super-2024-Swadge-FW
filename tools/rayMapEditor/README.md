@@ -89,6 +89,7 @@ These are the conditions which can trigger scripts.
 | PLAY | 7 | SONG, \[CELLs\] | Triggered when the given song is played within the bounding rectangle given by two cells |
 | OBJ_ENTER | 8 | \[IDs\], \[CELLs\], ONE_TIME | Triggered when all of the given objects are in all of the given cells. The number of `IDs` _must_ match the number of `CELLs`. |
 | HAVE_THING | 9 | \[THING\] | Triggered when a map is entered and the given thing has already been obtained | 
+| TURNTABLE | 10 | \[IDs\] | Start a turntable minigame when the object is shot and execute the 'then' portion if the game is successful. Similar to `SHOOT_OBJS`, but with a minigame |
 
 ### THEN Operations
 

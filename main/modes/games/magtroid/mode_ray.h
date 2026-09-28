@@ -275,7 +275,7 @@ typedef enum __attribute__((packed))
     OBJ_SCENERY_STAIRS       = (OBJ | SCENERY | 2),
     OBJ_SCENERY_ITEM_SHOP    = (OBJ | SCENERY | 3),
     OBJ_SCENERY_MAYORS_HOUSE = (OBJ | SCENERY | 4),
-    OBJ_SCENERY_5            = (OBJ | SCENERY | 5),
+    OBJ_SCENERY_TURNTABLE    = (OBJ | SCENERY | 5),
     OBJ_SCENERY_6            = (OBJ | SCENERY | 6),
     OBJ_SCENERY_7            = (OBJ | SCENERY | 7),
     OBJ_SCENERY_8            = (OBJ | SCENERY | 8),
@@ -309,17 +309,18 @@ typedef enum __attribute__((packed))
  */
 typedef enum
 {
-    SHOOT_OBJS   = 0, ///< Objects were shot
-    KILL         = 1, ///< Enemies were killed
-    GET          = 2, ///< Items were gotten
-    TOUCH        = 3, ///< Objects were touched
-    SHOOT_WALLS  = 4, ///< Walls were shot
-    ENTER        = 5, ///< Map cells were entered
-    TIME_ELAPSED = 6, ///< Time elapsed
-    PLAY         = 7, ///< A song was played
-    OBJ_ENTER    = 8, ///< An object entered a map cell
-    HAVE_THING   = 9, ///< A thing was had when entering a map
-    NUM_IF_OP_TYPES,  ///< The number of IF operation types
+    SHOOT_OBJS   = 0,  ///< Objects were shot
+    KILL         = 1,  ///< Enemies were killed
+    GET          = 2,  ///< Items were gotten
+    TOUCH        = 3,  ///< Objects were touched
+    SHOOT_WALLS  = 4,  ///< Walls were shot
+    ENTER        = 5,  ///< Map cells were entered
+    TIME_ELAPSED = 6,  ///< Time elapsed
+    PLAY         = 7,  ///< A song was played
+    OBJ_ENTER    = 8,  ///< An object entered a map cell
+    HAVE_THING   = 9,  ///< A thing was had when entering a map
+    TURNTABLE    = 10, ///< Start a turntable minigame and execute the script on success
+    NUM_IF_OP_TYPES,   ///< The number of IF operation types
 } ifOp_t;
 
 /**
@@ -494,11 +495,17 @@ typedef struct
             uint8_t* idsOnCells;        ///< The list of which ID is on which cell
             repeat_t oneTime;           ///< Whether or not the script triggers once or repeatedly
         } idCellList;
-        /// @brief  A struct for arguments when having a thing
+        /// A struct for arguments when having a thing
         struct
         {
             thing_t thing; ///< The thing to check if the player has
         } haveThing;
+        /// A struct for arguments when using turntables
+        struct
+        {
+            uint8_t numIds; ///< The number of IDs in the list
+            uint8_t* ids;   ///< A list of IDs
+        } turntableList;
     } ifArgs;
 
     thenOp_t thenOp; ///< The type of event that happens
