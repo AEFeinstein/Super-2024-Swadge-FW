@@ -52,6 +52,16 @@ bool initializePlayer(ray_t* ray)
         // Zero the entire inventory
         memset(&ray->p.i, 0, sizeof(ray->p.i));
 
+        // Uncomment to start with all items for testing
+        // ray->p.i.haveEwiOfTime     = true;
+        // ray->p.i.haveBombs         = true;
+        // ray->p.i.haveJumpBoots     = true;
+        // ray->p.i.haveShield        = true;
+        // ray->p.i.haveBow           = true;
+        // ray->p.i.haveBoomerang     = true;
+        // ray->p.i.haveTurntables    = true;
+        // ray->p.i.haveDoriasLullaby = true;
+
         // Set initial health
         ray->p.maxHealth = GAME_START_HEALTH;
         ray->p.health    = GAME_START_HEALTH;

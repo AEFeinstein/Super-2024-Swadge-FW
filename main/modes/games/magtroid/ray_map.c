@@ -106,7 +106,7 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
             rayMapCellType_t cType    = map->tiles[x][y].type;
 
             // If this is a cracked door, add it to the list for later bomb checks
-            if (BG_DOOR_CRACK_H == cType || BG_DOOR_CRACK_V == cType)
+            if (BG_DOOR_CRACK_H == cType || BG_DOOR_CRACK_V == cType || BG_DOOR_ROCKS == cType)
             {
                 intptr_t location = ((x & 0xFFFF) << 16) | (y & 0xFFFF);
                 push(&ray->map.crackedWalls, (void*)location);
