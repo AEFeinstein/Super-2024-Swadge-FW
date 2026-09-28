@@ -223,8 +223,8 @@ class tileType(Enum):
     OBJ_SCENERY_SHOP_BOMB = OBJ | SCENERY | 0
     OBJ_SCENERY_CAVE = OBJ | SCENERY | 1
     OBJ_SCENERY_STAIRS = OBJ | SCENERY | 2
-    OBJ_SCENERY_3 = OBJ | SCENERY | 3
-    OBJ_SCENERY_4 = OBJ | SCENERY | 4
+    OBJ_SCENERY_ITEM_SHOP = OBJ | SCENERY | 3
+    OBJ_SCENERY_MAYORS_HOUSE = OBJ | SCENERY | 4
     OBJ_SCENERY_5 = OBJ | SCENERY | 5
     OBJ_SCENERY_6 = OBJ | SCENERY | 6
     OBJ_SCENERY_7 = OBJ | SCENERY | 7
@@ -433,8 +433,8 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_SCENERY_SHOP_BOMB,
         tileType.OBJ_SCENERY_CAVE,
         tileType.OBJ_SCENERY_STAIRS,
-        tileType.OBJ_SCENERY_3,
-        tileType.OBJ_SCENERY_4,
+        tileType.OBJ_SCENERY_ITEM_SHOP,
+        tileType.OBJ_SCENERY_MAYORS_HOUSE,
         tileType.OBJ_SCENERY_5,
         tileType.OBJ_SCENERY_6,
         tileType.OBJ_SCENERY_7,
