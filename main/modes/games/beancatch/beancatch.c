@@ -543,10 +543,16 @@ void bcDrawGame(void)
             case BC_ST_CLOCK:
                 if(beancatch->btnState & PB_A)
                 {
+                    segment = BC_LCD_SEGMENTS[BC_SEG_GAME_A_LBL];
+                    drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
+
                     bcDrawScoreHud(beancatch->highScoreGameA);
                 }
                 else if(beancatch->btnState & PB_B)
                 {
+                    segment = BC_LCD_SEGMENTS[BC_SEG_GAME_B_LBL];
+                    drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
+                    
                     bcDrawScoreHud(beancatch->highScoreGameB);
                 } 
                 else
