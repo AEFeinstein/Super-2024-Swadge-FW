@@ -16,6 +16,7 @@ kOneTime: str = "onetime"
 kCost: str = "cost"
 kObj: str = "obj"
 kSong: str = "song"
+kThing: str = "thing"
 
 
 class ifOpType(Enum):
@@ -28,6 +29,7 @@ class ifOpType(Enum):
     TIME_ELAPSED = 6
     PLAY = 7
     OBJ_ENTER = 8
+    HAVE_THING = 9
 
 
 class thenOpType(Enum):
@@ -40,6 +42,7 @@ class thenOpType(Enum):
     WIN = 13
     CAMERA = 14
     SHOP = 15
+    GET_THING = 16
 
 
 class orderType(Enum):
@@ -60,6 +63,8 @@ class oneTimeType(Enum):
 class songType(Enum):
     LULLABY = 0
 
+class thingType(Enum):
+    MAYOR_HOUSE_TRIGGER = 0
 
 class spawn:
     def __init__(self, type: tileType, id: int, x: int, y: int) -> None:
@@ -190,6 +195,13 @@ class rme_script:
                 return type[1]
         return None
 
+    def __parseThing(self, thing:str) -> thingType:
+        # MAYOR_HOUSE_TRIGGER or other
+        for type in thingType.__members__.items():
+            if thing == type[0]:
+                return type[1]
+        return None
+
     def __parseOneTime(self, order: str) -> oneTimeType:
         # Either ONCE or ALWAYS
         for type in oneTimeType.__members__.items():
@@ -253,6 +265,8 @@ class rme_script:
             ifArgArray.append(self.ifArgs[kOneTime].name)
         if kTms in self.ifArgs.keys():
             ifArgArray.append(str(self.ifArgs[kTms]))
+        if kThing in self.ifArgs.keys():
+            ifArgArray.append(self.ifArgs[kThing].name)
 
         # Stringify the then args
         thenArgArray = []
@@ -302,6 +316,8 @@ class rme_script:
             thenArgArray.append(str(self.thenArgs[kCost]))
         if kObj in self.thenArgs.keys():
             thenArgArray.append(str(self.thenArgs[kObj]))
+        if kThing in self.thenArgs.keys():
+            thenArgArray.append(self.thenArgs[kThing].name)
 
         # Stitch it all together
         return (
@@ -383,6 +399,8 @@ class rme_script:
                     self.__parseCell(s) for s in self.__parseArray(argParts[1])
                 ]
                 self.ifArgs[kOneTime] = self.__parseOneTime(argParts[2])
+            elif ifOpType.HAVE_THING == self.ifOp:
+                self.ifArgs[kThing] = self.__parseThing(argParts[0])
             else:
                 self.resetScript()
                 return False
@@ -448,10 +466,14 @@ class rme_script:
                 if self.thenArgs[kCell] is None:
                     return False
 
-            elif thenOpType.SHOP:
+            elif thenOpType.SHOP == self.thenOp:
                 # Parse the args
                 self.thenArgs[kCost] = int(argParts[0])
                 self.thenArgs[kObj] = int(argParts[1])
+
+            elif thenOpType.GET_THING == self.thenOp:
+                # Parse the args
+                self.thenArgs[kThing] = self.__parseThing(argParts[0])
 
             else:
                 self.resetScript()
@@ -492,6 +514,8 @@ class rme_script:
             bytes.append((self.ifArgs[kTms] >> 16) & 255)
             bytes.append((self.ifArgs[kTms] >> 8) & 255)
             bytes.append((self.ifArgs[kTms] >> 0) & 255)
+        if kThing in self.ifArgs.keys():
+            bytes.append(self.ifArgs[kThing].value)
 
         # Append the ELSE operation
         bytes.append(self.thenOp.value)
@@ -528,6 +552,8 @@ class rme_script:
             bytes.append(self.thenArgs[kCost])
         if kObj in self.thenArgs.keys():
             bytes.append(self.thenArgs[kObj])
+        if kThing in self.thenArgs.keys():
+            bytes.append(self.thenArgs[kThing].value)
 
         return bytes
 
@@ -603,7 +629,7 @@ class rme_script:
             for cell in range(numCells):
                 self.ifArgs[kCells].append([bytes[idx], bytes[idx + 1]])
                 idx = idx + 2
-        elif ifOpType.OBJ_ENTER:
+        elif ifOpType.OBJ_ENTER == self.ifOp:
             # Read number of IDs
             numIds: int = bytes[idx]
             idx = idx + 1
@@ -624,6 +650,10 @@ class rme_script:
 
             # Read one time
             self.ifArgs[kOneTime] = oneTimeType._value2member_map_[bytes[idx]]
+            idx = idx + 1
+        elif ifOpType.HAVE_THING == self.ifOp:
+            # Read thing
+            self.ifArgs[kThing] = thingType._value2member_map_[bytes[idx]]
             idx = idx + 1
         else:
             self.resetScript()
@@ -698,6 +728,10 @@ class rme_script:
             idx = idx + 1
             # Read the object type
             self.thenArgs[kObj] = bytes[idx]
+            idx = idx + 1
+        elif thenOpType.GET_THING == self.thenOp:
+            # Read the thing
+            self.thenArgs[kThing] = thingType._value2member_map_[bytes[idx]]
             idx = idx + 1
         else:
             self.resetScript()

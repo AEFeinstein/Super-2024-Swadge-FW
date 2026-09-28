@@ -318,6 +318,7 @@ typedef enum
     TIME_ELAPSED = 6, ///< Time elapsed
     PLAY         = 7, ///< A song was played
     OBJ_ENTER    = 8, ///< An object entered a map cell
+    HAVE_THING   = 9, ///< A thing was had when entering a map
     NUM_IF_OP_TYPES,  ///< The number of IF operation types
 } ifOp_t;
 
@@ -326,15 +327,16 @@ typedef enum
  */
 typedef enum
 {
-    OPEN    = 7,  ///< Open doors
-    CLOSE   = 8,  ///< Close doors
-    SPAWN   = 9,  ///< Spawn enemies or items
-    DESPAWN = 10, ///< Despawn enemies or items
-    DIALOG  = 11, ///< Show a dialog box
-    WARP    = 12, ///< Warp to a location on a map
-    WIN     = 13, ///< Win the game
-    CAMERA  = 14, ///< Move the camera
-    SHOP    = 15, ///< Try to buy an object
+    OPEN      = 7,  ///< Open doors
+    CLOSE     = 8,  ///< Close doors
+    SPAWN     = 9,  ///< Spawn enemies or items
+    DESPAWN   = 10, ///< Despawn enemies or items
+    DIALOG    = 11, ///< Show a dialog box
+    WARP      = 12, ///< Warp to a location on a map
+    WIN       = 13, ///< Win the game
+    CAMERA    = 14, ///< Move the camera
+    SHOP      = 15, ///< Try to buy an object
+    GET_THING = 16, ///< Get a thing
 } thenOp_t;
 
 /**
@@ -368,6 +370,11 @@ typedef enum
 {
     LULLABY = 0, ///< Doria's Lullaby
 } songType_t;
+
+typedef enum
+{
+    MAYOR_HOUSE_TRIGGER = 0,
+} thing_t;
 
 typedef enum
 {
@@ -487,6 +494,11 @@ typedef struct
             uint8_t* idsOnCells;        ///< The list of which ID is on which cell
             repeat_t oneTime;           ///< Whether or not the script triggers once or repeatedly
         } idCellList;
+        /// @brief  A struct for arguments when having a thing
+        struct
+        {
+            thing_t thing; ///< The thing to check if the player has
+        } haveThing;
     } ifArgs;
 
     thenOp_t thenOp; ///< The type of event that happens
@@ -531,6 +543,11 @@ typedef struct
             uint8_t cost;         ///< The cost of the object
             rayMapCellType_t obj; ///< The object to buy
         } shop;
+
+        struct
+        {
+            thing_t thing; ///< The thing to get
+        } getThing;
 
     } thenArgs;
 
@@ -656,8 +673,8 @@ typedef struct __attribute__((packed))
  */
 typedef struct
 {
-    // Persistent keys (TODO)
-    invItem_t items[64]; // No more than 64 keys, heart pieces, etc for the game
+    // Persistent items like keys, heart pieces, etc.
+    invItem_t items[64]; // No more than 64 keys, heart pieces, etc. for the game
     // Persistent inventory items
     bool haveEwiOfTime;
     bool haveBombs;
@@ -667,7 +684,7 @@ typedef struct
     bool haveBoomerang;
     bool haveTurntables;
     bool haveDoriasLullaby;
-    // Persistent pick-ups (TODO heart pieces, ammo upgrades, etc.)
+    bool haveMayorHouseTrigger;
 } rayInventory_t;
 
 /**

@@ -165,6 +165,11 @@ void loadScripts(ray_t* ray, const uint8_t* fileData, uint32_t fileSize, uint32_
 
                 break;
             }
+            case HAVE_THING:
+            {
+                newScript->ifArgs.haveThing.thing = fileData[fileIdx++];
+                break;
+            }
             default:
             case NUM_IF_OP_TYPES:
             {
@@ -258,6 +263,12 @@ void loadScripts(ray_t* ray, const uint8_t* fileData, uint32_t fileSize, uint32_
                 newScript->thenArgs.shop.obj  = fileData[fileIdx++];
                 break;
             }
+            case GET_THING:
+            {
+                // Thing
+                newScript->thenArgs.getThing.thing = fileData[fileIdx++];
+                break;
+            }
         }
 
         // Add script to the list
@@ -310,6 +321,7 @@ static void freeScript(rayScript_t* script)
             break;
         }
         case TIME_ELAPSED:
+        case HAVE_THING:
         {
             // Nothing allocated
             break;
@@ -366,6 +378,7 @@ static void freeScript(rayScript_t* script)
         case WIN:
         case CAMERA:
         case SHOP:
+        case GET_THING:
         {
             // Nothing allocated
             break;
@@ -916,6 +929,38 @@ bool checkScriptObjEnter(ray_t* ray, int32_t id, int32_t x, int32_t y, wsg_t* po
 }
 
 /**
+ * @brief Check scripts when entering a map and having a thing
+ *
+ * @param ray The entire game state
+ * @param thing The thing the player has
+ * @param portrait A portrait to draw on dialogs
+ * @return true if a script executed, false if it didn't
+ */
+bool checkScriptHaveThing(ray_t* ray, thing_t thing, wsg_t* portrait)
+{
+    bool executed = false;
+    // Iterate over all nodes
+    node_t* currentNode = ray->scripts[HAVE_THING].first;
+    while (currentNode != NULL)
+    {
+        // Get the script
+        rayScript_t* script = currentNode->val;
+
+        // Only check if the script is active
+        if (script->isActive)
+        {
+            if (script->ifArgs.haveThing.thing == thing)
+            {
+                executeScriptEvent(ray, script, portrait);
+                executed = true;
+            }
+        }
+        currentNode = currentNode->next;
+    }
+    return executed;
+}
+
+/**
  * @brief Execute a script when it has been triggered
  *
  * @param ray The entire game state
@@ -937,9 +982,9 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
                 ray->map.tiles[x][y].openingDirection = 1;
                 // Mark it as permanently open
                 ray->map.visitedTiles[(y * ray->map.w) + x] = SCRIPT_DOOR_OPEN;
-                // Play SFX
-                globalMidiPlayerPlaySong(&ray->sfx_door_open, MIDI_SFX);
             }
+            // Play SFX
+            globalMidiPlayerPlaySong(&ray->sfx_door_open, MIDI_SFX);
             break;
         }
         case CLOSE:
@@ -1140,6 +1185,29 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         case SHOP:
         {
             rayShowShopDialog(ray, portrait, script->thenArgs.shop.cost, script->thenArgs.shop.obj);
+            break;
+        }
+        case GET_THING:
+        {
+            bool shouldSave = false;
+            switch (script->thenArgs.getThing.thing)
+            {
+                case MAYOR_HOUSE_TRIGGER:
+                {
+                    if (false == ray->p.i.haveMayorHouseTrigger)
+                    {
+                        ray->p.i.haveMayorHouseTrigger = true;
+                        shouldSave                     = true;
+                    }
+                    break;
+                }
+            }
+
+            if (shouldSave)
+            {
+                raySavePlayer(ray);
+                raySaveVisitedTiles(ray);
+            }
             break;
         }
     }

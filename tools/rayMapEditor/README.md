@@ -88,6 +88,7 @@ These are the conditions which can trigger scripts.
 | TIME_ELAPSED | 6     | TIME                               | Triggered after the given time, in seconds, elapses from the start of the level.                                                        |
 | PLAY | 7 | SONG, \[CELLs\] | Triggered when the given song is played within the bounding rectangle given by two cells |
 | OBJ_ENTER | 8 | \[IDs\], \[CELLs\], ONE_TIME | Triggered when all of the given objects are in all of the given cells. The number of `IDs` _must_ match the number of `CELLs`. |
+| HAVE_THING | 9 | \[THING\] | Triggered when a map is entered and the given thing has already been obtained | 
 
 ### THEN Operations
 
@@ -103,7 +104,8 @@ These are the actions that occur when a script is triggered
 | WARP      | 12    | MAP, CELL   | Warp the player to the given cell                                                                                                         |
 | WIN       | 13    |             | Beat the game                                                                                                                             |
 | CAMERA    | 14    | CELL        | Center the camera on the given cell                                                                                                       |
-| SHOP       | 15    | COST, OBJ_TYPE | Attempt to spend `COST` MPoints to get `OBJ_TYPE`                                                                                      |
+| SHOP      | 15    | COST, OBJ_TYPE | Attempt to spend `COST` MPoints to get `OBJ_TYPE`                                                                                      |
+| GET_THING       | 16    | \[THING\] | Immediately receive the given thing |
 
 ### Script Element Syntax
 
@@ -124,6 +126,7 @@ Arguments, arrays, CELLs, and SPAWNs all have different delimiters to make parsi
 | TIME      | `0`             | Integer from 0 to 2147483647, in seconds                        |
 | MAP       | `0`             | Integer corresponding to the map                                |
 | SONG      | `abc`           | `LULLABY` or other song                                         |
+| THING     | `abc`           | `MAYOR_HOUSE_TRIGGER` or other thing                            |
 
 ### Script Examples
 
