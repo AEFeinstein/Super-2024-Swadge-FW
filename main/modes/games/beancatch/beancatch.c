@@ -185,7 +185,19 @@ void bcUpdateAcl(void)
 {
     if(beancatch->refreshScreen)
     {
-        fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c445);
+        //Unit outer bezel
+        fillDisplayArea(0, 0, TFT_WIDTH, 21, c540);
+        fillDisplayArea(0, 221, TFT_WIDTH, TFT_HEIGHT, c540);
+        drawWsgSimple(&beancatch->wsgs[BC_WSG_TOP_LABEL], 0, 5);
+        drawWsgSimple(&beancatch->wsgs[BC_WSG_BOTTOM_LBL], 0, 226);
+
+        //Unit inner bezel
+        fillDisplayArea(0, 21, TFT_WIDTH, 28, c510);
+        fillDisplayArea(0, 212,TFT_WIDTH , 221, c510);
+
+        //Reflector
+        fillDisplayArea(0, 36, TFT_WIDTH, 204, c445);
+        
         drawWsgSimple(&beancatch->wsgs[BC_WSG_BEAN_CATCH_BG], 0, 28);
 
         bc_LcdSegment_t segment;
@@ -437,7 +449,19 @@ void bcDrawGame(void)
 {
     if(beancatch->refreshScreen)
     {
-        fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c445);
+        //Unit outer bezel
+        fillDisplayArea(0, 0, TFT_WIDTH, 21, c540);
+        fillDisplayArea(0, 221, TFT_WIDTH, TFT_HEIGHT, c540);
+        drawWsgSimple(&beancatch->wsgs[BC_WSG_TOP_LABEL], 0, 5);
+        drawWsgSimple(&beancatch->wsgs[BC_WSG_BOTTOM_LBL], 0, 226);
+
+        //Unit inner bezel
+        fillDisplayArea(0, 21, TFT_WIDTH, 28, c510);
+        fillDisplayArea(0, 212,TFT_WIDTH , 221, c510);
+
+        //Reflector
+        fillDisplayArea(0, 36, TFT_WIDTH, 204, c445);
+
         drawWsgSimple(&beancatch->wsgs[BC_WSG_BEAN_CATCH_BG], 0, 28);
 
         bc_LcdSegment_t segment;
