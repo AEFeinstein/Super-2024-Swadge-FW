@@ -11,7 +11,6 @@
 #include "ray_shop_dialog.h"
 #include "ray_enemy.h"
 
-static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait);
 static bool checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* portrait);
 static bool checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y);
 static void freeScript(rayScript_t* script);
@@ -994,7 +993,6 @@ bool checkScriptTurntables(ray_t* ray, uint32_t id, wsg_t* portrait)
         return false;
     }
 
-    bool executed = false;
     // Iterate over all nodes
     node_t* currentNode = ray->scripts[TURNTABLE].first;
     while (currentNode != NULL)
@@ -1011,12 +1009,11 @@ bool checkScriptTurntables(ray_t* ray, uint32_t id, wsg_t* portrait)
                 // Check if the ID matches
                 if (id == script->ifArgs.turntableList.ids[idx])
                 {
-                    // TODO start the minigame
-                    printf("START TURNTABLE MINIGAME\n");
-                    // Execute the script
-                    executeScriptEvent(ray, script, portrait);
-                    executed = true;
-                    break;
+                    // Switch to the turntable minigame. This clears state
+                    raySwitchToScreen(RAY_TURNTABLE);
+                    // Save the script to execute after the game. This must be done after switching the screen
+                    ray->ts.turntableScript = script;
+                    return true;
                 }
             }
         }
@@ -1025,7 +1022,7 @@ bool checkScriptTurntables(ray_t* ray, uint32_t id, wsg_t* portrait)
         currentNode = currentNode->next;
     }
 
-    return executed;
+    return false;
 }
 
 /**
@@ -1035,7 +1032,7 @@ bool checkScriptTurntables(ray_t* ray, uint32_t id, wsg_t* portrait)
  * @param script The script which should be executed
  * @param portrait A portrait to draw on dialogs
  */
-static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
+void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
 {
     switch (script->thenOp)
     {
