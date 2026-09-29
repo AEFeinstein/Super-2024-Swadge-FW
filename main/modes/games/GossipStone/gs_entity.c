@@ -291,12 +291,16 @@ void gs_updatePhysicsObject(gs_entity_t* self)
         {
             return;
         }
-        self->pos = addVec2d(hitInfo.pos, mulVec2d(hitInfo.normal, self->collider.circle.radius));
+        self->pos = mulVec2d(hitInfo.normal, self->collider.circle.radius);
+        self->pos.x /= 256;
+        self->pos.y /= 256;
+        self->pos = addVec2d(hitInfo.pos, self->pos);
 
         // Reflect the velocity vector along the normal
         // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
         pData->vel = divVec2d(
-            mulVec2d(subVec2d(pData->vel, mulVec2d(hitInfo.normal, (2 * dotVec2d(pData->vel, hitInfo.normal)))),
+            mulVec2d(subVec2d(pData->vel,
+                              divVec2d(mulVec2d(hitInfo.normal, (2 * dotVec2d(pData->vel, hitInfo.normal))), 65536)),
                      pData->bounceNumerator),
             pData->bounceDenominator);
     }
@@ -332,7 +336,7 @@ void gs_generateMoonTilemap(gs_entity_t* self)
         }
     }
     vec_t minerPos = (vec_t){133, 124};
-    for (int i = 0; i < 200; i++)
+    for (int i = 0; i < 10000; i++)
     {
         if (tData->tiles[minerPos.x][minerPos.y].framePlus1 != GS_NO_TILE)
         {
@@ -503,29 +507,8 @@ void gs_collisionCheck(gs_entity_t* tilemap, gs_entity_t* ent, gs_hitInfo_t* hit
                 hitInfo->pos    = closestPoint;
                 hitInfo->tile_i = x;
                 hitInfo->tile_j = y;
-                // calculate the normal
-                if (ABS(distance.x) > ABS(distance.y))
-                {
-                    if (distance.x < 0)
-                    {
-                        hitInfo->normal = (vec_t){-1, 0};
-                    }
-                    else
-                    {
-                        hitInfo->normal = (vec_t){1, 0};
-                    }
-                }
-                else
-                {
-                    if (distance.y < 0)
-                    {
-                        hitInfo->normal = (vec_t){0, -1};
-                    }
-                    else
-                    {
-                        hitInfo->normal = (vec_t){0, 1};
-                    }
-                }
+                hitInfo->normal = subVec2d(ent->pos, closestPoint);
+                fastNormVec(&hitInfo->normal.x, &hitInfo->normal.y);
             }
         }
     }

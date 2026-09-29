@@ -573,10 +573,10 @@ void gs_submodeStateEnter(gs_submode_t submode)
             gsData->grounded         = true;
             break;
         }
-        case GS_MOON_SUBMODE:
-            break;
         default:
+        {
             break;
+        }
     }
     // unique steps
     switch (submode)
@@ -696,7 +696,7 @@ void gs_submodeStateEnter(gs_submode_t submode)
             // gameData->entityManager.gossipStone->pos = (vec_t){0, 0};
             gameData->entityManager.gossipStone->pos = (vec_t){0, -((118 * 64) << DECIMAL_BITS)};
             gameData->entityManager.camera.pos       = gameData->entityManager.gossipStone->pos;
-            ((gs_gossipStone_t*)gameData->entityManager.gossipStone->data)->vel = (vec_t){0, 12000};
+            ((gs_gossipStone_t*)gameData->entityManager.gossipStone->data)->vel = (vec_t){0, 10000};
             gameData->entityManager.gossipStone->updateFunction                 = gs_updateGossipStone;
             gs_enableFlightControls(gameData->entityManager.gossip);
             gs_generateMoonTilemap(gameData->entityManager.tilemap);

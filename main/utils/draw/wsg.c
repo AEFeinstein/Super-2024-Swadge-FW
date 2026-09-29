@@ -459,8 +459,8 @@ void drawWsgSimpleScaledDown(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16
             }
         }
         lineout += dWidth;
-        linein += (yScale * wWidth);
-        wsgY++;
+        linein += ((1 << yScale) * wWidth);
+        wsgY += (1 << yScale);
     }
 }
 
