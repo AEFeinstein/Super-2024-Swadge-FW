@@ -40,6 +40,7 @@ static void gs_loadAssets(void);
 static void gs_initializeGame(void);
 static void gs_freeAssets(void);
 static void gs_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+static void gs_updateLEDs(void);
 bool gs_menuCb(const char* label, bool selected, uint32_t value);
 void gs_switchState(gs_submode_t submode);
 void gs_submodeStateExit(void);
@@ -110,8 +111,8 @@ gs_gameData_t* gameData;
 static void gs_enterMode(void)
 {
     setFrameRateUs(16666);
-    gameData = (gs_gameData_t*)heap_caps_calloc(1, sizeof(gs_gameData_t), MALLOC_CAP_8BIT);
 
+    gameData             = (gs_gameData_t*)heap_caps_calloc(1, sizeof(gs_gameData_t), MALLOC_CAP_8BIT);
     gameData->trophyData = &gs_trophies;
 
     gs_initializeEntityManager(&gameData->entityManager, gameData);
@@ -144,6 +145,8 @@ static void gs_enterMode(void)
     gameData->submode    = GS_MENU_SUBMODE;
     gameData->newSubmode = GS_MENU_SUBMODE;
     gameData->menu       = initMenu(gs_ModeName, gs_menuCb);
+
+    gameData->ledValue = -100;
 
     gs_populateMenu();
 
@@ -229,6 +232,18 @@ static void gs_mainLoop(int64_t elapsedUs)
 
     getTouchLinear(gameData->touchState, ARRAY_SIZE(gameData->touchState));
 
+    if (gameData->submode == GS_MOON_SUBMODE)
+    {
+        if ((gameData->btnDownState & PB_UP) && gameData->entityManager.zoom < 1)
+        {
+            gameData->entityManager.zoom++;
+        }
+        if ((gameData->btnDownState & PB_DOWN) && gameData->entityManager.zoom > -5)
+        {
+            gameData->entityManager.zoom--;
+        }
+    }
+
     // Update and Draw depending on the submode
     switch (gameData->submode)
     {
@@ -249,17 +264,10 @@ static void gs_mainLoop(int64_t elapsedUs)
             {
                 gameData->newSubmode = GS_MENU_SUBMODE;
             }
-            if ((gameData->btnDownState & PB_UP) && gameData->entityManager.zoom < 1)
-            {
-                gameData->entityManager.zoom++;
-            }
-            if ((gameData->btnDownState & PB_DOWN) && gameData->entityManager.zoom > -5)
-            {
-                gameData->entityManager.zoom--;
-            }
             // update the whole engine via entity management
             gs_updateEntities(&gameData->entityManager);
             gs_drawEntities(&gameData->entityManager);
+            gs_updateLEDs();
             if (gameData->submode != gameData->newSubmode)
             {
                 gs_submodeStateExit();
@@ -394,6 +402,23 @@ static void gs_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
     memset(&frameBuf[(y * TFT_WIDTH) + x], col, sizeof(paletteColor_t) * w * h);
 }
 
+static void gs_updateLEDs(void)
+{
+    if (gameData->ledValue > -100)
+    {
+        gameData->ledValue--;
+        for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+        {
+            uint32_t rgb        = paletteToRGB((paletteColor_t)CLAMP((gameData->ledValue / 10) + i, 0, 216));
+            gameData->leds[i].r = rgb & 0xFF;
+            gameData->leds[i].g = (rgb >> 8) & 0xFF;
+            gameData->leds[i].b = (rgb >> 16) & 0xFF;
+        }
+        // Set the LED output
+        setLeds(gameData->leds, CONFIG_NUM_LEDS);
+    }
+}
+
 /**
  * @brief Callback for when a Gossip Stone menu item is selected
  *
@@ -496,6 +521,7 @@ void gs_submodeStateExit(void)
     // Position is in 3 places. :(
     gameData->entityManager.gossipStone->pos = (vec_t){0xFFFF, 0xFFFF + (90 << DECIMAL_BITS)};
     gameData->entityManager.camera.pos       = (vec_t){0xFFFF, 0xFFFF};
+    gameData->entityManager.zoom             = 0;
 
     gameData->submode = GS_MENU_SUBMODE;
 }
@@ -583,6 +609,13 @@ void gs_submodeStateEnter(gs_submode_t submode)
     {
         case GS_GOSSIP_SUBMODE:
         {
+            for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+            {
+                gameData->leds[i].r = 0;
+                gameData->leds[i].g = 0;
+                gameData->leds[i].b = 0;
+            }
+            setLeds(gameData->leds, CONFIG_NUM_LEDS);
             gData->messageList = gossipList;
             gData->arr_size    = GOSSIP_COUNT;
             break;
@@ -694,6 +727,7 @@ void gs_submodeStateEnter(gs_submode_t submode)
             gData->messageList = moonList;
             gData->arr_size    = MOON_COUNT;
             // gameData->entityManager.gossipStone->pos = (vec_t){0, 0};
+            // spawn above the top center of the tilemap
             gameData->entityManager.gossipStone->pos = (vec_t){0, -((118 * 64) << DECIMAL_BITS)};
             gameData->entityManager.camera.pos       = gameData->entityManager.gossipStone->pos;
             ((gs_gossipStone_t*)gameData->entityManager.gossipStone->data)->vel = (vec_t){0, 10000};

@@ -4,16 +4,16 @@
 // clang-format off
 const char* gossipList[GOSSIP_COUNT] = {
     "Shake the rock to make it talk. Testers can press A.",
-    "Yo, this is the first line.",
+    "All life is sacred. But I am merely a rock. I am divine!",
+    "Love everything that has life!",
     "In Gaylordia, rocks float.",
-    "Something cool will happen if you listen to everything I have to say.",
+    "Listen to everything so we may proceed to phase two.",
     "After The Prophecy is complete, you can use the left touch strip to rub the crystal ball.",
-    "Okay, that's number five.",
-    "sixeroni.",
-    "This moon holds my future.",
-    "Here is the eighth line.",
+    "Immortals are never alien to one another.",
+    "Of all creatures that breathe and move upon the earth, nothing is bred that is weaker than man.",
+    "The moon holds the future.",
     "The godess of Gaylordia rearranges the stars every time you visit.",
-    "TEN!!!!!!!!",
+    "Consider how many people heard me say this.",
 };
 
 const char* AMAList[AMA_COUNT] = {

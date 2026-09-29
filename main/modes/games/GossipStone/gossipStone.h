@@ -44,6 +44,7 @@ typedef struct gs_gameData_t
     gs_entityManager_t entityManager;
     gs_asset_t assets[NUM_ASSETS];
     led_t leds[CONFIG_NUM_LEDS];
+    int16_t ledValue; // Ticks down for a sparkly reward.
 
     // cnfsFileIdx_t songs[1];
     // int8_t currentSongIdx;

@@ -158,6 +158,8 @@ void gs_recordProgress(gs_entity_t* self)
     uint8_t NVSbit   = data->index % 32;
     if (!gs_checkBit(self->gameData->gossipProgress[NVSgroup], NVSbit))
     {
+        // make a flashy LED effect
+        self->gameData->ledValue = 2170;
         // set that bit to 1
         self->gameData->gossipProgress[NVSgroup] |= (1 << NVSbit);
         // save it to nvs
@@ -741,6 +743,12 @@ void gs_updateBigMoon(gs_entity_t* self)
     bmData->deltaScale++;
     q24_8 increaseBy = gs_lerp(512, bmData->deltaScale, bmData->scale);
     bmData->scale += (increaseBy >> 9);
+    // printf("scale %d\n", bmData->scale);
+    if (self->assetIndex == GS_LANDING_ASSET && bmData->scale > 200 && bmData->scale % 100 == 0
+        && self->gameData->entityManager.zoom > -5)
+    {
+        self->gameData->entityManager.zoom--;
+    }
     if (bmData->scale > bmData->targetScale)
     {
         // update the trophy
@@ -800,6 +808,17 @@ void gs_spawnBigMoon(gs_entity_t* self)
 
 void gs_spawnLanding(gs_entity_t* self)
 {
+    self->destroyFlag = true;
+    node_t* cur       = self->gameData->entityManager.entities->first;
+    while (cur)
+    {
+        gs_entity_t* star = (gs_entity_t*)cur->val;
+        if (star->assetIndex == GS_STAR_ASSET)
+        {
+            star->pos = self->gameData->entityManager.camera.pos;
+        }
+        cur = cur->next;
+    }
     gs_entity_t* landing = gs_createEntityBefore(
         gs_findLastNodeOfType(self, GS_GOSSIP_STONE_DATA), &self->gameData->entityManager, 1, GS_NO_ANIMATION, false,
         GS_LANDING_ASSET, 1, self->gameData->entityManager.gossipStone->pos, self->gameData);
