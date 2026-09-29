@@ -1124,7 +1124,31 @@ void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
                         }
                     }
 
-                    if (!itemExists)
+                    // Don't spawn permanent items if they're already in the inventory
+                    bool itemInInventory = ((type == OBJ_ITEM_EWI && ray->p.i.haveEwiOfTime) ||         //
+                                            (type == OBJ_ITEM_BOMB && ray->p.i.haveBombs) ||            //
+                                            (type == OBJ_ITEM_BOOTS && ray->p.i.haveJumpBoots) ||       //
+                                            (type == OBJ_ITEM_SHIELD && ray->p.i.haveShield) ||         //
+                                            (type == OBJ_ITEM_BOW && ray->p.i.haveBow) ||               //
+                                            (type == OBJ_ITEM_BOOMERANG && ray->p.i.haveBoomerang) ||   //
+                                            (type == OBJ_ITEM_TURNTABLES && ray->p.i.haveTurntables) || //
+                                            (type == OBJ_ITEM_LULLABY && ray->p.i.haveDoriasLullaby));
+
+                    // Check previous pickups too
+                    for (int idx = 0; idx < ARRAY_SIZE(ray->p.i.items); idx++)
+                    {
+                        invItem_t* item = &ray->p.i.items[idx];
+                        if (item->occupied &&              //
+                            item->mapId == ray->p.mapId && //
+                            item->objId == id)
+                        {
+                            // Item was already obtained
+                            itemInInventory = true;
+                            break;
+                        }
+                    }
+
+                    if (!itemExists && !itemInInventory)
                     {
                         rayCreateCommonObj(ray, type, id, TO_FX(x) + TO_FX_FRAC(1, 2), TO_FX(y) + TO_FX_FRAC(1, 2));
                     }

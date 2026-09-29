@@ -238,6 +238,16 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
             obj->c.posX += (obj->velX * (int32_t)elapsedUs) / (1 << 16);
             obj->c.posY += (obj->velY * (int32_t)elapsedUs) / (1 << 16);
 
+            // Make sure the bullet is in bounds
+            if (obj->c.posX < 0 || FROM_FX(obj->c.posX) >= ray->map.w || //
+                obj->c.posY < 0 || FROM_FX(obj->c.posY) >= ray->map.h)
+            {
+                // Out of bounds, destroy this bullet
+                memset(obj, 0, sizeof(rayBullet_t));
+                obj->c.id = -1;
+                continue;
+            }
+
             // If there is a fuse
             if (obj->fuseUs >= 0)
             {
@@ -500,45 +510,60 @@ void checkRayCollisions(ray_t* ray)
             // An enemy's bullet
             if (objectsIntersect(&player, &bullet->c))
             {
-                // Determine the damage per-bullet
-                int32_t dmg = 0;
+                // Determine the damage per-bullet and if the bullet gets deleted or reflected
+                int32_t dmg       = 0;
+                bool deleteBullet = true;
                 switch (bullet->c.type)
                 {
-                    // case OBJ_BULLET_E_NORMAL:
-                    // {
-                    //     dmg = 10;
-                    //     break;
-                    // }
-                    // case OBJ_BULLET_E_STRONG:
-                    // {
-                    //     dmg = 15;
-                    //     break;
-                    // }
-                    // case OBJ_BULLET_E_ARMOR:
-                    // {
-                    //     dmg = 20;
-                    //     break;
-                    // }
-                    // case OBJ_BULLET_E_FLAMING:
-                    // {
-                    //     dmg = 25;
-                    //     break;
-                    // }
-                    // case OBJ_BULLET_E_HIDDEN:
-                    // {
-                    //     dmg = 30;
-                    //     break;
-                    // }
+                    case OBJ_BULLET_SHIELD_0:
+                    case OBJ_BULLET_SHIELD_1:
+                    case OBJ_BULLET_SHIELD_2:
+                    case OBJ_BULLET_SHIELD_3:
+                    {
+                        // Assume 1 damage for now
+                        dmg = 1;
+
+                        // If the shield is active
+                        if (ray->ps.shieldTimerUs)
+                        {
+                            if (ray->ps.shieldZone == (bullet->c.type - OBJ_BULLET_SHIELD_0))
+                            {
+                                // No damage
+                                dmg = 0;
+
+                                // Don't delete bullet
+                                deleteBullet = false;
+
+                                // Reflect the bullet
+                                bullet->velX = -bullet->velX;
+                                bullet->velY = -bullet->velY;
+
+                                // Player takes control of bullet
+                                bullet->c.id = 1;
+                            }
+                            else
+                            {
+                                // No damage, but no reflection either
+                                dmg = 0;
+                            }
+                        }
+                        break;
+                    }
                     default:
                     {
                         break;
                     }
                 }
+
                 // Player got shot, apply damage
                 rayPlayerDecrementHealth(ray, dmg);
-                // De-allocate the bullet
-                memset(bullet, 0, sizeof(rayBullet_t));
-                bullet->c.id = -1;
+
+                if (deleteBullet)
+                {
+                    // De-allocate the bullet
+                    memset(bullet, 0, sizeof(rayBullet_t));
+                    bullet->c.id = -1;
+                }
             }
         }
         else if (OBJ_BULLET_BOMB == bullet->c.type && bullet->c.bound.radius > 0) // Player's exploded bomb

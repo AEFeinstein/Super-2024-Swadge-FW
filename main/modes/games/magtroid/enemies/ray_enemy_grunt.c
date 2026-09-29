@@ -113,7 +113,6 @@ bool rayEnemyGruntMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
     // Return if dead for cleanup
     if (enemy->health <= 0)
     {
-        enemyDropAfterDeath(enemy);
         return true;
     }
 

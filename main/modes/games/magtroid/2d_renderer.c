@@ -207,18 +207,18 @@ void drawForeground2d(ray_t* ray)
                 }
             }
 
-            if (obj->bound.box.h)
-            {
-                rectangle_t bb = rayGetObjBB(obj);
-                drawRect(TO_PX(bb.pos.x) - camX,            //
-                         TO_PX(bb.pos.y) - camY,            //
-                         TO_PX(bb.pos.x + bb.width) - camX, //
-                         TO_PX(bb.pos.y + bb.height) - camY, c505);
-            }
-            else
-            {
-                drawCircle(TO_PX(obj->posX) - camX, TO_PX(obj->posY) - camY, TO_PX(obj->bound.radius), c505);
-            }
+            // if (obj->bound.box.h)
+            // {
+            //     rectangle_t bb = rayGetObjBB(obj);
+            //     drawRect(TO_PX(bb.pos.x) - camX,            //
+            //              TO_PX(bb.pos.y) - camY,            //
+            //              TO_PX(bb.pos.x + bb.width) - camX, //
+            //              TO_PX(bb.pos.y + bb.height) - camY, c505);
+            // }
+            // else
+            // {
+            //     drawCircle(TO_PX(obj->posX) - camX, TO_PX(obj->posY) - camY, TO_PX(obj->bound.radius), c505);
+            // }
         }
     }
 
@@ -255,8 +255,9 @@ void drawForeground2d(ray_t* ray)
             c045,
             c305,
         };
-        drawCircle(TO_PX(ray->p.posX), TO_PX(ray->p.posY + ray->ps.jumpPos), CELL_SIZE / 2,
-                   zColors[ray->ps.shieldZone]);
+        drawCircleOutline(TO_PX(ray->p.posX), TO_PX(ray->p.posY + ray->ps.jumpPos), //
+                          CELL_SIZE / 2, 3,                                         //
+                          zColors[ray->ps.shieldZone]);
     }
 
     // Draw HUD

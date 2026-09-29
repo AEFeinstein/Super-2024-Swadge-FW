@@ -395,7 +395,7 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
             ray->p.posY = TO_FX(ray->ps.lastGoodCell.y) + TO_FX_FRAC(1, 2);
 
             // Decrement health
-            ray->p.health--;
+            rayPlayerDecrementHealth(ray, 1);
         }
     }
 
