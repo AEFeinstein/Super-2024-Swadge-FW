@@ -69,85 +69,85 @@ const rayMapMetadata_t mapMetadata[] = {
     {
         .name       = "Tomi's House",
         .visitedKey = "tqvth",
-        .bgmFile    = BASE_0_MID,
+        .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = TOMIS_HOUSE_RMH,
     },
     {
         .name       = "Fairy Glen",
         .visitedKey = "tqvfg",
-        .bgmFile    = BASE_0_MID,
+        .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = FAIRY_GLEN_RMH,
     },
     {
         .name       = "Secluded Woods",
         .visitedKey = "tqvsw",
-        .bgmFile    = BASE_0_MID,
+        .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = SECLUDED_WOODS_RMH,
     },
     {
         .name       = "The Clearing",
         .visitedKey = "tqvtc",
-        .bgmFile    = BASE_0_MID,
+        .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = THE_CLEARING_RMH,
     },
     {
         .name       = "The Great DeeJay Tree",
         .visitedKey = "tqvdj",
-        .bgmFile    = BASE_0_MID,
+        .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = THE_GREAT_DEEJAY_TREE_RMH,
     },
     {
         .name       = "Gaylordia Field",
         .visitedKey = "tqvgf",
-        .bgmFile    = BASE_0_MID,
+        .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = GAYLORDIA_FIELD_RMH,
     },
     {
         .name       = "Dungeon 1",
         .visitedKey = "tqvd1",
-        .bgmFile    = BASE_0_MID,
+        .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = DUNGEON_1_RMH,
     },
     {
         .name       = "Dungeon 2",
         .visitedKey = "tqvd2",
-        .bgmFile    = BASE_0_MID,
+        .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = DUNGEON_2_RMH,
     },
     {
         .name       = "Dungeon 3",
         .visitedKey = "tqvd3",
-        .bgmFile    = BASE_0_MID,
+        .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = DUNGEON_3_RMH,
     },
     {
         .name       = "Dungeon 4",
         .visitedKey = "tqvd4",
-        .bgmFile    = BASE_0_MID,
+        .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = DUNGEON_4_RMH,
     },
     {
         .name       = "Town Square",
         .visitedKey = "tqvts",
-        .bgmFile    = BASE_0_MID,
+        .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = TOWN_SQUARE_RMH,
     },
     {
         .name       = "Fredward's Item Shop",
         .visitedKey = "tqvis",
-        .bgmFile    = BASE_0_MID,
+        .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = FREDWARDS_ITEM_SHOP_RMH,
     },
     {
         .name       = "Mayor's House",
         .visitedKey = "tqvmh",
-        .bgmFile    = BASE_0_MID,
+        .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = MAYORS_HOUSE_RMH,
     },
     {
         .name       = "Shrine of the Great Fairies",
         .visitedKey = "tqvsg",
-        .bgmFile    = BASE_0_MID,
+        .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = SHRINE_OF_THE_GREAT_FAIRIES_RMH,
     },
 };
@@ -198,11 +198,11 @@ static void rayEnterMode(void)
     rayInitMenu();
 
     // Force draw a loading screen
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c100);
-    const char loadingStr[] = "Loading...";
-    int32_t tWidth          = textWidth(&ray->logbook, loadingStr);
-    drawText(&ray->logbook, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - ray->logbook.height) / 2);
-    drawDisplayTft(NULL);
+    // fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c100);
+    // const char loadingStr[] = "Loading...";
+    // int32_t tWidth          = textWidth(&ray->logbook, loadingStr);
+    // drawText(&ray->logbook, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - ray->logbook.height) / 2);
+    // drawDisplayTft(NULL);
 
     // Initialize texture manager and environment textures
     loadEnvTextures(ray);

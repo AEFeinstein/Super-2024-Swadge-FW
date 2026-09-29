@@ -11,10 +11,7 @@
 
 typedef struct
 {
-    vec_q24_8 dir;     ///< The direction the turret is facing
-    int32_t dirTimer;  ///< A timer to randomly pick new directions to face
-    vec_q24_8 bumpVel; ///< The direction the turret got bumped
-    int32_t bumpTimer; ///< A timer to use bumpVel instead of dir for movement
+    int32_t dirTimer; ///< A timer to randomly pick new directions to face
 } turretState_t;
 
 //==============================================================================
@@ -144,9 +141,6 @@ void rayEnemyTurretCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle
  */
 void rayEnemyTurretGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
-    // Convenience pointer
-    turretState_t* state = enemy->state;
-
     switch (bullet)
     {
         case OBJ_BULLET_SHIELD_0:
