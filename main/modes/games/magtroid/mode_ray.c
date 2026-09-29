@@ -804,15 +804,7 @@ static void rayInitMenu(void)
     ray->menu = startSubMenu(ray->menu, rayResetStr);
     addSingleItemToMenu(ray->menu, rayConfirmStr);
     ray->menu = endSubMenu(ray->menu);
-
-    // Only show credits if the game was beaten
-    int32_t magtroidUnlocked = false;
-    readNvs32(TOMIS_QUEST_FINISHED, &magtroidUnlocked);
-    if (magtroidUnlocked)
-    {
-        addSingleItemToMenu(ray->menu, rayCreditsStr);
-    }
-
+    addSingleItemToMenu(ray->menu, rayCreditsStr);
     addSingleItemToMenu(ray->menu, rayExitStr);
 
     // Initialize a renderer

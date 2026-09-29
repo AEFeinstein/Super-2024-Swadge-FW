@@ -332,15 +332,15 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
 }
 
 /**
- * @brief TODO doc
+ * @brief Check for collisions between an object and the background (walls and doors).
+ * This checks scripts when objects hit walls, opens doors, etc.
  *
- * @param ray
- * @param x
- * @param y
- * @param oType
- * @param oId
- * @return true
- * @return false
+ * @param ray The entire game state
+ * @param x The X location of the object
+ * @param y The Y location of the object
+ * @param oType The type of object
+ * @param oId The object's ID
+ * @return true if there was a collision, false if there wasn't
  */
 bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int32_t oId)
 {
@@ -762,12 +762,11 @@ void checkRayCollisions(ray_t* ray)
 }
 
 /**
- * @brief TODO doc
+ * @brief Check if an object's bounding box fits in the map by checking if all four corners are in passable cells
  *
- * @param ray
- * @param bb
- * @return true
- * @return false
+ * @param ray The entire game state
+ * @param bb The bounding box
+ * @return true if the bounding box exists entirely in passable cells, false otherwise
  */
 bool rayBoundingBoxFitsInMap(ray_t* ray, rectangle_t bb)
 {

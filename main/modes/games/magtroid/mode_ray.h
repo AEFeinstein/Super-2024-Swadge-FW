@@ -406,8 +406,7 @@ typedef enum
  */
 typedef enum
 {
-    RP_LOCAL_MAP, ///< The map the player is currently in
-    // RP_WORLD_MAP,   ///< All the maps and how they connect
+    RP_LOCAL_MAP,   ///< The map the player is currently in
     RP_NUM_SCREENS, ///< The number of pause screens
 } rayPauseScreen_t;
 

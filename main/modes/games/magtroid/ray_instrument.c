@@ -53,13 +53,13 @@ void rayInstrumentCheckButtons(ray_t* ray)
 }
 
 /**
- * @brief TODO doc
+ * @brief Handle touches for the instrument
  *
- * @param ray
- * @param touch
- * @param lastTouchZone
- * @param noteOffset
- * @param osc
+ * @param ray The entire game state
+ * @param touch The touch to handle
+ * @param lastTouchZone The last zone touched, to check if the zone changed
+ * @param noteOffset The note offset (the second touch strip is offset by 4)
+ * @param osc The oscillator to play notes with
  */
 static void handleRayInstrument(ray_t* ray, const linearTouch_t* touch, int8_t* lastTouchZone, uint32_t noteOffset,
                                 synthOscillator_t* osc)

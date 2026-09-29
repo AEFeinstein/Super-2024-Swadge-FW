@@ -241,10 +241,10 @@ void drawForeground2d(ray_t* ray)
     if (ray->ps.swordTimerUs > 0)
     {
         line_t sword = rayGetSwordLineSegment(ray);
-        drawLineFast(TO_PX(sword.p1.x) - camX, //
-                     TO_PX(sword.p1.y) - camY, //
-                     TO_PX(sword.p2.x) - camX, //
-                     TO_PX(sword.p2.y) - camY, c550);
+        drawLineFast(TO_PX(sword.p1.x) - camX,                   //
+                     TO_PX(sword.p1.y + ray->ps.jumpPos) - camY, //
+                     TO_PX(sword.p2.x) - camX,                   //
+                     TO_PX(sword.p2.y + ray->ps.jumpPos) - camY, c550);
     }
 
     if (ray->ps.shieldTimerUs > 0)

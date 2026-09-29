@@ -166,11 +166,11 @@ static bool animateEnemy(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 }
 
 /**
- * @brief TODO doc
+ * @brief Check if an item should be created after an enemy dies
  *
- * @param ray
- * @param enemy
- * @return rayMapCellType_t
+ * @param ray The entire game state
+ * @param enemy The enemy which died
+ * @return The item to drop, or EMPTY
  */
 rayMapCellType_t enemyDropAfterDeath(rayEnemy_t* enemy)
 {
@@ -182,13 +182,16 @@ rayMapCellType_t enemyDropAfterDeath(rayEnemy_t* enemy)
 }
 
 /**
- * @brief TODO doc
+ * @brief Check for collisions between the given enemy and player.
+ * Sometimes collisions cause damage.
+ * Sometimes the enemy is immovable and stops the player.
+ * Sometimes the player pushes the enemy
  *
- * @param ray
- * @param enemy
- * @param player
- * @param deltaX
- * @param deltaY
+ * @param ray The entire game state
+ * @param enemy The enemy to check for collisions with
+ * @param player The player to check for collisions with
+ * @param deltaX The X distance the player is trying to move. May be set to 0 if the enemy is immovable.
+ * @param deltaY The Y distance the player is trying to move. May be set to 0 if the enemy is immovable.
  */
 void rayEnemyCheckCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY)
 {
@@ -199,11 +202,10 @@ void rayEnemyCheckCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q
 }
 
 /**
- * @brief
+ * @brief Standard function for heart and mpoint drops
  *
- * @param ray
- * @param enemy
- * @return rayMapCellType_t
+ * @param ray The entire game state
+ * @return rayMapCellType_t The item to drop, or EMPTY
  */
 rayMapCellType_t rayEnemyStandardItemDrop(void)
 {

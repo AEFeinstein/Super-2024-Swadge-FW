@@ -58,11 +58,11 @@ void rayInitEnemyTurret(ray_t* ray, rayEnemy_t* e)
 }
 
 /**
- * @brief TODO doc
+ * @brief Main loop for the Turret enemy. Handles attacking logic.
  *
  * @param ray The whole game state
- * @param enemy
- * @param elapsedUs
+ * @param enemy the Turret enemy
+ * @param elapsedUs The time since this function was last called
  * @return true if this enemy is dead (after any death animations), false if it is alive
  */
 bool rayEnemyTurretMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
@@ -76,8 +76,9 @@ bool rayEnemyTurretMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
     // Casted pointer for convenience
     turretState_t* state = enemy->state;
 
-    // Shoot direction every second
+    // Shoot a random bullet towards the player every two seconds
     RUN_TIMER_EVERY(state->dirTimer, 2000000, elapsedUs, {
+        // Find the direction from the turret to the player
         vec_q24_8 dirToPlayer;
         dirToPlayer.x = ray->p.posX - enemy->c.posX;
         dirToPlayer.y = ray->p.posY - enemy->c.posY;
@@ -87,6 +88,7 @@ bool rayEnemyTurretMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
         dirToPlayer.x = (3 * dirToPlayer.x) / 8;
         dirToPlayer.y = (3 * dirToPlayer.y) / 8;
 
+        // Shoot a bullet
         rayCreateBullet(ray,                                      //
                         OBJ_BULLET_SHIELD_0 + (esp_random() % 4), // Type
                         enemy->c.posX, enemy->c.posY,             // Position
@@ -100,40 +102,28 @@ bool rayEnemyTurretMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 }
 
 /**
- * @brief TODO doc
+ * @brief Function to check if the turret collides with the player
+ * The turret is immoveable, so collisions stop player movement
  *
  * @param ray The whole game state
- * @param enemy
- * @param player
- * @param deltaX
- * @param deltaY
+ * @param enemy The turret to check for collisions
+ * @param player The player to check for collisions
+ * @param deltaX The X distance the player is trying to move
+ * @param deltaY The Y distance the player is trying to move
  */
 void rayEnemyTurretCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY)
 {
-    // If the player is currently hittable
-    if (rayPlayerIsHittable(ray))
+    // Check if there's a bounding box intersection
+    rectangle_t enemyBB = rayGetObjBB(&enemy->c);
+    if (rectRectIntersection(player, enemyBB, NULL))
     {
-        // Check if there's a bounding box intersection
-        rectangle_t enemyBB = rayGetObjBB(&enemy->c);
-        if (rectRectIntersection(player, enemyBB, NULL))
-        {
-            // Damage the player
-            if (rayPlayerDecrementHealth(ray, 1))
-            {
-                // Give the player a bump away from the turret
-                ray->ps.vel.x = ray->p.posX - enemy->c.posX;
-                ray->ps.vel.y = ray->p.posY - enemy->c.posY;
-                fastNormVec(&ray->ps.vel.x, &ray->ps.vel.y);
-
-                // Bump for 250ms
-                ray->ps.bumpTimer = 250000;
-            }
-        }
+        *deltaX = 0;
+        *deltaY = 0;
     }
 }
 
 /**
- * @brief TODO doc
+ * @brief This function is called when the turret is hit
  *
  * @param ray The whole game state
  * @param enemy The enemy which was shot
@@ -148,11 +138,16 @@ void rayEnemyTurretGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bulle
         case OBJ_BULLET_SHIELD_2:
         case OBJ_BULLET_SHIELD_3:
         {
+            // Reflected bullets damage the turret
             // TODO start enemy iframes
             // TODO visual indicator enemy was hit
             enemy->health--;
             break;
         }
+        case OBJ_BULLET_SWORD:
+        case OBJ_BULLET_ARROW:
+        case OBJ_BULLET_BOMB:
+        case OBJ_BULLET_BOOMERANG:
         default:
         {
             // No damage from other weapons

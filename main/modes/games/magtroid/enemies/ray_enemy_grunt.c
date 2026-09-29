@@ -59,9 +59,9 @@ void rayInitEnemyGrunt(ray_t* ray, rayEnemy_t* e)
 }
 
 /**
- * @brief Pick a new direction for the grunt to travel
+ * @brief Pick a new direction for the grunt to travel, adjusting direction and sprite rotation
  *
- * @param enemy
+ * @param enemy The grunt which is picking a new direction to travel
  */
 static void rayEnemyGruntPickDirection(rayEnemy_t* enemy)
 {
@@ -101,11 +101,11 @@ static void rayEnemyGruntPickDirection(rayEnemy_t* enemy)
 }
 
 /**
- * @brief TODO doc
+ * @brief Main loop for the Grunt enemy. Handles movement logic.
  *
  * @param ray The whole game state
- * @param enemy
- * @param elapsedUs
+ * @param enemy The Grunt enemy
+ * @param elapsedUs The time since this function was last called
  * @return true if this enemy is dead (after any death animations), false if it is alive
  */
 bool rayEnemyGruntMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
@@ -165,13 +165,14 @@ bool rayEnemyGruntMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 }
 
 /**
- * @brief TODO doc
+ * @brief Function to check if the grunt collides with the player
+ * Touching the grunt damages and bumps the player
  *
  * @param ray The whole game state
- * @param enemy
- * @param player
- * @param deltaX
- * @param deltaY
+ * @param enemy The grunt to check for collisions
+ * @param player The player to check for collisions
+ * @param deltaX The X distance the player is trying to move
+ * @param deltaY The Y distance the player is trying to move
  */
 void rayEnemyGruntCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY)
 {
@@ -198,7 +199,7 @@ void rayEnemyGruntCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_
 }
 
 /**
- * @brief TODO doc
+ * @brief This function is called when the grunt is hit
  *
  * @param ray The whole game state
  * @param enemy The enemy which was shot
@@ -225,6 +226,10 @@ void rayEnemyGruntGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet
         case OBJ_BULLET_ARROW:
         case OBJ_BULLET_BOMB:
         case OBJ_BULLET_BOOMERANG:
+        case OBJ_BULLET_SHIELD_0:
+        case OBJ_BULLET_SHIELD_1:
+        case OBJ_BULLET_SHIELD_2:
+        case OBJ_BULLET_SHIELD_3:
         {
             // TODO start enemy iframes
             // TODO visual indicator enemy was hit

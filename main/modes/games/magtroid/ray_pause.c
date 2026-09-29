@@ -6,108 +6,10 @@
 #include "ray_tex_manager.h"
 
 //==============================================================================
-// Enums
-//==============================================================================
-
-/**
- * @brief Enum for the different corners in a map box, used for drawing warp lines
- */
-// typedef enum
-// {
-//     TOP_RIGHT,       ///< The top right corner of a map box
-//     TOP_LEFT,        ///< The top left corner of a map box
-//     BOTTOM_LEFT,     ///< The bottom left corner of a map box
-//     NUM_MAP_CORNERS, ///< The number of warp points in a map
-// } rayWorldMapCorner_t;
-
-//==============================================================================
-// Structs
-//==============================================================================
-
-/**
- * @brief The information necessary to draw a line between two corners in two map boxes
- */
-// typedef struct
-// {
-//     int16_t map1;                ///< The map to draw a warp line from
-//     int16_t map2;                ///< The map to draw a warp line to
-//     rayWorldMapCorner_t corner1; ///< The corner to draw a warp line from
-//     rayWorldMapCorner_t corner2; ///< The corner to draw a warp line to
-// } rayWorldMapLine_t;
-
-//==============================================================================
-// Const data
-//==============================================================================
-
-/// @brief A collection of all the possible warp lines to draw
-// const rayWorldMapLine_t warpLines[] = {
-//     // From map 0
-//     {
-//         .map1    = 0,
-//         .corner1 = TOP_LEFT,
-//         .map2    = 4,
-//         .corner2 = TOP_LEFT,
-//     },
-//     {
-//         .map1    = 0,
-//         .corner1 = TOP_RIGHT,
-//         .map2    = 1,
-//         .corner2 = BOTTOM_LEFT,
-//     },
-//     {
-//         .map1    = 0,
-//         .corner1 = BOTTOM_LEFT,
-//         .map2    = 3,
-//         .corner2 = TOP_LEFT,
-//     },
-//     // From map 1
-//     {
-//         .map1    = 1,
-//         .corner1 = TOP_LEFT,
-//         .map2    = 5,
-//         .corner2 = TOP_LEFT,
-//     },
-//     {
-//         .map1    = 1,
-//         .corner1 = TOP_RIGHT,
-//         .map2    = 2,
-//         .corner2 = BOTTOM_LEFT,
-//     },
-//     // From map 2
-//     {
-//         .map1    = 2,
-//         .corner1 = TOP_LEFT,
-//         .map2    = 5,
-//         .corner2 = TOP_RIGHT,
-//     },
-//     {
-//         .map1    = 2,
-//         .corner1 = TOP_RIGHT,
-//         .map2    = 3,
-//         .corner2 = BOTTOM_LEFT,
-//     },
-//     // From map 3
-//     {
-//         .map1    = 3,
-//         .corner1 = TOP_RIGHT,
-//         .map2    = 4,
-//         .corner2 = BOTTOM_LEFT,
-//     },
-//     // From map 4
-//     {
-//         .map1    = 4,
-//         .corner1 = TOP_RIGHT,
-//         .map2    = 5,
-//         .corner2 = BOTTOM_LEFT,
-//     },
-// };
-
-//==============================================================================
 // Function Declarations
 //==============================================================================
 
 static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs);
-// static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs);
 static void drawPlayerIndicator(ray_t* ray, int16_t cX, int16_t cY);
 
 //==============================================================================
@@ -189,11 +91,6 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
             rayPauseRenderLocalMap(ray, elapsedUs);
             break;
         }
-            // case RP_WORLD_MAP:
-            // {
-            //     rayPauseRenderWorldMap(ray, elapsedUs);
-            //     break;
-            // }
     }
 
     if (ray->blink)
@@ -264,45 +161,6 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
         }
     }
 
-    // Look through scenery for warp points
-    // node_t* currentNode = ray->scenery.first;
-    // while (currentNode != NULL)
-    // {
-    //     // Get a pointer from the linked list
-    //     rayObjCommon_t* obj = ((rayObjCommon_t*)currentNode->val);
-
-    //     // Look for portals
-    //     if (OBJ_SCENERY_PORTAL == obj->type)
-    //     {
-    //         // Found a portal, look for corresponding script
-    //         node_t* scriptNode = ray->scripts[TOUCH].first;
-    //         while (NULL != scriptNode)
-    //         {
-    //             rayScript_t* scr = scriptNode->val;
-    //             // If this is the right script for this object
-    //             if ((TOUCH == scr->ifOp) && (WARP == scr->thenOp) && (scr->ifArgs.idList.ids[0] == obj->id))
-    //             {
-    //                 // And the player has visited the other end of the warp
-    //                 if (ray->p.mapsVisited[scr->thenArgs.warpDest.mapId])
-    //                 {
-    //                     // Draw a number indicating the warp destination
-    //                     char num[8];
-    //                     snprintf(num, sizeof(num) - 1, "%1d", scr->thenArgs.warpDest.mapId + 1);
-    //                     tWidth = textWidth(&ray->ibm, num);
-    //                     drawText(&ray->ibm, c555, num,
-    //                              cellOffX + (cellSize * FROM_FX(obj->posX)) + (cellSize - tWidth) / 2,
-    //                              cellOffY + (cellSize * FROM_FX(obj->posY)) + (cellSize - ray->ibm.height) / 2);
-    //                 }
-    //                 break;
-    //             }
-    //             scriptNode = scriptNode->next;
-    //         }
-    //     }
-
-    //     // Iterate to the next node
-    //     currentNode = currentNode->next;
-    // }
-
     // The player's location blinks, so draw it when appropriate
     int16_t cX = cellOffX + FROM_FX(cellSize * ray->p.posX);
     int16_t cY = cellOffY + FROM_FX(cellSize * ray->p.posY);
@@ -329,131 +187,4 @@ static void drawPlayerIndicator(ray_t* ray, int16_t cX, int16_t cY)
         int16_t lineEndY = cY + FROM_FX(cR * ray->p.dirY);
         drawLine(cX, cY, lineEndX, lineEndY, c552, 0);
     }
-}
-
-/**
- * @brief Render the world map, a collection of map boxes with warp lines between then. Map boxes are only
- * representative of actual maps, since only one map can be loaded at a time.
- *
- * @param ray The whole game state
- * @param elapsedUs The elapsed time since this function was last called
- */
-// static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
-// {
-// #define MAP_X_MARGIN  16
-// #define MAP_Y_MARGIN  36
-// #define MAP_Y_MID_GAP 16
-// #define MAP_SIZE      72
-
-// #define MAP_ROWS 2
-// #define MAP_COLS 3
-
-// #define WARP_POINT_INDENT 4
-
-//     // Save coordinates for where to draw warp lines
-//     int16_t warpCoords[NUM_MAPS][NUM_MAP_CORNERS][2];
-
-//     // A texture to draw after artifacts are acquired
-//     // wsg_t* artifactWsg = getTexByType(ray, OBJ_ITEM_ARTIFACT);
-//     // int16_t aAOffX     = (MAP_SIZE - artifactWsg->w) / 2;
-//     // int16_t aAOffY     = (MAP_SIZE - artifactWsg->h) / 2;
-
-//     // For all six maps in a 3x2 grid
-//     for (int16_t mapY = 0; mapY < MAP_ROWS; mapY++)
-//     {
-//         for (int16_t mapX = 0; mapX < MAP_COLS; mapX++)
-//         {
-//             // Get the map ID
-//             int16_t mapId = (mapY * MAP_COLS) + mapX;
-
-//             // Only draw it if it's been visited
-//             if (ray->p.mapsVisited[mapId])
-//             {
-//                 // Find the box coordinates
-//                 int16_t startX = MAP_X_MARGIN + mapX * (MAP_SIZE + MAP_X_MARGIN);
-//                 int16_t startY = MAP_Y_MARGIN + mapY * (MAP_SIZE + MAP_Y_MID_GAP);
-//                 int16_t endX   = startX + MAP_SIZE;
-//                 int16_t endY   = startY + MAP_SIZE;
-
-//                 // Draw the dark red box, outlined
-//                 fillDisplayArea(startX + 1, startY + 1, endX - 1, endY - 1, c100);
-//                 drawRect(startX, startY, endX, endY, rayMapColors[mapId]);
-
-//                 // Draw an artifact if was acquired here
-//                 // if (ray->p.i.artifacts[mapId])
-//                 // {
-//                 //     drawWsgSimple(artifactWsg, startX + aAOffX, startY + aAOffY);
-//                 // }
-
-//                 // Draw the name, either above or below the box
-//                 int16_t tWidth = textWidth(&ray->ibm, rayMapNames[mapId]);
-//                 if (0 == mapY)
-//                 {
-//                     drawText(&ray->ibm, rayMapColors[mapId], rayMapNames[mapId], //
-//                              startX + ((MAP_SIZE - tWidth) / 2), startY - ray->ibm.height - 4);
-//                 }
-//                 else
-//                 {
-//                     drawText(&ray->ibm, rayMapColors[mapId], rayMapNames[mapId], //
-//                              startX + ((MAP_SIZE - tWidth) / 2), endY + 4);
-//                 }
-
-//                 // Save warp coordinates for this map
-//                 warpCoords[mapId][TOP_LEFT][0] = startX + WARP_POINT_INDENT;
-//                 warpCoords[mapId][TOP_LEFT][1] = startY + WARP_POINT_INDENT;
-
-//                 warpCoords[mapId][TOP_RIGHT][0] = endX - WARP_POINT_INDENT - 1;
-//                 warpCoords[mapId][TOP_RIGHT][1] = startY + WARP_POINT_INDENT;
-
-//                 warpCoords[mapId][BOTTOM_LEFT][0] = startX + WARP_POINT_INDENT;
-//                 warpCoords[mapId][BOTTOM_LEFT][1] = endY - WARP_POINT_INDENT - 1;
-
-//                 if (ray->p.mapId == mapId)
-//                 {
-//                     int16_t pPosX = startX + (MAP_SIZE * ray->p.posX) / TO_FX(ray->map.w);
-//                     int16_t pPosY = startY + (MAP_SIZE * ray->p.posY) / TO_FX(ray->map.h);
-
-//                     drawPlayerIndicator(ray, pPosX, pPosY);
-//                 }
-//             }
-//         }
-//     }
-
-//     // For each warp line
-//     for (int16_t wIdx = 0; wIdx < ARRAY_SIZE(warpLines); wIdx++)
-//     {
-//         // If both maps were visited
-//         if (ray->p.mapsVisited[warpLines[wIdx].map1] && ray->p.mapsVisited[warpLines[wIdx].map2])
-//         {
-//             // Draw one color line
-//             drawLine(warpCoords[warpLines[wIdx].map1][warpLines[wIdx].corner1][0],
-//                      warpCoords[warpLines[wIdx].map1][warpLines[wIdx].corner1][1],
-//                      warpCoords[warpLines[wIdx].map2][warpLines[wIdx].corner2][0],
-//                      warpCoords[warpLines[wIdx].map2][warpLines[wIdx].corner2][1],
-//                      rayMapColors[warpLines[wIdx].map1], 0);
-//             // Dash the other color on top of the first
-//             drawLine(warpCoords[warpLines[wIdx].map1][warpLines[wIdx].corner1][0],
-//                      warpCoords[warpLines[wIdx].map1][warpLines[wIdx].corner1][1],
-//                      warpCoords[warpLines[wIdx].map2][warpLines[wIdx].corner2][0],
-//                      warpCoords[warpLines[wIdx].map2][warpLines[wIdx].corner2][1],
-//                      rayMapColors[warpLines[wIdx].map2], 6);
-//         }
-//     }
-
-//     // Draw the string
-//     char collectionStr[32] = {0};
-//     snprintf(collectionStr, sizeof(collectionStr) - 1, "Percentage Complete: %" PRId32 "%%",
-//     getItemCompletePct(ray)); int16_t tWidth = textWidth(&ray->ibm, collectionStr); drawText(&ray->ibm, c555,
-//     collectionStr, (TFT_WIDTH - tWidth) / 2, TFT_HEIGHT - ray->ibm.height - 10);
-// }
-
-/**
- * @brief Get the percentage of items collected, 0 to 100
- *
- * @return The percentage of items collected
- */
-int32_t getItemCompletePct(ray_t* ray)
-{
-    // TODO recalculate or scrap
-    return 0;
 }

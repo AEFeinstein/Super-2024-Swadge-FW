@@ -812,17 +812,19 @@ bool rayPlayerDecrementHealth(ray_t* ray, int32_t health)
 }
 
 /**
- * @brief TODO doc
+ * @brief Get a line segment representing the player's sword.
+ * If the sword is not being swung, the line's start and end points are the same.
  *
- * @param ray
+ * @param ray The entire game state
+ * @return A line segment representing the player's sword
  */
 line_t rayGetSwordLineSegment(ray_t* ray)
 {
     line_t sword = {
         .p1.x = ray->p.posX,
-        .p1.y = ray->p.posY + ray->ps.jumpPos,
+        .p1.y = ray->p.posY,
         .p2.x = ray->p.posX,
-        .p2.y = ray->p.posY + ray->ps.jumpPos,
+        .p2.y = ray->p.posY,
     };
     if (ray->ps.swordTimerUs > 0)
     {
@@ -833,10 +835,12 @@ line_t rayGetSwordLineSegment(ray_t* ray)
 }
 
 /**
- * @brief TODO doc
+ * @brief Get an angle, at 45 degree intervals, from a vector.
+ * This doesn't round the vector, but is more of a D-Pad like angle.
  *
- * @param ray
- * @return int32_t
+ * @param x The X component of the vector
+ * @param y The Y component of the vector
+ * @return The nearest angle to the vector
  */
 int32_t rayGetEightWayAngle(q24_8 x, q24_8 y)
 {
@@ -894,11 +898,11 @@ int32_t rayGetEightWayAngle(q24_8 x, q24_8 y)
 }
 
 /**
- * @brief TODO doc
+ * @brief Get a normalized vector corresponding to the given angle in 45 degree increments
  *
- * @param angle
- * @param x
- * @param y
+ * @param angle An angle in degrees, must be divisible by 45
+ * @param x The X component of the vector is emitted here
+ * @param y The Y component of the vector is emitted here
  */
 void rayFromEightWayAngle(int32_t angle, q24_8* x, q24_8* y)
 {
@@ -963,9 +967,8 @@ void rayFromEightWayAngle(int32_t angle, q24_8* x, q24_8* y)
 /**
  * @brief Return true if the player is jumping, false otherwise
  *
- * @param ray
- * @return true
- * @return false
+ * @param ray The entire game state
+ * @return true if the player is jumping, false otherwise
  */
 bool rayPlayerIsJumping(ray_t* ray)
 {
@@ -973,11 +976,10 @@ bool rayPlayerIsJumping(ray_t* ray)
 }
 
 /**
- * @brief TODO doc
+ * @brief Return if the player is hittable (i.e. not jumping and without invincibility frames)
  *
- * @param ray
- * @return true
- * @return false
+ * @param ray The entire game state
+ * @return true if the player is hittable, false otherwise
  */
 bool rayPlayerIsHittable(ray_t* ray)
 {
@@ -985,10 +987,12 @@ bool rayPlayerIsHittable(ray_t* ray)
 }
 
 /**
- * @brief TODO doc
+ * @brief Get a bounding box for the player
  *
- * @param ray
- * @return rectangle_t
+ * TODO account for sprite rotation
+ *
+ * @param ray The entire game state
+ * @return The bounding box for the player
  */
 rectangle_t rayGetPlayerBB(ray_t* ray)
 {

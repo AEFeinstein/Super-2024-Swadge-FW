@@ -21,23 +21,22 @@ static const char NO_THANKS[]  = "No Thanks";
 //==============================================================================
 
 /**
- * @brief TODO doc
+ * @brief Show a dialog to buy an item or not
  *
- * @param ray
- * @param itemName
- * @param icon
- * @param cost
- * @param obj
+ * @param ray The entire game state
+ * @param icon The icon to show for the item
+ * @param cost The cost of the item
+ * @param type The type of item to buy
  */
-void rayShowShopDialog(ray_t* ray, wsg_t* icon, uint32_t cost, rayMapCellType_t obj)
+void rayShowShopDialog(ray_t* ray, wsg_t* icon, uint32_t cost, rayMapCellType_t type)
 {
     // Save shop parameters
     ray->shopCost = cost;
-    ray->shopObj  = obj;
+    ray->shopObj  = type;
 
     // Translate item to name
     const char* itemName = "Item";
-    if (OBJ_ITEM_BOMB == obj)
+    if (OBJ_ITEM_BOMB == type)
     {
         itemName = "Bombs";
     }
@@ -96,9 +95,9 @@ void rayShopDialogRender(ray_t* ray, uint32_t elapsedUs)
 }
 
 /**
- * @brief
+ * @brief Callback function from the shop dialog. Either buys an item or cancels.
  *
- * @param label
+ * @param label The choice the player made
  */
 void rayShopDialogCb(const char* label)
 {
