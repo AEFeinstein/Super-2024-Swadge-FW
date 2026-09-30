@@ -499,7 +499,7 @@ bool bombadeetleLoadLevelMax(void)
 
         if (levelMaxI32 != bombadeetle->levelMax)
         {
-            ESP_LOGI(TAG, "Level max value from NVS (%d) out of bounds. Clamped to %d", levelMaxI32, bombadeetle->levelMax);
+            ESP_LOGI(TAG, "Level max value from NVS (%"PRIu32") out of bounds. Clamped to %d", levelMaxI32, bombadeetle->levelMax);
         }
     }
 
