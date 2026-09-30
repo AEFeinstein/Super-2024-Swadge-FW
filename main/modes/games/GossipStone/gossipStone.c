@@ -146,7 +146,7 @@ static void gs_enterMode(void)
     gameData->newSubmode = GS_MENU_SUBMODE;
     gameData->menu       = initMenu(gs_ModeName, gs_menuCb);
 
-    gameData->ledValue = -100;
+    gameData->ledValue = -130;
 
     gs_populateMenu();
 
@@ -404,9 +404,9 @@ static void gs_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 
 static void gs_updateLEDs(void)
 {
-    if (gameData->ledValue > -100)
+    if (gameData->ledValue > -130)
     {
-        gameData->ledValue--;
+        gameData->ledValue -= 2;
         for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
             uint32_t rgb        = paletteToRGB((paletteColor_t)CLAMP((gameData->ledValue / 10) + i, 0, 216));
