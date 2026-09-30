@@ -145,7 +145,7 @@ bool installMidiUsb(void)
     tinyusb_config_t const tusb_cfg = {
         .device_descriptor        = NULL,
         .string_descriptor        = midiStringDescriptor,
-        .string_descriptor_count  = sizeof(midiStringDescriptor) / sizeof(midiStringDescriptor[0]),
+        .string_descriptor_count  = ARRAY_SIZE(midiStringDescriptor),
         .external_phy             = false,
         .configuration_descriptor = midiConfigDescriptor,
     };

@@ -201,6 +201,7 @@
 #include "menu.h"
 #include "menuManiaRenderer.h"
 #include "menuMegaRenderer.h"
+#include "menuZorldoRenderer.h"
 
 // Asset loaders
 #include "cnfs.h"

@@ -1,12 +1,13 @@
-# Super Magfest ESP32-S2 Swadge
+# Super Magfest ESP32-S2/S3 Swadge
 
-This is the firmware repository for the Super Magfest ESP32-S2 Swadges. The Swadge is a wearable swag-badge loaded with games and utilities. This project is based on the [Super Magfest 2023 Swadge](https://github.com/AEFeinstein/Super-2023-Swadge-FW).
+This is the firmware repository for the Super Magfest ESP32-S2/S3 Swadges. The Swadge is a wearable swag-badge loaded with games and utilities. This project is based on the [Super Magfest 2023 Swadge](https://github.com/AEFeinstein/Super-2023-Swadge-FW).
 
 The corresponding hardware repositories for various years can be found at:
 
 - [2024 - Gunship](https://github.com/AEFeinstein/Super-2024-Swadge-HW)
 - [2025 - Hot Dog](https://github.com/AEFeinstein/Super-2025-Swadge-HW)
 - [2026 - Alpha Pulse](https://github.com/AEFeinstein/Super-2026-Swadge-HW)
+- [2027 - Fairy](https://github.com/emilyanthony4244/Super-2027-Swadge-HW)
 
 If you have any questions, feel free to create a Github ticket or email us at circuitboards@magfest.org.
 
@@ -29,8 +30,8 @@ This project uses Github Actions to automatically build the firmware, emulator, 
 ## Directory Structure
 
 ### Code
-- [`main`](./main): The application code. This is platform-independent and is compiled into both firmware for the ESP32-S2 and an emulator for Windows or Linux.
-- [`components`](./components): The hardware abstraction code for ESP32-S2. This is only compiled into firmware.
+- [`main`](./main): The application code. This is platform-independent and is compiled into both firmware for the ESP32-S2 or ESP32-S3 and an emulator for Windows or Linux.
+- [`components`](./components): The hardware abstraction code for ESP32-S2 and ESP32-S3. This is only compiled into firmware.
 - [`emulator`](./emulator): The hardware abstraction code for the emulator. This is only compiled for Windows or Linux.
 
 ### Code Support

@@ -52,6 +52,14 @@ static void adc_calibration_deinit(adc_cali_handle_t handle);
  */
 void initBattmon(gpio_num_t gpio)
 {
+    if (GPIO_NUM_NC == gpio)
+    {
+        // VMON not supported on this platform
+        battMonGpio    = GPIO_NUM_NC;
+        is_initialized = false;
+        return;
+    }
+
     // Save for later
     battMonGpio = gpio;
 

@@ -37,6 +37,7 @@
 #include "factoryTest.h"
 #include "gamepad.h"
 #include "gossipStone.h"
+#include "gottaGo.h"
 #include "introMode.h"
 #include "jukebox.h"
 #include "keebTest.h"
@@ -53,6 +54,7 @@
 #include "trophyCase.h"
 #include "trophyTest.h"
 #include "tunernome.h"
+#include "heyListen.h"
 
 //==============================================================================
 // Function Prototypes

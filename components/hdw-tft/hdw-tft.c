@@ -87,6 +87,13 @@ static inline uint32_t get_cCount()
     #define SWAP_XY            false
     #define MIRROR_X           true
     #define MIRROR_Y           true
+#elif defined(CONFIG_ST7789_320x240)
+    #define LCD_PIXEL_CLOCK_HZ (80 * 1000 * 1000)
+    #define X_OFFSET           0
+    #define Y_OFFSET           0
+    #define SWAP_XY            false
+    #define MIRROR_X           false
+    #define MIRROR_Y           false
 #elif defined(CONFIG_GC9307_240x280)
 // A beautiful rounded edges LCD RB017A1505A
     #define LCD_PIXEL_CLOCK_HZ (80 * 1000 * 1000)
@@ -211,8 +218,8 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
 
 #if defined(CONFIG_ST7735_160x80)
     ESP_ERROR_CHECK(esp_lcd_new_panel_st7735(tft_io_handle, &panel_config, &panel_handle));
-#elif defined(CONFIG_ST7789_240x135) || defined(CONFIG_ST7789_240x240) || defined(CONFIG_ST7735_128x160) \
-    || defined(CONFIG_GC9307_240x280)
+#elif defined(CONFIG_ST7789_240x135) || defined(CONFIG_ST7789_240x240) || defined(CONFIG_ST7789_320x240) \
+    || defined(CONFIG_ST7735_128x160) || defined(CONFIG_GC9307_240x280)
     ESP_ERROR_CHECK(esp_lcd_new_panel_st7789(tft_io_handle, &panel_config, &panel_handle));
 #else
     #error "Please pick a screen size"

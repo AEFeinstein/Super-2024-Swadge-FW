@@ -44,6 +44,7 @@ typedef enum
 typedef struct
 {
     bool isHorz;
+    bool isLeft;
 
     mouseClickState_t clickState;
     int32_t mouseX;
@@ -64,7 +65,7 @@ typedef struct
 // Function Declarations
 //==============================================================================
 
-bool touchLinearInit(emuTouch_t* et, emuExtension_t* ext, const emuArgs_t* emuArgs, bool isHorz, const char* keys,
+bool touchLinearInit(emuTouch_t* et, emuExtension_t* ext, const emuArgs_t* emuArgs, bool isLeft, const char* keys,
                      uint8_t numKeys);
 int32_t touchLinearKey(emuTouch_t* et, uint32_t key, bool down, modKey_t modifiers);
 bool touchLinearMouseMove(emuTouch_t* et, int32_t x, int32_t y, mouseBit_t buttonMask);
