@@ -139,7 +139,7 @@ static void gs_enterMode(void)
     readNvs32("attendeesMisery", &gameData->attendeesMisery);
 
     // Initialize a menu renderer
-    gameData->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    gameData->menuRenderer = initMenuZorldoRenderer(NULL, NULL);
 
     // Initialize the main menu
     gameData->submode    = GS_MENU_SUBMODE;
@@ -249,7 +249,7 @@ static void gs_mainLoop(int64_t elapsedUs)
     {
         case GS_MENU_SUBMODE:
         {
-            drawMenuMega(gameData->menu, gameData->menuRenderer, elapsedUs);
+            drawMenuZorldo(gameData->menu, gameData->menuRenderer, elapsedUs);
             break;
         }
         case GS_GOSSIP_SUBMODE:
