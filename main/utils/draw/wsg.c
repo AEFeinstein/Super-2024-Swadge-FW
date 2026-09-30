@@ -421,12 +421,15 @@ void drawWsgSimpleScaledUp(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t
  * @param wsg  The WSG to draw to the display
  * @param xOff The x offset to draw the WSG at
  * @param yOff The y offset to draw the WSG at
- * @param scaleFactor 1 draws at half scale, 2 at quarter scale, etc...
+ * @param xScale 1 draws at half scale, 2 at quarter scale, etc...
+ * @param yScale 1 draws at half scale, 2 at quarter scale, etc...
  */
 void drawWsgSimpleScaledDown(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t xScale, int16_t yScale)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
+
+    //  Modified by DebrisHauler on 9/30 to support scaling down even further.
 
     if (NULL == wsg->px || xScale < 1 || yScale < 1 || xScale > 30 || yScale >> 30)
     {
@@ -434,12 +437,14 @@ void drawWsgSimpleScaledDown(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16
     }
 
     // Only draw in bounds
+    int xStep                    = 1 << xScale; // step over this many pixels in the source for each output sample.
+    int yStep                    = 1 << yScale;
     int dWidth                   = TFT_WIDTH;
     int wWidth                   = wsg->w;
     int xMin                     = CLAMP(xOff, 0, dWidth);
-    int xMax                     = CLAMP(xOff + (wWidth / (1 << xScale)), 0, dWidth);
+    int xMax                     = CLAMP(xOff + (wWidth / xStep), 0, dWidth);
     int yMin                     = CLAMP(yOff, 0, TFT_HEIGHT);
-    int yMax                     = CLAMP(yOff + (wsg->h / (1 << yScale)), 0, TFT_HEIGHT);
+    int yMax                     = CLAMP(yOff + (wsg->h / yStep), 0, TFT_HEIGHT);
     paletteColor_t* px           = getPxTftFramebuffer();
     int numX                     = xMax - xMin;
     int wsgY                     = (yMin - yOff);
@@ -452,15 +457,15 @@ void drawWsgSimpleScaledDown(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16
     {
         for (int x = 0; x < numX; x++)
         {
-            int color = linein[x * (1 << xScale)];
+            int color = linein[x * xStep];
             if (color != cTransparent)
             {
                 lineout[x] = color;
             }
         }
         lineout += dWidth;
-        linein += ((1 << yScale) * wWidth);
-        wsgY += (1 << yScale);
+        linein += (yStep * wWidth);
+        wsgY += yStep;
     }
 }
 
