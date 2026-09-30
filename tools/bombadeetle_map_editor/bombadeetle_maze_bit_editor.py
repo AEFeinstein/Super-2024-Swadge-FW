@@ -2,8 +2,6 @@ import json
 import os
 import struct
 import sys
-import tkinter as tk
-from tkinter import filedialog, messagebox
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -11,9 +9,6 @@ GRID_W = 12
 GRID_H = 9
 CELL = 48
 EDGE = 8
-
-HEADLESS = False
-PROCESS = False
 
 N,E,S,W = 8,4,2,1
 TELEPORTER = 16
@@ -41,6 +36,132 @@ selected=[0]
 current_path=[None]
 last_export_path=[None]
 last_direction=[DIR_W]
+
+global root
+root = None
+global canvas
+canvas = None
+
+def main():
+    HEADLESS = False
+    PROCESS = False
+
+    if (len(sys.argv) > 1):
+        p = 1
+
+        while p < len(sys.argv):
+            if (sys.argv[p] == '-o' or sys.argv[p] == "--output"):
+                PROCESS = True
+                if (p + 1 < len(sys.argv)):
+                    if (sys.argv[p + 1].startswith('-') == False):
+                        gPath = sys.argv[p + 1]
+                    
+            if (sys.argv[p] == '-i' or sys.argv[p] == '--input'):
+                if (p + 1 < len(sys.argv)):
+                    load_map_from_path(sys.argv[p + 1])
+                    if (gPath is None):
+                        gPath = sys.argv[p + 1].replace(".json", ".bin")
+                        print ("No file name set. Using " + gPath)
+
+                else:
+                    print ("Error! File not provided! Opening new blank file.")
+                
+            if (sys.argv[p] == '--headless' or sys.argv[p] == '-h'):
+                print ("\n\nBombadeetle map editor")
+                print ("Running headless, type -? for help")
+                HEADLESS = True
+
+            if (sys.argv[p] == '-?' or sys.argv[p] == '--help'):
+                print ("\n\nBombadeetle map editor")
+                print("-?, --help          show this help message")
+                print("-i, --input         Import default map")
+                print("-h, --headless      Do everything from the command line")
+                print("-o, --output        Set the name of the export binary")
+                quit()
+                
+            
+            p = p + 1
+
+    if not HEADLESS:
+        import tkinter as tk
+
+        global root
+        root=tk.Tk()
+        global canvas
+        canvas=tk.Canvas(root,width=GRID_W*CELL,height=GRID_H*CELL,bg="white")
+
+        root.title("Maze Editor - Untitled")
+
+        menubar=tk.Menu(root)
+        file_menu=tk.Menu(menubar,tearoff=0)
+        menubar.add_cascade(label="File",menu=file_menu)
+        root.config(menu=menubar)
+
+        canvas.pack()
+
+        canvas.bind("<Button-1>",click)
+
+        root.bind("<Key>",on_key)
+
+        file_menu.add_command(label="New",command=new_map,accelerator="Ctrl+N")
+        file_menu.add_command(label="Open...",command=open_map,accelerator="Ctrl+O")
+        file_menu.add_command(label="Save",command=save_map,accelerator="Ctrl+S")
+        file_menu.add_command(label="Save As...",command=save_map_as,accelerator="Ctrl+Shift+S")
+        file_menu.add_separator()
+        file_menu.add_command(label="Export Binary File",command=export_binary)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit",command=root.destroy)
+
+        root.bind("<Control-n>",lambda e: new_map())
+        root.bind("<Control-o>",lambda e: open_map())
+        root.bind("<Control-s>",lambda e: save_map())
+        root.bind("<Control-S>",lambda e: save_map_as())
+
+        name_frame=tk.Frame(root)
+        name_frame.pack(pady=(8,0))
+        tk.Label(name_frame,text="Name").pack(side="left",padx=(0,6))
+        name_var=tk.StringVar()
+
+        def _limit_name(*_):
+            value=name_var.get()
+            if len(value)>NAME_MAX:
+                name_var.set(value[:NAME_MAX])
+
+        name_var.trace_add("write",_limit_name)
+        name_entry=tk.Entry(name_frame,textvariable=name_var,width=NAME_MAX+2)
+        name_entry.pack(side="left")
+
+        btns=tk.Frame(root)
+        btns.pack(pady=5)
+        tk.Button(btns,text="Bombadeetle",command=toggle_bombadeetle).pack(side="left",padx=4)
+        tk.Button(btns,text="Goal",command=toggle_goal).pack(side="left",padx=4)
+        tk.Button(btns,text="Hole",command=toggle_hole).pack(side="left",padx=4)
+        tk.Button(btns,text="Teleporter",command=toggle_teleporter).pack(side="left",padx=4)
+        tk.Button(btns,text="Enemy",command=toggle_enemy).pack(side="left",padx=4)
+
+        hint=tk.Label(root,text="Select a Bombadeetle/Enemy tile, then use W/A/S/D to set facing.")
+        hint.pack(pady=(0,4))
+
+        arrows_frame=tk.LabelFrame(root,text="Arrow counts",padx=8,pady=6)
+        arrows_frame.pack(pady=5)
+
+        arrow_entries={}
+        for col,key,label in ((0,"left","Left"),(1,"up","Up"),(2,"down","Down"),(3,"right","Right")):
+            tk.Label(arrows_frame,text=label).grid(row=0,column=col,padx=8)
+            entry=tk.Entry(arrows_frame,width=6,justify="center")
+            entry.insert(0,"0")
+            entry.grid(row=1,column=col,padx=8,pady=2)
+            arrow_entries[key]=entry
+
+        redraw()
+
+    if not HEADLESS:
+        root.mainloop()
+    else:
+        if (PROCESS == True) and ((gPath is None) == False):
+            export_binary()
+            print ("Export "+ gPath+ " complete")
+
 
 def export_dialog_kwargs():
     kwargs={
@@ -126,17 +247,6 @@ def update_title():
     name=current_path[0] if current_path[0] else "Untitled"
     root.title("Maze Editor - %s"%name)
 
-root=tk.Tk()
-root.title("Maze Editor - Untitled")
-
-menubar=tk.Menu(root)
-file_menu=tk.Menu(menubar,tearoff=0)
-menubar.add_cascade(label="File",menu=file_menu)
-root.config(menu=menubar)
-
-canvas=tk.Canvas(root,width=GRID_W*CELL,height=GRID_H*CELL,bg="white")
-canvas.pack()
-
 def facing_line(cx,cy,x0,y0,x1,y1,direction,color):
     if direction==DIR_N:
         canvas.create_line(cx,cy,cx,y0+12,width=2,fill=color)
@@ -217,8 +327,6 @@ def click(event):
         selected[0]=idx(x,y)
         redraw()
 
-canvas.bind("<Button-1>",click)
-
 def toggle_special(bit):
     i=selected[0]
     if maze[i]&bit:
@@ -280,8 +388,6 @@ def on_key(event):
         set_selected_direction(DIR_S)
     elif key=="d":
         set_selected_direction(DIR_E)
-
-root.bind("<Key>",on_key)
 
 def new_map():
     for i in range(len(maze)):
@@ -380,6 +486,7 @@ def load_map_from_path(path):
     redraw()
 
 def open_map():
+    from tkinter import filedialog, messagebox
     path=filedialog.askopenfilename(
         title="Open Map",
         initialdir=APP_DIR,
@@ -409,6 +516,7 @@ def write_map(path):
     update_title()
 
 def save_map():
+    from tkinter import messagebox
     if current_path[0]:
         try:
             write_map(current_path[0])
@@ -418,6 +526,7 @@ def save_map():
         save_map_as()
 
 def save_map_as():
+    from tkinter import filedialog, messagebox
     path=filedialog.asksaveasfilename(
         title="Save Map As",
         initialdir=APP_DIR,
@@ -442,6 +551,7 @@ def export_grid(out,name,grid):
     out.append("};")
 
 def export_binary():
+    from tkinter import filedialog, messagebox
     global gPath
     try:
         arrows=get_arrow_counts()
@@ -481,100 +591,6 @@ def export_binary():
     except Exception as e:
         messagebox.showerror("Export failed",str(e))
 
-file_menu.add_command(label="New",command=new_map,accelerator="Ctrl+N")
-file_menu.add_command(label="Open...",command=open_map,accelerator="Ctrl+O")
-file_menu.add_command(label="Save",command=save_map,accelerator="Ctrl+S")
-file_menu.add_command(label="Save As...",command=save_map_as,accelerator="Ctrl+Shift+S")
-file_menu.add_separator()
-file_menu.add_command(label="Export Binary File",command=export_binary)
-file_menu.add_separator()
-file_menu.add_command(label="Exit",command=root.destroy)
 
-root.bind("<Control-n>",lambda e: new_map())
-root.bind("<Control-o>",lambda e: open_map())
-root.bind("<Control-s>",lambda e: save_map())
-root.bind("<Control-S>",lambda e: save_map_as())
-
-name_frame=tk.Frame(root)
-name_frame.pack(pady=(8,0))
-tk.Label(name_frame,text="Name").pack(side="left",padx=(0,6))
-name_var=tk.StringVar()
-
-def _limit_name(*_):
-    value=name_var.get()
-    if len(value)>NAME_MAX:
-        name_var.set(value[:NAME_MAX])
-
-name_var.trace_add("write",_limit_name)
-name_entry=tk.Entry(name_frame,textvariable=name_var,width=NAME_MAX+2)
-name_entry.pack(side="left")
-
-btns=tk.Frame(root)
-btns.pack(pady=5)
-tk.Button(btns,text="Bombadeetle",command=toggle_bombadeetle).pack(side="left",padx=4)
-tk.Button(btns,text="Goal",command=toggle_goal).pack(side="left",padx=4)
-tk.Button(btns,text="Hole",command=toggle_hole).pack(side="left",padx=4)
-tk.Button(btns,text="Teleporter",command=toggle_teleporter).pack(side="left",padx=4)
-tk.Button(btns,text="Enemy",command=toggle_enemy).pack(side="left",padx=4)
-
-hint=tk.Label(root,text="Select a Bombadeetle/Enemy tile, then use W/A/S/D to set facing.")
-hint.pack(pady=(0,4))
-
-arrows_frame=tk.LabelFrame(root,text="Arrow counts",padx=8,pady=6)
-arrows_frame.pack(pady=5)
-
-arrow_entries={}
-for col,key,label in ((0,"left","Left"),(1,"up","Up"),(2,"down","Down"),(3,"right","Right")):
-    tk.Label(arrows_frame,text=label).grid(row=0,column=col,padx=8)
-    entry=tk.Entry(arrows_frame,width=6,justify="center")
-    entry.insert(0,"0")
-    entry.grid(row=1,column=col,padx=8,pady=2)
-    arrow_entries[key]=entry
-
-redraw()
-
-if (len(sys.argv) > 1):
-    p = 1
-
-    while p < len(sys.argv):
-        if (sys.argv[p] == '-o' or sys.argv[p] == "--output"):
-            PROCESS = True
-            if (p + 1 < len(sys.argv)):
-                if (sys.argv[p + 1].startswith('-') == False):
-                    gPath = sys.argv[p + 1]
-                
-        if (sys.argv[p] == '-i' or sys.argv[p] == '--input'):
-            if (p + 1 < len(sys.argv)):
-                load_map_from_path(sys.argv[p + 1])
-                if (gPath is None):
-                    gPath = sys.argv[p + 1].replace(".json", ".bin")
-                    print ("No file name set. Using " + gPath)
-
-            else:
-                print ("Error! File not provided! Opening new blank file.")
-            
-        if (sys.argv[p] == '--headless' or sys.argv[p] == '-h'):
-            print ("\n\nBombadeetle map editor")
-            print ("Running headless, type -? for help")
-            HEADLESS = True
-
-        if (sys.argv[p] == '-?' or sys.argv[p] == '--help'):
-            print ("\n\nBombadeetle map editor")
-            print("-?, --help          show this help message")
-            print("-i, --input         Import default map")
-            print("-h, --headless      Do everything from the command line")
-            print("-o, --output        Set the name of the export binary")
-            quit()
-            
-        
-        p = p + 1
-
-
-
-if (HEADLESS == False):
-    root.mainloop()
-else:
-    if (PROCESS == True) and ((gPath is None) == False):
-        export_binary()
-        print ("Export "+ gPath+ " complete")
-        
+if __name__ == "__main__":
+    sys.exit(main())
