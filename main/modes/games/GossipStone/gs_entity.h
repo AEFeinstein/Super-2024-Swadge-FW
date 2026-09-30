@@ -25,6 +25,7 @@ typedef enum
     GS_OCEAN_DATA,
     GS_PARTICLE_DATA,
     GS_HILL_DATA,
+    GS_WIND_DATA,
 } gs_dataType_t;
 
 //==============================================================================
@@ -170,6 +171,11 @@ typedef struct
     uint8_t colorScaling;
 } gs_crystalBall_t;
 
+typedef struct
+{
+    int16_t yvel;
+} gs_wind_t;
+
 //==============================================================================
 // Prototypes
 //==============================================================================
@@ -214,3 +220,5 @@ void gs_drawParticle(gs_entity_t* self);
 void gs_updateCrystalBall(gs_entity_t* self);
 void gs_drawCrystalBall(gs_entity_t* self);
 void gs_switchMoonSubmode(gs_entity_t* self);
+void gs_updateWind(gs_entity_t* self);
+void gs_drawWindDebug(gs_entity_t* self);

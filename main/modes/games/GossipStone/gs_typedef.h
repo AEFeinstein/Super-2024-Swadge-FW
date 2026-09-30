@@ -45,6 +45,9 @@ typedef enum __attribute__((packed))
     GS_LANDING_ASSET,
     GS_WAVE_ASSET,
     GS_CRYSTAL_ASSET,
+    GS_GRASS_A_ASSET,
+    GS_GRASS_B_ASSET,
+    GS_GRASS_C_ASSET,
     GS_NO_ASSET, // Keep this one at the end of the enum. Used for entities with no wsgs.
 } gs_assetIdx_t;
 

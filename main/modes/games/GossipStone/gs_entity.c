@@ -1138,3 +1138,45 @@ void gs_switchMoonSubmode(gs_entity_t* self)
 {
     self->gameData->newSubmode = GS_MOON_SUBMODE;
 }
+
+void gs_updateWind(gs_entity_t* self)
+{
+    gs_wind_t* wData = (gs_wind_t*)self->data;
+    self->pos.x += 3000 * self->gameData->elapsedUs >> 20;
+    self->pos.y += wData->yvel * self->gameData->elapsedUs >> 20;
+    if (self->pos.x > self->gameData->entityManager.camera.pos.x + (300 << DECIMAL_BITS))
+    {
+        self->pos.x = self->gameData->entityManager.camera.pos.x - (280 << DECIMAL_BITS);
+        self->pos.y = self->gameData->entityManager.camera.pos.y
+                      + gs_randomInt(0, 200 << DECIMAL_BITS) * (gs_randomInt(0, 1) == 0 ? 1 : -1);
+        wData->yvel = gs_randomInt(-3000, 3000);
+    }
+    node_t* cur = self->gameData->entityManager.entities->first;
+    while (cur)
+    {
+        gs_entity_t* grass = (gs_entity_t*)cur->val;
+        if (grass->assetIndex >= GS_GRASS_A_ASSET && grass->assetIndex <= GS_GRASS_C_ASSET)
+        {
+            int32_t sqDist = sqMagVec2d(subVec2d(grass->pos, self->pos));
+            if (sqDist < 6553600)
+            {
+                grass->gameFramesPerAnimationFrame = CLAMP((((int)sqrt((double)sqDist)) >> 9), 8, 255);
+                grass->paused                      = false;
+            }
+            else
+            {
+                // grass->gameFramesPerAnimationFrame = gs_randomInt(240,255);
+                // grass->animationTimer = gs_randomInt(0,255);
+                grass->paused = true;
+            }
+        }
+        cur = cur->next;
+    }
+}
+
+void gs_drawWindDebug(gs_entity_t* self)
+{
+    int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS) + (TFT_WIDTH >> 1);
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1);
+    drawCircle(x, y, 160, c500);
+}

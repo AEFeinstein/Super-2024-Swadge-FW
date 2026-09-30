@@ -483,6 +483,9 @@ void gs_submodeStateExit(void)
             case GS_LANDING_ASSET:
             case GS_CRYSTAL_ASSET:
             case GS_WAVE_ASSET:
+            case GS_GRASS_A_ASSET:
+            case GS_GRASS_B_ASSET:
+            case GS_GRASS_C_ASSET:
                 gs_freeData(curNode->val);
                 gs_freeAsset(&gameData->assets[((gs_entity_t*)curNode->val)->assetIndex]);
                 removeEntry(gameData->entityManager.entities, curNode);
@@ -564,6 +567,9 @@ void gs_submodeStateEnter(gs_submode_t submode)
             gs_loadAsset(HILL_WSG, 1, &gameData->assets[GS_HILL_ASSET]);
             gs_loadAsset(MOON_WSG, 1, &gameData->assets[GS_MOON_ASSET]);
             gs_loadAsset(WAVE_0_WSG, 5, &gameData->assets[GS_WAVE_ASSET]);
+            gs_loadAsset(GRASS_A0_WSG, 4, &gameData->assets[GS_GRASS_A_ASSET]);
+            gs_loadAsset(GRASS_B0_WSG, 4, &gameData->assets[GS_GRASS_B_ASSET]);
+            gs_loadAsset(GRASS_C0_WSG, 4, &gameData->assets[GS_GRASS_C_ASSET]);
 
             node_t* gossipStoneNode = gs_findLastNodeOfType(gameData->entityManager.gossipStone, GS_GOSSIP_STONE_DATA);
             gs_entity_t* skyGradient
@@ -597,6 +603,42 @@ void gs_submodeStateEnter(gs_submode_t submode)
             gsData->angVel           = 0;
             gsData->rotateDeg        = (360 - 45) << DECIMAL_BITS;
             gsData->grounded         = true;
+
+            for (int i = 0; i < 200; i++)
+            {
+                vec_t screenPos = (vec_t){gs_randomInt(-140, 140), 0};
+                int16_t sine    = getSin1024((screenPos.x + 270) % 359);
+                screenPos.y     = gs_randomInt(85 + sine / 130, 120);
+                gs_entity_t* grass;
+                if (screenPos.y > 104)
+                {
+                    grass = gs_createEntity(&gameData->entityManager, 4, GS_LOOPING_ANIMATION, false,
+                                            GS_GRASS_A_ASSET + gs_randomInt(0, 2), gs_randomInt(240, 255),
+                                            addVec2d(gameData->entityManager.camera.pos,
+                                                     (vec_t){screenPos.x << DECIMAL_BITS, screenPos.y << DECIMAL_BITS}),
+                                            gameData);
+                }
+                else
+                {
+                    grass = gs_createEntityBefore(
+                        gossipStoneNode, &gameData->entityManager, 4, GS_LOOPING_ANIMATION, false,
+                        GS_GRASS_A_ASSET + gs_randomInt(0, 2), gs_randomInt(240, 255),
+                        addVec2d(gameData->entityManager.camera.pos,
+                                 (vec_t){screenPos.x << DECIMAL_BITS, screenPos.y << DECIMAL_BITS}),
+                        gameData);
+                }
+                grass->animationTimer = gs_randomInt(0, 255);
+            }
+            gs_entity_t* wind = gs_createEntity(
+                &gameData->entityManager, 0, GS_NO_ANIMATION, false, GS_NO_ASSET, 0,
+                addVec2d(gameData->entityManager.camera.pos, (vec_t){-4480, gs_randomInt(0, 120) << DECIMAL_BITS}),
+                gameData);
+            wind->dataType                 = GS_WIND_DATA;
+            wind->data                     = heap_caps_calloc(1, sizeof(gs_wind_t), MALLOC_CAP_SPIRAM);
+            ((gs_wind_t*)wind->data)->yvel = gs_randomInt(-50, 50);
+            wind->updateFunction           = gs_updateWind;
+            wind->drawFunction             = NULL; // gs_drawWindDebug;
+
             break;
         }
         default:
