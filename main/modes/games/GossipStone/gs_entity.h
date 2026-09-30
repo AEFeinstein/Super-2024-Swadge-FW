@@ -222,3 +222,4 @@ void gs_drawCrystalBall(gs_entity_t* self);
 void gs_switchMoonSubmode(gs_entity_t* self);
 void gs_updateWind(gs_entity_t* self);
 void gs_drawWindDebug(gs_entity_t* self);
+void gs_spawnOneGrass(gs_entity_t* self);

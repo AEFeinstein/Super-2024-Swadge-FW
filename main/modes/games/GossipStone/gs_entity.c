@@ -146,6 +146,10 @@ void gs_updateGossip(gs_entity_t* self)
         if (self->gameData->submode == GS_GOSSIP_SUBMODE)
         {
             gs_recordProgress(self);
+            if (self->gameData->entityManager.entities->length < 520)
+            {
+                gs_spawnOneGrass(self);
+            }
         }
     }
 }
@@ -1179,4 +1183,32 @@ void gs_drawWindDebug(gs_entity_t* self)
     int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS) + (TFT_WIDTH >> 1);
     int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1);
     drawCircle(x, y, 160, c500);
+}
+
+void gs_spawnOneGrass(gs_entity_t* self)
+{
+    vec_t screenPos = (vec_t){gs_randomInt(-140, 140), 0};
+    int16_t sine    = getSin1024((screenPos.x + 270) % 359);
+    screenPos.y     = gs_randomInt(85 + sine / 130, 120);
+    gs_entity_t* grass;
+    if (screenPos.y > 104)
+    {
+        grass = gs_createEntity(
+            &self->gameData->entityManager, 4, GS_LOOPING_ANIMATION, false, GS_GRASS_A_ASSET + gs_randomInt(0, 2),
+            gs_randomInt(240, 255),
+            addVec2d(self->gameData->entityManager.camera.pos, (vec_t){screenPos.x * 16, screenPos.y * 16}),
+            self->gameData);
+    }
+    else
+    {
+        node_t* gossipStoneNode
+            = gs_findLastNodeOfType(self->gameData->entityManager.gossipStone, GS_GOSSIP_STONE_DATA);
+        grass = gs_createEntityBefore(
+            gossipStoneNode, &self->gameData->entityManager, 4, GS_LOOPING_ANIMATION, false,
+            GS_GRASS_A_ASSET + gs_randomInt(0, 2), gs_randomInt(240, 255),
+            addVec2d(self->gameData->entityManager.camera.pos, (vec_t){screenPos.x * 16, screenPos.y * 16}),
+            self->gameData);
+    }
+    grass->currentAnimationFrame = gs_randomInt(0, 3);
+    grass->animationTimer        = gs_randomInt(0, 255);
 }

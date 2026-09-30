@@ -604,30 +604,9 @@ void gs_submodeStateEnter(gs_submode_t submode)
             gsData->rotateDeg        = (360 - 45) << DECIMAL_BITS;
             gsData->grounded         = true;
 
-            for (int i = 0; i < 200; i++)
+            for (int i = 0; i < MIN(-gameData->attendeesMisery, 500); i++)
             {
-                vec_t screenPos = (vec_t){gs_randomInt(-140, 140), 0};
-                int16_t sine    = getSin1024((screenPos.x + 270) % 359);
-                screenPos.y     = gs_randomInt(85 + sine / 130, 120);
-                gs_entity_t* grass;
-                if (screenPos.y > 104)
-                {
-                    grass = gs_createEntity(&gameData->entityManager, 4, GS_LOOPING_ANIMATION, false,
-                                            GS_GRASS_A_ASSET + gs_randomInt(0, 2), gs_randomInt(240, 255),
-                                            addVec2d(gameData->entityManager.camera.pos,
-                                                     (vec_t){screenPos.x << DECIMAL_BITS, screenPos.y << DECIMAL_BITS}),
-                                            gameData);
-                }
-                else
-                {
-                    grass = gs_createEntityBefore(
-                        gossipStoneNode, &gameData->entityManager, 4, GS_LOOPING_ANIMATION, false,
-                        GS_GRASS_A_ASSET + gs_randomInt(0, 2), gs_randomInt(240, 255),
-                        addVec2d(gameData->entityManager.camera.pos,
-                                 (vec_t){screenPos.x << DECIMAL_BITS, screenPos.y << DECIMAL_BITS}),
-                        gameData);
-                }
-                grass->animationTimer = gs_randomInt(0, 255);
+                gs_spawnOneGrass((gs_entity_t*)gameData->entityManager.entities->first->val);
             }
             gs_entity_t* wind = gs_createEntity(
                 &gameData->entityManager, 0, GS_NO_ANIMATION, false, GS_NO_ASSET, 0,
