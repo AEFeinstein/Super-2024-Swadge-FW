@@ -685,7 +685,7 @@ void gs_submodeStateEnter(gs_submode_t submode)
             {
                 cbData->colorScaling = 27;
                 sprintf(cbData->dynamicText, "After %d shakes, a new item appeared in the menu.\n",
-                        gameData->attendeesMisery * -1);
+                        (int)(gameData->attendeesMisery * -1));
                 crystalBall->updateFunction = gs_updateCrystalBall;
             }
             break;
