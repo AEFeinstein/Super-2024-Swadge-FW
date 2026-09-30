@@ -29,7 +29,7 @@ typedef struct gs_gameData_t
     gs_submode_t newSubmode;
     // Main Menu
     menu_t* menu;
-    menuMegaRenderer_t* menuRenderer;
+    menuZorldoRenderer_t* menuRenderer;
     font_t font_gossip; // IBM VGA 8 font
     font_t font_outline;
     font_t font_big; // Oxanium
