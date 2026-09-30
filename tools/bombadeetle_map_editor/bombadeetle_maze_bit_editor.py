@@ -42,10 +42,23 @@ root = None
 global canvas
 canvas = None
 
+global name_var
+name_var = None
+
+global arrow_entries
+arrow_entries={}
+
+global HEADLESS
+HEADLESS = False
+
 def main():
-    HEADLESS = False
+    global HEADLESS
+    global gPath
+    global arrow_entries
+
     PROCESS = False
 
+    map_to_load = None
     if (len(sys.argv) > 1):
         p = 1
 
@@ -58,7 +71,7 @@ def main():
                     
             if (sys.argv[p] == '-i' or sys.argv[p] == '--input'):
                 if (p + 1 < len(sys.argv)):
-                    load_map_from_path(sys.argv[p + 1])
+                    map_to_load = sys.argv[p + 1]
                     if (gPath is None):
                         gPath = sys.argv[p + 1].replace(".json", ".bin")
                         print ("No file name set. Using " + gPath)
@@ -120,6 +133,7 @@ def main():
         name_frame=tk.Frame(root)
         name_frame.pack(pady=(8,0))
         tk.Label(name_frame,text="Name").pack(side="left",padx=(0,6))
+        global name_var
         name_var=tk.StringVar()
 
         def _limit_name(*_):
@@ -145,7 +159,6 @@ def main():
         arrows_frame=tk.LabelFrame(root,text="Arrow counts",padx=8,pady=6)
         arrows_frame.pack(pady=5)
 
-        arrow_entries={}
         for col,key,label in ((0,"left","Left"),(1,"up","Up"),(2,"down","Down"),(3,"right","Right")):
             tk.Label(arrows_frame,text=label).grid(row=0,column=col,padx=8)
             entry=tk.Entry(arrows_frame,width=6,justify="center")
@@ -154,6 +167,12 @@ def main():
             arrow_entries[key]=entry
 
         redraw()
+    else:
+        for col,key,label in ((0,"left","Left"),(1,"up","Up"),(2,"down","Down"),(3,"right","Right")):
+            arrow_entries[key]='0'
+
+    if map_to_load is not None:
+        load_map_from_path(map_to_load)
 
     if not HEADLESS:
         root.mainloop()
@@ -161,6 +180,14 @@ def main():
         if (PROCESS == True) and ((gPath is None) == False):
             export_binary()
             print ("Export "+ gPath+ " complete")
+
+
+def showException(msg, e):
+    if not HEADLESS:
+        from tkinter import messagebox
+        messagebox.showerror(msg,str(e))
+    else:
+        print(f"{msg}: {str(e)}", file=sys.stderr)
 
 
 def export_dialog_kwargs():
@@ -405,15 +432,34 @@ def new_map():
     redraw()
 
 def get_name():
-    return name_var.get()[:NAME_MAX]
+    global name_var
+    global HEADLESS
+
+    if not HEADLESS:
+        return name_var.get()[:NAME_MAX]
+    else:
+        return name_var[:NAME_MAX]
 
 def set_name(name=""):
-    name_var.set(str(name)[:NAME_MAX])
+    global name_var
+    global HEADLESS
+
+    if not HEADLESS:
+        name_var.set(str(name)[:NAME_MAX])
+    else:
+        # Running in headless
+        name_var = str(name)[:NAME_MAX]
 
 def get_arrow_counts():
+    global arrow_entries
+    global HEADLESS
     counts={}
     for key,entry in arrow_entries.items():
-        text=entry.get().strip()
+        if not HEADLESS:
+            text=entry.get().strip()
+        else:
+            text = entry
+
         if text=="":
             counts[key]=0
             continue
@@ -426,10 +472,18 @@ def get_arrow_counts():
     return counts
 
 def set_arrow_counts(left=0,up=0,down=0,right=0):
+    global arrow_entries
+    global HEADLESS
     values={"left":left,"up":up,"down":down,"right":right}
-    for key,entry in arrow_entries.items():
-        entry.delete(0,tk.END)
-        entry.insert(0,str(values[key]))
+
+    if not HEADLESS:
+        import tkinter as tk
+        for key,entry in arrow_entries.items():
+            entry.delete(0,tk.END)
+            entry.insert(0,str(values[key]))
+    else:
+        for key,entry in arrow_entries.items():
+            arrow_entries = values
 
 def load_map_from_path(path):
     with open(path,"r",encoding="utf-8") as f:
@@ -482,8 +536,11 @@ def load_map_from_path(path):
         right=int(arrows.get("right",0)),
     )
     current_path[0]=path
-    update_title()
-    redraw()
+
+    global HEADLESS
+    if not HEADLESS:
+        update_title()
+        redraw()
 
 def open_map():
     from tkinter import filedialog, messagebox
@@ -497,7 +554,7 @@ def open_map():
     try:
         load_map_from_path(path)
     except Exception as e:
-        messagebox.showerror("Open failed",str(e))
+        showException("Open failed",str(e))
 
 def write_map(path):
     data={
@@ -521,7 +578,7 @@ def save_map():
         try:
             write_map(current_path[0])
         except Exception as e:
-            messagebox.showerror("Save failed",str(e))
+            showException("Save failed",str(e))
     else:
         save_map_as()
 
@@ -538,7 +595,7 @@ def save_map_as():
     try:
         write_map(path)
     except Exception as e:
-        messagebox.showerror("Save failed",str(e))
+        showException("Save failed",str(e))
 
 def export_grid(out,name,grid):
     out.append("uint8_t %s[%d] ="%(name,GRID_W*GRID_H))
@@ -551,8 +608,8 @@ def export_grid(out,name,grid):
     out.append("};")
 
 def export_binary():
-    from tkinter import filedialog, messagebox
     global gPath
+    global HEADLESS
     try:
         arrows=get_arrow_counts()
         for key,value in arrows.items():
@@ -561,10 +618,11 @@ def export_binary():
         name_bytes=get_name().encode("ascii",errors="replace")[:NAME_MAX]
         name_bytes=name_bytes.ljust(NAME_MAX,b" ")
     except Exception as e:
-        messagebox.showerror("Export failed",str(e))
+        showException("Export failed", e)
         return
 
-    if (gPath is None):
+    if (gPath is None and not HEADLESS):
+        from tkinter import filedialog
         path=filedialog.asksaveasfilename(**export_dialog_kwargs())
     else:
         path = gPath
@@ -589,7 +647,7 @@ def export_binary():
         last_export_path[0]=path
 
     except Exception as e:
-        messagebox.showerror("Export failed",str(e))
+        showException("Export failed",str(e))
 
 
 if __name__ == "__main__":
