@@ -536,7 +536,7 @@ void gs_updateGossipStone(gs_entity_t* self)
     {
         // printf("elapsedUs: %d\n", self->gameData->touchState[0].position - 511);
         // printf("tmp %d\n", (self->gameData->touchState[0].position - 511) * self->gameData->elapsedUs >> 14);
-        gsData->angVel += (self->gameData->touchState[0].position - 511) * self->gameData->elapsedUs >> 14;
+        gsData->angVel += (1024 - self->gameData->touchState[0].position - 512) * self->gameData->elapsedUs >> 14;
     }
     // angular drag per frame
     gsData->angVel = gsData->angVel * 39 / 40;
