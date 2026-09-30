@@ -89,13 +89,13 @@ jobs:
       run: |
         # Not installing graphviz here because we don't actually build the docs and brew has trouble with its dependencies
         # Not installing cmake either because it seems to be already installed from another source and brew can't handle that
-        brew install xquartz libxinerama clang-format cppcheck wget doxygen dylibbundler
+        brew install xquartz libxinerama clang-format cppcheck wget doxygen dylibbundler python-tk
 
     - name: Install apt packages
       if: matrix.family == 'linux'
       run: |
         sudo apt update
-        sudo apt install --fix-missing build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev git libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov gdb graphviz
+        sudo apt install --fix-missing build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev git libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov gdb graphviz python3-tk
 
     ## Firmware
     - name: Restore IDF Cache
