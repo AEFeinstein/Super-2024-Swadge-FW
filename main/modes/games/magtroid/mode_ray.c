@@ -268,7 +268,7 @@ static void rayEnterMode(void)
     setLeds(leds, CONFIG_NUM_LEDS);
 
     // Set frame rate to 30 FPS
-    setFrameRateUs(33333);
+    setFrameRateUs(1000000 / 60);
 
     // Check if a custom level should be loaded from NVS (a local file)
     size_t fLen = 0;
@@ -732,6 +732,9 @@ void rayStartGame(void)
 
     // Mark the starting tile as visited
     markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
+
+    // Check script from entering the initial cell
+    checkScriptEnter(ray, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
 
     // Set the default hue (blue)
     ray->targetLedHue = 170;

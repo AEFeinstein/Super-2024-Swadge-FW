@@ -68,6 +68,8 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
     newObj->c.bound.box.h = TO_FX_FRAC(newObj->c.sprite->h, CELL_SIZE);
     // Don't set radius
     newObj->c.spriteMirrored = false;
+    newObj->c.spriteRotation = 0;
+    newObj->c.solidColor     = cTransparent;
 
     // Add it to the linked list
     push(&ray->enemies, newObj);
@@ -140,7 +142,7 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
  */
 void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
-    if (enemy->getShotFn)
+    if (enemy->iFrameTimer <= 0 && enemy->getShotFn)
     {
         enemy->getShotFn(ray, enemy, bullet);
     }
@@ -156,6 +158,16 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
  */
 static bool animateEnemy(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 {
+    if (enemy->iFrameTimer > 0)
+    {
+        enemy->c.solidColor = ((4 * enemy->iFrameTimer) / ENEMY_DEFAULT_IFRAMES_US) & 0x01 ? c111 : c444;
+        enemy->iFrameTimer -= elapsedUs;
+    }
+    else
+    {
+        enemy->c.solidColor = cTransparent;
+    }
+
     if (enemy->mainFn)
     {
         return enemy->mainFn(ray, enemy, elapsedUs);

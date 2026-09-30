@@ -260,9 +260,6 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
         checkScriptHaveThing(ray, MAYOR_HOUSE_TRIGGER, ray->ps.sprite);
     }
 
-    // Check script from entering the initial cell
-    checkScriptEnter(ray, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
-
     // Only free data which was decompressed
     if (decompressedData)
     {
@@ -301,9 +298,12 @@ void rayCreateCommonObj(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, 
     rayObjCommon_t* newObj = (rayObjCommon_t*)heap_caps_calloc(1, sizeof(rayObjCommon_t), MALLOC_CAP_SPIRAM);
 
     // Set type, sprite and ID
-    newObj->type   = type;
-    newObj->sprite = getTexByType(ray, type);
-    newObj->id     = id;
+    newObj->type           = type;
+    newObj->sprite         = getTexByType(ray, type);
+    newObj->spriteMirrored = false;
+    newObj->spriteRotation = 0;
+    newObj->solidColor     = cTransparent;
+    newObj->id             = id;
 
     // Set spatial values
     newObj->posX        = x;

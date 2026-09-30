@@ -232,9 +232,8 @@ void rayEnemyGruntGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet
         case OBJ_BULLET_SHIELD_2:
         case OBJ_BULLET_SHIELD_3:
         {
-            // TODO start enemy iframes
-            // TODO visual indicator enemy was hit
             enemy->health--;
+            enemy->iFrameTimer = ENEMY_DEFAULT_IFRAMES_US;
             break;
         }
         default:

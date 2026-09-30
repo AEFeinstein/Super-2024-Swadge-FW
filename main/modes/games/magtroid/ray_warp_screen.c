@@ -6,6 +6,7 @@
 #include "ray_map.h"
 #include "ray_player.h"
 #include "2d_renderer.h"
+#include "ray_script.h"
 
 //==============================================================================
 // Functions
@@ -128,6 +129,9 @@ void warpToDestination(ray_t* ray)
 
     // Mark the starting tile as visited
     markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
+
+    // Check script from entering the initial cell
+    checkScriptEnter(ray, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
 
     // Loop SFX after saving
     // ray->sfx_warp.shouldLoop = false;

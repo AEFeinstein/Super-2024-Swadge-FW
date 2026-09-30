@@ -55,8 +55,11 @@ void rayCreateBullet(ray_t* ray, rayMapCellType_t bulletType, q24_8 posX, q24_8 
             newBullet->c.id = isPlayer ? 1 : 0;
 
             // Set the texture
-            wsg_t* texture      = getTexByType(ray, bulletType);
-            newBullet->c.sprite = texture;
+            wsg_t* texture              = getTexByType(ray, bulletType);
+            newBullet->c.sprite         = texture;
+            newBullet->c.spriteMirrored = false;
+            newBullet->c.spriteRotation = 0;
+            newBullet->c.solidColor     = cTransparent;
             if (OBJ_BULLET_BOMB == bulletType)
             {
                 // Bombs start with a negative radius to not collide with enemies
@@ -678,7 +681,6 @@ void checkRayCollisions(ray_t* ray)
                     // Decrease HP based on the shot and enemy type
                     rayEnemyGetShot(ray, enemy, bullet->c.type);
 
-                    // TODO enemies need i-frames to avoid being hit twice from explosions that don't immediately
                     // de-spawn (and sword)
                     if (bullet->fuseUs < 0)
                     {

@@ -140,9 +140,8 @@ void rayEnemyTurretGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bulle
         case OBJ_BULLET_SHIELD_3:
         {
             // Reflected bullets damage the turret
-            // TODO start enemy iframes
-            // TODO visual indicator enemy was hit
             enemy->health--;
+            enemy->iFrameTimer = ENEMY_DEFAULT_IFRAMES_US;
             break;
         }
         case OBJ_BULLET_SWORD:

@@ -630,10 +630,11 @@ typedef struct
             q24_8 h; ///< Bounding box height (must be negative when using radius instead of box)
         } box;
     } bound;
-    rayMapCellType_t type;  ///< The object's type
-    int32_t id;             ///< This object's ID
-    bool spriteMirrored;    ///< Whether or not the sprite should be drawn mirrored
-    int16_t spriteRotation; ///< Degrees rotation
+    rayMapCellType_t type;     ///< The object's type
+    int32_t id;                ///< This object's ID
+    bool spriteMirrored;       ///< Whether or not the sprite should be drawn mirrored
+    int16_t spriteRotation;    ///< Degrees rotation
+    paletteColor_t solidColor; ///< A solid color to draw the sprite as, or cTransparent to ignore
 } rayObjCommon_t;
 
 /**
@@ -666,9 +667,10 @@ typedef rayMapCellType_t (*rayEnemyDropAfterDeath_t)(void);
  */
 typedef struct rayEnemy
 {
-    rayObjCommon_t c; ///< Common object properties
-    int32_t health;   ///< The enemy's health
-    wsg_t* portrait;  ///< Portrait used for scripts
+    rayObjCommon_t c;    ///< Common object properties
+    int32_t health;      ///< The enemy's health
+    wsg_t* portrait;     ///< Portrait used for scripts
+    int32_t iFrameTimer; ///< Timer for invincibility frames
     rayEnemyMain_t mainFn;
     rayEnemyCheckCollision_t collisionFn;
     rayEnemyGetShot_t getShotFn;

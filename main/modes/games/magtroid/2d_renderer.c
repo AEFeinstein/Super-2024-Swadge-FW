@@ -118,9 +118,10 @@ static void drawCommonList(list_t* list, int camX, int camY, paletteColor_t bbCo
     while (node)
     {
         rayObjCommon_t* obj = node->val;
-        drawWsg(obj->sprite,                                    //
-                TO_PX(obj->posX) - camX - (obj->sprite->w / 2), //
-                TO_PX(obj->posY) - camY - (obj->sprite->h / 2), obj->spriteMirrored, false, obj->spriteRotation);
+        drawWsgSolid(obj->sprite,                                    //
+                     TO_PX(obj->posX) - camX - (obj->sprite->w / 2), //
+                     TO_PX(obj->posY) - camY - (obj->sprite->h / 2), obj->spriteMirrored, false, obj->spriteRotation,
+                     obj->solidColor);
 
         if (cTransparent != bbColor)
         {
@@ -230,8 +231,8 @@ void drawForeground2d(ray_t* ray)
         drawEllipseFilled(pSpriteX + spriteRadius, pSpriteY + ray->ps.sprite->h, spriteRadius, spriteRadius / 2, c111);
     }
 
-    drawWsg(ray->ps.sprite, pSpriteX, pSpriteY + TO_PX(ray->ps.jumpPos), false, false,
-            rayGetEightWayAngle(ray->p.dirX, ray->p.dirY));
+    drawWsgSolid(ray->ps.sprite, pSpriteX, pSpriteY + TO_PX(ray->ps.jumpPos), false, false,
+                 rayGetEightWayAngle(ray->p.dirX, ray->p.dirY), cTransparent);
     // rectangle_t bb = rayGetPlayerBB(ray);
     // drawRect(TO_PX(bb.pos.x) - camX,            //
     //          TO_PX(bb.pos.y) - camY,            //
@@ -307,6 +308,8 @@ void drawForeground2d(ray_t* ray)
     xOff += mpoint->w + X_SPACING;
     drawText(&ray->ibm, c555, mpointCount, xOff, (mpoint->h - ray->ibm.height) / 2);
     xOff += mPointTextWidth + X_SPACING;
+
+    // DRAW_FPS_COUNTER(ray->ibm);
 }
 
 /**

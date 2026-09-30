@@ -101,8 +101,10 @@ void rotatePixel(int32_t* x, int32_t* y, int32_t rotateDeg, int32_t width, int32
  * @param flipLR true to flip the image across the Y axis
  * @param flipUD true to flip the image across the X axis
  * @param rotateDeg The number of degrees to rotate clockwise, must be 0-359
+ * @param solidColor A single color to use for each pixel, or cTransparent to ignore
  */
-void drawWsg(const wsg_t* wsg, int32_t xOff, int32_t yOff, bool flipLR, bool flipUD, int32_t rotateDeg)
+void drawWsgSolid(const wsg_t* wsg, int32_t xOff, int32_t yOff, bool flipLR, bool flipUD, int32_t rotateDeg,
+                  paletteColor_t solidColor)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-08, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
@@ -154,6 +156,11 @@ void drawWsg(const wsg_t* wsg, int32_t xOff, int32_t yOff, bool flipLR, bool fli
                 paletteColor_t color = linein[readX];
                 if (cTransparent != color)
                 {
+                    if (solidColor < cTransparent)
+                    {
+                        color = solidColor;
+                    }
+
                     int32_t tx = srcX;
                     int32_t ty = srcY;
 
@@ -261,6 +268,10 @@ void drawWsg(const wsg_t* wsg, int32_t xOff, int32_t yOff, bool flipLR, bool fli
                 uint8_t color = linein[srcX];
                 if (cTransparent != color)
                 {
+                    if (solidColor < cTransparent)
+                    {
+                        color = solidColor;
+                    }
                     px[dstx] = color;
                 }
                 dstx++;
