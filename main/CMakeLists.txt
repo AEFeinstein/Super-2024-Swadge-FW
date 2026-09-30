@@ -172,7 +172,7 @@ add_custom_target(dummy_target ALL
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/../.assets_ts
     COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/assets_preprocessor -c ${CMAKE_CURRENT_SOURCE_DIR}/../assets.conf -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/ -t ${CMAKE_CURRENT_SOURCE_DIR}/../.assets_ts
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/assets_preprocessor -c ${CMAKE_CURRENT_SOURCE_DIR}/../assets.conf -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/ -t ${CMAKE_CURRENT_SOURCE_DIR}/../.assets_ts -r ${CMAKE_CURRENT_SOURCE_DIR}/..
     DEPENDS always_rebuild
 )
 

@@ -15,7 +15,9 @@
                 "-o",
                 "../../assets_image/",
                 "-c",
-                "../../assets.conf"
+                "../../assets.conf",
+                "-r",
+                "../.."
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
