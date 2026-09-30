@@ -88,12 +88,10 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
         // Get a pointer from the linked list
         rayEnemy_t* enemy = ((rayEnemy_t*)currentNode->val);
 
-        // TODO Call function to move enemies, run timers, update state, pick current sprite
         if (animateEnemy(ray, enemy, elapsedUs))
         {
             // Enemy was killed
-            // TODO function for portrait
-            checkScriptKill(ray, enemy->c.id, NULL);
+            checkScriptKill(ray, enemy->c.id, enemy->portrait);
 
             // save the next node
             node_t* nextNode = currentNode->next;

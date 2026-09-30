@@ -37,6 +37,7 @@ void rayInitEnemyTurret(ray_t* ray, rayEnemy_t* e)
 {
     // Turret has one texture, for now
     e->c.sprite = loadTexture(ray, OBJ_ENEMY_TURRET_WSG, OBJ_ENEMY_TURRET);
+    e->portrait = e->c.sprite;
 
     // Also load bullet textures
     loadTexture(ray, OBJ_BULLET_SHIELD_0_WSG, OBJ_BULLET_SHIELD_0);

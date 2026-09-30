@@ -69,84 +69,98 @@ const rayMapMetadata_t mapMetadata[] = {
     {
         .name       = "Tomi's House",
         .visitedKey = "tqvth",
+        .style      = MS_FOREST,
         .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = TOMIS_HOUSE_RMH,
     },
     {
         .name       = "Fairy Glen",
         .visitedKey = "tqvfg",
+        .style      = MS_FOREST,
         .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = FAIRY_GLEN_RMH,
     },
     {
         .name       = "Secluded Woods",
         .visitedKey = "tqvsw",
+        .style      = MS_FOREST,
         .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = SECLUDED_WOODS_RMH,
     },
     {
         .name       = "The Clearing",
         .visitedKey = "tqvtc",
+        .style      = MS_FOREST,
         .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = THE_CLEARING_RMH,
     },
     {
         .name       = "The Great DeeJay Tree",
         .visitedKey = "tqvdj",
+        .style      = MS_FOREST,
         .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = THE_GREAT_DEEJAY_TREE_RMH,
     },
     {
         .name       = "Gaylordia Field",
         .visitedKey = "tqvgf",
+        .style      = MS_FIELD,
         .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = GAYLORDIA_FIELD_RMH,
     },
     {
         .name       = "Dungeon 1",
         .visitedKey = "tqvd1",
+        .style      = MS_DUNGEON,
         .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = DUNGEON_1_RMH,
     },
     {
         .name       = "Dungeon 2",
         .visitedKey = "tqvd2",
+        .style      = MS_DUNGEON,
         .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = DUNGEON_2_RMH,
     },
     {
         .name       = "Dungeon 3",
         .visitedKey = "tqvd3",
+        .style      = MS_DUNGEON,
         .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = DUNGEON_3_RMH,
     },
     {
         .name       = "Dungeon 4",
         .visitedKey = "tqvd4",
+        .style      = MS_DUNGEON,
         .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = DUNGEON_4_RMH,
     },
     {
         .name       = "Town Square",
         .visitedKey = "tqvts",
+        .style      = MS_TOWN,
         .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = TOWN_SQUARE_RMH,
     },
     {
         .name       = "Fredward's Item Shop",
         .visitedKey = "tqvis",
+        .style      = MS_BUILDING,
         .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = FREDWARDS_ITEM_SHOP_RMH,
     },
     {
         .name       = "Mayor's House",
         .visitedKey = "tqvmh",
+        .style      = MS_BUILDING,
         .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = MAYORS_HOUSE_RMH,
     },
     {
         .name       = "Shrine of the Great Fairies",
         .visitedKey = "tqvsg",
+        .style      = MS_TOWN,
         .bgmFile    = ADVENTURE_AWAITS_MID,
         .mapFile    = SHRINE_OF_THE_GREAT_FAIRIES_RMH,
     },
@@ -724,9 +738,6 @@ void rayStartGame(void)
 
     // Set the initial screen
     raySwitchToScreen(RAY_GAME);
-
-    // Check script from entering the initial cell
-    checkScriptEnter(ray, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
 }
 
 /**
@@ -848,4 +859,46 @@ const rayMapMetadata_t* getRayMapMetadata(uint32_t idx)
         return &mapMetadata[idx];
     }
     return NULL;
+}
+
+/**
+ * @brief Get the default floor tile for the current map style
+ *
+ * @return The default floor tile for the current map
+ */
+rayMapCellType_t rayGetDefaultFloor(void)
+{
+    switch (mapMetadata[ray->p.mapId].style)
+    {
+        case MS_DUNGEON:
+        {
+            return BG_FLOOR_DUNGEON;
+        }
+        default:
+        {
+            return BG_FLOOR_GRASS;
+        }
+    }
+    return BG_FLOOR_GRASS;
+}
+
+/**
+ * @brief Get the default floor tile for the current map style
+ *
+ * @return The default floor tile for the current map
+ */
+rayMapCellType_t rayGetDefaultDoor(void)
+{
+    switch (mapMetadata[ray->p.mapId].style)
+    {
+        case MS_DUNGEON:
+        {
+            return BG_DOOR_31;
+        }
+        default:
+        {
+            return BG_DOOR_31;
+        }
+    }
+    return BG_DOOR_31;
 }

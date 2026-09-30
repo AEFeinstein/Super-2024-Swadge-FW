@@ -9,6 +9,7 @@ void rayInitEnemyBox(ray_t* ray, rayEnemy_t* e)
 {
     // Box has one texture
     e->c.sprite = loadTexture(ray, OBJ_ENEMY_BOX_WSG, OBJ_ENEMY_BOX);
+    e->portrait = e->c.sprite;
 
     // Box has 1hp to not die
     e->health = 1;

@@ -291,9 +291,15 @@ void drawForeground2d(ray_t* ray)
     xOff = TFT_WIDTH - X_MARGIN - mPointTextWidth - X_SPACING - mpoint->w - keyTextWidth - X_SPACING - key->w;
 
     // Draw Keys
-    drawWsgSimple(key, xOff, 0);
+    if (MS_DUNGEON == getRayMapMetadata(ray->p.mapId)->style)
+    {
+        drawWsgSimple(key, xOff, 0);
+    }
     xOff += key->w + X_SPACING;
-    drawText(&ray->ibm, c555, keyCount, xOff, (key->h - ray->ibm.height) / 2);
+    if (MS_DUNGEON == getRayMapMetadata(ray->p.mapId)->style)
+    {
+        drawText(&ray->ibm, c555, keyCount, xOff, (key->h - ray->ibm.height) / 2);
+    }
     xOff += keyTextWidth;
 
     // Draw MPoints

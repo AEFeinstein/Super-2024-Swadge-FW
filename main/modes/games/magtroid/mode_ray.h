@@ -420,6 +420,18 @@ typedef enum __attribute__((packed))
     SCRIPT_DOOR_OPEN, ///< This map tile has been visited and has a permanently-open door
 } rayTileState_t;
 
+/**
+ * @brief Enum for map styling
+ */
+typedef enum
+{
+    MS_FOREST,
+    MS_FIELD,
+    MS_DUNGEON,
+    MS_TOWN,
+    MS_BUILDING,
+} mapStyle_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -587,6 +599,7 @@ typedef struct
 {
     cnfsFileIdx_t mapFile;  ///< The map to load
     cnfsFileIdx_t bgmFile;  ///< The BGM for this map
+    mapStyle_t style;       ///< The style for this map
     const char* name;       ///< The name of this map
     const char* visitedKey; ///< The NVS key to store which tiles have been visited on this map
 } rayMapMetadata_t;
@@ -655,6 +668,7 @@ typedef struct rayEnemy
 {
     rayObjCommon_t c; ///< Common object properties
     int32_t health;   ///< The enemy's health
+    wsg_t* portrait;  ///< Portrait used for scripts
     rayEnemyMain_t mainFn;
     rayEnemyCheckCollision_t collisionFn;
     rayEnemyGetShot_t getShotFn;
@@ -885,5 +899,7 @@ void rayStartGame(void);
 void raySwitchToScreen(rayScreen_t newScreen);
 ray_t* getRayState(void);
 const rayMapMetadata_t* getRayMapMetadata(uint32_t idx);
+rayMapCellType_t rayGetDefaultFloor(void);
+rayMapCellType_t rayGetDefaultDoor(void);
 
 #endif

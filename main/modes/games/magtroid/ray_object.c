@@ -140,8 +140,7 @@ void moveRayObjects(ray_t* ray, uint32_t elapsedUs)
                         cell->openingDirection = 0;
 
                         // Turn DOOR into FLOOR
-                        cell->type &= ~DOOR;
-                        cell->type |= FLOOR;
+                        cell->type = rayGetDefaultFloor();
                     }
                 }
                 // Else if the door is closing
@@ -161,8 +160,7 @@ void moveRayObjects(ray_t* ray, uint32_t elapsedUs)
                             cell->openingDirection = 0;
 
                             // Turn FLOOR into DOOR
-                            cell->type &= ~FLOOR;
-                            cell->type |= DOOR;
+                            cell->type = rayGetDefaultDoor();
                         }
                     }
                 }

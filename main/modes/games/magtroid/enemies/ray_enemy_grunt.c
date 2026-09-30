@@ -41,6 +41,7 @@ void rayInitEnemyGrunt(ray_t* ray, rayEnemy_t* e)
 {
     // Grunt has one texture, for now
     e->c.sprite = loadTexture(ray, OBJ_ENEMY_GRUNT_WSG, OBJ_ENEMY_GRUNT);
+    e->portrait = e->c.sprite;
 
     // Grunt has 1hp to not die
     e->health = 3;

@@ -120,8 +120,7 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
                     map->tiles[x][y].doorOpen = TO_FX(1);
 
                     // Turn DOOR into FLOOR
-                    map->tiles[x][y].type &= ~DOOR;
-                    map->tiles[x][y].type |= FLOOR;
+                    map->tiles[x][y].type = rayGetDefaultFloor();
                 }
             }
 
@@ -261,6 +260,9 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
         checkScriptHaveThing(ray, MAYOR_HOUSE_TRIGGER, ray->ps.sprite);
     }
 
+    // Check script from entering the initial cell
+    checkScriptEnter(ray, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
+
     // Only free data which was decompressed
     if (decompressedData)
     {
@@ -380,8 +382,6 @@ bool isPassableCell(rayMapCell_t* cell)
  */
 void markTileVisited(rayMap_t* map, int16_t x, int16_t y)
 {
-#define SPATIAL_VISIT
-#ifdef SPATIAL_VISIT // Uncomment to mark adjacent tiles as visited
     // Find in-bounds loop indices
     int16_t minX = MAX(0, x - 1);
     int16_t maxX = MIN(map->w - 1, x + 1);
@@ -401,11 +401,4 @@ void markTileVisited(rayMap_t* map, int16_t x, int16_t y)
             }
         }
     }
-#else
-    rayTileState_t* ts = &map->visitedTiles[(y * map->w) + x];
-    if (*ts < VISITED)
-    {
-        *ts = VISITED;
-    }
-#endif
 }
