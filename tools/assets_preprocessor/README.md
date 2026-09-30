@@ -71,6 +71,7 @@ output file paths into the command being executed. These are listed in the table
 | `%o`        | Full path to the output file               |
 | `%a`        | Input file extension, without leading '.'  |
 | `%b`        | Output file extension, without leading '.' |
+| `%r`        | Root directory used when calling other programs with relative paths, such as `../..`. Does not require a trailing `\` |
 | `%%`        | Literal `%` character                      |
 
 ## <a name="options-files">Options Files</a>

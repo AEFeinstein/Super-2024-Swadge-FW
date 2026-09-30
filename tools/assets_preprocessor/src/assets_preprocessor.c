@@ -45,9 +45,8 @@
 // EDIT HERE to register a new asset processor
 //==============================================================================
 static const assetProcessor_t* allAssetProcessors[] = {
-    &binProcessor,   &chartProcessor, &fontProcessor, &heatshrinkProcessor,
-    &imageProcessor, &jsonProcessor,  &sudokuProcessor, &textProcessor,
-    &cfunProcessor,  &greyscaleProcessor,
+    &binProcessor,  &chartProcessor,  &fontProcessor, &heatshrinkProcessor, &imageProcessor,
+    &jsonProcessor, &sudokuProcessor, &textProcessor, &cfunProcessor,       &greyscaleProcessor,
 };
 //==============================================================================
 // END Asset Processor List
@@ -66,6 +65,8 @@ const processorOptions_t* globalConfig = NULL;
 
 static const fileProcessorMap_t* loadedExtMappings = NULL;
 static size_t loadedExtMappingCount                = 0;
+
+static const char* rootDir = ".";
 
 //==============================================================================
 // Function declarations
@@ -94,8 +95,14 @@ static const char optionsFileExtension[] = "opts";
  */
 void print_usage(void)
 {
-    printf("Usage:\n  assets_preprocessor\n    -i INPUT_DIRECTORY\n    -o OUTPUT_DIRECTORY\n    [-t "
-           "TIMESTAMP_FILE_OUTPUT]\n    [-c CONFIG_FILE]\n    [-v]\n");
+    printf("Usage:\n"
+           "  assets_preprocessor\n"
+           "    -i INPUT_DIRECTORY\n"
+           "    -o OUTPUT_DIRECTORY\n"
+           "    -r ROOT_DIRECTORY (\".\" by default)\n"
+           "    [-t TIMESTAMP_FILE_OUTPUT]\n"
+           "    [-c CONFIG_FILE]\n"
+           "    [-v]\n");
     printf("\n All Asset processors:\n");
     for (int n = 0; n < sizeof(allAssetProcessors) / sizeof(*allAssetProcessors); n++)
     {
@@ -241,9 +248,9 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
 
                 if (FUNCTION == processor->type)
                 {
-                    FILE* inHandle             = NULL;
-                    FILE* outHandle            = NULL;
-                    processorFileData_t inData = {0};
+                    FILE* inHandle              = NULL;
+                    FILE* outHandle             = NULL;
+                    processorFileData_t inData  = {0};
                     processorFileData_t outData = {0};
 
                     switch (processor->inFmt)
@@ -271,7 +278,7 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                         break;
                     }
 
-                    const char * outFileName = NULL;
+                    const char* outFileName = NULL;
 
                     switch (processor->outFmt)
                     {
@@ -280,14 +287,14 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                         case FMT_LINES:
                         {
                             outHandle = fopen(outFile, "w");
-                            outData = (processorFileData_t){ .file = outHandle };
+                            outData   = (processorFileData_t){.file = outHandle};
                             break;
                         }
 
                         case FMT_FILENAME:
                         {
                             outFileName = outFile;
-                            outData = (processorFileData_t){ .fileName = outFileName };
+                            outData     = (processorFileData_t){.fileName = outFileName};
                             break;
                         }
 
@@ -295,7 +302,7 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                         case FMT_DATA:
                         {
                             outHandle = fopen(outFile, "wb");
-                            outData = (processorFileData_t){ .file = outHandle };
+                            outData   = (processorFileData_t){.file = outHandle};
                             break;
                         }
                     }
@@ -629,6 +636,9 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                                     case 'b':
                                         substStr = extMap->outExt;
                                         break;
+                                    case 'r':
+                                        substStr = rootDir;
+                                        break;
                                     // %% -> % (escape)
                                     case '%':
                                     {
@@ -932,7 +942,7 @@ int main(int argc, char** argv)
     const char* timestampFileName = NULL;
 
     opterr = 0;
-    while ((c = getopt(argc, argv, "i:o:t:vc:h")) != -1)
+    while ((c = getopt(argc, argv, "i:o:t:vc:hr:")) != -1)
     {
         switch (c)
         {
@@ -965,6 +975,11 @@ int main(int argc, char** argv)
             {
                 print_usage();
                 return 0;
+            }
+            case 'r':
+            {
+                rootDir = optarg;
+                break;
             }
             default:
             {

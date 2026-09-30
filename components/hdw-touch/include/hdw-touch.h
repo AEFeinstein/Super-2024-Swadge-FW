@@ -21,7 +21,7 @@
  * If touches are polled from a shape that was not initialized, no data will be returned.
  *
  * Touch pad areas are set up and read with <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.7/esp32s2/api-reference/peripherals/touch_pad.html">Touch
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.8/esp32s2/api-reference/peripherals/touch_pad.html">Touch
  * Sensor</a>.
  *
  * \section touch_usage Usage

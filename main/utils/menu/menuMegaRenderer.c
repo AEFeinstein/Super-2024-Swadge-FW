@@ -34,9 +34,11 @@ static const paletteColor_t defaultBgColors[] = {
     c024, c025, c035, c034, c033, c043, c143, c254, c453, c553,
 };
 // Routes through the helmet M, with three extra numbers slapped on the end so the hotdog won't crash.
-static const uint8_t ledConveyorOrder[] = {
-    1, 0, 2, 3, 5, 4, 6, 7, 8,
-};
+static const uint8_t ledConveyorOrder[CONFIG_NUM_LEDS] = {
+    // Clockwise around the circle
+    7, 6, 5, 4, 3, 2, 1, 0,
+    // Clockwise around the wings
+    8, 9, 10, 11, 12, 13};
 
 //==============================================================================
 // Function Prototypes
@@ -200,7 +202,7 @@ void deinitMenuMegaRenderer(menuMegaRenderer_t* renderer)
  * @param renderer The renderer.
  * @param drawBody true to draw the body background, false to skip it
  */
-void setDrawBody(menuMegaRenderer_t* renderer, bool drawBody)
+void setDrawMenuMegaBody(menuMegaRenderer_t* renderer, bool drawBody)
 {
     renderer->drawBody = drawBody;
 }
@@ -212,7 +214,7 @@ void setDrawBody(menuMegaRenderer_t* renderer, bool drawBody)
  * @param renderer The renderer to adjust the body height for
  * @param height The new height. If the given value is negative, the default height will be set.
  */
-void setBodyHeight(menuMegaRenderer_t* renderer, int16_t height)
+void setMenuMegaBodyHeight(menuMegaRenderer_t* renderer, int16_t height)
 {
     if (height < 0)
     {
@@ -365,8 +367,8 @@ static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t
  * @param flipLR true to flip the body horizontally
  * @param renderer The renderer to draw a body with
  */
-void drawMenuBody(uint16_t topLeftX, uint16_t topLeftY, uint8_t expansionHeight, bool flipLR,
-                  menuMegaRenderer_t* renderer)
+void drawMenuMegaBody(uint16_t topLeftX, uint16_t topLeftY, uint8_t expansionHeight, bool flipLR,
+                      menuMegaRenderer_t* renderer)
 {
     // Draw the top part of the body
     drawWsgPalette(&renderer->body_top, topLeftX, topLeftY, &renderer->palette, flipLR, false, 0);
@@ -481,7 +483,7 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
 
     if (renderer->drawBody)
     {
-        drawMenuBody(12, 42, renderer->bodyHeight, false, renderer);
+        drawMenuMegaBody(12, 42, renderer->bodyHeight, false, renderer);
     }
 
     // Where to start drawing

@@ -310,7 +310,7 @@ typedef struct
     list_t customFiles;
 
     menu_t* menu;
-    menuMegaRenderer_t* renderer;
+    menuZorldoRenderer_t* renderer;
     wheelMenuRenderer_t* wheelMenu;
     rectangle_t wheelTextArea;
     bool updateMenu;
@@ -1563,7 +1563,7 @@ static void synthEnterMode(void)
     sd->wheelTextArea.height = sd->betterFont.height + 2;
 
     // Use smol font for menu items, there might be a lot
-    sd->renderer          = initMenuMegaRenderer(NULL, NULL, NULL);
+    sd->renderer          = initMenuZorldoRenderer(NULL, NULL);
     sd->wheelMenu         = initWheelMenu(&sd->betterFont, 90, &sd->wheelTextArea);
     sd->wheelMenu->unselR = 16;
 
@@ -1688,7 +1688,7 @@ static void synthExitMode(void)
     }
 
     deinitWheelMenu(sd->wheelMenu);
-    deinitMenuMegaRenderer(sd->renderer);
+    deinitMenuZorldoRenderer(sd->renderer);
     deinitMenu(sd->menu);
 
     // Clean up dynamic strings allocated for the controllers
@@ -1832,7 +1832,7 @@ static void synthMainLoop(int64_t elapsedUs)
 
     if (sd->screen == SS_MENU)
     {
-        drawMenuMega(sd->menu, sd->renderer, elapsedUs);
+        drawMenuZorldo(sd->menu, sd->renderer, elapsedUs);
     }
     else if (sd->screen == SS_FILE_SELECT)
     {

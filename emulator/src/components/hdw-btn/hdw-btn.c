@@ -58,17 +58,20 @@ void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons)
  */
 void deinitButtons(void)
 {
-    // Check the queue
-    void* val;
-
-    // No events
-    while (NULL != (val = shift(buttonQueue)))
+    if (buttonQueue)
     {
-        // Free everything
-        free(val);
+        // Check the queue
+        void* val;
+
+        // No events
+        while (NULL != (val = shift(buttonQueue)))
+        {
+            // Free everything
+            free(val);
+        }
+        clear(buttonQueue);
+        free(buttonQueue);
     }
-    clear(buttonQueue);
-    free(buttonQueue);
 }
 
 /**
@@ -89,7 +92,7 @@ void powerUpButtons(void)
 
 /**
  * @brief Service the queue of button events that caused interrupts
- * This only reutrns a single event, even if there are multiple in the queue
+ * This only returns a single event, even if there are multiple in the queue
  * This function may be called multiple times in a row to completely empty the queue
  *
  * @param evt If an event occurred, return it through this argument
@@ -97,24 +100,28 @@ void powerUpButtons(void)
  */
 bool checkButtonQueue(buttonEvt_t* evt)
 {
-    // Check the queue
-    buttonEvt_t* val = shift(buttonQueue);
+    if (buttonQueue)
+    {
+        // Check the queue
+        buttonEvt_t* val = shift(buttonQueue);
 
-    // No events
-    if (NULL == val)
-    {
-        memset(evt, 0, sizeof(buttonEvt_t));
-        return false;
+        // No events
+        if (NULL == val)
+        {
+            memset(evt, 0, sizeof(buttonEvt_t));
+            return false;
+        }
+        else
+        {
+            // Copy the event to the arg
+            memcpy(evt, val, sizeof(buttonEvt_t));
+            // Free everything
+            free(val);
+            // Return that an event occurred
+            return true;
+        }
     }
-    else
-    {
-        // Copy the event to the arg
-        memcpy(evt, val, sizeof(buttonEvt_t));
-        // Free everything
-        free(val);
-        // Return that an event occurred
-        return true;
-    }
+    return false;
 }
 
 /**
@@ -125,45 +132,48 @@ bool checkButtonQueue(buttonEvt_t* evt)
  */
 void emulatorInjectButton(buttonBit_t button, bool down)
 {
-    // Set or clear the button
-    if (down)
+    if (buttonQueue)
     {
-        // Check if button was already pressed
-        if (buttonState & button)
+        // Set or clear the button
+        if (down)
         {
-            // It was, just return
-            return;
+            // Check if button was already pressed
+            if (buttonState & button)
+            {
+                // It was, just return
+                return;
+            }
+            else
+            {
+                // It wasn't, set it!
+                buttonState |= button;
+            }
         }
         else
         {
-            // It wasn't, set it!
-            buttonState |= button;
+            // Check if button was already released
+            if (0 == (buttonState & button))
+            {
+                // It was, just return
+                return;
+            }
+            else
+            {
+                // It wasn't, clear it!
+                buttonState &= ~button;
+            }
         }
-    }
-    else
-    {
-        // Check if button was already released
-        if (0 == (buttonState & button))
-        {
-            // It was, just return
-            return;
-        }
-        else
-        {
-            // It wasn't, clear it!
-            buttonState &= ~button;
-        }
-    }
 
-    // Create a new event
-    buttonEvt_t* evt = malloc(sizeof(buttonEvt_t));
-    evt->button      = button;
-    evt->down        = down;
-    evt->state       = buttonState;
-    evt->time        = esp_timer_get_time();
+        // Create a new event
+        buttonEvt_t* evt = malloc(sizeof(buttonEvt_t));
+        evt->button      = button;
+        evt->down        = down;
+        evt->state       = buttonState;
+        evt->time        = esp_timer_get_time();
 
-    // Add the event to the list
-    push(buttonQueue, evt);
+        // Add the event to the list
+        push(buttonQueue, evt);
+    }
 }
 
 /**

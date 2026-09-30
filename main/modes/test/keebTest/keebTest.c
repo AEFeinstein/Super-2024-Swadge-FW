@@ -45,7 +45,7 @@ typedef struct
     // Menu
     State_t state;
     menu_t* menu;
-    menuMegaRenderer_t* renderer;
+    menuZorldoRenderer_t* renderer;
 
     // Settings
     bool drawLines;
@@ -179,7 +179,7 @@ static void keebEnterMode(void)
     addSingleItemToMenu(kbTest->menu, teMenuReset);
 
     // Init renderer
-    kbTest->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    kbTest->renderer = initMenuZorldoRenderer(NULL, NULL);
 
     // Init
     kbTest->state = MENU;
@@ -195,7 +195,7 @@ static void keebExitMode(void)
     deinitMenu(kbTest->menu);
 
     // Deinit renderer
-    deinitMenuMegaRenderer(kbTest->renderer);
+    deinitMenuZorldoRenderer(kbTest->renderer);
 
     // Deinit fonts
     freeFont(&kbTest->fnt[1]);
@@ -218,7 +218,7 @@ static void keebMainLoop(int64_t elapsedUs)
             {
                 kbTest->menu = menuButton(kbTest->menu, evt);
             }
-            drawMenuMega(kbTest->menu, kbTest->renderer, elapsedUs);
+            drawMenuZorldo(kbTest->menu, kbTest->renderer, elapsedUs);
             break;
         }
         case TYPING:
