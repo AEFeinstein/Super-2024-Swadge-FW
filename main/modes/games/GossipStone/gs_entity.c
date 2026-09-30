@@ -1160,7 +1160,7 @@ void gs_updateWind(gs_entity_t* self)
             int32_t sqDist = sqMagVec2d(subVec2d(grass->pos, self->pos));
             if (sqDist < 6553600)
             {
-                grass->gameFramesPerAnimationFrame = CLAMP((((int)sqrt((double)sqDist)) >> 9), 8, 255);
+                grass->gameFramesPerAnimationFrame = CLAMP((((int)sqrt((double)sqDist)) >> 6), 8, 255);
                 grass->paused                      = false;
             }
             else
