@@ -14,7 +14,8 @@
 //==============================================================================
 // Defines
 //==============================================================================
-
+char gs_key_attendeesMisery[] = "attendeesMisery";
+char gs_key_gossipProgress[]  = "gossipProgress";
 //==============================================================================
 // Consts
 //==============================================================================
@@ -133,10 +134,10 @@ static void gs_enterMode(void)
     for (int i = 0; i < (GOSSIP_COUNT / 32) + 1; i++)
     {
         char nvsKey[20];
-        sprintf(nvsKey, "gossipProgress%d", i);
+        sprintf(nvsKey, "%s%d", gs_key_gossipProgress, i);
         readNvs32(nvsKey, &gameData->gossipProgress[i]);
     }
-    readNvs32("attendeesMisery", &gameData->attendeesMisery);
+    readNvs32(gs_key_attendeesMisery, &gameData->attendeesMisery);
 
     // Initialize a menu renderer
     gameData->menuRenderer = initMenuZorldoRenderer(NULL, NULL);

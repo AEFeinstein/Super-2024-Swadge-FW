@@ -12,6 +12,9 @@
 #define TILE_FIELD_WIDTH  266 // matches the level wsg graphic width
 #define TILE_FIELD_HEIGHT 226 // matches the level wsg graphic height
 
+extern char gs_key_attendeesMisery[];
+extern char gs_key_gossipProgress[];
+
 typedef struct gs_entity_t gs_entity_t;
 typedef struct gs_gameData_t gs_gameData_t;
 typedef struct gs_tilemap_t gs_tilemap_t;

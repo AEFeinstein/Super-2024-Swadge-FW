@@ -176,7 +176,7 @@ void gs_recordProgress(gs_entity_t* self)
         self->gameData->gossipProgress[NVSgroup] |= (1 << NVSbit);
         // save it to nvs
         char nvsKey[20];
-        sprintf(nvsKey, "gossipProgress%d", NVSgroup);
+        sprintf(nvsKey, "%s%d", gs_key_gossipProgress, NVSgroup);
         printf("nvsKey = '%s'\n", nvsKey);
         writeNvs32(nvsKey, self->gameData->gossipProgress[NVSgroup]);
 
@@ -188,7 +188,7 @@ void gs_recordProgress(gs_entity_t* self)
         {
             self->gameData->attendeesMisery++;
             self->gameData->attendeesMisery *= -1; // set the negative bit
-            writeNvs32("attendeesMisery", self->gameData->attendeesMisery);
+            writeNvs32(gs_key_attendeesMisery, self->gameData->attendeesMisery);
             data->advanceScene = true;
         }
     }
@@ -196,7 +196,7 @@ void gs_recordProgress(gs_entity_t* self)
     if (self->gameData->attendeesMisery >= 0)
     {
         self->gameData->attendeesMisery++;
-        writeNvs32("attendeesMisery", self->gameData->attendeesMisery);
+        writeNvs32(gs_key_attendeesMisery, self->gameData->attendeesMisery);
     }
 }
 
