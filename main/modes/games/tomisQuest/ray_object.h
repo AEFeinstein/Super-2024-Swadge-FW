@@ -1,0 +1,13 @@
+#ifndef _RAY_OBJECT_H_
+#define _RAY_OBJECT_H_
+
+#include "mode_ray.h"
+
+void rayCreateBullet(ray_t* ray, rayMapCellType_t bulletType, q24_8 posX, q24_8 posY, q24_8 velX, q24_8 velY,
+                     q24_8 accX, q24_8 accY, int32_t fuseUs, bool isPlayer);
+void moveRayObjects(ray_t* ray, uint32_t elapsedUs);
+void checkRayCollisions(ray_t* ray);
+rectangle_t rayGetObjBB(const rayObjCommon_t* obj);
+bool rayBoundingBoxFitsInMap(ray_t* ray, rectangle_t bb);
+
+#endif

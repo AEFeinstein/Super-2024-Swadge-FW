@@ -1,0 +1,1026 @@
+//==============================================================================
+// Includes
+//==============================================================================
+
+#include "hdw-btn.h"
+#include "touchUtils.h"
+
+#include "ray_player.h"
+#include "ray_object.h"
+#include "ray_map.h"
+#include "ray_pause.h"
+#include "ray_script.h"
+#include "ray_death_screen.h"
+#include "ray_enemy.h"
+#include "ray_dialog.h"
+#include "ray_tex_manager.h"
+
+//==============================================================================
+// Defines
+//==============================================================================
+
+#define SWORD_SWING_TIME  300000
+#define SWORD_SWING_ANGLE 180
+
+//==============================================================================
+// Functions
+//==============================================================================
+
+/**
+ * @brief Initialize the player
+ *
+ * @param ray The entire game state
+ * @return true if the player was initialized from scratch, false if loaded from NVM
+ */
+bool initializePlayer(ray_t* ray)
+{
+    bool initFromScratch = false;
+    size_t len           = sizeof(ray->p);
+    if (!readNvsBlob(RAY_NVS_KEY, &ray->p, &len))
+    {
+        initFromScratch = true;
+
+        // Start at map 0, loaded later
+        ray->p.mapId = 0;
+
+        // ray->p.posX and ray->p.posY (starting position) are set by the map
+
+        // Set the direction
+        ray->p.dirX = TO_FX(0);
+        ray->p.dirY = -TO_FX(1);
+
+        // Zero the entire inventory
+        memset(&ray->p.i, 0, sizeof(ray->p.i));
+
+        // Uncomment to start with all items for testing
+        // ray->p.i.haveEwiOfTime     = true;
+        // ray->p.i.haveBombs         = true;
+        // ray->p.i.haveJumpBoots     = true;
+        // ray->p.i.haveShield        = true;
+        // ray->p.i.haveBow           = true;
+        // ray->p.i.haveBoomerang     = true;
+        // ray->p.i.haveTurntables    = true;
+        // ray->p.i.haveDoriasLullaby = true;
+
+        // Set initial health
+        ray->p.maxHealth = GAME_START_HEALTH;
+        ray->p.health    = GAME_START_HEALTH;
+    }
+    else
+    {
+        // When loading, set the camera equal to the prior target
+        ray->camera = ray->p.cameraTarget;
+    }
+
+    // Load sprites
+    ray->ps.sprite = loadTexture(ray, HYUT_WSG, EMPTY);
+    loadTexture(ray, OBJ_BULLET_NORMAL_WSG, OBJ_BULLET_ARROW);
+    loadTexture(ray, OBJ_BULLET_MISSILE_WSG, OBJ_BULLET_BOMB);
+    loadTexture(ray, OBJ_BULLET_BOOMERANG_WSG, OBJ_BULLET_BOOMERANG);
+
+    // Always reload with full health
+    ray->p.health = ray->p.maxHealth;
+
+    // Initial touch state is negative
+    ray->ps.ts.initialTouchPos = -1;
+    ray->ps.ts.lastTouchPos    = -1;
+
+    // Invalid shield zone
+    ray->ps.shieldZone = -1;
+
+    // Starting cell is a good cell
+    ray->ps.lastGoodCell.x = FROM_FX(ray->p.posX);
+    ray->ps.lastGoodCell.y = FROM_FX(ray->p.posY);
+
+    return initFromScratch;
+}
+
+/**
+ * @brief Save the entire player state to NVM
+ *
+ * @param ray The entire game state
+ */
+void raySavePlayer(ray_t* ray)
+{
+    writeNvsBlob(RAY_NVS_KEY, &(ray->p), sizeof(ray->p));
+}
+
+/**
+ * @brief Save the tiles the player has visited in this map
+ *
+ * @param ray The entire game state
+ */
+void raySaveVisitedTiles(ray_t* ray)
+{
+    writeNvsBlob(getRayMapMetadata(ray->p.mapId)->visitedKey, ray->map.visitedTiles,
+                 sizeof(rayTileState_t) * ray->map.w * ray->map.h);
+}
+
+/**
+ * @brief Check button inputs for the player. This will move the player and shoot bullets
+ *
+ * @param ray The entire game state
+ * @param elapsedUs The elapsed time since this function was last called
+ */
+void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
+{
+    // Don't accept input or move while falling
+    bool acceptInput = (ray->ps.fallTimerUs <= 0);
+
+    // If PB_A is held down
+    if (ray->ps.pbaDown && ray->p.i.haveDoriasLullaby)
+    {
+        // Accumulate time
+        ray->ps.pbaDownTimeUs += elapsedUs;
+
+        // If it's been held for more than a second
+        if (ray->ps.pbaDownTimeUs >= 1000000)
+        {
+            // Switch to instrument mode
+            ray->ps.pbaDown       = false;
+            ray->ps.pbaDownTimeUs = 0;
+            raySwitchToScreen(RAY_INSTRUMENT);
+        }
+    }
+
+    // Check all queued button events
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+        // Save the current button state
+        ray->btnState = evt.state;
+
+        // The start button enters the pause menu
+        if (PB_START == evt.button && evt.down)
+        {
+            // Show the pause menu
+            rayShowPause(ray);
+            return;
+        }
+        else if (acceptInput)
+        {
+            // The B button swings the sword
+            if (PB_B == evt.button)
+            {
+                if (ray->p.i.haveEwiOfTime && evt.down && (false == ray->ps.swordActive))
+                {
+                    // Start a sword swing
+                    ray->ps.swordAngle   = 270; // -90
+                    ray->ps.swordTimerUs = SWORD_SWING_TIME;
+                    ray->ps.swordActive  = true;
+
+                    // Cancel any shields
+                    ray->ps.shieldTimerUs = 0;
+                    ray->ps.shieldZone    = -1;
+                }
+            }
+            // The A button shoots. Make sure there is a gun
+            else if (PB_A == evt.button)
+            {
+                if (evt.down)
+                {
+                    // If not already jumping, add an impulse to jump
+                    if (ray->p.i.haveJumpBoots && !rayPlayerIsJumping(ray))
+                    {
+                        ray->ps.jumpVel = -TO_FX_FRAC(5, 8);
+                    }
+
+                    // When the button is pressed, start accumulating time
+                    ray->ps.pbaDown       = true;
+                    ray->ps.pbaDownTimeUs = 0;
+                }
+                else if (ray->ps.pbaDown)
+                {
+                    // Mark PB_A as released
+                    ray->ps.pbaDown = false;
+                }
+            }
+        }
+    }
+
+    if (acceptInput)
+    {
+        // Find move distances
+        q24_8 deltaX = 0;
+        q24_8 deltaY = 0;
+
+        bool shouldNormalize = true;
+
+        if (ray->ps.vel.x || ray->ps.vel.y)
+        {
+            // This vector is already normalized
+            deltaX          = ray->ps.vel.x;
+            deltaY          = ray->ps.vel.y;
+            shouldNormalize = false;
+        }
+        else
+        {
+            // If the up button is held
+            if (ray->btnState & PB_UP)
+            {
+                // Move forward
+                deltaY -= TO_FX(1);
+            }
+            // Else if the down button is held
+            else if (ray->btnState & PB_DOWN)
+            {
+                // Move backwards
+                deltaY += TO_FX(1);
+            }
+
+            // If the left button is held
+            if (ray->btnState & PB_LEFT)
+            {
+                // Move left
+                deltaX -= TO_FX(1);
+            }
+            // Else if the right button is held
+            else if (ray->btnState & PB_RIGHT)
+            {
+                // Move backwards
+                deltaX += TO_FX(1);
+            }
+        }
+
+        // Stop the bump when the timer expires
+        if (ray->ps.bumpTimer > 0)
+        {
+            ray->ps.bumpTimer -= elapsedUs;
+            if (ray->ps.bumpTimer <= 0)
+            {
+                ray->ps.vel.x = 0;
+                ray->ps.vel.y = 0;
+            }
+        }
+
+        // If there is movement
+        if (deltaX || deltaY)
+        {
+            if (shouldNormalize)
+            {
+                // Normalize deltaX and deltaY before scaling with elapsedUs
+                fastNormVec(&deltaX, &deltaY);
+            }
+            ray->p.dirX = deltaX;
+            ray->p.dirY = deltaY;
+
+            // Should move 1/6 units every 40000uS
+            deltaX = (int32_t)(deltaX * elapsedUs) / (int32_t)(40000 * 6);
+            deltaY = (int32_t)(deltaY * elapsedUs) / (int32_t)(40000 * 6);
+
+            // Save the old cell to check for crossing cell boundaries
+            int16_t oldCellX = FROM_FX(ray->p.posX);
+            int16_t oldCellY = FROM_FX(ray->p.posY);
+
+            // Make a bounding box for where the player would move
+            rectangle_t movedBoundingBox = rayGetPlayerBB(ray);
+            movedBoundingBox.pos.x += deltaX;
+            movedBoundingBox.pos.y += deltaY;
+
+            // If the player's new location doesn't fit
+            if (!rayBoundingBoxFitsInMap(ray, movedBoundingBox))
+            {
+                // Stop movement
+                deltaX = 0;
+                deltaY = 0;
+
+                // Unmove the player's bounding box
+                movedBoundingBox.pos.x -= deltaX;
+                movedBoundingBox.pos.y -= deltaY;
+
+                // TODO allow axis aligned movement when the input is diagonal on a wall?
+            }
+
+            // Check for collisions with all enemies in the new location
+            node_t* eNode = ray->enemies.first;
+            while (eNode)
+            {
+                rayEnemy_t* e = eNode->val;
+
+                // If the player collides with an immovable enemy (i.e. a box on a wall) this will stop movement
+                rayEnemyCheckCollision(ray, e, movedBoundingBox, &deltaX, &deltaY);
+                eNode = eNode->next;
+            }
+
+            // Update location with allowed movement
+            ray->p.posX += deltaX;
+            ray->p.posY += deltaY;
+
+            // Get the new cell to check for crossing cell boundaries
+            int16_t newCellX = FROM_FX(ray->p.posX);
+            int16_t newCellY = FROM_FX(ray->p.posY);
+
+            // If the cell changed
+            if (oldCellX != newCellX || oldCellY != newCellY)
+            {
+                // Mark it on the map
+                markTileVisited(&ray->map, newCellX, newCellY);
+
+                // Check scripts when entering cells
+                checkScriptEnter(ray, newCellX, newCellY);
+
+                // If the player entered a non-hole floor cell, save the location
+                rayMapCellType_t cType = ray->map.tiles[newCellX][newCellY].type;
+                if (CELL_IS_TYPE(cType, BG | FLOOR) && (BG_FLOOR_HOLE != cType))
+                {
+                    ray->ps.lastGoodCell.x = newCellX;
+                    ray->ps.lastGoodCell.y = newCellY;
+                }
+            }
+        }
+        else
+        {
+            // No movement, but check for enemy collisions b/c enemies move
+            rectangle_t pbb = rayGetPlayerBB(ray);
+            node_t* eNode   = ray->enemies.first;
+            while (eNode)
+            {
+                rayEnemy_t* e = eNode->val;
+
+                // If the player collides with an immovable enemy (i.e. a box on a wall) this will stop movement
+                rayEnemyCheckCollision(ray, e, pbb, &deltaX, &deltaY);
+                eNode = eNode->next;
+            }
+        }
+    }
+
+    // If the player is on a hole
+    if ((BG_FLOOR_HOLE == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type) &&
+        // And the player isn't jumping
+        !rayPlayerIsJumping(ray) &&
+        // And the player isn't already falling
+        ray->ps.fallTimerUs <= 0)
+    {
+        // Snap to the middle of the hole
+        ray->p.posX = TO_FX(FROM_FX(ray->p.posX)) + TO_FX_FRAC(1, 2);
+        ray->p.posY = TO_FX(FROM_FX(ray->p.posY)) + TO_FX_FRAC(1, 2);
+
+        // Start the fall timer animation
+        ray->ps.fallTimerUs = 2000000;
+
+        // Cancel sword & shields immediately
+        ray->ps.swordTimerUs  = 0;
+        ray->ps.swordAngle    = 0;
+        ray->ps.swordActive   = false;
+        ray->ps.shieldTimerUs = 0;
+        ray->ps.shieldZone    = -1;
+    }
+
+    // Run the fall timer if active
+    if (ray->ps.fallTimerUs > 0)
+    {
+        ray->ps.fallTimerUs -= elapsedUs;
+
+        // Run animation for sprite rotation animation
+        RUN_TIMER_EVERY(ray->ps.fallRotationTimerUs, 2000000 / 16, elapsedUs, {
+            int32_t angle = rayGetEightWayAngle(ray->p.dirX, ray->p.dirY);
+            angle += 45;
+            if (360 <= angle)
+            {
+                angle -= 360;
+            }
+            rayFromEightWayAngle(angle, &ray->p.dirX, &ray->p.dirY);
+        });
+
+        // If the timer elapsed
+        if (ray->ps.fallTimerUs <= 0)
+        {
+            // Move to the middle of the last known good cell
+            ray->p.posX = TO_FX(ray->ps.lastGoodCell.x) + TO_FX_FRAC(1, 2);
+            ray->p.posY = TO_FX(ray->ps.lastGoodCell.y) + TO_FX_FRAC(1, 2);
+
+            // Decrement health
+            rayPlayerDecrementHealth(ray, 1);
+        }
+    }
+
+    // Run the sword timer
+    if (ray->ps.swordTimerUs > 0)
+    {
+        ray->ps.swordTimerUs -= elapsedUs;
+        // SWORD_SWING_ANGLE degrees in SWORD_SWING_TIME us
+        ray->ps.swordAngle += (SWORD_SWING_ANGLE * elapsedUs) / SWORD_SWING_TIME;
+        if (ray->ps.swordAngle >= 360)
+        {
+            ray->ps.swordAngle -= 360;
+        }
+    }
+    else
+    {
+        // Sword timer elapsed, sword is not active
+        ray->ps.swordActive = false;
+    }
+
+    // Run the shield timer
+    if (ray->ps.shieldTimerUs > 0)
+    {
+        ray->ps.shieldTimerUs -= elapsedUs;
+    }
+
+    // Run the jump physics
+    if (rayPlayerIsJumping(ray))
+    {
+        // Gravity is just fixed positive acceleration
+        ray->ps.jumpVel += ((int32_t)elapsedUs) / (1 << 11);
+        ray->ps.jumpPos += (ray->ps.jumpVel * (int32_t)elapsedUs) / (1 << 16);
+
+        // If the jump is back where it started
+        if (ray->ps.jumpPos >= 0)
+        {
+            // Finish the jump by zeroing variables
+            ray->ps.jumpVel = TO_FX(0);
+            ray->ps.jumpPos = TO_FX(0);
+        }
+    }
+
+    // Run the invincibility frame timer
+    if (ray->ps.iFrameTimer > 0)
+    {
+        ray->ps.iFrameTimer -= elapsedUs;
+    }
+}
+
+/**
+ * @brief Check touchpad inputs for the player. This will change the player's loadout
+ *
+ * @param ray The entire game state
+ * @param elapsedUs The elapsed time since this function was last called
+ */
+void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
+{
+    // Don't check for touches while jumping or falling
+    if (rayPlayerIsJumping(ray) || ray->ps.fallTimerUs > 0)
+    {
+        return;
+    }
+
+    bool lTouched     = false;
+    int32_t lPosition = 0;
+    bool rTouched     = false;
+    int32_t rPosition = 0;
+
+    linearTouch_t touches[2] = {0};
+    int32_t phi, r, intensity;
+    if (2 == getTouchLinear(touches, ARRAY_SIZE(touches)))
+    {
+        lTouched  = touches[0].touched;
+        lPosition = touches[0].position;
+        rTouched  = touches[1].touched;
+        rPosition = touches[1].position;
+    }
+    else if (getTouchJoystick(&phi, &r, &intensity))
+    {
+        int32_t x, y;
+        getTouchCartesian(phi, r, &x, &y);
+
+        rTouched  = true;
+        rPosition = 1024 - y;
+        lTouched  = true;
+        lPosition = x;
+    }
+
+    struct touchState* ts = &ray->ps.ts;
+
+    if (ray->p.i.haveShield)
+    {
+        if (lTouched && !ray->ps.shieldTouched)
+        {
+            ray->ps.shieldTouched = true;
+            ray->ps.shieldTimerUs = 500000;
+            ray->ps.shieldZone    = lPosition / 256;
+
+            // Cancel any swords immediately
+            ray->ps.swordAngle   = 0;
+            ray->ps.swordTimerUs = 0;
+            ray->ps.swordActive  = false;
+        }
+        else if (!lTouched && ray->ps.shieldTouched)
+        {
+            ray->ps.shieldTouched = false;
+            ray->ps.shieldTimerUs = 0;
+            ray->ps.shieldZone    = -1;
+        }
+    }
+
+    if (rTouched)
+    {
+        // Save initial position if not set
+        if (ts->initialTouchPos < 0)
+        {
+            ts->initialTouchPos = rPosition;
+        }
+
+        // Save last touch
+        ts->lastTouchPos = rPosition;
+
+        // Calculate the distance between inital and curren touches
+        int32_t touchDelta = rPosition - ts->initialTouchPos;
+
+        // Check if the touch has dragged far enough to start drawing a bow or setting a bomb
+        const int32_t touchLimit = 1024 / 5;
+        if (touchDelta > touchLimit)
+        {
+            if (ray->p.i.haveBow && !ts->drawingBow)
+            {
+                ts->drawingBow = true;
+            }
+        }
+        else if (touchDelta < -touchLimit)
+        {
+            if (ray->p.i.haveBombs && !ts->settingBomb)
+            {
+                ts->settingBomb = true;
+            }
+        }
+    }
+    else if (ts->initialTouchPos >= 0)
+    {
+        // Touch has been released
+        int32_t touchDelta = ts->lastTouchPos - ts->initialTouchPos;
+        touchDelta         = ABS(touchDelta);
+
+        // fire!
+        if (ts->drawingBow)
+        {
+            ts->drawingBow = false;
+
+            q24_8 velX = ray->p.dirX;
+            q24_8 velY = ray->p.dirY;
+
+            velX = (velX * touchDelta) / 1024;
+            velY = (velY * touchDelta) / 1024;
+            rayCreateBullet(ray, OBJ_BULLET_ARROW, ray->p.posX, ray->p.posY, velX, velY, -ray->p.dirX, -ray->p.dirY, -1,
+                            true);
+        }
+        else if (ts->settingBomb)
+        {
+            ts->settingBomb = false;
+
+            // 64 bit to prevent saturation
+            int32_t fuseUs = (touchDelta * (int64_t)4000000) / 1024;
+
+            // Spawn the bomb slightly in front of the player
+            rayCreateBullet(ray, OBJ_BULLET_BOMB, ray->p.posX + (ray->p.dirX / 2), ray->p.posY + (ray->p.dirY / 2), 0,
+                            0, 0, 0, fuseUs, true);
+        }
+        else if (ray->p.i.haveBoomerang)
+        {
+            // Only allow one boomerang at a time
+            bool boomerangThrown = false;
+            for (int32_t idx = 0; idx < MAX_RAY_BULLETS; idx++)
+            {
+                if (OBJ_BULLET_BOOMERANG == ray->bullets[idx].c.type)
+                {
+                    // Found a boomerang, don't throw another
+                    boomerangThrown = true;
+                    break;
+                }
+            }
+
+            // If there isn't a boomerang, throw one
+            if (!boomerangThrown)
+            {
+                rayCreateBullet(ray, OBJ_BULLET_BOOMERANG, ray->p.posX, ray->p.posY, ray->p.dirX / 2, ray->p.dirY / 2,
+                                0, 0, 1000000, true);
+            }
+        }
+
+        // Reset variables
+        ts->initialTouchPos = -1;
+        ts->lastTouchPos    = -1;
+    }
+}
+
+/**
+ * @brief This handles what happens when a player touches an item
+ *
+ * @param ray The whole game state
+ * @param item The item that was touched
+ * @param mapId The current map ID, used to track non-unique persistent pick-ups
+ */
+void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
+{
+    rayMapCellType_t type = item->type;
+    // int32_t itemId        = item->id;
+
+    // Assume saving after picking up an item
+    bool saveAfterObtain      = true;
+    rayInventory_t* inventory = &ray->p.i;
+    switch (type)
+    {
+        case OBJ_ITEM_EWI:
+        {
+            inventory->haveEwiOfTime = true;
+            break;
+        }
+        case OBJ_ITEM_BOMB:
+        {
+            inventory->haveBombs = true;
+            break;
+        }
+        case OBJ_ITEM_BOOTS:
+        {
+            inventory->haveJumpBoots = true;
+            break;
+        }
+        case OBJ_ITEM_SHIELD:
+        {
+            inventory->haveShield = true;
+            break;
+        }
+        case OBJ_ITEM_BOW:
+        {
+            inventory->haveBow = true;
+            break;
+        }
+        case OBJ_ITEM_BOOMERANG:
+        {
+            inventory->haveBoomerang = true;
+            break;
+        }
+        case OBJ_ITEM_TURNTABLES:
+        {
+            inventory->haveTurntables = true;
+            break;
+        }
+        case OBJ_ITEM_LULLABY:
+        {
+            inventory->haveDoriasLullaby = true;
+            break;
+        }
+        case OBJ_ITEM_HEART:
+        {
+            if (ray->p.health < ray->p.maxHealth)
+            {
+                ray->p.health++;
+            }
+            // Don't save for each heart
+            saveAfterObtain = false;
+            break;
+        }
+        case OBJ_ITEM_MPOINT_1:
+        {
+            ray->p.mpoints += 1;
+            // Don't save for each mpoint
+            saveAfterObtain = false;
+            break;
+        }
+        case OBJ_ITEM_MPOINT_5:
+        {
+            ray->p.mpoints += 5;
+            // Don't save for each mpoint
+            saveAfterObtain = false;
+            break;
+        }
+        case OBJ_ITEM_MPOINT_10:
+        {
+            ray->p.mpoints += 10;
+            // Don't save for each mpoint
+            saveAfterObtain = false;
+            break;
+        }
+        case OBJ_ITEM_MPOINT_20:
+        {
+            ray->p.mpoints += 20;
+            // Don't save for each mpoint
+            saveAfterObtain = false;
+            break;
+        }
+        case OBJ_ITEM_KEY:
+        {
+            for (int idx = 0; idx < ARRAY_SIZE(ray->p.i.items); idx++)
+            {
+                invItem_t* invItem = &ray->p.i.items[idx];
+                if (!invItem->occupied)
+                {
+                    invItem->occupied = true;
+                    invItem->keyUsed  = false;
+                    invItem->mapId    = mapId;
+                    invItem->objId    = item->id;
+                    invItem->type     = item->type & ID_MASK;
+                    ray->ps.keyCount++;
+                    break;
+                }
+            }
+            break;
+        }
+        // TODO heart pieces
+        default:
+        {
+            // Don't care about other types
+            saveAfterObtain = false;
+            break;
+        }
+    }
+
+    // If a notable item was obtained
+    if (saveAfterObtain)
+    {
+        // Autosave
+        raySavePlayer(ray);
+        raySaveVisitedTiles(ray);
+        // Play SFX
+        globalMidiPlayerPlaySong(&ray->sfx_item_get, MIDI_SFX);
+    }
+}
+
+/**
+ * @brief Check if a player should take damage for standing in lava
+ *
+ * @param ray The entire game state
+ * @param elapsedUs The elapsed time since this function was last called
+ */
+void rayPlayerCheckFloorEffect(ray_t* ray, uint32_t elapsedUs)
+{
+    // If the player is in lava without the lava suit
+    // if ((!ray->p.i.lavaSuit) && (BG_FLOOR_LAVA == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type))
+    // {
+    //     // Run a timer to take lava damage
+    //     ray->floorEffectTimer += elapsedUs;
+    //     if (ray->floorEffectTimer <= US_PER_FLOOR_EFFECT)
+    //     {
+    //         ray->floorEffectTimer -= US_PER_FLOOR_EFFECT;
+    //         rayPlayerDecrementHealth(ray, 1);
+    //     }
+
+    //     // If the player is entering lava
+    //     if (false == ray->playerInLava)
+    //     {
+    //         ray->playerInLava = true;
+    //         // Start looping SFX
+    //         // ray->sfx_lava_dmg.shouldLoop = true;
+    //         // globalMidiPlayerPlaySong(&ray->sfx_lava_dmg, MIDI_SFX);
+    //     }
+    // }
+    // else if (BG_FLOOR_HEAL == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type)
+    // {
+    //     // Run a timer to heal
+    //     ray->floorEffectTimer += elapsedUs;
+    //     if (ray->floorEffectTimer <= US_PER_FLOOR_EFFECT)
+    //     {
+    //         ray->floorEffectTimer -= US_PER_FLOOR_EFFECT;
+    //         rayPlayerDecrementHealth(ray, -1);
+    //     }
+
+    //     if (false == ray->playerInHealth)
+    //     {
+    //         ray->playerInHealth = true;
+    //     }
+    // }
+    // else if (true == ray->playerInLava)
+    // {
+    //     ray->playerInLava = false;
+    //     // Stop looping SFX
+    //     // ray->sfx_lava_dmg.shouldLoop = true;
+    // }
+    // else if (true == ray->playerInHealth)
+    // {
+    //     ray->playerInHealth = false;
+    // }
+}
+
+/**
+ * @brief Decrement player health and check for death
+ *
+ * @param ray The entire game state
+ * @param health The amount of health to decrement
+ * @return true if health was decremented, false if it was not (invincible, jumping)
+ */
+bool rayPlayerDecrementHealth(ray_t* ray, int32_t health)
+{
+    // Return if the player is invincible
+    if (ray->ps.iFrameTimer > 0)
+    {
+        return false;
+    }
+    else if (rayPlayerIsJumping(ray))
+    {
+        return false;
+    }
+
+    // Start player iframes
+    ray->ps.iFrameTimer = ENEMY_DEFAULT_IFRAMES_US;
+
+    // Decrement health
+    ray->p.health -= health;
+
+    if (health > 0)
+    {
+        // Play SFX
+        globalMidiPlayerPlaySong(&ray->sfx_p_damage, MIDI_SFX);
+    }
+
+    // Make LEDs red
+    ray->ledHue = 0;
+
+    // Check for death happens not in the middle of processing because
+    // it can free state while it's still being used. Search for
+    // ray->p.health
+
+    // Never go over the max health
+    if (ray->p.health > ray->p.maxHealth)
+    {
+        ray->p.health = ray->p.maxHealth;
+    }
+
+    return true;
+}
+
+/**
+ * @brief Get a line segment representing the player's sword.
+ * If the sword is not being swung, the line's start and end points are the same.
+ *
+ * @param ray The entire game state
+ * @return A line segment representing the player's sword
+ */
+line_t rayGetSwordLineSegment(ray_t* ray)
+{
+    line_t sword = {
+        .p1.x = ray->p.posX,
+        .p1.y = ray->p.posY,
+        .p2.x = ray->p.posX,
+        .p2.y = ray->p.posY,
+    };
+    if (ray->ps.swordTimerUs > 0)
+    {
+        int32_t playerAngle = rayGetEightWayAngle(ray->p.dirX, ray->p.dirY);
+        int32_t swordAngle  = playerAngle + ray->ps.swordAngle;
+        if (swordAngle > 360)
+        {
+            swordAngle -= 360;
+        }
+        sword.p2.x += (9 * getSin1024(swordAngle)) / 32;
+        sword.p2.y += -(9 * getCos1024(swordAngle)) / 32;
+    }
+    return sword;
+}
+
+/**
+ * @brief Get an angle, at 45 degree intervals, from a vector.
+ * This doesn't round the vector, but is more of a D-Pad like angle.
+ *
+ * @param x The X component of the vector
+ * @param y The Y component of the vector
+ * @return The nearest angle to the vector
+ */
+int32_t rayGetEightWayAngle(q24_8 x, q24_8 y)
+{
+    int32_t angle = 0;
+    if (y < 0)
+    {
+        if (x < 0)
+        {
+            // Up Left
+            angle = 45 * 7;
+        }
+        else if (x > 0)
+        {
+            // Up Right
+            angle = 45 * 1;
+        }
+        else
+        {
+            // Up
+            angle = 45 * 0;
+        }
+    }
+    else if (y > 0)
+    {
+        if (x < 0)
+        {
+            // Down Left
+            angle = 45 * 5;
+        }
+        else if (x > 0)
+        {
+            // Down Right
+            angle = 45 * 3;
+        }
+        else
+        {
+            // Down
+            angle = 45 * 4;
+        }
+    }
+    else
+    {
+        if (x < 0)
+        {
+            // Left
+            angle = 45 * 6;
+        }
+        else if (x > 0)
+        {
+            // Right
+            angle = 45 * 2;
+        }
+    }
+    return angle;
+}
+
+/**
+ * @brief Get a normalized vector corresponding to the given angle in 45 degree increments
+ *
+ * @param angle An angle in degrees, must be divisible by 45
+ * @param x The X component of the vector is emitted here
+ * @param y The Y component of the vector is emitted here
+ */
+void rayFromEightWayAngle(int32_t angle, q24_8* x, q24_8* y)
+{
+    switch (angle)
+    {
+        case 0:
+        {
+            *x = 0;
+            *y = -1;
+            break;
+        }
+        case 45:
+        {
+            *x = 1;
+            *y = -1;
+            break;
+        }
+        case 90:
+        {
+            *x = 1;
+            *y = 0;
+            break;
+        }
+        case 135:
+        {
+            *x = 1;
+            *y = 1;
+            break;
+        }
+        case 180:
+        {
+            *x = 0;
+            *y = 1;
+            break;
+        }
+        case 225:
+        {
+            *x = -1;
+            *y = 1;
+            break;
+        }
+        case 270:
+        {
+            *x = -1;
+            *y = 0;
+            break;
+        }
+        case 315:
+        {
+            *x = -1;
+            *y = -1;
+            break;
+        }
+        default:
+        {
+            return;
+        }
+    }
+    fastNormVec(x, y);
+}
+
+/**
+ * @brief Return true if the player is jumping, false otherwise
+ *
+ * @param ray The entire game state
+ * @return true if the player is jumping, false otherwise
+ */
+bool rayPlayerIsJumping(ray_t* ray)
+{
+    return ray->ps.jumpPos || ray->ps.jumpVel;
+}
+
+/**
+ * @brief Return if the player is hittable (i.e. not jumping and without invincibility frames)
+ *
+ * @param ray The entire game state
+ * @return true if the player is hittable, false otherwise
+ */
+bool rayPlayerIsHittable(ray_t* ray)
+{
+    return !(ray->ps.jumpPos || ray->ps.jumpVel) || (ray->ps.iFrameTimer > 0);
+}
+
+/**
+ * @brief Get a bounding box for the player
+ *
+ * TODO account for sprite rotation
+ *
+ * @param ray The entire game state
+ * @return The bounding box for the player
+ */
+rectangle_t rayGetPlayerBB(ray_t* ray)
+{
+    rectangle_t bb;
+    bb.width  = (ray->ps.sprite->w * 256) / CELL_SIZE;
+    bb.height = (ray->ps.sprite->h * 256) / CELL_SIZE;
+    bb.pos.x  = (ray->p.posX) - (bb.width / 2);
+    bb.pos.y  = (ray->p.posY) - (bb.height / 2);
+    return bb;
+}

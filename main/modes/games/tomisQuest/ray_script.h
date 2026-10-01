@@ -1,0 +1,23 @@
+#ifndef _RAY_SCRIPT_H_
+#define _RAY_SCRIPT_H_
+
+#include "mode_ray.h"
+
+void loadScripts(ray_t* ray, const uint8_t* fileData, uint32_t fileSize, uint32_t caps);
+void freeScripts(ray_t* ray);
+
+bool checkScriptShootObjs(ray_t* ray, int32_t id, wsg_t* portrait);
+bool checkScriptKill(ray_t* ray, int32_t id, wsg_t* portrait);
+bool checkScriptGet(ray_t* ray, int32_t id, wsg_t* portrait);
+bool checkScriptTouch(ray_t* ray, int32_t id, wsg_t* portrait);
+bool checkScriptShootWall(ray_t* ray, int32_t x, int32_t y);
+bool checkScriptEnter(ray_t* ray, int32_t x, int32_t y);
+bool checkScriptTime(ray_t* ray, uint32_t elapsedUs);
+bool checkScriptSong(ray_t* ray, int32_t x, int32_t y, songType_t song, wsg_t* portrait);
+bool checkScriptObjEnter(ray_t* ray, int32_t id, int32_t x, int32_t y, wsg_t* portrait);
+bool checkScriptHaveThing(ray_t* ray, thing_t thing, wsg_t* portrait);
+bool checkScriptTurntables(ray_t* ray, uint32_t id, wsg_t* portrait);
+
+void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait);
+
+#endif

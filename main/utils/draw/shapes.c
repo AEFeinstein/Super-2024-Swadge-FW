@@ -1103,6 +1103,82 @@ void drawEllipse(int xm, int ym, int a, int b, paletteColor_t col)
 }
 
 /**
+ * @brief Draw a filled ellipse
+ *
+ * @param xm The X coordinate of the center of the ellipse
+ * @param ym The Y coordinate of the center of the ellipse
+ * @param a The X radius of the ellipse
+ * @param b The Y radius of the ellipse
+ * @param col The color to draw
+ */
+void drawEllipseFilled(int xm, int ym, int a, int b, paletteColor_t col)
+{
+    paletteColor_t* fb = getPxTftFramebuffer();
+    bool skipDraw      = false;
+
+    long x = -a, y = 0;                      /* II. quadrant from bottom left to top right */
+    long e2 = b, dx = (1 + 2 * x) * e2 * e2; /* error increment  */
+    long dy = x * x, err = dx + dy;          /* error of 1.step */
+
+    do
+    {
+        // Only fill a new row when Y changes
+        if (!skipDraw)
+        {
+            // Find where X starts and ends on this row, clamped to the display
+            int xMin   = xm + x;
+            xMin       = CLAMP(xMin, 0, TFT_WIDTH);
+            int xMax   = xm - x;
+            xMax       = CLAMP(xMax, 0, TFT_WIDTH);
+            int xWidth = xMax - xMin;
+
+            // Fill a row of the lower half of the circle, if on screen
+            int ymp = (ym + y);
+            if (0 <= ymp && ymp < TFT_HEIGHT)
+            {
+                memset(&fb[TFT_WIDTH * ymp + xMin], col, xWidth);
+            }
+
+            // Fill a row of the upper half of the circle, if on screen
+            int ymn = (ym - y);
+            if (0 <= ymn && ymn < TFT_HEIGHT)
+            {
+                memset(&fb[TFT_WIDTH * ymn + xMin], col, xWidth);
+            }
+        }
+        else
+        {
+            skipDraw = false;
+        }
+
+        e2 = 2 * err;
+
+        if (e2 >= dx)
+        {
+            x++;
+            err += dx += 2 * (long)b * b;
+        } /* x step */
+
+        if (e2 <= dy)
+        {
+            y++;
+            err += dy += 2 * (long)a * a;
+        } /* y step */
+        else
+        {
+            skipDraw = true;
+        }
+    } while (x <= 0);
+
+    /* too early stop for flat ellipses with a=1, */
+    if (y < b)
+    {
+        /* -> finish tip of ellipse */
+        drawLineFast(xm, ym - b, xm, ym + b, col);
+    }
+}
+
+/**
  * @brief Helper function to draw the outline of a circle with translation and scaling
  *
  * @param xm The X coordinate of the center of the circle
@@ -1341,42 +1417,67 @@ static void drawCircleFilledInner(int xm, int ym, int r, paletteColor_t col, int
  */
 void drawCircleOutline(int xm, int ym, int r, int stroke, paletteColor_t col)
 {
-    SETUP_FOR_TURBO();
+    paletteColor_t* dispPx = getPxTftFramebuffer();
 
     // Outer circle
-    int x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
+    int r_outer   = r;
+    int x_outer   = -r_outer;
+    int y_outer   = 0;
+    int err_outer = 2 - 2 * r_outer; /* bottom left to top right */
 
     // Inner circle
-    int r_inner = r - stroke;
-    int x_inner = -r_inner, y_inner = 0, err_inner = 2 - 2 * r_inner; /* bottom left to top right */
+    int r_inner   = r - stroke;
+    int x_inner   = -r_inner;
+    int y_inner   = 0;
+    int err_inner = 2 - 2 * r_inner; /* bottom left to top right */
 
-    // Iterates over Y
+    // Only draw new horizontal lines when Y changes
+    // This prevents over-draw
+    bool newline = true;
+
     do
     {
-        // Iterates over X
-        for (int lineX = xm + x; lineX <= xm - x; lineX++)
+        if (newline)
         {
-            // Only draw the outline
-            if (lineX < (xm + x_inner) || lineX > (xm - x_inner))
+            newline = false;
+
+            // Get the start and end points for the two horizontal lines at the Y
+            int xStart_l = CLAMP(xm + x_outer, 0, TFT_WIDTH - 1);
+            int xEnd_l   = CLAMP(xm + x_inner, 0, TFT_WIDTH - 1);
+            int xStart_r = CLAMP(xm - x_inner, 0, TFT_WIDTH - 1);
+            int xEnd_r   = CLAMP(xm - x_outer, 0, TFT_WIDTH - 1);
+
+            // Only memset if vertically in bounds
+            int yStart = ym - y_outer;
+            if (0 <= yStart && yStart < TFT_HEIGHT)
             {
-                TURBO_SET_PIXEL_BOUNDS(lineX, (ym - y), col);
-                TURBO_SET_PIXEL_BOUNDS(lineX, (ym + y), col);
+                memset(&dispPx[yStart * TFT_WIDTH + xStart_l], col, xEnd_l - xStart_l);
+                memset(&dispPx[yStart * TFT_WIDTH + xStart_r], col, xEnd_r - xStart_r);
+            }
+
+            // Only memset if vertically in bounds
+            int yEnd = ym + y_outer - 1;
+            if (0 <= yEnd && yEnd < TFT_HEIGHT)
+            {
+                memset(&dispPx[yEnd * TFT_WIDTH + xStart_l], col, xEnd_l - xStart_l);
+                memset(&dispPx[yEnd * TFT_WIDTH + xStart_r], col, xEnd_r - xStart_r);
             }
         }
 
-        // Iterate the outer circle
-        r = err;
-        if (r <= y)
+        // Do outer circle things
+        r_outer = err_outer;
+        if (r_outer <= y_outer)
         {
-            err += ++y * 2 + 1; /* e_xy+e_y < 0 */
+            err_outer += ++y_outer * 2 + 1; /* e_xy+e_y < 0 */
+            newline = true;
         }
-        if (r > x || err > y) /* e_xy+e_x > 0 or no 2nd y-step */
+        if (r_outer > x_outer || err_outer > y_outer) /* e_xy+e_x > 0 or no 2nd y-step */
         {
-            err += ++x * 2 + 1; /* -> x-step now */
+            err_outer += ++x_outer * 2 + 1; /* -> x-step now */
         }
 
-        // Iterate the inner circle to match
-        while (y_inner != y)
+        // Do inner circle things, to match the outer circle
+        while ((x_inner < 0) && (y_outer != y_inner))
         {
             r_inner = err_inner;
             if (r_inner <= y_inner)
@@ -1388,7 +1489,8 @@ void drawCircleOutline(int xm, int ym, int r, int stroke, paletteColor_t col)
                 err_inner += ++x_inner * 2 + 1; /* -> x-step now */
             }
         }
-    } while (x < 0);
+
+    } while (x_outer < 0);
 }
 
 /**
