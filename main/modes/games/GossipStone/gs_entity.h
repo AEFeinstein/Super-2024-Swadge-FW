@@ -50,7 +50,7 @@ struct gs_entity_t
     bool destroyFlag;               // Entity will be destroyed after engine updating and before engine drawing.
     vec_t pos;
     gs_colliderType_t colliderType;
-    union gs_collider_u collider; // it's a union so whichever internal variable was saved last uses the space.
+    gs_collider_u collider; // it's a union so whichever internal variable was saved last uses the space.
     gs_animationType_t type;
     bool paused;
     gs_paletteIdx_t palleteIdx;

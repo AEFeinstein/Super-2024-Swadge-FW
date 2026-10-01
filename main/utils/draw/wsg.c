@@ -510,16 +510,16 @@ void drawWsgSmoothScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, q24_8 xSc
     q24_8 endY   = TO_FX_QN(MIN(TFT_HEIGHT, yOff + (newHeigt >> FRAC_BITS)), FRAC_BITS);
 
     paletteColor_t* px = getPxTftFramebuffer();
-    int wsgY           = 0;
-    if (yOff < 0)
-    {
-        wsgY -= yOff;
-    }
-    int wsgX = 0;
-    if (xOff < 0)
-    {
-        wsgX -= xOff;
-    }
+    // int wsgY           = 0;
+    // if (yOff < 0)
+    // {
+    //     wsgY -= yOff;
+    // }
+    // int wsgX = 0;
+    // if (xOff < 0)
+    // {
+    //     wsgX -= xOff;
+    // }
 
     for (q24_8 y = startY; y < endY; y += TO_FX_QN(1, FRAC_BITS))
     {
