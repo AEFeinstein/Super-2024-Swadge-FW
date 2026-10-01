@@ -13,7 +13,7 @@ def main():
         prog=Path(__file__).name, description="Tile map editor for Swadge games"
     )
 
-    defaultAssetsPath = "../../assets/magtroid/"
+    defaultAssetsPath = "../../assets/tomisQuest/"
     defaultImagesPath = "./imgs/"
     parser.add_argument(
         "-a",

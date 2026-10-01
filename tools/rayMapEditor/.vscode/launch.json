@@ -11,7 +11,7 @@
             "program": "ray_map_editor.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["--file", "../../assets/magtroid/maps/tomis_house.rmd"]
+            "args": ["--file", "../../assets/tomisQuest/maps/tomis_house.rmd"]
         }
     ]
 }

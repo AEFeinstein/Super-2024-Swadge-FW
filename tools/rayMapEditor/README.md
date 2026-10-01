@@ -14,7 +14,7 @@ Tile map editor for Swadge games
 options:
   -h, --help            show this help message and exit
   -a, --swadge-assets-path SWADGE_ASSETS_PATH
-                        Path to the Swadge assets directory. The default value is "../../assets/magtroid/".
+                        Path to the Swadge assets directory. The default value is "../../assets/tomisQuest/".
   -i, --editor-images-path EDITOR_IMAGES_PATH
                         Path to the Editor images directory. The default value is "./imgs/".
   -f, --file FILE       The map file to load (optional)
@@ -23,7 +23,7 @@ options:
 ### Example
 
 ```bash
-./ray_map_editor.py -a ../../assets/magtroid/ -i ./imgs/ -f ../../assets/magtroid/maps/0.rmd 
+./ray_map_editor.py -a ../../assets/tomisQuest/ -i ./imgs/ -f ../../assets/tomisQuest/maps/0.rmd 
 ```
 
 ## Controls
