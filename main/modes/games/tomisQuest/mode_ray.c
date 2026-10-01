@@ -267,8 +267,8 @@ static void rayEnterMode(void)
     led_t leds[CONFIG_NUM_LEDS] = {0};
     setLeds(leds, CONFIG_NUM_LEDS);
 
-    // Set frame rate to 30 FPS
-    setFrameRateUs(1000000 / 60);
+    // Set frame rate to 50 FPS
+    setFrameRateUs(1000000 / 50);
 
     // Check if a custom level should be loaded from NVS (a local file)
     size_t fLen = 0;

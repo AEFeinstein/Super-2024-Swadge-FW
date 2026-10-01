@@ -454,27 +454,47 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
         return;
     }
 
+    bool lTouched     = false;
+    int32_t lPosition = 0;
+    bool rTouched     = false;
+    int32_t rPosition = 0;
+
     linearTouch_t touches[2] = {0};
-    getTouchLinear(touches, ARRAY_SIZE(touches));
-    const linearTouch_t* lTouch = &touches[0];
-    const linearTouch_t* rTouch = &touches[1];
+    int32_t phi, r, intensity;
+    if (2 == getTouchLinear(touches, ARRAY_SIZE(touches)))
+    {
+        lTouched  = touches[0].touched;
+        lPosition = touches[0].position;
+        rTouched  = touches[1].touched;
+        rPosition = touches[1].position;
+    }
+    else if (getTouchJoystick(&phi, &r, &intensity))
+    {
+        int32_t x, y;
+        getTouchCartesian(phi, r, &x, &y);
+
+        rTouched  = true;
+        rPosition = 1024 - y;
+        lTouched  = true;
+        lPosition = x;
+    }
 
     struct touchState* ts = &ray->ps.ts;
 
     if (ray->p.i.haveShield)
     {
-        if (lTouch->touched && !ray->ps.shieldTouched)
+        if (lTouched && !ray->ps.shieldTouched)
         {
             ray->ps.shieldTouched = true;
             ray->ps.shieldTimerUs = 500000;
-            ray->ps.shieldZone    = lTouch->position / 256;
+            ray->ps.shieldZone    = lPosition / 256;
 
             // Cancel any swords immediately
             ray->ps.swordAngle   = 0;
             ray->ps.swordTimerUs = 0;
             ray->ps.swordActive  = false;
         }
-        else if (!lTouch->touched && ray->ps.shieldTouched)
+        else if (!lTouched && ray->ps.shieldTouched)
         {
             ray->ps.shieldTouched = false;
             ray->ps.shieldTimerUs = 0;
@@ -482,19 +502,19 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
         }
     }
 
-    if (rTouch->touched)
+    if (rTouched)
     {
         // Save initial position if not set
         if (ts->initialTouchPos < 0)
         {
-            ts->initialTouchPos = rTouch->position;
+            ts->initialTouchPos = rPosition;
         }
 
         // Save last touch
-        ts->lastTouchPos = rTouch->position;
+        ts->lastTouchPos = rPosition;
 
         // Calculate the distance between inital and curren touches
-        int32_t touchDelta = rTouch->position - ts->initialTouchPos;
+        int32_t touchDelta = rPosition - ts->initialTouchPos;
 
         // Check if the touch has dragged far enough to start drawing a bow or setting a bomb
         const int32_t touchLimit = 1024 / 5;
