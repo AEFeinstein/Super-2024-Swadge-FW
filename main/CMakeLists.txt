@@ -1,3 +1,4 @@
+# find main/ -iname "*.c" | sort | sed -E 's/main\/(.*)/"\1"/g'
 idf_component_register(SRCS "modes/games/atrium/atrium.c"
                             "modes/games/Bombadeetle/bombadeetle.c"
                             "modes/games/GossipStone/gossipStone.c"
@@ -12,6 +13,25 @@ idf_component_register(SRCS "modes/games/atrium/atrium.c"
                             "modes/games/GottaGo/src/ggLevel.c"
                             "modes/games/GottaGo/src/ggScoring.c"
                             "modes/games/RoboRunner/roboRunner.c"
+                            "modes/games/tomisQuest/2d_renderer.c"
+                            "modes/games/tomisQuest/enemies/ray_enemy_box.c"
+                            "modes/games/tomisQuest/enemies/ray_enemy.c"
+                            "modes/games/tomisQuest/enemies/ray_enemy_grunt.c"
+                            "modes/games/tomisQuest/enemies/ray_enemy_turret.c"
+                            "modes/games/tomisQuest/mode_ray.c"
+                            "modes/games/tomisQuest/ray_credits.c"
+                            "modes/games/tomisQuest/ray_death_screen.c"
+                            "modes/games/tomisQuest/ray_dialog.c"
+                            "modes/games/tomisQuest/ray_instrument.c"
+                            "modes/games/tomisQuest/ray_map.c"
+                            "modes/games/tomisQuest/ray_object.c"
+                            "modes/games/tomisQuest/ray_pause.c"
+                            "modes/games/tomisQuest/ray_player.c"
+                            "modes/games/tomisQuest/ray_script.c"
+                            "modes/games/tomisQuest/ray_shop_dialog.c"
+                            "modes/games/tomisQuest/ray_tex_manager.c"
+                            "modes/games/tomisQuest/ray_turntable.c"
+                            "modes/games/tomisQuest/ray_warp_screen.c"
                             "modes/music/colorchord/colorchord.c"
                             "modes/music/jukebox/jukebox.c"
                             "modes/music/tunernome/tunernome.c"
@@ -116,6 +136,7 @@ idf_component_register(SRCS "modes/games/atrium/atrium.c"
                                   crashwrap
                     REQUIRES esp_timer
                              spi_flash
+                    # find main/ -type d | sort | sed -E 's/main\/(.*)/".\/\1"/g'
                     INCLUDE_DIRS "./"
                                 "./modes"
                                 "./modes/games"
@@ -126,6 +147,8 @@ idf_component_register(SRCS "modes/games/atrium/atrium.c"
                                 "./modes/games/GottaGo/Data"
                                 "./modes/games/GottaGo/src"
                                 "./modes/games/RoboRunner"
+                                "./modes/games/tomisQuest"
+                                "./modes/games/tomisQuest/enemies"
                                 "./modes/music"
                                 "./modes/music/colorchord"
                                 "./modes/music/jukebox"
@@ -168,7 +191,8 @@ idf_component_register(SRCS "modes/games/atrium/atrium.c"
                                 "./utils/midi"
                                 "./utils/network"
                                 "./utils/peripherals"
-                                "./utils/settings")
+                                "./utils/settings"
+)
 
 # Custom target will always cause its dependencies to be evaluated and is
 # run by default

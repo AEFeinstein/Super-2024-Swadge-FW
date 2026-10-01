@@ -227,6 +227,7 @@
 #include "swadgePass.h"
 #include "trophy.h"
 #include "helpPages.h"
+#include "dialogBox.h"
 
 // Sound utilities
 #include "swSynth.h"

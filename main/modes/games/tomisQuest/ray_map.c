@@ -1,0 +1,404 @@
+//==============================================================================
+// Includes
+//==============================================================================
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include <esp_heap_caps.h>
+
+#include "cnfs.h"
+#include "heatshrink_helper.h"
+#include "ray_map.h"
+#include "ray_tex_manager.h"
+#include "ray_script.h"
+#include "ray_enemy.h"
+
+//==============================================================================
+// Functions
+//==============================================================================
+
+/**
+ * @brief Load a RMH from ROM to RAM. RMHs placed in the assets_image folder
+ * before compilation will be automatically flashed to ROM
+ *
+ * @param mapId The map ID to load
+ * @param ray The ray_t to load the map into
+ * @param pStartX The starting X coordinate for this map
+ * @param pStartY The starting Y coordinate for this map
+ * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
+ * than normal RAM
+ */
+void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool spiRam)
+{
+    // Convenience inventory to know what not to spawn
+    rayInventory_t* inv = &ray->p.i;
+
+    // Start with an uninitialized camera
+    // This may be loaded from NVM set via script, or in free-roam
+    ray->camera.x = 0;
+    ray->camera.y = 0;
+
+    // Clear this flag before loading the map
+    ray->cameraScripted = false;
+
+    // Pick the allocation type
+    uint32_t caps = spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_DEFAULT;
+
+    // Convenience pointers
+    rayMap_t* map = &ray->map;
+
+    // The map file data, may be loaded from compressed file or CNFS injection
+    uint32_t fileSize         = 0;
+    const uint8_t* fileData   = NULL;
+    uint8_t* decompressedData = NULL;
+
+    // Check if a custom map cam be loaded from CNFS
+    const uint8_t* userLevel = NULL;
+    size_t userLevelLen      = 0;
+    // CNFS_NUM_FILES is usually invalid, but is the index used for injected data
+    if ((userLevel = cnfsGetFile(CNFS_NUM_FILES, &userLevelLen)) && userLevelLen > 0)
+    {
+        // Load from the injected file
+        fileSize = userLevelLen;
+        fileData = userLevel;
+    }
+    else // Load a map normally from compressed data
+    {
+        // Read and decompress the file
+        fileSize = 0;
+        // Save this as a separate pointer for freeing later
+        decompressedData = readHeatshrinkFile(getRayMapMetadata(mapId)->mapFile, &fileSize, spiRam);
+        fileData         = decompressedData;
+    }
+
+    uint32_t fileIdx = 0;
+
+    // Read the width and height
+    map->w = fileData[fileIdx++];
+    map->h = fileData[fileIdx++];
+
+    // Allocate the tiles, 2D array
+    map->tiles = (rayMapCell_t**)heap_caps_calloc(map->w, sizeof(rayMapCell_t*), caps);
+    for (uint32_t x = 0; x < map->w; x++)
+    {
+        map->tiles[x] = (rayMapCell_t*)heap_caps_calloc(map->h, sizeof(rayMapCell_t), caps);
+    }
+
+    // Allocate space to track what tiles have been visited
+    map->visitedTiles = (rayTileState_t*)heap_caps_calloc(map->w * map->h, sizeof(rayTileState_t), caps);
+
+    // Attempt to read visited tile data. It's fine if this fails
+    size_t visitedTilesLen = map->w * map->h * sizeof(rayTileState_t);
+    readNvsBlob(getRayMapMetadata(mapId)->visitedKey, map->visitedTiles, &visitedTilesLen);
+
+    // Read tile data
+    for (uint32_t y = 0; y < map->h; y++)
+    {
+        for (uint32_t x = 0; x < map->w; x++)
+        {
+            // Each tile has a type and object
+            map->tiles[x][y].type     = fileData[fileIdx++];
+            map->tiles[x][y].doorOpen = 0;
+            rayMapCellType_t oType    = fileData[fileIdx++];
+            rayMapCellType_t cType    = map->tiles[x][y].type;
+
+            // If this is a cracked door, add it to the list for later bomb checks
+            if (BG_DOOR_CRACK_H == cType || BG_DOOR_CRACK_V == cType || BG_DOOR_ROCKS == cType)
+            {
+                intptr_t location = ((x & 0xFFFF) << 16) | (y & 0xFFFF);
+                push(&ray->map.crackedWalls, (void*)location);
+            }
+            else if (BG_DOOR_LOCKED == cType)
+            {
+                // Open doors which were already unlocked
+                if (SCRIPT_DOOR_OPEN == map->visitedTiles[(y * ray->map.w) + x])
+                {
+                    // If the key was already used, open the door
+                    map->tiles[x][y].doorOpen = TO_FX(1);
+
+                    // Turn DOOR into FLOOR
+                    map->tiles[x][y].type = rayGetDefaultFloor();
+                }
+            }
+
+            // If the oType isn't empty
+            if (EMPTY != oType)
+            {
+                // Read the oType's ID
+                uint8_t id = fileData[fileIdx++];
+                // If it's the starting point
+                if (oType == OBJ_ENEMY_START_POINT)
+                {
+                    // Save the starting coordinates
+                    *pStartX = ADD_FX(TO_FX(x), TO_FX_FRAC(1, 2));
+                    *pStartY = ADD_FX(TO_FX(y), TO_FX_FRAC(1, 2));
+                }
+                // If it's an object
+                else if ((oType & OBJ) == OBJ)
+                {
+                    // Allocate a new object
+                    if ((oType & 0x60) == ENEMY)
+                    {
+                        rayCreateEnemy(ray, oType, id, TO_FX(x) + TO_FX_FRAC(1, 2), TO_FX(y) + TO_FX_FRAC(1, 2));
+                    }
+                    else
+                    {
+                        bool shouldCreate = true;
+
+                        switch (oType)
+                        {
+                            case OBJ_ITEM_EWI:
+                            {
+                                if (inv->haveEwiOfTime)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_BOMB:
+                            {
+                                if (inv->haveBombs)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_BOOTS:
+                            {
+                                if (inv->haveJumpBoots)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_SHIELD:
+                            {
+                                if (inv->haveShield)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_BOW:
+                            {
+                                if (inv->haveBow)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_BOOMERANG:
+                            {
+                                if (inv->haveBoomerang)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_TURNTABLES:
+                            {
+                                if (inv->haveTurntables)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_LULLABY:
+                            {
+                                if (inv->haveDoriasLullaby)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            default:
+                            {
+                                // Check previous pickups
+                                for (int idx = 0; idx < ARRAY_SIZE(ray->p.i.items); idx++)
+                                {
+                                    invItem_t* item = &ray->p.i.items[idx];
+                                    if (item->occupied &&       //
+                                        item->mapId == mapId && //
+                                        item->objId == id)
+                                    {
+                                        // Item was already obtained
+                                        shouldCreate = false;
+                                        break;
+                                    }
+                                }
+
+                                // Create all other objects that aren't obtainable
+                                break;
+                            }
+                        }
+
+                        // Create this object if it wasn't already picked up
+                        if (shouldCreate)
+                        {
+                            rayCreateCommonObj(ray, oType, id, TO_FX(x) + TO_FX_FRAC(1, 2),
+                                               TO_FX(y) + TO_FX_FRAC(1, 2));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Reset script timers
+    ray->scriptTimer       = 0;
+    ray->secondsSinceStart = 0;
+
+    // Load Scripts
+    loadScripts(ray, &fileData[fileIdx], fileSize - fileIdx, caps);
+
+    // After loading scripts, check if the player has this thing
+    if (ray->p.i.haveMayorHouseTrigger)
+    {
+        checkScriptHaveThing(ray, MAYOR_HOUSE_TRIGGER, ray->ps.sprite);
+    }
+
+    // Only free data which was decompressed
+    if (decompressedData)
+    {
+        heap_caps_free(decompressedData);
+    }
+
+    // Get a count of unused small keys
+    ray->ps.keyCount = 0;
+    for (int idx = 0; idx < ARRAY_SIZE(ray->p.i.items); idx++)
+    {
+        invItem_t* invItem = &ray->p.i.items[idx];
+        if (invItem->occupied &&                         // Has item
+            invItem->mapId == ray->p.mapId &&            // in this map
+            invItem->type == (OBJ_ITEM_KEY & ID_MASK) && // of type key
+            !invItem->keyUsed)                           // not used yet
+        {
+            ray->ps.keyCount++;
+        }
+    }
+
+    // Play this map's music
+    globalMidiPlayerPlaySong(getAtIndex(&ray->bgmSongs, ray->p.mapId), MIDI_BGM);
+}
+
+/**
+ * @brief Create an object, either scenery or item
+ *
+ * @param ray The entire game state
+ * @param type The type of object to spawn
+ * @param id The ID for this object
+ * @param x The X position for this object
+ * @param y The Y position for this object
+ */
+void rayCreateCommonObj(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_8 y)
+{
+    rayObjCommon_t* newObj = (rayObjCommon_t*)heap_caps_calloc(1, sizeof(rayObjCommon_t), MALLOC_CAP_SPIRAM);
+
+    // Set type, sprite and ID
+    newObj->type           = type;
+    newObj->sprite         = getTexByType(ray, type);
+    newObj->spriteMirrored = false;
+    newObj->spriteRotation = 0;
+    newObj->solidColor     = cTransparent;
+    newObj->id             = id;
+
+    // Set spatial values
+    newObj->posX        = x;
+    newObj->posY        = y;
+    newObj->bound.box.w = TO_FX_FRAC(newObj->sprite->w, CELL_SIZE);
+    newObj->bound.box.h = TO_FX_FRAC(newObj->sprite->h, CELL_SIZE);
+    // Don't set radius
+
+    // Add it to the linked list
+    if ((type & 0x60) == ITEM)
+    {
+        push(&ray->items, newObj);
+    }
+    else
+    {
+        push(&ray->scenery, newObj);
+    }
+}
+
+/**
+ * @brief Free an allocated ::rayMap_t
+ *
+ * @param map the ::rayMap_t to free
+ */
+void freeRayMap(rayMap_t* map)
+{
+    if (map->tiles)
+    {
+        // Free each column
+        for (uint32_t x = 0; x < map->w; x++)
+        {
+            heap_caps_free(map->tiles[x]);
+        }
+        // Free the pointers
+        heap_caps_free(map->tiles);
+        // Free visited tiles too
+        heap_caps_free(map->visitedTiles);
+
+        // Clear the list of cracked walls
+        clear(&map->crackedWalls);
+    }
+}
+
+/**
+ * @brief Check if a cell is currently passable
+ *
+ * @param cell The cell type to check
+ * @return true if the cell can be passed through, false if it cannot
+ */
+bool isPassableCell(rayMapCell_t* cell)
+{
+    if (CELL_IS_TYPE(cell->type, BG | WALL))
+    {
+        // Never pass through walls
+        return false;
+    }
+    else if (CELL_IS_TYPE(cell->type, BG | DOOR))
+    {
+        // Only pass through at least half open doors
+        return (TO_FX_FRAC(1, 2) < cell->doorOpen);
+    }
+    else
+    {
+        // Always pass through everything else
+        return true;
+    }
+}
+
+/**
+ * @brief Mark a tile, and surrounding tiles, as visited on the map.
+ * Visited tiles are drawn in the pause menu
+ *
+ * @param map The map to mark tiles visited for
+ * @param x The X coordinate of the tile that was visited
+ * @param y The Y coordinate of the tile that was visited
+ */
+void markTileVisited(rayMap_t* map, int16_t x, int16_t y)
+{
+    // Find in-bounds loop indices
+    int16_t minX = MAX(0, x - 1);
+    int16_t maxX = MIN(map->w - 1, x + 1);
+    int16_t minY = MAX(0, y - 1);
+    int16_t maxY = MIN(map->h - 1, y + 1);
+
+    // For a 3x3 grid (inbounds)
+    for (int16_t yIdx = minY; yIdx <= maxY; yIdx++)
+    {
+        for (int16_t xIdx = minX; xIdx <= maxX; xIdx++)
+        {
+            // Mark these cells as visited, don't undo SCRIPT_DOOR_OPEN
+            rayTileState_t* ts = &map->visitedTiles[(yIdx * map->w) + xIdx];
+            if (*ts == NOT_VISITED)
+            {
+                *ts = VISITED;
+            }
+        }
+    }
+}

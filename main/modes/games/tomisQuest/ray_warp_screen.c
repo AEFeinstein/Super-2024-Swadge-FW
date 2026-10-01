@@ -1,0 +1,139 @@
+//==============================================================================
+// Includes
+//==============================================================================
+
+#include "ray_warp_screen.h"
+#include "ray_map.h"
+#include "ray_player.h"
+#include "2d_renderer.h"
+#include "ray_script.h"
+
+//==============================================================================
+// Functions
+//==============================================================================
+
+/**
+ * @brief Draw the background for the warp screen
+ *
+ * @param x the x coordinate that should be updated
+ * @param y the x coordinate that should be updated
+ * @param w the width of the rectangle to be updated
+ * @param h the height of the rectangle to be updated
+ */
+void drawWarpBackground(int16_t x, int16_t y, int16_t w, int16_t h)
+{
+    // Draw black screen
+    fillDisplayArea(x, y, x + w, y + h, c000);
+}
+
+/**
+ * @brief Draw the foreground for the warp screen and run the timer
+ *
+ * @param ray The entire game state
+ * @param elapsedUs The elapsed time since this function was last called
+ */
+void rayWarpScreenRender(ray_t* ray, uint32_t elapsedUs)
+{
+    // Draw text with the destination name
+    char warpText[128] = {0};
+    snprintf(warpText, sizeof(warpText) - 1, "Traveling to %s", getRayMapMetadata(ray->warpDestMapId)->name);
+    int16_t xOff = 20;
+    int16_t yOff = (TFT_HEIGHT) / 2 - ray->logbook.height;
+    drawTextWordWrapCentered(&ray->logbook, c555, warpText, &xOff, &yOff, TFT_WIDTH - xOff, TFT_HEIGHT);
+
+    // Decrement the timer
+    ray->warpTimerUs -= elapsedUs;
+    // If it expired
+    if (ray->warpTimerUs <= 0)
+    {
+        // Return to the game
+        raySwitchToScreen(RAY_GAME);
+        // Don't warp again
+        ray->warpTimerUs = 0;
+        // Stop warp SFX
+        // ray->sfx_warp.shouldLoop = false;
+        globalMidiPlayerStop(true);
+        // Play music
+        globalMidiPlayerPlaySong(getAtIndex(&ray->bgmSongs, ray->p.mapId), MIDI_BGM);
+    }
+}
+
+/**
+ * @brief Set the warp map and cell destination, but do not warp yet
+ *
+ * @param ray The entire game state
+ * @param mapId The map ID to warp to
+ * @param posX The map cell X position to warp to
+ * @param posY The map cell Y position to warp to
+ */
+void setWarpDestination(ray_t* ray, int32_t mapId, int16_t posX, int16_t posY)
+{
+    // Set the destination
+    ray->warpDestMapId = mapId;
+    ray->warpDestPosX  = ADD_FX(TO_FX(posX), TO_FX_FRAC(1, 2));
+    ray->warpDestPosY  = ADD_FX(TO_FX(posY), TO_FX_FRAC(1, 2));
+
+    // Set the warp timer
+    ray->warpTimerUs = 2500000;
+}
+
+/**
+ * @brief Execute the warp to the destination map and cell, freeing and reloading the map and objects
+ *
+ * @param ray The entire game state
+ */
+void warpToDestination(ray_t* ray)
+{
+    // Stop BGM when manipulating data
+    globalMidiPlayerStop(true);
+
+    // Save the current map's visited tiles
+    raySaveVisitedTiles(ray);
+
+    // Free the scripts
+    rayFreeCurrentState(ray);
+
+    // Load the new map
+    q24_8 pStartX = 0, pStartY = 0;
+    loadRayMap(ray->warpDestMapId, ray, &pStartX, &pStartY, true);
+    // Stop again after loading the map starts
+    globalMidiPlayerStop(true);
+
+    // Set the map ID
+    ray->p.mapId = ray->warpDestMapId;
+
+    // Set the player position after the map is loaded
+    ray->p.posX = ray->warpDestPosX;
+    ray->p.posY = ray->warpDestPosY;
+
+    // Assume the warp target is safe
+    ray->ps.lastGoodCell.x = FROM_FX(ray->p.posX);
+    ray->ps.lastGoodCell.y = FROM_FX(ray->p.posY);
+
+    // Initialize player angle
+    if (ray->p.posX < TO_FX(ray->map.w) / 2)
+    {
+        // On the left side, look right
+        ray->p.dirX = TO_FX(1);
+        ray->p.dirY = TO_FX(0);
+    }
+    else
+    {
+        // On the right side, look left
+        ray->p.dirX = -TO_FX(1);
+        ray->p.dirY = TO_FX(0);
+    }
+
+    // Save after warping
+    raySavePlayer(ray);
+
+    // Mark the starting tile as visited
+    markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
+
+    // Check script from entering the initial cell
+    checkScriptEnter(ray, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
+
+    // Loop SFX after saving
+    // ray->sfx_warp.shouldLoop = false;
+    globalMidiPlayerPlaySong(&ray->sfx_warp, MIDI_SFX);
+}

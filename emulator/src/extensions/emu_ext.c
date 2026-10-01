@@ -26,6 +26,7 @@
 #include "ext_touch_1d_left.h"
 #include "ext_touch_1d_right.h"
 #include "ext_touch.h"
+#include "ext_tomis_quest.h"
 
 //==============================================================================
 // Registered Extensions
@@ -36,8 +37,9 @@
 //==============================================================================
 
 static const emuExtension_t* registeredExtensions[] = {
-    &touchEmu1DLeftExtension, &ledEmuExtension,   &touchEmu1DRightExtension, &fuzzerEmuExtension, &toolsEmuExtension,
-    &keymapEmuCallback,       &modesEmuExtension, &gamepadEmuExtension,      &replayEmuExtension, &midiEmuExtension,
+    &touchEmu1DLeftExtension, &ledEmuExtension,   &touchEmu1DRightExtension, &fuzzerEmuExtension,
+    &toolsEmuExtension,       &keymapEmuCallback, &modesEmuExtension,        &gamepadEmuExtension,
+    &replayEmuExtension,      &midiEmuExtension,  &tomiEmuExtension,
 };
 
 //==============================================================================

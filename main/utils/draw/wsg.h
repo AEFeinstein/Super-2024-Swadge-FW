@@ -62,7 +62,9 @@ typedef struct
 } wsg_t;
 
 void rotatePixel(int32_t* x, int32_t* y, int32_t rotateDeg, int32_t width, int32_t height);
-void drawWsg(const wsg_t* wsg, int32_t xOff, int32_t yOff, bool flipLR, bool flipUD, int32_t rotateDeg);
+#define drawWsg(w, x, y, lr, ud, rot) drawWsgSolid(w, x, y, lr, ud, rot, cTransparent)
+void drawWsgSolid(const wsg_t* wsg, int32_t xOff, int32_t yOff, bool flipLR, bool flipUD, int32_t rotateDeg,
+                  paletteColor_t color);
 void drawWsgSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff);
 void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t xScale, int16_t yScale);
 void drawWsgSimpleScaledUp(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t xScale, int16_t yScale);
