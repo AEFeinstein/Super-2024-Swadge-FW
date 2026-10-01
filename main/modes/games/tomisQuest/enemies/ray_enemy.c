@@ -160,7 +160,7 @@ static bool animateEnemy(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 {
     if (enemy->iFrameTimer > 0)
     {
-        enemy->c.solidColor = ((4 * enemy->iFrameTimer) / ENEMY_DEFAULT_IFRAMES_US) & 0x01 ? c111 : c444;
+        enemy->c.solidColor = ((6 * enemy->iFrameTimer) / ENEMY_DEFAULT_IFRAMES_US) & 0x01 ? c111 : c444;
         enemy->iFrameTimer -= elapsedUs;
     }
     else

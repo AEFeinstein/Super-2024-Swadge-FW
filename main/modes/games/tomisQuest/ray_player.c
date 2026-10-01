@@ -19,8 +19,8 @@
 // Defines
 //==============================================================================
 
-#define SWORD_SWING_TIME  200000
-#define SWORD_SWING_ANGLE 120
+#define SWORD_SWING_TIME  300000
+#define SWORD_SWING_ANGLE 180
 
 //==============================================================================
 // Functions
@@ -165,12 +165,7 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
                 if (ray->p.i.haveEwiOfTime && evt.down && (false == ray->ps.swordActive))
                 {
                     // Start a sword swing
-                    ray->ps.swordAngle = rayGetEightWayAngle(ray->p.dirX, ray->p.dirY);
-                    ray->ps.swordAngle -= 90;
-                    if (ray->ps.swordAngle < 0)
-                    {
-                        ray->ps.swordAngle += 360;
-                    }
+                    ray->ps.swordAngle   = 270; // -90
                     ray->ps.swordTimerUs = SWORD_SWING_TIME;
                     ray->ps.swordActive  = true;
 
@@ -784,7 +779,7 @@ bool rayPlayerDecrementHealth(ray_t* ray, int32_t health)
     }
 
     // Start player iframes
-    ray->ps.iFrameTimer = 1000000;
+    ray->ps.iFrameTimer = ENEMY_DEFAULT_IFRAMES_US;
 
     // Decrement health
     ray->p.health -= health;
@@ -828,8 +823,14 @@ line_t rayGetSwordLineSegment(ray_t* ray)
     };
     if (ray->ps.swordTimerUs > 0)
     {
-        sword.p2.x += getSin1024(ray->ps.swordAngle) / 4;
-        sword.p2.y += -getCos1024(ray->ps.swordAngle) / 4;
+        int32_t playerAngle = rayGetEightWayAngle(ray->p.dirX, ray->p.dirY);
+        int32_t swordAngle  = playerAngle + ray->ps.swordAngle;
+        if (swordAngle > 360)
+        {
+            swordAngle -= 360;
+        }
+        sword.p2.x += (9 * getSin1024(swordAngle)) / 32;
+        sword.p2.y += -(9 * getCos1024(swordAngle)) / 32;
     }
     return sword;
 }

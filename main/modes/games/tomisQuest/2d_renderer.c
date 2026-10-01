@@ -231,8 +231,14 @@ void drawForeground2d(ray_t* ray)
         drawEllipseFilled(pSpriteX + spriteRadius, pSpriteY + ray->ps.sprite->h, spriteRadius, spriteRadius / 2, c111);
     }
 
+    paletteColor_t playerSolidColor = cTransparent;
+    if (ray->ps.iFrameTimer > 0)
+    {
+        playerSolidColor = ((6 * ray->ps.iFrameTimer) / ENEMY_DEFAULT_IFRAMES_US) & 0x01 ? c111 : c444;
+    }
+
     drawWsgSolid(ray->ps.sprite, pSpriteX, pSpriteY + TO_PX(ray->ps.jumpPos), false, false,
-                 rayGetEightWayAngle(ray->p.dirX, ray->p.dirY), cTransparent);
+                 rayGetEightWayAngle(ray->p.dirX, ray->p.dirY), playerSolidColor);
     // rectangle_t bb = rayGetPlayerBB(ray);
     // drawRect(TO_PX(bb.pos.x) - camX,            //
     //          TO_PX(bb.pos.y) - camY,            //
@@ -245,7 +251,7 @@ void drawForeground2d(ray_t* ray)
         drawLineFast(TO_PX(sword.p1.x) - camX,                   //
                      TO_PX(sword.p1.y + ray->ps.jumpPos) - camY, //
                      TO_PX(sword.p2.x) - camX,                   //
-                     TO_PX(sword.p2.y + ray->ps.jumpPos) - camY, c550);
+                     TO_PX(sword.p2.y + ray->ps.jumpPos) - camY, c005);
     }
 
     if (ray->ps.shieldTimerUs > 0)

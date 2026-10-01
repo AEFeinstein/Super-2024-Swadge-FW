@@ -6,7 +6,7 @@
 #include "ray_tex_manager.h"
 #include "ray_player.h"
 
-#define ENEMY_DEFAULT_IFRAMES_US 500000
+#define ENEMY_DEFAULT_IFRAMES_US 1000000
 
 void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs);
 void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet);
