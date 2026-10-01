@@ -1,0 +1,73 @@
+#include "gs_gossip.h"
+
+// clang-format off
+const char* gossipList[GOSSIP_COUNT] = {
+    "Shake the rock to make it talk. Testers can press A.",
+    "All life is sacred. But I am merely a rock. I am divine!",
+    "Love everything that has life!",
+    "In Gaylordia, rocks float.",
+    "Listen to everything so we may proceed to phase two.",
+    "After The Prophecy is complete, you can use the left touch strip to rub the crystal ball.",
+    "Immortals are never alien to one another.",
+    "Of all creatures that breathe and move upon the earth, nothing is bred that is weaker than man.",
+    "The moon holds the future.",
+    "The godess of Gaylordia rearranges the stars every time you visit.",
+    "Consider how many people heard me say this.",
+};
+
+const char* AMAList[AMA_COUNT] = {
+    "Speak a yes or no question clearly into the microphone then shake the swadge.",
+    "It is certain.",
+    "It is decidedly so.",
+    "Without a doubt.",
+    "Yes definitely.",
+    "You may rely on it.",
+    "As I see it, yes.",
+    "Most likely.",
+    "Outlook good.",
+    "Yes.",
+    "Signs point to yes.",
+    "Reply hazy, try again.",
+    "Ask again later.",
+    "Better not tell you now.",
+    "Cannot predict now.",
+    "Concentrate and ask again.",
+    "Don't count on it.",
+    "My reply is no.",
+    "My sources say no.",
+    "Outlook not so good.",
+    "Very doubtful.",
+};
+
+const char* prophecyList[PROPHECY_COUNT] = {
+    "Interesting!",
+    "It took 1,312 years to tether a gaylordian.",
+    "A very short task after my last assignment.",
+    "Thank you for relentlessly shaking me.",
+    "T-10",
+    "9",
+    "8",
+    "7",
+    "6",
+    "5",
+    "4",
+    "3",
+    "2",
+    "1",
+    "What are you waiting for? Use the touch strips.",
+};
+
+
+const char* prophecyEndSceneList[PROPHECY_END_SCENE_COUNT] = {
+    "Fortunate vector. Homebound.",
+    "Our arrival should be a cause for celebration.",
+    "But there's a bad omen from Delphinus projecting past the 2027 boundary.",
+    "A multi-year meta-plot could unbind MAGFest as we know it.",
+    "We must consult the Augur.",
+};
+
+const char* moonList[MOON_COUNT] = {
+    "Gotta go slow!"
+};
+
+// clang-format on

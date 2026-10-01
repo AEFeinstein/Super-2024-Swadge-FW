@@ -137,6 +137,15 @@ float fixToFloat(q24_8 fx);
     #define FLOOR_FX_QN(a, fracBits) ((a) & (~((1 << (fracBits)) - 1)))
 
     /**
+     * @brief Round a fixed point type with N fractional bits to the nearest integer
+     * @param a The number to round
+     * @return The nearest integer to the input
+     */
+    #define ROUND_FX_QN(a, fracBits)                                \
+        ((a) >= 0 ? (((a) + (1 << ((fracBits) - 1))) >> (fracBits)) \
+                  : -(((-(a)) + (1 << ((fracBits) - 1))) >> (fracBits)))
+
+    /**
      * @brief Convert an integer fraction to fixed point type with N fractional bits
      * @param num The numerator
      * @param denom The denominator
@@ -198,6 +207,13 @@ float fixToFloat(q24_8 fx);
     #define FLOOR_FX(a) FLOOR_FX_QN(a, FRAC_BITS)
 
     /**
+     * @brief Round a q24_8 to the nearest integer
+     * @param a The number to round
+     * @return The nearest integer to the input
+     */
+    #define ROUND_FX(a) ROUND_FX_QN(a, FRAC_BITS)
+
+    /**
      * @brief Convert an integer fraction to q24_8
      * @param num The numerator
      * @param denom The denominator
@@ -241,6 +257,15 @@ static inline q24_8 DIV_FX(q24_8 a, q24_8 b)
 static inline q24_8 FLOOR_FX(q24_8 a)
 {
     return a & (~((1 << FRAC_BITS) - 1));
+}
+
+static inline int32_t ROUND_FX(q24_8 a)
+{
+    if (a >= 0)
+    {
+        return (int32_t)((a + (1 << (FRAC_BITS - 1))) >> FRAC_BITS);
+    }
+    return -(int32_t)(((-a) + (1 << (FRAC_BITS - 1))) >> FRAC_BITS);
 }
 
 // #define FMT_FX    "%s%d.%03d"

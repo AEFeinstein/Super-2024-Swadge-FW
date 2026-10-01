@@ -37,6 +37,7 @@
 #include "dance.h"
 #include "factoryTest.h"
 #include "gamepad.h"
+#include "gossipStone.h"
 #include "gottaGo.h"
 #include "heyListen.h"
 #include "introMode.h"

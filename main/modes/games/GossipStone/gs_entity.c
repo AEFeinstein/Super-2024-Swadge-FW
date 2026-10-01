@@ -1,0 +1,1222 @@
+#include "gs_entity.h"
+#include "gs_utility.h"
+#include "gs_gossip.h"
+#include "shapes.h"
+#include <linked_list.h>
+#include <limits.h>
+#include "hdw-tft.h"
+
+void gs_setData(gs_entity_t* self, void* data, gs_dataType_t dataType)
+{
+    if (self->data != NULL)
+    {
+        heap_caps_free(self->data);
+        self->data = NULL;
+    }
+    self->data     = data;
+    self->dataType = dataType;
+}
+
+void* gs_findLastNodeOfType(gs_entity_t* self, gs_dataType_t type)
+{
+    node_t* cur = self->gameData->entityManager.entities->last;
+    while (((gs_entity_t*)cur->val)->dataType != type)
+    {
+        cur = cur->prev;
+        if (!cur)
+        {
+            return NULL;
+        }
+    }
+    return cur;
+}
+
+gs_entity_t* gs_findLastEntityOfType(gs_entity_t* self, gs_dataType_t type)
+{
+    node_t* node = (node_t*)gs_findLastNodeOfType(self, type);
+    if (node)
+    {
+        return (gs_entity_t*)node->val;
+    }
+    return NULL;
+}
+
+void gs_drawAsset(gs_entity_t* self)
+{
+    int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS) + (TFT_WIDTH >> 1)
+                - self->gameData->assets[self->assetIndex].originX;
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1)
+                - self->gameData->assets[self->assetIndex].originY;
+    if (self->palleteIdx)
+    {
+        drawWsgPalette(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y,
+                       &self->gameData->entityManager.palettes[self->palleteIdx], self->flipped, false, 0);
+    }
+    else
+    {
+        drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped,
+                false, 0);
+    }
+}
+
+void gs_drawNothing(gs_entity_t* self)
+{
+}
+
+void gs_drawSkyGradient(gs_entity_t* self)
+{
+    int32_t y     = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1)
+                    - self->gameData->assets[self->assetIndex].originY;
+    int8_t offset = -((self->gameData->entityManager.camera.pos.x >> DECIMAL_BITS)
+                      % self->gameData->assets[self->assetIndex].frames[0].w);
+    if (self->gameData->entityManager.camera.pos.x < 0)
+    {
+        offset -= self->gameData->assets[self->assetIndex].frames[0].w;
+    }
+    for (int i = 0; i < TFT_WIDTH / self->gameData->assets[self->assetIndex].frames[0].w + 1; i++)
+    {
+        int32_t x = i * self->gameData->assets[self->assetIndex].frames[0].w + offset;
+        drawWsgTile(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y);
+    }
+}
+
+void gs_updateGossip(gs_entity_t* self)
+{
+    gs_gossip_t* data = (gs_gossip_t*)self->data;
+    if (data->dialogueFinished)
+    {
+        return;
+    }
+    if (self->gameData->submode == GS_PROPHECY_SUBMODE && data->index == data->arr_size - 1
+        && (self->gameData->touchState[0].touched || self->gameData->touchState[1].touched)
+        && data->arr_size == PROPHECY_COUNT)
+    {
+        data->dialogueFinished = true;
+        data->onDialogueFinished(self);
+    }
+    if (data->progress < strlen(data->messageList[data->index]) * FRAMES_PER_CHAR)
+    {
+        data->progress++;
+        if (data->progress == strlen(data->messageList[data->index]) * FRAMES_PER_CHAR)
+        {
+            data->gossipStone->currentAnimationFrame = 0;
+            data->gossipStone->paused                = true;
+        }
+    }
+    // make this check for shake later
+    else if (self->gameData->btnDownState & PB_A)
+    {
+        switch (self->gameData->submode)
+        {
+            case GS_GOSSIP_SUBMODE:
+            case GS_AMA_SUBMODE:
+            {
+                if (data->advanceScene)
+                {
+                    self->gameData->newSubmode = GS_PROPHECY_SUBMODE;
+                }
+                data->index               = gs_randomInt(1, data->arr_size - 1);
+                data->gossipStone->paused = false;
+                break;
+            }
+            case GS_PROPHECY_SUBMODE:
+            {
+                if (data->index < data->arr_size - 1)
+                {
+                    data->index++;
+                    if (data->messageList[data->index][0] == '5' || data->messageList[data->index][0] == '3')
+                    {
+                        data->gossipStone->palleteIdx = GS_BLUE_PALETTE;
+                    }
+                    else if (data->messageList[data->index][0] == '1')
+                    {
+                        data->gossipStone->palleteIdx = GS_RED_PALETTE;
+                    }
+                    else
+                    {
+                        data->gossipStone->palleteIdx = GS_UNTOUCHED_PALETTE;
+                    }
+                    data->gossipStone->paused = false;
+                }
+                else
+                {
+                    data->dialogueFinished = true;
+                    data->onDialogueFinished(self);
+                }
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+        data->progress = 0;
+        if (self->gameData->submode == GS_GOSSIP_SUBMODE)
+        {
+            gs_recordProgress(self);
+            if (self->gameData->entityManager.entities->length < 520)
+            {
+                gs_spawnOneGrass(self);
+            }
+        }
+    }
+}
+
+void gs_recordProgress(gs_entity_t* self)
+{
+    gs_gossip_t* data = (gs_gossip_t*)self->data;
+
+    uint8_t NVSgroup = data->index / 32;
+    uint8_t NVSbit   = data->index % 32;
+    if (!gs_checkBit(self->gameData->gossipProgress[NVSgroup], NVSbit))
+    {
+        // make a flashy LED effect
+        self->gameData->ledValue = 2170;
+        // set that bit to 1
+        self->gameData->gossipProgress[NVSgroup] |= (1 << NVSbit);
+        // save it to nvs
+        char nvsKey[20];
+        sprintf(nvsKey, "%s%d", gs_key_gossipProgress, NVSgroup);
+        printf("nvsKey = '%s'\n", nvsKey);
+        writeNvs32(nvsKey, self->gameData->gossipProgress[NVSgroup]);
+
+        // update the trophy
+        trophyUpdate(&(*self->gameData->trophyData)[THE_PROPHECY_TROPH],
+                     trophyGetSavedValue(&(*self->gameData->trophyData)[THE_PROPHECY_TROPH]) + 1, true);
+
+        if (trophyGetSavedValue(&(*self->gameData->trophyData)[THE_PROPHECY_TROPH]) == GOSSIP_COUNT - 1)
+        {
+            self->gameData->attendeesMisery++;
+            self->gameData->attendeesMisery *= -1; // set the negative bit
+            writeNvs32(gs_key_attendeesMisery, self->gameData->attendeesMisery);
+            data->advanceScene = true;
+        }
+    }
+
+    if (self->gameData->attendeesMisery >= 0)
+    {
+        self->gameData->attendeesMisery++;
+        writeNvs32(gs_key_attendeesMisery, self->gameData->attendeesMisery);
+    }
+}
+
+void gs_drawGossip(gs_entity_t* self)
+{
+    if (self->gameData->submode == GS_CRYSTAL_SUBMODE)
+    {
+        return;
+    }
+    gs_gossip_t* data = ((gs_gossip_t*)self->data);
+    if (data->dialogueFinished)
+    {
+        return;
+    }
+
+    uint16_t typeAmount = data->progress / FRAMES_PER_CHAR;
+    char display[typeAmount + 5];
+    strncpy(display, data->messageList[data->index], typeAmount);
+    display[typeAmount] = '\0';
+
+    if (typeAmount > 0)
+    {
+        int16_t textX = 17;
+        int16_t textY = 50;
+        drawTextWordWrap(&self->gameData->font_gossip, c000, display, &textX, &textY, TFT_WIDTH - textX - 2,
+                         TFT_HEIGHT - textY);
+        textX = 19;
+        textY = 50;
+        drawTextWordWrap(&self->gameData->font_gossip, c000, display, &textX, &textY, TFT_WIDTH - textX + 2,
+                         TFT_HEIGHT - textY);
+        textX = 18;
+        textY = 49;
+        drawTextWordWrap(&self->gameData->font_gossip, c000, display, &textX, &textY, TFT_WIDTH - textX,
+                         TFT_HEIGHT - textY - 2);
+        textX = 18;
+        textY = 51;
+        drawTextWordWrap(&self->gameData->font_gossip, c000, display, &textX, &textY, TFT_WIDTH - textX,
+                         TFT_HEIGHT - textY + 2);
+
+        textX = 18;
+        textY = 50;
+        drawTextWordWrap(&self->gameData->font_gossip, c445, display, &textX, &textY, TFT_WIDTH - textX,
+                         TFT_HEIGHT - textY);
+    }
+}
+
+void gs_drawFlame(gs_entity_t* self)
+{
+    gs_flame_t* fData = (gs_flame_t*)self->data;
+    if (!fData->flameOn)
+    {
+        return;
+    }
+    // use the right touch input to draw the sized flame.
+    self->currentAnimationFrame
+        = (self->gameData->assets[GS_FLAME_ASSET].numFrames) * self->gameData->touchState[1].position / 1023;
+    self->currentAnimationFrame = self->gameData->assets[GS_FLAME_ASSET].numFrames - 1 - self->currentAnimationFrame;
+
+    int assetIdx = MAX(self->assetIndex + self->gameData->entityManager.zoom, GS_FLAME_TINY_ASSET);
+
+    int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x)
+                 >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
+                + (TFT_WIDTH >> 1) - self->gameData->assets[assetIdx].originX;
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y)
+                 >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
+                + (TFT_HEIGHT >> 1) - self->gameData->assets[assetIdx].originY;
+
+    drawWsg(&self->gameData->assets[assetIdx].frames[self->currentAnimationFrame], x, y, gs_randomInt(0, 1), false,
+            fData->rotateDeg >> DECIMAL_BITS);
+
+    if (self->gameData->entityManager.zoom < 0)
+    {
+        return;
+    }
+
+    vec_t direction = rotateVec2d((vec_t){0, 1 << DECIMAL_BITS}, fData->rotateDeg >> DECIMAL_BITS);
+    vec_t directionScaled
+        = mulVec2d(direction, (28 + self->currentAnimationFrame) << self->gameData->entityManager.zoom);
+
+    drawCircleFilled(x + self->gameData->assets[assetIdx].originX + (directionScaled.x >> DECIMAL_BITS),
+                     y + self->gameData->assets[assetIdx].originY + (directionScaled.y >> DECIMAL_BITS),
+                     (2 + self->currentAnimationFrame + gs_randomInt(-1, 1)) << self->gameData->entityManager.zoom,
+                     c530);
+
+    directionScaled = mulVec2d(direction, (24 + self->currentAnimationFrame) << self->gameData->entityManager.zoom);
+    drawCircleFilled(
+        x + self->gameData->assets[assetIdx].originX + (directionScaled.x >> DECIMAL_BITS) + gs_randomInt(-1, 1),
+        y + self->gameData->assets[assetIdx].originY + (directionScaled.y >> DECIMAL_BITS) + gs_randomInt(-1, 1),
+        (1 + (self->currentAnimationFrame >> 1)) << self->gameData->entityManager.zoom, c554);
+}
+
+void gs_updatePhysicsObject(gs_entity_t* self)
+{
+    gs_physics_t* pData = (gs_physics_t*)self->data;
+
+    // gravity
+    pData->vel.y += pData->gravity * self->gameData->elapsedUs >> 17;
+    self->pos.x += pData->vel.x * self->gameData->elapsedUs >> 20;
+    self->pos.y += pData->vel.y * self->gameData->elapsedUs >> 20;
+
+    gs_hitInfo_t hitInfo = {0};
+    if (self->gameData->entityManager.tilemap) // Only The Moon level has a tilemap so far
+    {
+        gs_collisionCheck(self->gameData->entityManager.tilemap, self, &hitInfo);
+        if (hitInfo.hit == false)
+        {
+            return;
+        }
+        self->pos = mulVec2d(hitInfo.normal, self->collider.circle.radius);
+        self->pos.x /= 256;
+        self->pos.y /= 256;
+        self->pos = addVec2d(hitInfo.pos, self->pos);
+
+        // Reflect the velocity vector along the normal
+        // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
+        pData->vel = divVec2d(
+            mulVec2d(subVec2d(pData->vel,
+                              divVec2d(mulVec2d(hitInfo.normal, (2 * dotVec2d(pData->vel, hitInfo.normal))), 65536)),
+                     pData->bounceNumerator),
+            pData->bounceDenominator);
+    }
+}
+
+void gs_generateMoonTilemap(gs_entity_t* self)
+{
+    gs_tilemap_t* tData = (gs_tilemap_t*)self->data;
+    for (int x = 0; x < TILE_FIELD_WIDTH; x++)
+    {
+        for (int y = 0; y < TILE_FIELD_HEIGHT; y++)
+        {
+            tData->tiles[x][y].framePlus1 = GS_WALL_FORE;
+        }
+    }
+    for (int y = 0; y < 124; y++)
+    {
+        tData->tiles[132][y].framePlus1 = GS_WALL_BACK;
+        tData->tiles[133][y].framePlus1 = GS_WALL_BACK;
+    }
+    for (int y = 120; y < 128; y++)
+    {
+        for (int x = 127; x < 137; x++)
+        {
+            tData->tiles[x][y].framePlus1 = GS_WALL_BACK;
+        }
+    }
+    for (int y = 122; y < 126; y++)
+    {
+        for (int x = 129; x < 135; x++)
+        {
+            tData->tiles[x][y].framePlus1 = GS_NO_TILE;
+        }
+    }
+    vec_t minerPos = (vec_t){133, 124};
+    for (int i = 0; i < 10000; i++)
+    {
+        if (tData->tiles[minerPos.x][minerPos.y].framePlus1 != GS_NO_TILE)
+        {
+            tData->tiles[minerPos.x][minerPos.y].framePlus1 = GS_WALL_BACK;
+        }
+        switch (gs_randomInt(0, 3))
+        {
+            case 0:
+            {
+                minerPos = addVec2d(minerPos, (vec_t){0, 1});
+                break;
+            }
+            case 1:
+            {
+                minerPos = addVec2d(minerPos, (vec_t){0, -1});
+                break;
+            }
+            case 2:
+            {
+                minerPos = addVec2d(minerPos, (vec_t){1, 0});
+                break;
+            }
+            default:
+            {
+                minerPos = addVec2d(minerPos, (vec_t){-1, 0});
+                break;
+            }
+        }
+        minerPos.x = CLAMP(minerPos.x, 1, TILE_FIELD_WIDTH - 2);
+        minerPos.y = CLAMP(minerPos.y, 1, TILE_FIELD_HEIGHT - 2);
+    }
+}
+
+void gs_clearMoonTilemap(gs_entity_t* self)
+{
+    gs_tilemap_t* tData = (gs_tilemap_t*)self->data;
+    for (int x = 0; x < TILE_FIELD_WIDTH; x++)
+    {
+        for (int y = 0; y < TILE_FIELD_HEIGHT; y++)
+        {
+            tData->tiles[x][y].framePlus1 = 0;
+        }
+    }
+}
+
+void gs_drawTileMap(gs_entity_t* self)
+{
+    gs_tilemap_t* tData = (gs_tilemap_t*)self->data;
+
+    int8_t shiftBy = 6 + self->gameData->entityManager.zoom;
+
+    int topLeftCamPixelX
+        = (self->gameData->entityManager.camera.pos.x >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
+          - (TFT_WIDTH >> 1);
+    int topLeftCamPixelY
+        = (self->gameData->entityManager.camera.pos.y >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
+          - (TFT_HEIGHT >> 1);
+    int newFieldPixelWidth  = TILE_FIELD_WIDTH << shiftBy;
+    int newFieldPixelHeight = TILE_FIELD_HEIGHT << shiftBy;
+
+    vec_t tilemapPixelOffset;
+    if (self->gameData->entityManager.zoom <= 0)
+    {
+        tilemapPixelOffset = (vec_t){-((TILE_FIELD_WIDTH * 64) >> (-self->gameData->entityManager.zoom + 1)),
+                                     -((TILE_FIELD_HEIGHT * 64) >> (-self->gameData->entityManager.zoom + 1))};
+    }
+    else
+    {
+        tilemapPixelOffset = (vec_t){-((TILE_FIELD_WIDTH * 64) << (self->gameData->entityManager.zoom - 1)),
+                                     -((TILE_FIELD_HEIGHT * 64) << (self->gameData->entityManager.zoom - 1))};
+    }
+    int tileYIdx = topLeftCamPixelY / (1 << shiftBy) + (TILE_FIELD_HEIGHT >> 1);
+    if (tileYIdx <= TILE_FIELD_HEIGHT >> 1)
+    {
+        tileYIdx--;
+    }
+
+    while (-(newFieldPixelHeight >> 1) + tileYIdx * (1 << shiftBy) < topLeftCamPixelY + TFT_HEIGHT)
+    {
+        int tileXIdx = topLeftCamPixelX / (1 << shiftBy) + (TILE_FIELD_WIDTH >> 1);
+        if (tileXIdx <= TILE_FIELD_WIDTH >> 1)
+        {
+            tileXIdx--;
+        }
+        while (-(newFieldPixelWidth >> 1) + tileXIdx * (1 << shiftBy) < topLeftCamPixelX + TFT_WIDTH)
+        {
+            if (tileXIdx >= 0 && tileYIdx >= 0 && tileXIdx < TILE_FIELD_WIDTH && tileYIdx < TILE_FIELD_HEIGHT)
+            {
+                if (tData->tiles[tileXIdx][tileYIdx].framePlus1 != GS_NO_TILE)
+                {
+                    int drawX = tilemapPixelOffset.x + (tileXIdx << shiftBy) - topLeftCamPixelX;
+                    int drawY = tilemapPixelOffset.y + (tileYIdx << shiftBy) - topLeftCamPixelY;
+                    drawWsgSimpleScaled(&self->gameData->assets[self->assetIndex]
+                                             .frames[tData->tiles[tileXIdx][tileYIdx].framePlus1 - 1],
+                                        drawX, drawY, self->gameData->entityManager.zoom,
+                                        self->gameData->entityManager.zoom);
+                }
+            }
+            tileXIdx++;
+        }
+        tileYIdx++;
+    }
+}
+
+void gs_collisionCheck(gs_entity_t* tilemap, gs_entity_t* ent, gs_hitInfo_t* hitInfo)
+{
+    if (ent->colliderType != GS_CIRCLE)
+    {
+        // no hit
+        return;
+    }
+    // subtract half the Tilemap coordinates by bitshifting 1 because it's centered on the world origin.
+    // Any bitshifting by 6 goes between a tileIdx and pixel coordinates because tiles are 64x64 pixels.
+    // Any bitshifting by DECIMAL_BITS which is 4 goes between pixel coordinates and true coordinates.
+    vec_t localPos
+        = addVec2d(ent->pos, (vec_t){TILE_FIELD_WIDTH << (5 + DECIMAL_BITS), TILE_FIELD_HEIGHT << (5 + DECIMAL_BITS)});
+    // get the bounds for a kernel of nearby Tiles to check
+    vec_t topLeftTile     = (vec_t){0, 0};
+    vec_t bottomRightTile = (vec_t){0, 0};
+    if (localPos.x >= 0)
+    {
+        if (localPos.x > (TILE_FIELD_WIDTH << (6 + DECIMAL_BITS)))
+        {
+            topLeftTile.x     = TILE_FIELD_WIDTH - 1;
+            bottomRightTile.x = TILE_FIELD_WIDTH - 1;
+        }
+        else
+        {
+            topLeftTile.x     = MAX((localPos.x >> (6 + DECIMAL_BITS)) - 1, 0);
+            bottomRightTile.x = MIN((localPos.x >> (6 + DECIMAL_BITS)) + 1, TILE_FIELD_WIDTH - 1);
+        }
+    }
+    if (localPos.y >= 0)
+    {
+        if (localPos.y > (TILE_FIELD_HEIGHT << (6 + DECIMAL_BITS)))
+        {
+            topLeftTile.y     = TILE_FIELD_HEIGHT - 1;
+            bottomRightTile.y = TILE_FIELD_HEIGHT - 1;
+        }
+        else
+        {
+            topLeftTile.y     = MAX((localPos.y >> (6 + DECIMAL_BITS)) - 1, 0);
+            bottomRightTile.y = MIN((localPos.y >> (6 + DECIMAL_BITS)) + 1, TILE_FIELD_HEIGHT - 1);
+        }
+    }
+    gs_tilemap_t* tmData = (gs_tilemap_t*)tilemap->data;
+    // Check tiles in the kernel for a collision
+    int32_t closestSqDist = INT32_MAX;
+    // vec_t entityPixelPos = (vec_t){ent->pos.x/(1<<DECIMAL_BITS),ent->pos.y/(1<<DECIMAL_BITS)};
+    for (int y = topLeftTile.y; y <= bottomRightTile.y; y++)
+    {
+        for (int x = topLeftTile.x; x <= bottomRightTile.x; x++)
+        {
+            // https://gamedev.stackexchange.com/questions/96337/collision-between-aabb-and-circle
+            // Add half a tile to get the center point.
+            vec_t tilePos = (vec_t){((x << 6) + 32) << DECIMAL_BITS, ((y << 6) + 32) << DECIMAL_BITS};
+            tilePos       = subVec2d(
+                tilePos, (vec_t){TILE_FIELD_WIDTH << (5 + DECIMAL_BITS), TILE_FIELD_HEIGHT << (5 + DECIMAL_BITS)});
+            vec_t distance     = subVec2d(ent->pos, tilePos);
+            vec_t clampDst     = (vec_t){CLAMP(distance.x, -512, 512), CLAMP(distance.y, -512, 512)};
+            vec_t closestPoint = addVec2d(tilePos, clampDst);
+            int32_t sqDist     = sqMagVec2d(subVec2d(closestPoint, ent->pos));
+            if (tmData->tiles[x][y].framePlus1 != GS_WALL_BACK && tmData->tiles[x][y].framePlus1 != GS_NO_TILE
+                && sqDist < closestSqDist && sqDist < ent->collider.circle.radius * ent->collider.circle.radius)
+            {
+                closestSqDist   = sqDist;
+                hitInfo->hit    = true;
+                hitInfo->pos    = closestPoint;
+                hitInfo->tile_i = x;
+                hitInfo->tile_j = y;
+                hitInfo->normal = subVec2d(ent->pos, closestPoint);
+                fastNormVec(&hitInfo->normal.x, &hitInfo->normal.y);
+            }
+        }
+    }
+}
+
+void gs_updateGossipStone(gs_entity_t* self)
+{
+    gs_gossipStone_t* gsData = (gs_gossipStone_t*)self->data;
+    // angular physics
+    if (self->gameData->touchState[0].touched && gsData->rcsEnabled)
+    {
+        // printf("elapsedUs: %d\n", self->gameData->touchState[0].position - 511);
+        // printf("tmp %d\n", (self->gameData->touchState[0].position - 511) * self->gameData->elapsedUs >> 14);
+        gsData->angVel -= (self->gameData->touchState[0].position - 511) * self->gameData->elapsedUs >> 14;
+    }
+    // angular drag per frame
+    gsData->angVel = gsData->angVel * 39 / 40;
+    // printf("ang vel: %d\n", gsData->angVel);
+    // printf("elapsed trunc: %d\n",self->gameData->elapsedUs>>2);
+    // printf("uhhh: %d\n", gsData->angVel * (self->gameData->elapsedUs>>2));
+    // printf("heh? %d\n", gsData->angVel * (self->gameData->elapsedUs>>2) / 24);
+    gsData->rotateDeg += gsData->angVel * (self->gameData->elapsedUs >> 2) / 1000000;
+    gsData->rotateDeg %= 360 << DECIMAL_BITS;
+    if (gsData->rotateDeg < 0)
+    {
+        gsData->rotateDeg += 360 << DECIMAL_BITS;
+    }
+
+    gs_flame_t* fData = (gs_flame_t*)gsData->flame->data;
+    fData->rotateDeg  = gsData->rotateDeg;
+
+    // translational physics
+    fData->flameOn = self->gameData->touchState[1].touched && gsData->throttleEnabled;
+    if (fData->flameOn)
+    {
+        vec_t rocketForce = rotateVec2d((vec_t){0, 1 << DECIMAL_BITS}, (gsData->rotateDeg >> DECIMAL_BITS) + 180);
+        rocketForce
+            = mulVec2d(rocketForce, (1024 - self->gameData->touchState[1].position) * self->gameData->elapsedUs);
+        gsData->vel = addVec2d(gsData->vel, divVec2d(rocketForce, 10000000));
+    }
+
+    gs_updatePhysicsObject(self);
+
+    gsData->flame->pos = self->pos;
+
+    // printf("pos x: %d pos y: %d\n", self->pos.x, self->pos.y);
+
+    self->gameData->entityManager.camera.vel = self->gameData->entityManager.camera.pos;
+    if (self->pos.y < 0xFFFF || self->gameData->submode == GS_MOON_SUBMODE)
+    {
+        self->gameData->entityManager.camera.pos.y = self->pos.y;
+    }
+    self->gameData->entityManager.camera.pos.x = self->pos.x;
+    self->gameData->entityManager.camera.vel
+        = subVec2d(self->gameData->entityManager.camera.pos, self->gameData->entityManager.camera.vel);
+}
+
+void gs_drawGossipStone(gs_entity_t* self)
+{
+    gs_gossipStone_t* gsData = (gs_gossipStone_t*)self->data;
+
+    int asseteIdx = MAX(self->assetIndex + self->gameData->entityManager.zoom, GS_GOSSIP_STONE_TINY_ASSET);
+
+    int32_t x        = ((self->pos.x - self->gameData->entityManager.camera.pos.x)
+                        >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
+                       + (TFT_WIDTH >> 1) - self->gameData->assets[asseteIdx].originX;
+    int32_t y        = ((self->pos.y - self->gameData->entityManager.camera.pos.y)
+                        >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
+                       + (TFT_HEIGHT >> 1) - self->gameData->assets[asseteIdx].originY;
+    int32_t finalRot = gsData->rotateDeg >> DECIMAL_BITS;
+    finalRot         = (finalRot + 45) % 360;
+    if (self->palleteIdx)
+    {
+        drawWsgPalette(&self->gameData->assets[asseteIdx].frames[self->currentAnimationFrame], x, y,
+                       &self->gameData->entityManager.palettes[self->palleteIdx], self->flipped, false, finalRot);
+    }
+    else
+    {
+        drawWsg(&self->gameData->assets[asseteIdx].frames[self->currentAnimationFrame], x, y, self->flipped, false,
+                finalRot);
+    }
+}
+
+void gs_randomizeStarData(gs_entity_t* self)
+{
+    gs_star_t* sData                  = (gs_star_t*)self->data;
+    self->gameFramesPerAnimationFrame = gs_randomInt(5, 30);
+    sData->linearPlayback             = gs_randomInt(0, 1);
+    sData->startFrame                 = gs_randomInt(0, self->gameData->assets[self->assetIndex].numFrames - 1);
+    uint8_t endFrame                  = sData->startFrame;
+    if (gs_randomInt(0, 1) && sData->startFrame < self->gameData->assets[self->assetIndex].numFrames - 1)
+    {
+        endFrame = gs_randomInt(sData->startFrame + 1, self->gameData->assets[self->assetIndex].numFrames - 1);
+    }
+    sData->frameCount           = endFrame - sData->startFrame; // it's actually the frame count minus 1.
+    self->currentAnimationFrame = sData->startFrame;
+}
+
+void gs_updateStar(gs_entity_t* self)
+{
+    // fake movement during talking cutscene moment, approaching moon
+    if (self->gameData->entityManager.gossipStone->updateFunction == NULL)
+    {
+        self->pos = subVec2d(self->pos, self->gameData->entityManager.camera.vel);
+    }
+}
+
+void gs_updateFarStar(gs_entity_t* self)
+{
+    if (self->gameData->entityManager.camera.vel.x == 0 && self->gameData->entityManager.camera.vel.y == 0)
+    {
+        return;
+    }
+    gs_randomizeStarData(self);
+
+    uint32_t longOdds = TFT_WIDTH * abs(self->gameData->entityManager.camera.vel.y);
+
+    uint32_t total = longOdds + TFT_HEIGHT * abs(self->gameData->entityManager.camera.vel.x);
+    uint32_t roll  = gs_randomInt(0, total);
+
+    if (roll <= longOdds) // it warps to a long edge
+    {
+        if (self->gameData->entityManager.camera.vel.y < 0)
+        {
+            self->pos.x = self->gameData->entityManager.camera.pos.x
+                          + gs_randomInt(-(TFT_WIDTH << (DECIMAL_BITS - 1)), TFT_WIDTH << (DECIMAL_BITS - 1));
+            self->pos.y = self->gameData->entityManager.camera.pos.y - (TFT_HEIGHT << (DECIMAL_BITS - 1))
+                          - (16 << DECIMAL_BITS);
+        }
+        else
+        {
+            self->pos.x = self->gameData->entityManager.camera.pos.x
+                          + gs_randomInt(-(TFT_WIDTH << (DECIMAL_BITS - 1)), TFT_WIDTH << (DECIMAL_BITS - 1));
+            self->pos.y = self->gameData->entityManager.camera.pos.y + (TFT_HEIGHT << (DECIMAL_BITS - 1))
+                          + (16 << DECIMAL_BITS);
+        }
+    }
+    else // it warps to a short edge
+    {
+        if (self->gameData->entityManager.camera.vel.x < 0)
+        {
+            self->pos.x
+                = self->gameData->entityManager.camera.pos.x - (TFT_WIDTH << (DECIMAL_BITS - 1)) - (16 << DECIMAL_BITS);
+            self->pos.y = self->gameData->entityManager.camera.pos.y
+                          + gs_randomInt(-(TFT_HEIGHT << (DECIMAL_BITS - 1)), TFT_HEIGHT << (DECIMAL_BITS - 1));
+        }
+        else
+        {
+            self->pos.x
+                = self->gameData->entityManager.camera.pos.x + (TFT_WIDTH << (DECIMAL_BITS - 1)) + (16 << DECIMAL_BITS);
+            self->pos.y = self->gameData->entityManager.camera.pos.y
+                          + gs_randomInt(-(TFT_HEIGHT << (DECIMAL_BITS - 1)), TFT_HEIGHT << (DECIMAL_BITS - 1));
+        }
+    }
+}
+
+void gs_drawStar(gs_entity_t* self)
+{
+    gs_star_t* sData = (gs_star_t*)self->data;
+    self->animationTimer++;
+    if (self->animationTimer >= self->gameFramesPerAnimationFrame)
+    {
+        self->animationTimer = 0;
+
+        if (sData->linearPlayback)
+        {
+            self->currentAnimationFrame++;
+            if (self->currentAnimationFrame >= sData->startFrame + sData->frameCount)
+                self->currentAnimationFrame = 0;
+        }
+        else
+        {
+            self->currentAnimationFrame = gs_randomInt(sData->startFrame, sData->startFrame + sData->frameCount);
+        }
+    }
+
+    int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x)
+                 >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
+                + (TFT_WIDTH >> 1) - self->gameData->assets[self->assetIndex].originX;
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y)
+                 >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
+                + (TFT_HEIGHT >> 1) - self->gameData->assets[self->assetIndex].originY;
+    drawWsgSimple(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y);
+}
+
+void gs_enableFlightControls(gs_entity_t* self)
+{
+    gs_entity_t* gossipStone           = ((gs_gossip_t*)self->data)->gossipStone;
+    gossipStone->currentAnimationFrame = 0;
+    gossipStone->paused                = true;
+    gs_gossipStone_t* gsData           = (gs_gossipStone_t*)gossipStone->data;
+    gsData->rcsEnabled                 = true;
+    gsData->throttleEnabled            = true;
+}
+
+void gs_updateMoon(gs_entity_t* self)
+{
+    // Just doing some prophecy scene management with the little moon that happens to be present for the scene.
+    if (self->gameData->entityManager.gossipStone->pos.y < 30000)
+    {
+        self->updateFunction                                                                  = NULL;
+        ((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->throttleEnabled = false;
+        ((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->gravity         = 0;
+        ((gs_flame_t*)((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->flame->data)->flameOn
+            = false;
+        gs_gossip_t* gData         = (gs_gossip_t*)self->gameData->entityManager.gossip->data;
+        gData->gossipStone->paused = false;
+        gData->messageList         = prophecyEndSceneList;
+        gData->arr_size            = PROPHECY_END_SCENE_COUNT;
+        gData->dialogueFinished    = false;
+        gData->onDialogueFinished  = gs_spawnBigMoon;
+        gData->index               = 0;
+        gData->progress            = 0;
+    }
+}
+
+void gs_updateBigMoon(gs_entity_t* self)
+{
+    // The big moon pulls the gossip stone in.
+    gs_entity_t* gs = self->gameData->entityManager.gossipStone;
+    vec_t gsVec     = subVec2d(gs->pos, self->pos);
+    gsVec           = divVec2d(mulVec2d(gsVec, 199), 200);
+    gs->pos         = addVec2d(self->pos, gsVec);
+
+    if (sqMagVec2d(gsVec) > 17000000)
+    {
+        return;
+    }
+    gs_bigMoon_t* bmData = (gs_bigMoon_t*)self->data;
+    bmData->deltaScale++;
+    q24_8 increaseBy = gs_lerp(512, bmData->deltaScale, bmData->scale);
+    bmData->scale += (increaseBy >> 9);
+    // printf("scale %d\n", bmData->scale);
+    if (self->assetIndex == GS_LANDING_ASSET && bmData->scale > 200 && bmData->scale % 100 == 0
+        && self->gameData->entityManager.zoom > -5)
+    {
+        self->gameData->entityManager.zoom--;
+    }
+    if (bmData->scale > bmData->targetScale)
+    {
+        // update the trophy
+        trophyUpdate(&(*self->gameData->trophyData)[THE_MOON_TROPH], 1, true);
+        self->updateFunction = NULL;
+        if (bmData->callback)
+        {
+            bmData->callback(self);
+        }
+    }
+}
+
+void gs_drawBigMoon(gs_entity_t* self)
+{
+    gs_bigMoon_t* bmData = (gs_bigMoon_t*)self->data;
+    int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS) + (TFT_WIDTH >> 1);
+    x -= FROM_FX_QN(
+        MUL_FX_QN(TO_FX_QN(self->gameData->assets[self->assetIndex].originX, FRAC_BITS), bmData->scale, FRAC_BITS),
+        FRAC_BITS);
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1);
+    y -= FROM_FX_QN(
+        MUL_FX_QN(TO_FX_QN(self->gameData->assets[self->assetIndex].originY, FRAC_BITS), bmData->scale, FRAC_BITS),
+        FRAC_BITS);
+    drawWsgSmoothScaled(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y,
+                        bmData->scale, bmData->scale);
+}
+
+void gs_spawnBigMoon(gs_entity_t* self)
+{
+    self->gameData->entityManager.gossipStone->updateFunction                 = gs_updateGossipStone;
+    ((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->vel = (vec_t){0, 0};
+    // Where the moon is spawning relative to the GossipStone.
+    vec_t moonOffset = mulVec2d(
+        (vec_t){self->gameData->entityManager.camera.vel.x / 16, self->gameData->entityManager.camera.vel.y / 16}, 200);
+    // if it is so close that it would pop on screen
+    if (sqMagVec2d(moonOffset) < 140 * 140)
+    {
+        // make the offset be the length of half the tft width.
+        vec_t norm = (vec_t){self->gameData->entityManager.camera.vel.x, self->gameData->entityManager.camera.vel.y};
+        fastNormVec(&norm.x, &norm.y);
+        norm       = divVec2d(norm, 64);
+        moonOffset = mulVec2d(norm, 140);
+    }
+    moonOffset.x *= 16;
+    moonOffset.y *= 16;
+    gs_entity_t* moon = gs_createEntityBefore(
+        gs_findLastNodeOfType(self, GS_GOSSIP_STONE_DATA), &self->gameData->entityManager, 1, GS_NO_ANIMATION, false,
+        GS_HI_RES_MOON_ASSET, 1, addVec2d(self->gameData->entityManager.gossipStone->pos, moonOffset), self->gameData);
+    moon->updateFunction                     = gs_updateBigMoon;
+    moon->drawFunction                       = gs_drawBigMoon;
+    moon->data                               = heap_caps_calloc(1, sizeof(gs_bigMoon_t), MALLOC_CAP_SPIRAM);
+    moon->dataType                           = GS_BIG_MOON_DATA;
+    ((gs_bigMoon_t*)moon->data)->scale       = 1;               // q24_8 for 0.125
+    ((gs_bigMoon_t*)moon->data)->callback    = gs_spawnLanding; // q24_8 for 0.125
+    ((gs_bigMoon_t*)moon->data)->targetScale = 700;
+}
+
+void gs_spawnLanding(gs_entity_t* self)
+{
+    self->destroyFlag = true;
+    node_t* cur       = self->gameData->entityManager.entities->first;
+    while (cur)
+    {
+        gs_entity_t* star = (gs_entity_t*)cur->val;
+        if (star->assetIndex == GS_STAR_ASSET)
+        {
+            star->pos = self->gameData->entityManager.camera.pos;
+        }
+        cur = cur->next;
+    }
+    gs_entity_t* landing = gs_createEntityBefore(
+        gs_findLastNodeOfType(self, GS_GOSSIP_STONE_DATA), &self->gameData->entityManager, 1, GS_NO_ANIMATION, false,
+        GS_LANDING_ASSET, 1, self->gameData->entityManager.gossipStone->pos, self->gameData);
+    landing->updateFunction                     = gs_updateBigMoon;
+    landing->drawFunction                       = gs_drawBigMoon;
+    landing->data                               = heap_caps_calloc(1, sizeof(gs_bigMoon_t), MALLOC_CAP_SPIRAM);
+    landing->dataType                           = GS_BIG_MOON_DATA;
+    ((gs_bigMoon_t*)landing->data)->scale       = 1;
+    ((gs_bigMoon_t*)landing->data)->callback    = gs_switchMoonSubmode;
+    ((gs_bigMoon_t*)landing->data)->targetScale = 800;
+}
+
+void gs_positionWave(gs_entity_t* self)
+{
+    gs_wave_t* wData            = (gs_wave_t*)self->data;
+    wData->reverseAnim          = false;
+    self->currentAnimationFrame = 0;
+    self->animationTimer        = 0;
+    self->pos.x                 = self->gameData->entityManager.camera.pos.x
+                                  + gs_randomInt(-(TFT_WIDTH << (DECIMAL_BITS - 1)), TFT_WIDTH << (DECIMAL_BITS - 1));
+    self->pos.y                 = 0xFFFF + gs_randomInt(92 << DECIMAL_BITS, 103 << DECIMAL_BITS);
+    self->pos.y += wData->fore * (11 << DECIMAL_BITS);
+    wData->velX = gs_randomInt(20, 30);
+}
+
+void gs_randomizeWaveData(gs_entity_t* self)
+{
+    self->currentAnimationFrame           = gs_randomInt(0, 4);
+    self->gameFramesPerAnimationFrame     = self->currentAnimationFrame * 3 + 3;
+    self->animationTimer                  = gs_randomInt(0, (self->currentAnimationFrame - 1) * 3 + 3);
+    ((gs_wave_t*)self->data)->reverseAnim = gs_randomInt(0, 1);
+}
+
+void gs_updateFarWave(gs_entity_t* self)
+{
+    gs_randomizeWaveData(self);
+    gs_positionWave(self);
+    if (self->gameData->entityManager.camera.vel.x < 0)
+    {
+        self->pos.x
+            = self->gameData->entityManager.camera.pos.x - (TFT_WIDTH << (DECIMAL_BITS - 1)) - (19 << DECIMAL_BITS);
+    }
+    else
+    {
+        self->pos.x
+            = self->gameData->entityManager.camera.pos.x + (TFT_WIDTH << (DECIMAL_BITS - 1)) + (19 << DECIMAL_BITS);
+    }
+}
+
+void gs_updateWave(gs_entity_t* self)
+{
+    int parallax = ((self->pos.y - (self->gameData->entityManager.camera.pos.y - (TFT_HEIGHT << (DECIMAL_BITS - 1))))
+                    >> DECIMAL_BITS)
+                   - 223;
+    parallax *= -1;
+    // printf("parallax %d\n", parallax);
+    self->pos.x += ((gs_wave_t*)self->data)->velX * self->gameData->elapsedUs >> 17;
+    int denominator = 120;
+    if (denominator != 0)
+    {
+        self->pos.x += self->gameData->entityManager.camera.vel.x * (parallax - 5) / 24;
+    }
+}
+
+void gs_drawWave(gs_entity_t* self)
+{
+    gs_wave_t* wData = (gs_wave_t*)self->data;
+    self->animationTimer++;
+    if (self->animationTimer >= self->gameFramesPerAnimationFrame)
+    {
+        self->animationTimer = 0;
+        if (!wData->reverseAnim)
+        {
+            self->currentAnimationFrame++;
+            self->gameFramesPerAnimationFrame += 3;
+            if (self->currentAnimationFrame == self->gameData->assets[self->assetIndex].numFrames - 1)
+            {
+                wData->reverseAnim = true;
+            }
+        }
+        else
+        {
+            self->currentAnimationFrame--;
+            self->gameFramesPerAnimationFrame -= 3;
+            if (self->currentAnimationFrame == 0)
+            {
+                wData->reverseAnim = false;
+                gs_positionWave(self);
+            }
+        }
+        self->currentAnimationFrame
+            = CLAMP(self->currentAnimationFrame, 0, self->gameData->assets[self->assetIndex].numFrames - 1);
+    }
+
+    int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS) + (TFT_WIDTH >> 1)
+                - self->gameData->assets[self->assetIndex].originX;
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1)
+                - self->gameData->assets[self->assetIndex].originY;
+
+    drawWsgSimple(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y);
+}
+
+void gs_drawOcean(gs_entity_t* self)
+{
+    // printf("cam y %d\n", self->gameData->entityManager.camera.pos.y);
+    // if(self->gameData->entityManager.camera.pos.y < ?)
+    //  {
+    //      return;
+    //  }
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1);
+    drawRectFilled(0, y, TFT_WIDTH, y + 16, c011);
+}
+
+// Sorts the player where it needs to be for rendering.
+void gs_updateOcean(gs_entity_t* self)
+{
+    // resort for rendering order
+    gs_ocean_t* oData    = (gs_ocean_t*)self->data;
+    bool stoneAboveOcean = self->gameData->entityManager.gossipStone->pos.x < 62015
+                           || self->gameData->entityManager.gossipStone->pos.x > 69055;
+    if (stoneAboveOcean != oData->stoneAboveOcean)
+    {
+        oData->stoneAboveOcean = stoneAboveOcean;
+        gs_entity_t* flame
+            = removeEntry(self->gameData->entityManager.entities, self->gameData->entityManager.gossipStoneNode->next);
+        removeEntry(self->gameData->entityManager.entities, self->gameData->entityManager.gossipStoneNode);
+        if (stoneAboveOcean)
+        {
+            // add it before the ocean
+            node_t* curNode = self->gameData->entityManager.entities->first;
+            while (curNode != NULL)
+            {
+                if (((gs_entity_t*)curNode->val)->dataType == GS_OCEAN_DATA)
+                {
+                    addBefore(self->gameData->entityManager.entities, self->gameData->entityManager.gossipStone,
+                              curNode);
+                    break;
+                }
+                curNode = curNode->next;
+            }
+        }
+        else
+        {
+            // add it after the hill
+            node_t* curNode = self->gameData->entityManager.entities->first;
+            while (curNode != NULL)
+            {
+                if (((gs_entity_t*)curNode->val)->assetIndex == GS_HILL_ASSET)
+                {
+                    addAfter(self->gameData->entityManager.entities, self->gameData->entityManager.gossipStone,
+                             curNode);
+                    break;
+                }
+                curNode = curNode->next;
+            }
+        }
+        // add the flame after the gossip stone
+        self->gameData->entityManager.gossipStoneNode = gs_findLastNodeOfType(self, GS_GOSSIP_STONE_DATA);
+        addAfter(self->gameData->entityManager.entities, flame, self->gameData->entityManager.gossipStoneNode);
+    }
+
+    gs_entity_t* gossipStone = self->gameData->entityManager.gossipStone;
+    gs_gossipStone_t* gsData = (gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data;
+    // ground and water physics for the player. (bouancy, drag)
+    //  ground collision
+    if (gossipStone->pos.y > 0x1059F) // 0xFFFF + (82 << DECIMAL_BITS))
+    {
+        if (!stoneAboveOcean)
+        {
+            gossipStone->pos.y = 0x1059F;
+            gsData->vel.y      = 0;
+        }
+        else
+        {
+            int32_t height = (gossipStone->pos.y - 0xFFFF) >> DECIMAL_BITS;
+            gsData->vel.y -= (int32_t)(pow(height, 1.13) * self->gameData->elapsedUs) >> 18;
+            gsData->vel = divVec2d(mulVec2d(gsData->vel, 99), 100);
+
+            // create water particles
+            int32_t threshold = MAX(height, 0);
+            for (uint8_t i = 0; i < 50 + MIN((abs(gsData->vel.y) >> 4), 100); i++)
+            {
+                if (gs_randomInt(100, 132) < threshold)
+                {
+                    continue;
+                }
+                node_t* curNode = self->gameData->entityManager.entities->last;
+                while (curNode != NULL)
+                {
+                    gs_entity_t* curEntity = (gs_entity_t*)curNode->val;
+                    bool tooFar            = false;
+                    if (curEntity->dataType == GS_FLAME_DATA)
+                    {
+                        curEntity = (gs_entity_t*)curNode->next->next->val;
+                        tooFar    = true; // just steal an active particle at this point.
+                    }
+                    if (curEntity->dataType == GS_PARTICLE_DATA && (curEntity->updateFunction == NULL || tooFar))
+                    {
+                        // inactive particle found!
+                        curEntity->updateFunction = gs_updateParticle;
+                        curEntity->drawFunction   = gs_drawParticle;
+                        curEntity->pos            = (vec_t){gossipStone->pos.x + gs_randomInt(-512, 512), 0x1069F};
+                        ((gs_particle_t*)curEntity->data)->vel
+                            = (vec_t){gs_randomInt(-(abs(gsData->vel.x) >> 1), abs(gsData->vel.x)) + gsData->vel.x,
+                                      -1 * abs(gsData->vel.y) + gs_randomInt(-abs(gsData->vel.y), abs(gsData->vel.y))};
+                        ((gs_particle_t*)curEntity->data)->despawnAtY
+                            = 0x1069F + gs_randomInt(0, abs(gsData->vel.y) >> DECIMAL_BITS);
+                        break;
+                    }
+                    curNode = curNode->prev;
+                }
+            }
+        }
+    }
+}
+
+void gs_drawHill(gs_entity_t* self)
+{
+    int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS) + (TFT_WIDTH >> 1)
+                - self->gameData->assets[self->assetIndex].originX;
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1)
+                - self->gameData->assets[self->assetIndex].originY;
+    drawWsgSimple(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y);
+}
+
+void gs_updateParticle(gs_entity_t* self)
+{
+    gs_particle_t* pData = (gs_particle_t*)self->data;
+    // gravity
+    pData->vel.y
+        += ((gs_gossipStone_t*)self->gameData->entityManager.gossipStone->data)->gravity * self->gameData->elapsedUs
+           >> 17;
+    // drag
+    pData->vel = divVec2d(mulVec2d(pData->vel, 99), 100);
+    self->pos.x += pData->vel.x * self->gameData->elapsedUs >> 20;
+    self->pos.y += pData->vel.y * self->gameData->elapsedUs >> 20;
+    if (self->pos.y > pData->despawnAtY)
+    {
+        self->updateFunction = NULL;
+        self->drawFunction   = NULL;
+    }
+}
+
+void gs_drawParticle(gs_entity_t* self)
+{
+    int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS) + (TFT_WIDTH >> 1);
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1);
+    setPxTft(x, y, c344);
+}
+
+void gs_updateCrystalBall(gs_entity_t* self)
+{
+    if (self->gameData->touchState[0].touched)
+    {
+        ((gs_crystalBall_t*)self->data)->colorScaling = self->gameData->touchState[0].position / 10;
+    }
+}
+
+void gs_drawCrystalBall(gs_entity_t* self)
+{
+    gs_crystalBall_t* cbData = (gs_crystalBall_t*)self->data;
+    SETUP_FOR_TURBO();
+
+    int w = 128;
+    int h = 128;
+    for (int x = 0; x < w; x++)
+    {
+        // we can skip the bottom 5 pixels which would be behind the globe holder
+        for (int y = 0; y < 123; y++)
+        {
+            // don't draw outside the crystal ball (circle check)
+            if (sqMagVec2d(subVec2d((vec_t){x, y}, (vec_t){64, 64})) > 4090)
+            {
+                continue;
+            }
+
+            // https://lodev.org/cgtutor/plasma.html
+            float color = sin(x / 8.0f + self->gameData->clock * 0.04f) + sin(y / 16.0f + self->gameData->clock * 0.02f)
+                          + sin(sqrt((double)((x - w / 2.0f) * (x - w / 2.0f) + (y - h / 2.0f) * (y - h / 2.0f))) / 8.0f
+                                + self->gameData->clock * 0.03f)
+                          + sin(sqrt((double)(x * x + y * y)) / 8.0f + self->gameData->clock * 0.007f);
+
+            // We've added four sine waves, so -4 thru 4 must become 0 thru 216 (number of colors)
+            color = (int)((color + 4.0f) * cbData->colorScaling);
+
+            if (color > 216)
+                color = 216;
+
+            TURBO_SET_PIXEL(x + 76, y + 3, (paletteColor_t)color);
+        }
+    }
+
+    drawWsgSimple(&self->gameData->assets[self->assetIndex].frames[0], 7, 122);
+    drawWsg(&self->gameData->assets[self->assetIndex].frames[0], 140, 122, true, false, 0);
+    drawWsg(&self->gameData->assets[self->assetIndex].frames[1], 76, 3, false, false, 0);
+
+    int16_t xOff = 5;
+    int16_t yOff = 50;
+    if (self->gameData->attendeesMisery >= 0)
+    {
+        drawTextWordWrapCentered(&self->gameData->font_big, c543, cbData->dynamicText, &xOff, &yOff, 275, yOff + 80);
+        xOff = 5;
+        yOff = 212;
+        drawTextWordWrapCentered(&self->gameData->font_gossip, c543, "chance to hear new gossip", &xOff, &yOff, 275,
+                                 TFT_HEIGHT);
+    }
+    else
+    {
+        xOff = 5;
+        yOff = 212;
+        drawTextWordWrapCentered(&self->gameData->font_gossip, c543, cbData->dynamicText, &xOff, &yOff, 275,
+                                 TFT_HEIGHT);
+    }
+}
+
+void gs_switchMoonSubmode(gs_entity_t* self)
+{
+    self->gameData->newSubmode = GS_MOON_SUBMODE;
+}
+
+void gs_updateWind(gs_entity_t* self)
+{
+    gs_wind_t* wData = (gs_wind_t*)self->data;
+    self->pos.x += 3000 * self->gameData->elapsedUs >> 20;
+    self->pos.y += wData->yvel * self->gameData->elapsedUs >> 20;
+    if (self->pos.x > self->gameData->entityManager.camera.pos.x + (300 << DECIMAL_BITS))
+    {
+        self->pos.x = self->gameData->entityManager.camera.pos.x - (280 << DECIMAL_BITS);
+        self->pos.y = self->gameData->entityManager.camera.pos.y
+                      + gs_randomInt(0, 200 << DECIMAL_BITS) * (gs_randomInt(0, 1) == 0 ? 1 : -1);
+        wData->yvel = gs_randomInt(-3000, 3000);
+    }
+    node_t* cur = self->gameData->entityManager.entities->first;
+    while (cur)
+    {
+        gs_entity_t* grass = (gs_entity_t*)cur->val;
+        if (grass->assetIndex >= GS_GRASS_A_ASSET && grass->assetIndex <= GS_GRASS_C_ASSET)
+        {
+            int32_t sqDist = sqMagVec2d(subVec2d(grass->pos, self->pos));
+            if (sqDist < 6553600)
+            {
+                grass->gameFramesPerAnimationFrame = CLAMP((((int)sqrt((double)sqDist)) >> 6), 5, 255);
+                grass->paused                      = false;
+            }
+            else
+            {
+                // grass->gameFramesPerAnimationFrame = gs_randomInt(240,255);
+                // grass->animationTimer = gs_randomInt(0,255);
+                grass->paused = true;
+            }
+        }
+        cur = cur->next;
+    }
+}
+
+void gs_drawWindDebug(gs_entity_t* self)
+{
+    int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x) >> DECIMAL_BITS) + (TFT_WIDTH >> 1);
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1);
+    drawCircle(x, y, 160, c500);
+}
+
+void gs_spawnOneGrass(gs_entity_t* self)
+{
+    vec_t screenPos = (vec_t){gs_randomInt(-140, 140), 0};
+    int16_t sine    = getSin1024((screenPos.x + 270) % 359);
+    screenPos.y     = gs_randomInt(85 + sine / 130, 120);
+    gs_entity_t* grass;
+    if (screenPos.y > 104)
+    {
+        grass = gs_createEntity(
+            &self->gameData->entityManager, 4, GS_LOOPING_ANIMATION, false, GS_GRASS_A_ASSET + gs_randomInt(0, 2),
+            gs_randomInt(240, 255),
+            addVec2d(self->gameData->entityManager.camera.pos, (vec_t){screenPos.x * 16, screenPos.y * 16}),
+            self->gameData);
+    }
+    else
+    {
+        node_t* gossipStoneNode
+            = gs_findLastNodeOfType(self->gameData->entityManager.gossipStone, GS_GOSSIP_STONE_DATA);
+        grass = gs_createEntityBefore(
+            gossipStoneNode, &self->gameData->entityManager, 4, GS_LOOPING_ANIMATION, false,
+            GS_GRASS_A_ASSET + gs_randomInt(0, 2), gs_randomInt(240, 255),
+            addVec2d(self->gameData->entityManager.camera.pos, (vec_t){screenPos.x * 16, screenPos.y * 16}),
+            self->gameData);
+    }
+    grass->currentAnimationFrame = gs_randomInt(0, 3);
+    grass->animationTimer        = gs_randomInt(0, 255);
+}
