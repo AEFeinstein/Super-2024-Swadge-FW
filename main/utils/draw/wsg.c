@@ -318,7 +318,8 @@ void drawWsgSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff)
 }
 
 /**
- * @brief Draw a WSG to the display without flipping or rotation
+ * @brief Draw a WSG to the display without flipping or rotation. xScale and yScale must share the same sign or else the
+ * image will be drawn normally at 1x scale.
  *
  * @param wsg  The WSG to draw to the display
  * @param xOff The x offset to draw the WSG at
