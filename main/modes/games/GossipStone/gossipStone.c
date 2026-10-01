@@ -153,8 +153,6 @@ static void gs_enterMode(void)
     gs_loadAssets();
 
     gs_initializeGame();
-
-    SETUP_FOR_TURBO();
 }
 
 void gs_populateMenu(void)

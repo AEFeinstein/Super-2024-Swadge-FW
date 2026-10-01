@@ -200,7 +200,7 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
 
         if (*count != 0)
         {
-            iniPrintf("Allocating opts buffer of %z" PRIu32 " items", (uint32_t)*count);
+            iniPrintf("Allocating opts buffer of %" PRIu32 " items", (uint32_t)*count);
             optsOut = calloc(*count, sizeof(optPair_t));
 
             if (!optsOut)
@@ -231,11 +231,11 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
     size_t textChars = 0;
     size_t pairs     = 0;
 
-    char prevSectionName[128] = {0};
-    char sectionName[128]     = {0};
+    char prevSectionName[512] = {0};
+    char sectionName[512]     = {0};
 
-    char key[128] = {0};
-    char val[256] = {0};
+    char key[512] = {0};
+    char val[512] = {0};
 
     bool escaping = false;
 

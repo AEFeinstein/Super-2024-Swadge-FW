@@ -1,4 +1,3 @@
-#pragma once
 #include "gs_gossip.h"
 
 // clang-format off

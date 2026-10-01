@@ -1,10 +1,10 @@
 idf_component_register(SRCS "modes/games/atrium/atrium.c"
+                            "modes/games/Bombadeetle/bombadeetle.c"
                             "modes/games/GossipStone/gossipStone.c"
                             "modes/games/GossipStone/gs_collision.c"
                             "modes/games/GossipStone/gs_entity.c"
                             "modes/games/GossipStone/gs_entityManager.c"
                             "modes/games/GossipStone/gs_gossip.c"
-                            "modes/games/GossipStone/gs_utility.c"
                             "modes/games/GossipStone/gs_utility.c"
                             "modes/games/GottaGo/Data/ggCommonTypes.c"
                             "modes/games/GottaGo/gottaGo.c"
@@ -82,9 +82,9 @@ idf_component_register(SRCS "modes/games/atrium/atrium.c"
                             "utils/menu/menu.c"
                             "utils/menu/menuManiaRenderer.c"
                             "utils/menu/menuMegaRenderer.c"
-                            "utils/menu/menuZorldoRenderer.c"
                             "utils/menu/menuSimpleRenderer.c"
                             "utils/menu/menu_utils.c"
+                            "utils/menu/menuZorldoRenderer.c"
                             "utils/menu/modeIncludeList.c"
                             "utils/midi/bakedDrums.c"
                             "utils/midi/drums.c"
@@ -120,10 +120,11 @@ idf_component_register(SRCS "modes/games/atrium/atrium.c"
                                 "./modes"
                                 "./modes/games"
                                 "./modes/games/atrium"
+                                "./modes/games/Bombadeetle"
                                 "./modes/games/GossipStone"
                                 "./modes/games/GottaGo"
-                                "./modes/games/GottaGo/src"
                                 "./modes/games/GottaGo/Data"
+                                "./modes/games/GottaGo/src"
                                 "./modes/games/RoboRunner"
                                 "./modes/music"
                                 "./modes/music/colorchord"
@@ -178,7 +179,7 @@ add_custom_target(dummy_target ALL
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/../.assets_ts
     COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/assets_preprocessor -c ${CMAKE_CURRENT_SOURCE_DIR}/../assets.conf -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/ -t ${CMAKE_CURRENT_SOURCE_DIR}/../.assets_ts
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/assets_preprocessor -c ${CMAKE_CURRENT_SOURCE_DIR}/../assets.conf -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/ -t ${CMAKE_CURRENT_SOURCE_DIR}/../.assets_ts -r ${CMAKE_CURRENT_SOURCE_DIR}/..
     DEPENDS always_rebuild
 )
 

@@ -684,7 +684,7 @@ typedef union
         size_t textSize;
     };
 
-	const char * fileName;
+    const char* fileName;
 } processorFileData_t;
 
 /**

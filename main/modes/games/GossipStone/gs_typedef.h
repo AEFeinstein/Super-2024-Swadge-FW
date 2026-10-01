@@ -127,8 +127,8 @@ typedef struct
     uint16_t halfHeight;
 } gs_AABB_t;
 
-typedef union gs_collider_u
+typedef union
 {
     gs_circle_t circle;
     gs_AABB_t AABB;
-};
+} gs_collider_u;
