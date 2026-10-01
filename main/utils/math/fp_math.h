@@ -141,11 +141,9 @@ float fixToFloat(q24_8 fx);
      * @param a The number to round
      * @return The nearest integer to the input
      */
-    #define ROUND_FX_QN(a, fracBits)                                                                    \
-        (((fracBits) == 0)                                                                              \
-             ? (a)                                                                                      \
-             : (((int64_t)(a) >= 0) ? (((int64_t)(a) + ((int64_t)1 << ((fracBits) - 1))) >> (fracBits)) \
-                                    : (-((((int64_t)(-(a)) + ((int64_t)1 << ((fracBits) - 1))) >> (fracBits))))))
+    #define ROUND_FX_QN(a, fracBits)                                \
+        ((a) >= 0 ? (((a) + (1 << ((fracBits) - 1))) >> (fracBits)) \
+                  : -(((-(a)) + (1 << ((fracBits) - 1))) >> (fracBits)))
 
     /**
      * @brief Convert an integer fraction to fixed point type with N fractional bits

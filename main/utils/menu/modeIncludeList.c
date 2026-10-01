@@ -37,7 +37,7 @@ void modeListSetMenu(menu_t* menu)
     // Games sub menu
     menu = startSubMenu(menu, "Games");
     addSingleItemToMenu(menu, gottaGoMode.modeName);
-    addSingleItemToMenu(menu, gossipStoneMode.modeName); //Talky Rocky name is after Gotta Go alphabetically
+    addSingleItemToMenu(menu, gossipStoneMode.modeName); // Talky Rocky name is after Gotta Go alphabetically
     addSingleItemToMenu(menu, roboRunnerMode.modeName);
     addSingleItemToMenu(menu, bombadeetleMode.modeName);
     menu = endSubMenu(menu);
