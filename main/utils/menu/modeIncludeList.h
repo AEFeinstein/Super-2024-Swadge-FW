@@ -31,12 +31,14 @@
 
 #include "accelTest.h"
 #include "atrium.h"
+#include "bombadeetle.h"
 #include "canvas.h"
 #include "colorchord.h"
 #include "dance.h"
 #include "factoryTest.h"
 #include "gamepad.h"
 #include "gottaGo.h"
+#include "heyListen.h"
 #include "introMode.h"
 #include "jukebox.h"
 #include "keebTest.h"
@@ -53,7 +55,6 @@
 #include "trophyCase.h"
 #include "trophyTest.h"
 #include "tunernome.h"
-#include "heyListen.h"
 
 //==============================================================================
 // Function Prototypes

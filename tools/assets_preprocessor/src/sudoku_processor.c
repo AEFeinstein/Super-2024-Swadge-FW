@@ -7,15 +7,14 @@
 
 #include "assets_preprocessor.h"
 
-
 bool process_sudoku(processorInput_t* arg);
 
 const assetProcessor_t sudokuProcessor = {
-    .name = "sudoku",
-    .type = FUNCTION,
+    .name     = "sudoku",
+    .type     = FUNCTION,
     .function = process_sudoku,
-    .inFmt = FMT_FILE,
-    .outFmt = FMT_FILE_BIN,
+    .inFmt    = FMT_FILE,
+    .outFmt   = FMT_FILE_BIN,
 };
 
 bool process_sudoku(processorInput_t* arg)
@@ -23,11 +22,11 @@ bool process_sudoku(processorInput_t* arg)
     uint8_t cells[81];
 
     int valueCount = 0;
-    int n = 0;
+    int n          = 0;
 
     int cur;
     bool startOfLine = true;
-    bool comment = false;
+    bool comment     = false;
     while (-1 != (cur = getc(arg->in.file)))
     {
         switch (cur)
@@ -106,7 +105,7 @@ bool process_sudoku(processorInput_t* arg)
             case '\r':
             case '\n':
             {
-                comment = false;
+                comment     = false;
                 startOfLine = true;
                 break;
             }
@@ -149,7 +148,7 @@ bool process_sudoku(processorInput_t* arg)
     //// GRID
 
     // Holds the nibble for the cell value
-    uint8_t buf = 0;
+    uint8_t buf  = 0;
     bool pending = false;
 
     // Write grid count
@@ -176,7 +175,7 @@ bool process_sudoku(processorInput_t* arg)
             {
                 // Write first location of pair
                 putc(((r & 0x0F) << 4) | (c & 0x0F), outFile);
-                buf = (cells[i] - 1) << 4;
+                buf     = (cells[i] - 1) << 4;
                 pending = true;
             }
         }
