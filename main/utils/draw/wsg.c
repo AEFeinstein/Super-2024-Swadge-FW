@@ -431,7 +431,7 @@ void drawWsgSimpleScaledDown(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16
 
     //  Modified by DebrisHauler on 9/30 to support scaling down even further.
 
-    if (NULL == wsg->px || xScale < 1 || yScale < 1 || xScale > 30 || yScale >> 30)
+    if (NULL == wsg->px || xScale < 1 || yScale < 1 || xScale > 30 || yScale > 30)
     {
         return;
     }
