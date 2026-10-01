@@ -35,6 +35,12 @@ struct beancatch_t {
     int16_t prevBtnState;
     int16_t frameCounter;
 
+    int64_t usCounter;
+    uint8_t clockSeconds;
+    uint8_t clockMinutes;
+    uint8_t clockHours;
+    bool clockSecondsPulse;
+
     bc_gameStateEnum_t state;
     gameUpdateFuncton_t update;
     bool refreshScreen;
@@ -139,6 +145,12 @@ void beancatchEnterMode(void)
 
     loadFont(LCD_NUMBERS_FONT, &beancatch->lcdNumbersFont, false);
 
+    beancatch->usCounter = 0;
+    beancatch->clockHours = 0;
+    beancatch->clockMinutes = 0;
+    beancatch->clockSeconds = 0;
+    beancatch->clockSecondsPulse = false;
+
     beancatch->refreshScreen = true;
     beancatch->update = &bcUpdateAcl;
 }
@@ -177,6 +189,31 @@ void beancatchMainLoop(int64_t elapsedUs)
     }
 
     beancatch->update();
+
+    beancatch->clockSecondsPulse = false;
+    beancatch->usCounter += elapsedUs;
+    if(beancatch->usCounter > 999999)
+    {
+        beancatch->usCounter -= 1000000;
+        beancatch->clockSecondsPulse = true;
+
+        beancatch->clockSeconds++;
+        if(beancatch->clockSeconds > 59) {
+            beancatch->clockSeconds = 0;
+
+            beancatch->clockMinutes++;
+            if(beancatch->clockMinutes > 59)
+            {
+                beancatch->clockMinutes = 0;
+
+                beancatch->clockHours++;
+                if(beancatch->clockHours > 23)
+                {
+                    beancatch->clockHours = 0;
+                }
+            }
+        }
+    }
 
     beancatch->prevBtnState          = beancatch->btnState;
 }
@@ -250,6 +287,11 @@ void bcUpdateClock(void)
     {
         bcChangeStateGameB();
         return;
+    }
+
+    if (beancatch->clockSecondsPulse)
+    {
+        beancatch->refreshScreen = true;
     }
 
     bcDrawGame();
@@ -442,6 +484,20 @@ void bcUpdateGame(void)
             break;
     }
 
+    if(beancatch->clockSecondsPulse)
+    {
+        if( !beancatch->eggyDevito && ((beancatch->clockSeconds % 10) > 5) )
+        {
+            beancatch->eggyDevito = true;
+            beancatch->refreshScreen = true;
+        } 
+        else if( beancatch->eggyDevito && !((beancatch->clockSeconds % 10) > 5) )
+        {
+            beancatch->eggyDevito = false;
+            beancatch->refreshScreen = true;
+        } 
+    }       
+
     bcDrawGame();
 }
 
@@ -582,6 +638,16 @@ void bcDrawGame(void)
                 else
                 {
                     //draw clock
+                    segment = BC_LCD_SEGMENTS[BC_SEG_HOURS_SEP];
+                    drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
+
+                    if(beancatch->clockHours < 12)
+                    {
+                        segment = BC_LCD_SEGMENTS[BC_SEG_AM_LABEL];
+                        drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
+                    }
+
+                    bcDrawScoreHud( (( (beancatch->clockHours == 0) ? 12 : beancatch->clockHours) % 13) * 100 + beancatch->clockMinutes );
                 }
             default:
                 break;
