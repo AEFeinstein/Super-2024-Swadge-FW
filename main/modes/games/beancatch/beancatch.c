@@ -40,6 +40,7 @@ struct beancatch_t {
     uint8_t clockMinutes;
     uint8_t clockHours;
     bool clockSecondsPulse;
+    bool clockHalfSecondsPulse;
 
     bc_gameStateEnum_t state;
     gameUpdateFuncton_t update;
@@ -150,6 +151,7 @@ void beancatchEnterMode(void)
     beancatch->clockMinutes = 0;
     beancatch->clockSeconds = 0;
     beancatch->clockSecondsPulse = false;
+    beancatch->clockHalfSecondsPulse = false;
 
     beancatch->refreshScreen = true;
     beancatch->update = &bcUpdateAcl;
@@ -192,10 +194,16 @@ void beancatchMainLoop(int64_t elapsedUs)
 
     beancatch->clockSecondsPulse = false;
     beancatch->usCounter += elapsedUs;
-    if(beancatch->usCounter > 999999)
+
+    if(beancatch->usCounter == 500000)
+    {
+        beancatch->clockHalfSecondsPulse = true;
+    }
+    else if(beancatch->usCounter > 999999)
     {
         beancatch->usCounter -= 1000000;
         beancatch->clockSecondsPulse = true;
+        beancatch->clockHalfSecondsPulse = true;
 
         beancatch->clockSeconds++;
         if(beancatch->clockSeconds > 59) {
@@ -484,6 +492,11 @@ void bcUpdateGame(void)
             break;
     }
 
+    if(beancatch->clockHalfSecondsPulse && beancatch->halfStrike)
+    {
+        beancatch->refreshScreen = true;
+    }
+
     if(beancatch->clockSecondsPulse)
     {
         if( !beancatch->eggyDevito && ((beancatch->clockSeconds % 10) > 5) )
@@ -595,7 +608,7 @@ void bcDrawGame(void)
 
         for (uint16_t i = 0; i < beancatch->strikes; i++)
         {
-            if(beancatch->halfStrike && i == beancatch->strikes-1 && (beancatch->frameCounter > 29) )
+            if(beancatch->halfStrike && i == beancatch->strikes-1 && (beancatch->usCounter > 500000) )
             {
                 break;
             }
