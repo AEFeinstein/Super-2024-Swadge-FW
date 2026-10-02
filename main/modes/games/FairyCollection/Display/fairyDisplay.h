@@ -23,4 +23,4 @@ typedef struct
 
 bool fcRunSPField(fcspField_t* fcspf);
 
-void fcDrawSPField(fcspField_t* fcspf,  font_t* font, int64_t elapsedUs);
+void fcDrawSPField(fcspField_t* fcspf, font_t* font, int64_t elapsedUs);

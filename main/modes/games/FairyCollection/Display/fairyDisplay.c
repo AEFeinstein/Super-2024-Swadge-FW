@@ -12,11 +12,11 @@
 
 #define NUM_COLS 8
 
-#define BOX_WIDTH 24
+#define BOX_WIDTH    24
 #define BOX_X_OFFSET 23
 #define BOX_Y_OFFSET 3
-#define X_SPACING 6
-#define Y_SPACING 6
+#define X_SPACING    6
+#define Y_SPACING    6
 
 //==============================================================================
 // Function declarations
@@ -60,7 +60,8 @@ void fcDrawSPField(fcspField_t* fcspf, font_t* font, int64_t elapsedUs)
     {
         nameData_t nd = {0};
         setUsernameFrom32(&nd, fcspf->spFairies[fcspf->fairyIndex].packedName);
-        fcDrawFairyCard(&fcspf->spFairies[fcspf->fairyIndex].pCard, &fcspf->spFairies[fcspf->fairyIndex].fairy, &nd, font);
+        fcDrawFairyCard(&fcspf->spFairies[fcspf->fairyIndex].pCard, &fcspf->spFairies[fcspf->fairyIndex].fairy, &nd,
+                        font);
         return;
     }
     // Draw field
@@ -75,7 +76,8 @@ void fcDrawSPField(fcspField_t* fcspf, font_t* font, int64_t elapsedUs)
         if (idx == fcspf->fairyIndex)
         {
             col = c550;
-        } else if (!fcspf->spFairies[idx].pCard.initialized)
+        }
+        else if (!fcspf->spFairies[idx].pCard.initialized)
         {
             col = c500;
         }

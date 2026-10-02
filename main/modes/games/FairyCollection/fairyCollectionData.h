@@ -225,7 +225,7 @@ typedef struct __attribute__((packed))
     uint8_t attendeeType : 4;
     uint8_t cardBG       : 4;
     uint8_t team         : 2;
-    bool initialized   : 1; // If fairy is initialized
+    bool initialized     : 1; // If fairy is initialized
 } profileCard_t;
 
 typedef struct __attribute__((packed))

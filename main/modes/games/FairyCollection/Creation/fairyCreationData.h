@@ -10,11 +10,11 @@
 // Struct
 //==============================================================================
 
-typedef struct 
+typedef struct
 {
     int optionSelection;
     int options[FC_OPT_COUNT];
     fairy_t* fairy;
-    profileCard_t* card; 
+    profileCard_t* card;
     bool displayFairy;
 } fcCreationData_t;

@@ -87,7 +87,7 @@ bool updateHighScores(highScores_t* hs, const char* nvsNamespace, score_t newSco
     if (!userScoreExists)
     {
         hs->highScores[HIGH_SCORE_COUNT(hs) - 1].score = hs->userHighScore;
-        //memset(&hs->highScores[HIGH_SCORE_COUNT(hs) - 1].swadgesona, 0, sizeof(swadgesonaCore_t));
+        // memset(&hs->highScores[HIGH_SCORE_COUNT(hs) - 1].swadgesona, 0, sizeof(swadgesonaCore_t));
         changed = true;
     }
 
@@ -113,7 +113,7 @@ void saveHighScoresFromSwadgePass(highScores_t* hs, const char* nvsNamespace, li
             swadgePassData_t* spd = node->val;
             spScores[i].score     = fnGetSwadgePassHighScore(&spd->data.packet);
             memcpy(&spScores[i].spKey, &spd->key, NVS_KEY_NAME_MAX_SIZE);
-            //memcpy(&spScores[i].swadgesona, &spd->data.packet.swadgesona.core, sizeof(swadgesonaCore_t));
+            // memcpy(&spScores[i].swadgesona, &spd->data.packet.swadgesona.core, sizeof(swadgesonaCore_t));
             i++;
             node = node->next;
         }

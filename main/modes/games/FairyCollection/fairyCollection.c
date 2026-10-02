@@ -78,7 +78,7 @@ typedef struct
     // Data
     fairy_t userFairy;
     profileCard_t userCard;
-    
+
     // Menu
     menu_t* menu;
     menuZorldoRenderer_t* zr;
@@ -246,8 +246,8 @@ static void loadFromSwadgePass(void)
         swadgePassData_t* spd = (swadgePassData_t*)spNode->val;
         if (!isPacketUsedByMode(spd, &fairyCollectionMode))
         {
-            fcd->fcspf->spFairies[currIdx].fairy = spd->data.packet.fairyCol.fairy;
-            fcd->fcspf->spFairies[currIdx].pCard = spd->data.packet.fairyCol.card;
+            fcd->fcspf->spFairies[currIdx].fairy      = spd->data.packet.fairyCol.fairy;
+            fcd->fcspf->spFairies[currIdx].pCard      = spd->data.packet.fairyCol.card;
             fcd->fcspf->spFairies[currIdx].packedName = spd->data.packet.username;
             setPacketUsedByMode(spd, &fairyCollectionMode, true);
             currIdx++;
@@ -261,7 +261,8 @@ static void loadFromSwadgePass(void)
     dacStart();
     // Save to NVS
     writeNamespaceNvs32(nvsStrs[FC_NAMESPACE], nvsStrs[FC_SPP_NEXT_IDX], currIdx);
-    writeNamespaceNvsBlob(nvsStrs[FC_NAMESPACE], nvsStrs[FC_SPP_SAVED], fcd->fcspf->spFairies, sizeof(fcd->fcspf->spFairies));
+    writeNamespaceNvsBlob(nvsStrs[FC_NAMESPACE], nvsStrs[FC_SPP_SAVED], fcd->fcspf->spFairies,
+                          sizeof(fcd->fcspf->spFairies));
 }
 
 static bool fcMenuCb(const char* label, bool selected, uint32_t settingVal)
