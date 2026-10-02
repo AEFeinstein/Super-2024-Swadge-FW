@@ -5,6 +5,8 @@
 // Constant Variables
 //==============================================================================
 
+// clang-format off
+
 const cnfsFileIdx_t BC_WSGS[] = {
     //WSGs in order
     BC_BEAN_UL_00_WSG,
@@ -112,3 +114,5 @@ const uint16_t BC_DIFFICULTY_MAX_BEANS[] = {
 /*  0  1  2  3  4  5  6  7  9 10 11 12 13 14 15 16 MAX */
     2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 7, 7, 7, 9, 9, 9, 12
 };
+
+// clang-format on
