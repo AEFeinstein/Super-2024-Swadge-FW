@@ -11,9 +11,13 @@
             "program": "${workspaceFolder}/assets_preprocessor",
             "args": [
                 "-i",
-                "./in",
+                "../../assets/",
                 "-o",
-                "./out"
+                "../../assets_image/",
+                "-c",
+                "../../assets.conf",
+                "-r",
+                "../.."
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

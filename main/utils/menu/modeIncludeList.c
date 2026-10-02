@@ -20,6 +20,11 @@ swadgeMode_t* const allSwadgeModes[] = {
     &gamepadMode,      &gottaGoMode, &introMode,      &jukeboxMode,    &keebTestMode,   &mainMenuMode,
     &modeCh32v003test, &modeCredits, &nameTestMode,   &roboRunnerMode, &sonaTestMode,   &swadgePassTestMode,
     &swsnCreatorMode,  &synthMode,   &tCaseMode,      &touchTestMode,  &trophyTestMode, &tunernomeMode,
+    &accelTestMode,   &atriumMode,     &bombadeetleMode, &canvasTestMode,     &colorchordMode,  &danceMode,
+    &factoryTestMode, &gamepadMode,    &gossipStoneMode, &gottaGoMode,        &heyListenMode,   &introMode,
+    &jukeboxMode,     &keebTestMode,   &mainMenuMode,    &modeCh32v003test,   &modeCredits,     &nameTestMode,
+    &rayMode,         &roboRunnerMode, &sonaTestMode,    &swadgePassTestMode, &swsnCreatorMode, &synthMode,
+    &tCaseMode,       &touchTestMode,  &trophyTestMode,  &tunernomeMode,
 };
 
 //==============================================================================
@@ -37,7 +42,10 @@ void modeListSetMenu(menu_t* menu)
     menu = startSubMenu(menu, "Games");
     addSingleItemToMenu(menu, beancatchMode.modeName);
     addSingleItemToMenu(menu, gottaGoMode.modeName);
+    addSingleItemToMenu(menu, gossipStoneMode.modeName); // Talky Rocky name is after Gotta Go alphabetically
     addSingleItemToMenu(menu, roboRunnerMode.modeName);
+    addSingleItemToMenu(menu, bombadeetleMode.modeName);
+    addSingleItemToMenu(menu, rayMode.modeName);
     menu = endSubMenu(menu);
 
     // Music sub menu
@@ -49,11 +57,14 @@ void modeListSetMenu(menu_t* menu)
 
     // Utilities sub menu
     menu = startSubMenu(menu, "Utilities");
+
     addSingleItemToMenu(menu, tCaseMode.modeName);
     addSingleItemToMenu(menu, danceMode.modeName);
+    addSingleItemToMenu(menu, heyListenMode.modeName);
     addSingleItemToMenu(menu, gamepadMode.modeName);
     addSingleItemToMenu(menu, modeCredits.modeName);
     addSingleItemToMenu(menu, introMode.modeName);
+
     menu = endSubMenu(menu);
 
     // Swadgepass

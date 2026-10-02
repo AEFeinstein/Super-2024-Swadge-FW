@@ -9,6 +9,7 @@
 #include "trigonometry.h"
 #include "fill.h"
 #include "wsg.h"
+#include <fp_math.h>
 
 //==============================================================================
 // Functions
@@ -101,8 +102,10 @@ void rotatePixel(int32_t* x, int32_t* y, int32_t rotateDeg, int32_t width, int32
  * @param flipLR true to flip the image across the Y axis
  * @param flipUD true to flip the image across the X axis
  * @param rotateDeg The number of degrees to rotate clockwise, must be 0-359
+ * @param solidColor A single color to use for each pixel, or cTransparent to ignore
  */
-void drawWsg(const wsg_t* wsg, int32_t xOff, int32_t yOff, bool flipLR, bool flipUD, int32_t rotateDeg)
+void drawWsgSolid(const wsg_t* wsg, int32_t xOff, int32_t yOff, bool flipLR, bool flipUD, int32_t rotateDeg,
+                  paletteColor_t solidColor)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-08, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
@@ -154,6 +157,11 @@ void drawWsg(const wsg_t* wsg, int32_t xOff, int32_t yOff, bool flipLR, bool fli
                 paletteColor_t color = linein[readX];
                 if (cTransparent != color)
                 {
+                    if (solidColor < cTransparent)
+                    {
+                        color = solidColor;
+                    }
+
                     int32_t tx = srcX;
                     int32_t ty = srcY;
 
@@ -261,6 +269,10 @@ void drawWsg(const wsg_t* wsg, int32_t xOff, int32_t yOff, bool flipLR, bool fli
                 uint8_t color = linein[srcX];
                 if (cTransparent != color)
                 {
+                    if (solidColor < cTransparent)
+                    {
+                        color = solidColor;
+                    }
                     px[dstx] = color;
                 }
                 dstx++;
@@ -313,7 +325,32 @@ void drawWsgSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff)
         }
         lineout += dWidth;
         linein += wWidth;
-        wsgY++;
+    }
+}
+
+/**
+ * @brief Draw a WSG to the display without flipping or rotation. xScale and yScale must share the same sign or else the
+ * image will be drawn normally at 1x scale.
+ *
+ * @param wsg  The WSG to draw to the display
+ * @param xOff The x offset to draw the WSG at
+ * @param yOff The y offset to draw the WSG at
+ * @param xScale The amount to scale the image horizontally
+ * @param yScale The amount to scale the image vertically
+ */
+void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t xScale, int16_t yScale)
+{
+    if (xScale > 0 && yScale > 0)
+    {
+        drawWsgSimpleScaledUp(wsg, xOff, yOff, xScale + 1, yScale + 1);
+    }
+    else if (xScale < 0 && yScale < 0)
+    {
+        drawWsgSimpleScaledDown(wsg, xOff, yOff, -xScale, -yScale);
+    }
+    else
+    {
+        drawWsgSimple(wsg, xOff, yOff);
     }
 }
 
@@ -326,7 +363,7 @@ void drawWsgSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff)
  * @param xScale The amount to scale the image horizontally
  * @param yScale The amount to scale the image vertically
  */
-void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t xScale, int16_t yScale)
+void drawWsgSimpleScaledUp(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t xScale, int16_t yScale)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
@@ -396,24 +433,30 @@ void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t x
  * @param wsg  The WSG to draw to the display
  * @param xOff The x offset to draw the WSG at
  * @param yOff The y offset to draw the WSG at
+ * @param xScale 1 draws at half scale, 2 at quarter scale, etc...
+ * @param yScale 1 draws at half scale, 2 at quarter scale, etc...
  */
-void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff)
+void drawWsgSimpleScaledDown(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t xScale, int16_t yScale)
 {
     //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
 
-    if (NULL == wsg->px)
+    //  Modified by DebrisHauler on 9/30 to support scaling down even further.
+
+    if (NULL == wsg->px || xScale < 1 || yScale < 1 || xScale > 30 || yScale > 30)
     {
         return;
     }
 
     // Only draw in bounds
+    int xStep                    = 1 << xScale; // step over this many pixels in the source for each output sample.
+    int yStep                    = 1 << yScale;
     int dWidth                   = TFT_WIDTH;
     int wWidth                   = wsg->w;
     int xMin                     = CLAMP(xOff, 0, dWidth);
-    int xMax                     = CLAMP(xOff + (wWidth / 2), 0, dWidth);
+    int xMax                     = CLAMP(xOff + (wWidth / xStep), 0, dWidth);
     int yMin                     = CLAMP(yOff, 0, TFT_HEIGHT);
-    int yMax                     = CLAMP(yOff + (wsg->h / 2), 0, TFT_HEIGHT);
+    int yMax                     = CLAMP(yOff + (wsg->h / yStep), 0, TFT_HEIGHT);
     paletteColor_t* px           = getPxTftFramebuffer();
     int numX                     = xMax - xMin;
     int wsgY                     = (yMin - yOff);
@@ -426,15 +469,77 @@ void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff)
     {
         for (int x = 0; x < numX; x++)
         {
-            int color = linein[x * 2];
+            int color = linein[x * xStep];
             if (color != cTransparent)
             {
                 lineout[x] = color;
             }
         }
         lineout += dWidth;
-        linein += (2 * wWidth);
-        wsgY++;
+        linein += (yStep * wWidth);
+        wsgY += yStep;
+    }
+}
+
+/**
+ * @brief Draw a WSG to the display without flipping or rotation at half size
+ *
+ * @param wsg  The WSG to draw to the display
+ * @param xOff The x offset to draw the WSG at
+ * @param yOff The y offset to draw the WSG at
+ */
+void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff)
+{
+    drawWsgSimpleScaledDown(wsg, xOff, yOff, 1, 1);
+}
+
+/**
+ * @brief Draw a WSG to the display without flipping or rotation. Use drawWsgSimpleScaled and drawWsgSimpleHalf if
+ * halving or doubling sprites.
+ *
+ * @param wsg  The WSG to draw to the display
+ * @param xOff The x offset to draw the WSG at
+ * @param yOff The y offset to draw the WSG at
+ * @param xScale The amount to scale the image horizontally
+ * @param yScale The amount to scale the image vertically
+ */
+void drawWsgSmoothScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, q24_8 xScale, q24_8 yScale)
+{
+    //  This function added by DebrisHauler on 8/31/2026
+    //  Nearest Neigbhor scaling algorithm:
+    //  https://courses.cs.vt.edu/~masc1044/L17-Rotation/ScalingNN.html
+
+    q24_8 wWidth   = TO_FX_QN(wsg->w, FRAC_BITS);
+    q24_8 wHeigt   = TO_FX_QN(wsg->h, FRAC_BITS);
+    q24_8 newWidth = MUL_FX_QN(wWidth, xScale, FRAC_BITS);
+    q24_8 newHeigt = MUL_FX_QN(wHeigt, yScale, FRAC_BITS);
+
+    // Portion of the scaled image that falls inside the screen.
+    q24_8 startX = TO_FX_QN(MAX(0, xOff), FRAC_BITS);
+    q24_8 endX   = TO_FX_QN(MIN(TFT_WIDTH, xOff + (newWidth >> FRAC_BITS)), FRAC_BITS);
+
+    q24_8 startY = TO_FX_QN(MAX(0, yOff), FRAC_BITS);
+    q24_8 endY   = TO_FX_QN(MIN(TFT_HEIGHT, yOff + (newHeigt >> FRAC_BITS)), FRAC_BITS);
+
+    paletteColor_t* px = getPxTftFramebuffer();
+
+    for (q24_8 y = startY; y < endY; y += TO_FX_QN(1, FRAC_BITS))
+    {
+        for (q24_8 x = startX; x < endX; x += TO_FX_QN(1, FRAC_BITS))
+        {
+            q24_8 scaledX = SUB_FX_QN(x, TO_FX_QN(xOff, FRAC_BITS), FRAC_BITS);
+            q24_8 scaledY = SUB_FX_QN(y, TO_FX_QN(yOff, FRAC_BITS), FRAC_BITS);
+
+            // Convert scaled position to source position
+            int srcX = ROUND_FX_QN(MUL_FX_QN(DIV_FX_QN(scaledX, newWidth, FRAC_BITS), wWidth, FRAC_BITS), FRAC_BITS);
+            int srcY = ROUND_FX_QN(MUL_FX_QN(DIV_FX_QN(scaledY, newHeigt, FRAC_BITS), wHeigt, FRAC_BITS), FRAC_BITS);
+
+            int color = wsg->px[srcY * wsg->w + srcX];
+            if (color != cTransparent)
+            {
+                px[(y >> FRAC_BITS) * TFT_WIDTH + (x >> FRAC_BITS)] = color;
+            }
+        }
     }
 }
 
@@ -449,7 +554,7 @@ void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff)
  */
 void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff)
 {
-    if (xOff > TFT_WIDTH)
+    if (xOff > TFT_WIDTH || xOff + wsg->w < 0 || yOff > TFT_HEIGHT || yOff + wsg->h < 0)
     {
         return;
     }

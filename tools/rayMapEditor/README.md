@@ -1,5 +1,31 @@
 # Ray Map Editor
 
+Ray Map Editor is a tile-based map editor for Swadge games. Each tile may have a background (floor, wall, or door) and foreground (enemy, item, or scenery) object.
+
+Ray Map Editor also has a script editor to take actions when conditions are met during gameplay. Scripts can do things like spawn enemies when entering a room, open a door when all enemies are defeated, or other things.
+
+## Usage
+
+```
+usage: ray_map_editor.py [-h] [-a SWADGE_ASSETS_PATH] [-i EDITOR_IMAGES_PATH] [-f FILE]
+
+Tile map editor for Swadge games
+
+options:
+  -h, --help            show this help message and exit
+  -a, --swadge-assets-path SWADGE_ASSETS_PATH
+                        Path to the Swadge assets directory. The default value is "../../assets/tomisQuest/".
+  -i, --editor-images-path EDITOR_IMAGES_PATH
+                        Path to the Editor images directory. The default value is "./imgs/".
+  -f, --file FILE       The map file to load (optional)
+```
+
+### Example
+
+```bash
+./ray_map_editor.py -a ../../assets/tomisQuest/ -i ./imgs/ -f ../../assets/tomisQuest/maps/0.rmd 
+```
+
 ## Controls
 
 Left click on tiles and objects in the palette on the left edge to select them.
@@ -10,6 +36,19 @@ Right click on the map to see that cell's coordinate and optionally that object'
 Middle click on the map to drag the whole map around.
 
 Load, save, or 'save as' the current map and scripts with the buttons on the top.
+
+| Key | Action |
+| --- | ------ |
+| `ctrl` + `o` | Open a map |
+| `ctrl` + `s` | Save the map |
+| `ctrl` + `shift` + `s` | Save the map as a different name |
+| `ctrl` + `r` | Resize the map |
+| `ctrl` + `e` | Advance the script spawn helper |
+| `ctrl` + `w` | Advance the script camera helper |
+| `ctrl` + `=` | Zoom the map in |
+| `ctrl` + `-` | Zoom the map out |
+| `ctrl` + arrow keys | Move the map around |
+| `alt` + up or down arrow | Scroll the palette up and down |
 
 ## Tiles
 
@@ -47,6 +86,10 @@ These are the conditions which can trigger scripts.
 | SHOOT_WALLS  | 4     | AND_OR, \[CELLs\], ORDER, ONE_TIME | Triggered when one or all walls in the given cells are shot. If all, may be in the given order or any order. May reset after triggering.     |
 | ENTER        | 5     | AND_OR, \[CELLs\], ORDER, ONE_TIME | Triggered when the player enters one or all of the given cells. If all, may be in the given order or any order. May reset after triggering.  |
 | TIME_ELAPSED | 6     | TIME                               | Triggered after the given time, in seconds, elapses from the start of the level.                                                        |
+| PLAY | 7 | SONG, \[CELLs\] | Triggered when the given song is played within the bounding rectangle given by two cells |
+| OBJ_ENTER | 8 | \[IDs\], \[CELLs\], ONE_TIME | Triggered when all of the given objects are in all of the given cells. The number of `IDs` _must_ match the number of `CELLs`. |
+| HAVE_THING | 9 | \[THING\] | Triggered when a map is entered and the given thing has already been obtained | 
+| TURNTABLE | 10 | \[IDs\] | Start a turntable minigame when the object is shot and execute the 'then' portion if the game is successful. Similar to `SHOOT_OBJS`, but with a minigame |
 
 ### THEN Operations
 
@@ -61,6 +104,9 @@ These are the actions that occur when a script is triggered
 | DIALOG    | 11    | TEXT        | Display the text in a dialog window                                                                                                       |
 | WARP      | 12    | MAP, CELL   | Warp the player to the given cell                                                                                                         |
 | WIN       | 13    |             | Beat the game                                                                                                                             |
+| CAMERA    | 14    | CELL        | Center the camera on the given cell                                                                                                       |
+| SHOP      | 15    | COST, OBJ_TYPE | Attempt to spend `COST` MPoints to get `OBJ_TYPE`                                                                                      |
+| GET_THING       | 16    | \[THING\] | Immediately receive the given thing |
 
 ### Script Element Syntax
 
@@ -73,49 +119,15 @@ Arguments, arrays, CELLs, and SPAWNs all have different delimiters to make parsi
 | Arrays    | `[a, b, c]`     | May be arrays of CELLs, SPAWNs, or IDs                          |
 | CELL      | `{x. y}`        | Only has x and y components                                     |
 | ID        | `0`             | Integer from 0 to 255                                           |
-| SPAWN     | `{TYPE-ID-x.y}` | `TYPE` is any `tileType` (see below). ID, x, and y are integers |
+| SPAWN     | `{TYPE-ID-x.y}` | `TYPE` is any `tileType` (see [`class tileType`](./rme_tiles.py)). ID, x, and y are integers |
 | AND_OR    | `abc`           | `AND` or `OR`                                                   |
 | ORDER     | `abc`           | `IN_ORDER` or `ANY_ORDER`                                       |
 | ONE_TIME  | `abc`           | `ONCE` or `ALWAYS`                                              |
 | TEXT      | `abc`           | Not quoted, cannot use the characters `(` or `)`                |
 | TIME      | `0`             | Integer from 0 to 2147483647, in seconds                        |
-| MAP       | `0`             | Integer corresponding to the map, 0 to 5                        |
-
-### Tile Types
-
-These are the objects that can be spawned
-
-| Object                    | Notes                                              |
-|---------------------------|----------------------------------------------------|
-| `OBJ_ENEMY_NORMAL`        | Enemy type, weak to normal beam                    |
-| `OBJ_ENEMY_STRONG`        | Enemy type, weak to charge beam                    |
-| `OBJ_ENEMY_ARMORED`       | Enemy type, weak to missile                        |
-| `OBJ_ENEMY_FLAMING`       | Enemy type, weak to ice beam                       |
-| `OBJ_ENEMY_HIDDEN`        | Enemy type, weak to x-ray beam                     |
-| `OBJ_ENEMY_BOSS`          | Boss Enemy                                         |
-| `OBJ_ITEM_BEAM`           | Power-up, normal beam                              |
-| `OBJ_ITEM_CHARGE_BEAM`    | Power-up, charge beam                              |
-| `OBJ_ITEM_MISSILE`        | Power-up, missiles (also missile capacity upgrade) |
-| `OBJ_ITEM_ICE`            | Power-up, ice beam                                 |
-| `OBJ_ITEM_XRAY`           | Power-up, x-ray visor                              |
-| `OBJ_ITEM_SUIT_WATER`     | Power-up, suit, water resistance                   |
-| `OBJ_ITEM_SUIT_LAVA`      | Power-up, suit, lava resistance                    |
-| `OBJ_ITEM_ENERGY_TANK`    | Power-up, energy tank                              |
-| `OBJ_ITEM_KEY_A`          | Access item, key A                                 |
-| `OBJ_ITEM_KEY_B`          | Access item, key B                                 |
-| `OBJ_ITEM_KEY_C`          | Access item, key C                                 |
-| `OBJ_ITEM_ARTIFACT`       | Access item, artifact                              |
-| `OBJ_ITEM_PICKUP_ENERGY`  | Pickup, energy                                     |
-| `OBJ_ITEM_PICKUP_MISSILE` | Pickup, missiles                                   |
-| `OBJ_SCENERY_TERMINAL`    | Scenery, computer terminal                         |
-| `OBJ_SCENERY_PORTAL`      | Scenery, portal                                    |
-| `OBJ_SCENERY_F1`          | Scenery, a friend                                  |
-| `OBJ_SCENERY_F2`          | Scenery, a friend                                  |
-| `OBJ_SCENERY_F3`          | Scenery, a friend                                  |
-| `OBJ_SCENERY_F4`          | Scenery, a friend                                  |
-| `OBJ_SCENERY_F5`          | Scenery, a friend                                  |
-| `OBJ_SCENERY_F6`          | Scenery, a friend                                  |
-| `OBJ_SCENERY_F7`          | Scenery, a friend                                  |
+| MAP       | `0`             | Integer corresponding to the map                                |
+| SONG      | `abc`           | `LULLABY` or other song                                         |
+| THING     | `abc`           | `MAYOR_HOUSE_TRIGGER` or other thing                            |
 
 ### Script Examples
 

@@ -40,33 +40,36 @@ bool process_greyscale(processorInput_t* arg)
     {
         uint16_t w_out = w;
         uint16_t h_out = h;
-        fwrite( &w_out, 2, 1, arg->out.file );
-        fwrite( &h_out, 2, 1, arg->out.file );
+        fwrite(&w_out, 2, 1, arg->out.file);
+        fwrite(&h_out, 2, 1, arg->out.file);
 
         uint8_t pixelBuffer[h][w];
         int x, y;
-        for( y = 0; y < h; y++ )
-        for( x = 0; x < w; x++ )
-        {
-            int pv = 0;
-            int ch;
-            int chuse = n;
+        for (y = 0; y < h; y++)
+            for (x = 0; x < w; x++)
+            {
+                int pv = 0;
+                int ch;
+                int chuse = n;
 
-            // Don't blend alpha.
-            if( chuse == 4 ) { chuse = 3; }
+                // Don't blend alpha.
+                if (chuse == 4)
+                {
+                    chuse = 3;
+                }
 
-            // Flip Y.
-            for( ch = 0; ch < chuse; ch++ )
-                pv += data[(x+(h-y-1)*w)*4+ch];
+                // Flip Y.
+                for (ch = 0; ch < chuse; ch++)
+                    pv += data[(x + (h - y - 1) * w) * 4 + ch];
 
-            pv = (pv + chuse/2) / chuse;
-            pixelBuffer[y][x] = pv;
-        }
+                pv                = (pv + chuse / 2) / chuse;
+                pixelBuffer[y][x] = pv;
+            }
 
         /* Free stbi memory */
         stbi_image_free(data);
 
-        fwrite( pixelBuffer, w*h, 1, arg->out.file );
+        fwrite(pixelBuffer, w * h, 1, arg->out.file);
         return true;
     }
 
