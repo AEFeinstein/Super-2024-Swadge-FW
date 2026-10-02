@@ -54,6 +54,7 @@ struct beancatch_t {
     uint8_t waitLoopMax;
     uint8_t emptyLoopCountdown;
     uint8_t idleConveyorCounter;
+    uint8_t occupiedConveyorCount;
 
     uint8_t currentConveyor;
 
@@ -311,7 +312,7 @@ void bcUpdateGame(void)
     {
         beancatch->waitLoopCounter++;
 
-        if(beancatch->waitLoopCounter > beancatch->waitLoopMax)
+        if(beancatch->waitLoopCounter > (beancatch->waitLoopMax >> (beancatch->occupiedConveyorCount > 1)) )
         {
             if(beancatch->beanInDanger > -1)
             {
@@ -340,7 +341,7 @@ void bcUpdateGame(void)
 
                     //move bean
                     beancatch->beans[beancatch->currentConveyor] = beancatch->beans[beancatch->currentConveyor] << 1;
-                
+                    
                     //decide whether to add a new bean
                     if(
                         !bcIgnoreCurrentConveyorForGameA() //If we haven't chosen to ignore this conveyor for Game
@@ -357,8 +358,14 @@ void bcUpdateGame(void)
                             
                     )
                     {
+                        if (!beancatch->beans[beancatch->currentConveyor])
+                        {
+                            beancatch->occupiedConveyorCount++;
+                        }
+
                         beancatch->beans[beancatch->currentConveyor]++;
                         beancatch->beanCount++;
+                        
                         beancatch->refreshScreen = true;
                     }
 
@@ -374,6 +381,8 @@ void bcUpdateGame(void)
                     {
                         beancatch->idleConveyorCounter++;
                     }
+
+
 
                     beancatch->currentConveyor = (beancatch->currentConveyor + 1) % 4;
                 } while (beancatch->idleConveyorCounter > 0 && beancatch->idleConveyorCounter < 3);
@@ -727,6 +736,7 @@ void bcClearBeans(void)
     }
 
     beancatch->beanCount = 0;
+    beancatch->occupiedConveyorCount = 0;
 
     beancatch->refreshScreen = true;
 }
@@ -813,7 +823,7 @@ void bcChangeStateGameA(void)
 {
     beancatch->state = BC_ST_GAME_A;
     bcNewGame();
-    beancatch->waitLoopMax = 31;
+    beancatch->waitLoopMax = 37;
     beancatch->update = &bcUpdateGame;
 }
 
@@ -821,7 +831,7 @@ void bcChangeStateGameB(void)
 {
     beancatch->state = BC_ST_GAME_B;
     bcNewGame();
-    beancatch->waitLoopMax = 25;
+    beancatch->waitLoopMax = 31;
     beancatch->update = &bcUpdateGame;
 }
 
@@ -840,6 +850,10 @@ void bcCheckPlayerCatchBean(void)
         //Catch bean
         beancatch->beanCount--;
         beancatch->beans[beancatch->playerPosition] = beancatch->beans[beancatch->playerPosition] & 0b011111;
+        if (!beancatch->beans[beancatch->playerPosition])
+        {
+            beancatch->occupiedConveyorCount--;
+        }
         beancatch->beanInDanger = BC_CONVEYOR_NULL;
         globalMidiPlayerPlaySong(&beancatch->sounds[BC_SOUND_SCORE_POINT], MIDI_BGM);
         bcScorePoint();
