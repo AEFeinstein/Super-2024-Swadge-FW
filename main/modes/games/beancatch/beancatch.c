@@ -90,7 +90,7 @@ static void beancatchMainLoop(int64_t elapsedUs);
 static void bcUpdateAcl(void);
 static void bcUpdateClock(void);
 static void bcUpdateGame(void);
-static void bcUpdateGameOver(void);
+// static void bcUpdateGameOver(void);
 
 static void bcDrawGame(void);
 static void bcDrawScoreHud(uint16_t value);
