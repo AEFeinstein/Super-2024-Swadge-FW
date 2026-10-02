@@ -30,7 +30,7 @@ const char beancatchNVSKey[]   = "beancatch";
 
 typedef void (*gameUpdateFuncton_t)();
 
-struct beancatch_t
+typedef struct
 {
     int16_t btnState;
     int16_t prevBtnState;
@@ -77,7 +77,7 @@ struct beancatch_t
     uint16_t score;
     uint16_t highScoreGameA;
     uint16_t highScoreGameB;
-};
+} beancatch_t;
 
 //==============================================================================
 // Function declarations
