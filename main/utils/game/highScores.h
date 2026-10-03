@@ -27,6 +27,8 @@
 #pragma once
 
 #include "linked_list.h"
+#include "nameList.h"
+#include "hdw-nvs.h"
 #include "swadgePass.h"
 
 #include <stdbool.h>
@@ -43,7 +45,7 @@ typedef struct
     char spKey[NVS_KEY_NAME_MAX_SIZE];
     /// The Swadgesona of the player who achieved this score. If the score is from this Swadge's user, this data will be
     /// all `00`; built-in methods to load the current SP Swadgesona and username should be used instead.
-    swadgesonaCore_t swadgesona;
+    // swadgesonaCore_t swadgesona;
 } score_t;
 
 typedef struct
@@ -112,7 +114,7 @@ void addHighScoreToSwadgePassPacket(const char* nvsNamespace, swadgePassPacket_t
  * @param sonas Array of swadgesona structs. ::nameData_t.nameBuffer in ::swadgesona_t.name and ::swadgesona_t.image
  * will be populated. This array must be the same length as ::highScores_t.highScoreCount.
  */
-void initHighScoreSonas(highScores_t* hs, swadgesona_t sonas[]);
+// void initHighScoreSonas(highScores_t* hs, swadgesona_t sonas[]);
 
 /**
  * @brief Free memory used for Swadgesona images.
@@ -120,4 +122,4 @@ void initHighScoreSonas(highScores_t* hs, swadgesona_t sonas[]);
  * @param hs The ::highScores_t struct that contains the high scores
  * @param sonas Array of swadgesona structs. This array must be the same length as ::highScores_t.highScoreCount.
  */
-void freeHighScoreSonas(highScores_t* hs, swadgesona_t sonas[]);
+// void freeHighScoreSonas(highScores_t* hs, swadgesona_t sonas[]);
