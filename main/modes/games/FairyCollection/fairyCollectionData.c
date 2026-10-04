@@ -18,15 +18,15 @@ const char* const nvsStrs[] = {
 const char* const fcOptionTypes[] = {
     "Years Attended:", "Type of Attendee:", "Card Background:",  "Team:",
     "Bottle shape:",   "Bottle Charm:",     "Bottle filling:",   "Bottle Pedestal:",
-    "Fairy Colors:",   "Fiary Wing Shape:", "Fairy Ball Shape:", "Fairy Aura:",
+    "Fairy Colors:",   "Fairy Wing Shape:", "Fairy Ball Shape:", "Fairy Aura:",
 };
 const char* const fcAttendeeText[] = {
-    "Attendee",     "Staff", "Volunteer", "Guest",  "Performer", "Cosplayer", "Maker", "Panalist",
+    "Attendee",     "Staff", "Volunteer", "Guest",  "Performer", "Cosplayer", "Maker", "Panelist",
     "Photographer", "Gamer", "Developer", "Artist", "Musician",  "Partier",   "Furry", "Pinball Wizard",
 };
 const char* const fcCardText[] = {
     "Scrolls", "Pac-Man", "Sheet Music", "Unused1", "Unused2", "Unused3", "Unused4", "Unused5",
-    "Red",     "Orange",  "Yellow",      "Green",   "Blue",    "Indigio", "Violet",  "White",
+    "Red",     "Orange",  "Yellow",      "Green",   "Blue",    "Indigo",  "Violet",  "White",
 };
 const char* const fcTeamText[] = {
     "Blue",

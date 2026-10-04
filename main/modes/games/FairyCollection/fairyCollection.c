@@ -189,7 +189,7 @@ static void fcMainLoop(int64_t elapsedUs)
                 fcd->state = FC_MENU;
             }
             fcDrawCreation(fcd->fcdd, &fcd->font);
-            fcDrawFairy(&fcd->userFairy, 200, 200);
+            // fcDrawFairy(&fcd->userFairy, 200, 200);
             break;
         }
         default:

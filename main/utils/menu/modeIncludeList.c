@@ -16,12 +16,11 @@
 
 /// @brief Add swadgeMode_t pointers to this struct to include them in emulator and main menu
 swadgeMode_t* const allSwadgeModes[] = {
-    &accelTestMode,      &beancatchMode,       &bombadeetleMode, &colorchordMode,  &danceMode,
-    &factoryTestMode,    &fairyCollectionMode, &gamepadMode,     &gossipStoneMode, &gottaGoMode,
-    &heyListenMode,      &introMode,           &jukeboxMode,     &keebTestMode,    &mainMenuMode,
-    &modeCh32v003test,   &modeCredits,         &nameTestMode,    &rayMode,         &roboRunnerMode,
-    &swadgePassTestMode, &synthMode,           &tCaseMode,       &touchTestMode,   &trophyTestMode,
-    &tunernomeMode,
+    &accelTestMode,       &beancatchMode,  &bombadeetleMode, &colorchordMode,     &danceMode,         &factoryTestMode,
+    &fairyCollectionMode, &gamepadMode,    &gossipStoneMode, &gottaGoMode,        &highScoreTestMode, &heyListenMode,
+    &introMode,           &jukeboxMode,    &keebTestMode,    &mainMenuMode,       &modeCh32v003test,  &modeCredits,
+    &nameTestMode,        &rayMode,        &roboRunnerMode,  &swadgePassTestMode, &synthMode,         &tCaseMode,
+    &touchTestMode,       &trophyTestMode, &tunernomeMode,
 };
 
 //==============================================================================
@@ -74,6 +73,7 @@ void modeListAddSecretMenuModes(menu_t* menu)
 {
     addSingleItemToMenu(menu, synthMode.modeName);
     addSingleItemToMenu(menu, factoryTestMode.modeName);
+    addSingleItemToMenu(menu, highScoreTestMode.modeName);
     addSingleItemToMenu(menu, keebTestMode.modeName);
     addSingleItemToMenu(menu, accelTestMode.modeName);
     addSingleItemToMenu(menu, touchTestMode.modeName);

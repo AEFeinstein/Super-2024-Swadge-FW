@@ -3,17 +3,41 @@
 //==============================================================================
 
 #include "fairyDraw.h"
+#include "esp_random.h"
 #include "fill.h"
+#include "fs_wsg.h"
 #include "nameList.h"
+#include "wsgCanvas.h"
 
 #include <stdio.h>
+
+//==============================================================================
+// Constants
+//==============================================================================
+
+#define FAIRY_WIDTH  48
+#define FAIRY_HEIGHT 48
 
 //==============================================================================
 // Function
 //==============================================================================
 
-void fcDrawFairy(fairy_t* fairy, int x, int y)
+void fcGenerateFairyImage(fairy_t* fairy, wsg_t* wsg, bool drawBottle)
 {
+    // Free old image if it exists
+    if (wsg->w != 0)
+    {
+        freeWsg(wsg);
+    }
+
+    // Make a new canvas.
+    // It should be transparent, but it's a random color for now so we know the code works until we have artwork
+    paletteColor_t color
+        = (fairy->shape + fairy->charm * 10 + fairy->filling * 100 + fairy->pedestal * 1000 + fairy->color * 10000
+           + fairy->wing * 100000 + fairy->ball * 1000000 + fairy->aura * 10000000)
+          % 215;
+    canvasBlankInit(wsg, FAIRY_WIDTH, FAIRY_HEIGHT, color, true);
+
     // TODO: Layer in all the images in the correct order:
     // - Pedestal
     // - Filling

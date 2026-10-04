@@ -1,6 +1,8 @@
 #include "highScores.h"
 
+#include "fairyDraw.h"
 #include "hdw-nvs.h"
+#include "nameList.h"
 #include "swadgePass.h"
 
 #include <stdbool.h>
@@ -86,9 +88,9 @@ bool updateHighScores(highScores_t* hs, const char* nvsNamespace, score_t newSco
     }
     if (!userScoreExists)
     {
+        memset(&hs->highScores[HIGH_SCORE_COUNT(hs) - 1], 0, sizeof(score_t));
         hs->highScores[HIGH_SCORE_COUNT(hs) - 1].score = hs->userHighScore;
-        // memset(&hs->highScores[HIGH_SCORE_COUNT(hs) - 1].swadgesona, 0, sizeof(swadgesonaCore_t));
-        changed = true;
+        changed                                        = true;
     }
 
     if (changed)
@@ -113,7 +115,8 @@ void saveHighScoresFromSwadgePass(highScores_t* hs, const char* nvsNamespace, li
             swadgePassData_t* spd = node->val;
             spScores[i].score     = fnGetSwadgePassHighScore(&spd->data.packet);
             memcpy(&spScores[i].spKey, &spd->key, NVS_KEY_NAME_MAX_SIZE);
-            // memcpy(&spScores[i].swadgesona, &spd->data.packet.swadgesona.core, sizeof(swadgesonaCore_t));
+            spScores[i].packedName = spd->data.packet.username;
+            memcpy(&spScores[i].fairy, &spd->data.packet.fairyCol.fairy, sizeof(fairy_t));
             i++;
             node = node->next;
         }
@@ -136,6 +139,12 @@ void saveHighScoresFromSwadgePass(highScores_t* hs, const char* nvsNamespace, li
     }
 }
 
+void clearHighScores(const char* nvsNamespace)
+{
+    eraseNamespaceNvsKey(nvsNamespace, NVS_KEY_USER_HIGH_SCORE);
+    eraseNamespaceNvsKey(nvsNamespace, NVS_KEY_HIGH_SCORES);
+}
+
 void addHighScoreToSwadgePassPacket(const char* nvsNamespace, swadgePassPacket_t* packet,
                                     void (*fnSetSwadgePassHighScore)(swadgePassPacket_t* packet, int32_t highScore))
 {
@@ -144,43 +153,45 @@ void addHighScoreToSwadgePassPacket(const char* nvsNamespace, swadgePassPacket_t
     fnSetSwadgePassHighScore(packet, highScore);
 }
 
-/* void initHighScoreSonas(highScores_t* hs, swadgesona_t sonas[])
+void initDisplayHighScores(highScores_t* hs, displayScore_t ds[])
 {
+    fairy_t fairy;
     for (int i = 0; i < hs->highScoreCount; i++)
     {
         if (hs->highScores[i].score > 0)
         {
-            if (sonas[i].image.w != 0)
+            if (ds[i].image.w != 0)
             {
-                freeWsg(&sonas[i].image);
+                freeWsg(&ds[i].image);
             }
 
             if (hs->highScores[i].spKey[0] == '\0')
             {
                 nameData_t username = *getSystemUsername();
-                memcpy(&sonas[i].name.nameBuffer, username.nameBuffer, USERNAME_MAX_LEN);
+                memcpy(&ds[i].name, &username, sizeof(nameData_t));
 
-                loadSPSona(&sonas[i].core);
+                size_t size = sizeof(fairy_t);
+                readNamespaceNvsBlob(nvsStrs[FC_NAMESPACE], nvsStrs[FC_USER_FAIRY], &fairy, &size);
             }
             else
             {
-                setUsernameFrom32(&sonas[i].name, hs->highScores[i].swadgesona.packedName);
+                setUsernameFrom32(&ds[i].name, hs->highScores[i].packedName);
 
-                memcpy(&sonas[i].core, &hs->highScores[i].swadgesona, sizeof(swadgesonaCore_t));
+                memcpy(&fairy, &hs->highScores[i].fairy, sizeof(fairy_t));
             }
 
-            generateSwadgesonaImage(&sonas[i], false);
+            fcGenerateFairyImage(&fairy, &ds[i].image, false);
         }
     }
 }
 
-void freeHighScoreSonas(highScores_t* hs, swadgesona_t sonas[])
+void freeDisplayHighScores(highScores_t* hs, displayScore_t ds[])
 {
     for (int i = 0; i < hs->highScoreCount; i++)
     {
-        if (sonas[i].image.w != 0)
+        if (ds[i].image.w != 0)
         {
-            freeWsg(&sonas[i].image);
+            freeWsg(&ds[i].image);
         }
     }
-} */
+}
