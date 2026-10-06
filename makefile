@@ -36,12 +36,15 @@ ifeq ($(HOST_OS),Windows)
 endif
 
 # clang-format may actually be clang-format-22. Push stderr to null if which returns nothing.
-CLANG_FORMAT:=clang-format-22
-ifeq (, $(shell which $(CLANG_FORMAT) 2>/dev/null))
+ifeq ($(shell /usr/lib/llvm22/bin/clang-format --version | grep -Pc "22\.\d+\.\d+"), 1)
+	CLANG_FORMAT:=/usr/lib/llvm22/bin/clang-format
+else ifeq ($(shell clang-format-22 --version | grep -Pc "22\.\d+\.\d+"), 1)
+	CLANG_FORMAT:=clang-format-22
+else ifeq ($(shell clang-format --version | grep -Pc "22\.\d+\.\d+"), 1)
 	CLANG_FORMAT:=clang-format
-ifneq ($(shell clang-format --version | grep -Pc "22\.\d+\.\d+"), 1)
-$(warning Your clang-format version is not 22. Formatting may be inconsistent)
-endif
+else
+	$(warning Your clang-format version is not 22. Formatting may be inconsistent)
+	CLANG_FORMAT:=clang-format
 endif
 
 ifeq ($(HOST_OS),Linux)
