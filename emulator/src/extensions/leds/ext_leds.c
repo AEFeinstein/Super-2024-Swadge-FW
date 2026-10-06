@@ -50,10 +50,10 @@ static bool ledsExtInit(emuArgs_t* args)
 {
     if (!args->hideLeds)
     {
-        requestPane(&ledEmuExtension, PANE_LEFT, MIN_LED_DIM, MIN_LED_DIM * 3);
-        requestPane(&ledEmuExtension, PANE_RIGHT, MIN_LED_DIM, MIN_LED_DIM * 3);
-        requestPane(&ledEmuExtension, PANE_TOP, MIN_LED_DIM * 3, MIN_LED_DIM);
-        requestPane(&ledEmuExtension, PANE_BOTTOM, MIN_LED_DIM * 3, MIN_LED_DIM);
+        requestPane(&ledEmuExtension, PANE_LEFT, MIN_LED_DIM, MIN_LED_DIM * 4);
+        requestPane(&ledEmuExtension, PANE_RIGHT, MIN_LED_DIM, MIN_LED_DIM * 4);
+        requestPane(&ledEmuExtension, PANE_TOP, MIN_LED_DIM * 2, MIN_LED_DIM);
+        requestPane(&ledEmuExtension, PANE_BOTTOM, MIN_LED_DIM * 2, MIN_LED_DIM);
         return true;
     }
 
@@ -63,7 +63,7 @@ static bool ledsExtInit(emuArgs_t* args)
 /**
  * @brief Draws the LEDs onto the screen
  *
- * If \c numPanes is less than 2, this function does nothing.
+ * If \c numPanes is less than 4, this function does nothing.
  *
  * @param winH unused
  * @param winW unused
@@ -120,7 +120,7 @@ static void drawLeds(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8
     // Body LEDs, right pane
 
     ledW    = rPane->paneW / 2;
-    ledH    = borderH / 3;
+    ledH    = borderH / 4;
     xOffset = rPane->paneX;
     yOffset = rPane->paneY + borderY;
 
@@ -132,7 +132,7 @@ static void drawLeds(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8
     led = &leds[2];
     CNFGColor((led->r << 24) | (led->g << 16) | (led->b << 8) | 0xFF);
     CNFGTackRectangle(xOffset, yOffset, xOffset + ledW, yOffset + (ledH * 2));
-    yOffset += (ledH * 1.5);
+    yOffset += (ledH * 2);
 
     led = &leds[1];
     CNFGColor((led->r << 24) | (led->g << 16) | (led->b << 8) | 0xFF);
@@ -159,7 +159,7 @@ static void drawLeds(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8
     // Body LEDs, left pane
 
     ledW    = lPane->paneW / 2;
-    ledH    = borderH / 3;
+    ledH    = borderH / 4;
     xOffset = lPane->paneX + (lPane->paneW / 2);
     yOffset = lPane->paneY + borderY;
 
@@ -171,7 +171,7 @@ static void drawLeds(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8
     led = &leds[5];
     CNFGColor((led->r << 24) | (led->g << 16) | (led->b << 8) | 0xFF);
     CNFGTackRectangle(xOffset, yOffset, xOffset + ledW, yOffset + (ledH * 2));
-    yOffset += (ledH * 1.5);
+    yOffset += (ledH * 2);
 
     led = &leds[0];
     CNFGColor((led->r << 24) | (led->g << 16) | (led->b << 8) | 0xFF);
@@ -230,5 +230,4 @@ static void drawLeds(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8
     led = &leds[6];
     CNFGColor((led->r << 24) | (led->g << 16) | (led->b << 8) | 0xFF);
     CNFGTackRectangle(xOffset, yOffset, xOffset + ledW, yOffset + ledH);
-
 }
