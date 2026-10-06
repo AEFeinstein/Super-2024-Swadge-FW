@@ -16,7 +16,12 @@ void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset);
 void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset)
 {
     // Map comet index to LED index
-    const int8_t ledMap[CONFIG_NUM_LEDS] = {7, 6, 5, 4, 3, 2, 1, 0, 8, 9, 10, 11, 12, 13};
+    const int8_t ledMap[CONFIG_NUM_LEDS] = {// Down the right wing
+                                            10, 9, 8, 7,
+                                            // Up the left wing
+                                            6, 13, 12, 11,
+                                            // Around the screen
+                                            3, 2, 1, 0, 5, 4};
 
     static int32_t ledCount            = 0;
     static uint8_t rainbow             = 0;
