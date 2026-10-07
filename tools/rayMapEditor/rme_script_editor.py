@@ -64,8 +64,10 @@ class oneTimeType(Enum):
 class songType(Enum):
     LULLABY = 0
 
+
 class thingType(Enum):
     MAYOR_HOUSE_TRIGGER = 0
+
 
 class spawn:
     def __init__(self, type: tileType, id: int, x: int, y: int) -> None:
@@ -196,7 +198,7 @@ class rme_script:
                 return type[1]
         return None
 
-    def __parseThing(self, thing:str) -> thingType:
+    def __parseThing(self, thing: str) -> thingType:
         # MAYOR_HOUSE_TRIGGER or other
         for type in thingType.__members__.items():
             if thing == type[0]:

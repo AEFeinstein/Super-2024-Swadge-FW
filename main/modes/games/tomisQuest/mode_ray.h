@@ -141,12 +141,12 @@ typedef enum __attribute__((packed))
     BG_DOOR_BUSH          = (BG | DOOR | 0),
     BG_DOOR_CRACK_H       = (BG | DOOR | 1),
     BG_DOOR_CRACK_V       = (BG | DOOR | 2),
-    BG_DOOR_KEY_LOCKED    = (BG | DOOR | 3),
+    BG_DOOR_R_KEY_LOCKED  = (BG | DOOR | 3),
     BG_DOOR_ROCKS         = (BG | DOOR | 4),
     BG_DOOR_SCRIPT_LOCKED = (BG | DOOR | 5),
-    BG_DOOR_6             = (BG | DOOR | 6),
-    BG_DOOR_7             = (BG | DOOR | 7),
-    BG_DOOR_8             = (BG | DOOR | 8),
+    BG_DOOR_G_KEY_LOCKED  = (BG | DOOR | 6),
+    BG_DOOR_B_KEY_LOCKED  = (BG | DOOR | 7),
+    BG_DOOR_K_KEY_LOCKED  = (BG | DOOR | 8),
     BG_DOOR_9             = (BG | DOOR | 9),
     BG_DOOR_10            = (BG | DOOR | 10),
     BG_DOOR_11            = (BG | DOOR | 11),
@@ -217,10 +217,10 @@ typedef enum __attribute__((packed))
     OBJ_ITEM_MPOINT_5   = (OBJ | ITEM | 10),
     OBJ_ITEM_MPOINT_10  = (OBJ | ITEM | 11),
     OBJ_ITEM_MPOINT_20  = (OBJ | ITEM | 12),
-    OBJ_ITEM_KEY        = (OBJ | ITEM | 13),
-    OBJ_ITEM_14         = (OBJ | ITEM | 14),
-    OBJ_ITEM_15         = (OBJ | ITEM | 15),
-    OBJ_ITEM_16         = (OBJ | ITEM | 16),
+    OBJ_ITEM_R_KEY      = (OBJ | ITEM | 13),
+    OBJ_ITEM_G_KEY      = (OBJ | ITEM | 14),
+    OBJ_ITEM_B_KEY      = (OBJ | ITEM | 15),
+    OBJ_ITEM_K_KEY      = (OBJ | ITEM | 16),
     OBJ_ITEM_17         = (OBJ | ITEM | 17),
     OBJ_ITEM_18         = (OBJ | ITEM | 18),
     OBJ_ITEM_19         = (OBJ | ITEM | 19),
@@ -766,7 +766,14 @@ typedef struct
 
     wsg_t* sprite;
 
-    int32_t keyCount; ///< A count of small keys for the current map
+    /// @brief A mask of keys held for the current map
+    struct
+    {
+        bool r_key;
+        bool g_key;
+        bool b_key;
+        bool k_key;
+    } keyMask;
 } rayPlayerState_t;
 
 typedef struct

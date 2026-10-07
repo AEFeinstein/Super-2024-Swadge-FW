@@ -686,7 +686,10 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
             saveAfterObtain = false;
             break;
         }
-        case OBJ_ITEM_KEY:
+        case OBJ_ITEM_R_KEY:
+        case OBJ_ITEM_G_KEY:
+        case OBJ_ITEM_B_KEY:
+        case OBJ_ITEM_K_KEY:
         {
             for (int idx = 0; idx < ARRAY_SIZE(ray->p.i.items); idx++)
             {
@@ -698,7 +701,30 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
                     invItem->mapId    = mapId;
                     invItem->objId    = item->id;
                     invItem->type     = item->type & ID_MASK;
-                    ray->ps.keyCount++;
+
+                    switch (type)
+                    {
+                        case OBJ_ITEM_R_KEY:
+                        {
+                            ray->ps.keyMask.r_key = true;
+                            break;
+                        }
+                        case OBJ_ITEM_G_KEY:
+                        {
+                            ray->ps.keyMask.g_key = true;
+                            break;
+                        }
+                        case OBJ_ITEM_B_KEY:
+                        {
+                            ray->ps.keyMask.b_key = true;
+                            break;
+                        }
+                        case OBJ_ITEM_K_KEY:
+                        {
+                            ray->ps.keyMask.k_key = true;
+                            break;
+                        }
+                    }
                     break;
                 }
             }
