@@ -19,14 +19,17 @@ void danceChristmas(uint32_t tElapsedUs, uint32_t arg, bool reset);
  */
 void danceChristmas(uint32_t tElapsedUs, uint32_t arg, bool reset)
 {
-    static int32_t ledCount                                  = 0;
-    static int32_t ledCount2                                 = 0;
-    static uint8_t color_hue_save[CONFIG_NUM_LEDS]           = {0};
-    static uint8_t color_saturation_save[CONFIG_NUM_LEDS]    = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-    static uint8_t current_color_hue[CONFIG_NUM_LEDS]        = {0};
-    static uint8_t current_color_saturation[CONFIG_NUM_LEDS] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-    static uint8_t target_value[CONFIG_NUM_LEDS]             = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-    static uint8_t current_value[CONFIG_NUM_LEDS]            = {0};
+    static int32_t ledCount                        = 0;
+    static int32_t ledCount2                       = 0;
+    static uint8_t color_hue_save[CONFIG_NUM_LEDS] = {0};
+    static uint8_t color_saturation_save[CONFIG_NUM_LEDS]
+        = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    static uint8_t current_color_hue[CONFIG_NUM_LEDS] = {0};
+    static uint8_t current_color_saturation[CONFIG_NUM_LEDS]
+        = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    static uint8_t target_value[CONFIG_NUM_LEDS]
+        = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    static uint8_t current_value[CONFIG_NUM_LEDS] = {0};
 
     static uint32_t tAccumulated      = 0;
     static uint32_t tAccumulatedValue = 0;
