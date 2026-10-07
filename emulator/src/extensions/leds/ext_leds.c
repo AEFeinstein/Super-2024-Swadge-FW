@@ -113,7 +113,7 @@ static void drawLeds(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8
 
     led = &leds[3];
     CNFGColor((led->r << 24) | (led->g << 16) | (led->b << 8) | 0xFF);
-    CNFGTackRectangle(xOffset, yOffset, xOffset + (ledW * 2), yOffset + ledH);
+    CNFGTackRectangle(xOffset, yOffset, xOffset + ledW, yOffset + ledH);
     xOffset += ledW;
 
     ///////////////////////////////////////////////////////////////////////
