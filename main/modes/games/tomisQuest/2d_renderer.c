@@ -282,38 +282,53 @@ void drawForeground2d(ray_t* ray)
         xOff += heart->w + X_SPACING;
     }
 
-    // Measure Keys
-    wsg_t* key        = getTexByType(ray, OBJ_ITEM_KEY);
-    char keyCount[32] = {0};
-    sprintf(keyCount, "%" PRIu32, ray->ps.keyCount);
-    int16_t keyTextWidth = textWidth(&ray->ibm, keyCount);
+    // Start drawing here, right to left
+    xOff = TFT_WIDTH - X_MARGIN;
 
-    // Measure MPoints
-    wsg_t* mpoint        = getTexByType(ray, OBJ_ITEM_MPOINT_1);
+    // Mpoint icon
+    wsg_t* mpoint = getTexByType(ray, OBJ_ITEM_MPOINT_1);
+
+    // Mpoint Text
     char mpointCount[32] = {0};
     sprintf(mpointCount, "%" PRIu32, ray->p.mpoints);
-    int16_t mPointTextWidth = textWidth(&ray->ibm, mpointCount);
+    xOff -= textWidth(&ray->ibm, mpointCount);
+    drawText(&ray->ibm, c555, mpointCount, xOff, (mpoint->h - ray->ibm.height) / 2);
 
-    // Start drawing here
-    xOff = TFT_WIDTH - X_MARGIN - mPointTextWidth - X_SPACING - mpoint->w - keyTextWidth - X_SPACING - key->w;
+    // Mpoint Icon
+    xOff -= (X_SPACING + mpoint->w);
+    drawWsgSimple(mpoint, xOff, 0);
 
     // Draw Keys
     if (MS_DUNGEON == getRayMapMetadata(ray->p.mapId)->style)
     {
-        drawWsgSimple(key, xOff, 0);
-    }
-    xOff += key->w + X_SPACING;
-    if (MS_DUNGEON == getRayMapMetadata(ray->p.mapId)->style)
-    {
-        drawText(&ray->ibm, c555, keyCount, xOff, (key->h - ray->ibm.height) / 2);
-    }
-    xOff += keyTextWidth;
+        // List of held keys
+        const bool* keys[] = {
+            &ray->ps.keyMask.k_key,
+            &ray->ps.keyMask.b_key,
+            &ray->ps.keyMask.g_key,
+            &ray->ps.keyMask.r_key,
+        };
 
-    // Draw MPoints
-    drawWsgSimple(mpoint, xOff, 0);
-    xOff += mpoint->w + X_SPACING;
-    drawText(&ray->ibm, c555, mpointCount, xOff, (mpoint->h - ray->ibm.height) / 2);
-    xOff += mPointTextWidth + X_SPACING;
+        // Associated icons, in order
+        const wsg_t* wsgs[] = {
+            getTexByType(ray, OBJ_ITEM_K_KEY),
+            getTexByType(ray, OBJ_ITEM_B_KEY),
+            getTexByType(ray, OBJ_ITEM_G_KEY),
+            getTexByType(ray, OBJ_ITEM_R_KEY),
+        };
+
+        // For oeach key
+        for (int kIdx = 0; kIdx < ARRAY_SIZE(keys); kIdx++)
+        {
+            // If it is held
+            if (*keys[kIdx])
+            {
+                // Draw the icon
+                xOff -= (X_SPACING + wsgs[kIdx]->w);
+                drawWsgSimple(wsgs[kIdx], xOff, 0);
+            }
+        }
+    }
 
     // DRAW_FPS_COUNTER(ray->ibm);
 }
