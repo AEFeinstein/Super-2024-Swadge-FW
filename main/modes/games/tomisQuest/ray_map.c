@@ -111,7 +111,11 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
                 intptr_t location = ((x & 0xFFFF) << 16) | (y & 0xFFFF);
                 push(&ray->map.crackedWalls, (void*)location);
             }
-            else if ((BG_DOOR_KEY_LOCKED == cType) || (BG_DOOR_SCRIPT_LOCKED == cType))
+            else if ((BG_DOOR_R_KEY_LOCKED == cType) || //
+                     (BG_DOOR_G_KEY_LOCKED == cType) || //
+                     (BG_DOOR_B_KEY_LOCKED == cType) || //
+                     (BG_DOOR_K_KEY_LOCKED == cType) || //
+                     (BG_DOOR_SCRIPT_LOCKED == cType))
             {
                 // Open doors which were already unlocked
                 if (SCRIPT_DOOR_OPEN == map->visitedTiles[(y * ray->map.w) + x])
@@ -266,17 +270,39 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
         heap_caps_free(decompressedData);
     }
 
-    // Get a count of unused small keys
-    ray->ps.keyCount = 0;
+    // Get a list of unused small keys
+    memset(&ray->ps.keyMask, 0, sizeof(ray->ps.keyMask));
     for (int idx = 0; idx < ARRAY_SIZE(ray->p.i.items); idx++)
     {
         invItem_t* invItem = &ray->p.i.items[idx];
-        if (invItem->occupied &&                         // Has item
-            invItem->mapId == ray->p.mapId &&            // in this map
-            invItem->type == (OBJ_ITEM_KEY & ID_MASK) && // of type key
-            !invItem->keyUsed)                           // not used yet
+        if (invItem->occupied &&              // Has item
+            invItem->mapId == ray->p.mapId && // in this map
+            !invItem->keyUsed)                // not used yet
         {
-            ray->ps.keyCount++;
+            // Match the type
+            switch (invItem->type)
+            {
+                case (OBJ_ITEM_R_KEY & ID_MASK):
+                {
+                    ray->ps.keyMask.r_key = true;
+                    break;
+                }
+                case (OBJ_ITEM_G_KEY & ID_MASK):
+                {
+                    ray->ps.keyMask.g_key = true;
+                    break;
+                }
+                case (OBJ_ITEM_B_KEY & ID_MASK):
+                {
+                    ray->ps.keyMask.b_key = true;
+                    break;
+                }
+                case (OBJ_ITEM_K_KEY & ID_MASK):
+                {
+                    ray->ps.keyMask.k_key = true;
+                    break;
+                }
+            }
         }
     }
 

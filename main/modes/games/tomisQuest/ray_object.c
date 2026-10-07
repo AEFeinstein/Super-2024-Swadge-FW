@@ -400,21 +400,53 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
                             // Do nothing. Explosion radius checked against crackedWalls elsewhere
                             break;
                         }
-                        case BG_DOOR_KEY_LOCKED:
+                        case BG_DOOR_R_KEY_LOCKED:
+                        case BG_DOOR_G_KEY_LOCKED:
+                        case BG_DOOR_B_KEY_LOCKED:
+                        case BG_DOOR_K_KEY_LOCKED:
                         {
-                            // Check if the player has an unused key
+                            // Check if the player has an unused key that matches
                             for (int idx = 0; idx < ARRAY_SIZE(ray->p.i.items); idx++)
                             {
                                 invItem_t* invItem = &ray->p.i.items[idx];
-                                if (invItem->occupied &&                         // Has item
-                                    invItem->mapId == ray->p.mapId &&            // in this map
-                                    invItem->type == (OBJ_ITEM_KEY & ID_MASK) && // of type key
-                                    !invItem->keyUsed)                           // not used yet
+                                if (invItem->occupied &&                            // Has item
+                                    invItem->mapId == ray->p.mapId &&               // in this map
+                                    (((invItem->type == (OBJ_ITEM_R_KEY & ID_MASK)) // And type matches the door
+                                      && (BG_DOOR_R_KEY_LOCKED == cell->type))
+                                     || ((invItem->type == (OBJ_ITEM_G_KEY & ID_MASK))
+                                         && (BG_DOOR_G_KEY_LOCKED == cell->type))
+                                     || ((invItem->type == (OBJ_ITEM_B_KEY & ID_MASK))
+                                         && (BG_DOOR_B_KEY_LOCKED == cell->type))
+                                     || ((invItem->type == (OBJ_ITEM_K_KEY & ID_MASK))
+                                         && (BG_DOOR_K_KEY_LOCKED == cell->type)))
+                                    && !invItem->keyUsed) // not used yet
                                 {
                                     // Use the key
                                     invItem->keyUsed = true;
-                                    ray->ps.keyCount--;
 
+                                    switch (cell->type)
+                                    {
+                                        case BG_DOOR_R_KEY_LOCKED:
+                                        {
+                                            ray->ps.keyMask.r_key = false;
+                                            break;
+                                        }
+                                        case BG_DOOR_G_KEY_LOCKED:
+                                        {
+                                            ray->ps.keyMask.g_key = false;
+                                            break;
+                                        }
+                                        case BG_DOOR_B_KEY_LOCKED:
+                                        {
+                                            ray->ps.keyMask.b_key = false;
+                                            break;
+                                        }
+                                        case BG_DOOR_K_KEY_LOCKED:
+                                        {
+                                            ray->ps.keyMask.k_key = false;
+                                            break;
+                                        }
+                                    }
                                     // Open the door
                                     opened = true;
 
