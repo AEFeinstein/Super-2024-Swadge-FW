@@ -111,7 +111,7 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
                 intptr_t location = ((x & 0xFFFF) << 16) | (y & 0xFFFF);
                 push(&ray->map.crackedWalls, (void*)location);
             }
-            else if (BG_DOOR_LOCKED == cType)
+            else if ((BG_DOOR_KEY_LOCKED == cType) || (BG_DOOR_SCRIPT_LOCKED == cType))
             {
                 // Open doors which were already unlocked
                 if (SCRIPT_DOOR_OPEN == map->visitedTiles[(y * ray->map.w) + x])

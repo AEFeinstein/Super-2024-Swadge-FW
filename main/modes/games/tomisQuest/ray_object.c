@@ -400,7 +400,7 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
                             // Do nothing. Explosion radius checked against crackedWalls elsewhere
                             break;
                         }
-                        case BG_DOOR_LOCKED:
+                        case BG_DOOR_KEY_LOCKED:
                         {
                             // Check if the player has an unused key
                             for (int idx = 0; idx < ARRAY_SIZE(ray->p.i.items); idx++)
