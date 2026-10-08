@@ -176,10 +176,12 @@ typedef struct __attribute__((packed)) swadgePassPacket
         int32_t adjScore;
     } gottaGo;
 
+#ifdef CONFIG_BUILD_TYPE_DEBUG
     struct
     {
         uint16_t highScore;
     } highScoreTest;
+#endif
 
     struct
     {

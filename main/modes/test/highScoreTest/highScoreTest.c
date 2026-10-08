@@ -41,9 +41,12 @@ static bool hstMenu(const char* label, bool selected, uint32_t value);
 static void hstSetUserHighScoreLabel();
 static void hstMainLoop(int64_t elapsedUs);
 static void hstBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+
+#ifdef CONFIG_BUILD_TYPE_DEBUG
 static void hstAddToSwadgePassPacket(swadgePassPacket_t* packet);
 static int32_t hstGetSwadgePassHighScore(const swadgePassPacket_t* packet);
 static void hstSetSwadgePassHighScore(swadgePassPacket_t* packet, int32_t highScore);
+#endif
 
 swadgeMode_t highScoreTestMode = {
     .modeName                 = highScoreTestName,
@@ -52,7 +55,9 @@ swadgeMode_t highScoreTestMode = {
     .fnExitMode               = hstExitMode,
     .fnMainLoop               = hstMainLoop,
     .fnBackgroundDrawCallback = hstBackgroundDrawCallback,
-    .fnAddToSwadgePassPacket  = hstAddToSwadgePassPacket,
+#ifdef CONFIG_BUILD_TYPE_DEBUG
+    .fnAddToSwadgePassPacket = hstAddToSwadgePassPacket,
+#endif
 };
 
 static void hstEnterMode(void)
@@ -75,11 +80,13 @@ static void hstEnterMode(void)
     initHighScores(&hst->highScores, HST_NVS_NAMESPACE);
     hstSetUserHighScoreLabel();
 
+#ifdef CONFIG_BUILD_TYPE_DEBUG
     list_t swadgePasses = {0};
     getSwadgePasses(&swadgePasses, &highScoreTestMode, false);
     saveHighScoresFromSwadgePass(&hst->highScores, HST_NVS_NAMESPACE, swadgePasses, &highScoreTestMode,
                                  hstGetSwadgePassHighScore);
     freeSwadgePasses(&swadgePasses);
+#endif
 }
 
 static void hstExitMode(void)
@@ -211,6 +218,7 @@ static void hstBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
     fillDisplayArea(x, y, x + w, y + h, c344);
 }
 
+#ifdef CONFIG_BUILD_TYPE_DEBUG
 static void hstAddToSwadgePassPacket(swadgePassPacket_t* packet)
 {
     addHighScoreToSwadgePassPacket(HST_NVS_NAMESPACE, packet, hstSetSwadgePassHighScore);
@@ -225,3 +233,4 @@ static void hstSetSwadgePassHighScore(swadgePassPacket_t* packet, int32_t highSc
 {
     packet->highScoreTest.highScore = highScore;
 }
+#endif
