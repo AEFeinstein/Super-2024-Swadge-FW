@@ -33,6 +33,9 @@
  */
 void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool spiRam)
 {
+    // Set the map ID
+    ray->p.mapId = mapId;
+
     // Convenience inventory to know what not to spawn
     rayInventory_t* inv = &ray->p.i;
 
@@ -276,7 +279,7 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
     {
         invItem_t* invItem = &ray->p.i.items[idx];
         if (invItem->occupied &&              // Has item
-            invItem->mapId == ray->p.mapId && // in this map
+            invItem->mapId == mapId && // in this map
             !invItem->keyUsed)                // not used yet
         {
             // Match the type
@@ -307,7 +310,7 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
     }
 
     // Play this map's music
-    globalMidiPlayerPlaySong(getAtIndex(&ray->bgmSongs, ray->p.mapId), MIDI_BGM);
+    globalMidiPlayerPlaySong(getAtIndex(&ray->bgmSongs, mapId), MIDI_BGM);
 }
 
 /**

@@ -9,5 +9,6 @@ void moveRayObjects(ray_t* ray, uint32_t elapsedUs);
 void checkRayCollisions(ray_t* ray);
 rectangle_t rayGetObjBB(const rayObjCommon_t* obj);
 bool rayBoundingBoxFitsInMap(ray_t* ray, rectangle_t bb);
+void raySetDoorState(ray_t* ray, uint32_t x, uint32_t y, bool isOpening, bool setScriptOpen, bool playSfx);
 
 #endif
