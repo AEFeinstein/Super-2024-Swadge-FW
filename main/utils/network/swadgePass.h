@@ -167,6 +167,7 @@ typedef struct __attribute__((packed)) swadgePassPacket
         fairy_t fairy;
         profileCard_t card;
     } fairyCol;
+
     struct
     {
         int8_t maxLevels;
@@ -174,6 +175,14 @@ typedef struct __attribute__((packed)) swadgePassPacket
         int32_t totalScore;
         int32_t adjScore;
     } gottaGo;
+
+#ifdef CONFIG_BUILD_TYPE_DEBUG
+    struct
+    {
+        uint16_t highScore;
+    } highScoreTest;
+#endif
+
     struct
     {
         uint16_t highScore;

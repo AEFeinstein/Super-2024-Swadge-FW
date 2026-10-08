@@ -6,7 +6,7 @@
  *
  * This util is intended to make saving a high score table as painless as possible. Features:
  * - Save a configurable number of high scores to NVS, up to ::MAX_HIGH_SCORE_COUNT
- * - Include scores from SwadgePass in high score table, max one per SwadgePass user, along with Swadgesona image and
+ * - Include scores from SwadgePass in high score table, max one per SwadgePass user, along with user image and
  * username data
  * - Keep at least one score from this Swadge's user, even if ~~they suck~~ SwadgePass scores would overtake theirs
  *
@@ -22,14 +22,16 @@
  * -# The high score array in ::highScores_t.highScores will always be up-to-date, so it can be used to display high
  * scores without any other considerations. See nameList.h for how to get display names from
  * ::swadgesonaCore_t.packedName, or use ::initHighScoreSonas() to initialize names and Swadgesona images all at once.
+ *
+ * There is an example implementation in highScoreTest.c that may be helpful to use a guide.
  */
 
 #pragma once
 
 #include "linked_list.h"
 #include "nameList.h"
-#include "hdw-nvs.h"
 #include "swadgePass.h"
+#include "FairyCollection/fairyCollectionData.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -43,9 +45,12 @@ typedef struct
     /// The SwadgePass key for this score, to ensure we only save one score from a given SP user. This will be empty if
     /// this score is from this Swadge's user and not from Swadgepass.
     char spKey[NVS_KEY_NAME_MAX_SIZE];
-    /// The Swadgesona of the player who achieved this score. If the score is from this Swadge's user, this data will be
-    /// all `00`; built-in methods to load the current SP Swadgesona and username should be used instead.
-    // swadgesonaCore_t swadgesona;
+    /// The username of the player who achieved this score. If the score is from this Swadge's user, this data will be
+    /// all `00`; built-in methods to load the current SP username should be used instead.
+    int32_t packedName;
+    /// The fairy of the player who achieved this score. If the score is from this Swadge's user, this data will be
+    /// all `00`; built-in methods to load the current SP fairy image should be used instead.
+    fairy_t fairy;
 } score_t;
 
 typedef struct
@@ -58,6 +63,17 @@ typedef struct
     /// High score list, sorted from high to low
     score_t highScores[MAX_HIGH_SCORE_COUNT];
 } highScores_t;
+
+/// Struct for displaying the high score table entry. Includes usernames and rendered user images.
+typedef struct
+{
+    /// The point value of this score. This will be `0` for uninitialized scores.
+    int32_t score;
+    /// The Swadgepass username
+    nameData_t name;
+    /// The Swadgepass user's rendered profile picture
+    wsg_t image;
+} displayScore_t;
 
 /**
  * @brief Load high score data from NVS.
@@ -95,6 +111,13 @@ void saveHighScoresFromSwadgePass(highScores_t* hs, const char* nvsNamespace, li
                                   int32_t (*fnGetSwadgePassHighScore)(const swadgePassPacket_t* packet));
 
 /**
+ * @brief Clear high score data from NVS.
+ *
+ * @param nvsNamespace The NVS namespace to clear saved high score data from
+ */
+void clearHighScores(const char* nvsNamespace);
+
+/**
  * @brief Write high score data to SwadgePass packet for sending to other swadges. This should be called from your
  * mode's `fnAddToSwadgePassPacket` function.
  *
@@ -106,20 +129,20 @@ void addHighScoreToSwadgePassPacket(const char* nvsNamespace, swadgePassPacket_t
                                     void (*fnSetSwadgePassHighScore)(swadgePassPacket_t* packet, int32_t highScore));
 
 /**
- * @brief Load the usernames and Swadgesona images for the high score table into memory. When you are finished with the
- * Swadgesona images, call ::freeHighScoreSonas() to free the memory. It is safe to call this function multiple times
- * before calling ::freeHighScoreSonas().
+ * @brief Load the usernames and user images for the high score table into memory. When you are finished with the
+ * images, call ::freeHighScoreUserImages() to free the memory. It is safe to call this function multiple times
+ * before calling ::freeHighScoreUserImages().
  *
  * @param hs The ::highScores_t struct that contains the high scores
- * @param sonas Array of swadgesona structs. ::nameData_t.nameBuffer in ::swadgesona_t.name and ::swadgesona_t.image
- * will be populated. This array must be the same length as ::highScores_t.highScoreCount.
+ * @param ds Array of display structs to be populated. This array must be the same length as
+ * ::highScores_t.highScoreCount.
  */
-// void initHighScoreSonas(highScores_t* hs, swadgesona_t sonas[]);
+void initDisplayHighScores(highScores_t* hs, displayScore_t ds[]);
 
 /**
- * @brief Free memory used for Swadgesona images.
+ * @brief Free memory used for user images.
  *
  * @param hs The ::highScores_t struct that contains the high scores
- * @param sonas Array of swadgesona structs. This array must be the same length as ::highScores_t.highScoreCount.
+ * @param ds The ::displayScores_t array that contains user images to be freed
  */
-// void freeHighScoreSonas(highScores_t* hs, swadgesona_t sonas[]);
+void freeDisplayHighScores(highScores_t* hs, displayScore_t ds[]);

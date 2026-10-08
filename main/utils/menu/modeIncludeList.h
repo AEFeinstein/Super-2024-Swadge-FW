@@ -41,6 +41,7 @@
 #include "gossipStone.h"
 #include "gottaGo.h"
 #include "heyListen.h"
+#include "highScoreTest.h"
 #include "introMode.h"
 #include "jukebox.h"
 #include "keebTest.h"
