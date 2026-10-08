@@ -124,7 +124,7 @@ void moveRayObjects(ray_t* ray, uint32_t elapsedUs)
                     if (0 == cell->closeTimer)
                     {
                         // When this elapses, start closing the door
-                        cell->openingDirection = -1;
+                        raySetDoorState(ray, x, y, false, false, false);
                     }
                 }
 
@@ -373,6 +373,7 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
                 if (0 == cell->doorOpen)
                 {
                     bool opened = false;
+                    bool keyOpened = false;
                     switch (cell->type)
                     {
                         case BG_DOOR_BUSH:
@@ -449,6 +450,7 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
                                     }
                                     // Open the door
                                     opened = true;
+                                    keyOpened = true;
 
                                     // Mark it as permanently open
                                     ray->map.visitedTiles[(FROM_FX(y) * ray->map.w) + FROM_FX(x)] = SCRIPT_DOOR_OPEN;
@@ -459,6 +461,11 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
                                     break;
                                 }
                             }
+                            break;
+                        }
+                        case BG_DOOR_DUNGEON:
+                        {
+                            opened = true;
                             break;
                         }
                         default:
@@ -472,10 +479,7 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
                     if (opened)
                     {
                         // Start opening the door
-                        cell->openingDirection = 1;
-
-                        // Play SFX
-                        globalMidiPlayerPlaySong(&ray->sfx_door_open, MIDI_SFX);
+                        raySetDoorState(ray, FROM_FX(x), FROM_FX(y), true, keyOpened, keyOpened);
                     }
                 }
             }
@@ -813,4 +817,66 @@ bool rayBoundingBoxFitsInMap(ray_t* ray, rectangle_t bb)
            isPassableCell(&ray->map.tiles[x1][y2]) && //
            isPassableCell(&ray->map.tiles[x2][y1]) && //
            isPassableCell(&ray->map.tiles[x2][y2]);
+}
+
+/**
+ * @brief Open or close the door on the given cell
+ *
+ * @param ray The entire game state
+ * @param x The X position of the door tile
+ * @param y The Y position of the door tile
+ * @param isOpening True to open the door, false to close it
+ * @param setScriptOpen True to mark the door as permanently open, false to not
+ * @param playSfx True to play a jingle, false to stay silent
+ */
+void raySetDoorState(ray_t* ray, uint32_t x, uint32_t y, bool isOpening, bool setScriptOpen, bool playSfx)
+{
+    int8_t direction = isOpening ? 1 : -1;
+
+    // Open or close the given door
+    ray->map.tiles[x][y].openingDirection = direction;
+
+    // Do additional things if the door is opening
+    if (isOpening)
+    {
+        if (setScriptOpen)
+        {
+            ray->map.visitedTiles[(y * ray->map.w) + x] = SCRIPT_DOOR_OPEN;
+        }
+
+        if (playSfx)
+        {
+            // Play SFX
+            globalMidiPlayerPlaySong(&ray->sfx_door_open, MIDI_SFX);
+        }
+    }
+
+    // Also check cardinal adjacent doors
+    vec_t adj[4] = {
+        {.x = x - 1, .y = y},
+        {.x = x + 1, .y = y},
+        {.x = x, .y = y - 1},
+        {.x = x, .y = y + 1},
+    };
+
+    // For each adjacent tile
+    for (uint32_t i = 0; i < ARRAY_SIZE(adj); i++)
+    {
+        // If it's in-bounds
+        if (0 <= adj[i].x && adj[i].x < ray->map.w && //
+            0 <= adj[i].y && adj[i].y < ray->map.h)
+        {
+            // If the cell is a door
+            rayMapCell_t* cell = &ray->map.tiles[adj[i].x][adj[i].y];
+            if (CELL_IS_TYPE(cell->type, BG | DOOR))
+            {
+                cell->openingDirection = direction;
+
+                if (isOpening && setScriptOpen)
+                {
+                    ray->map.visitedTiles[(adj[i].y * ray->map.w) + adj[i].x] = SCRIPT_DOOR_OPEN;
+                }
+            }
+        }
+    }
 }
