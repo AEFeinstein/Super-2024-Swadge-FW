@@ -1044,12 +1044,8 @@ void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
                 int32_t x = script->thenArgs.cellList.cells[cIdx].x;
                 int32_t y = script->thenArgs.cellList.cells[cIdx].y;
                 // Start opening the door
-                ray->map.tiles[x][y].openingDirection = 1;
-                // Mark it as permanently open
-                ray->map.visitedTiles[(y * ray->map.w) + x] = SCRIPT_DOOR_OPEN;
+                raySetDoorState(ray, x, y, true, true, 0 == cIdx);
             }
-            // Play SFX
-            globalMidiPlayerPlaySong(&ray->sfx_door_open, MIDI_SFX);
             break;
         }
         case CLOSE:
@@ -1059,7 +1055,7 @@ void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
                 int32_t x = script->thenArgs.cellList.cells[cIdx].x;
                 int32_t y = script->thenArgs.cellList.cells[cIdx].y;
                 // Start closing the door
-                ray->map.tiles[x][y].openingDirection = -1;
+                raySetDoorState(ray, x, y, false, false, false);
             }
             break;
         }

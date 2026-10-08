@@ -99,9 +99,6 @@ void warpToDestination(ray_t* ray)
     // Stop again after loading the map starts
     globalMidiPlayerStop(true);
 
-    // Set the map ID
-    ray->p.mapId = ray->warpDestMapId;
-
     // Set the player position after the map is loaded
     ray->p.posX = ray->warpDestPosX;
     ray->p.posY = ray->warpDestPosY;

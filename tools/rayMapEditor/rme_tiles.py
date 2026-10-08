@@ -97,7 +97,7 @@ class tileType(Enum):
     BG_DOOR_G_KEY_LOCKED = BG | DOOR | 6
     BG_DOOR_B_KEY_LOCKED = BG | DOOR | 7
     BG_DOOR_K_KEY_LOCKED = BG | DOOR | 8
-    BG_DOOR_9 = BG | DOOR | 9
+    BG_DOOR_DUNGEON = BG | DOOR | 9
     BG_DOOR_10 = BG | DOOR | 10
     BG_DOOR_11 = BG | DOOR | 11
     BG_DOOR_12 = BG | DOOR | 12
@@ -333,7 +333,7 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_DOOR_G_KEY_LOCKED,
         tileType.BG_DOOR_B_KEY_LOCKED,
         tileType.BG_DOOR_K_KEY_LOCKED,
-        tileType.BG_DOOR_9,
+        tileType.BG_DOOR_DUNGEON,
         tileType.BG_DOOR_10,
         tileType.BG_DOOR_11,
         tileType.BG_DOOR_12,
