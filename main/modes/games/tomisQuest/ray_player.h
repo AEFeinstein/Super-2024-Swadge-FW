@@ -15,6 +15,7 @@ int32_t rayGetEightWayAngle(q24_8 x, q24_8 y);
 void rayFromEightWayAngle(int32_t angle, q24_8* x, q24_8* y);
 bool rayPlayerIsJumping(ray_t* ray);
 bool rayPlayerIsHittable(ray_t* ray);
+int32_t rayPlayerIsShielding(ray_t* ray);
 rectangle_t rayGetPlayerBB(ray_t* ray);
 
 #endif
