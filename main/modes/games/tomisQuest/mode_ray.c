@@ -488,9 +488,16 @@ static void rayMainLoop(int64_t elapsedUs)
             drawForeground2d(ray);
 
             // If the camera is not scripted, follow the player
-            if (false == ray->cameraScripted)
+            if (false == ray->p.cameraScripted)
             {
                 rayCenterCameraOnPlayer(ray);
+
+                // If the current tile hasn't been visited in free-camera mode, mark the screen as visited
+                // This handles the case where the player enters a new map
+                if (NOT_VISITED == ray->map.visitedTiles[FROM_FX(ray->p.posY) * ray->map.w + FROM_FX(ray->p.posX)])
+                {
+                    markScreenVisited(ray);
+                }
             }
             else
             {
@@ -709,7 +716,9 @@ void rayStartGame(void)
     rayFreeCurrentState(ray);
 
     // Load player data from NVM
-    bool initFromScratch = initializePlayer(ray);
+    bool initFromScratch      = initializePlayer(ray);
+    vec_t loadedCameraTarget  = ray->p.cameraTarget;
+    bool loadedCameraScripted = ray->p.cameraScripted;
 
     // Load the map and object data
     q24_8 pStartX = 0, pStartY = 0;
@@ -727,11 +736,15 @@ void rayStartGame(void)
         ray->ps.lastGoodCell.y = FROM_FX(ray->p.posY);
 
         // Save the starting position
-        raySavePlayer(ray);
+        raySaveGame(ray);
     }
-
-    // Mark the starting tile as visited
-    markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
+    else
+    {
+        // Overwrite camera data set by map
+        ray->camera           = loadedCameraTarget;
+        ray->p.cameraTarget   = loadedCameraTarget;
+        ray->p.cameraScripted = loadedCameraScripted;
+    }
 
     // Check script from entering the initial cell
     checkScriptEnter(ray, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));

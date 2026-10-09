@@ -45,7 +45,7 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
     ray->camera.y = 0;
 
     // Clear this flag before loading the map
-    ray->cameraScripted = false;
+    ray->p.cameraScripted = false;
 
     // Pick the allocation type
     uint32_t caps = spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_DEFAULT;
@@ -278,9 +278,9 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
     for (int idx = 0; idx < ARRAY_SIZE(ray->p.i.items); idx++)
     {
         invItem_t* invItem = &ray->p.i.items[idx];
-        if (invItem->occupied &&              // Has item
+        if (invItem->occupied &&       // Has item
             invItem->mapId == mapId && // in this map
-            !invItem->keyUsed)                // not used yet
+            !invItem->keyUsed)         // not used yet
         {
             // Match the type
             switch (invItem->type)
@@ -424,6 +424,46 @@ void markTileVisited(rayMap_t* map, int16_t x, int16_t y)
         {
             // Mark these cells as visited, don't undo SCRIPT_DOOR_OPEN
             rayTileState_t* ts = &map->visitedTiles[(yIdx * map->w) + xIdx];
+            if (*ts == NOT_VISITED)
+            {
+                *ts = VISITED;
+            }
+        }
+    }
+}
+
+/**
+ * @brief Mark a screen's-worth of tiles as visited, based on the camera target
+ *
+ * @param ray The entire game state
+ */
+void markScreenVisited(ray_t* ray)
+{
+    rayMap_t* map = &ray->map;
+
+    // Camera target is in pixel space, convert to cell indices
+    vec_t min = {
+        .x = ray->p.cameraTarget.x / CELL_SIZE,
+        .y = ray->p.cameraTarget.y / CELL_SIZE,
+    };
+    vec_t max = {
+        .x = min.x + (TFT_WIDTH / CELL_SIZE),
+        .y = min.y + (TFT_HEIGHT / CELL_SIZE),
+    };
+
+    // Clamp all values
+    min.x = CLAMP(min.x, 0, ray->map.w);
+    min.y = CLAMP(min.y, 0, ray->map.h);
+    max.x = CLAMP(max.x, 0, ray->map.w);
+    max.y = CLAMP(max.y, 0, ray->map.h);
+
+    // Mark visible cells as visited
+    for (int16_t y = min.y; y < max.y; y++)
+    {
+        for (int16_t x = min.x; x < max.x; x++)
+        {
+            // Mark these cells as visited, don't undo SCRIPT_DOOR_OPEN
+            rayTileState_t* ts = &map->visitedTiles[(y * map->w) + x];
             if (*ts == NOT_VISITED)
             {
                 *ts = VISITED;

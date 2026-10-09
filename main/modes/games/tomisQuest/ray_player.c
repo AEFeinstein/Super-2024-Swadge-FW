@@ -96,22 +96,13 @@ bool initializePlayer(ray_t* ray)
 }
 
 /**
- * @brief Save the entire player state to NVM
+ * @brief Save the entire player state and map's visited tiles to NVM
  *
  * @param ray The entire game state
  */
-void raySavePlayer(ray_t* ray)
+void raySaveGame(ray_t* ray)
 {
     writeNvsBlob(RAY_NVS_KEY, &(ray->p), sizeof(ray->p));
-}
-
-/**
- * @brief Save the tiles the player has visited in this map
- *
- * @param ray The entire game state
- */
-void raySaveVisitedTiles(ray_t* ray)
-{
     writeNvsBlob(getRayMapMetadata(ray->p.mapId)->visitedKey, ray->map.visitedTiles,
                  sizeof(rayTileState_t) * ray->map.w * ray->map.h);
 }
@@ -313,8 +304,12 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
             // If the cell changed
             if (oldCellX != newCellX || oldCellY != newCellY)
             {
-                // Mark it on the map
-                markTileVisited(&ray->map, newCellX, newCellY);
+                // Mark the new screen as visited, but only if the camera is not scripted.
+                // If the camera is scripted, it gets marked in executeScriptEvent()
+                if (!ray->p.cameraScripted)
+                {
+                    markScreenVisited(ray);
+                }
 
                 // Check scripts when entering cells
                 checkScriptEnter(ray, newCellX, newCellY);
@@ -743,8 +738,7 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
     if (saveAfterObtain)
     {
         // Autosave
-        raySavePlayer(ray);
-        raySaveVisitedTiles(ray);
+        raySaveGame(ray);
         // Play SFX
         globalMidiPlayerPlaySong(&ray->sfx_item_get, MIDI_SFX);
     }
