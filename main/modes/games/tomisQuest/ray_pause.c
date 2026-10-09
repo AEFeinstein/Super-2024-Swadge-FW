@@ -143,12 +143,34 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
                     // All walls are the same
                     color = c001;
                 }
+                else if (BG_DOOR_R_KEY_LOCKED == type)
+                {
+                    color = c500;
+                }
+                else if (BG_DOOR_G_KEY_LOCKED == type)
+                {
+                    color = c050;
+                }
+                else if (BG_DOOR_B_KEY_LOCKED == type)
+                {
+                    color = c005;
+                }
+                else if (BG_DOOR_K_KEY_LOCKED == type)
+                {
+                    color = c222;
+                }
+                else if (BG_DOOR_SCRIPT_LOCKED == type)
+                {
+                    color = c202;
+                }
                 else if (CELL_IS_TYPE(type, BG | DOOR))
                 {
+                    // Generic door
                     color = c444;
                 }
                 else if (CELL_IS_TYPE(type, BG | FLOOR))
                 {
+                    // Generic floor
                     color = c111;
                 }
 
