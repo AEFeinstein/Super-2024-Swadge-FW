@@ -105,7 +105,7 @@ These are the actions that occur when a script is triggered
 | WARP      | 12    | MAP, CELL   | Warp the player to the given cell                                                                                                         |
 | WIN       | 13    |             | Beat the game                                                                                                                             |
 | CAMERA    | 14    | CELL        | Center the camera on the given cell                                                                                                       |
-| SHOP      | 15    | COST, OBJ_TYPE | Attempt to spend `COST` MPoints to get `OBJ_TYPE`                                                                                      |
+| SHOP      | 15    | COST, TYPE | Attempt to spend `COST` MPoints to get `TYPE` |
 | GET_THING       | 16    | \[THING\] | Immediately receive the given thing |
 
 ### Script Element Syntax
@@ -158,6 +158,24 @@ IF ENTER (OR; [{42.39}, {42.51}]; ANY_ORDER; ALWAYS) THEN CLOSE([{42.38}, {42.52
 After a minute, tell the player a minute has elapsed:
 ```
 IF TIME_ELAPSED(60000) THEN DIALOG(One minute has elapsed!)
+```
+Open a shop dialog to buy bombs for 20 stupees when interacting with an object:
+```
+IF SHOOT_OBJS(OR; [2]; ANY_ORDER; ALWAYS) THEN SHOP(20; OBJ_ITEM_BOMB)
+```
+Get a hidden trigger when shooting a wall, and then use that trigger to open a door elsewhere:
+```
+IF SHOOT_WALLS(OR; [{13.5}]; ANY_ORDER; ONCE) THEN GET_THING(MAYOR_HOUSE_TRIGGER)
+...
+IF HAVE_THING(MAYOR_HOUSE_TRIGGER) THEN OPEN([{10.17}, {10.18}])
+```
+Play a song to open a door:
+```
+IF PLAY(LULLABY; [{19.1}, {26.13}]) THEN OPEN([{22.8}, {23.8}])
+```
+Move the camera when entering a room from a number of directions
+```
+IF ENTER(OR; [{21.12}, {14.18}, {27.18}]; ANY_ORDER; ALWAYS) THEN CAMERA({14.12})
 ```
 
 ## RMD File Format

@@ -198,6 +198,12 @@ class rme_script:
                 return type[1]
         return None
 
+    def __parseTileType(self, obj: str) -> tileType:
+        for type in tileType.__members__.items():
+            if obj == type[0]:
+                return type[1]
+        return None
+
     def __parseThing(self, thing: str) -> thingType:
         # MAYOR_HOUSE_TRIGGER or other
         for type in thingType.__members__.items():
@@ -320,7 +326,7 @@ class rme_script:
         if kCost in self.thenArgs.keys():
             thenArgArray.append(str(self.thenArgs[kCost]))
         if kObj in self.thenArgs.keys():
-            thenArgArray.append(str(self.thenArgs[kObj]))
+            thenArgArray.append(str(self.thenArgs[kObj].name))
         if kThing in self.thenArgs.keys():
             thenArgArray.append(self.thenArgs[kThing].name)
 
@@ -478,7 +484,7 @@ class rme_script:
             elif thenOpType.SHOP == self.thenOp:
                 # Parse the args
                 self.thenArgs[kCost] = int(argParts[0])
-                self.thenArgs[kObj] = int(argParts[1])
+                self.thenArgs[kObj] = self.__parseTileType(argParts[1])
 
             elif thenOpType.GET_THING == self.thenOp:
                 # Parse the args
@@ -563,7 +569,7 @@ class rme_script:
         if kCost in self.thenArgs.keys():
             bytes.append(self.thenArgs[kCost])
         if kObj in self.thenArgs.keys():
-            bytes.append(self.thenArgs[kObj])
+            bytes.append(self.thenArgs[kObj].value)
         if kThing in self.thenArgs.keys():
             bytes.append(self.thenArgs[kThing].value)
 
@@ -748,7 +754,7 @@ class rme_script:
             self.thenArgs[kCost] = bytes[idx]
             idx = idx + 1
             # Read the object type
-            self.thenArgs[kObj] = bytes[idx]
+            self.thenArgs[kObj] = tileType._value2member_map_[bytes[idx]]
             idx = idx + 1
         elif thenOpType.GET_THING == self.thenOp:
             # Read the thing
