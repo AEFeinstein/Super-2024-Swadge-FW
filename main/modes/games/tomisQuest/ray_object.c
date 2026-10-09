@@ -372,7 +372,7 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
                 // If the door is closed
                 if (0 == cell->doorOpen)
                 {
-                    bool opened = false;
+                    bool opened    = false;
                     bool keyOpened = false;
                     switch (cell->type)
                     {
@@ -449,15 +449,8 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
                                         }
                                     }
                                     // Open the door
-                                    opened = true;
+                                    opened    = true;
                                     keyOpened = true;
-
-                                    // Mark it as permanently open
-                                    ray->map.visitedTiles[(FROM_FX(y) * ray->map.w) + FROM_FX(x)] = SCRIPT_DOOR_OPEN;
-
-                                    // Autosave
-                                    raySavePlayer(ray);
-                                    raySaveVisitedTiles(ray);
                                     break;
                                 }
                             }
@@ -480,6 +473,12 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
                     {
                         // Start opening the door
                         raySetDoorState(ray, FROM_FX(x), FROM_FX(y), true, keyOpened, keyOpened);
+
+                        // Autosave when a key is used
+                        if (keyOpened)
+                        {
+                            raySaveGame(ray);
+                        }
                     }
                 }
             }

@@ -88,7 +88,7 @@ void warpToDestination(ray_t* ray)
     globalMidiPlayerStop(true);
 
     // Save the current map's visited tiles
-    raySaveVisitedTiles(ray);
+    raySaveGame(ray);
 
     // Free the scripts
     rayFreeCurrentState(ray);
@@ -121,11 +121,8 @@ void warpToDestination(ray_t* ray)
         ray->p.dirY = TO_FX(0);
     }
 
-    // Save after warping
-    raySavePlayer(ray);
-
-    // Mark the starting tile as visited
-    markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
+    // Save again after warping
+    raySaveGame(ray);
 
     // Check script from entering the initial cell
     checkScriptEnter(ray, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));

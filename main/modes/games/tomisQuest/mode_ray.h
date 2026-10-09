@@ -715,12 +715,13 @@ typedef struct
  */
 typedef struct
 {
-    q24_8 posX;         ///< The player's X position
-    q24_8 posY;         ///< The player's Y position
-    q24_8 dirX;         ///< The player's X direction
-    q24_8 dirY;         ///< The player's Y direction
-    vec_t cameraTarget; ///< The target position of the 2D camera
-    int32_t mapId;      ///< The ID of the current map
+    q24_8 posX;          ///< The player's X position
+    q24_8 posY;          ///< The player's Y position
+    q24_8 dirX;          ///< The player's X direction
+    q24_8 dirY;          ///< The player's Y direction
+    vec_t cameraTarget;  ///< The target position of the 2D camera
+    bool cameraScripted; ///< True if the camera is controlled by scripts, false to free-roam
+    int32_t mapId;       ///< The ID of the current map
     // Current status
     int32_t health;    ///< The player's current health
     int32_t maxHealth; ///< The player's current max health.
@@ -812,7 +813,6 @@ typedef struct rayGame
 
     vec_t camera;        ///< The position of the 2D camera
     int32_t cameraTimer; ///< A timer to move the camera from current to target positions
-    bool cameraScripted; ///< True if the camera is controlled by scripts, false to free-roam
 
     rayPlayer_t p;       ///< All the player's state, loaded from NVM
     rayPlayerState_t ps; ///< All the player's temporary state
