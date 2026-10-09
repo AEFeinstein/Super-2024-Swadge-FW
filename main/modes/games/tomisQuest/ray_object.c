@@ -531,8 +531,8 @@ void checkRayCollisions(ray_t* ray)
     // Create a 'player' for collision comparison
     rectangle_t pbb       = rayGetPlayerBB(ray);
     rayObjCommon_t player = {
-        .posX        = pbb.pos.x,
-        .posY        = pbb.pos.y,
+        .posX        = pbb.pos.x + (pbb.width / 2),
+        .posY        = pbb.pos.y + (pbb.height / 2),
         .bound.box.w = pbb.width,
         .bound.box.h = pbb.height,
     };
