@@ -93,18 +93,19 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
         }
     }
 
-    if (ray->blink)
-    {
-#define TRIANGLE_OFFSET_X 20
-#define TRIANGLE_OFFSET_Y 0
-        drawTriangleOutlined(TFT_WIDTH - TRIANGLE_OFFSET_X - 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 4,
-                             TFT_WIDTH - TRIANGLE_OFFSET_X - 4, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 10,
-                             TFT_WIDTH - TRIANGLE_OFFSET_X - 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 16, c100, c542);
+    //     if (ray->blink)
+    //     {
+    // #define TRIANGLE_OFFSET_X 20
+    // #define TRIANGLE_OFFSET_Y 0
+    //         drawTriangleOutlined(TFT_WIDTH - TRIANGLE_OFFSET_X - 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 4,
+    //                              TFT_WIDTH - TRIANGLE_OFFSET_X - 4, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 10,
+    //                              TFT_WIDTH - TRIANGLE_OFFSET_X - 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 16, c100,
+    //                              c542);
 
-        drawTriangleOutlined(TRIANGLE_OFFSET_X + 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 4, TRIANGLE_OFFSET_X + 4,
-                             TFT_HEIGHT - TRIANGLE_OFFSET_Y - 10, TRIANGLE_OFFSET_X + 16,
-                             TFT_HEIGHT - TRIANGLE_OFFSET_Y - 16, c100, c542);
-    }
+    //         drawTriangleOutlined(TRIANGLE_OFFSET_X + 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 4, TRIANGLE_OFFSET_X + 4,
+    //                              TFT_HEIGHT - TRIANGLE_OFFSET_Y - 10, TRIANGLE_OFFSET_X + 16,
+    //                              TFT_HEIGHT - TRIANGLE_OFFSET_Y - 16, c100, c542);
+    //     }
 }
 
 /**
