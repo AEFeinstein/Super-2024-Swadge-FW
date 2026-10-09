@@ -830,23 +830,32 @@ bool rayBoundingBoxFitsInMap(ray_t* ray, rectangle_t bb)
  */
 void raySetDoorState(ray_t* ray, uint32_t x, uint32_t y, bool isOpening, bool setScriptOpen, bool playSfx)
 {
-    int8_t direction = isOpening ? 1 : -1;
-
-    // Open or close the given door
-    ray->map.tiles[x][y].openingDirection = direction;
-
     // Do additional things if the door is opening
     if (isOpening)
     {
-        if (setScriptOpen)
+        // Start opening if not already open
+        if (ray->map.tiles[x][y].doorOpen < TO_FX(1))
         {
-            ray->map.visitedTiles[(y * ray->map.w) + x] = SCRIPT_DOOR_OPEN;
-        }
+            ray->map.tiles[x][y].openingDirection = 1;
 
-        if (playSfx)
+            if (setScriptOpen)
+            {
+                ray->map.visitedTiles[(y * ray->map.w) + x] = SCRIPT_DOOR_OPEN;
+            }
+
+            if (playSfx)
+            {
+                // Play SFX
+                globalMidiPlayerPlaySong(&ray->sfx_door_open, MIDI_SFX);
+            }
+        }
+    }
+    else
+    {
+        // Start closing if not already closed
+        if (ray->map.tiles[x][y].doorOpen > TO_FX(0))
         {
-            // Play SFX
-            globalMidiPlayerPlaySong(&ray->sfx_door_open, MIDI_SFX);
+            ray->map.tiles[x][y].openingDirection = -1;
         }
     }
 
@@ -869,11 +878,25 @@ void raySetDoorState(ray_t* ray, uint32_t x, uint32_t y, bool isOpening, bool se
             rayMapCell_t* cell = &ray->map.tiles[adj[i].x][adj[i].y];
             if (CELL_IS_TYPE(cell->type, BG | DOOR))
             {
-                cell->openingDirection = direction;
-
-                if (isOpening && setScriptOpen)
+                if (isOpening)
                 {
-                    ray->map.visitedTiles[(adj[i].y * ray->map.w) + adj[i].x] = SCRIPT_DOOR_OPEN;
+                    // Start opening if not already open
+                    if (cell->doorOpen < TO_FX(1))
+                    {
+                        cell->openingDirection = 1;
+                        if (setScriptOpen)
+                        {
+                            ray->map.visitedTiles[(adj[i].y * ray->map.w) + adj[i].x] = SCRIPT_DOOR_OPEN;
+                        }
+                    }
+                }
+                else
+                {
+                    // Start closing if not already closed
+                    if (cell->doorOpen > TO_FX(0))
+                    {
+                        cell->openingDirection = -1;
+                    }
                 }
             }
         }
