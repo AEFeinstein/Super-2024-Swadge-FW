@@ -1256,13 +1256,16 @@ void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
             ray->p.cameraTarget.x = (CELL_SIZE * script->thenArgs.cell.x);
             ray->p.cameraTarget.y = (CELL_SIZE * (script->thenArgs.cell.y));
 
+            // Mark the new screen as visited when the camera target moves
+            markScreenVisited(ray);
+
             // Also set the actual camera if it's not scripted yet
-            if (false == ray->cameraScripted)
+            if (false == ray->p.cameraScripted)
             {
                 ray->camera = ray->p.cameraTarget;
 
                 // Mark the camera as scripted so it won't follow the player
-                ray->cameraScripted = true;
+                ray->p.cameraScripted = true;
             }
 
             break;
@@ -1290,8 +1293,7 @@ void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
 
             if (shouldSave)
             {
-                raySavePlayer(ray);
-                raySaveVisitedTiles(ray);
+                raySaveGame(ray);
             }
             break;
         }
