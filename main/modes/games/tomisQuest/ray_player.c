@@ -1028,6 +1028,21 @@ bool rayPlayerIsHittable(ray_t* ray)
 }
 
 /**
+ * @brief Return the type of shield the player has up (0, 1, 2, 3), or -1 if the player is not shielding.
+ *
+ * @param ray The entire game state
+ * @return -1 if the player is not shielding, or the current shield zone (0, 1, 2, 3)
+ */
+int32_t rayPlayerIsShielding(ray_t* ray)
+{
+    if (ray->ps.shieldTimerUs > 0)
+    {
+        return ray->ps.shieldZone;
+    }
+    return -1;
+}
+
+/**
  * @brief Get a bounding box for the player
  *
  * TODO account for sprite rotation

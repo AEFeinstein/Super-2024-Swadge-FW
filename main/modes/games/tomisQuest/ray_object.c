@@ -381,7 +381,7 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
                             if (OBJ_BULLET_SWORD == oType)
                             {
                                 // Slash the bush by chaning the type to floor
-                                cell->type            = BG_FLOOR_GRASS;
+                                cell->type            = rayGetDefaultFloor();
                                 rayMapCellType_t drop = rayEnemyStandardItemDrop();
                                 if (EMPTY != drop)
                                 {
@@ -636,7 +636,7 @@ void checkRayCollisions(ray_t* ray)
                 {
                     // open the door by changing the floor type
                     // TODO door animation
-                    cell->type = BG_FLOOR_GRASS;
+                    cell->type = rayGetDefaultFloor();
 
                     // Remove this address from the list
                     node_t* next = cNode->next;
