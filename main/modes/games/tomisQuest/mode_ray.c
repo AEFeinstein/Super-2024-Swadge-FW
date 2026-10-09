@@ -909,12 +909,12 @@ rayMapCellType_t rayGetDefaultDoor(void)
     {
         case MS_DUNGEON:
         {
-            return BG_DOOR_31;
+            return BG_DOOR_DUNGEON;
         }
         default:
         {
-            return BG_DOOR_31;
+            return BG_DOOR_DUNGEON;
         }
     }
-    return BG_DOOR_31;
+    return BG_DOOR_DUNGEON;
 }
