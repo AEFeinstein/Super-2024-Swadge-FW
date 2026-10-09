@@ -131,7 +131,9 @@ This function takes no arguments and returns the `rayMapCellType_t` which is dro
 
 ## Editing Maps
 
-The main documentation for the map editor can be found at [the editor's README.md](../../tools/rayMapEditor/README.md).
+The main documentation for the map editor can be found at [the editor's README.md](../../tools/rayMapEditor/README.md). It is a python program that has been tested on all major OSs.
+
+Map files can be found in [the assets directory](../../assets/tomisQuest/maps/).
 
 ### Anatomy of a Map
 
@@ -154,6 +156,8 @@ Foregrounds may be any size (they are drawn centered on their position), may hav
 
 Foreground objects each have an ID which can be interacted with via scripts.
 
+If you right click a cell in the map, the cell coordinates and an ID for the object on that cell will be displayed in the right window for convenience.
+
 ### Dungeon Templates
 
 Dungeon templates are automatically generated so that doors and keys are placed in a way that will require backtracking to complete and not soft-lock the player. The rooms the keys are in and the key doors **must not be moved**. You may move the key within the room, have it dropped by an enemy there, place it after a puzzle, etc.
@@ -170,6 +174,12 @@ It is your job to fill in each room with something interesting. Some ideas for r
 * Block pushing puzzles
 * Switch-hitting puzzles
 * Nothing at all, just some nice scenery!
+
+It is also your job to open the lone scripted door in the template using the key item of the dungeon. This action is not part of template, but the placement of the scripted door is. The dungeon key items are:
+
+1. Shield
+2. Boomerang
+3. Doria's Lullaby
 
 Scripts make dungeons interactive and interesting. Full script documentation can be found on [the editor's README.md](../../tools/rayMapEditor/README.md). Sorry for the clunky syntax. Some ideas for scripts are:
 
