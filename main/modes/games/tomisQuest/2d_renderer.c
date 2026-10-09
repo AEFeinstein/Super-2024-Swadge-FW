@@ -262,9 +262,11 @@ void drawForeground2d(ray_t* ray)
             c045,
             c305,
         };
-        drawCircleOutline(TO_PX(ray->p.posX), TO_PX(ray->p.posY + ray->ps.jumpPos), //
-                          CELL_SIZE / 2, 3,                                         //
-                          zColors[ray->ps.shieldZone]);
+        drawCircleOutline(TO_PX(ray->p.posX) - camX,                   // Center
+                          TO_PX(ray->p.posY + ray->ps.jumpPos) - camY, // Center
+                          CELL_SIZE / 2,                               // Radius
+                          3,                                           // Stroke
+                          zColors[ray->ps.shieldZone]);                // Color
     }
 
     // Draw HUD
