@@ -1030,6 +1030,7 @@ INPUT                  = ./main \
                          ./main/utils/filesystem/heatshrink/heatshrink_helper.h \
                          ./main/utils/filesystem/heatshrink/heatshrink_helper.c \
                          ./tools/assets_preprocessor/src \
+                         ./tools/rayMapEditor/README.md \
                          ./components \
                          ./docs/CODE_OF_CONDUCT.md \
                          ./docs/CONTRIBUTING.md \
@@ -1039,7 +1040,8 @@ INPUT                  = ./main \
                          ./docs/PORTING.md \
                          ./docs/SERIAL_DEBUG.md \
                          ./docs/SETUP.md \
-                         ./docs/tutorial.md
+                         ./docs/tutorial.md \
+                         ./docs/tomisQuest/CONTRIBUTING.md
 
 # This tag can be used to specify the character encoding of the source files
 # that Doxygen parses. Internally Doxygen uses the UTF-8 encoding. Doxygen uses

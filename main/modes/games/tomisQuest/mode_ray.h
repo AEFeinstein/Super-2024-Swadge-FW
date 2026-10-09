@@ -667,15 +667,17 @@ typedef rayMapCellType_t (*rayEnemyDropAfterDeath_t)(void);
  */
 typedef struct rayEnemy
 {
+    // Common Variables
     rayObjCommon_t c;    ///< Common object properties
     int32_t health;      ///< The enemy's health
     wsg_t* portrait;     ///< Portrait used for scripts
     int32_t iFrameTimer; ///< Timer for invincibility frames
-    rayEnemyMain_t mainFn;
-    rayEnemyCheckCollision_t collisionFn;
-    rayEnemyGetShot_t getShotFn;
-    rayEnemyDropAfterDeath_t dropAfterDeathFn;
-    void* state; ///< Enemy specific state
+    void* state;         ///< Enemy specific state
+    // Function Pointers
+    rayEnemyMain_t mainFn;                     ///< The main function for this enemy, handles gameplay logic
+    rayEnemyCheckCollision_t collisionFn;      ///< A function called to check if the player collides with an enemy
+    rayEnemyGetShot_t getShotFn;               ///< A function called when the enemy is hit with something
+    rayEnemyDropAfterDeath_t dropAfterDeathFn; ///< A function called after the enemy dies to drop an item
 } rayEnemy_t;
 
 /**
