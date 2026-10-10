@@ -352,7 +352,18 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
     }
 
     // Get the cell the bullet is in now
-    rayMapCell_t* cell = &ray->map.tiles[FROM_FX(x)][FROM_FX(y)];
+    vec_t vCell = {
+        .x = FROM_FX(x),
+        .y = FROM_FX(y),
+    };
+
+    // Map bounds check
+    if (vCell.x < 0 || vCell.x >= ray->map.w || vCell.y < 0 || vCell.y >= ray->map.h)
+    {
+        return false;
+    }
+
+    rayMapCell_t* cell = &ray->map.tiles[vCell.x][vCell.y];
 
     // If the bullet hit something
     if (!isPassableCell(cell))
@@ -364,7 +375,7 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
             if (CELL_IS_TYPE(cell->type, BG | WALL) && OBJ_BULLET_ARROW == oType)
             {
                 // Check wall scripts
-                checkScriptShootWall(ray, FROM_FX(x), FROM_FX(y));
+                checkScriptShootWall(ray, vCell.x, vCell.y);
             }
             // If it hit a door
             else if (CELL_IS_TYPE(cell->type, BG | DOOR))
@@ -472,7 +483,7 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
                     if (opened)
                     {
                         // Start opening the door
-                        raySetDoorState(ray, FROM_FX(x), FROM_FX(y), true, keyOpened, keyOpened);
+                        raySetDoorState(ray, vCell.x, vCell.y, true, keyOpened, keyOpened);
 
                         // Autosave when a key is used
                         if (keyOpened)
@@ -810,6 +821,12 @@ bool rayBoundingBoxFitsInMap(ray_t* ray, rectangle_t bb)
     int32_t x2 = FROM_FX(bb.pos.x + bb.width);
     int32_t y1 = FROM_FX(bb.pos.y);
     int32_t y2 = FROM_FX(bb.pos.y + bb.height);
+
+    // Map bounds check
+    if (x1 < 0 || y1 < 0 || x2 >= ray->map.w || y2 >= ray->map.h)
+    {
+        return false;
+    }
 
     // Check if each corner is in a passable cell
     return isPassableCell(&ray->map.tiles[x1][y1]) && //

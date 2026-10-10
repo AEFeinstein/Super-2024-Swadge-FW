@@ -265,21 +265,27 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
 
             // Make a bounding box for where the player would move
             rectangle_t movedBoundingBox = rayGetPlayerBB(ray);
-            movedBoundingBox.pos.x += deltaX;
-            movedBoundingBox.pos.y += deltaY;
 
+            // Check for horizontal movement
+            movedBoundingBox.pos.x += deltaX;
             // If the player's new location doesn't fit
             if (!rayBoundingBoxFitsInMap(ray, movedBoundingBox))
             {
-                // Stop movement
-                deltaX = 0;
-                deltaY = 0;
-
                 // Unmove the player's bounding box
                 movedBoundingBox.pos.x -= deltaX;
-                movedBoundingBox.pos.y -= deltaY;
+                // Stop horizontal movement
+                deltaX = 0;
+            }
 
-                // TODO allow axis aligned movement when the input is diagonal on a wall?
+            // Check for vertical movement
+            movedBoundingBox.pos.y += deltaY;
+            // If the player's new location doesn't fit
+            if (!rayBoundingBoxFitsInMap(ray, movedBoundingBox))
+            {
+                // Unmove the player's bounding box
+                movedBoundingBox.pos.y -= deltaY;
+                // Stop vertical movement
+                deltaY = 0;
             }
 
             // Check for collisions with all enemies in the new location
