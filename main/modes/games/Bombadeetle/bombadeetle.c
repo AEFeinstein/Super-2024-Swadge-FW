@@ -7,8 +7,10 @@
 #include "fs_font.h"
 #include "fs_wsg.h"
 #include "hdw-btn.h"
+#include "hdw-nvs.h"
 #include "hdw-tft.h"
 #include "mainMenu.h"
+#include "menu.h"
 #include "palette.h"
 #include "shapes.h"
 #include "swadge.h"
@@ -19,81 +21,95 @@
 //==============================================================================
 // Defines
 //==============================================================================
-#define TAG                   "BOMBADEETLE"
-#define OFFSETMAP_X           44
-#define OFFSETMAP_Y           10
-#define OFFSETSELECTBUTTON_X  42
-#define OFFSETSELECTBUTTON_Y  72
-#define ANIMATIONSPEED        125
-#define CURSORSPEED           125
-#define GAME_MOVE_TIME        1
-#define SHLOOG_MOVE_TIME      40
-#define BOMBADEETLE_MOVE_TIME 25
-#define MOVETIME              75
-#define TILESIZE              16
+#define TAG                             "BOMBADEETLE"
+#define OFFSETMAP_X                     44
+#define OFFSETMAP_Y                     10
+#define OFFSETSELECTBUTTON_X            42
+#define OFFSETSELECTBUTTON_Y            72
+#define ANIMATIONSPEED                  125
+#define CURSORSPEED                     125
+#define GAME_MOVE_TIME                  1
+#define SHLOOG_MOVE_TIME                40
+#define BOMBADEETLE_MOVE_TIME           25
+#define MOVETIME                        75
+#define TILESIZE                        16
 
-#define DEFAULT_MOVE_AMOUNT 4
+#define DEFAULT_MOVE_AMOUNT             4
 
-#define GRIDHEIGHT 9
-#define GRIDWIDTH  12
+#define GRIDHEIGHT                      9
+#define GRIDWIDTH                       12
 
-#define SHLOOG_HEIGHT_OFFSET -8
+#define SHLOOG_HEIGHT_OFFSET            -8
 
-#define WALL_W   1
-#define WALL_S   2
-#define WALL_E   4
-#define WALL_N   8
-#define TELEPORT 16
-#define GOAL     32
-#define HOLE     64
+#define WALL_W                          1
+#define WALL_S                          2
+#define WALL_E                          4
+#define WALL_N                          8
+#define TELEPORT                        16
+#define GOAL                            32
+#define HOLE                            64
 
-#define DIRECTION_NONE 0
-#define DIRECTION_W    1
-#define DIRECTION_S    2
-#define DIRECTION_E    4
-#define DIRECTION_N    8
+#define DIRECTION_NONE                  0
+#define DIRECTION_W                     1
+#define DIRECTION_S                     2
+#define DIRECTION_E                     4
+#define DIRECTION_N                     8
 
-#define BG_LEVELNAME_X 44
-#define BG_LEVELNAME_Y 166
+#define BG_LEVELNAME_X                  44
+#define BG_LEVELNAME_Y                  166
 
-#define BG_POPUP_X 8
-#define BG_POPUP_Y 10
+#define BG_POPUP_X                      8
+#define BG_POPUP_Y                      10
 
-#define BOMBADEETLE_FRAMECOUNT 4
-#define BOMBADEETLE_COUNT      100
-#define SHLOOG_MAX_COUNT       16
+#define BOMBADEETLE_FRAMECOUNT          4
+#define BOMBADEETLE_COUNT               100
+#define SHLOOG_MAX_COUNT                16
 
-#define COLLISION_RANGE 12
+#define COLLISION_RANGE                 12
 
-#define COLOR_BOMBLUE c225
+#define COLOR_BOMBLUE                   c225
 
-#define TIMING_SUCCESS 500
+#define TIMING_SUCCESS                  500
 
-#define NOMORE_X_OFFSET  13
-#define NOMORE_Y_OFFSET  55
-#define NOMORE_Y_SPACING 35
-#define NOMORE_DURATION  750
+#define NOMORE_X_OFFSET                 13
+#define NOMORE_Y_OFFSET                 55
+#define NOMORE_Y_SPACING                35
+#define NOMORE_DURATION                 750
 
-#define MINHELD_DURATION 500
-#define HELD_SPEED       65
+#define MINHELD_DURATION                500
+#define HELD_SPEED                      65
 
-const char bombadeetleModeName[]        = "Bombadeetle";
-const char bombadeetleNVSNamespaceKey[] = "bombadeetle";
-const char bombadeetleNVSLevelMaxKey[]  = "levelMax";
+#define TILESET_SIZE                    2
+#define TILESET_COUNT                   2
+#define SWADGEMENU_TILE_X               100
+#define SWADGEMENU_TILE_Y               94
+#define SWADGEMENU_TILE_WIDTH           16
+#define SWADGEMENU_TILE_HEIGHT          16    
+#define SWADGEMENU_TILE_H_OFFSET        SWADGEMENU_TILE_WIDTH + 2   
 
-typedef enum
-{
-    STATE_MENU,
-    STATE_STAGESELECT,
-    STATE_INSTRUCTIONS,
-    STATE_PLACING,
-    STATE_RUNNING,
-    STATE_COLLISION,
-    STATE_WIN,
+static const char bombadeetleModeName[]            = "Bombadeetle";
+static const char bombadeetleNVSNamespaceKey[]     = "bombadeetle";
+static const char bombadeetleNVSLevelMaxKey[]      = "levelMax";
+static const char bombadeetleNVSTileKey[]          = "bTileSet";
+static const char bombadeetleNVSBackgroundKey[]    = "bMovingBackground";
 
-} bombState_t;
 
-static const cnfsFileIdx_t bombadeetleTiles[] = {BOMB_TILE_001_WSG, BOMB_TILE_002_WSG};
+static const char bombadeetleMenuStr[]             = "Bombadeetle Bitesize Bowling";
+static const char bombadeetlePlayStr[]             = "Play";
+static const char bombadeetleResetStr[]            = "Reset";
+static const char bombadeetleSettingStr[]          = "Settings";
+static const char bombadeetleConfirmStr[]          = "Really Reset Data";
+static const char bombadeetleTileStr[]             = "Tile Set";
+static const char bombadeetleMovingBGStr[]         = "Background:";
+static const char bombadeetleExitStr[]             = "Exit";
+static const char* const backgroundOptions[]       = {"Still","Moving" };
+static const int32_t bombadeetleBGSettings[]       = {0, 1};
+
+
+static const cnfsFileIdx_t bombadeetleTiles[] = {
+    BOMB_TILE_001_WSG, BOMB_TILE_002_WSG,
+     BOMB_TILE_003_WSG, BOMB_TILE_004_WSG
+};
 
 static const cnfsFileIdx_t bombadeetleArrows[] = {
     BOMB_ARROW_LEFT_WSG,
@@ -113,7 +129,7 @@ static const cnfsFileIdx_t bombadeetleActiveCursor[] = {
     BOMB_ABOX_003_WSG,
 };
 
-static const cnfsFileIdx_t bombadeetleWall[] = {BOMB_WALL_V_WSG, BOMB_WALL_H_WSG};
+static const cnfsFileIdx_t bombadeetleWall[] = {BOMB_WALL_OV_WSG, BOMB_WALL_OH_WSG,BOMB_WALL_V_WSG, BOMB_WALL_H_WSG};
 
 static const cnfsFileIdx_t bombadeetleBombadeetleSprite[] = {
     BOMB_BEETLETES_101_WSG, BOMB_BEETLETES_102_WSG, BOMB_BEETLETES_103_WSG,
@@ -192,6 +208,10 @@ static const int bombadeetleGoalAnimation[] = {
 
 static const int bombadeetleTitleXLocations[] = {110, 75, 115};
 
+static const int colorSetA[] = {c454, c243}; 
+static const int colorSetB[] = {c530, c310}; 
+
+
 static void bombadeetleEnterMode(void);
 static void bombadeetleExitMode(void);
 static void bombadeetleMainLoop(int64_t elapsedUs);
@@ -216,10 +236,20 @@ static void bombadeetleInstructionsLoop(int64_t elapsedUs);
 static void bombadeetleBackgroundUpdate(int64_t elapsedUs);
 static void bombadeetlePauseMenu(int64_t elapsedUs);
 
+static void bombadeetleSwadgeMenuInit();
+static void bombadeetleSwadgeMenuLoop(int16_t elapsedUs);
+static void bombadeetleSwadgeMenuUnload();
+
+
+
+static bool bombadeetleMainMenuCb(const char* label, bool selected, uint32_t settingVal);
+
+
 static void bombadeetleOnCollision(void);
 
 bool bombadeetleLoadLevelMax(void);
 bool bombadeetleSaveLevelMax(void);
+static void bombadeetleAdditionalSettings(void);
 
 static uint16_t bombadeetleGetTitleWidth(const font_t* font, const char* text, int max);
 static void bombadeetleGetLevelData(uint8_t index);
@@ -242,141 +272,44 @@ swadgeMode_t bombadeetleMode = {
     .fnAdvancedUSB            = NULL,
 };
 
-typedef struct
-{
-    wsg_t* tiles;
-
-} bombadeetleBackground_t;
-
-typedef struct
-{
-    char name[17];
-    int8_t map[GRIDWIDTH * GRIDHEIGHT];
-    int8_t bombadeetleSpawn[GRIDWIDTH * GRIDHEIGHT];
-    int8_t shloogSpawn[GRIDWIDTH * GRIDHEIGHT];
-    int8_t left;
-    int8_t up;
-    int8_t down;
-    int8_t right;
-    uint8_t nameWidthOffset;
-
-} bombadeetleCurrentLevel_t;
-
-typedef struct
-{
-    int8_t direction;
-    int8_t tileX;
-    int8_t tileY;
-    int8_t frame;
-
-    int16_t locX;
-    int16_t locY;
-
-    bool goal;
-    bool doomed;
-
-} bombadeetleEntity_t;
-
-typedef struct
-{
-    bombState_t state;
-    bombState_t lastState;
-
-    bombadeetleCurrentLevel_t mapFile;
-
-    wsg_t* arrows;
-    wsg_t* cursor;
-    wsg_t* acursor;
-    wsg_t* walls;
-    wsg_t* bombadeetleSprites;
-    wsg_t* shloogSprites;
-    wsg_t* teleporterSprites;
-    wsg_t* instructionsPages;
-    wsg_t* goal;
-    wsg_t backgroundTile;
-    wsg_t success;
-    wsg_t unsuccessful;
-    wsg_t genericBackground;
-    wsg_t mainTitle;
-    wsg_t mainSelect;
-    wsg_t mainOptions;
-    wsg_t stageSelect;
-    wsg_t stageSelectButton;
-    wsg_t stageActiveSelectButton;
-    wsg_t pausedBackground;
-    wsg_t levelNameBackground;
-    wsg_t tools;
-    wsg_t collisionSprite;
-    wsg_t holeSprite;
-    wsg_t noMoreIcon;
-
-    bool building;
-    bool goalAnimating;
-    bool losePrompt;
-
-    bombadeetleBackground_t background;
-    int8_t cursorFrame;
-    int16_t cursorTime;
-    int8_t cursorX;
-    int8_t cursorY;
-
-    int8_t goalFrame;
-    int16_t goalTime;
-    int8_t goalCount;
-
-    int16_t animationTime;
-
-    int8_t teleporterFrame;
-
-    int8_t levelIndex;
-    int8_t levelMax;
-
-    int8_t backgroundOffset;
-    int8_t backgroundSpeed;
-
-    int8_t holdingDir;
-    int32_t timeHeldDireciton;
-
-    int16_t successTime;
-
-    int16_t collisionX;
-    int16_t collisionY;
-
-    int8_t mainSelectIndex;
-
-    int8_t stageSelectIndex;
-    int8_t stageSelectPageIndex;
-
-    int8_t instructionsPage;
-
-    int8_t bombadeetleMoveAmount;
-    int8_t shloogMoveAmount;
-    font_t mainFont;
-
-    int16_t menuTimer;
-    int32_t dontHaveArrowTimer[4];
-
-    int16_t cursorMoveTime;
-    int16_t gameMoveTime;
-    int16_t gameMoveTick;
-    int8_t gameSpeed;
-
-    int8_t grid[GRIDHEIGHT * GRIDWIDTH]; // I don't like this.
-    int8_t map[GRIDHEIGHT * GRIDWIDTH];
-
-    bombadeetleEntity_t* bombadeetles;
-    bombadeetleEntity_t* shloogs;
-
-    bool paused;
-
-} bombadeetleData_t;
-
 bombadeetleData_t* bombadeetle;
+
+//Post con figure out a better way to do this
+settingParam_t bombadeetleTileBounds =
+{
+    .def = 0,
+    .min = 0,
+    .max = TILESET_COUNT - 1
+};
+
+settingParam_t bombadeetleYesNoBounds = 
+{
+    .def = 1,
+    .min = 0,
+    .max = 1
+};
 
 static void bombadeetleEnterMode()
 {
     bombadeetle = (bombadeetleData_t*)heap_caps_calloc(1, sizeof(bombadeetleData_t), MALLOC_CAP_8BIT);
 
+    
+    // Load current level max from NVS
+    if (!bombadeetleLoadLevelMax())
+    {
+        bombadeetle->levelMax = 0;
+    }
+    bombadeetleAdditionalSettings();
+
+    ESP_LOGI(TAG, "MAX LEVEL %d", bombadeetle->levelIndex);
+    loadFont(IBM_VGA_8_FONT, &bombadeetle->menuFont, true);
+    bombadeetleSwadgeMenuInit();
+
+}
+
+void bombadeetleGameEnter(void)
+{
+    bombadeetle->gameStarted = true;
     bombadeetle->cursorTime           = 0;
     bombadeetle->cursorX              = 0;
     bombadeetle->cursorY              = 0;
@@ -400,6 +333,9 @@ static void bombadeetleEnterMode()
     bombadeetle->state     = STATE_MENU;
     bombadeetle->lastState = STATE_MENU;
 
+    ESP_LOGI(TAG, "Ya!");
+
+
     bombadeetle->bombadeetles
         = (bombadeetleEntity_t*)heap_caps_calloc(BOMBADEETLE_COUNT, sizeof(bombadeetleEntity_t), MALLOC_CAP_8BIT);
     bombadeetle->shloogs
@@ -407,11 +343,6 @@ static void bombadeetleEnterMode()
 
     bombadeetleGetLevelData(0);
 
-    // Load current level max from NVS
-    if (!bombadeetleLoadLevelMax())
-    {
-        bombadeetle->levelMax = 0;
-    }
 
     bombadeetle->levelIndex = 0;
 
@@ -434,9 +365,9 @@ static void bombadeetleEnterMode()
     loadWsg(BOMB_HOLE_WSG, &bombadeetle->holeSprite, true);
     loadWsg(BOMB_BACKGROUND_WSG, &bombadeetle->backgroundTile, true);
     bombadeetle->background.tiles = heap_caps_calloc(ARRAY_SIZE(bombadeetleTiles), sizeof(wsg_t), MALLOC_CAP_8BIT);
-    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleTiles); idx++)
+    for (int idx = 0; idx < TILESET_SIZE; idx++)
     {
-        loadWsg(bombadeetleTiles[idx], &bombadeetle->background.tiles[idx], true);
+        loadWsg(bombadeetleTiles[idx + (bombadeetle->tileSet * TILESET_SIZE)], &bombadeetle->background.tiles[idx], true);
     }
 
     bombadeetle->arrows = heap_caps_calloc(ARRAY_SIZE(bombadeetleArrows), sizeof(wsg_t), MALLOC_CAP_8BIT);
@@ -542,6 +473,36 @@ bool bombadeetleLoadLevelMax(void)
     return success;
 }
 
+static void bombadeetleAdditionalSettings(void)
+{
+    int32_t tileSet = 0;
+    int32_t movingBackground = 1; 
+
+    bool success = readNamespaceNvs32(bombadeetleNVSNamespaceKey, bombadeetleNVSBackgroundKey, &movingBackground);
+
+    if (!success) 
+    {
+        bombadeetle->backgroundMoving = false;
+    }
+    else
+    {
+        bombadeetle->backgroundMoving = (movingBackground == 1);
+    }
+
+    success = readNamespaceNvs32(bombadeetleNVSNamespaceKey, bombadeetleNVSTileKey, &tileSet);
+
+    if (!success)
+    {
+        bombadeetle->tileSet = 0;
+    }
+    else 
+    {
+        bombadeetle->tileSet = tileSet;    
+    }
+
+}
+
+
 void bombadeetleGetLevelData(uint8_t index)
 {
     size_t levelSize;
@@ -562,6 +523,68 @@ void bombadeetleGetLevelData(uint8_t index)
 bool bombadeetleSaveLevelMax(void)
 {
     return writeNamespaceNvs32(bombadeetleNVSNamespaceKey, bombadeetleNVSLevelMaxKey, bombadeetle->levelMax);
+}
+
+static void bombadeetleSwadgeMenuInit()
+{
+    bombadeetle->menu = initMenu(bombadeetleMenuStr, bombadeetleMainMenuCb);
+    
+    addSingleItemToMenu(bombadeetle->menu,bombadeetlePlayStr);
+    
+    bombadeetle->menu = startSubMenu(bombadeetle->menu, bombadeetleSettingStr);
+    addSettingsOptionsItemToMenu(bombadeetle->menu, bombadeetleMovingBGStr, backgroundOptions, bombadeetleBGSettings, ARRAY_SIZE(backgroundOptions), &bombadeetleYesNoBounds, (bombadeetle->backgroundMoving ? 1 : 0));
+    // addSettingsItemToMenu(bombadeetle->menu, bombadeetleMovingBGStr, &bombadeetleYesNoBounds,bombadeetle->backgroundMoving);
+    //addSettingsOptionsItemToMenu(tc->menu, menuItems[1], caseOptions, caseSettings, ARRAY_SIZE(caseOptions),
+    
+    addSettingsItemToMenu(bombadeetle->menu, bombadeetleTileStr, &bombadeetleTileBounds,bombadeetle->tileSet);
+
+    bombadeetle->menu = startSubMenu(bombadeetle->menu, bombadeetleResetStr);
+    addSingleItemToMenu(bombadeetle->menu, bombadeetleConfirmStr);
+    bombadeetle->menu = endSubMenu(bombadeetle->menu);
+    bombadeetle->menu = endSubMenu(bombadeetle->menu);
+    addSingleItemToMenu(bombadeetle->menu,bombadeetleExitStr);
+    bombadeetle->renderer = initMenuZorldoRenderer(NULL, NULL);
+
+
+}
+
+
+static bool bombadeetleMainMenuCb(const char* label, bool selected, uint32_t settingVal)
+{
+    if (selected)
+    {
+        
+        if(label == bombadeetlePlayStr)
+        {
+            bombadeetleSwadgeMenuUnload();    
+            bombadeetleGameEnter();
+        }
+        else if (label == bombadeetleConfirmStr)
+        {
+            eraseNvsKey(bombadeetleNVSLevelMaxKey);
+            ESP_LOGI(TAG, "Levels erased");
+            bombadeetle->menu = bombadeetle->menu->parentMenu;
+            bombadeetle->levelMax = 0;
+            
+        }
+        else if (label == bombadeetleExitStr)
+        {
+            switchToSwadgeMode(&mainMenuMode);
+        }
+    }
+    else {
+        if (label == bombadeetleTileStr)
+        {
+            bombadeetle->tileSet = settingVal;
+            writeNamespaceNvs32(bombadeetleNVSNamespaceKey, bombadeetleNVSTileKey, bombadeetle->tileSet);
+        }
+        if (label == bombadeetleMovingBGStr)
+        {
+            bombadeetle->backgroundMoving = (settingVal == 1);
+            writeNamespaceNvs32(bombadeetleNVSNamespaceKey,bombadeetleNVSBackgroundKey,settingVal);
+        }
+    }
+    return false;
 }
 
 static void bombadeetleCheckBombadeetles(bool update)
@@ -1075,6 +1098,9 @@ static void bombadeetleMainLoop(int64_t elapsedUs)
     bombadeetleBackgroundUpdate(elapsedUs);
     switch (bombadeetle->state)
     {
+        case STATE_SWADGEMENU:
+            bombadeetleSwadgeMenuLoop(elapsedUs);
+            break;
         case STATE_MENU:
             bombadeetleMenuLoop(elapsedUs);
             break;
@@ -1087,6 +1113,29 @@ static void bombadeetleMainLoop(int64_t elapsedUs)
         default:
             bombadeetleGameLoop(elapsedUs);
             break;
+    }
+}
+
+static void bombadeetleSwadgeMenuLoop(int16_t elapsedUs)
+{
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down)
+        {
+            bombadeetle->menu = menuButton(bombadeetle->menu, evt);
+        }
+    }
+
+    // When exiting the menu, this still gets called one last time.
+    if (!bombadeetle->gameStarted)
+    {
+        drawMenuZorldo(bombadeetle->menu, bombadeetle->renderer, elapsedUs);
+        if (bombadeetle->menu->title == bombadeetleSettingStr)
+        {
+            drawRectFilled(SWADGEMENU_TILE_X, SWADGEMENU_TILE_Y, SWADGEMENU_TILE_X+ SWADGEMENU_TILE_WIDTH,SWADGEMENU_TILE_Y + SWADGEMENU_TILE_HEIGHT, colorSetA[bombadeetle->tileSet]);
+            drawRectFilled(SWADGEMENU_TILE_X + SWADGEMENU_TILE_H_OFFSET, SWADGEMENU_TILE_Y, SWADGEMENU_TILE_X+ SWADGEMENU_TILE_WIDTH + SWADGEMENU_TILE_H_OFFSET,SWADGEMENU_TILE_Y + SWADGEMENU_TILE_HEIGHT, colorSetB[bombadeetle->tileSet]);
+        }
     }
 }
 
@@ -1149,8 +1198,11 @@ static void bombadeetleBackgroundUpdate(int64_t elapsedUs)
     {
         bombadeetle->animationTime -= ANIMATIONSPEED;
 
-        bombadeetle->backgroundOffset += bombadeetle->backgroundSpeed;
-        bombadeetle->backgroundOffset %= 16;
+        if (bombadeetle->backgroundMoving)
+        {
+            bombadeetle->backgroundOffset += bombadeetle->backgroundSpeed;
+            bombadeetle->backgroundOffset %= 16;
+        }
     }
 
     // TODO: Fix this so you're not doing it in three different places.
@@ -1869,13 +1921,12 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
 
 static void bombadeetleDrawBackground()
 {
-    // Drawing has to be the last thing in the stack
     for (int x = -1; x < 19; x++)
     {
         for (int y = -1; y < 17; y++)
         {
             drawWsgSimple(&bombadeetle->backgroundTile, (x * 16) + bombadeetle->backgroundOffset,
-                          (y * 16) + bombadeetle->backgroundOffset);
+            (y * 16) + bombadeetle->backgroundOffset);
         }
     }
 }
@@ -2054,8 +2105,6 @@ static void bombadeetleDrawGame()
             {
                 drawWsgSimple(&bombadeetle->walls[0], OFFSETMAP_X + ((x + 1) * TILESIZE) - 2,
                               OFFSETMAP_Y + (y * TILESIZE) - 2);
-                // drawRectFilled(OFFSETMAP_X + ((x+1) * TILESIZE) - 2, OFFSETMAP_Y + (y * TILESIZE), OFFSETMAP_X +
-                // ((x+1) * TILESIZE) + 2, OFFSETMAP_Y + ((y +1) * TILESIZE) + 2, c505);
             }
 
             if (bombadeetle->map[tileIndex] & WALL_S)
@@ -2063,8 +2112,6 @@ static void bombadeetleDrawGame()
                 drawWsgSimple(&bombadeetle->walls[1], OFFSETMAP_X + (x * TILESIZE) - 2,
                               OFFSETMAP_Y + ((y + 1) * TILESIZE) - 2);
 
-                // drawRectFilled(OFFSETMAP_X + (x * TILESIZE) , OFFSETMAP_Y + ((y+1) * TILESIZE) - 2, OFFSETMAP_X +
-                // ((x+1) * TILESIZE), OFFSETMAP_Y + ((y+1) * TILESIZE) + 2, c505);
             }
         }
     }
@@ -2102,16 +2149,13 @@ static void bombadeetleDrawGame()
                 break;
 
             case GOAL:
-                // drawRectFilled(OFFSETMAP_X + (bombadeetle->bombadeetles[idx].tileX * TILESIZE), OFFSETMAP_Y +
-                // (bombadeetle->bombadeetles[idx].tileY * TILESIZE), OFFSETMAP_X +
-                // (bombadeetle->bombadeetles[idx].tileX * TILESIZE) + 16, OFFSETMAP_Y +
-                // (bombadeetle->bombadeetles[idx].tileY * TILESIZE) + 16, c505);
                 break;
 
             default:
                 break;
         }
     }
+
 
     for (int idx = 0; idx < SHLOOG_MAX_COUNT; idx++)
     {
@@ -2215,91 +2259,113 @@ static void bombadeetleDrawGame()
     }
 }
 
+
+
+static void bombadeetleSwadgeMenuUnload()
+{
+
+    
+    // Deinit menu
+    deinitMenu(bombadeetle->menu);
+    
+    // Deinit renderer
+    deinitMenuZorldoRenderer(bombadeetle->renderer);
+    freeFont(&bombadeetle->menuFont);
+}
+
+
 static void bombadeetleExitMode()
 {
-    freeFont(&bombadeetle->mainFont);
-    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleShloogSprite); idx++)
+    if (bombadeetle->gameStarted)
     {
-        freeWsg(&bombadeetle->shloogSprites[idx]);
+
+        freeFont(&bombadeetle->mainFont);
+        for (int idx = 0; idx < ARRAY_SIZE(bombadeetleShloogSprite); idx++)
+        {
+            freeWsg(&bombadeetle->shloogSprites[idx]);
+        }
+        
+        for (int idx = 0; idx < ARRAY_SIZE(bombadeetleGoal); idx++)
+        {
+            freeWsg(&bombadeetle->goal[idx]);
+        }
+        
+        for (int idx = 0; idx < ARRAY_SIZE(bombadeetleBombadeetleSprite); idx++)
+        {
+            freeWsg(&bombadeetle->bombadeetleSprites[idx]);
+        }
+        
+        for (int idx = 0; idx < ARRAY_SIZE(bombadeetleWall); idx++)
+        {
+            freeWsg(&bombadeetle->walls[idx]);
+        }
+        
+        for (int idx = 0; idx < ARRAY_SIZE(bombadeetleActiveCursor); idx++)
+        {
+            freeWsg(&bombadeetle->acursor[idx]);
+        }
+        
+        for (int idx = 0; idx < ARRAY_SIZE(bombadeetleCursor); idx++)
+        {
+            freeWsg(&bombadeetle->cursor[idx]);
+        }
+        
+        for (int idx = 0; idx < ARRAY_SIZE(bombadeetleTeleporter); idx++)
+        {
+            freeWsg(&bombadeetle->teleporterSprites[idx]);
+        }
+        
+        for (int idx = 0; idx < ARRAY_SIZE(bombadeetleArrows); idx++)
+        {
+            freeWsg(&bombadeetle->arrows[idx]);
+        }
+        
+        for (int idx = 0; idx < ARRAY_SIZE(bombadeetleTiles); idx++)
+        {
+            freeWsg(&bombadeetle->background.tiles[idx]);
+        }
+        
+        for (int idx = 0; idx < ARRAY_SIZE(bombadeetleInstructions); idx++)
+        {
+            freeWsg(&bombadeetle->instructionsPages[idx]);
+        }
+        
+        freeWsg(bombadeetle->shloogSprites);
+        freeWsg(bombadeetle->goal);
+        freeWsg(bombadeetle->bombadeetleSprites);
+        freeWsg(bombadeetle->walls);
+        freeWsg(bombadeetle->acursor);
+        freeWsg(bombadeetle->cursor);
+        freeWsg(bombadeetle->teleporterSprites);
+        freeWsg(bombadeetle->arrows);
+        freeWsg(bombadeetle->background.tiles);
+        freeWsg(bombadeetle->instructionsPages);
+        freeWsg(&bombadeetle->pausedBackground);
+        
+        freeWsg(&bombadeetle->noMoreIcon);
+        
+        freeWsg(&bombadeetle->mainSelect);
+        freeWsg(&bombadeetle->backgroundTile);
+        freeWsg(&bombadeetle->mainTitle);
+        freeWsg(&bombadeetle->mainOptions);
+        
+        freeWsg(&bombadeetle->stageSelect);
+        freeWsg(&bombadeetle->stageSelectButton);
+        freeWsg(&bombadeetle->stageActiveSelectButton);
+        freeWsg(&bombadeetle->genericBackground);
+        freeWsg(&bombadeetle->unsuccessful);
+        freeWsg(&bombadeetle->success);
+        freeWsg(&bombadeetle->levelNameBackground);
+        freeWsg(&bombadeetle->tools);
+        freeWsg(&bombadeetle->collisionSprite);
+        freeWsg(&bombadeetle->holeSprite);
+        
+        heap_caps_free(bombadeetle->bombadeetles);
+        heap_caps_free(bombadeetle->shloogs);
     }
-
-    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleGoal); idx++)
-    {
-        freeWsg(&bombadeetle->goal[idx]);
+    else {
+        bombadeetleSwadgeMenuUnload();    
     }
-
-    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleBombadeetleSprite); idx++)
-    {
-        freeWsg(&bombadeetle->bombadeetleSprites[idx]);
-    }
-
-    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleWall); idx++)
-    {
-        freeWsg(&bombadeetle->walls[idx]);
-    }
-
-    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleActiveCursor); idx++)
-    {
-        freeWsg(&bombadeetle->acursor[idx]);
-    }
-
-    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleCursor); idx++)
-    {
-        freeWsg(&bombadeetle->cursor[idx]);
-    }
-
-    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleTeleporter); idx++)
-    {
-        freeWsg(&bombadeetle->teleporterSprites[idx]);
-    }
-
-    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleArrows); idx++)
-    {
-        freeWsg(&bombadeetle->arrows[idx]);
-    }
-
-    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleTiles); idx++)
-    {
-        freeWsg(&bombadeetle->background.tiles[idx]);
-    }
-
-    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleInstructions); idx++)
-    {
-        freeWsg(&bombadeetle->instructionsPages[idx]);
-    }
-
-    freeWsg(bombadeetle->shloogSprites);
-    freeWsg(bombadeetle->goal);
-    freeWsg(bombadeetle->bombadeetleSprites);
-    freeWsg(bombadeetle->walls);
-    freeWsg(bombadeetle->acursor);
-    freeWsg(bombadeetle->cursor);
-    freeWsg(bombadeetle->teleporterSprites);
-    freeWsg(bombadeetle->arrows);
-    freeWsg(bombadeetle->background.tiles);
-    freeWsg(bombadeetle->instructionsPages);
-    freeWsg(&bombadeetle->pausedBackground);
-
-    freeWsg(&bombadeetle->noMoreIcon);
-
-    freeWsg(&bombadeetle->mainSelect);
-    freeWsg(&bombadeetle->backgroundTile);
-    freeWsg(&bombadeetle->mainTitle);
-    freeWsg(&bombadeetle->mainOptions);
-
-    freeWsg(&bombadeetle->stageSelect);
-    freeWsg(&bombadeetle->stageSelectButton);
-    freeWsg(&bombadeetle->stageActiveSelectButton);
-    freeWsg(&bombadeetle->genericBackground);
-    freeWsg(&bombadeetle->unsuccessful);
-    freeWsg(&bombadeetle->success);
-    freeWsg(&bombadeetle->levelNameBackground);
-    freeWsg(&bombadeetle->tools);
-    freeWsg(&bombadeetle->collisionSprite);
-    freeWsg(&bombadeetle->holeSprite);
-
-    heap_caps_free(bombadeetle->bombadeetles);
-    heap_caps_free(bombadeetle->shloogs);
-
-    heap_caps_free(bombadeetle);
+        heap_caps_free(bombadeetle);
 }
+    
