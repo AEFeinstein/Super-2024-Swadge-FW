@@ -312,11 +312,11 @@ void gs_updatePhysicsObject(gs_entity_t* self)
 
         // Reflect the velocity vector along the normal
         // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
-        pData->vel = divVec2d(
-            mulVec2d(subVec2d(pData->vel,
-                              divVec2d(mulVec2d(divVec2d(hitInfo.normal,2), dotVec2d(pData->vel, hitInfo.normal)), 16384)),
-                     pData->bounceNumerator),
-            pData->bounceDenominator);
+        pData->vel = divVec2d(mulVec2d(subVec2d(pData->vel, divVec2d(mulVec2d(divVec2d(hitInfo.normal, 2),
+                                                                              dotVec2d(pData->vel, hitInfo.normal)),
+                                                                     16384)),
+                                       pData->bounceNumerator),
+                              pData->bounceDenominator);
     }
 }
 
@@ -332,21 +332,38 @@ void gs_generateMoonTilemap(gs_entity_t* self)
     }
     for (int y = 0; y < 124; y++)
     {
-        tData->tiles[132][y].framePlus1 = GS_WALL_BACK;
-        tData->tiles[133][y].framePlus1 = GS_WALL_BACK;
+        tData->tiles[131][y].framePlus1 = GS_WALL_FORE_VIP;
+        tData->tiles[132][y].framePlus1 = GS_WALL_BACK_VIP;
+        tData->tiles[133][y].framePlus1 = GS_WALL_BACK_VIP;
+        tData->tiles[134][y].framePlus1 = GS_WALL_FORE_VIP;
     }
     for (int y = 120; y < 128; y++)
     {
-        for (int x = 127; x < 137; x++)
+        for (int x = 128; x < 138; x++)
         {
-            tData->tiles[x][y].framePlus1 = GS_WALL_BACK;
+            for (int u = -1; u < 2; u++)
+            {
+                for (int v = -1; v < 2; v++)
+                {
+                    if (u == 0 && v == 0)
+                    {
+                        tData->tiles[x][y].framePlus1 = GS_WALL_BACK_VIP;
+                    }
+                    else if (tData->tiles[x + u][y + v].framePlus1 == GS_WALL_FORE)
+                    {
+                        tData->tiles[x + u][y + v].framePlus1 = GS_WALL_FORE_VIP;
+                    }
+                }
+            }
         }
     }
+    // tData->tiles[127][124].framePlus1 = GS_WALL_FORE_VIP;
+    // tData->tiles[138][124].framePlus1 = GS_WALL_FORE_VIP;
     for (int y = 122; y < 126; y++)
     {
-        for (int x = 129; x < 135; x++)
+        for (int x = 130; x < 136; x++)
         {
-            tData->tiles[x][y].framePlus1 = GS_NO_TILE;
+            tData->tiles[x][y].framePlus1 = GS_NO_TILE_VIP;
         }
     }
     vec_t minerPos = (vec_t){133, 124};
@@ -354,7 +371,7 @@ void gs_generateMoonTilemap(gs_entity_t* self)
     {
         if (tData->tiles[minerPos.x][minerPos.y].framePlus1 != GS_NO_TILE)
         {
-            tData->tiles[minerPos.x][minerPos.y].framePlus1 = GS_WALL_BACK;
+            // tData->tiles[minerPos.x][minerPos.y].framePlus1 = GS_WALL_BACK;
         }
         switch (gs_randomInt(0, 3))
         {
@@ -381,6 +398,26 @@ void gs_generateMoonTilemap(gs_entity_t* self)
         }
         minerPos.x = CLAMP(minerPos.x, 1, TILE_FIELD_WIDTH - 2);
         minerPos.y = CLAMP(minerPos.y, 1, TILE_FIELD_HEIGHT - 2);
+    }
+    for (int month = 0; month < 12; month++)
+    {
+        // find a tile that's not VIP
+        int x;
+        int y;
+        do
+        {
+            x = gs_randomInt(0, TILE_FIELD_WIDTH);
+            y = gs_randomInt(0, TILE_FIELD_HEIGHT);
+        } while (tData->tiles[x][y].framePlus1 >= GS_NO_TILE_VIP);
+        tData->tiles[x][y].framePlus1 = GS_ASTRO_1_VIP + month;
+    }
+    // un-VIP any tiles.
+    for (int x = 0; x < TILE_FIELD_WIDTH; x++)
+    {
+        for (int y = 0; y < TILE_FIELD_HEIGHT; y++)
+        {
+            tData->tiles[x][y].framePlus1 %= GS_NO_TILE_VIP; // The last enum before VIP enums.
+        }
     }
 }
 

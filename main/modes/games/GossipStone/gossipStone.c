@@ -337,7 +337,7 @@ static void gs_initializeGame(void)
     gs_gossipStone_t* gsData            = (gs_gossipStone_t*)gossipStone->data;
     gsData->grounded                    = true;
     gsData->gravity                     = 100;
-    gsData->bounceNumerator             = 3;
+    gsData->bounceNumerator             = 2;
     gsData->bounceDenominator           = 4;
     gossipStone->colliderType           = GS_CIRCLE;
     gossipStone->collider.circle.radius = 20 << DECIMAL_BITS;

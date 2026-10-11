@@ -111,6 +111,23 @@ typedef enum __attribute__((packed))
     GS_WALL_FORE_GROUND,
     GS_WALL_FORE,
     GS_WALL_BACK,
+    GS_NO_TILE_VIP, // The VIP tiles can't be overwritten in the generation phase. But become normal at the end of
+                    // generation.
+    GS_ASTRO_1_VIP,
+    GS_ASTRO_2_VIP,
+    GS_ASTRO_3_VIP,
+    GS_ASTRO_4_VIP,
+    GS_ASTRO_5_VIP,
+    GS_ASTRO_6_VIP,
+    GS_ASTRO_7_VIP,
+    GS_ASTRO_8_VIP,
+    GS_ASTRO_9_VIP,
+    GS_ASTRO_10_VIP,
+    GS_ASTRO_11_VIP,
+    GS_ASTRO_12_VIP,
+    GS_WALL_FORE_GROUND_VIP,
+    GS_WALL_FORE_VIP,
+    GS_WALL_BACK_VIP,
 } gs_tileType_t;
 
 typedef struct
