@@ -79,6 +79,9 @@
 #define MINHELD_DURATION                500
 #define HELD_SPEED                      65
 
+
+#define BORDER_COUNT                    3
+#define BORDER_SIZE                     2
 #define TILESET_SIZE                    2
 #define TILESET_COUNT                   2
 #define SWADGEMENU_TILE_X               100
@@ -92,6 +95,7 @@ static const char bombadeetleNVSNamespaceKey[]     = "bombadeetle";
 static const char bombadeetleNVSLevelMaxKey[]      = "levelMax";
 static const char bombadeetleNVSTileKey[]          = "bTileSet";
 static const char bombadeetleNVSBackgroundKey[]    = "bMovingBackground";
+static const char bombadeetleNVSWallKey[]          = "bUsingWalls";
 
 
 static const char bombadeetleMenuStr[]             = "Bombadeetle Bitesize Bowling";
@@ -101,9 +105,12 @@ static const char bombadeetleSettingStr[]          = "Settings";
 static const char bombadeetleConfirmStr[]          = "Really Reset Data";
 static const char bombadeetleTileStr[]             = "Tile Set";
 static const char bombadeetleMovingBGStr[]         = "Background:";
+static const char bombadeetleBordersStr[]         = "Borders:";
 static const char bombadeetleExitStr[]             = "Exit";
-static const char* const backgroundOptions[]       = {"Still","Moving" };
+static const char* const bombadeetleBackgroundOptions[]       = {"Still","Moving" };
+static const char* const bombadeetleWallOptions[]  = {"Walls", "Gates", "Borders"};
 static const int32_t bombadeetleBGSettings[]       = {0, 1};
+static const int32_t bombadeetleWallSettings[]       = {0, 1, 2};
 
 
 static const cnfsFileIdx_t bombadeetleTiles[] = {
@@ -129,7 +136,11 @@ static const cnfsFileIdx_t bombadeetleActiveCursor[] = {
     BOMB_ABOX_003_WSG,
 };
 
-static const cnfsFileIdx_t bombadeetleWall[] = {BOMB_WALL_OV_WSG, BOMB_WALL_OH_WSG,BOMB_WALL_V_WSG, BOMB_WALL_H_WSG};
+static const cnfsFileIdx_t bombadeetleWall[] = {
+    BOMB_WALL_V_WSG, BOMB_WALL_H_WSG,
+    BOMB_WALL_OV_WSG, BOMB_WALL_OH_WSG,
+    BOMB_WALL_BV_WSG, BOMB_WALL_BH_WSG
+};
 
 static const cnfsFileIdx_t bombadeetleBombadeetleSprite[] = {
     BOMB_BEETLETES_101_WSG, BOMB_BEETLETES_102_WSG, BOMB_BEETLETES_103_WSG,
@@ -403,11 +414,15 @@ void bombadeetleGameEnter(void)
     }
 
     bombadeetle->walls = heap_caps_calloc(ARRAY_SIZE(bombadeetleWall), sizeof(wsg_t), MALLOC_CAP_8BIT);
-    for (int idx = 0; idx < ARRAY_SIZE(bombadeetleWall); idx++)
+    for (int idx = 0; idx < BORDER_SIZE; idx++)
     {
-        loadWsg(bombadeetleWall[idx], &bombadeetle->walls[idx], true);
+        ESP_LOGI(TAG, "%d %d",bombadeetle->wallType, idx + (bombadeetle->wallType * BORDER_SIZE));
+        loadWsg(bombadeetleWall[idx + (bombadeetle->wallType * BORDER_SIZE)], &bombadeetle->walls[idx], true);
     }
-
+/*for (int idx = 0; idx < TILESET_SIZE; idx++)
+    {
+        loadWsg(bombadeetleTiles[idx + (bombadeetle->tileSet * TILESET_SIZE)], &bombadeetle->background.tiles[idx], true);
+    }*/
     bombadeetle->bombadeetleSprites
         = heap_caps_calloc(ARRAY_SIZE(bombadeetleBombadeetleSprite), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(bombadeetleBombadeetleSprite); idx++)
@@ -477,6 +492,7 @@ static void bombadeetleAdditionalSettings(void)
 {
     int32_t tileSet = 0;
     int32_t movingBackground = 1; 
+    int32_t wallType = 1;
 
     bool success = readNamespaceNvs32(bombadeetleNVSNamespaceKey, bombadeetleNVSBackgroundKey, &movingBackground);
 
@@ -490,7 +506,6 @@ static void bombadeetleAdditionalSettings(void)
     }
 
     success = readNamespaceNvs32(bombadeetleNVSNamespaceKey, bombadeetleNVSTileKey, &tileSet);
-
     if (!success)
     {
         bombadeetle->tileSet = 0;
@@ -500,6 +515,15 @@ static void bombadeetleAdditionalSettings(void)
         bombadeetle->tileSet = tileSet;    
     }
 
+
+    success = readNamespaceNvs32(bombadeetleNVSNamespaceKey, bombadeetleNVSWallKey, &wallType);
+    if (!success)
+    {
+        bombadeetle->wallType = 0;
+    }
+    else {
+        bombadeetle->wallType = wallType;
+    }
 }
 
 
@@ -532,11 +556,11 @@ static void bombadeetleSwadgeMenuInit()
     addSingleItemToMenu(bombadeetle->menu,bombadeetlePlayStr);
     
     bombadeetle->menu = startSubMenu(bombadeetle->menu, bombadeetleSettingStr);
-    addSettingsOptionsItemToMenu(bombadeetle->menu, bombadeetleMovingBGStr, backgroundOptions, bombadeetleBGSettings, ARRAY_SIZE(backgroundOptions), &bombadeetleYesNoBounds, (bombadeetle->backgroundMoving ? 1 : 0));
-    // addSettingsItemToMenu(bombadeetle->menu, bombadeetleMovingBGStr, &bombadeetleYesNoBounds,bombadeetle->backgroundMoving);
-    //addSettingsOptionsItemToMenu(tc->menu, menuItems[1], caseOptions, caseSettings, ARRAY_SIZE(caseOptions),
+    addSettingsOptionsItemToMenu(bombadeetle->menu, bombadeetleMovingBGStr, bombadeetleBackgroundOptions, bombadeetleBGSettings, ARRAY_SIZE(bombadeetleBackgroundOptions), &bombadeetleYesNoBounds, (bombadeetle->backgroundMoving ? 1 : 0));
     
     addSettingsItemToMenu(bombadeetle->menu, bombadeetleTileStr, &bombadeetleTileBounds,bombadeetle->tileSet);
+    addSettingsOptionsItemToMenu(bombadeetle->menu, bombadeetleBordersStr, bombadeetleWallOptions, bombadeetleWallSettings , ARRAY_SIZE(bombadeetleWallOptions), &bombadeetleYesNoBounds, bombadeetle->wallType);
+   
 
     bombadeetle->menu = startSubMenu(bombadeetle->menu, bombadeetleResetStr);
     addSingleItemToMenu(bombadeetle->menu, bombadeetleConfirmStr);
@@ -582,6 +606,11 @@ static bool bombadeetleMainMenuCb(const char* label, bool selected, uint32_t set
         {
             bombadeetle->backgroundMoving = (settingVal == 1);
             writeNamespaceNvs32(bombadeetleNVSNamespaceKey,bombadeetleNVSBackgroundKey,settingVal);
+        }
+        if (label == bombadeetleBordersStr)
+        {
+            bombadeetle->wallType = settingVal;
+            writeNamespaceNvs32(bombadeetleNVSNamespaceKey, bombadeetleNVSWallKey, bombadeetle->wallType);
         }
     }
     return false;
@@ -2295,7 +2324,7 @@ static void bombadeetleExitMode()
             freeWsg(&bombadeetle->bombadeetleSprites[idx]);
         }
         
-        for (int idx = 0; idx < ARRAY_SIZE(bombadeetleWall); idx++)
+        for (int idx = 0; idx < (BORDER_SIZE); idx++)
         {
             freeWsg(&bombadeetle->walls[idx]);
         }

@@ -93,6 +93,7 @@ typedef struct
 
     // QoL
     bool backgroundMoving;
+    int wallType;
     int tileSet;
 
     bombadeetleBackground_t background;
