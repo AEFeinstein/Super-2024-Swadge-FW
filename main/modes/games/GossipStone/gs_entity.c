@@ -314,7 +314,7 @@ void gs_updatePhysicsObject(gs_entity_t* self)
         // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
         pData->vel = divVec2d(
             mulVec2d(subVec2d(pData->vel,
-                              divVec2d(mulVec2d(hitInfo.normal, (2 * dotVec2d(pData->vel, hitInfo.normal))), 65536)),
+                              divVec2d(mulVec2d(divVec2d(hitInfo.normal,2), dotVec2d(pData->vel, hitInfo.normal)), 16384)),
                      pData->bounceNumerator),
             pData->bounceDenominator);
     }
