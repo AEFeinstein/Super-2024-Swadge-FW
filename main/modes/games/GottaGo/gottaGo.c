@@ -337,7 +337,9 @@ static void ggEnterMode(void)
         loadWsg(titleImages[idx], &ggd->titleImages[idx], true);
     }
     // Audio files
-    loadMidiFile(ROBO_RUNNER_BGM_MID, &ggd->bgm, true);
+    loadMidiFile(BOSS_MOVEOVA_MID, &ggd->bgmMenu, true);
+    loadMidiFile(PEACEFUL_PORCELAIN_MID, &ggd->bgmCasual, true);
+    loadMidiFile(OUT_OF_THE_WAY_MID, &ggd->bgmFrantic, true);
 
     // NVS
     int32_t outVal = 0;
@@ -356,7 +358,7 @@ static void ggEnterMode(void)
     player->loop         = true;
     midiGmOn(player);
     globalMidiPlayerSetVolume(MIDI_BGM, 12);
-    // globalMidiPlayerPlaySong(&ggd->bgm, MIDI_BGM);
+    globalMidiPlayerPlaySong(&ggd->bgmMenu, MIDI_BGM);
     ggd->sfxPlayer = globalMidiPlayerGet(MIDI_SFX);
     midiGmOn(ggd->sfxPlayer);
     midiPause(ggd->sfxPlayer, false);
@@ -373,7 +375,9 @@ static void ggEnterMode(void)
 static void ggExitMode(void)
 {
     globalMidiPlayerStop(MIDI_BGM);
-    unloadMidiFile(&ggd->bgm);
+    unloadMidiFile(&ggd->bgmFrantic);
+    unloadMidiFile(&ggd->bgmCasual);
+    unloadMidiFile(&ggd->bgmMenu);
     for (int idx = 0; idx < ARRAY_SIZE(uiImages); idx++)
     {
         freeWsg(&ggd->uiImages[idx]);
@@ -491,6 +495,7 @@ static void ggMainLoop(int64_t elapsedUs)
                             ggd->pause     = false;
                             ggd->selection = GG_TEXT_MENU_PLAY;
                             ggd->state     = GG_MENU;
+                            globalMidiPlayerPlaySong(&ggd->bgmMenu, MIDI_BGM);
                         }
                         else
                         {
@@ -503,6 +508,7 @@ static void ggMainLoop(int64_t elapsedUs)
                         ggd->pause     = false;
                         ggd->selection = GG_TEXT_MENU_PLAY;
                         ggd->state     = GG_MENU;
+                        globalMidiPlayerPlaySong(&ggd->bgmMenu, MIDI_BGM);
                         ggSaveFinalToNVS(ggd); // Only saves at the end of a run
                         ggNewUserScore(ggd);   // Try to add score to scoreboard
                     }
@@ -688,11 +694,13 @@ static void doPickGame()
                     ggd->stallUses = 9999;
                     ggd->casual    = true;
                     ggd->state     = GG_CASUAL;
+                    globalMidiPlayerPlaySong(&ggd->bgmCasual, MIDI_BGM);
                 }
                 else
                 {
                     ggd->casual = false;
                     ggd->state  = GG_READY;
+                    globalMidiPlayerPlaySong(&ggd->bgmFrantic, MIDI_BGM);
                 }
             }
             else if (evt.button & PB_UP)

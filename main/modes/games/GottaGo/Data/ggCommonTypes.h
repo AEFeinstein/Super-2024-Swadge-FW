@@ -245,9 +245,11 @@ typedef struct
     font_t descFont;         ///< Font for smaller text
 
     // SFX/BGM
-    midiFile_t bgm;          ///< Background track
     midiPlayer_t* sfxPlayer; ///< SFX player
     int clickSound;          ///< The sound of a button press
+    midiFile_t bgmMenu;
+    midiFile_t bgmCasual;
+    midiFile_t bgmFrantic;
 
     // Main
     ggState_t state;   ///< Game state
