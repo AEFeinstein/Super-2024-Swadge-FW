@@ -90,8 +90,8 @@ void rayShopDialogCheckButtons(ray_t* ray)
  */
 void rayShopDialogRender(ray_t* ray, uint32_t elapsedUs)
 {
-    drawDialogBox(ray->shopDialog, &ray->ibm, &ray->ibm, DIALOG_CENTER, DIALOG_CENTER, TFT_WIDTH - 80, TFT_HEIGHT - 80,
-                  8);
+    drawDialogBox(ray->shopDialog, ray->renderer->titleFont, ray->renderer->menuFont, DIALOG_CENTER, DIALOG_CENTER,
+                  TFT_WIDTH - 80, TFT_HEIGHT - 80, 8);
 }
 
 /**

@@ -7,6 +7,7 @@
 #include "ray_enemy_box.h"
 #include "ray_enemy_grunt.h"
 #include "ray_enemy_turret.h"
+#include "ray_enemy_npc.h"
 
 //==============================================================================
 // Function Prototypes
@@ -51,6 +52,11 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
         case OBJ_ENEMY_TURRET:
         {
             rayInitEnemyTurret(ray, newObj);
+            break;
+        }
+        case OBJ_ENEMY_FAIRY_0 ... OBJ_ENEMY_FAIRY_5:
+        {
+            rayInitEnemyNpc(ray, newObj, type);
             break;
         }
         default:

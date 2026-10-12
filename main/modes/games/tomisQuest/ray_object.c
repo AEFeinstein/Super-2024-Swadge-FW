@@ -389,7 +389,7 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
                     {
                         case BG_DOOR_BUSH:
                         {
-                            if (OBJ_BULLET_SWORD == oType)
+                            if (OBJ_BULLET_SWORD == oType) // OBJ_BULLET_GHOST_SWORD doesn't slash bush
                             {
                                 // Slash the bush by chaning the type to floor
                                 cell->type            = rayGetDefaultFloor();
@@ -417,59 +417,69 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
                         case BG_DOOR_B_KEY_LOCKED:
                         case BG_DOOR_K_KEY_LOCKED:
                         {
-                            // Check if the player has an unused key that matches
-                            for (int idx = 0; idx < ARRAY_SIZE(ray->p.i.items); idx++)
+                            if (OBJ_BULLET_SWORD == oType || OBJ_BULLET_GHOST_SWORD == oType)
                             {
-                                invItem_t* invItem = &ray->p.i.items[idx];
-                                if (invItem->occupied &&                            // Has item
-                                    invItem->mapId == ray->p.mapId &&               // in this map
-                                    (((invItem->type == (OBJ_ITEM_R_KEY & ID_MASK)) // And type matches the door
-                                      && (BG_DOOR_R_KEY_LOCKED == cell->type))
-                                     || ((invItem->type == (OBJ_ITEM_G_KEY & ID_MASK))
-                                         && (BG_DOOR_G_KEY_LOCKED == cell->type))
-                                     || ((invItem->type == (OBJ_ITEM_B_KEY & ID_MASK))
-                                         && (BG_DOOR_B_KEY_LOCKED == cell->type))
-                                     || ((invItem->type == (OBJ_ITEM_K_KEY & ID_MASK))
-                                         && (BG_DOOR_K_KEY_LOCKED == cell->type)))
-                                    && !invItem->keyUsed) // not used yet
+                                // Check if the player has an unused key that matches
+                                for (int idx = 0; idx < ARRAY_SIZE(ray->p.i.items); idx++)
                                 {
-                                    // Use the key
-                                    invItem->keyUsed = true;
-
-                                    switch (cell->type)
+                                    invItem_t* invItem = &ray->p.i.items[idx];
+                                    if (invItem->occupied &&                            // Has item
+                                        invItem->mapId == ray->p.mapId &&               // in this map
+                                        (((invItem->type == (OBJ_ITEM_R_KEY & ID_MASK)) // And type matches the door
+                                          && (BG_DOOR_R_KEY_LOCKED == cell->type))
+                                         || ((invItem->type == (OBJ_ITEM_G_KEY & ID_MASK))
+                                             && (BG_DOOR_G_KEY_LOCKED == cell->type))
+                                         || ((invItem->type == (OBJ_ITEM_B_KEY & ID_MASK))
+                                             && (BG_DOOR_B_KEY_LOCKED == cell->type))
+                                         || ((invItem->type == (OBJ_ITEM_K_KEY & ID_MASK))
+                                             && (BG_DOOR_K_KEY_LOCKED == cell->type)))
+                                        && !invItem->keyUsed) // not used yet
                                     {
-                                        case BG_DOOR_R_KEY_LOCKED:
+                                        // Use the key
+                                        invItem->keyUsed = true;
+
+                                        switch (cell->type)
                                         {
-                                            ray->ps.keyMask.r_key = false;
-                                            break;
+                                            case BG_DOOR_R_KEY_LOCKED:
+                                            {
+                                                ray->ps.keyMask.r_key = false;
+                                                break;
+                                            }
+                                            case BG_DOOR_G_KEY_LOCKED:
+                                            {
+                                                ray->ps.keyMask.g_key = false;
+                                                break;
+                                            }
+                                            case BG_DOOR_B_KEY_LOCKED:
+                                            {
+                                                ray->ps.keyMask.b_key = false;
+                                                break;
+                                            }
+                                            case BG_DOOR_K_KEY_LOCKED:
+                                            {
+                                                ray->ps.keyMask.k_key = false;
+                                                break;
+                                            }
+                                            default:
+                                            {
+                                                break;
+                                            }
                                         }
-                                        case BG_DOOR_G_KEY_LOCKED:
-                                        {
-                                            ray->ps.keyMask.g_key = false;
-                                            break;
-                                        }
-                                        case BG_DOOR_B_KEY_LOCKED:
-                                        {
-                                            ray->ps.keyMask.b_key = false;
-                                            break;
-                                        }
-                                        case BG_DOOR_K_KEY_LOCKED:
-                                        {
-                                            ray->ps.keyMask.k_key = false;
-                                            break;
-                                        }
+                                        // Open the door
+                                        opened    = true;
+                                        keyOpened = true;
+                                        break;
                                     }
-                                    // Open the door
-                                    opened    = true;
-                                    keyOpened = true;
-                                    break;
                                 }
                             }
                             break;
                         }
                         case BG_DOOR_DUNGEON:
                         {
-                            opened = true;
+                            if (OBJ_BULLET_SWORD == oType || OBJ_BULLET_GHOST_SWORD == oType)
+                            {
+                                opened = true;
+                            }
                             break;
                         }
                         default:
@@ -702,9 +712,10 @@ void checkRayCollisions(ray_t* ray)
     // Only check the sword if it's active
     if (ray->ps.swordActive)
     {
+        rayMapCellType_t type = ray->p.i.haveEwiOfTime ? OBJ_BULLET_SWORD : OBJ_BULLET_GHOST_SWORD;
         // Check for sword / background collisions
-        checkBgCollision(ray, sword.p1.x, sword.p1.y, OBJ_BULLET_SWORD, 1);
-        checkBgCollision(ray, sword.p2.x, sword.p2.y, OBJ_BULLET_SWORD, 1);
+        checkBgCollision(ray, sword.p1.x, sword.p1.y, type, 1);
+        checkBgCollision(ray, sword.p2.x, sword.p2.y, type, 1);
         // Don't set swordActive to false so that multiple bushes can be slashed
     }
 
@@ -745,7 +756,7 @@ void checkRayCollisions(ray_t* ray)
             // Check for a collision between bounding box and sword
             if (rectLineIntersection(rayGetObjBB(&enemy->c), sword, NULL))
             {
-                rayEnemyGetShot(ray, enemy, OBJ_BULLET_SWORD);
+                rayEnemyGetShot(ray, enemy, ray->p.i.haveEwiOfTime ? OBJ_BULLET_SWORD : OBJ_BULLET_GHOST_SWORD);
                 // Stop the sword swing
                 ray->ps.swordActive = false;
             }

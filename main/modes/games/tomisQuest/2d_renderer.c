@@ -245,13 +245,16 @@ void drawForeground2d(ray_t* ray)
     //          TO_PX(bb.pos.x + bb.width) - camX, //
     //          TO_PX(bb.pos.y + bb.height) - camY, c050);
 
-    if (ray->ps.swordTimerUs > 0)
+    if (ray->p.i.haveEwiOfTime)
     {
-        line_t sword = rayGetSwordLineSegment(ray);
-        drawLineFast(TO_PX(sword.p1.x) - camX,                   //
-                     TO_PX(sword.p1.y + ray->ps.jumpPos) - camY, //
-                     TO_PX(sword.p2.x) - camX,                   //
-                     TO_PX(sword.p2.y + ray->ps.jumpPos) - camY, c005);
+        if (ray->ps.swordTimerUs > 0)
+        {
+            line_t sword = rayGetSwordLineSegment(ray);
+            drawLineFast(TO_PX(sword.p1.x) - camX,                   //
+                         TO_PX(sword.p1.y + ray->ps.jumpPos) - camY, //
+                         TO_PX(sword.p2.x) - camX,                   //
+                         TO_PX(sword.p2.y + ray->ps.jumpPos) - camY, c005);
+        }
     }
 
     if (ray->ps.shieldTimerUs > 0)
@@ -293,8 +296,9 @@ void drawForeground2d(ray_t* ray)
     // Mpoint Text
     char mpointCount[32] = {0};
     sprintf(mpointCount, "%" PRIu32, ray->p.mpoints);
-    xOff -= textWidth(&ray->ibm, mpointCount);
-    drawText(&ray->ibm, c555, mpointCount, xOff, (mpoint->h - ray->ibm.height) / 2);
+    font_t* font = ray->renderer->menuFont;
+    xOff -= textWidth(font, mpointCount);
+    drawText(font, c555, mpointCount, xOff, (mpoint->h - font->height) / 2);
 
     // Mpoint Icon
     xOff -= (X_SPACING + mpoint->w);
@@ -332,7 +336,7 @@ void drawForeground2d(ray_t* ray)
         }
     }
 
-    // DRAW_FPS_COUNTER(ray->ibm);
+    // DRAW_FPS_COUNTER(getSysFont());
 }
 
 /**
