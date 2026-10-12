@@ -50,6 +50,8 @@ struct beancatch_t {
     wsg_t wsgs[BC_WSG_SIZE];
     midiFile_t sounds[BC_SOUND_INDEX_MAX];
 
+    bc_gameLevelIndex_t gameLevel;
+
     uint8_t waitLoopCounter;
     uint8_t waitLoopMax;
     uint8_t emptyLoopCountdown;
@@ -705,15 +707,10 @@ void bcDrawGame(void)
 
         switch(beancatch->state)
         {
-            case BC_ST_GAME_A:
-                segment = BC_LCD_SEGMENTS[BC_SEG_GAME_A_LBL];
-                drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
-
-                bcDrawScoreHud(beancatch->score);
-
-                break;
-            case BC_ST_GAME_B:
-                segment = BC_LCD_SEGMENTS[BC_SEG_GAME_B_LBL];
+            case BC_ST_GAME:
+            case BC_ST_MISS:
+            case BC_ST_GAME_OVER:
+                segment = (beancatch->gameLevel == BC_GAME_LEVEL_A) ? BC_LCD_SEGMENTS[BC_SEG_GAME_A_LBL] : BC_LCD_SEGMENTS[BC_SEG_GAME_B_LBL];
                 drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
 
                 bcDrawScoreHud(beancatch->score);
@@ -820,7 +817,7 @@ void bcClearBeans(void)
 
 bool bcIgnoreCurrentConveyorForGameA(void)
 {
-    if(beancatch->state != BC_ST_GAME_A) 
+    if(beancatch->gameLevel != BC_GAME_LEVEL_A) 
     {
         return false;
     }
@@ -858,15 +855,15 @@ void bcScorePoint(void)
         beancatch->maxBeans = BC_DIFFICULTY_MAX_BEANS[CLAMP(scoreHundredsDigit + scoreTensDigit, 0, BC_DIFFICULTY_MAX_BEANS_SIZE)];
     }
     
-    switch(beancatch->state)
+    switch(beancatch->gameLevel)
     {
-        case BC_ST_GAME_A:
+        case BC_GAME_LEVEL_A:
             if(beancatch->score > beancatch->highScoreGameA)
             {
                 beancatch->highScoreGameA = beancatch->score;
             }
             break;
-        case BC_ST_GAME_B:
+        case BC_GAME_LEVEL_B:
             if(beancatch->score > beancatch->highScoreGameB)
             {
                 beancatch->highScoreGameB = beancatch->score;
@@ -898,7 +895,8 @@ void bcNewGame(void)
 
 void bcChangeStateGameA(void)
 {
-    beancatch->state = BC_ST_GAME_A;
+    beancatch->gameLevel = BC_GAME_LEVEL_A;
+    beancatch->state = BC_ST_GAME;
     bcNewGame();
     beancatch->waitLoopMax = 37;
     beancatch->update = &bcUpdateGame;
@@ -906,7 +904,8 @@ void bcChangeStateGameA(void)
 
 void bcChangeStateGameB(void)
 {
-    beancatch->state = BC_ST_GAME_B;
+    beancatch->gameLevel = BC_GAME_LEVEL_B;
+    beancatch->state = BC_ST_GAME;
     bcNewGame();
     beancatch->waitLoopMax = 31;
     beancatch->update = &bcUpdateGame;
@@ -914,6 +913,7 @@ void bcChangeStateGameB(void)
 
 void bcChangeStateClock(void)
 {
+    beancatch->gameLevel = BC_GAME_LEVEL_NULL;
     beancatch->state = BC_ST_CLOCK;
     bcNewGame();
     beancatch->refreshScreen = true;

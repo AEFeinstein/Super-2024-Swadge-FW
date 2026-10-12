@@ -58,12 +58,18 @@ typedef enum
     BC_ST_NULL,
     BC_ST_ACL,
     BC_ST_CLOCK,
-    BC_ST_GAME_A,
-    BC_ST_GAME_B,
+    BC_ST_GAME,
     BC_ST_MISS,
     BC_ST_GAME_OVER,
     BC_ST_PAUSE
 } bc_gameStateEnum_t;
+
+typedef enum
+{
+    BC_GAME_LEVEL_NULL,
+    BC_GAME_LEVEL_A,
+    BC_GAME_LEVEL_B
+} bc_gameLevelIndex_t;
 
 typedef enum
 {
