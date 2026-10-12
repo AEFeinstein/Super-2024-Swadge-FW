@@ -60,7 +60,9 @@ typedef enum
     BC_ST_CLOCK,
     BC_ST_GAME_A,
     BC_ST_GAME_B,
-    BC_ST_GAME_OVER
+    BC_ST_MISS,
+    BC_ST_GAME_OVER,
+    BC_ST_PAUSE
 } bc_gameStateEnum_t;
 
 typedef enum

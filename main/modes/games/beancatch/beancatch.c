@@ -6,7 +6,7 @@
  *
  */
  
-//==================== ==========================================================
+//==============================================================================
 // Includes
 //==============================================================================
 #include "beancatch.h"
@@ -27,7 +27,6 @@ const char beancatchNVSKey[] = "beancatch";
 //==============================================================================
 // Structs
 //==============================================================================
-
 typedef void (*gameUpdateFuncton_t)();
 
 struct beancatch_t {
@@ -43,6 +42,7 @@ struct beancatch_t {
     bool clockHalfSecondsPulse;
 
     bc_gameStateEnum_t state;
+    bc_gameStateEnum_t tempState;
     gameUpdateFuncton_t update;
     bool refreshScreen;
 
@@ -89,7 +89,9 @@ static void beancatchMainLoop(int64_t elapsedUs);
 static void bcUpdateAcl(void);
 static void bcUpdateClock(void);
 static void bcUpdateGame(void);
+static void bcUpdateMiss(void);
 static void bcUpdateGameOver(void);
+static void bcUpdatePause(void);
 
 static void bcDrawGame(void);
 static void bcDrawScoreHud(uint16_t value);
@@ -101,7 +103,24 @@ static void bcNewGame(void);
 static void bcChangeStateGameA(void);
 static void bcChangeStateGameB(void);
 static void bcChangeStateClock(void);
+static void bcChangeStateMiss(void);
+static void bcChangeStateGameOver(void);
+static void bcChangeStatePause(void);
+static void bcResumeTempState(void);
+
 static void bcCheckPlayerCatchBean(void);
+
+
+void* gameStateToUpdateFunctions[] = {
+    &bcUpdateAcl,
+    &bcUpdateAcl, 
+    &bcUpdateClock, 
+    &bcUpdateGame, 
+    &bcUpdateGame, 
+    &bcUpdateMiss, 
+    &bcUpdateGameOver, 
+    &bcUpdatePause
+};
 
 //==============================================================================
 // Variables
@@ -139,7 +158,6 @@ void beancatchEnterMode(void)
         loadWsg(BC_WSGS[i], &beancatch->wsgs[i], false);
     }
 
-
     for (uint16_t i = 0; i < BC_SOUND_INDEX_MAX; i++)
     {
         loadMidiFile(BC_SOUND_MAP[i], &beancatch->sounds[i], false);
@@ -155,6 +173,9 @@ void beancatchEnterMode(void)
     beancatch->clockHalfSecondsPulse = false;
 
     beancatch->refreshScreen = true;
+
+    beancatch->state = BC_ST_ACL;
+    beancatch->tempState = BC_ST_NULL;
     beancatch->update = &bcUpdateAcl;
 }
 
@@ -316,8 +337,10 @@ void bcUpdateGame(void)
         {
             if(beancatch->beanInDanger > -1)
             {
+                bcChangeStateMiss();
+                
                 //Cleanup after strike
-                beancatch->droppedBeanLocation = beancatch->beanInDanger;
+                /*beancatch->droppedBeanLocation = beancatch->beanInDanger;
                 beancatch->beanInDanger = BC_CONVEYOR_NULL;
                 beancatch->waitLoopCounter = 0;
 
@@ -326,7 +349,7 @@ void bcUpdateGame(void)
 
                 beancatch->eggyDevitoed = beancatch->eggyDevito;
 
-                beancatch->emptyLoopCountdown = 60;
+                beancatch->emptyLoopCountdown = 60;*/
             }
             else
             {
@@ -398,41 +421,41 @@ void bcUpdateGame(void)
         {
             if(beancatch->droppedBeanLocation != BC_CONVEYOR_NULL)
             {
-                beancatch->droppedBeanLocation = BC_CONVEYOR_NULL;
+                // beancatch->droppedBeanLocation = BC_CONVEYOR_NULL;
 
-                if(beancatch->eggyDevitoed)
-                {
-                    if(beancatch->halfStrike)
-                    {
-                        beancatch->halfStrike = false;
-                        beancatch->refreshScreen = true;
-                    }
-                    else
-                    {
-                        beancatch->strikes++;
-                        beancatch->halfStrike = true;
-                        beancatch->refreshScreen = true;
-                    }
-                }
-                else
-                {
-                    if(beancatch->strikes >= 3 && beancatch->halfStrike)
-                    {
-                        beancatch->halfStrike = false;
-                        beancatch->refreshScreen = true;
-                    }
-                    else
-                    {
-                        beancatch->strikes++;
-                        beancatch->refreshScreen = true;
-                    }
-                }
+                // if(beancatch->eggyDevitoed)
+                // {
+                //     if(beancatch->halfStrike)
+                //     {
+                //         beancatch->halfStrike = false;
+                //         beancatch->refreshScreen = true;
+                //     }
+                //     else
+                //     {
+                //         beancatch->strikes++;
+                //         beancatch->halfStrike = true;
+                //         beancatch->refreshScreen = true;
+                //     }
+                // }
+                // else
+                // {
+                //     if(beancatch->strikes >= 3 && beancatch->halfStrike)
+                //     {
+                //         beancatch->halfStrike = false;
+                //         beancatch->refreshScreen = true;
+                //     }
+                //     else
+                //     {
+                //         beancatch->strikes++;
+                //         beancatch->refreshScreen = true;
+                //     }
+                // }
 
-                if(beancatch->strikes >= 3 && !beancatch->halfStrike)
-                {
-                    //Game Over
-                    beancatch->emptyLoopCountdown = 240;
-                }
+                // if(beancatch->strikes >= 3 && !beancatch->halfStrike)
+                // {
+                //     //Game Over
+                //     beancatch->emptyLoopCountdown = 240;
+                // }
             }
             else if(beancatch->strikes >= 3 && !beancatch->halfStrike)
             {
@@ -521,6 +544,60 @@ void bcUpdateGame(void)
     }       
 
     bcDrawGame();
+}
+
+void bcUpdateMiss(void)
+{
+    beancatch->frameCounter++;
+    
+    if(beancatch->frameCounter > 60)
+    {
+        beancatch->droppedBeanLocation = BC_CONVEYOR_NULL;
+
+        if(beancatch->eggyDevitoed)
+        {
+            if(beancatch->halfStrike)
+            {
+                beancatch->halfStrike = false;
+                beancatch->refreshScreen = true;
+            }
+            else
+            {
+                beancatch->strikes++;
+                beancatch->halfStrike = true;
+                beancatch->refreshScreen = true;
+            }
+        }
+        else
+        {
+            if(beancatch->strikes >= 3 && beancatch->halfStrike)
+            {
+                beancatch->halfStrike = false;
+                beancatch->refreshScreen = true;
+            }
+            else
+            {
+                beancatch->strikes++;
+                beancatch->refreshScreen = true;
+            }
+        }
+
+        if(beancatch->strikes >= 3 && !beancatch->halfStrike)
+        {
+            //Game Over
+            beancatch->emptyLoopCountdown = 240;
+        }
+
+        bcResumeTempState();
+    }
+}
+
+void bcUpdateGameOver(void)
+{
+}
+
+void bcUpdatePause(void)
+{
 }
 
 void bcDrawGame(void)
@@ -841,6 +918,45 @@ void bcChangeStateClock(void)
     bcNewGame();
     beancatch->refreshScreen = true;
     beancatch->update = &bcUpdateClock;
+}
+
+void bcChangeStateMiss(void)
+{
+    beancatch->tempState = beancatch->state;
+    beancatch->state = BC_ST_MISS;
+    beancatch->frameCounter = 0;
+
+    beancatch->droppedBeanLocation = beancatch->beanInDanger;
+    beancatch->beanInDanger = BC_CONVEYOR_NULL;
+    beancatch->waitLoopCounter = 0;
+
+    globalMidiPlayerPlaySong(&beancatch->sounds[BC_SOUND_STRIKE], MIDI_SFX);
+    bcClearBeans();
+
+    beancatch->eggyDevitoed = beancatch->eggyDevito;
+
+    beancatch->update = &bcUpdateMiss;
+}
+
+void bcChangeStateGameOver(void)
+{
+    beancatch->state = BC_ST_GAME_OVER;
+    beancatch->frameCounter = 0;
+    beancatch->update = &bcUpdateMiss;
+}
+
+void bcChangeStatePause(void)
+{
+    beancatch->state = BC_ST_PAUSE;
+    beancatch->frameCounter = 0;
+    beancatch->update = &bcUpdatePause;
+}
+
+void bcResumeTempState(void)
+{
+    beancatch->state = beancatch->tempState;
+    beancatch->tempState = BC_ST_NULL;
+    beancatch->update = (gameUpdateFuncton_t) gameStateToUpdateFunctions[beancatch->state];
 }
 
 void bcCheckPlayerCatchBean(void)
