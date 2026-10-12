@@ -125,12 +125,12 @@ class tileType(Enum):
     OBJ_ENEMY_BOX = OBJ | ENEMY | 1
     OBJ_ENEMY_GRUNT = OBJ | ENEMY | 2
     OBJ_ENEMY_TURRET = OBJ | ENEMY | 3
-    OBJ_ENEMY_4 = OBJ | ENEMY | 4
-    OBJ_ENEMY_5 = OBJ | ENEMY | 5
-    OBJ_ENEMY_6 = OBJ | ENEMY | 6
-    OBJ_ENEMY_7 = OBJ | ENEMY | 7
-    OBJ_ENEMY_8 = OBJ | ENEMY | 8
-    OBJ_ENEMY_9 = OBJ | ENEMY | 9
+    OBJ_ENEMY_FAIRY_0 = OBJ | ENEMY | 4
+    OBJ_ENEMY_FAIRY_1 = OBJ | ENEMY | 5
+    OBJ_ENEMY_FAIRY_2 = OBJ | ENEMY | 6
+    OBJ_ENEMY_FAIRY_3 = OBJ | ENEMY | 7
+    OBJ_ENEMY_FAIRY_4 = OBJ | ENEMY | 8
+    OBJ_ENEMY_FAIRY_5 = OBJ | ENEMY | 9
     OBJ_ENEMY_10 = OBJ | ENEMY | 10
     OBJ_ENEMY_11 = OBJ | ENEMY | 11
     OBJ_ENEMY_12 = OBJ | ENEMY | 12
@@ -400,12 +400,12 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ENEMY_BOX,
         tileType.OBJ_ENEMY_GRUNT,
         tileType.OBJ_ENEMY_TURRET,
-        tileType.OBJ_ENEMY_4,
-        tileType.OBJ_ENEMY_5,
-        tileType.OBJ_ENEMY_6,
-        tileType.OBJ_ENEMY_7,
-        tileType.OBJ_ENEMY_8,
-        tileType.OBJ_ENEMY_9,
+        tileType.OBJ_ENEMY_FAIRY_0,
+        tileType.OBJ_ENEMY_FAIRY_1,
+        tileType.OBJ_ENEMY_FAIRY_2,
+        tileType.OBJ_ENEMY_FAIRY_3,
+        tileType.OBJ_ENEMY_FAIRY_4,
+        tileType.OBJ_ENEMY_FAIRY_5,
         tileType.OBJ_ENEMY_10,
         tileType.OBJ_ENEMY_11,
         tileType.OBJ_ENEMY_12,

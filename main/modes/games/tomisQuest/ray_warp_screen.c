@@ -35,11 +35,12 @@ void drawWarpBackground(int16_t x, int16_t y, int16_t w, int16_t h)
 void rayWarpScreenRender(ray_t* ray, uint32_t elapsedUs)
 {
     // Draw text with the destination name
+    font_t* font       = ray->renderer->titleFont;
     char warpText[128] = {0};
     snprintf(warpText, sizeof(warpText) - 1, "Traveling to %s", getRayMapMetadata(ray->warpDestMapId)->name);
     int16_t xOff = 20;
-    int16_t yOff = (TFT_HEIGHT) / 2 - ray->logbook.height;
-    drawTextWordWrapCentered(&ray->logbook, c555, warpText, &xOff, &yOff, TFT_WIDTH - xOff, TFT_HEIGHT);
+    int16_t yOff = (TFT_HEIGHT) / 2 - ((3 * font->height) / 2);
+    drawTextWordWrapCentered(font, c555, warpText, &xOff, &yOff, TFT_WIDTH - xOff, TFT_HEIGHT);
 
     // Decrement the timer
     ray->warpTimerUs -= elapsedUs;

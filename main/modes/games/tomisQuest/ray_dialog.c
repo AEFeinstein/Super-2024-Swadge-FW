@@ -116,7 +116,7 @@ void rayDialogRender(ray_t* ray, uint32_t elapsedUs)
     int16_t xOff = DIALOG_MARGIN + TEXT_MARGIN;
     int16_t yOff = DIALOG_START_Y + TEXT_MARGIN;
     // Save what the next part of the text will be
-    ray->nextDialogText = drawTextWordWrap(&ray->ibm, DIALOG_TEXT_COLOR, ray->dialogText,
+    ray->nextDialogText = drawTextWordWrap(ray->renderer->menuFont, DIALOG_TEXT_COLOR, ray->dialogText,
                                            &xOff,                                   //
                                            &yOff,                                   //
                                            TFT_WIDTH - DIALOG_MARGIN - TEXT_MARGIN, //

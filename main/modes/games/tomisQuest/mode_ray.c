@@ -19,6 +19,7 @@
 #include "2d_renderer.h"
 #include "ray_shop_dialog.h"
 #include "ray_turntable.h"
+#include "ray_cutscene.h"
 
 //==============================================================================
 // Function Prototypes
@@ -204,19 +205,8 @@ static void rayEnterMode(void)
     // Allocate memory
     ray = heap_caps_calloc(1, sizeof(ray_t), MALLOC_CAP_8BIT);
 
-    // Load fonts
-    loadFont(LOGBOOK_FONT, &ray->logbook, true);
-    loadFont(IBM_VGA_8_FONT, &ray->ibm, true);
-
     // Initialize the menu
     rayInitMenu();
-
-    // Force draw a loading screen
-    // fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c100);
-    // const char loadingStr[] = "Loading...";
-    // int32_t tWidth          = textWidth(&ray->logbook, loadingStr);
-    // drawText(&ray->logbook, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - ray->logbook.height) / 2);
-    // drawDisplayTft(NULL);
 
     // Initialize texture manager and environment textures
     loadEnvTextures(ray);
@@ -320,10 +310,6 @@ static void rayExitMode(void)
     unloadMidiFile(&ray->sfx_lava_dmg);
     unloadMidiFile(&ray->sfx_health);
     unloadMidiFile(&ray->sfx_game_over);
-
-    // Free the font
-    freeFont(&ray->ibm);
-    freeFont(&ray->logbook);
 
     // Free the game state
     heap_caps_free(ray);
@@ -598,6 +584,19 @@ static void rayMainLoop(int64_t elapsedUs)
             rayDialogCheckButtons(ray);
             break;
         }
+        case RAY_CUTSCENE:
+        {
+            // Check buttons first
+            rayCutsceneCheckButtons(ray);
+
+            // Draw normal foreground
+            drawForeground2d(ray);
+            update2dCamera(ray, elapsedUs);
+
+            // Draw cutscene on opt
+            rayCutsceneRender(ray, elapsedUs);
+            break;
+        }
         case RAY_PAUSE:
         {
             // Render first
@@ -654,6 +653,7 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         case RAY_GAME:
         // TODO @jarettmillard: move this if you don't want to draw on top of the game screen
         case RAY_TURNTABLE:
+        case RAY_CUTSCENE:
         {
             drawBackground2d(ray, y, y + h);
             break;
@@ -768,6 +768,13 @@ void raySwitchToScreen(rayScreen_t newScreen)
 
     // Assume MIDI output
     rayMode.fnDacCb = NULL;
+
+    // Clear the cutscene, just in case
+    if (NULL != ray->cutscene)
+    {
+        deinitCutscene(ray->cutscene);
+        ray->cutscene = NULL;
+    }
 
     // Initialize depending on the screen
     switch (newScreen)

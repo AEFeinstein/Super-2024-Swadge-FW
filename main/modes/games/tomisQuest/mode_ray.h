@@ -9,6 +9,7 @@
 #include "fp_math.h"
 #include "esp_random.h"
 #include "credits_utils.h"
+#include "cutscene.h"
 
 //==============================================================================
 // Defines
@@ -175,12 +176,12 @@ typedef enum __attribute__((packed))
     OBJ_ENEMY_BOX         = (OBJ | ENEMY | 1),
     OBJ_ENEMY_GRUNT       = (OBJ | ENEMY | 2),
     OBJ_ENEMY_TURRET      = (OBJ | ENEMY | 3),
-    OBJ_ENEMY_4           = (OBJ | ENEMY | 4),
-    OBJ_ENEMY_5           = (OBJ | ENEMY | 5),
-    OBJ_ENEMY_6           = (OBJ | ENEMY | 6),
-    OBJ_ENEMY_7           = (OBJ | ENEMY | 7),
-    OBJ_ENEMY_8           = (OBJ | ENEMY | 8),
-    OBJ_ENEMY_9           = (OBJ | ENEMY | 9),
+    OBJ_ENEMY_FAIRY_0     = (OBJ | ENEMY | 4),
+    OBJ_ENEMY_FAIRY_1     = (OBJ | ENEMY | 5),
+    OBJ_ENEMY_FAIRY_2     = (OBJ | ENEMY | 6),
+    OBJ_ENEMY_FAIRY_3     = (OBJ | ENEMY | 7),
+    OBJ_ENEMY_FAIRY_4     = (OBJ | ENEMY | 8),
+    OBJ_ENEMY_FAIRY_5     = (OBJ | ENEMY | 9),
     OBJ_ENEMY_10          = (OBJ | ENEMY | 10),
     OBJ_ENEMY_11          = (OBJ | ENEMY | 11),
     OBJ_ENEMY_12          = (OBJ | ENEMY | 12),
@@ -237,38 +238,39 @@ typedef enum __attribute__((packed))
     OBJ_ITEM_30         = (OBJ | ITEM | 30),
     OBJ_ITEM_31         = (OBJ | ITEM | 31),
     // Bullets
-    OBJ_BULLET_ARROW     = (OBJ | BULLET | 0),
-    OBJ_BULLET_BOMB      = (OBJ | BULLET | 1),
-    OBJ_BULLET_BOOMERANG = (OBJ | BULLET | 2),
-    OBJ_BULLET_SWORD     = (OBJ | BULLET | 3),
-    OBJ_BULLET_SHIELD_0  = (OBJ | BULLET | 4),
-    OBJ_BULLET_SHIELD_1  = (OBJ | BULLET | 5),
-    OBJ_BULLET_SHIELD_2  = (OBJ | BULLET | 6),
-    OBJ_BULLET_SHIELD_3  = (OBJ | BULLET | 7),
-    OBJ_BULLET_8         = (OBJ | BULLET | 8),
-    OBJ_BULLET_9         = (OBJ | BULLET | 9),
-    OBJ_BULLET_10        = (OBJ | BULLET | 10),
-    OBJ_BULLET_11        = (OBJ | BULLET | 11),
-    OBJ_BULLET_12        = (OBJ | BULLET | 12),
-    OBJ_BULLET_13        = (OBJ | BULLET | 13),
-    OBJ_BULLET_14        = (OBJ | BULLET | 14),
-    OBJ_BULLET_15        = (OBJ | BULLET | 15),
-    OBJ_BULLET_16        = (OBJ | BULLET | 16),
-    OBJ_BULLET_17        = (OBJ | BULLET | 17),
-    OBJ_BULLET_18        = (OBJ | BULLET | 18),
-    OBJ_BULLET_19        = (OBJ | BULLET | 19),
-    OBJ_BULLET_20        = (OBJ | BULLET | 20),
-    OBJ_BULLET_21        = (OBJ | BULLET | 21),
-    OBJ_BULLET_22        = (OBJ | BULLET | 22),
-    OBJ_BULLET_23        = (OBJ | BULLET | 23),
-    OBJ_BULLET_24        = (OBJ | BULLET | 24),
-    OBJ_BULLET_25        = (OBJ | BULLET | 25),
-    OBJ_BULLET_26        = (OBJ | BULLET | 26),
-    OBJ_BULLET_27        = (OBJ | BULLET | 27),
-    OBJ_BULLET_28        = (OBJ | BULLET | 28),
-    OBJ_BULLET_29        = (OBJ | BULLET | 29),
-    OBJ_BULLET_30        = (OBJ | BULLET | 30),
-    OBJ_BULLET_31        = (OBJ | BULLET | 31),
+    OBJ_BULLET_ARROW       = (OBJ | BULLET | 0),
+    OBJ_BULLET_BOMB        = (OBJ | BULLET | 1),
+    OBJ_BULLET_BOOMERANG   = (OBJ | BULLET | 2),
+    OBJ_BULLET_SWORD       = (OBJ | BULLET | 3),
+    OBJ_BULLET_SHIELD_0    = (OBJ | BULLET | 4),
+    OBJ_BULLET_SHIELD_1    = (OBJ | BULLET | 5),
+    OBJ_BULLET_SHIELD_2    = (OBJ | BULLET | 6),
+    OBJ_BULLET_SHIELD_3    = (OBJ | BULLET | 7),
+    OBJ_BULLET_GHOST_SWORD = (OBJ | BULLET | 8), // Similar to OBJ_BULLET_SWORD, but used when the player doesn't have a
+                                                 // sword to open doors and interact with enemies
+    OBJ_BULLET_9  = (OBJ | BULLET | 9),
+    OBJ_BULLET_10 = (OBJ | BULLET | 10),
+    OBJ_BULLET_11 = (OBJ | BULLET | 11),
+    OBJ_BULLET_12 = (OBJ | BULLET | 12),
+    OBJ_BULLET_13 = (OBJ | BULLET | 13),
+    OBJ_BULLET_14 = (OBJ | BULLET | 14),
+    OBJ_BULLET_15 = (OBJ | BULLET | 15),
+    OBJ_BULLET_16 = (OBJ | BULLET | 16),
+    OBJ_BULLET_17 = (OBJ | BULLET | 17),
+    OBJ_BULLET_18 = (OBJ | BULLET | 18),
+    OBJ_BULLET_19 = (OBJ | BULLET | 19),
+    OBJ_BULLET_20 = (OBJ | BULLET | 20),
+    OBJ_BULLET_21 = (OBJ | BULLET | 21),
+    OBJ_BULLET_22 = (OBJ | BULLET | 22),
+    OBJ_BULLET_23 = (OBJ | BULLET | 23),
+    OBJ_BULLET_24 = (OBJ | BULLET | 24),
+    OBJ_BULLET_25 = (OBJ | BULLET | 25),
+    OBJ_BULLET_26 = (OBJ | BULLET | 26),
+    OBJ_BULLET_27 = (OBJ | BULLET | 27),
+    OBJ_BULLET_28 = (OBJ | BULLET | 28),
+    OBJ_BULLET_29 = (OBJ | BULLET | 29),
+    OBJ_BULLET_30 = (OBJ | BULLET | 30),
+    OBJ_BULLET_31 = (OBJ | BULLET | 31),
     // Scenery
     OBJ_SCENERY_SHOP_BOMB    = (OBJ | SCENERY | 0),
     OBJ_SCENERY_CAVE         = (OBJ | SCENERY | 1),
@@ -399,6 +401,7 @@ typedef enum
     RAY_WARP_SCREEN,  ///< The warp screen animation is being shown
     RAY_DEATH_SCREEN, ///< The player has died
     RAY_CREDITS,      ///< Showing the credits for the game
+    RAY_CUTSCENE,     ///< A cutscene (similar to RAY_DIALOG)
 } rayScreen_t;
 
 /**
@@ -836,9 +839,6 @@ typedef struct rayGame
     list_t loadedTextures;    ///< A list of all currently loaded textures
     wsg_t* typeToTexMap[256]; ///< A map of rayMapCellType_t to texture
 
-    font_t ibm;     ///< A font to draw the HUD
-    font_t logbook; ///< A font to draw the menu
-
     const char* dialogText;     ///< A pointer to the current dialog text
     const char* nextDialogText; ///< A pointer to the next dialog text, if it doesn't fit in one box
     wsg_t* dialogPortrait;      ///< A portrait to draw above the dialog text
@@ -889,7 +889,11 @@ typedef struct rayGame
     rayMapCellType_t shopObj; ///< The item currently being purchased
     char* shopDescription;    ///< A description of item and cost
 
-    rayTurntableState_t ts; // The turntable state
+    rayTurntableState_t ts; ///< The turntable state
+
+    cutscene_t* cutscene;      ///< The cutscene state
+    uint16_t cutsceneBtnState; ///< The cutscene button state
+    bool cutsceneDone;         ///< Flag to finish the cutscene in the main loop
 } ray_t;
 
 //==============================================================================
