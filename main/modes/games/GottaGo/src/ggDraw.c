@@ -154,7 +154,8 @@ static const char* const rulesText[] = {
     "Rules",
     "Here is a compendium fo the rules of picking a urinal. Some of these will feel pretty intuitive.",
     "Controls",
-    "A: Select Urinal\n\nB: Use a stall\n\nLeft/right: Pick a urinal\n\nLeft swipe pad can also be used\n\nStart/select: Pause "
+    "A: Select Urinal\n\nB: Use a stall\n\nLeft/right: Pick a urinal\n\nLeft swipe pad can also be "
+    "used\n\nStart/select: Pause "
     "game",
     "Mechanics",
     "There's more that goes into choosing a urinal than you might expect or think about when you use the little boy's "
