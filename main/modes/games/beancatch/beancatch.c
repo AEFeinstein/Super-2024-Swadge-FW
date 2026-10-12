@@ -415,14 +415,14 @@ void bcUpdateGame(void)
         }
         
     } 
-    else
-    {
-        beancatch->emptyLoopCountdown--;
+    // else
+    // {
+    //     beancatch->emptyLoopCountdown--;
 
-        if(!beancatch->emptyLoopCountdown)
-        {
-            if(beancatch->droppedBeanLocation != BC_CONVEYOR_NULL)
-            {
+    //     if(!beancatch->emptyLoopCountdown)
+    //     {
+            // if(beancatch->droppedBeanLocation != BC_CONVEYOR_NULL)
+            // {
                 // beancatch->droppedBeanLocation = BC_CONVEYOR_NULL;
 
                 // if(beancatch->eggyDevitoed)
@@ -458,14 +458,14 @@ void bcUpdateGame(void)
                 //     //Game Over
                 //     beancatch->emptyLoopCountdown = 240;
                 // }
-            }
-            else if(beancatch->strikes >= 3 && !beancatch->halfStrike)
-            {
-                beancatch->strikes = 0;
-                bcChangeStateClock();
-            }
-        }
-    }
+            // }
+            // else if(beancatch->strikes >= 3 && !beancatch->halfStrike)
+            // {
+            //     beancatch->strikes = 0;
+            //     bcChangeStateClock();
+            // }
+    //     }
+    // }
 
     switch (beancatch->playerPosition)
     {
@@ -587,15 +587,39 @@ void bcUpdateMiss(void)
         if(beancatch->strikes >= 3 && !beancatch->halfStrike)
         {
             //Game Over
-            beancatch->emptyLoopCountdown = 240;
+            // beancatch->emptyLoopCountdown = 240;
+            bcChangeStateGameOver();
+            return;
         }
 
         bcResumeTempState();
     }
+
+    bcDrawGame();
 }
 
 void bcUpdateGameOver(void)
 {
+    beancatch->frameCounter++;
+    if(beancatch->frameCounter > 18000) // Automatically return to clock after 5 minutes
+    {
+        bcChangeStateClock();
+        return;
+    }
+
+    if ((beancatch->prevBtnState & PB_A) && !(beancatch->btnState & PB_A))
+    {
+        bcChangeStateClock();
+        return;
+    }
+    
+    if ((beancatch->prevBtnState & PB_B) && !(beancatch->btnState & PB_B))
+    {
+        bcChangeStateClock();
+        return;
+    }
+
+    bcDrawGame();
 }
 
 void bcUpdatePause(void)
@@ -914,6 +938,8 @@ void bcChangeStateGameB(void)
 void bcChangeStateClock(void)
 {
     beancatch->gameLevel = BC_GAME_LEVEL_NULL;
+    beancatch->strikes = 0;
+    
     beancatch->state = BC_ST_CLOCK;
     bcNewGame();
     beancatch->refreshScreen = true;
@@ -935,6 +961,7 @@ void bcChangeStateMiss(void)
 
     beancatch->eggyDevitoed = beancatch->eggyDevito;
 
+    beancatch->refreshScreen = true;
     beancatch->update = &bcUpdateMiss;
 }
 
@@ -942,7 +969,9 @@ void bcChangeStateGameOver(void)
 {
     beancatch->state = BC_ST_GAME_OVER;
     beancatch->frameCounter = 0;
-    beancatch->update = &bcUpdateMiss;
+
+    beancatch->refreshScreen = true;
+    beancatch->update = &bcUpdateGameOver;
 }
 
 void bcChangeStatePause(void)
