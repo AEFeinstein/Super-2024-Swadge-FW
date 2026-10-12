@@ -153,7 +153,7 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
             // The B button swings the sword
             if (PB_B == evt.button)
             {
-                if (ray->p.i.haveEwiOfTime && evt.down && (false == ray->ps.swordActive))
+                if (evt.down && (false == ray->ps.swordActive))
                 {
                     // Start a sword swing
                     ray->ps.swordAngle   = 270; // -90
@@ -723,6 +723,10 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
                         case OBJ_ITEM_K_KEY:
                         {
                             ray->ps.keyMask.k_key = true;
+                            break;
+                        }
+                        default:
+                        {
                             break;
                         }
                     }

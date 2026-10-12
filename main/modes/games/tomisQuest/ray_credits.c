@@ -61,7 +61,7 @@ void rayShowCredits(ray_t* ray)
     globalMidiPlayerStop(true);
 
     // Init credits, which starts music
-    initCredits(&ray->credits, &ray->logbook, rayCreditEntries, ARRAY_SIZE(rayCreditEntries));
+    initCredits(&ray->credits, ray->renderer->titleFont, rayCreditEntries, ARRAY_SIZE(rayCreditEntries));
 }
 
 /**

@@ -116,16 +116,17 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
  */
 static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
 {
+    font_t* font     = ray->renderer->menuFont;
     const char* name = getRayMapMetadata(ray->p.mapId)->name;
-    int16_t tWidth   = textWidth(&ray->ibm, name);
-    drawText(&ray->ibm, c555, name, (TFT_WIDTH - tWidth) / 2, 2);
+    int16_t tWidth   = textWidth(font, name);
+    drawText(font, c555, name, (TFT_WIDTH - tWidth) / 2, 2);
 
     // Figure out the largest cell size to draw the whole map centered on the screen
     int16_t cellSizeW = TFT_WIDTH / ray->map.w;
-    int16_t cellSizeH = (TFT_HEIGHT - (ray->ibm.height + 4)) / ray->map.h;
+    int16_t cellSizeH = (TFT_HEIGHT - (font->height + 4)) / ray->map.h;
     int16_t cellSize  = MIN(cellSizeW, cellSizeH);
     int16_t cellOffX  = (TFT_WIDTH - (ray->map.w * cellSize)) / 2;
-    int16_t cellOffY  = (ray->ibm.height + 4) + (((TFT_HEIGHT - (ray->ibm.height + 4)) - (ray->map.h * cellSize)) / 2);
+    int16_t cellOffY  = (font->height + 4) + (((TFT_HEIGHT - (font->height + 4)) - (ray->map.h * cellSize)) / 2);
 
     // For each cell
     for (int16_t y = 0; y < ray->map.h; y++)

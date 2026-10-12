@@ -518,7 +518,7 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
             drawWsgSimple(cutscene->nextIcon[0], 256, 190);
             if (cutscene->blinkTimer > 0)
             {
-                drawText(font, c253, "A", 260, 190);
+                drawText(font, c000, "A", 260, 190);
             }
         }
         else
@@ -528,7 +528,7 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
             {
                 iconFrame = 3;
             }
-            drawWsgSimpleScaled(cutscene->nextIcon[iconFrame], 215, 130, 4, 4);
+            drawWsgSimple(cutscene->nextIcon[iconFrame], 256, 190);
         }
     }
 
