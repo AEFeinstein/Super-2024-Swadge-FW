@@ -331,142 +331,73 @@ void bcUpdateClock(void)
 
 void bcUpdateGame(void)
 {
-    if(!beancatch->emptyLoopCountdown)
+    beancatch->waitLoopCounter++;
+
+    if(beancatch->waitLoopCounter > (beancatch->waitLoopMax >> (beancatch->occupiedConveyorCount > 1)) )
     {
-        beancatch->waitLoopCounter++;
-
-        if(beancatch->waitLoopCounter > (beancatch->waitLoopMax >> (beancatch->occupiedConveyorCount > 1)) )
+        if(beancatch->beanInDanger > -1)
         {
-            if(beancatch->beanInDanger > -1)
-            {
-                bcChangeStateMiss();
-                
-                //Cleanup after strike
-                /*beancatch->droppedBeanLocation = beancatch->beanInDanger;
-                beancatch->beanInDanger = BC_CONVEYOR_NULL;
-                beancatch->waitLoopCounter = 0;
-
-                globalMidiPlayerPlaySong(&beancatch->sounds[BC_SOUND_STRIKE], MIDI_SFX);
-                bcClearBeans();
-
-                beancatch->eggyDevitoed = beancatch->eggyDevito;
-
-                beancatch->emptyLoopCountdown = 60;*/
-            }
-            else
-            {
-                //handle beans
-                beancatch->idleConveyorCounter=0;
-
-                do {
-                    if(beancatch->beans[beancatch->currentConveyor] & 0b10000)
-                    {
-                        beancatch->beanInDanger = beancatch->currentConveyor;
-                    }
-
-                    //move bean
-                    beancatch->beans[beancatch->currentConveyor] = beancatch->beans[beancatch->currentConveyor] << 1;
-                    
-                    //decide whether to add a new bean
-                    if(
-                        !bcIgnoreCurrentConveyorForGameA() //If we haven't chosen to ignore this conveyor for Game
-                        && 
-                        !(beancatch->beans[beancatch->currentConveyor] & 0b10) //If there is not a bean in the second position (we just moved it out of the first one)
-                        &&
-                        beancatch->beanCount < beancatch->maxBeans //If beans are not maxed out according to the current difficulty scale
-                        &&
-                        ( 
-                            ((esp_random() % 10) > 5) //Random yes/no decision
-                            || 
-                            !beancatch->beanCount    //Force to yes if there are no beans on the playfield 
-                        )
-                            
-                    )
-                    {
-                        if (!beancatch->beans[beancatch->currentConveyor])
-                        {
-                            beancatch->occupiedConveyorCount++;
-                        }
-
-                        beancatch->beans[beancatch->currentConveyor]++;
-                        beancatch->beanCount++;
-                        
-                        beancatch->refreshScreen = true;
-                    }
-
-                    if (beancatch->beans[beancatch->currentConveyor] > 0)
-                    {
-                        beancatch->idleConveyorCounter=0;
-                        bcCheckPlayerCatchBean();
-                        globalMidiPlayerPlaySong(&beancatch->sounds[beancatch->currentConveyor], MIDI_SFX);
-                        beancatch->waitLoopCounter=0;
-                        beancatch->refreshScreen = true;
-                    }
-                    else
-                    {
-                        beancatch->idleConveyorCounter++;
-                    }
-
-
-
-                    beancatch->currentConveyor = (beancatch->currentConveyor + 1) % 4;
-                } while (beancatch->idleConveyorCounter > 0 && beancatch->idleConveyorCounter < 3);
-            }
+            bcChangeStateMiss();
         }
-        
-    } 
-    // else
-    // {
-    //     beancatch->emptyLoopCountdown--;
+        else
+        {
+            //handle beans
+            beancatch->idleConveyorCounter=0;
 
-    //     if(!beancatch->emptyLoopCountdown)
-    //     {
-            // if(beancatch->droppedBeanLocation != BC_CONVEYOR_NULL)
-            // {
-                // beancatch->droppedBeanLocation = BC_CONVEYOR_NULL;
+            do {
+                if(beancatch->beans[beancatch->currentConveyor] & 0b10000)
+                {
+                    beancatch->beanInDanger = beancatch->currentConveyor;
+                }
 
-                // if(beancatch->eggyDevitoed)
-                // {
-                //     if(beancatch->halfStrike)
-                //     {
-                //         beancatch->halfStrike = false;
-                //         beancatch->refreshScreen = true;
-                //     }
-                //     else
-                //     {
-                //         beancatch->strikes++;
-                //         beancatch->halfStrike = true;
-                //         beancatch->refreshScreen = true;
-                //     }
-                // }
-                // else
-                // {
-                //     if(beancatch->strikes >= 3 && beancatch->halfStrike)
-                //     {
-                //         beancatch->halfStrike = false;
-                //         beancatch->refreshScreen = true;
-                //     }
-                //     else
-                //     {
-                //         beancatch->strikes++;
-                //         beancatch->refreshScreen = true;
-                //     }
-                // }
+                //move bean
+                beancatch->beans[beancatch->currentConveyor] = beancatch->beans[beancatch->currentConveyor] << 1;
+                
+                //decide whether to add a new bean
+                if(
+                    !bcIgnoreCurrentConveyorForGameA() //If we haven't chosen to ignore this conveyor for Game
+                    && 
+                    !(beancatch->beans[beancatch->currentConveyor] & 0b10) //If there is not a bean in the second position (we just moved it out of the first one)
+                    &&
+                    beancatch->beanCount < beancatch->maxBeans //If beans are not maxed out according to the current difficulty scale
+                    &&
+                    ( 
+                        ((esp_random() % 10) > 5) //Random yes/no decision
+                        || 
+                        !beancatch->beanCount    //Force to yes if there are no beans on the playfield 
+                    )
+                        
+                )
+                {
+                    if (!beancatch->beans[beancatch->currentConveyor])
+                    {
+                        beancatch->occupiedConveyorCount++;
+                    }
 
-                // if(beancatch->strikes >= 3 && !beancatch->halfStrike)
-                // {
-                //     //Game Over
-                //     beancatch->emptyLoopCountdown = 240;
-                // }
-            // }
-            // else if(beancatch->strikes >= 3 && !beancatch->halfStrike)
-            // {
-            //     beancatch->strikes = 0;
-            //     bcChangeStateClock();
-            // }
-    //     }
-    // }
+                    beancatch->beans[beancatch->currentConveyor]++;
+                    beancatch->beanCount++;
+                    
+                    beancatch->refreshScreen = true;
+                }
 
+                if (beancatch->beans[beancatch->currentConveyor] > 0)
+                {
+                    beancatch->idleConveyorCounter=0;
+                    bcCheckPlayerCatchBean();
+                    globalMidiPlayerPlaySong(&beancatch->sounds[beancatch->currentConveyor], MIDI_SFX);
+                    beancatch->waitLoopCounter=0;
+                    beancatch->refreshScreen = true;
+                }
+                else
+                {
+                    beancatch->idleConveyorCounter++;
+                }
+
+                beancatch->currentConveyor = (beancatch->currentConveyor + 1) % 4;
+            } while (beancatch->idleConveyorCounter > 0 && beancatch->idleConveyorCounter < 3);
+        }
+    }
+    
     switch (beancatch->playerPosition)
     {
         case BC_CONVEYOR_LU:
