@@ -362,6 +362,27 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         return;
     }
     cutsceneStyle_t* style = getCurrentStyle(cutscene);
+
+    // Don't spend time sliding in or out if there is no sprite
+    if (false == style->drawSprite)
+    {
+        if (cutscene->isEnding)
+        {
+            if (style->stageLeft)
+            {
+                cutscene->xOffset = -281;
+            }
+            else
+            {
+                cutscene->xOffset = 281;
+            }
+        }
+        else
+        {
+            cutscene->xOffset = 0;
+        }
+    }
+
     cutscene->blinkTimer += 8;
     // Extra hold required because sometimes click-unclick-click registers on the hardware from an intended single
     // click.
