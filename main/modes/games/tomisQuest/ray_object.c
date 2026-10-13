@@ -829,9 +829,9 @@ bool rayBoundingBoxFitsInMap(ray_t* ray, rectangle_t bb)
 {
     // Find the cells for the four corners of the bounding box
     int32_t x1 = FROM_FX(bb.pos.x);
-    int32_t x2 = FROM_FX(bb.pos.x + bb.width);
+    int32_t x2 = FROM_FX(bb.pos.x + bb.width - 1);
     int32_t y1 = FROM_FX(bb.pos.y);
-    int32_t y2 = FROM_FX(bb.pos.y + bb.height);
+    int32_t y2 = FROM_FX(bb.pos.y + bb.height - 1);
 
     // Map bounds check
     if (x1 < 0 || y1 < 0 || x2 >= ray->map.w || y2 >= ray->map.h)
