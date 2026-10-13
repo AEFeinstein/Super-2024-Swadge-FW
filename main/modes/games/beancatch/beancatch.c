@@ -487,7 +487,7 @@ void bcUpdateMiss(void)
     {
         beancatch->droppedBeanLocation = BC_CONVEYOR_NULL;
 
-        if(beancatch->eggyDevitoed)
+        if(!beancatch->eggyDevitoed)
         {
             if(beancatch->halfStrike)
             {
@@ -663,12 +663,39 @@ void bcDrawGame(void)
         switch(beancatch->state)
         {
             case BC_ST_GAME:
-            case BC_ST_MISS:
             case BC_ST_GAME_OVER:
                 segment = (beancatch->gameLevel == BC_GAME_LEVEL_A) ? BC_LCD_SEGMENTS[BC_SEG_GAME_A_LBL] : BC_LCD_SEGMENTS[BC_SEG_GAME_B_LBL];
                 drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
 
                 bcDrawScoreHud(beancatch->score);
+
+                break;
+            case BC_ST_MISS:
+                segment = (beancatch->gameLevel == BC_GAME_LEVEL_A) ? BC_LCD_SEGMENTS[BC_SEG_GAME_A_LBL] : BC_LCD_SEGMENTS[BC_SEG_GAME_B_LBL];
+                drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
+
+                bcDrawScoreHud(beancatch->score);
+
+                if(beancatch->eggyDevitoed)
+                {
+                    switch(beancatch->playerPosition)
+                    {
+                        case BC_CONVEYOR_LU:
+                        case BC_CONVEYOR_LD:
+                        default:
+                            segment = BC_LCD_SEGMENTS[BC_SEG_BUBBLE_PTR_L];
+                            drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
+                            break;
+                        case BC_CONVEYOR_RU:
+                        case BC_CONVEYOR_RD:
+                            segment = BC_LCD_SEGMENTS[BC_SEG_BUBBLE_PTR_R];
+                            drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
+                            break;
+                    }
+                    
+                    segment = BC_LCD_SEGMENTS[BC_SEG_SWEARING];
+                    drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
+                }
 
                 break;
             case BC_ST_CLOCK:
