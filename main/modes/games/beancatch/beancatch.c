@@ -483,6 +483,19 @@ void bcUpdateMiss(void)
 {
     beancatch->frameCounter++;
     
+    if(beancatch->frameCounter < 0)
+    {
+        if(!(beancatch->frameCounter % 6))
+        {
+            beancatch->eggyDevito = !beancatch->eggyDevito;
+            beancatch->refreshScreen = true;
+            globalMidiPlayerPlaySong(&beancatch->sounds[beancatch->currentConveyor], MIDI_SFX);
+        }
+    } else if(beancatch->frameCounter == 0)
+    {
+        beancatch->refreshScreen = true;
+    }
+
     if(beancatch->frameCounter > 60)
     {
         beancatch->droppedBeanLocation = BC_CONVEYOR_NULL;
@@ -532,6 +545,12 @@ void bcUpdateMiss(void)
 void bcUpdateGameOver(void)
 {
     beancatch->frameCounter++;
+
+    if(beancatch->frameCounter < 60)
+    {
+        globalMidiPlayerPlaySong(&beancatch->sounds[beancatch->frameCounter & 0b11], MIDI_SFX);
+    }
+
     if(beancatch->frameCounter > 18000) // Automatically return to clock after 5 minutes
     {
         bcChangeStateClock();
@@ -663,12 +682,34 @@ void bcDrawGame(void)
         switch(beancatch->state)
         {
             case BC_ST_GAME:
+                segment = (beancatch->gameLevel == BC_GAME_LEVEL_A) ? BC_LCD_SEGMENTS[BC_SEG_GAME_A_LBL] : BC_LCD_SEGMENTS[BC_SEG_GAME_B_LBL];
+                drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
+
+                bcDrawScoreHud(beancatch->score);
+
+                break;
             case BC_ST_GAME_OVER:
                 segment = (beancatch->gameLevel == BC_GAME_LEVEL_A) ? BC_LCD_SEGMENTS[BC_SEG_GAME_A_LBL] : BC_LCD_SEGMENTS[BC_SEG_GAME_B_LBL];
                 drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
 
                 bcDrawScoreHud(beancatch->score);
 
+                switch(beancatch->playerPosition)
+                {
+                    case BC_CONVEYOR_LU:
+                    case BC_CONVEYOR_LD:
+                    default:
+                        segment = BC_LCD_SEGMENTS[BC_SEG_BUBBLE_PTR_L];
+                        drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
+                        break;
+                    case BC_CONVEYOR_RU:
+                    case BC_CONVEYOR_RD:
+                        segment = BC_LCD_SEGMENTS[BC_SEG_BUBBLE_PTR_R];
+                        drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
+                        break;
+                }
+                segment = BC_LCD_SEGMENTS[BC_SEG_SWEARING];
+                drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
                 break;
             case BC_ST_MISS:
                 segment = (beancatch->gameLevel == BC_GAME_LEVEL_A) ? BC_LCD_SEGMENTS[BC_SEG_GAME_A_LBL] : BC_LCD_SEGMENTS[BC_SEG_GAME_B_LBL];
@@ -676,7 +717,7 @@ void bcDrawGame(void)
 
                 bcDrawScoreHud(beancatch->score);
 
-                if(beancatch->eggyDevitoed)
+                if(beancatch->frameCounter >= 0 && (beancatch->eggyDevitoed || beancatch->strikes >= 3))
                 {
                     switch(beancatch->playerPosition)
                     {
@@ -908,7 +949,6 @@ void bcChangeStateMiss(void)
 {
     beancatch->tempState = beancatch->state;
     beancatch->state = BC_ST_MISS;
-    beancatch->frameCounter = 0;
 
     beancatch->droppedBeanLocation = beancatch->beanInDanger;
     beancatch->beanInDanger = BC_CONVEYOR_NULL;
@@ -918,6 +958,7 @@ void bcChangeStateMiss(void)
     bcClearBeans();
 
     beancatch->eggyDevitoed = beancatch->eggyDevito;
+    beancatch->frameCounter = (beancatch->eggyDevitoed && beancatch->strikes < 3) ? -60 : 0;
 
     beancatch->refreshScreen = true;
     beancatch->update = &bcUpdateMiss;
