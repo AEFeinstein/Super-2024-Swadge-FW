@@ -207,6 +207,12 @@ static const char* const rulesText[] = {
     "Adjusted score",
     "Total score multiplied by the overall accuracy for a single overall number to compare the performance of a player "
     "vs others. \n\nAll four scores are sent through swadgepass, compare with your friends!",
+    "Cheatsheet: Penalties",
+    "People (Normal): 200/distance\nPeople (Weird): 300/distance\nPuddles (S/M/L): 50/100/150\nPuddles incur half "
+    "penalties for standing next to them\nDivders (Half): 50\nDividers (Missing): 100\nMinor issues: 50 each\nMajor "
+    "issue: Instant fail\nADA toilet: 200",
+    "Cheatsheet: Bonuses",
+    "\nAutoflusher: 10\nEnd urinal: 20",
 };
 
 static const char* const scoreTypeText[] = {
