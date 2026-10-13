@@ -966,14 +966,18 @@ static void drawUrinal(ggData_t* ggd, ggUrinal_t* u, int x, int y)
     if (u->brokenBowl)
     {
         drawWsgSimple(&ggd->urinalImages[5], x, y + currHeight);
-        drawWsgSimple(&ggd->urinalImages[6], x + 16, TFT_HEIGHT - FLOOR_HEIGHT + 4);
+        drawWsgSimple(&ggd->urinalImages[6], x, TFT_HEIGHT - FLOOR_HEIGHT - 6);
     }
     else
     {
         drawWsgSimple(&ggd->urinalImages[4], x, y + currHeight);
     }
     // Drain
-    if (u->brokenDrain)
+    if (u->brokenBowl)
+    {
+        ;
+    }
+    else if (u->brokenDrain)
     {
         drawWsgSimple(&ggd->urinalImages[8], x + (ggd->urinalImages[2].w - ggd->urinalImages[8].w) / 2,
                       y + currHeight + ggd->urinalImages[4].h);
