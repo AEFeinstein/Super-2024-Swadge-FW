@@ -125,24 +125,28 @@ class tileType(Enum):
     OBJ_ENEMY_BOX = OBJ | ENEMY | 1
     OBJ_ENEMY_GRUNT = OBJ | ENEMY | 2
     OBJ_ENEMY_TURRET = OBJ | ENEMY | 3
-    OBJ_ENEMY_FAIRY_0 = OBJ | ENEMY | 4
-    OBJ_ENEMY_FAIRY_1 = OBJ | ENEMY | 5
-    OBJ_ENEMY_FAIRY_2 = OBJ | ENEMY | 6
-    OBJ_ENEMY_FAIRY_3 = OBJ | ENEMY | 7
-    OBJ_ENEMY_FAIRY_4 = OBJ | ENEMY | 8
-    OBJ_ENEMY_FAIRY_5 = OBJ | ENEMY | 9
-    OBJ_ENEMY_10 = OBJ | ENEMY | 10
-    OBJ_ENEMY_11 = OBJ | ENEMY | 11
-    OBJ_ENEMY_12 = OBJ | ENEMY | 12
-    OBJ_ENEMY_13 = OBJ | ENEMY | 13
-    OBJ_ENEMY_14 = OBJ | ENEMY | 14
-    OBJ_ENEMY_15 = OBJ | ENEMY | 15
-    OBJ_ENEMY_16 = OBJ | ENEMY | 16
-    OBJ_ENEMY_17 = OBJ | ENEMY | 17
-    OBJ_ENEMY_18 = OBJ | ENEMY | 18
-    OBJ_ENEMY_19 = OBJ | ENEMY | 19
-    OBJ_ENEMY_20 = OBJ | ENEMY | 20
-    OBJ_ENEMY_21 = OBJ | ENEMY | 21
+    # Forest NPCs
+    OBJ_ENEMY_NPC_FAIRY_1 = OBJ | ENEMY | 4
+    OBJ_ENEMY_NPC_FAIRY_2 = OBJ | ENEMY | 5
+    OBJ_ENEMY_NPC_FAIRY_3 = OBJ | ENEMY | 6
+    OBJ_ENEMY_NPC_FAIRY_4 = OBJ | ENEMY | 7
+    OBJ_ENEMY_NPC_FAIRY_5 = OBJ | ENEMY | 8
+    OBJ_ENEMY_NPC_FAIRY_6 = OBJ | ENEMY | 9
+    OBJ_ENEMY_NPC_BARRY_THE_FAIRY = OBJ | ENEMY | 10
+    OBJ_ENEMY_NPC_HYUT = OBJ | ENEMY | 11
+    OBJ_ENEMY_NPC_GREAT_DEEJAY_TREE = OBJ | ENEMY | 12
+    # Field NPCs
+    OBJ_ENEMY_NPC_LOOT = OBJ | ENEMY | 13
+    OBJ_ENEMY_NPC_DORIA = OBJ | ENEMY | 14
+    # Town NPCs
+    OBJ_ENEMY_NPC_KING_DONUT = OBJ | ENEMY | 15
+    OBJ_ENEMY_NPC_MEGA_PULSE = OBJ | ENEMY | 16
+    OBJ_ENEMY_NPC_CHO = OBJ | ENEMY | 17
+    OBJ_ENEMY_NPC_TRASH_MAN = OBJ | ENEMY | 18
+    OBJ_ENEMY_NPC_EMBER_DEMON = OBJ | ENEMY | 19
+    OBJ_ENEMY_NPC_THE_MAYOR = OBJ | ENEMY | 20
+    OBJ_ENEMY_NPC_FREDWARD = OBJ | ENEMY | 21
+    # Unallocated enemies
     OBJ_ENEMY_22 = OBJ | ENEMY | 22
     OBJ_ENEMY_23 = OBJ | ENEMY | 23
     OBJ_ENEMY_24 = OBJ | ENEMY | 24
@@ -400,24 +404,24 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ENEMY_BOX,
         tileType.OBJ_ENEMY_GRUNT,
         tileType.OBJ_ENEMY_TURRET,
-        tileType.OBJ_ENEMY_FAIRY_0,
-        tileType.OBJ_ENEMY_FAIRY_1,
-        tileType.OBJ_ENEMY_FAIRY_2,
-        tileType.OBJ_ENEMY_FAIRY_3,
-        tileType.OBJ_ENEMY_FAIRY_4,
-        tileType.OBJ_ENEMY_FAIRY_5,
-        tileType.OBJ_ENEMY_10,
-        tileType.OBJ_ENEMY_11,
-        tileType.OBJ_ENEMY_12,
-        tileType.OBJ_ENEMY_13,
-        tileType.OBJ_ENEMY_14,
-        tileType.OBJ_ENEMY_15,
-        tileType.OBJ_ENEMY_16,
-        tileType.OBJ_ENEMY_17,
-        tileType.OBJ_ENEMY_18,
-        tileType.OBJ_ENEMY_19,
-        tileType.OBJ_ENEMY_20,
-        tileType.OBJ_ENEMY_21,
+        tileType.OBJ_ENEMY_NPC_FAIRY_1,
+        tileType.OBJ_ENEMY_NPC_FAIRY_2,
+        tileType.OBJ_ENEMY_NPC_FAIRY_3,
+        tileType.OBJ_ENEMY_NPC_FAIRY_4,
+        tileType.OBJ_ENEMY_NPC_FAIRY_5,
+        tileType.OBJ_ENEMY_NPC_FAIRY_6,
+        tileType.OBJ_ENEMY_NPC_BARRY_THE_FAIRY,
+        tileType.OBJ_ENEMY_NPC_HYUT,
+        tileType.OBJ_ENEMY_NPC_GREAT_DEEJAY_TREE,
+        tileType.OBJ_ENEMY_NPC_LOOT,
+        tileType.OBJ_ENEMY_NPC_DORIA,
+        tileType.OBJ_ENEMY_NPC_KING_DONUT,
+        tileType.OBJ_ENEMY_NPC_MEGA_PULSE,
+        tileType.OBJ_ENEMY_NPC_CHO,
+        tileType.OBJ_ENEMY_NPC_TRASH_MAN,
+        tileType.OBJ_ENEMY_NPC_EMBER_DEMON,
+        tileType.OBJ_ENEMY_NPC_THE_MAYOR,
+        tileType.OBJ_ENEMY_NPC_FREDWARD,
         tileType.OBJ_ENEMY_22,
         tileType.OBJ_ENEMY_23,
         tileType.OBJ_ENEMY_24,
