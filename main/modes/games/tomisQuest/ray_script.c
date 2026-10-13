@@ -1,6 +1,6 @@
 #include <esp_heap_caps.h>
 #include "ray_script.h"
-#include "ray_dialog.h"
+#include "ray_cutscene.h"
 #include "ray_player.h"
 #include "ray_map.h"
 #include "ray_warp_screen.h"
@@ -1218,7 +1218,7 @@ void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         {
             // 1s cooldown to prevent double-dialog from double-shots
             script->resetTimerSec = 1;
-            rayShowDialog(ray, script->thenArgs.text, portrait);
+            rayShowCutscene(ray, EMPTY, -1, script->thenArgs.text);
             break;
         }
         case WARP:

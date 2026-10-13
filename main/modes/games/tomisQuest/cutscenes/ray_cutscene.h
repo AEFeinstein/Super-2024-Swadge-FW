@@ -36,7 +36,7 @@ typedef enum
     TQ_GREAT_FAIRY,
 } tqCharacter_t;
 
-void rayShowCutscene(ray_t* ray, rayMapCellType_t type, int32_t sceneID);
+void rayShowCutscene(ray_t* ray, rayMapCellType_t type, int32_t sceneID, char* text);
 void rayCutsceneCheckButtons(ray_t* ray);
 void rayCutsceneRender(ray_t* ray, uint32_t elapsedUs);
 

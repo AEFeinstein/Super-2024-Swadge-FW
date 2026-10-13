@@ -282,7 +282,7 @@ typedef enum __attribute__((packed))
     OBJ_SCENERY_ITEM_SHOP    = (OBJ | SCENERY | 3),
     OBJ_SCENERY_MAYORS_HOUSE = (OBJ | SCENERY | 4),
     OBJ_SCENERY_TURNTABLE    = (OBJ | SCENERY | 5),
-    OBJ_SCENERY_6            = (OBJ | SCENERY | 6),
+    OBJ_SCENERY_SIGNPOST     = (OBJ | SCENERY | 6),
     OBJ_SCENERY_7            = (OBJ | SCENERY | 7),
     OBJ_SCENERY_8            = (OBJ | SCENERY | 8),
     OBJ_SCENERY_9            = (OBJ | SCENERY | 9),
