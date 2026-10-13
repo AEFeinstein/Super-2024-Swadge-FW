@@ -9,12 +9,24 @@
 #include "ray_pause.h"
 #include "cutscene.h"
 
-#include "ray_cutscene_npc_fairy_0.h"
+#include "ray_cutscene_npc_barry_the_fairy.h"
+#include "ray_cutscene_npc_cho.h"
+#include "ray_cutscene_npc_doria.h"
+#include "ray_cutscene_npc_ember_demon.h"
 #include "ray_cutscene_npc_fairy_1.h"
 #include "ray_cutscene_npc_fairy_2.h"
 #include "ray_cutscene_npc_fairy_3.h"
 #include "ray_cutscene_npc_fairy_4.h"
 #include "ray_cutscene_npc_fairy_5.h"
+#include "ray_cutscene_npc_fairy_6.h"
+#include "ray_cutscene_npc_fredward.h"
+#include "ray_cutscene_npc_great_deejay_tree.h"
+#include "ray_cutscene_npc_hyut.h"
+#include "ray_cutscene_npc_king_donut.h"
+#include "ray_cutscene_npc_loot.h"
+#include "ray_cutscene_npc_mega_pulse.h"
+#include "ray_cutscene_npc_the_mayor.h"
+#include "ray_cutscene_npc_trash_man.h"
 
 static void rayCutsceneCb(void);
 
@@ -39,42 +51,102 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, int32_t sceneID)
     ray->cutscene = initCutscene(rayCutsceneCb, CUTSCENE_NEXT_0_WSG, 0);
 
     // Always load these two by default
-    addCutsceneStyle(ray->cutscene, c000, NAVI_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "Tomi", 1, false, true, true);
-    addCutsceneStyle(ray->cutscene, c000, NAVI_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "Hyut", 1, false, true, true);
+    addCutsceneStyle(ray->cutscene, c000, TQ_TOMI_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "Tomi", 1, false, true, true);
+    addCutsceneStyle(ray->cutscene, c000, TQ_HYUT_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "Hyut", 1, false, true, true);
 
     // Initialize the cutscene based on NPC or scene
     if (EMPTY != type)
     {
         switch (type)
         {
-            case OBJ_ENEMY_FAIRY_0:
-            {
-                initNpcCutsceneFairy0(ray->cutscene);
-                break;
-            }
-            case OBJ_ENEMY_FAIRY_1:
+            case OBJ_ENEMY_NPC_FAIRY_1:
             {
                 initNpcCutsceneFairy1(ray->cutscene);
                 break;
             }
-            case OBJ_ENEMY_FAIRY_2:
+            case OBJ_ENEMY_NPC_FAIRY_2:
             {
                 initNpcCutsceneFairy2(ray->cutscene);
                 break;
             }
-            case OBJ_ENEMY_FAIRY_3:
+            case OBJ_ENEMY_NPC_FAIRY_3:
             {
                 initNpcCutsceneFairy3(ray->cutscene);
                 break;
             }
-            case OBJ_ENEMY_FAIRY_4:
+            case OBJ_ENEMY_NPC_FAIRY_4:
             {
                 initNpcCutsceneFairy4(ray->cutscene);
                 break;
             }
-            case OBJ_ENEMY_FAIRY_5:
+            case OBJ_ENEMY_NPC_FAIRY_5:
             {
                 initNpcCutsceneFairy5(ray->cutscene);
+                break;
+            }
+            case OBJ_ENEMY_NPC_FAIRY_6:
+            {
+                initNpcCutsceneFairy6(ray->cutscene);
+                break;
+            }
+            case OBJ_ENEMY_NPC_BARRY_THE_FAIRY:
+            {
+                initNpcCutsceneBarryTheFairy(ray->cutscene);
+                break;
+            }
+            case OBJ_ENEMY_NPC_HYUT:
+            {
+                initNpcCutsceneHyut(ray->cutscene);
+                break;
+            }
+            case OBJ_ENEMY_NPC_GREAT_DEEJAY_TREE:
+            {
+                initNpcCutsceneGreatDeejayTree(ray->cutscene);
+                break;
+            }
+            case OBJ_ENEMY_NPC_LOOT:
+            {
+                initNpcCutsceneLoot(ray->cutscene);
+                break;
+            }
+            case OBJ_ENEMY_NPC_DORIA:
+            {
+                initNpcCutsceneDoria(ray->cutscene);
+                break;
+            }
+            case OBJ_ENEMY_NPC_KING_DONUT:
+            {
+                initNpcCutsceneKingDonut(ray->cutscene);
+                break;
+            }
+            case OBJ_ENEMY_NPC_MEGA_PULSE:
+            {
+                initNpcCutsceneMegaPulse(ray->cutscene);
+                break;
+            }
+            case OBJ_ENEMY_NPC_CHO:
+            {
+                initNpcCutsceneCho(ray->cutscene);
+                break;
+            }
+            case OBJ_ENEMY_NPC_TRASH_MAN:
+            {
+                initNpcCutsceneTrashMan(ray->cutscene);
+                break;
+            }
+            case OBJ_ENEMY_NPC_EMBER_DEMON:
+            {
+                initNpcCutsceneEmberDemon(ray->cutscene);
+                break;
+            }
+            case OBJ_ENEMY_NPC_THE_MAYOR:
+            {
+                initNpcCutsceneTheMayor(ray->cutscene);
+                break;
+            }
+            case OBJ_ENEMY_NPC_FREDWARD:
+            {
+                initNpcCutsceneFredward(ray->cutscene);
                 break;
             }
             default:
