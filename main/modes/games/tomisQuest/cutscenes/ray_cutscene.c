@@ -35,13 +35,14 @@ static void rayCutsceneCb(void);
 //==============================================================================
 
 /**
- * @brief Show a cutscene
+ * @brief Show a cutscene. The three non-ray arguments are mutually exclusive
  *
  * @param ray The entire game state
  * @param type The NPC type for this cutscene, or EMPTY
  * @param sceneID The scene ID for this cutscene, or -1
+ * @param text The text to show for this cutscene, or NULL
  */
-void rayShowCutscene(ray_t* ray, rayMapCellType_t type, int32_t sceneID)
+void rayShowCutscene(ray_t* ray, rayMapCellType_t type, int32_t sceneID, char* text)
 {
     // Pause music and switch to the cutscene
     globalMidiPlayerPauseAll();
@@ -158,6 +159,13 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, int32_t sceneID)
     else if (-1 != sceneID)
     {
         // TODO map out scenes
+    }
+    else if (NULL != text)
+    {
+        // Blank style for signposts and such
+        addCutsceneStyle(ray->cutscene, c000, 0, CUTSCENE_TEXTBOX_WSG, "", 0, false, false, true);
+        // Add the single line
+        addCutsceneLine(ray->cutscene, 2, text, false, 0, NULL);
     }
 }
 

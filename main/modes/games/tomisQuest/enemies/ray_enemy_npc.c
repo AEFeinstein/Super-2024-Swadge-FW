@@ -193,7 +193,7 @@ static void rayEnemyNpcGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t b
         case OBJ_BULLET_GHOST_SWORD:
         {
             // Show cutscene
-            rayShowCutscene(ray, enemy->c.type, -1);
+            rayShowCutscene(ray, enemy->c.type, -1, NULL);
             break;
         }
         default:
