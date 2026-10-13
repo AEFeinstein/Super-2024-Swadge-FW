@@ -31,9 +31,94 @@ void rayInitEnemyNpc(ray_t* ray, rayEnemy_t* e, rayMapCellType_t type)
     cnfsFileIdx_t tex;
     switch (type)
     {
-        case OBJ_ENEMY_FAIRY_0 ... OBJ_ENEMY_FAIRY_5:
+        case OBJ_ENEMY_NPC_FAIRY_1:
         {
-            tex = OBJ_ENEMY_FAIRY_0_WSG + (type - OBJ_ENEMY_FAIRY_0);
+            tex = OBJ_ENEMY_NPC_FAIRY_1_WSG;
+            break;
+        }
+        case OBJ_ENEMY_NPC_FAIRY_2:
+        {
+            tex = OBJ_ENEMY_NPC_FAIRY_2_WSG;
+            break;
+        }
+        case OBJ_ENEMY_NPC_FAIRY_3:
+        {
+            tex = OBJ_ENEMY_NPC_FAIRY_3_WSG;
+            break;
+        }
+        case OBJ_ENEMY_NPC_FAIRY_4:
+        {
+            tex = OBJ_ENEMY_NPC_FAIRY_4_WSG;
+            break;
+        }
+        case OBJ_ENEMY_NPC_FAIRY_5:
+        {
+            tex = OBJ_ENEMY_NPC_FAIRY_5_WSG;
+            break;
+        }
+        case OBJ_ENEMY_NPC_FAIRY_6:
+        {
+            tex = OBJ_ENEMY_NPC_FAIRY_6_WSG;
+            break;
+        }
+        case OBJ_ENEMY_NPC_BARRY_THE_FAIRY:
+        {
+            tex = OBJ_ENEMY_NPC_BARRY_THE_FAIRY_WSG;
+            break;
+        }
+        case OBJ_ENEMY_NPC_HYUT:
+        {
+            tex = OBJ_ENEMY_NPC_HYUT_WSG;
+            break;
+        }
+        case OBJ_ENEMY_NPC_GREAT_DEEJAY_TREE:
+        {
+            tex = OBJ_ENEMY_NPC_GREAT_DEEJAY_TREE_WSG;
+            break;
+        }
+        case OBJ_ENEMY_NPC_LOOT:
+        {
+            tex = OBJ_ENEMY_NPC_LOOT_WSG;
+            break;
+        }
+        case OBJ_ENEMY_NPC_DORIA:
+        {
+            tex = OBJ_ENEMY_NPC_DORIA_WSG;
+            break;
+        }
+        case OBJ_ENEMY_NPC_KING_DONUT:
+        {
+            tex = OBJ_ENEMY_NPC_KING_DONUT_WSG;
+            break;
+        }
+        case OBJ_ENEMY_NPC_MEGA_PULSE:
+        {
+            tex = OBJ_ENEMY_NPC_MEGA_PULSE_WSG;
+            break;
+        }
+        case OBJ_ENEMY_NPC_CHO:
+        {
+            tex = OBJ_ENEMY_NPC_CHO_WSG;
+            break;
+        }
+        case OBJ_ENEMY_NPC_TRASH_MAN:
+        {
+            tex = OBJ_ENEMY_NPC_TRASH_MAN_WSG;
+            break;
+        }
+        case OBJ_ENEMY_NPC_EMBER_DEMON:
+        {
+            tex = OBJ_ENEMY_NPC_EMBER_DEMON_WSG;
+            break;
+        }
+        case OBJ_ENEMY_NPC_THE_MAYOR:
+        {
+            tex = OBJ_ENEMY_NPC_THE_MAYOR_WSG;
+            break;
+        }
+        case OBJ_ENEMY_NPC_FREDWARD:
+        {
+            tex = OBJ_ENEMY_NPC_FREDWARD_WSG;
             break;
         }
         default:

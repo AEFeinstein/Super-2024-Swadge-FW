@@ -54,7 +54,7 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
             rayInitEnemyTurret(ray, newObj);
             break;
         }
-        case OBJ_ENEMY_FAIRY_0 ... OBJ_ENEMY_FAIRY_5:
+        case OBJ_ENEMY_NPC_FAIRY_1 ... OBJ_ENEMY_NPC_FREDWARD:
         {
             rayInitEnemyNpc(ray, newObj, type);
             break;
