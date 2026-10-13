@@ -36,6 +36,30 @@ void rayEnemyBoxCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t 
             enemyBB.pos.y += *deltaY;
             if (rayBoundingBoxFitsInMap(ray, enemyBB))
             {
+                // Check for intersections with other boxes
+                node_t* eNode = ray->enemies.first;
+                while (eNode)
+                {
+                    rayEnemy_t* otherEnemy = eNode->val;
+                    // Make sure not to compare to self and only to other boxes
+                    if ((otherEnemy != enemy) && (otherEnemy->c.type == OBJ_ENEMY_BOX))
+                    {
+                        rectangle_t otherBB = rayGetObjBB(&otherEnemy->c);
+                        if (rectRectIntersection(enemyBB, otherBB, NULL))
+                        {
+                            // If it doesn't fit, stop the player's movement
+                            *deltaX = 0;
+                            *deltaY = 0;
+
+                            // Nothing more to do here
+                            return;
+                        }
+                    }
+
+                    // Iterate
+                    eNode = eNode->next;
+                }
+
                 // If it fits, update the position
 
                 vec_t oldCell = {
