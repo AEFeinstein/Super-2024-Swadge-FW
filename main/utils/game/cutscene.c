@@ -10,6 +10,7 @@
 #include "esp_random.h"
 #include "fs_wsg.h"
 // #include "shapes.h"//uncomment to draw rects around text for debug
+#include "macros.h"
 
 //==============================================================================
 // Function Prototypes
@@ -39,10 +40,6 @@ cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx, uint8_t s
 {
     cutscene_t* cutscene = (cutscene_t*)heap_caps_calloc(1, sizeof(cutscene_t), MALLOC_CAP_SPIRAM);
     cutscene->cbFunc     = cbFunc;
-    cutscene->lines      = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
-    cutscene->styles     = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
-    cutscene->sprite     = heap_caps_calloc(1, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
-    cutscene->textBox    = heap_caps_calloc(1, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
     cutscene->soundBank  = soundBank;
     for (int i = 0; i < 4; i++)
     {
@@ -79,9 +76,9 @@ static void resetCutscene(cutscene_t* cutscene)
     cutscene->a_down     = false;
     cutscene->blinkTimer = 0;
     cutscene->isEnding   = false;
-    while (cutscene->lines->first != NULL)
+    while (cutscene->lines.first != NULL)
     {
-        cutsceneLine_t* line = (cutsceneLine_t*)shift(cutscene->lines);
+        cutsceneLine_t* line = (cutsceneLine_t*)shift(&cutscene->lines);
         free(line->body);
     }
     cutscene->nextIconAnimationTimer = 30;
@@ -166,9 +163,9 @@ static void loadAndPlayRandomCharacterSound(cutsceneStyle_t* style, cutscene_t* 
  */
 void removeAllStyles(cutscene_t* cutscene)
 {
-    while (cutscene->styles->first != NULL)
+    while (cutscene->styles.first != NULL)
     {
-        cutsceneStyle_t* style = (cutsceneStyle_t*)shift(cutscene->styles);
+        cutsceneStyle_t* style = (cutsceneStyle_t*)shift(&cutscene->styles);
         free(style->title);
     }
 }
@@ -228,7 +225,7 @@ void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileId
     style->slowAttack  = false;
 
     // push to tail
-    push(cutscene->styles, (void*)style);
+    push(&cutscene->styles, (void*)style);
 }
 
 /**
@@ -244,7 +241,7 @@ void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileId
 void setMidiParams(cutscene_t* cutscene, uint8_t styleIdx, uint8_t instrument, int8_t octaveOvset, uint16_t noteLength,
                    bool slowAttack)
 {
-    cutsceneStyle_t* style = getAtIndex(cutscene->styles, styleIdx);
+    cutsceneStyle_t* style = getAtIndex(&cutscene->styles, styleIdx);
     style->instrument      = instrument;
     style->octaveOvset     = octaveOvset;
     style->noteLength      = noteLength;
@@ -279,6 +276,23 @@ void setSongPitches(cutscene_t* cutscene, int16_t songPitches[8])
 void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation,
                      cutsceneCb cbFunc)
 {
+    insertCutsceneLineAfter(cutscene, NULL, styleIdx, body, flipHorizontal, spriteVariation, cbFunc);
+}
+
+/**
+ * @brief Adds a dialogue line to the cutscene
+ *
+ * @param cutscene Pointer to the cutscene
+ * @param priorLine The line to insert another line after, or NULL
+ * @param styleIdx Index into the styles list
+ * @param body The dialogue text to draw
+ * @param flipHorizontal true to flip the character pose horizontally
+ * @param spriteVariation The specific pose sprite, counted up from the main pose sprite.
+ * @param cbFunc A callback function to fire when A is pressed on this line. Leave NULL to fire nothing.
+ */
+void insertCutsceneLineAfter(cutscene_t* cutscene, node_t* priorLine, uint8_t styleIdx, char* body, bool flipHorizontal,
+                             int8_t spriteVariation, cutsceneCb cbFunc)
+{
     cutsceneLine_t* line = (cutsceneLine_t*)heap_caps_calloc(1, sizeof(cutsceneLine_t), MALLOC_CAP_SPIRAM);
     line->body           = (char*)heap_caps_calloc(strlen(body) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
     strcpy(line->body, body);
@@ -287,11 +301,18 @@ void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool fl
     line->flipHorizontal  = flipHorizontal;
     line->cbFunc          = cbFunc;
 
-    if (cutscene->lines->first == NULL)
+    if (cutscene->lines.first == NULL)
     {
-        cutsceneStyle_t* style = ((cutsceneStyle_t*)getAtIndex(cutscene->styles, line->styleIdx));
-        loadWsg(style->spriteIdx + line->spriteVariation, cutscene->sprite, true);
-        loadWsg(style->textBoxIdx, cutscene->textBox, true);
+        cutsceneStyle_t* style = ((cutsceneStyle_t*)getAtIndex(&cutscene->styles, line->styleIdx));
+        if (style->drawSprite)
+        {
+            loadWsg(style->spriteIdx + line->spriteVariation, &cutscene->sprite, true);
+        }
+
+        if (style->drawTextBox)
+        {
+            loadWsg(style->textBoxIdx, &cutscene->textBox, true);
+        }
 
         if (style->stageLeft)
         {
@@ -300,7 +321,14 @@ void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool fl
     }
 
     // push to tail
-    push(cutscene->lines, (void*)line);
+    if (NULL == priorLine)
+    {
+        push(&cutscene->lines, (void*)line);
+    }
+    else
+    {
+        addAfter(&cutscene->lines, (void*)line, priorLine);
+    }
 }
 
 /**
@@ -335,7 +363,7 @@ static uint8_t getRandomVariationFromStyle(cutsceneStyle_t* style)
  */
 static uint8_t getRandomVariationFromStyleIdx(cutscene_t* cutscene, uint8_t styleIdx)
 {
-    return getRandomVariationFromStyle((cutsceneStyle_t*)getAtIndex(cutscene->styles, styleIdx));
+    return getRandomVariationFromStyle((cutsceneStyle_t*)getAtIndex(&cutscene->styles, styleIdx));
 }
 
 /**
@@ -346,7 +374,7 @@ static uint8_t getRandomVariationFromStyleIdx(cutscene_t* cutscene, uint8_t styl
  */
 static cutsceneStyle_t* getCurrentStyle(cutscene_t* cutscene)
 {
-    return getAtIndex(cutscene->styles, ((cutsceneLine_t*)cutscene->lines->first->val)->styleIdx);
+    return getAtIndex(&cutscene->styles, ((cutsceneLine_t*)cutscene->lines.first->val)->styleIdx);
 }
 
 /**
@@ -357,7 +385,7 @@ static cutsceneStyle_t* getCurrentStyle(cutscene_t* cutscene)
  */
 void updateCutscene(cutscene_t* cutscene, int16_t btnState)
 {
-    if (cutscene->lines->first == NULL)
+    if (cutscene->lines.first == NULL)
     {
         return;
     }
@@ -390,22 +418,27 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
     {
         if (btnState & PB_A && !(cutscene->btnState_previousFrame & PB_A))
         {
-            if (((cutsceneLine_t*)(cutscene->lines->first->val))->cbFunc != NULL)
+            if (((cutsceneLine_t*)(cutscene->lines.first->val))->cbFunc != NULL)
             {
-                ((cutsceneLine_t*)(cutscene->lines->first->val))->cbFunc();
+                ((cutsceneLine_t*)(cutscene->lines.first->val))->cbFunc();
             }
             // proceed to next cutscene line.
-            if (cutscene->lines->first != NULL
-                && cutscene->lines->first->next != NULL) // There is at least onle line after this one.
+            if (cutscene->lines.first != NULL
+                && cutscene->lines.first->next != NULL) // There is at least onle line after this one.
             {
-                free(((cutsceneLine_t*)shift(cutscene->lines))->body);
+                free(((cutsceneLine_t*)shift(&cutscene->lines))->body);
                 style = getCurrentStyle(cutscene);
 
                 // load the new character sprite into the existing wsg.
-                loadWsg(style->spriteIdx + ((cutsceneLine_t*)cutscene->lines->first->val)->spriteVariation,
-                        cutscene->sprite, true);
-                loadWsg(style->textBoxIdx, cutscene->textBox, true);
-
+                if (style->drawSprite)
+                {
+                    loadWsg(style->spriteIdx + ((cutsceneLine_t*)cutscene->lines.first->val)->spriteVariation,
+                            &cutscene->sprite, true);
+                }
+                if (style->drawTextBox)
+                {
+                    loadWsg(style->textBoxIdx, &cutscene->textBox, true);
+                }
                 loadAndPlayRandomCharacterSound(style, cutscene);
             }
             else // This was the last line.
@@ -513,17 +546,17 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
  */
 void drawCutscene(cutscene_t* cutscene, font_t* font)
 {
-    if (cutscene->lines->first == NULL)
+    if (cutscene->lines.first == NULL)
     {
         return;
     }
 
-    cutsceneLine_t* line   = (cutsceneLine_t*)cutscene->lines->first->val;
-    cutsceneStyle_t* style = getAtIndex(cutscene->styles, line->styleIdx);
+    cutsceneLine_t* line   = (cutsceneLine_t*)cutscene->lines.first->val;
+    cutsceneStyle_t* style = getAtIndex(&cutscene->styles, line->styleIdx);
 
     if (style->drawSprite)
     {
-        drawWsg(cutscene->sprite, cutscene->xOffset, 0, line->flipHorizontal, false, 0);
+        drawWsg(&cutscene->sprite, cutscene->xOffset, 0, line->flipHorizontal, false, 0);
     }
     char variationText[5];
     snprintf(variationText, sizeof(variationText), "%d", line->spriteVariation);
@@ -532,7 +565,7 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
     {
         if (style->drawTextBox)
         {
-            drawWsgSimple(cutscene->textBox, 0, 137);
+            drawWsgSimple(&cutscene->textBox, 0, 137);
         }
         if (cutscene->nextIconAnimationTimer > 30)
         {
@@ -561,9 +594,28 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
         drawText(font, style->textColor, style->title, xOff, yOff);
 
         xOff = 13;
-        yOff = 174;
-        // drawRect(xOff, yOff, 252, 240, c520);
-        drawTextWordWrap(font, style->textColor, line->body, &xOff, &yOff, 252, 240);
+        yOff = 172;
+        // Suppress -Wdiscarded-qualifiers because we know the text being drawn isn't const
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
+        char* extraText = drawTextWordWrap(font, style->textColor, line->body, &xOff, &yOff, 252, 240);
+#pragma GCC diagnostic pop
+
+        // If there's more text to be drawn, insert another line copying this line's parameters
+        if (extraText)
+        {
+            // Null terminate the prior line and skip whitespace for the new line
+            extraText[0] = 0;
+            extraText++;
+
+            // Move callback function to the next line
+            cutsceneCb cbFunc = line->cbFunc;
+            line->cbFunc      = NULL;
+
+            // Insert a new line with the extra text and the same characteristics
+            insertCutsceneLineAfter(cutscene, cutscene->lines.first, line->styleIdx, extraText, line->flipHorizontal,
+                                    line->spriteVariation, cbFunc);
+        }
     }
 }
 
@@ -577,13 +629,11 @@ void deinitCutscene(cutscene_t* cutscene)
 {
     resetCutscene(cutscene);
     removeAllStyles(cutscene);
-    free(cutscene->lines);
-    free(cutscene->styles);
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < ARRAY_SIZE(cutscene->nextIcon); i++)
     {
         freeWsg(cutscene->nextIcon[i]);
     }
-    freeWsg(cutscene->sprite);
-    freeWsg(cutscene->textBox);
+    freeWsg(&cutscene->sprite);
+    freeWsg(&cutscene->textBox);
     free(cutscene);
 }
