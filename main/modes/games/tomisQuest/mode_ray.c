@@ -746,14 +746,14 @@ void rayStartGame(void)
         ray->p.cameraScripted = loadedCameraScripted;
     }
 
-    // Check script from entering the initial cell
-    checkScriptEnter(ray, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
-
     // Set the default hue (blue)
     ray->targetLedHue = 170;
 
     // Set the initial screen
     raySwitchToScreen(RAY_GAME);
+
+    // Check script from entering the initial cell
+    checkScriptEnter(ray, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
 }
 
 /**

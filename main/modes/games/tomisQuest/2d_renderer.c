@@ -39,6 +39,12 @@ void drawBackground2d(ray_t* ray, int32_t firstRow, int32_t lastRow)
     // Get the framebuffer at this row
     paletteColor_t* fb = getPxTftFramebuffer() + (TFT_WIDTH * firstRow);
 
+    if (false == ray->p.drawGame)
+    {
+        memset(fb, c000, TFT_WIDTH * (lastRow - firstRow));
+        return;
+    }
+
     // Find the row and offset into the texture to start at
     int32_t mapY       = (ray->camera.y + firstRow) / CELL_SIZE;
     int32_t texOffsetY = (ray->camera.y + firstRow) % CELL_SIZE;
@@ -179,6 +185,10 @@ void update2dCamera(ray_t* ray, uint32_t elapsedUs)
  */
 void drawForeground2d(ray_t* ray)
 {
+    if (false == ray->p.drawGame)
+    {
+        return;
+    }
     int32_t camX = ray->camera.x;
     int32_t camY = ray->camera.y;
 
