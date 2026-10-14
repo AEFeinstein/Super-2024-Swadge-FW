@@ -88,13 +88,13 @@ typedef struct
 typedef struct
 {
     cutsceneCb cbFunc;  ///< A callback which is called when this cutscene concludes. Use it to unpause your game loop.
-    list_t* styles;     ///< A list_t of lineStyle_t
-    list_t* lines;      ///< A list_t of cutsceneLine_t
+    list_t styles;      ///< A list_t of lineStyle_t
+    list_t lines;       ///< A list_t of cutsceneLine_t
     int8_t blinkTimer;  ///< Increments and overflows to make the next graphic blink.
     bool a_down;        ///< True when the a button is held.
     int16_t xOffset;    ///< Decrements to slide the character portait in from below.
-    wsg_t* sprite;      ///< The character sprite.
-    wsg_t* textBox;     ///< The textbox rendered over the character sprite.
+    wsg_t sprite;       ///< The character sprite.
+    wsg_t textBox;      ///< The textbox rendered over the character sprite.
     wsg_t* nextIcon[4]; ///< The nextIcon with a few animation frames.
     int8_t nextIconAnimationTimer;  ///< Increments and controls the next icon frame.
     bool isEnding;                  ///< True as the character slides out of frame.
@@ -114,6 +114,8 @@ void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t color, cnfsFileIdx_t 
 void setMidiParams(cutscene_t* cutscene, uint8_t styleIdx, uint8_t instrument, int8_t octaveOvset, uint16_t noteLength,
                    bool slowAttack);
 void setSongPitches(cutscene_t* cutscene, int16_t songPitches[8]);
+void insertCutsceneLineAfter(cutscene_t* cutscene, node_t* priorLine, uint8_t styleIdx, char* body, bool flipHorizontal,
+                             int8_t spriteVariation, cutsceneCb cbFunc);
 void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation,
                      cutsceneCb cbFunc);
 void updateCutscene(cutscene_t* cutscene, int16_t btnState);
