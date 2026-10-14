@@ -3,41 +3,33 @@
 
 #include "mode_ray.h"
 
-typedef enum
-{
-    // Misc
-    TQ_NARRATOR,
-    // Protagonists
-    TQ_TOMI,
-    TQ_HYUT,
-    // Forest-folk
-    TQ_FAIRY_1,
-    TQ_FAIRY_2,
-    TQ_FAIRY_3,
-    TQ_FAIRY_4,
-    TQ_FAIRY_5,
-    TQ_FAIRY_6,
-    TQ_FAIRY_BARRY,
-    TQ_DJ_TREE,
-    // Field-folk
-    TQ_LOOT,
-    TQ_DORIA,
-    // Towns-folk
-    TQ_KING_DONUT,
-    TQ_MEGA_PULSE,
-    TQ_CHO,
-    TQ_GARBOTNIK,
-    TQ_EMBER,
-    TQ_MAYOR,
-    TQ_FREDWARD,
-    // Final Area
-    TQ_WADDLEDORF,
-    TQ_GREAT_FAIRIES,
-    TQ_GREAT_FAIRY,
-} tqCharacter_t;
+#include "ray_cutscene_npc_barry_the_fairy.h"
+#include "ray_cutscene_npc_cho.h"
+#include "ray_cutscene_npc_doria.h"
+#include "ray_cutscene_npc_ember_demon.h"
+#include "ray_cutscene_npc_fairy_1.h"
+#include "ray_cutscene_npc_fairy_2.h"
+#include "ray_cutscene_npc_fairy_3.h"
+#include "ray_cutscene_npc_fairy_4.h"
+#include "ray_cutscene_npc_fairy_5.h"
+#include "ray_cutscene_npc_fairy_6.h"
+#include "ray_cutscene_npc_fredward.h"
+#include "ray_cutscene_npc_great_deejay_tree.h"
+#include "ray_cutscene_npc_hyut.h"
+#include "ray_cutscene_npc_king_donut.h"
+#include "ray_cutscene_npc_loot.h"
+#include "ray_cutscene_npc_mega_pulse.h"
+#include "ray_cutscene_npc_the_mayor.h"
+#include "ray_cutscene_npc_trash_man.h"
 
-void rayShowCutscene(ray_t* ray, rayMapCellType_t type, int32_t sceneID, char* text);
+#define CS_STYLE_TOMI 0
+#define CS_STYLE_HYUT 1
+
+typedef bool (*rayCutsceneSceneInitFn_t)(cutscene_t* cutscene, const char* title);
+
+void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text);
 void rayCutsceneCheckButtons(ray_t* ray);
 void rayCutsceneRender(ray_t* ray, uint32_t elapsedUs);
+void addCutsceneStyleNarrator(cutscene_t* cutscene);
 
 #endif

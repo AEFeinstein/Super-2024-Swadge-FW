@@ -730,6 +730,7 @@ typedef struct
     q24_8 dirY;          ///< The player's Y direction
     vec_t cameraTarget;  ///< The target position of the 2D camera
     bool cameraScripted; ///< True if the camera is controlled by scripts, false to free-roam
+    bool drawGame;       ///< False to draw black, true to draw the game
     int32_t mapId;       ///< The ID of the current map
     // Current status
     int32_t health;    ///< The player's current health
@@ -775,6 +776,8 @@ typedef struct
     int32_t iFrameTimer; ///< A timer for invincibility frames
 
     wsg_t* sprite;
+    wsg_t* spriteTomi;
+    wsg_t* spriteHyut;
 
     /// @brief A mask of keys held for the current map
     struct
