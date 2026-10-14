@@ -207,6 +207,12 @@ static const char* const rulesText[] = {
     "Adjusted score",
     "Total score multiplied by the overall accuracy for a single overall number to compare the performance of a player "
     "vs others. \n\nAll four scores are sent through swadgepass, compare with your friends!",
+    "Cheatsheet: Penalties",
+    "People (Normal): 200/distance\nPeople (Weird): 300/distance\nPuddles (S/M/L): 50/100/150\nPuddles incur half "
+    "penalties for standing next to them\nDivders (Half): 50\nDividers (Missing): 100\nMinor issues: 50 each\nMajor "
+    "issue: Instant fail\nADA toilet: 200",
+    "Cheatsheet: Bonuses",
+    "\nAutoflusher: 10\nEnd urinal: 20",
 };
 
 static const char* const scoreTypeText[] = {
@@ -960,14 +966,18 @@ static void drawUrinal(ggData_t* ggd, ggUrinal_t* u, int x, int y)
     if (u->brokenBowl)
     {
         drawWsgSimple(&ggd->urinalImages[5], x, y + currHeight);
-        drawWsgSimple(&ggd->urinalImages[6], x + 16, TFT_HEIGHT - FLOOR_HEIGHT + 4);
+        drawWsgSimple(&ggd->urinalImages[6], x, TFT_HEIGHT - FLOOR_HEIGHT - 6);
     }
     else
     {
         drawWsgSimple(&ggd->urinalImages[4], x, y + currHeight);
     }
     // Drain
-    if (u->brokenDrain)
+    if (u->brokenBowl)
+    {
+        ;
+    }
+    else if (u->brokenDrain)
     {
         drawWsgSimple(&ggd->urinalImages[8], x + (ggd->urinalImages[2].w - ggd->urinalImages[8].w) / 2,
                       y + currHeight + ggd->urinalImages[4].h);
