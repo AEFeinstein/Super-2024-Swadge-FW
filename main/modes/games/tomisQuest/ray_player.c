@@ -73,7 +73,16 @@ bool initializePlayer(ray_t* ray)
     }
 
     // Load sprites
-    ray->ps.sprite = loadTexture(ray, HYUT_WSG, EMPTY);
+    ray->ps.spriteTomi = loadTexture(ray, ZORLDO_MENU_TOMI_WSG, EMPTY);
+    ray->ps.spriteHyut = loadTexture(ray, HYUT_WSG, EMPTY);
+    if (ray->p.i.haveEwiOfTime)
+    {
+        ray->ps.sprite = ray->ps.spriteHyut;
+    }
+    else
+    {
+        ray->ps.sprite = ray->ps.spriteTomi;
+    }
     loadTexture(ray, OBJ_BULLET_NORMAL_WSG, OBJ_BULLET_ARROW);
     loadTexture(ray, OBJ_BULLET_MISSILE_WSG, OBJ_BULLET_BOMB);
     loadTexture(ray, OBJ_BULLET_BOOMERANG_WSG, OBJ_BULLET_BOOMERANG);
@@ -612,6 +621,7 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
         case OBJ_ITEM_EWI:
         {
             inventory->haveEwiOfTime = true;
+            ray->ps.sprite           = ray->ps.spriteHyut;
             break;
         }
         case OBJ_ITEM_BOMB:

@@ -1218,7 +1218,7 @@ void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         {
             // 1s cooldown to prevent double-dialog from double-shots
             script->resetTimerSec = 1;
-            rayShowCutscene(ray, EMPTY, -1, script->thenArgs.text);
+            rayShowCutscene(ray, EMPTY, script->thenArgs.text);
             break;
         }
         case WARP:

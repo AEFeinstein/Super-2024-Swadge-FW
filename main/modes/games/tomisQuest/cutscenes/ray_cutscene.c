@@ -9,24 +9,7 @@
 #include "ray_pause.h"
 #include "cutscene.h"
 
-#include "ray_cutscene_npc_barry_the_fairy.h"
-#include "ray_cutscene_npc_cho.h"
-#include "ray_cutscene_npc_doria.h"
-#include "ray_cutscene_npc_ember_demon.h"
-#include "ray_cutscene_npc_fairy_1.h"
-#include "ray_cutscene_npc_fairy_2.h"
-#include "ray_cutscene_npc_fairy_3.h"
-#include "ray_cutscene_npc_fairy_4.h"
-#include "ray_cutscene_npc_fairy_5.h"
-#include "ray_cutscene_npc_fairy_6.h"
-#include "ray_cutscene_npc_fredward.h"
-#include "ray_cutscene_npc_great_deejay_tree.h"
-#include "ray_cutscene_npc_hyut.h"
-#include "ray_cutscene_npc_king_donut.h"
-#include "ray_cutscene_npc_loot.h"
-#include "ray_cutscene_npc_mega_pulse.h"
-#include "ray_cutscene_npc_the_mayor.h"
-#include "ray_cutscene_npc_trash_man.h"
+#include "ray_cutscene_scene_intro.h"
 
 static void rayCutsceneCb(void);
 
@@ -35,14 +18,13 @@ static void rayCutsceneCb(void);
 //==============================================================================
 
 /**
- * @brief Show a cutscene. The three non-ray arguments are mutually exclusive
+ * @brief Show a cutscene. The two non-ray arguments are mutually exclusive
  *
  * @param ray The entire game state
  * @param type The NPC type for this cutscene, or EMPTY
- * @param sceneID The scene ID for this cutscene, or -1
- * @param text The text to show for this cutscene, or NULL
+ * @param text The The title of a scene, the text to show for this cutscene, or NULL
  */
-void rayShowCutscene(ray_t* ray, rayMapCellType_t type, int32_t sceneID, char* text)
+void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text)
 {
     // Pause music and switch to the cutscene
     globalMidiPlayerPauseAll();
@@ -156,16 +138,30 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, int32_t sceneID, char* t
             }
         }
     }
-    else if (-1 != sceneID)
-    {
-        // TODO map out scenes
-    }
     else if (NULL != text)
     {
-        // Blank style for signposts and such
-        addCutsceneStyle(ray->cutscene, c000, 0, CUTSCENE_TEXTBOX_WSG, "", 0, false, false, true);
-        // Add the single line
-        addCutsceneLine(ray->cutscene, 2, text, false, 0, NULL);
+        // Check if this text is a scene title
+        rayCutsceneSceneInitFn_t scenes[] = {
+            initCutsceneIntro,
+        };
+
+        bool sceneStarted = false;
+        for (int sIdx = 0; sIdx < ARRAY_SIZE(scenes); sIdx++)
+        {
+            if (scenes[sIdx](ray->cutscene, text))
+            {
+                sceneStarted = true;
+                break;
+            }
+        }
+
+        if (false == sceneStarted)
+        {
+            // Blank style for signposts and such
+            addCutsceneStyle(ray->cutscene, c000, 0, CUTSCENE_TEXTBOX_WSG, "", 0, false, false, true);
+            // Add the single line
+            addCutsceneLine(ray->cutscene, 2, text, false, 0, NULL);
+        }
     }
 }
 
@@ -221,7 +217,7 @@ void rayCutsceneRender(ray_t* ray, uint32_t elapsedUs)
         updateCutscene(ray->cutscene, ray->cutsceneBtnState);
 
         // Safety check to not get stuck in a blank cutscene
-        if (ray->cutscene->lines->first == NULL)
+        if (ray->cutscene->lines.first == NULL)
         {
             rayCutsceneCb();
         }
@@ -230,4 +226,14 @@ void rayCutsceneRender(ray_t* ray, uint32_t elapsedUs)
             drawCutscene(ray->cutscene, ray->renderer->menuFont);
         }
     }
+}
+
+/**
+ * @brief Add a narrator style to the cutscene
+ *
+ * @param cutscene The cutscene to add a style to
+ */
+void addCutsceneStyleNarrator(cutscene_t* cutscene)
+{
+    addCutsceneStyle(cutscene, c000, -1, CUTSCENE_TEXTBOX_WSG, "Narrator", 1, true, false, true);
 }
