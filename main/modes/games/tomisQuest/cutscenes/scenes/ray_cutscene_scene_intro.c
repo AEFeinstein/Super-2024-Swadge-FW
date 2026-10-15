@@ -18,11 +18,11 @@ bool initCutsceneIntro(cutscene_t* cutscene, const char* title)
 #define CS_STYLE_NARRATOR 2
         addCutsceneStyleNarrator(cutscene);
 
-#define CS_STYLE_FAIRY_1 3
-        addCutsceneStyleFairy1(cutscene);
+#define CS_STYLE_KAITIE 3
+        addCutsceneStyleKaitie(cutscene);
 
-#define CS_STYLE_FAIRY_2 4
-        addCutsceneStyleFairy2(cutscene);
+#define CS_STYLE_SABLE 4
+        addCutsceneStyleSable(cutscene);
 
         // clang-format off
 
@@ -39,12 +39,12 @@ bool initCutsceneIntro(cutscene_t* cutscene, const char* title)
 
         // [still black.]
 
-        addCutsceneLine(cutscene, CS_STYLE_FAIRY_1, "Wake up, loser!", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_FAIRY_2, "Yeah, dingus, you're gonna miss the connection ceremony!", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_KAITIE, "Wake up, loser!", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_SABLE, "Yeah, dingus, you're gonna miss the connection ceremony!", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "...huhwha?", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_FAIRY_2, "Of COURSE Tomi would oversleep.", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_FAIRY_1, "Hey, the Great DeJay Tree said we had to wake her. She's up. C'mon, let's go.", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_FAIRY_2, "See ya!", false, 0, startDrawingGame);
+        addCutsceneLine(cutscene, CS_STYLE_SABLE, "Of COURSE Tomi would oversleep.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_KAITIE, "Hey, the Great DeJay Tree said we had to wake her. She's up. C'mon, let's go.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_SABLE, "See ya!", false, 0, startDrawingGame);
 
         // [Scene starts: Tomi's Home.]
 
