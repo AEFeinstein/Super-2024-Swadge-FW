@@ -44,32 +44,32 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text)
         {
             case OBJ_ENEMY_NPC_FAIRY_1:
             {
-                initNpcCutsceneFairy1(ray->cutscene);
+                initNpcCutsceneKaitie(ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_FAIRY_2:
             {
-                initNpcCutsceneFairy2(ray->cutscene);
+                initNpcCutsceneSable(ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_FAIRY_3:
             {
-                initNpcCutsceneFairy3(ray->cutscene);
+                initNpcCutsceneBean(ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_FAIRY_4:
             {
-                initNpcCutsceneFairy4(ray->cutscene);
+                initNpcCutsceneDacc(ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_FAIRY_5:
             {
-                initNpcCutsceneFairy5(ray->cutscene);
+                initNpcCutsceneKiki(ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_FAIRY_6:
             {
-                initNpcCutsceneFairy6(ray->cutscene);
+                initNpcCutsceneBouba(ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_BARRY_THE_FAIRY:
