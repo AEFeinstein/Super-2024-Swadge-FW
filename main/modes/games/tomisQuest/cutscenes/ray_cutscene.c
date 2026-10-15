@@ -9,7 +9,23 @@
 #include "ray_pause.h"
 #include "cutscene.h"
 
-#include "ray_cutscene_scene_intro.h"
+#include "ray_cutscene_scene_00_intro.h"
+#include "ray_cutscene_scene_01_pairing.h"
+#include "ray_cutscene_scene_02_hyut_intro.h"
+#include "ray_cutscene_scene_03_hyut_pairing.h"
+#include "ray_cutscene_scene_04_loot_intro.h"
+#include "ray_cutscene_scene_05_doria_intro.h"
+#include "ray_cutscene_scene_06_dungeon_1_complete.h"
+#include "ray_cutscene_scene_07_dungeon_2_complete.h"
+#include "ray_cutscene_scene_08_dungeon_3_complete.h"
+#include "ray_cutscene_scene_09_dungeon_4_complete.h"
+#include "ray_cutscene_scene_10_singing.h"
+#include "ray_cutscene_scene_11_final_fight.h"
+#include "ray_cutscene_scene_12_fight_complete.h"
+#include "ray_cutscene_scene_13_great_fairy.h"
+#include "ray_cutscene_scene_14_dream_1.h"
+#include "ray_cutscene_scene_15_dream_2.h"
+#include "ray_cutscene_scene_16_dream_3.h"
 
 static void rayCutsceneCb(void);
 
@@ -143,6 +159,22 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text)
         // Check if this text is a scene title
         rayCutsceneSceneInitFn_t scenes[] = {
             initCutsceneIntro,
+            initCutscenePairing,
+            initCutsceneHyutIntro,
+            initCutsceneHyutPairing,
+            initCutsceneLootIntro,
+            initCutsceneDoriaIntro,
+            initCutsceneDungeon1Complete,
+            initCutsceneDungeon2Complete,
+            initCutsceneDungeon3Complete,
+            initCutsceneDungeon4Complete,
+            initCutsceneSinging,
+            initCutsceneFinalFight,
+            initCutsceneFightComplete,
+            initCutsceneGreatFairy,
+            initCutsceneDream1,
+            initCutsceneDream2,
+            initCutsceneDream3,
         };
 
         bool sceneStarted = false;
