@@ -1,20 +1,27 @@
 #include <string.h>
-#include "ray_cutscene_scene_intro.h"
-
-static void startDrawingGame(void);
+#include "ray_cutscene_scene_00_intro.h"
 
 /**
- * @brief TODO doc
+ * @brief Dialog callback to start drawing the game mid-cutscene
+ */
+static void startDrawingGame(void)
+{
+    getRayState()->p.drawGame = true;
+}
+
+/**
+ * @brief Initialize a cutscene based on the cutscene scene title
  *
- * @param cutscene
- * @param title
- * @return true
- * @return false
+ * @param cutscene The cutscene to initialize
+ * @param title The title of the cutscene to initialize. May or may not match this cutscene
+ * @return true if the cutscene was initialized, false if it wasn't
  */
 bool initCutsceneIntro(cutscene_t* cutscene, const char* title)
 {
     if (0 == strcmp(title, "INTRO_SCENE"))
     {
+        // Initialize Styles
+
 #define CS_STYLE_NARRATOR 2
         addCutsceneStyleNarrator(cutscene);
 
@@ -25,6 +32,8 @@ bool initCutsceneIntro(cutscene_t* cutscene, const char* title)
         addCutsceneStyleSable(cutscene);
 
         // clang-format off
+
+        // Initialize lines
 
         // [black screen with text.]
 
@@ -58,12 +67,4 @@ bool initCutsceneIntro(cutscene_t* cutscene, const char* title)
     {
         return false;
     }
-}
-
-/**
- * @brief Dialog callback to start drawing the game mid-cutscene
- */
-static void startDrawingGame(void)
-{
-    getRayState()->p.drawGame = true;
 }
