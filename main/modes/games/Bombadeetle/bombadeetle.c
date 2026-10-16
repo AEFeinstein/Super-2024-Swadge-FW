@@ -11,6 +11,7 @@
 #include "hdw-tft.h"
 #include "mainMenu.h"
 #include "menu.h"
+#include "midiFileParser.h"
 #include "palette.h"
 #include "shapes.h"
 #include "swadge.h"
@@ -79,6 +80,11 @@
 #define MINHELD_DURATION                500
 #define HELD_SPEED                      65
 
+#define MUSIC_PLACE_IT                  0
+#define MUSIC_GO                        1
+#define STINGER_WIN                     2
+#define STINGER_LOSE                    3
+#define MUSIC_MENU                      4
 
 #define BORDER_COUNT                    3
 #define BORDER_SIZE                     2
@@ -314,6 +320,9 @@ static void bombadeetleEnterMode()
 
     ESP_LOGI(TAG, "MAX LEVEL %d", bombadeetle->levelIndex);
     loadFont(IBM_VGA_8_FONT, &bombadeetle->menuFont, true);
+    loadMidiFile(BOMB_MENU_MID, &bombadeetle->music[MUSIC_MENU], true);
+
+    
     bombadeetleSwadgeMenuInit();
 
 }
@@ -341,11 +350,14 @@ void bombadeetleGameEnter(void)
     bombadeetle->gameSpeed      = DEFAULT_MOVE_AMOUNT;
     bombadeetle->cursorMoveTime = 0;
 
+    if (bombadeetle->state != STATE_STAGESELECT && bombadeetle->state != STATE_INSTRUCTIONS)
+    {
+
+        globalMidiPlayerPlaySong(&bombadeetle->music[MUSIC_MENU], MIDI_BGM);
+        globalMidiPlayerGet(MIDI_BGM)->loop = true;
+    }
     bombadeetle->state     = STATE_MENU;
     bombadeetle->lastState = STATE_MENU;
-
-    ESP_LOGI(TAG, "Ya!");
-
 
     bombadeetle->bombadeetles
         = (bombadeetleEntity_t*)heap_caps_calloc(BOMBADEETLE_COUNT, sizeof(bombadeetleEntity_t), MALLOC_CAP_8BIT);
@@ -442,6 +454,11 @@ void bombadeetleGameEnter(void)
         loadWsg(bombadeetleGoal[idx], &bombadeetle->goal[idx], true);
     }
     loadFont(BOMB_BOMBADEETLE_FONT, &bombadeetle->mainFont, true);
+
+    loadMidiFile(BOMB_PLACE_IT_MID, &bombadeetle->music[MUSIC_PLACE_IT], true);
+    loadMidiFile(BOMB_GO_MID, &bombadeetle->music[MUSIC_GO], true);
+    loadMidiFile(BOMB_WIN_MID, &bombadeetle->music[STINGER_WIN], true);
+    loadMidiFile(BOMB_LOSE_MID, &bombadeetle->music[STINGER_LOSE], true);
 
     for (int idx = 0; idx < GRIDHEIGHT * GRIDWIDTH; idx++)
     {
@@ -909,10 +926,19 @@ static void bombadeetleCheckShloogs(bool update)
 
 static void bombadeetleOnCollision()
 {
+    if (bombadeetle->state != STATE_COLLISION)
+    {
+        
+        globalMidiPlayerPlaySong(&bombadeetle->music[STINGER_LOSE], MIDI_BGM);
+        globalMidiPlayerGet(MIDI_BGM)->loop = false;
+    }
+
     ESP_LOGI(TAG, "COLLISION! %d", bombadeetle->gameMoveTick);
     bombadeetle->state       = STATE_COLLISION;
     bombadeetle->menuTimer   = 3000;
     bombadeetle->successTime = 0;
+
+
 }
 
 static void bombadeetleImportMap(int64_t index)
@@ -1371,6 +1397,10 @@ static void bombadeetleStageSelectLoop(int64_t elapsedUs)
                 bombadeetle->levelIndex = bombadeetle->stageSelectIndex + (bombadeetle->stageSelectPageIndex * 20);
                 bombadeetle->state      = STATE_PLACING;
 
+                
+                globalMidiPlayerPlaySong(&bombadeetle->music[MUSIC_PLACE_IT], MIDI_BGM);
+                globalMidiPlayerGet(MIDI_BGM)->loop = true;
+
                 bombadeetleImportMap(bombadeetle->levelIndex);
                 bombadeetleLoadMap();
             }
@@ -1434,10 +1464,13 @@ static void bombadeetlePauseMenu(int64_t elapsedUs)
             {
                 switch (bombadeetle->mainSelectIndex)
                 {
-                    case 0:
+                    case 0:                    
                         bombadeetle->state = STATE_INSTRUCTIONS;
                         break;
                     case 1:
+                    
+                        globalMidiPlayerPlaySong(&bombadeetle->music[MUSIC_MENU], MIDI_BGM);
+                        globalMidiPlayerGet(MIDI_BGM)->loop = true;
                         bombadeetle->state     = STATE_STAGESELECT;
                         bombadeetle->paused    = false;
                         bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT;
@@ -1548,6 +1581,9 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                         else
                         {
                             // Next map
+                            
+                            globalMidiPlayerPlaySong(&bombadeetle->music[MUSIC_PLACE_IT], MIDI_BGM);
+                            globalMidiPlayerGet(MIDI_BGM)->loop = true;
                             bombadeetleImportMap(bombadeetle->levelIndex);
                             bombadeetleLoadMap();
                         }
@@ -1571,6 +1607,9 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                             bombadeetleSaveLevelMax();
                         }
                         // Reset map
+                        
+                        globalMidiPlayerPlaySong(&bombadeetle->music[MUSIC_MENU], MIDI_BGM);
+                        globalMidiPlayerGet(MIDI_BGM)->loop = true;
                         bombadeetle->state     = STATE_STAGESELECT;
                         bombadeetle->paused    = false;
                         bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT;
@@ -1591,6 +1630,10 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                     if (evt.button & PB_B)
                     {
                         // Reset map
+                        
+                        globalMidiPlayerPlaySong(&bombadeetle->music[MUSIC_PLACE_IT], MIDI_BGM);
+                        globalMidiPlayerGet(MIDI_BGM)->loop = true;
+
                         bombadeetleLoadMap();
                     }
 
@@ -1709,6 +1752,10 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                     if (evt.button & PB_B && !bombadeetle->building)
                     {
                         bombadeetle->state        = STATE_RUNNING;
+                        
+                        globalMidiPlayerPlaySong(&bombadeetle->music[MUSIC_GO], MIDI_BGM);
+                        globalMidiPlayerGet(MIDI_BGM)->loop = true;
+
                         bombadeetle->gameMoveTick = 0;
                         bombadeetleCheckShloogs(false);
                         bombadeetleCheckBombadeetles(false);
@@ -1817,6 +1864,9 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                     if (evt.button & PB_B)
                     {
                         // Reset map
+                        
+                        globalMidiPlayerPlaySong(&bombadeetle->music[MUSIC_PLACE_IT], MIDI_BGM);
+                        globalMidiPlayerGet(MIDI_BGM)->loop = true;
                         bombadeetleLoadMap();
                     }
 
@@ -1825,6 +1875,9 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                         if (evt.button & PB_A)
                         {
                             // Reset map
+                            
+                            globalMidiPlayerPlaySong(&bombadeetle->music[MUSIC_MENU], MIDI_BGM);
+                            globalMidiPlayerGet(MIDI_BGM)->loop = true;
                             bombadeetle->state     = STATE_STAGESELECT;
                             bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT;
                         }
@@ -1916,6 +1969,9 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
             ESP_LOGI(TAG, "WIN!");
             bombadeetle->state       = STATE_WIN;
             bombadeetle->successTime = 0;
+            
+        globalMidiPlayerPlaySong(&bombadeetle->music[STINGER_WIN], MIDI_BGM);
+        globalMidiPlayerGet(MIDI_BGM)->loop = false;
         }
     }
 

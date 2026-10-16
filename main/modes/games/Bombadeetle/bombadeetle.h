@@ -153,6 +153,7 @@ typedef struct
     menu_t* menu;
     menuZorldoRenderer_t* renderer;
     
+    midiFile_t music[6];
 
     bool paused;
     bool gameStarted;
