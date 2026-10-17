@@ -14,27 +14,27 @@ bool initCutscenePairing(cutscene_t* cutscene, const char* title)
     {
         // Initialize Styles
 
-#define CS_STYLE_NARRATOR 2
+#define CS_STYLE_NARRATOR (CS_STYLE_HYUT + 1)
         addCutsceneStyleNarrator(cutscene);
 
-#define CS_STYLE_KAITIE 3
+#define CS_STYLE_KAITIE (CS_STYLE_NARRATOR + 1)
         addCutsceneStyleKaitie(cutscene);
 
-#define CS_STYLE_SABLE 4
+#define CS_STYLE_SABLE (CS_STYLE_KAITIE + 1)
         addCutsceneStyleSable(cutscene);
 
-#define CS_STYLE_BEAN 5
+#define CS_STYLE_BEAN (CS_STYLE_SABLE + 1)
         addCutsceneStyleBean(cutscene);
 
-#define CS_STYLE_DACC 6
+#define CS_STYLE_DACC (CS_STYLE_BEAN + 1)
         addCutsceneStyleDacc(cutscene);
 
-#define CS_STYLE_KIKI 7
+#define CS_STYLE_KIKI (CS_STYLE_DACC + 1)
         addCutsceneStyleKiki(cutscene);
 
         // Bouba not in this scene
 
-#define CS_STYLE_TREE 8
+#define CS_STYLE_TREE (CS_STYLE_KIKI + 1)
         addCutsceneStyleGreatDeejayTree(cutscene);
 
         // clang-format off

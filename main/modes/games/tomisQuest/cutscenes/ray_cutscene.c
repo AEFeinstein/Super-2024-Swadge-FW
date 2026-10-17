@@ -50,8 +50,10 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text)
     ray->cutscene = initCutscene(rayCutsceneCb, CUTSCENE_NEXT_0_WSG, 0);
 
     // Always load these two by default
-    addCutsceneStyle(ray->cutscene, c000, TQ_TOMI_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "Tomi", 1, false, true, true);
-    addCutsceneStyle(ray->cutscene, c000, TQ_HYUT_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "Hyut", 1, false, true, true);
+    addCutsceneStyle(ray->cutscene, c000, TQ_TOMI_PORTRAIT_00_COCKY_WSG, CUTSCENE_TEXTBOX_WSG, "Tomi", 10, false, true,
+                     true);
+    addCutsceneStyle(ray->cutscene, c000, TQ_HYUT_PORTRAIT_00_NEUTRAL_WSG, CUTSCENE_TEXTBOX_WSG, "Hyut", 2, false, true,
+                     true);
 
     // Initialize the cutscene based on NPC or scene
     if (EMPTY != type)

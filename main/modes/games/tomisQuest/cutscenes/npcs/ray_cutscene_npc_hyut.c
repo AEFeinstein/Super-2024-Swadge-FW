@@ -7,7 +7,8 @@
  */
 void addCutsceneStyleHyut(cutscene_t* cutscene)
 {
-    addCutsceneStyle(cutscene, c000, TQ_HYUT_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "Hyut", 1, true, true, true);
+    addCutsceneStyle(cutscene, c000, TQ_HYUT_PORTRAIT_00_NEUTRAL_WSG, CUTSCENE_TEXTBOX_WSG, "Hyut", 1, true, true,
+                     true);
 }
 
 /**

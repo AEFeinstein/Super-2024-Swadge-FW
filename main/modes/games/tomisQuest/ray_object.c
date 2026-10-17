@@ -825,7 +825,7 @@ void checkRayCollisions(ray_t* ray)
  * @param bb The bounding box
  * @return true if the bounding box exists entirely in passable cells, false otherwise
  */
-bool rayBoundingBoxFitsInMap(ray_t* ray, rectangle_t bb)
+bool rayBoundingBoxFitsInMap(ray_t* ray, rectangle_t bb, vec_t* collisionVec)
 {
     // Find the cells for the four corners of the bounding box
     int32_t x1 = FROM_FX(bb.pos.x);
@@ -833,17 +833,97 @@ bool rayBoundingBoxFitsInMap(ray_t* ray, rectangle_t bb)
     int32_t y1 = FROM_FX(bb.pos.y);
     int32_t y2 = FROM_FX(bb.pos.y + bb.height - 1);
 
-    // Map bounds check
-    if (x1 < 0 || y1 < 0 || x2 >= ray->map.w || y2 >= ray->map.h)
+    // Map bounds checks
+    if (x1 < 0)
     {
+        if (collisionVec)
+        {
+            collisionVec->x = 1;
+            collisionVec->y = 0;
+        }
+        return false;
+    }
+    if (y1 < 0)
+    {
+        if (collisionVec)
+        {
+            collisionVec->x = 0;
+            collisionVec->y = 1;
+        }
+        return false;
+    }
+    if (x2 >= ray->map.w)
+    {
+        if (collisionVec)
+        {
+            collisionVec->x = -1;
+            collisionVec->y = 0;
+        }
+        return false;
+    }
+    if (y2 >= ray->map.h)
+    {
+        if (collisionVec)
+        {
+            collisionVec->x = 0;
+            collisionVec->y = -1;
+        }
         return false;
     }
 
-    // Check if each corner is in a passable cell
-    return isPassableCell(&ray->map.tiles[x1][y1]) && //
-           isPassableCell(&ray->map.tiles[x1][y2]) && //
-           isPassableCell(&ray->map.tiles[x2][y1]) && //
-           isPassableCell(&ray->map.tiles[x2][y2]);
+    // If we need to return a collision vector
+    if (collisionVec)
+    {
+        // Find the corner which is invalid
+        vec_t invalidCell;
+        if (!isPassableCell(&ray->map.tiles[x1][y1]))
+        {
+            invalidCell.x = x1;
+            invalidCell.y = y1;
+        }
+        else if (!isPassableCell(&ray->map.tiles[x1][y2]))
+        {
+            invalidCell.x = x1;
+            invalidCell.y = y2;
+        }
+        else if (!isPassableCell(&ray->map.tiles[x2][y1]))
+        {
+            invalidCell.x = x2;
+            invalidCell.y = y1;
+        }
+        else if (!isPassableCell(&ray->map.tiles[x2][y2]))
+        {
+            invalidCell.x = x2;
+            invalidCell.y = y2;
+        }
+        else
+        {
+            // All corners are valid, the bounding box fits
+            return true;
+        }
+
+        // Some corner was not valid, build a bounding box for that tile
+        rectangle_t mapTile = {
+                .height = TO_FX(1),
+                .width = TO_FX(1),
+                .pos = {
+                    .x = TO_FX(invalidCell.x),
+                    .y = TO_FX(invalidCell.y),
+                },
+            };
+
+        // Do the intersection to fill collisionVec
+        rectRectIntersection(bb, mapTile, collisionVec);
+        return false;
+    }
+    else
+    {
+        // Simply return if all four corners are passable
+        return isPassableCell(&ray->map.tiles[x1][y1]) && //
+               isPassableCell(&ray->map.tiles[x1][y2]) && //
+               isPassableCell(&ray->map.tiles[x2][y1]) && //
+               isPassableCell(&ray->map.tiles[x2][y2]);
+    }
 }
 
 /**

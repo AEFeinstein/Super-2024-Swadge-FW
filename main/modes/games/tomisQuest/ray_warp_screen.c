@@ -49,6 +49,8 @@ void rayWarpScreenRender(ray_t* ray, uint32_t elapsedUs)
     {
         // Return to the game
         raySwitchToScreen(RAY_GAME);
+        // Do the warp
+        warpToDestination(ray);
         // Don't warp again
         ray->warpTimerUs = 0;
         // Stop warp SFX

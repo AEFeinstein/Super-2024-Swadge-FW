@@ -8,6 +8,7 @@
 #include "ray_enemy_grunt.h"
 #include "ray_enemy_turret.h"
 #include "ray_enemy_npc.h"
+#include "ray_enemy_hyut.h"
 
 //==============================================================================
 // Function Prototypes
@@ -37,6 +38,14 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
     newObj->c.type = type;
     newObj->c.id   = id;
 
+    // Set initial common state
+    newObj->c.posX = x;
+    newObj->c.posY = y;
+    // Don't set radius
+    newObj->c.spriteMirrored = false;
+    newObj->c.spriteRotation = 0;
+    newObj->c.solidColor     = cTransparent;
+
     switch (type)
     {
         case OBJ_ENEMY_BOX:
@@ -54,9 +63,39 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
             rayInitEnemyTurret(ray, newObj);
             break;
         }
-        case OBJ_ENEMY_NPC_FAIRY_1 ... OBJ_ENEMY_NPC_FREDWARD:
+        case OBJ_ENEMY_NPC_FAIRY_1:
+        case OBJ_ENEMY_NPC_FAIRY_2:
+        case OBJ_ENEMY_NPC_FAIRY_3:
+        case OBJ_ENEMY_NPC_FAIRY_4:
+        case OBJ_ENEMY_NPC_FAIRY_5:
+        case OBJ_ENEMY_NPC_FAIRY_6:
+        case OBJ_ENEMY_NPC_BARRY_THE_FAIRY:
+        case OBJ_ENEMY_NPC_GREAT_DEEJAY_TREE:
+        case OBJ_ENEMY_NPC_LOOT:
+        case OBJ_ENEMY_NPC_DORIA:
+        case OBJ_ENEMY_NPC_KING_DONUT:
+        case OBJ_ENEMY_NPC_MEGA_PULSE:
+        case OBJ_ENEMY_NPC_CHO:
+        case OBJ_ENEMY_NPC_TRASH_MAN:
+        case OBJ_ENEMY_NPC_EMBER_DEMON:
+        case OBJ_ENEMY_NPC_THE_MAYOR:
+        case OBJ_ENEMY_NPC_FREDWARD:
         {
             rayInitEnemyNpc(ray, newObj, type);
+            break;
+        }
+        case OBJ_ENEMY_NPC_HYUT:
+        {
+            if (!ray->p.i.haveEwiOfTime)
+            {
+                rayInitEnemyHyut(ray, newObj);
+            }
+            else
+            {
+                // Hyut already in the party, don't spawn
+                heap_caps_free(newObj);
+                return;
+            }
             break;
         }
         default:
@@ -67,15 +106,9 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
         }
     }
 
-    // Set initial common state
-    newObj->c.posX        = x;
-    newObj->c.posY        = y;
+    // Set bounding box based on assigned sprite
     newObj->c.bound.box.w = TO_FX_FRAC(newObj->c.sprite->w, CELL_SIZE);
     newObj->c.bound.box.h = TO_FX_FRAC(newObj->c.sprite->h, CELL_SIZE);
-    // Don't set radius
-    newObj->c.spriteMirrored = false;
-    newObj->c.spriteRotation = 0;
-    newObj->c.solidColor     = cTransparent;
 
     // Add it to the linked list
     push(&ray->enemies, newObj);

@@ -333,7 +333,7 @@ void drawForeground2d(ray_t* ray)
             getTexByType(ray, OBJ_ITEM_R_KEY),
         };
 
-        // For oeach key
+        // For each key
         for (int kIdx = 0; kIdx < ARRAY_SIZE(keys); kIdx++)
         {
             // If it is held
