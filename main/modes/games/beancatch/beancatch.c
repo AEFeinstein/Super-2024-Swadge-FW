@@ -324,7 +324,7 @@ void bcUpdateClock(void)
     {
         beancatch->waitLoopCounter = 200;
         beancatch->refreshScreen = true;
-        //bcUpdateGame();
+        bcUpdateGame();
     }
 
     bcDrawGame();
@@ -366,7 +366,7 @@ void bcUpdateGame(void)
                         || 
                         !beancatch->beanCount    //Force to yes if there are no beans on the playfield 
                     )
-                        
+
                 )
                 {
                     if (!beancatch->beans[beancatch->currentConveyor])
@@ -384,7 +384,17 @@ void bcUpdateGame(void)
                 if (beancatch->beans[beancatch->currentConveyor] > 0)
                 {
                     bcCheckPlayerCatchBean();
-                    globalMidiPlayerPlaySong(&beancatch->sounds[beancatch->currentConveyor], MIDI_SFX);
+
+                    if(beancatch->state != BC_ST_CLOCK)
+                    {
+                        globalMidiPlayerPlaySong(&beancatch->sounds[beancatch->currentConveyor], MIDI_SFX);
+                    } 
+                    else if(beancatch->beans[beancatch->currentConveyor] & 0b100000)
+                    {
+                        beancatch->playerPosition = beancatch->currentConveyor;
+                        bcCheckPlayerCatchBean();
+                    }
+
                     beancatch->waitLoopCounter=0;
                     beancatch->refreshScreen = true;
                     beancatch->currentConveyor = (beancatch->currentConveyor + 1) % 4;
@@ -397,63 +407,66 @@ void bcUpdateGame(void)
         }
     }
     
-    switch (beancatch->playerPosition)
+    if(beancatch->state != BC_ST_CLOCK)
     {
-        case BC_CONVEYOR_LU:
-            if((beancatch->btnState & PB_RIGHT) && !(beancatch->btnState & PB_LEFT))
-            {
-                beancatch->playerPosition = BC_CONVEYOR_RU;
-                bcCheckPlayerCatchBean();
-                beancatch->refreshScreen = true;
-            } else if((beancatch->btnState & PB_DOWN) && !(beancatch->btnState & PB_UP))
-            {
-                beancatch->playerPosition = BC_CONVEYOR_LD;
-                bcCheckPlayerCatchBean();
-                beancatch->refreshScreen = true;
-            }
-            break;
-        case BC_CONVEYOR_LD:
-            if((beancatch->btnState & PB_RIGHT) && !(beancatch->btnState & PB_LEFT))
-            {
-                beancatch->playerPosition = BC_CONVEYOR_RD;
-                bcCheckPlayerCatchBean();
-                beancatch->refreshScreen = true;
-            } else if((beancatch->btnState & PB_UP) && !(beancatch->btnState & PB_DOWN))
-            {
-                beancatch->playerPosition = BC_CONVEYOR_LU;
-                bcCheckPlayerCatchBean();
-                beancatch->refreshScreen = true;
-            }
-            break;
-        case BC_CONVEYOR_RU:
-            if((beancatch->btnState & PB_LEFT) && !(beancatch->btnState & PB_RIGHT))
-            {
-                beancatch->playerPosition = BC_CONVEYOR_LU;
-                bcCheckPlayerCatchBean();
-                beancatch->refreshScreen = true;
-            } else if((beancatch->btnState & PB_DOWN) && !(beancatch->btnState & PB_UP))
-            {
-                beancatch->playerPosition = BC_CONVEYOR_RD;
-                bcCheckPlayerCatchBean();
-                beancatch->refreshScreen = true;
-            }
-            break;
-        case BC_CONVEYOR_RD:
-            if((beancatch->btnState & PB_LEFT) && !(beancatch->btnState & PB_RIGHT))
-            {
-                beancatch->playerPosition = BC_CONVEYOR_LD;
-                bcCheckPlayerCatchBean();
-                beancatch->refreshScreen = true;
-            } else if((beancatch->btnState & PB_UP) && !(beancatch->btnState & PB_DOWN))
-            {
-                beancatch->playerPosition = BC_CONVEYOR_RU;
-                bcCheckPlayerCatchBean();
-                beancatch->refreshScreen = true;
-            }
-            break;
-        
-        default:
-            break;
+        switch (beancatch->playerPosition)
+        {
+            case BC_CONVEYOR_LU:
+                if((beancatch->btnState & PB_RIGHT) && !(beancatch->btnState & PB_LEFT))
+                {
+                    beancatch->playerPosition = BC_CONVEYOR_RU;
+                    bcCheckPlayerCatchBean();
+                    beancatch->refreshScreen = true;
+                } else if((beancatch->btnState & PB_DOWN) && !(beancatch->btnState & PB_UP))
+                {
+                    beancatch->playerPosition = BC_CONVEYOR_LD;
+                    bcCheckPlayerCatchBean();
+                    beancatch->refreshScreen = true;
+                }
+                break;
+            case BC_CONVEYOR_LD:
+                if((beancatch->btnState & PB_RIGHT) && !(beancatch->btnState & PB_LEFT))
+                {
+                    beancatch->playerPosition = BC_CONVEYOR_RD;
+                    bcCheckPlayerCatchBean();
+                    beancatch->refreshScreen = true;
+                } else if((beancatch->btnState & PB_UP) && !(beancatch->btnState & PB_DOWN))
+                {
+                    beancatch->playerPosition = BC_CONVEYOR_LU;
+                    bcCheckPlayerCatchBean();
+                    beancatch->refreshScreen = true;
+                }
+                break;
+            case BC_CONVEYOR_RU:
+                if((beancatch->btnState & PB_LEFT) && !(beancatch->btnState & PB_RIGHT))
+                {
+                    beancatch->playerPosition = BC_CONVEYOR_LU;
+                    bcCheckPlayerCatchBean();
+                    beancatch->refreshScreen = true;
+                } else if((beancatch->btnState & PB_DOWN) && !(beancatch->btnState & PB_UP))
+                {
+                    beancatch->playerPosition = BC_CONVEYOR_RD;
+                    bcCheckPlayerCatchBean();
+                    beancatch->refreshScreen = true;
+                }
+                break;
+            case BC_CONVEYOR_RD:
+                if((beancatch->btnState & PB_LEFT) && !(beancatch->btnState & PB_RIGHT))
+                {
+                    beancatch->playerPosition = BC_CONVEYOR_LD;
+                    bcCheckPlayerCatchBean();
+                    beancatch->refreshScreen = true;
+                } else if((beancatch->btnState & PB_UP) && !(beancatch->btnState & PB_DOWN))
+                {
+                    beancatch->playerPosition = BC_CONVEYOR_RU;
+                    bcCheckPlayerCatchBean();
+                    beancatch->refreshScreen = true;
+                }
+                break;
+            
+            default:
+                break;
+        }
     }
 
     if(beancatch->clockHalfSecondsPulse && beancatch->halfStrike)
@@ -874,7 +887,7 @@ void bcScorePoint(void)
     {
         beancatch->maxBeans = 1;
     } else {
-        beancatch->maxBeans = BC_DIFFICULTY_MAX_BEANS[CLAMP(scoreHundredsDigit + scoreTensDigit, 0, BC_DIFFICULTY_MAX_BEANS_SIZE)];
+        beancatch->maxBeans = BC_DIFFICULTY_MAX_BEANS[CLAMP(scoreHundredsDigit + scoreTensDigit, 0, BC_DIFFICULTY_MAX_BEANS_SIZE - 1)];
     }
     
     switch(beancatch->gameLevel)
@@ -937,9 +950,10 @@ void bcChangeStateClock(void)
 {
     beancatch->gameLevel = BC_GAME_LEVEL_NULL;
     beancatch->strikes = 0;
-    
     beancatch->state = BC_ST_CLOCK;
     bcNewGame();
+
+    beancatch->maxBeans = 8;
     beancatch->refreshScreen = true;
     beancatch->update = &bcUpdateClock;
 }
@@ -998,7 +1012,12 @@ void bcCheckPlayerCatchBean(void)
             beancatch->occupiedConveyorCount--;
         }
         beancatch->beanInDanger = BC_CONVEYOR_NULL;
-        globalMidiPlayerPlaySong(&beancatch->sounds[BC_SOUND_SCORE_POINT], MIDI_BGM);
-        bcScorePoint();
+
+        if(beancatch->state != BC_ST_CLOCK)
+        {
+            globalMidiPlayerPlaySong(&beancatch->sounds[BC_SOUND_SCORE_POINT], MIDI_BGM);
+            bcScorePoint();
+        }
+           
     }
 }
