@@ -15,9 +15,10 @@ void addCutsceneStyleLoot(cutscene_t* cutscene)
  *
  * Note that Tomi is style 0 and Hyut is style 1
  *
+ * @param ray The entire game state
  * @param cutscene The cutscene to add to
  */
-void initNpcCutsceneLoot(cutscene_t* cutscene)
+void initNpcCutsceneLoot(ray_t* ray, cutscene_t* cutscene)
 {
     addCutsceneStyleLoot(cutscene);
     addCutsceneLine(cutscene, 0, "I'm Tomi", false, 0, NULL);

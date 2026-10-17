@@ -62,92 +62,92 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text)
         {
             case OBJ_ENEMY_NPC_FAIRY_1:
             {
-                initNpcCutsceneKaitie(ray->cutscene);
+                initNpcCutsceneKaitie(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_FAIRY_2:
             {
-                initNpcCutsceneSable(ray->cutscene);
+                initNpcCutsceneSable(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_FAIRY_3:
             {
-                initNpcCutsceneBean(ray->cutscene);
+                initNpcCutsceneBean(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_FAIRY_4:
             {
-                initNpcCutsceneDacc(ray->cutscene);
+                initNpcCutsceneDacc(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_FAIRY_5:
             {
-                initNpcCutsceneKiki(ray->cutscene);
+                initNpcCutsceneKiki(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_FAIRY_6:
             {
-                initNpcCutsceneBouba(ray->cutscene);
+                initNpcCutsceneBouba(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_BARRY_THE_FAIRY:
             {
-                initNpcCutsceneBarryTheFairy(ray->cutscene);
+                initNpcCutsceneBarryTheFairy(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_HYUT:
             {
-                initNpcCutsceneHyut(ray->cutscene);
+                // No dialog for Hyut, only scenes
                 break;
             }
             case OBJ_ENEMY_NPC_GREAT_DEEJAY_TREE:
             {
-                initNpcCutsceneGreatDeejayTree(ray->cutscene);
+                initNpcCutsceneGreatDeejayTree(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_LOOT:
             {
-                initNpcCutsceneLoot(ray->cutscene);
+                initNpcCutsceneLoot(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_DORIA:
             {
-                initNpcCutsceneDoria(ray->cutscene);
+                initNpcCutsceneDoria(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_KING_DONUT:
             {
-                initNpcCutsceneKingDonut(ray->cutscene);
+                initNpcCutsceneKingDonut(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_MEGA_PULSE:
             {
-                initNpcCutsceneMegaPulse(ray->cutscene);
+                initNpcCutsceneMegaPulse(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_CHO:
             {
-                initNpcCutsceneCho(ray->cutscene);
+                initNpcCutsceneCho(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_TRASH_MAN:
             {
-                initNpcCutsceneTrashMan(ray->cutscene);
+                initNpcCutsceneTrashMan(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_EMBER_DEMON:
             {
-                initNpcCutsceneEmberDemon(ray->cutscene);
+                initNpcCutsceneEmberDemon(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_THE_MAYOR:
             {
-                initNpcCutsceneTheMayor(ray->cutscene);
+                initNpcCutsceneTheMayor(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_FREDWARD:
             {
-                initNpcCutsceneFredward(ray->cutscene);
+                initNpcCutsceneFredward(ray, ray->cutscene);
                 break;
             }
             default:

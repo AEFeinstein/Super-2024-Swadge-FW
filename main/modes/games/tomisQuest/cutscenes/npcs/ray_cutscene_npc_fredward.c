@@ -15,9 +15,10 @@ void addCutsceneStyleFredward(cutscene_t* cutscene)
  *
  * Note that Tomi is style 0 and Hyut is style 1
  *
+ * @param ray The entire game state
  * @param cutscene The cutscene to add to
  */
-void initNpcCutsceneFredward(cutscene_t* cutscene)
+void initNpcCutsceneFredward(ray_t* ray, cutscene_t* cutscene)
 {
     addCutsceneStyleFredward(cutscene);
     addCutsceneLine(cutscene, 0, "I'm Tomi", false, 0, NULL);
