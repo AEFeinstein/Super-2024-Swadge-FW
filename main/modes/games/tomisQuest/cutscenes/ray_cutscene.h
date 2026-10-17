@@ -12,7 +12,6 @@
 #include "ray_cutscene_npc_ember_demon.h"
 #include "ray_cutscene_npc_fredward.h"
 #include "ray_cutscene_npc_great_deejay_tree.h"
-#include "ray_cutscene_npc_hyut.h"
 #include "ray_cutscene_npc_kaitie.h"
 #include "ray_cutscene_npc_kiki.h"
 #include "ray_cutscene_npc_king_donut.h"
