@@ -215,7 +215,7 @@ void drawLineFast(int16_t x0, int16_t y0, int16_t x1, int16_t y1, paletteColor_t
     int cy            = y0;
 
     // Checks if both edges are outside of bounds
-    // This is a simple, yet incomplete line clipping algorithm similar to Cohen–Sutherland
+    // This is a simple, yet incomplete line clipping algorithm similar to Cohen-Sutherland
     // that ignores more complex cases of diagonal lines outside the viewing area
     if ((x0 < 0 && x1 < 0) || (x0 >= TFT_WIDTH && x1 >= TFT_WIDTH) || //
         (y0 < 0 && y1 < 0) || (y0 >= TFT_HEIGHT && y1 >= TFT_HEIGHT))

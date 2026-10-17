@@ -31,6 +31,13 @@ bool initCutsceneIntro(cutscene_t* cutscene, const char* title)
 #define CS_STYLE_SABLE (CS_STYLE_KAITIE + 1)
         addCutsceneStyleSable(cutscene);
 
+#define CS_STYLE_DACC (CS_STYLE_SABLE + 1)
+        addCutsceneStyleDacc(cutscene);
+
+#define CS_STYLE_TOMI_NO_PORTRAIT (CS_STYLE_DACC + 1)
+        addCutsceneStyle(cutscene, c000, TQ_TOMI_PORTRAIT_00_COCKY_WSG, CUTSCENE_TEXTBOX_WSG, "Tomi", 10, false, false,
+                         true);
+
         // clang-format off
 
         // Initialize lines
@@ -48,16 +55,16 @@ bool initCutsceneIntro(cutscene_t* cutscene, const char* title)
 
         // [still black.]
 
-        addCutsceneLine(cutscene, CS_STYLE_KAITIE, "Wake up, loser!", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_DACC, "Wake up, loser!", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_SABLE, "Yeah, dingus, you're gonna miss the connection ceremony!", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_TOMI, "...huhwha?", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_SABLE, "Of COURSE Tomi would oversleep.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI_NO_PORTRAIT, "...huhwha?", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_DACC, "Of COURSE Tomi would oversleep.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_KAITIE, "Hey, the Great DeJay Tree said we had to wake her. She's up. C'mon, let's go.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_SABLE, "See ya!", false, 0, startDrawingGame);
 
         // [Scene starts: Tomi's Home.]
 
-        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Aww jeez. Aww jeez! The Connection Ceremony is today?! I gotta hurry, or I'm going to miss the whole thing!", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Aww jeez. Aww jeez! The Connection Ceremony is today?! I gotta hurry, or I'm going to miss the whole thing!", false, TOMI_EMBARASSED, NULL);
 
         // clang-format on
 
