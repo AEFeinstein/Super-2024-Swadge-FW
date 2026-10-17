@@ -149,7 +149,7 @@ bool rayEnemyGruntMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
     bb.pos.y += delta.y;
 
     // Update the enemy position if it's in bounds
-    if (rayBoundingBoxFitsInMap(ray, bb))
+    if (rayBoundingBoxFitsInMap(ray, bb, NULL))
     {
         enemy->c.posX += delta.x;
         enemy->c.posY += delta.y;

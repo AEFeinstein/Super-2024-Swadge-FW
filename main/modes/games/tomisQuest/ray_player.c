@@ -111,6 +111,10 @@ bool initializePlayer(ray_t* ray)
  */
 void raySaveGame(ray_t* ray)
 {
+    // Never ever save a camera target that is out of bounds
+    ray->p.cameraTarget.x = CLAMP(ray->camera.x, 0, (ray->map.w * CELL_SIZE) - TFT_WIDTH);
+    ray->p.cameraTarget.y = CLAMP(ray->camera.y, 0, (ray->map.h * CELL_SIZE) - TFT_HEIGHT);
+
     writeNvsBlob(RAY_NVS_KEY, &(ray->p), sizeof(ray->p));
     writeNvsBlob(getRayMapMetadata(ray->p.mapId)->visitedKey, ray->map.visitedTiles,
                  sizeof(rayTileState_t) * ray->map.w * ray->map.h);
@@ -278,7 +282,7 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
             // Check for horizontal movement
             movedBoundingBox.pos.x += deltaX;
             // If the player's new location doesn't fit
-            if (!rayBoundingBoxFitsInMap(ray, movedBoundingBox))
+            if (!rayBoundingBoxFitsInMap(ray, movedBoundingBox, NULL))
             {
                 // Unmove the player's bounding box
                 movedBoundingBox.pos.x -= deltaX;
@@ -289,7 +293,7 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
             // Check for vertical movement
             movedBoundingBox.pos.y += deltaY;
             // If the player's new location doesn't fit
-            if (!rayBoundingBoxFitsInMap(ray, movedBoundingBox))
+            if (!rayBoundingBoxFitsInMap(ray, movedBoundingBox, NULL))
             {
                 // Unmove the player's bounding box
                 movedBoundingBox.pos.y -= deltaY;
