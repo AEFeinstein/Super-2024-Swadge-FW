@@ -527,8 +527,6 @@ static void rayMainLoop(int64_t elapsedUs)
                 {
                     // Switch to showing the warp screen
                     raySwitchToScreen(RAY_WARP_SCREEN);
-                    // Do the warp in the background
-                    warpToDestination(ray);
                 }
                 // Show credits if it's in the game state and it should
                 // It may switch to the dialog state while credits are pending

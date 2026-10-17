@@ -25,6 +25,26 @@
 #define CS_STYLE_TOMI 0
 #define CS_STYLE_HYUT 1
 
+typedef enum
+{
+    TOMI_COCKY,
+    TOMI_EMBARASSED,
+    TOMI_FIREDUP,
+    TOMI_PLEADING,
+    TOMI_ANGRY,
+    TOMI_BORED,
+    TOMI_SUSPICIOUS,
+    TOMI_CALM,
+    TOMI_SAD,
+    TOMI_SHOCKED,
+} tomiEmotion_t;
+
+typedef enum
+{
+    HYUT_NEUTRAL,
+    HYUT_YELLING,
+} hyutEmotion_t;
+
 typedef bool (*rayCutsceneSceneInitFn_t)(cutscene_t* cutscene, const char* title);
 
 void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text);

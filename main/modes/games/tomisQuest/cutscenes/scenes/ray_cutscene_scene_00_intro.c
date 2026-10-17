@@ -22,13 +22,13 @@ bool initCutsceneIntro(cutscene_t* cutscene, const char* title)
     {
         // Initialize Styles
 
-#define CS_STYLE_NARRATOR 2
+#define CS_STYLE_NARRATOR (CS_STYLE_HYUT + 1)
         addCutsceneStyleNarrator(cutscene);
 
-#define CS_STYLE_KAITIE 3
+#define CS_STYLE_KAITIE (CS_STYLE_NARRATOR + 1)
         addCutsceneStyleKaitie(cutscene);
 
-#define CS_STYLE_SABLE 4
+#define CS_STYLE_SABLE (CS_STYLE_KAITIE + 1)
         addCutsceneStyleSable(cutscene);
 
         // clang-format off

@@ -34,7 +34,7 @@ void rayEnemyBoxCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t 
             // Try moving the bounding box and check if it fits
             enemyBB.pos.x += *deltaX;
             enemyBB.pos.y += *deltaY;
-            if (rayBoundingBoxFitsInMap(ray, enemyBB))
+            if (rayBoundingBoxFitsInMap(ray, enemyBB, NULL))
             {
                 // Check for intersections with other boxes
                 node_t* eNode = ray->enemies.first;
