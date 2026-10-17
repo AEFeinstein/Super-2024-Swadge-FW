@@ -43,7 +43,7 @@ bool initCutsceneHyutPairing(cutscene_t* cutscene, const char* title)
         addCutsceneLine(cutscene, CS_STYLE_HYUT_QQQ, "Ha.. Haa.. Hyaaa!", false, HYUT_YELLING, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Can you talk? ", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_HYUT_QQQ, "Hyaa! Hyut!", false, HYUT_YELLING, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Uhh, I guess I'll call you “Hyut.”", false, TOMI_BORED, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Uhh, I guess I'll call you \"Hyut.\"", false, TOMI_BORED, NULL);
         addCutsceneLine(cutscene, CS_STYLE_HYUT, "Hyut! Haa!", false, HYUT_NEUTRAL, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "...", false, TOMI_BORED, NULL);
         addCutsceneLine(cutscene, CS_STYLE_HYUT, "...", false, HYUT_NEUTRAL, NULL);
