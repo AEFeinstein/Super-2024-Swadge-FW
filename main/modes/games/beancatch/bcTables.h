@@ -175,7 +175,8 @@ typedef enum
     BC_CONVEYOR_LU,
     BC_CONVEYOR_RU,
     BC_CONVEYOR_LD,
-    BC_CONVEYOR_RD
+    BC_CONVEYOR_RD,
+    BC_CONVEYOR_SIZE
 } bc_conveyorIndex_t;
 
 typedef enum

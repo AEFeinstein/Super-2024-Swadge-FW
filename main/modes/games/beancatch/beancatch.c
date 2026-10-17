@@ -55,7 +55,6 @@ struct beancatch_t {
     uint8_t waitLoopCounter;
     uint8_t waitLoopMax;
     uint8_t emptyLoopCountdown;
-    uint8_t idleConveyorCounter;
     uint8_t occupiedConveyorCount;
 
     uint8_t currentConveyor;
@@ -323,7 +322,9 @@ void bcUpdateClock(void)
 
     if (beancatch->clockSecondsPulse)
     {
+        beancatch->waitLoopCounter = 200;
         beancatch->refreshScreen = true;
+        //bcUpdateGame();
     }
 
     bcDrawGame();
@@ -342,9 +343,8 @@ void bcUpdateGame(void)
         else
         {
             //handle beans
-            beancatch->idleConveyorCounter=0;
-
-            do {
+            for(uint8_t i = 0; i < BC_CONVEYOR_SIZE; i++)
+            {
                 if(beancatch->beans[beancatch->currentConveyor] & 0b10000)
                 {
                     beancatch->beanInDanger = beancatch->currentConveyor;
@@ -380,21 +380,20 @@ void bcUpdateGame(void)
                     beancatch->refreshScreen = true;
                 }
 
+                //Did we actually move a bean?
                 if (beancatch->beans[beancatch->currentConveyor] > 0)
                 {
-                    beancatch->idleConveyorCounter=0;
                     bcCheckPlayerCatchBean();
                     globalMidiPlayerPlaySong(&beancatch->sounds[beancatch->currentConveyor], MIDI_SFX);
                     beancatch->waitLoopCounter=0;
                     beancatch->refreshScreen = true;
-                }
-                else
-                {
-                    beancatch->idleConveyorCounter++;
+                    beancatch->currentConveyor = (beancatch->currentConveyor + 1) % 4;
+                    break;
                 }
 
+                //If not, try the next conveyor
                 beancatch->currentConveyor = (beancatch->currentConveyor + 1) % 4;
-            } while (beancatch->idleConveyorCounter > 0 && beancatch->idleConveyorCounter < 3);
+            }
         }
     }
     
