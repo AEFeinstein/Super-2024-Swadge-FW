@@ -34,7 +34,7 @@ bool initCutsceneHyutPairing(ray_t* ray, cutscene_t* cutscene, const char* title
         {
             return true;
         }
-        
+
         // Initialize Styles
 
 #define CS_STYLE_HYUT_QQQ (CS_STYLE_HYUT + 1)
