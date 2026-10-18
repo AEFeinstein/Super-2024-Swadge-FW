@@ -98,7 +98,7 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text)
             }
             case OBJ_ENEMY_NPC_GREAT_DEEJAY_TREE:
             {
-                initNpcCutsceneGreatDeejayTree(ray, ray->cutscene);
+                initNpcCutsceneGreatDejayTree(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_LOOT:

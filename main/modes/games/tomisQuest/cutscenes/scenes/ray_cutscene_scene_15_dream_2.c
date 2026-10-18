@@ -26,7 +26,7 @@ bool initCutsceneDream2(ray_t* ray, cutscene_t* cutscene, const char* title)
         {
             return true;
         }
-        
+
         // Initialize Styles
 
         // clang-format off

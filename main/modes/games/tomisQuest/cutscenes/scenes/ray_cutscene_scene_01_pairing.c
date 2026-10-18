@@ -50,7 +50,7 @@ bool initCutscenePairing(ray_t* ray, cutscene_t* cutscene, const char* title)
         // Bouba not in this scene
 
 #define CS_STYLE_TREE (CS_STYLE_KIKI + 1)
-        addCutsceneStyleGreatDeejayTree(cutscene);
+        addCutsceneStyleGreatDejayTree(cutscene);
 
         // clang-format off
 
