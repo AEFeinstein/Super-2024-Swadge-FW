@@ -2,4 +2,4 @@
 
 #include "ray_cutscene.h"
 
-bool initCutsceneGreatFairy(cutscene_t* cutscene, const char* title);
+bool initCutsceneGreatFairy(ray_t* ray, cutscene_t* cutscene, const char* title);

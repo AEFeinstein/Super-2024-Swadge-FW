@@ -733,10 +733,11 @@ typedef struct
     bool drawGame;       ///< False to draw black, true to draw the game
     int32_t mapId;       ///< The ID of the current map
     // Current status
-    int32_t health;    ///< The player's current health
-    int32_t maxHealth; ///< The player's current max health.
-    rayInventory_t i;  ///< All the players items
-    uint32_t mpoints;  ///< Currency
+    int32_t health;          ///< The player's current health
+    int32_t maxHealth;       ///< The player's current max health.
+    rayInventory_t i;        ///< All the players items
+    uint32_t mpoints;        ///< Currency
+    uint32_t cutsceneViewed; ///< Cutscenes viewed
 } rayPlayer_t;
 
 /**
