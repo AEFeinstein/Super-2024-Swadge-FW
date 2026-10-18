@@ -2,16 +2,31 @@
 #include "ray_cutscene_scene_01_pairing.h"
 
 /**
+ * @brief Callback to mark this scene as viewed
+ */
+static void endScene(void)
+{
+    getRayState()->p.cutsceneViewed |= TQS_PAIRING;
+}
+
+/**
  * @brief Initialize a cutscene based on the cutscene scene title
  *
+ * @param ray the entire game state
  * @param cutscene The cutscene to initialize
  * @param title The title of the cutscene to initialize. May or may not match this cutscene
  * @return true if the cutscene was initialized, false if it wasn't
  */
-bool initCutscenePairing(cutscene_t* cutscene, const char* title)
+bool initCutscenePairing(ray_t* ray, cutscene_t* cutscene, const char* title)
 {
     if (0 == strcmp(title, "PAIRING_SCENE"))
     {
+        // If the cutscene was already viewed, don't bother
+        if (ray->p.cutsceneViewed & TQS_PAIRING)
+        {
+            return true;
+        }
+
         // Initialize Styles
 
 #define CS_STYLE_NARRATOR (CS_STYLE_HYUT + 1)
@@ -64,8 +79,8 @@ bool initCutscenePairing(cutscene_t* cutscene, const char* title)
         // [as the player presses A, instead of singing...]
 
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "(... Ehh, no. I'd better not annoy them. I'm sure everything will be fine.)", false, TOMI_EMBARASSED, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "One by one, each fairy paired with a child. And Tomi was left alone. ", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_TOMI, "...? There's no one left? Oh... okay. I guess there'll always be next time... right?", false, TOMI_SAD, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "One by one, each fairy paired with a child. And Tomi was left alone.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "...? There's no one left? Oh... okay. I guess there'll always be next time... right?", false, TOMI_SAD, endScene);
 
         // clang-format on
 
