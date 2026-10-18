@@ -2,4 +2,4 @@
 
 #include "ray_cutscene.h"
 
-bool initCutsceneDoriaIntro(cutscene_t* cutscene, const char* title);
+bool initCutsceneDoriaIntro(ray_t* ray, cutscene_t* cutscene, const char* title);

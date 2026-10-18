@@ -2,4 +2,4 @@
 
 #include "ray_cutscene.h"
 
-bool initCutsceneSinging(cutscene_t* cutscene, const char* title);
+bool initCutsceneSinging(ray_t* ray, cutscene_t* cutscene, const char* title);

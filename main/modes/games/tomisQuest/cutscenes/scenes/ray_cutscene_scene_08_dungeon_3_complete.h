@@ -2,4 +2,4 @@
 
 #include "ray_cutscene.h"
 
-bool initCutsceneDungeon3Complete(cutscene_t* cutscene, const char* title);
+bool initCutsceneDungeon3Complete(ray_t* ray, cutscene_t* cutscene, const char* title);

@@ -81,13 +81,9 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text)
                 break;
             }
             case OBJ_ENEMY_NPC_FAIRY_5:
-            {
-                initNpcCutsceneKiki(ray, ray->cutscene);
-                break;
-            }
             case OBJ_ENEMY_NPC_FAIRY_6:
             {
-                initNpcCutsceneBouba(ray, ray->cutscene);
+                initNpcCutsceneKikiBouba(ray, ray->cutscene);
                 break;
             }
             case OBJ_ENEMY_NPC_BARRY_THE_FAIRY:
@@ -182,9 +178,18 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text)
         bool sceneStarted = false;
         for (int sIdx = 0; sIdx < ARRAY_SIZE(scenes); sIdx++)
         {
-            if (scenes[sIdx](ray->cutscene, text))
+            if (scenes[sIdx](ray, ray->cutscene, text))
             {
-                sceneStarted = true;
+                if (0 == ray->cutscene->lines.length)
+                {
+                    // Zero lines indicates the cutscene name matched, but has already been viewed
+                    ray->cutsceneDone = true;
+                    return;
+                }
+                else
+                {
+                    sceneStarted = true;
+                }
                 break;
             }
         }

@@ -2,4 +2,4 @@
 
 #include "ray_cutscene.h"
 
-bool initCutsceneHyutPairing(cutscene_t* cutscene, const char* title);
+bool initCutsceneHyutPairing(ray_t* ray, cutscene_t* cutscene, const char* title);
