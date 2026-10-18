@@ -10,7 +10,7 @@
 #include "ray_cutscene_npc_doria.h"
 #include "ray_cutscene_npc_ember_demon.h"
 #include "ray_cutscene_npc_fredward.h"
-#include "ray_cutscene_npc_great_deejay_tree.h"
+#include "ray_cutscene_npc_great_dejay_tree.h"
 #include "ray_cutscene_npc_kaitie.h"
 #include "ray_cutscene_npc_kiki_bouba.h"
 #include "ray_cutscene_npc_king_donut.h"
@@ -62,6 +62,11 @@ typedef enum
     TQS_DREAM_1            = (1 << 14),
     TQS_DREAM_2            = (1 << 15),
     TQS_DREAM_3            = (1 << 16),
+    TQS_DJ_TREE_1          = (1 << 17),
+    TQS_DJ_TREE_2          = (1 << 18),
+    TQS_DJ_TREE_3          = (1 << 19),
+    TQS_DJ_TREE_4          = (1 << 20),
+    TQS_DJ_TREE_5          = (1 << 21),
 } tomisQuestSceneId_t;
 
 typedef bool (*rayCutsceneSceneInitFn_t)(ray_t* ray, cutscene_t* cutscene, const char* title);

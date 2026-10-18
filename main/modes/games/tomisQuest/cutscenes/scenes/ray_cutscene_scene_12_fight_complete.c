@@ -26,7 +26,7 @@ bool initCutsceneFightComplete(ray_t* ray, cutscene_t* cutscene, const char* tit
         {
             return true;
         }
-        
+
         // Initialize Styles
 
         // clang-format off
