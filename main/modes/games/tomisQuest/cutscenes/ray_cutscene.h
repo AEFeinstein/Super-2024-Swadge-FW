@@ -67,6 +67,7 @@ typedef enum
     TQS_DJ_TREE_3          = (1 << 19),
     TQS_DJ_TREE_4          = (1 << 20),
     TQS_DJ_TREE_5          = (1 << 21),
+    TQS_FREDWARD           = (1 << 22),
 } tomisQuestSceneId_t;
 
 typedef bool (*rayCutsceneSceneInitFn_t)(ray_t* ray, cutscene_t* cutscene, const char* title);

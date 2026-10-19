@@ -93,7 +93,26 @@ void rayInitEnemyNpc(ray_t* ray, rayEnemy_t* e, rayMapCellType_t type)
         }
         case OBJ_ENEMY_NPC_MEGA_PULSE:
         {
-            tex = OBJ_ENEMY_NPC_MEGA_PULSE_WSG;
+            // After visiting Loot, before getting shield
+            if (!ray->p.i.haveShield)
+            {
+                tex = OBJ_ENEMY_NPC_MEGA_PULSE_WSG;
+            }
+            // After getting shield, before getting turntables
+            else if (!ray->p.i.haveTurntables)
+            {
+                tex = OBJ_ENEMY_NPC_SAWTOOTH_WSG;
+            }
+            // After getting turntables, before getting lullaby
+            else if (!ray->p.i.haveDoriasLullaby)
+            {
+                tex = OBJ_ENEMY_NPC_MEGA_PULSE_WSG;
+            }
+            // After getting lullaby
+            else
+            {
+                tex = OBJ_ENEMY_NPC_MEGA_PULSE_SAWTOOTH_WSG;
+            }
             break;
         }
         case OBJ_ENEMY_NPC_CHO:
@@ -113,7 +132,16 @@ void rayInitEnemyNpc(ray_t* ray, rayEnemy_t* e, rayMapCellType_t type)
         }
         case OBJ_ENEMY_NPC_THE_MAYOR:
         {
-            tex = OBJ_ENEMY_NPC_THE_MAYOR_WSG;
+            // Mayor is actually a sign between getting the shield and turntables
+            if (ray->p.i.haveShield && !ray->p.i.haveTurntables)
+            {
+                tex = OBJ_SCENERY_SIGNPOST_WSG;
+            }
+            // After getting turntables, before getting lullaby
+            else
+            {
+                tex = OBJ_ENEMY_NPC_THE_MAYOR_WSG;
+            }
             break;
         }
         case OBJ_ENEMY_NPC_FREDWARD:

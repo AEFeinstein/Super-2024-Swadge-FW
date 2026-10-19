@@ -15,6 +15,7 @@
 #include "ray_tex_manager.h"
 #include "ray_script.h"
 #include "ray_enemy.h"
+#include "ray_cutscene.h"
 
 //==============================================================================
 // Functions
@@ -261,16 +262,16 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
     // Load Scripts
     loadScripts(ray, &fileData[fileIdx], fileSize - fileIdx, caps);
 
-    // After loading scripts, check if the player has this thing
-    if (ray->p.i.haveMayorHouseTrigger)
-    {
-        checkScriptHaveThing(ray, MAYOR_HOUSE_TRIGGER, ray->ps.sprite);
-    }
-
     // Only free data which was decompressed
     if (decompressedData)
     {
         heap_caps_free(decompressedData);
+    }
+
+    // After loading scripts, check if the player has this thing
+    if (ray->p.i.haveMayorHouseTrigger)
+    {
+        checkScriptHaveThing(ray, MAYOR_HOUSE_TRIGGER, ray->ps.sprite);
     }
 
     // Get a list of unused small keys
@@ -308,6 +309,10 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
             }
         }
     }
+
+    // For Fredward's dialog
+    ray->ps.firstShopVisit = (ray->p.cutsceneViewed & TQS_FREDWARD) ? false : true;
+    ray->ps.itemPurchased  = false;
 
     // Play this map's music
     globalMidiPlayerPlaySong(getAtIndex(&ray->bgmSongs, mapId), MIDI_BGM);
