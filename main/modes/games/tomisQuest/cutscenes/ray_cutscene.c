@@ -197,7 +197,7 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text)
         if (false == sceneStarted)
         {
             // Blank style for signposts and such
-            addCutsceneStyle(ray->cutscene, c000, 0, CUTSCENE_TEXTBOX_WSG, "", 0, false, false, true);
+            addCutsceneStyleSign(ray->cutscene);
             // Add the single line
             addCutsceneLine(ray->cutscene, 2, text, false, 0, NULL);
         }

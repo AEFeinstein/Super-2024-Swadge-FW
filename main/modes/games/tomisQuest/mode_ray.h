@@ -788,6 +788,9 @@ typedef struct
         bool b_key;
         bool k_key;
     } keyMask;
+
+    bool firstShopVisit; ///< For Fredward's dialog, if this is the first time the player visits the shop
+    bool itemPurchased;  ///< For Fredward's dialog, if the player purchased an item in the current map
 } rayPlayerState_t;
 
 typedef struct
