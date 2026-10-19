@@ -111,6 +111,9 @@ void rayShopDialogCb(const char* label)
                 .type = ray->shopObj,
             };
             rayPlayerTouchItem(ray, &item, ray->p.mapId);
+
+            // For Fredward's dialog
+            ray->ps.itemPurchased = true;
         }
     }
     else if (label == NO_THANKS)

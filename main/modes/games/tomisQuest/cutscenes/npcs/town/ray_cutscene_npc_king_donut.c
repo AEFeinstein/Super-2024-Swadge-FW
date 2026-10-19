@@ -25,34 +25,34 @@ void initNpcCutsceneKingDonut(ray_t* ray, cutscene_t* cutscene)
 #define CS_STYLE_KING_DONUT (CS_STYLE_HYUT + 1)
     addCutsceneStyleKingDonut(cutscene);
 
-    if (!ray->p.i.haveEwiOfTime)
-    {
-        // Before getting Ewi
-        addCutsceneLine(cutscene, CS_STYLE_KING_DONUT, "TODO", false, 0, NULL);
-    }
-    // After getting Ewi, before visiting Loot
-    else if (!(ray->p.cutsceneViewed & TQS_LOOT_INTRO))
-    {
-        addCutsceneLine(cutscene, CS_STYLE_KING_DONUT, "TODO", false, 0, NULL);
-    }
+    // clang-format off
+
     // After visiting Loot, before getting shield
-    else if (!ray->p.i.haveShield)
+    if (!ray->p.i.haveShield)
     {
-        addCutsceneLine(cutscene, CS_STYLE_KING_DONUT, "TODO", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_KING_DONUT, "Man, have you sampled any of the fine goods over at the ITEM SHOP? They're delicious!", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "um... none of the items in the ITEM SHOP looked like food...", false, TOMI_SUSPICIOUS, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_KING_DONUT, "Sure, not if you have THAT attitude!", false, 0, NULL);
     }
     // After getting shield, before getting turntables
     else if (!ray->p.i.haveTurntables)
     {
-        addCutsceneLine(cutscene, CS_STYLE_KING_DONUT, "TODO", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_KING_DONUT, "Welcome back, brave adventurers!", false, 0, NULL);
     }
     // After getting turntables, before getting lullaby
     else if (!ray->p.i.haveDoriasLullaby)
     {
-        addCutsceneLine(cutscene, CS_STYLE_KING_DONUT, "TODO", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_KING_DONUT, "Back again, brave Adventurers! Need to stock up on provisions?", false, 0, NULL);
     }
     // After getting lullaby
     else
     {
-        addCutsceneLine(cutscene, CS_STYLE_KING_DONUT, "TODO", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_KING_DONUT, "Hello Tomi!", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Hello, your majesty!", false, TOMI_CALM, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_KING_DONUT, "I will be returning to my kingdom soon, sadly. No rest for visiting royalty!", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Did you get to do everything you wanted in Gaylordia?", false, TOMI_CALM, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_KING_DONUT, "never enough time to see everyone and do everything. But alas, it's always this way. The good news is, there's always next year!", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Until then!", false, TOMI_CALM, NULL);
     }
+    // clang-format on
 }

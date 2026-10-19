@@ -24,34 +24,37 @@ void initNpcCutsceneTrashMan(ray_t* ray, cutscene_t* cutscene)
 #define CS_STYLE_TRASH_MAN (CS_STYLE_HYUT + 1)
     addCutsceneStyleTrashMan(cutscene);
 
-    if (!ray->p.i.haveEwiOfTime)
-    {
-        // Before getting Ewi
-        addCutsceneLine(cutscene, CS_STYLE_TRASH_MAN, "TODO", false, 0, NULL);
-    }
-    // After getting Ewi, before visiting Loot
-    else if (!(ray->p.cutsceneViewed & TQS_LOOT_INTRO))
-    {
-        addCutsceneLine(cutscene, CS_STYLE_TRASH_MAN, "TODO", false, 0, NULL);
-    }
+    // clang-format off
+
     // After visiting Loot, before getting shield
-    else if (!ray->p.i.haveShield)
+    if (!ray->p.i.haveShield)
     {
-        addCutsceneLine(cutscene, CS_STYLE_TRASH_MAN, "TODO", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TRASH_MAN, "Hey there, brave adventurers! Can I interest you in-", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "(to Hyut) Don't make eye contact...just keep walking...", false, TOMI_EMBARASSED, NULL);
     }
     // After getting shield, before getting turntables
     else if (!ray->p.i.haveTurntables)
     {
-        addCutsceneLine(cutscene, CS_STYLE_TRASH_MAN, "TODO", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TRASH_MAN, "Hello again brave adventurers! Can I interest-", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Dude, NOT interested. Man, what a creep.", false, TOMI_BORED, NULL);
     }
     // After getting turntables, before getting lullaby
     else if (!ray->p.i.haveDoriasLullaby)
     {
-        addCutsceneLine(cutscene, CS_STYLE_TRASH_MAN, "TODO", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TRASH_MAN, "Brave adventurers! You will DEFINITELY not want to miss-", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "NO dude, leave us alone!", false, TOMI_ANGRY, NULL);
     }
     // After getting lullaby
     else
     {
-        addCutsceneLine(cutscene, CS_STYLE_TRASH_MAN, "TODO", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TRASH_MAN, "Brave adventurers! Please do not ignore me again, I have vital information for you to complete your quest!", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Sigh, fine. What do you got for us?", false, TOMI_BORED, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TRASH_MAN, "did you know... that to the west of us, there lies a mysterious DUNGEON? What mysteries could it possi-", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Yeah dude, we already checked it out. Like, a while ago.", false, TOMI_BORED, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TRASH_MAN, "Oh.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "See ya.", false, TOMI_BORED, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TRASH_MAN, "Yes, well... See ya, I guess.", false, 0, NULL);
     }
+
+    // clang-format on
 }
