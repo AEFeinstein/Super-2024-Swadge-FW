@@ -191,6 +191,12 @@ void powerUpButtons(void)
  */
 bool checkButtonQueue(buttonEvt_t* evt)
 {
+    // Return immediately if not initialized
+    if (NULL == btn_evt_queue)
+    {
+        return false;
+    }
+
     // Check if there's an event to dequeue from the ISR
     timedEvt_t gpio_evt;
     while (xQueueReceive(btn_evt_queue, &gpio_evt, 0))
