@@ -17,23 +17,23 @@
 #include "hdw-nvs.h"
 #include "quaternions.h"
 
-#define DSCL_OUTPUT                             \
-    {                                           \
-        GPIO.enable1_w1ts.val = 1 << (41 - 32); \
+#define DSCL_OUTPUT                          \
+    {                                        \
+        GPIO_SCL_ENABLE_W1TS = 1 << SCL_PIN; \
     }
-#define DSCL_INPUT                              \
-    {                                           \
-        GPIO.enable1_w1tc.val = 1 << (41 - 32); \
+#define DSCL_INPUT                           \
+    {                                        \
+        GPIO_SCL_ENABLE_W1TC = 1 << SCL_PIN; \
     }
-#define DSDA_OUTPUT                  \
-    {                                \
-        GPIO.enable_w1ts = 1 << (3); \
+#define DSDA_OUTPUT                          \
+    {                                        \
+        GPIO_SDA_ENABLE_W1TS = 1 << SDA_PIN; \
     }
-#define DSDA_INPUT                   \
-    {                                \
-        GPIO.enable_w1tc = 1 << (3); \
+#define DSDA_INPUT                           \
+    {                                        \
+        GPIO_SDA_ENABLE_W1TC = 1 << SDA_PIN; \
     }
-#define READ_DSDA ((GPIO.in >> 3) & 1)
+#define READ_DSDA ((GPIO_SDA_IN >> SDA_PIN) & 1)
 
 // 14 counts (1MHz) works most of the time, but no hurries, let's slow it down to ~800k.
 void i2c_delay(int x)
@@ -44,6 +44,32 @@ void i2c_delay(int x)
 }
 #define DELAY1 i2c_delay(1);
 #define DELAY2 i2c_delay(2);
+
+static uint32_t SDA_PIN;
+static volatile uint32_t* GPIO_SDA_W1TC_R;
+static volatile uint32_t* GPIO_SDA_W1TS_R;
+static volatile uint32_t* GPIO_SDA_ENABLE_W1TC_R;
+static volatile uint32_t* GPIO_SDA_ENABLE_W1TS_R;
+static volatile uint32_t* GPIO_SDA_IN_R;
+
+#define GPIO_SDA_W1TC        (*GPIO_SDA_W1TC_R)
+#define GPIO_SDA_W1TS        (*GPIO_SDA_W1TS_R)
+#define GPIO_SDA_ENABLE_W1TC (*GPIO_SDA_ENABLE_W1TC_R)
+#define GPIO_SDA_ENABLE_W1TS (*GPIO_SDA_ENABLE_W1TS_R)
+#define GPIO_SDA_IN          (*GPIO_SDA_IN_R)
+
+static uint32_t SCL_PIN;
+static volatile uint32_t* GPIO_SCL_W1TC_R;
+static volatile uint32_t* GPIO_SCL_W1TS_R;
+static volatile uint32_t* GPIO_SCL_ENABLE_W1TC_R;
+static volatile uint32_t* GPIO_SCL_ENABLE_W1TS_R;
+static volatile uint32_t* GPIO_SCL_IN_R;
+
+#define GPIO_SCL_W1TC        (*GPIO_SCL_W1TC_R)
+#define GPIO_SCL_W1TS        (*GPIO_SCL_W1TS_R)
+#define GPIO_SCL_ENABLE_W1TC (*GPIO_SCL_ENABLE_W1TC_R)
+#define GPIO_SCL_ENABLE_W1TS (*GPIO_SCL_ENABLE_W1TS_R)
+#define GPIO_SCL_IN          (*GPIO_SCL_IN_R)
 
 #include "static_i2c.h"
 
@@ -276,30 +302,70 @@ do_retry:
 
     gpio_config(&gsetup);
 
+    // Save Data pin and register
+    if (sda < 32)
+    {
+        SDA_PIN                = sda;
+        GPIO_SDA_W1TC_R        = &GPIO.out_w1tc;
+        GPIO_SDA_W1TS_R        = &GPIO.out_w1ts;
+        GPIO_SDA_ENABLE_W1TC_R = &GPIO.enable_w1tc;
+        GPIO_SDA_ENABLE_W1TS_R = &GPIO.enable_w1ts;
+        GPIO_SDA_IN_R          = &GPIO.in;
+    }
+    else
+    {
+        SDA_PIN                = (sda - 32);
+        GPIO_SDA_W1TC_R        = &GPIO.out1_w1tc.val;
+        GPIO_SDA_W1TS_R        = &GPIO.out1_w1ts.val;
+        GPIO_SDA_ENABLE_W1TC_R = &GPIO.enable1_w1tc.val;
+        GPIO_SDA_ENABLE_W1TS_R = &GPIO.enable1_w1ts.val;
+        GPIO_SDA_IN_R          = &GPIO.in1.val;
+    }
+
+    // Save Clock pin and register
+    if (scl < 32)
+    {
+        SCL_PIN                = scl;
+        GPIO_SCL_W1TC_R        = &GPIO.out_w1tc;
+        GPIO_SCL_W1TS_R        = &GPIO.out_w1ts;
+        GPIO_SCL_ENABLE_W1TC_R = &GPIO.enable_w1tc;
+        GPIO_SCL_ENABLE_W1TS_R = &GPIO.enable_w1ts;
+        GPIO_SCL_IN_R          = &GPIO.in;
+    }
+    else
+    {
+        SCL_PIN                = (scl - 32);
+        GPIO_SCL_W1TC_R        = &GPIO.out1_w1tc.val;
+        GPIO_SCL_W1TS_R        = &GPIO.out1_w1ts.val;
+        GPIO_SCL_ENABLE_W1TC_R = &GPIO.enable1_w1tc.val;
+        GPIO_SCL_ENABLE_W1TS_R = &GPIO.enable1_w1ts.val;
+        GPIO_SCL_IN_R          = &GPIO.in1.val;
+    }
+
     // This will "shake loose" any devices stuck on the bus.
-    GPIO.enable_w1ts      = 1 << (3);
-    GPIO.enable1_w1ts.val = 1 << (41 - 32);
+    GPIO_SDA_ENABLE_W1TS = 1 << SDA_PIN;
+    GPIO_SCL_ENABLE_W1TS = 1 << SCL_PIN;
     esp_rom_delay_us(10);
-    GPIO.out_w1tc = 1 << (3);
+    GPIO_SDA_W1TC = 1 << SDA_PIN;
     for (i = 0; i < 16; i++)
     {
         esp_rom_delay_us(10);
-        GPIO.out1_w1ts.val = 1 << (41 - 32);
+        GPIO_SCL_W1TS = 1 << SCL_PIN;
         esp_rom_delay_us(10);
-        GPIO.out1_w1tc.val = 1 << (41 - 32);
+        GPIO_SCL_W1TC = 1 << SCL_PIN;
     }
     esp_rom_delay_us(10);
-    GPIO.out1_w1ts.val = 1 << (41 - 32);
+    GPIO_SCL_W1TS = 1 << SCL_PIN;
     esp_rom_delay_us(10);
-    GPIO.out_w1ts = 1 << (3);
+    GPIO_SDA_W1TS = 1 << SDA_PIN;
     esp_rom_delay_us(10);
-    GPIO.out1_w1ts.val = 1 << (41 - 32); // Send final stop
+    GPIO_SCL_W1TS = 1 << SCL_PIN; // Send final stop
 
     // Prepare for normal open drain functionality.
-    GPIO.enable1_w1tc.val = 1 << (41 - 32);
-    GPIO.enable_w1tc      = 1 << (3);
-    GPIO.out1_w1tc.val    = 1 << (41 - 32);
-    GPIO.out_w1tc         = 1 << (3);
+    GPIO_SCL_ENABLE_W1TC = 1 << SCL_PIN;
+    GPIO_SDA_ENABLE_W1TC = 1 << SDA_PIN;
+    GPIO_SCL_W1TC        = 1 << SCL_PIN;
+    GPIO_SDA_W1TC        = 1 << SDA_PIN;
 
     // Enable access
     LSM6DSLSet(LSM6DSL_FUNC_CFG_ACCESS, 0x20);

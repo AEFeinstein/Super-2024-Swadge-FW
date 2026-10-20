@@ -261,6 +261,12 @@ void dacPoll(void)
  */
 void setDacShutdown(bool shutdown)
 {
+    // Return if not initialized
+    if (GPIO_NUM_NC == shdnGpio)
+    {
+        return;
+    }
+
     if (shutdown)
     {
         dacStop();
