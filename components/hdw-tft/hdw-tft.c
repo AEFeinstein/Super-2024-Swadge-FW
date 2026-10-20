@@ -99,9 +99,9 @@ static inline uint32_t get_cCount()
     #define LCD_PIXEL_CLOCK_HZ (80 * 1000 * 1000)
     #define X_OFFSET           20
     #define Y_OFFSET           0
-    #define SWAP_XY            true
-    #define MIRROR_X           true
-    #define MIRROR_Y           true
+    #define SWAP_XY            true // Overridden by Memory Access Control register
+    #define MIRROR_X           true // Overridden by Memory Access Control register
+    #define MIRROR_Y           true // Overridden by Memory Access Control register
 #else
     #error "Please pick a screen size"
 #endif
@@ -247,7 +247,15 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
     esp_lcd_panel_invert_color(panel_handle, false);
     // NOTE: the following call would override settings set by esp_lcd_panel_swap_xy() and esp_lcd_panel_mirror()
     // Both of the prior functions write to the 0x36 register
-    esp_lcd_panel_io_tx_param(tft_io_handle, 0x36, (uint8_t[]){0xE8}, 1); // MX, MY, RGB mode  (MAD CTL)
+    esp_lcd_panel_io_tx_param(tft_io_handle, 0x36,
+                              (uint8_t[]){
+    #if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+                                  0xE8 //  MX,  MY, MV, !ML, !BGR, !MH, 0, 0  (Memory Access Control)
+    #else
+                                  0x28 // !MY, !MX, MV, !ML, !BGR, !MH, 0, 0  (Memory Access Control)
+    #endif
+                              },
+                              1);
     esp_lcd_panel_io_tx_param(tft_io_handle, 0x35, (uint8_t[]){0x00}, 1); // "tear effect" testing sync pin.
 #elif defined(CONFIG_ST7735_128x160)
     esp_lcd_panel_io_tx_param(tft_io_handle, 0xB1, (uint8_t[]){0x05, 0x3C, 0x3C}, 3);
