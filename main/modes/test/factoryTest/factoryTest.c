@@ -83,7 +83,9 @@ void testReadAndValidateTouch(void);
 void testReadAndValidateAccelerometer(void);
 
 void plotButtonState(int16_t x, int16_t y, testButtonState_t state);
+#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
 static void touchFillCircleSegments(int16_t x, int16_t y, int16_t r, int16_t segs, bool center);
+#endif
 
 static void testEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 static void testEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
@@ -997,6 +999,7 @@ void testReadAndValidateAccelerometer(void)
     }
 }
 
+#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
 static void touchFillCircleSegments(int16_t x, int16_t y, int16_t r, int16_t segs, bool center)
 {
     uint8_t numTouchElem = (ARRAY_SIZE(test->touchStates));
@@ -1072,6 +1075,7 @@ static void touchFillCircleSegments(int16_t x, int16_t y, int16_t r, int16_t seg
         }
     }
 }
+#endif
 
 static void testEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
 {
