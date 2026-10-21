@@ -33,12 +33,12 @@
 
 #if defined(CONFIG_HARDWARE_FAIRY_PROTO)
     #define NUM_TOUCH_STRIPS 2
-    #define NUM_TOUCH_ZONES  5
+    #define NUM_TOUCH_ZONES  10
 
     #define LT_X     200
     #define LT_Y     34
     #define LT_W     20
-    #define LT_Z     20
+    #define LT_Z     10
     #define LT_H     (NUM_TOUCH_ZONES * LT_Z)
     #define LT_SPACE 8
 #else
