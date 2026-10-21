@@ -417,21 +417,21 @@ void app_main(void)
 
     // Fairy has two linear touch strips
     touch_pad_t touchPads[] = {
-        GPIO_TOUCH_1, GPIO_TOUCH_2, GPIO_TOUCH_3, GPIO_TOUCH_4, GPIO_TOUCH_5,
-        GPIO_TOUCH_6, GPIO_TOUCH_7, GPIO_TOUCH_8, GPIO_TOUCH_9, GPIO_TOUCH_14,
+        GPIO_TOUCH_8, GPIO_TOUCH_4,  GPIO_TOUCH_5, GPIO_TOUCH_6, GPIO_TOUCH_7,
+        GPIO_TOUCH_3, GPIO_TOUCH_14, GPIO_TOUCH_9, GPIO_TOUCH_2, GPIO_TOUCH_1,
     };
     initTouchPads(touchPads, ARRAY_SIZE(touchPads), 0.2f, true);
 
-    static const uint8_t rightIdxs[]          = {0, 1, 2, 3, 4};
-    static const uint8_t leftIdxs[]           = {5, 6, 7, 8, 9};
+    static const uint8_t leftIdxs[]           = {0, 1, 2, 3, 4};
+    static const uint8_t rightIdxs[]          = {5, 6, 7, 8, 9};
     static const touchLinearCfg_t linearCfg[] = {
-        {
-            .numTouchPads = ARRAY_SIZE(rightIdxs),
-            .touchPadIdxs = rightIdxs,
-        },
         {
             .numTouchPads = ARRAY_SIZE(leftIdxs),
             .touchPadIdxs = leftIdxs,
+        },
+        {
+            .numTouchPads = ARRAY_SIZE(rightIdxs),
+            .touchPadIdxs = rightIdxs,
         },
     };
     initTouchLinear(linearCfg, ARRAY_SIZE(linearCfg));

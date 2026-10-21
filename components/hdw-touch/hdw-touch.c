@@ -453,15 +453,53 @@ uint8_t getTouchLinear(linearTouch_t* touches, uint8_t numLinearTouches)
         return 0;
     }
 
-    // Loop over the min of requested and configured linear touches
+    // Read base values
+    int32_t baseVals[_numTouchPads];
+    int numTouchesRead = getBaseTouchVals(baseVals, _numTouchPads);
+    if (numTouchesRead != _numTouchPads)
+    {
+        return 0;
+    }
+
+    // Loop over the min of requested and configured linear touch strips
     if (_numTouchLinearCfgs < numLinearTouches)
     {
         numLinearTouches = _numTouchLinearCfgs;
     }
-    for (uint8_t idx = 0; idx < numLinearTouches; idx++)
+    for (uint8_t sIdx = 0; sIdx < numLinearTouches; sIdx++)
     {
-        // TODO use configuration and calculate touches
-        touches[idx].touched = false;
+        // Get this strip's configuration
+        const touchLinearCfg_t* cfg = &_touchLinearCfgs[sIdx];
+
+        // Find most pressed pad in the strip
+        int32_t maxVal = 0;
+        int32_t maxIdx = 0;
+        for (uint8_t pIdx = 0; pIdx < cfg->numTouchPads; pIdx++)
+        {
+            int32_t val = baseVals[cfg->touchPadIdxs[pIdx]];
+            if (val > maxVal)
+            {
+                maxVal = val;
+                maxIdx = pIdx;
+            }
+        }
+
+        // If there's a high enough intensity
+        if (maxVal >= 4200)
+        {
+            // Yes touch
+            touches[sIdx].touched   = true;
+            touches[sIdx].intensity = maxVal;
+
+            // TODO surely there is better math to be done here
+            int32_t zoneSize       = 1024 / cfg->numTouchPads;
+            touches[sIdx].position = (zoneSize / 2) + (maxIdx * zoneSize);
+        }
+        else
+        {
+            // No touch
+            touches[sIdx].touched = false;
+        }
     }
 
     // Return number of read linear touches

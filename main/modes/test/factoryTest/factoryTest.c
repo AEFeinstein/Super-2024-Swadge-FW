@@ -29,11 +29,23 @@
 #define ACCEL_BAR_CENT     150
 #define MAX_ACCEL_BAR_SIZE 40
 
-#define TOUCHBAR_WIDTH  60
-#define TOUCHBAR_HEIGHT 60
-#define TOUCHBAR_Y_OFF  32
-
 #define ON_OFF_TEST 0
+
+#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+    #define NUM_TOUCH_STRIPS 2
+    #define NUM_TOUCH_ZONES  5
+
+    #define LT_X     200
+    #define LT_Y     34
+    #define LT_W     20
+    #define LT_Z     20
+    #define LT_H     (NUM_TOUCH_ZONES * LT_Z)
+    #define LT_SPACE 8
+#else
+    #define TOUCHBAR_WIDTH  60
+    #define TOUCHBAR_HEIGHT 60
+    #define TOUCHBAR_Y_OFF  32
+#endif
 
 //==============================================================================
 // Enums
@@ -98,6 +110,12 @@ typedef struct
     bool spkActive;
     // Button
     testButtonState_t buttonStates[8];
+#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+    // Touch is two linear 5-segment strips
+    bool touched[NUM_TOUCH_STRIPS];
+    int32_t touchPositions[NUM_TOUCH_STRIPS];
+    testButtonState_t touchStates[NUM_TOUCH_STRIPS * NUM_TOUCH_ZONES];
+#else
     // Touch, as an 8-way joystick with center deadzone
     testButtonState_t touchStates[9];
     uint8_t lastTouchStateIdx;
@@ -105,6 +123,7 @@ typedef struct
     bool touched;
     int32_t touchAngle;
     int32_t touchRadius;
+#endif
     // Accelerometer
     int16_t x;
     int16_t y;
@@ -175,8 +194,10 @@ void testEnterMode(void)
     loadWsg(KID_0_WSG, &test->kd_idle0, true);
     loadWsg(KID_1_WSG, &test->kd_idle1, true);
 
+#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
     // Init last touchState index to indicate no previous state
     test->lastTouchStateIdx = UINT8_MAX;
+#endif
 
     // Init CC
     InitColorChord(&test->end, &test->dd);
@@ -323,9 +344,6 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     // PB_A
     plotButtonState(btnX, centerLine - AB_SEP, test->buttonStates[4]);
 
-    // Set up drawing accel bars
-    int16_t barY = TOUCHBAR_Y_OFF;
-
     paletteColor_t accelColor = c500;
     if (test->accelPassed)
     {
@@ -406,7 +424,52 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     fillDisplayArea(ACCEL_BAR_WIDTH * 13, ACCEL_BAR_CENT + barDelta, ACCEL_BAR_WIDTH * 14,
                     ACCEL_BAR_CENT + MAX_ACCEL_BAR_SIZE, accelColor);
 
+#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+    // Draw linear touch strips. For each strip
+    for (int32_t sIdx = 0; sIdx < NUM_TOUCH_STRIPS; sIdx++)
+    {
+        // Get that strip's X offset
+        int32_t xOff = LT_X + (sIdx * (LT_W + LT_SPACE));
+
+        // Draw an outline
+        drawRect(xOff, LT_Y, xOff + LT_W, LT_Y + LT_H, c500);
+
+        // For each zone in that strip
+        for (int32_t zIdx = 0; zIdx < NUM_TOUCH_ZONES; zIdx++)
+        {
+            // Pick a color based on the touch state
+            testButtonState_t state = test->touchStates[(sIdx * NUM_TOUCH_ZONES) + zIdx];
+            paletteColor_t c        = cTransparent;
+            if (BTN_PRESSED == state)
+            {
+                c = c005;
+            }
+            else if (BTN_RELEASED == state)
+            {
+                c = c050;
+            }
+
+            // Fill the zone if not transparent
+            if (cTransparent != c)
+            {
+                fillDisplayArea(xOff,                 //
+                                LT_Y + (LT_Z * zIdx), //
+                                xOff + LT_W,          //
+                                LT_Y + (LT_Z * (zIdx + 1)), c);
+            }
+        }
+
+        // If there is a current touch
+        if (test->touched[sIdx])
+        {
+            // Draw a line where the touch is
+            int32_t touchY = LT_Y + ((LT_H * test->touchPositions[sIdx]) / 1024);
+            fillDisplayArea(xOff, touchY - 1, xOff + LT_W, touchY + 2, c044);
+        }
+    }
+#else
     // Draw the 8-direction touchpad with center circle
+    int16_t barY  = TOUCHBAR_Y_OFF;
     int16_t tBarX = TFT_WIDTH - TOUCHBAR_WIDTH;
     int16_t tBarY = barY + 4 + TOUCHBAR_HEIGHT / 2 + test->ibm_vga8.height + 15;
     int16_t rSize = 35;
@@ -417,6 +480,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     drawCircleFilled(tBarX + getCos1024(test->touchAngle) * test->touchRadius / 1024 * rSize / 1024,
                      tBarY - getSin1024(test->touchAngle) * test->touchRadius / 1024 * rSize / 1024, 3,
                      test->touched ? c500 : c333);
+#endif
 
     // Plot some text depending on test status
     char dbgStr[32] = {0};
@@ -723,6 +787,66 @@ touchJoystick_t touchIdxToTouchJoystick(uint8_t touchIdx)
  */
 void testReadAndValidateTouch(void)
 {
+#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+
+    // Read the touch strips
+    linearTouch_t touches[NUM_TOUCH_STRIPS] = {0};
+    if (NUM_TOUCH_STRIPS == getTouchLinear(touches, NUM_TOUCH_STRIPS))
+    {
+        // For each strip
+        for (int32_t sIdx = 0; sIdx < NUM_TOUCH_STRIPS; sIdx++)
+        {
+            linearTouch_t* strip = &touches[sIdx];
+
+            // If there is a touch
+            if (strip->touched)
+            {
+                test->touched[sIdx]        = true;
+                test->touchPositions[sIdx] = strip->position;
+
+                // Find the touched zone
+                int32_t touchedZone = (strip->position * NUM_TOUCH_ZONES) / 1024;
+
+                // For each zone
+                for (int32_t zIdx = 0; zIdx < NUM_TOUCH_ZONES; zIdx++)
+                {
+                    testButtonState_t* state = &test->touchStates[(NUM_TOUCH_ZONES * sIdx) + zIdx];
+
+                    // Mark the touched zone as touched
+                    if (touchedZone == zIdx)
+                    {
+                        // Mark the zone as touched
+                        if (BTN_NOT_PRESSED == *state)
+                        {
+                            *state = BTN_PRESSED;
+                        }
+                    }
+                    // And other zones as released
+                    else if (BTN_PRESSED == *state)
+                    {
+                        *state = BTN_RELEASED;
+                    }
+                }
+            }
+            else
+            {
+                test->touched[sIdx]        = false;
+                test->touchPositions[sIdx] = 0;
+
+                // No touches, so for each zone
+                for (int32_t zIdx = 0; zIdx < NUM_TOUCH_ZONES; zIdx++)
+                {
+                    // Release all zones
+                    testButtonState_t* state = &test->touchStates[(NUM_TOUCH_ZONES * sIdx) + zIdx];
+                    if (BTN_PRESSED == *state)
+                    {
+                        *state = BTN_RELEASED;
+                    }
+                }
+            }
+        }
+    }
+#else
     int32_t intensity;
     test->touched = getTouchJoystick(&test->touchAngle, &test->touchRadius, &intensity);
 
@@ -768,6 +892,7 @@ void testReadAndValidateTouch(void)
             test->touchPassed = false;
         }
     }
+#endif
 }
 
 /**
