@@ -194,6 +194,14 @@ typedef enum
     GPIO_VMON  = GPIO_NUM_NC,
     GPIO_BZR_1 = GPIO_NUM_NC,
     GPIO_BZR_2 = GPIO_NUM_NC,
+    // GPIO_BTN_UP is connected to GPIO_NUM_0 for boot strapping purposes
+    GPIO_BTN_DOWN  = GPIO_NUM_NC,
+    GPIO_BTN_LEFT  = GPIO_NUM_NC,
+    GPIO_BTN_RIGHT = GPIO_NUM_NC,
+    GPIO_BTN_A     = GPIO_NUM_NC,
+    GPIO_BTN_B     = GPIO_NUM_NC,
+    GPIO_BTN_MENU  = GPIO_NUM_NC,
+    GPIO_BTN_PAUSE = GPIO_NUM_NC,
 #else
     #error "Define what hardware is being built for"
 #endif

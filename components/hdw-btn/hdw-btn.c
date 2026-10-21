@@ -15,6 +15,9 @@
 
 #include "hdw-btn.h"
 
+#include "cnfs.h"
+#include "hdw-ch32v003.h"
+
 //==============================================================================
 // Defines
 //==============================================================================
@@ -37,6 +40,10 @@ typedef struct
 // Variables
 //==============================================================================
 
+#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+    #warning "TODO Declare variables for CH32 button handling"
+#else
+
 /// A queue to move pushbutton reads from the ISR to the main loop
 static QueueHandle_t btn_evt_queue = NULL;
 /// The current state of the pushbuttons
@@ -55,11 +62,15 @@ static dedic_gpio_bundle_handle_t bundle = NULL;
 /// Timer handle used to periodically poll buttons
 static gptimer_handle_t btnTimer = NULL;
 
+#endif
+
 //==============================================================================
 // Prototypes
 //==============================================================================
 
+#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
 static bool btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx);
+#endif
 
 //==============================================================================
 // Functions
@@ -74,6 +85,10 @@ static bool btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_alarm_event_d
  */
 void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons)
 {
+#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+    #warning "TODO Handle CH32 initialization for pushbuttons with ch32v003RunBinaryAsset()"
+#else
+
     // Make sure there aren't too many
     if (numPushButtons > 31)
     {
@@ -109,6 +124,7 @@ void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons)
 
     // Set up the GPIO bundle and timer
     powerUpButtons();
+#endif
 }
 
 /**
@@ -116,9 +132,12 @@ void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons)
  */
 void deinitButtons(void)
 {
+#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+    #warning "TODO Handle CH32 de-initialization for pushbuttons, if necessary"
+#else
     powerDownButtons();
-
     vQueueDelete(btn_evt_queue);
+#endif
 }
 
 /**
@@ -126,11 +145,15 @@ void deinitButtons(void)
  */
 void powerDownButtons(void)
 {
+#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+    #warning "TODO Put the CH32 in the lowest possible power state, if possible"
+#else
     // Disable button timer and GPIO bundle
     ESP_ERROR_CHECK(gptimer_stop(btnTimer));
     ESP_ERROR_CHECK(gptimer_disable(btnTimer));
     ESP_ERROR_CHECK(gptimer_del_timer(btnTimer));
     ESP_ERROR_CHECK(dedic_gpio_del_bundle(bundle));
+#endif
 }
 
 /**
@@ -138,6 +161,9 @@ void powerDownButtons(void)
  */
 void powerUpButtons(void)
 {
+#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+    #warning "TODO Resume normal CH32 operation after powerDownButtons()"
+#else
     // Create bundle, input only
     dedic_gpio_bundle_config_t bundle_config =
     {
@@ -179,6 +205,7 @@ void powerUpButtons(void)
     // Start the timer
     ESP_ERROR_CHECK(gptimer_enable(btnTimer));
     ESP_ERROR_CHECK(gptimer_start(btnTimer));
+#endif
 }
 
 /**
@@ -191,6 +218,10 @@ void powerUpButtons(void)
  */
 bool checkButtonQueue(buttonEvt_t* evt)
 {
+#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+    #warning "TODO Handle pushbutton events from CH32"
+    return false;
+#else
     // Return immediately if not initialized
     if (NULL == btn_evt_queue)
     {
@@ -225,7 +256,10 @@ bool checkButtonQueue(buttonEvt_t* evt)
     }
     // Nothing happened
     return false;
+#endif
 }
+
+#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
 
 /**
  * @brief Interrupt called by the hardware timer to poll buttons
@@ -279,3 +313,5 @@ static bool IRAM_ATTR btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_ala
     // return whether we need to yield at the end of ISR
     return high_task_awoken == pdTRUE;
 }
+
+#endif

@@ -377,8 +377,7 @@ void app_main(void)
     // Init file system
     initCnfs();
 
-#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
-    // Init buttons and touch pads
+    // Init buttons
     gpio_num_t pushButtons[] = {
         GPIO_BTN_UP,    // Up
         GPIO_BTN_DOWN,  // Down
@@ -390,12 +389,6 @@ void app_main(void)
         GPIO_BTN_PAUSE, // Select
     };
     initButtons(pushButtons, ARRAY_SIZE(pushButtons));
-#else
-    #warning "TODO Handle CH32 Buttons on Fairy. Classic button init left in place for the emulator"
-    #if !defined(__XTENSA__)
-    initButtons(NULL, 0);
-    #endif
-#endif
 
 #if defined(CONFIG_HARDWARE_WAVEBIRD)
     // Squarewavebird has one linear touch strip
@@ -719,8 +712,6 @@ static void initOptionalPeripherals(void)
 #if defined(CONFIG_HARDWARE_PULSE)
     // Load some default firmware that blinks eyes
     ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
-#elif defined(CONFIG_HARDWARE_FAIRY_PROTO)
-    #warning "TODO load CH32 firmware for button handling with ch32v003RunBinaryAsset()"
 #endif
 }
 
