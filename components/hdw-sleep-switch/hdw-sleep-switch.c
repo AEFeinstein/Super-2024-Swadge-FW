@@ -3,6 +3,8 @@
 #include "hdw-sleep-switch.h"
 #include "driver/rtc_io.h"
 
+extern void rtc_sleep_enable_ultra_low(bool);
+
 static gpio_num_t ssGpio = GPIO_NUM_NC;
 
 /**
@@ -26,6 +28,9 @@ esp_err_t initSleepSwitch(gpio_num_t gpio)
 
     // Set the RTC GPIO as a wakeup source
     ESP_ERROR_CHECK(esp_sleep_enable_ext0_wakeup(ssGpio, 1));
+
+    // Enable a sleepier sleep
+    rtc_sleep_enable_ultra_low(true);
 
     return ESP_OK;
 }
