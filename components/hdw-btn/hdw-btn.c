@@ -116,8 +116,13 @@ void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons)
  */
 void deinitButtons(void)
 {
-    powerDownButtons();
+    // Return immediately if not initialized
+    if (NULL == btn_evt_queue)
+    {
+        return;
+    }
 
+    powerDownButtons();
     vQueueDelete(btn_evt_queue);
 }
 
@@ -126,6 +131,12 @@ void deinitButtons(void)
  */
 void powerDownButtons(void)
 {
+    // Return immediately if not initialized
+    if (NULL == btn_evt_queue)
+    {
+        return;
+    }
+
     // Disable button timer and GPIO bundle
     ESP_ERROR_CHECK(gptimer_stop(btnTimer));
     ESP_ERROR_CHECK(gptimer_disable(btnTimer));
@@ -138,6 +149,12 @@ void powerDownButtons(void)
  */
 void powerUpButtons(void)
 {
+    // Return immediately if not initialized
+    if (NULL == btn_evt_queue)
+    {
+        return;
+    }
+
     // Create bundle, input only
     dedic_gpio_bundle_config_t bundle_config =
     {

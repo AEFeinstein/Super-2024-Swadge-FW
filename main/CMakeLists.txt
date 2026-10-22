@@ -124,20 +124,21 @@ idf_component_register(SRCS "modes/games/beancatch/bcTables.c"
                             "utils/peripherals/imu_utils.c"
                             "utils/peripherals/touchUtils.c"
                             "utils/settings/settingsManager.c"
-                    PRIV_REQUIRES hdw-imu
-                                  hdw-battmon
-                                  hdw-btn
-                                  hdw-ch32v003
-                                  hdw-dac
-                                  hdw-esp-now
-                                  hdw-led
-                                  hdw-mic
-                                  hdw-nvs
-                                  hdw-tft
-                                  hdw-temperature
-                                  hdw-touch
-                                  hdw-usb
-                                  crashwrap
+                    PRIV_REQUIRES hdw-battmon
+                                hdw-btn
+                                hdw-ch32v003
+                                hdw-dac
+                                hdw-esp-now
+                                hdw-imu
+                                hdw-led
+                                hdw-mic
+                                hdw-nvs
+                                hdw-sleep-switch
+                                hdw-temperature
+                                hdw-tft
+                                hdw-touch
+                                hdw-usb
+                                crashwrap
                     REQUIRES esp_timer
                              spi_flash
                     # find main/ -type d | sort | sed -E 's/main\/(.*)/".\/\1"/g'

@@ -155,6 +155,7 @@ void initDac(gpio_num_t spk_gpio, gpio_num_t shdn_gpio, fnDacCallback_t cb)
  */
 void deinitDac(void)
 {
+    powerDownDac();
 #if SOC_DAC_SUPPORTED
     if (dac_handle)
     {
