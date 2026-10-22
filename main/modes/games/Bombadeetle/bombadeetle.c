@@ -173,32 +173,34 @@ static const cnfsFileIdx_t bombadeetleGoal[] = {
 static const cnfsFileIdx_t bombadeetleLevels[] = {
     BOMB_LVL_ONE_BIN,
     BOMB_LVL_HELLO_BIN,
-    BOMB_LVL_RIDEIT_BIN,
+    BOMB_LVL_MOREGOALS_BIN,
     BOMB_LVL_NOHOLES_BIN,
-    BOMB_LVL_GONOHOLE_BIN,
     BOMB_LVL_SHLOOG_BIN,
     BOMB_LVL_SPYRL_BIN,
     BOMB_LVL_NARROW_BIN,
+    BOMB_LVL_RIDEIT_BIN,
+    BOMB_LVL_GONOHOLE_BIN,
     BOMB_LVL_MAG_1_BIN,
-    BOMB_LVL_MOTRAINING_BIN,
     BOMB_LVL_CREPUSCULAR_BIN,
-    BOMB_LVL_JERO_BIN,
+    BOMB_LVL_MOTRAINING_BIN,
     BOMB_LVL_TRISKAIDEKAPHOBIA_BIN,
     BOMB_LVL_DOOBLY_BIN,
     BOMB_LVL_MOWWOW_BIN,
-    BOMB_LVL_MELLOR_BIN,
     BOMB_LVL_DELEPORTER_BIN,
-    BOMB_LVL_ROGER_BIN,
-    BOMB_LVL_UNDERDEFEAT_BIN,
-    BOMB_LVL_LERNDELEPORT_BIN,
-    BOMB_LVL_DODGENIT_BIN,
-    BOMB_LVL_MAG_2_BIN,
-    BOMB_LVL_DIPDIPDIP_BIN,
     BOMB_LVL_WOOBLY_BIN,
-    BOMB_LVL_TRAP_BIN,
-    BOMB_LVL_TRISKAIDEKAPHOBIA_2_BIN,
     BOMB_LVL_RABBIT_BIN,
     BOMB_LVL_ASTLE_BIN,
+    BOMB_LVL_MANIMIES_JSON,
+    BOMB_LVL_MELLOR_BIN,
+    BOMB_LVL_JERO_BIN,
+    BOMB_LVL_ROGER_BIN,
+    BOMB_LVL_UNDERDEFEAT_BIN,
+    BOMB_LVL_DIPDIPDIP_BIN,
+    BOMB_LVL_TRISKAIDEKAPHOBIA_2_BIN,
+    BOMB_LVL_MAG_2_BIN,
+    BOMB_LVL_TRAP_BIN,
+    BOMB_LVL_DODGENIT_BIN, // One of the final levels
+    BOMB_LVL_LERNDELEPORT_BIN, //Rename and move to bottom
 };
 
 static const cnfsFileIdx_t bombadeetleTeleporter[] = {
@@ -879,13 +881,11 @@ static void bombadeetleCheckShloogs(bool update)
         }
         else if (bombadeetleMove(tile, bombadeetleLeft(bombadeetle->shloogs[idx].direction)))
         {
-            ESP_LOGI(TAG, "Turn left");
 
             bombadeetle->shloogs[idx].direction = bombadeetleLeft(bombadeetle->shloogs[idx].direction);
         }
         else
         {
-            ESP_LOGI(TAG, "Turn around");
 
             bombadeetle->shloogs[idx].direction = bombadeetleTurnAround(bombadeetle->shloogs[idx].direction);
         }
@@ -933,7 +933,6 @@ static void bombadeetleOnCollision()
         globalMidiPlayerGet(MIDI_BGM)->loop = false;
     }
 
-    ESP_LOGI(TAG, "COLLISION! %d", bombadeetle->gameMoveTick);
     bombadeetle->state       = STATE_COLLISION;
     bombadeetle->menuTimer   = 3000;
     bombadeetle->successTime = 0;
