@@ -36,7 +36,7 @@ static const char* const fcBGOptions[] = {
     "Bookcase",
     "Lab",
 };
-static const int fcBGOptionVals[] = {
+static const int32_t fcBGOptionVals[] = {
     0,
     1,
     2,
