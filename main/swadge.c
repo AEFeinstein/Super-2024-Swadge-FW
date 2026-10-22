@@ -102,6 +102,7 @@
  *     - imu_utils.h: Utilities to process IMU data
  * - hdw-battmon.h: Learn how to check the battery voltage
  * - hdw-temperature.h: Learn how to use the temperature sensor
+ * - hdw-sleep-switch.h: Learn how the sleep switch controls deep sleep states
  *
  * \subsection led_api LED APIs
  *
@@ -377,6 +378,9 @@ void app_main(void)
     // Init file system
     initCnfs();
 
+    // Initialize sleep switch
+    initSleepSwitch(GPIO_SLEEP);
+
 #if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
     // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
@@ -645,6 +649,17 @@ void app_main(void)
 
             // Go to sleep. pendingSwadgeMode will be used after waking up
             esp_sleep_enable_timer_wakeup(1);
+            esp_deep_sleep_start();
+        }
+
+        // If the switch says it's time to sleep
+        if (sleepSwitchShouldSleep())
+        {
+            // Don't start a specific mode when awoken
+            pendingSwadgeMode = NULL;
+            // Deinitialize everything (including the swadge mode)
+            deinitSystem();
+            // Sleep until the switch wakes the swadge
             esp_deep_sleep_start();
         }
 

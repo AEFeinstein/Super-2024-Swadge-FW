@@ -91,7 +91,7 @@ esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt, uint8_t brightness)
  */
 esp_err_t deinitLeds(void)
 {
-    ESP_ERROR_CHECK(rmt_disable(led_chan));
+    powerDownLed();
     ESP_ERROR_CHECK(rmt_del_encoder(led_encoder));
     ESP_ERROR_CHECK(rmt_del_channel(led_chan));
     return ESP_OK;
