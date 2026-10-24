@@ -245,6 +245,7 @@
 #include "midiPlayer.h"
 #include "introMode.h"
 #include "nameList.h"
+#include "swadgeClock.h"
 
 //==============================================================================
 // Defines
@@ -311,6 +312,9 @@ void app_main(void)
     // Redirect UART if configured and able
     uart_set_pin(UART_NUM_0, GPIO_SAO_B, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 #endif
+
+    // Set the default time if time hasn't been set
+    setDefaultTime();
 
     // Init NVS. Do this first to get test mode status and crashwrap logs
     initNvs(true);
