@@ -157,7 +157,9 @@ static void clockMainLoop(int64_t elapsedUs)
     // Get the current time
     struct timeval tv = {0};
     gettimeofday(&tv, NULL);
-    struct tm* tmTime = localtime(&tv.tv_sec);
+
+    time_t epochSec   = tv.tv_sec;
+    struct tm* tmTime = localtime(&epochSec);
 
     // Handle button inputs, which may adjust the time
     buttonEvt_t evt;
@@ -221,8 +223,11 @@ static void clockMainLoop(int64_t elapsedUs)
                         // Make sure that it's a valid time
                         if (tv.tv_sec >= 0)
                         {
+                            // settimeofday() doesn't exist in MSYS, so don't bother there
+#ifndef __MSYS__
                             // Set the system time to the new time
                             settimeofday(&tv, NULL);
+#endif
                         }
                     }
                     break;
@@ -274,7 +279,8 @@ static void clockMainLoop(int64_t elapsedUs)
 
     // Get the time again, potentially after buttons change it
     gettimeofday(&tv, NULL);
-    tmTime = localtime(&tv.tv_sec);
+    epochSec = tv.tv_sec;
+    tmTime   = localtime(&epochSec);
 
     // Set up where to start drawing
     int32_t xOff = sc->timeXoff;
@@ -414,6 +420,9 @@ void setDefaultTime(void)
             .tm_sec  = 0,
         };
         tv.tv_sec = mktime(&magTime);
+        // settimeofday() doesn't exist in MSYS, so don't bother there
+#ifndef __MSYS__
         settimeofday(&tv, NULL);
+#endif
     }
 }
