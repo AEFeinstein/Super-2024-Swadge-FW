@@ -15,6 +15,11 @@ static gpio_num_t ssGpio = GPIO_NUM_NC;
  */
 esp_err_t initSleepSwitch(gpio_num_t gpio)
 {
+    if (GPIO_NUM_NC == gpio)
+    {
+        return ESP_ERR_INVALID_ARG;
+    }
+
     // Save the GPIO
     ssGpio = gpio;
 
@@ -44,5 +49,9 @@ esp_err_t initSleepSwitch(gpio_num_t gpio)
  */
 bool sleepSwitchShouldSleep(void)
 {
-    return (0 == rtc_gpio_get_level(ssGpio));
+    if (GPIO_NUM_NC != ssGpio)
+    {
+        return (0 == rtc_gpio_get_level(ssGpio));
+    }
+    return false;
 }
