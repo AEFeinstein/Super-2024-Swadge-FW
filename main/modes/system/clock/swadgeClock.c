@@ -224,7 +224,7 @@ static void clockMainLoop(int64_t elapsedUs)
                         if (tv.tv_sec >= 0)
                         {
                             // settimeofday() doesn't exist in MSYS, so don't bother there
-#ifndef __MSYS__
+#if !defined(__WINDOWS__)
                             // Set the system time to the new time
                             settimeofday(&tv, NULL);
 #endif
@@ -421,7 +421,7 @@ void setDefaultTime(void)
         };
         tv.tv_sec = mktime(&magTime);
         // settimeofday() doesn't exist in MSYS, so don't bother there
-#ifndef __MSYS__
+#if !defined(__WINDOWS__)
         settimeofday(&tv, NULL);
 #endif
     }
