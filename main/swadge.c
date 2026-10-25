@@ -658,6 +658,8 @@ void app_main(void)
         // If the switch says it's time to sleep
         if (sleepSwitchShouldSleep())
         {
+            // Sleep the ch32
+            ch32v003RunBinaryAsset(DEEP_SLEEP_CFUN_BIN);
             // Don't start a specific mode when awoken
             pendingSwadgeMode = NULL;
             // Deinitialize everything (including the swadge mode)
