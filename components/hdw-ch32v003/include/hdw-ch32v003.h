@@ -49,11 +49,20 @@ int ch32v003ReadMemory(uint8_t* binary, uint32_t length, uint32_t address);
 int ch32v003GetReg(int regno, uint32_t* value);
 int ch32v003SetReg(int regno, uint32_t regValue);
 int ch32v003Resume();
-void ch32v003CheckTerminal();
+void ch32v003Tick();
 void ch32v003Teardown();
 
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+
+extern uint32_t g_ch32v003_buttons;
+extern uint16_t g_ch32v003_touches[4];
+extern uint32_t g_ch32v003_vmon;
+extern uint32_t g_ch32v003_chargemon;
+
+#else
 int ch32v003WriteBitmapAsset(int slot, int asset_idx);
 int ch32v003WriteBitmap(int slot, const uint8_t pixels[6][12]);
 int ch32v003SelectBitmap(int slot);
+#endif
 
 #endif

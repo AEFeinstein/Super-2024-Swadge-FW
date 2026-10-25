@@ -74,6 +74,8 @@ const uint8_t* cnfsGetFile(int index, size_t* size);
 // Variables
 //==============================================================================
 
+#ifndef CONFIG_HARDWARE_FAIRY_PROTO
+
 // Coordinate map is used any time you want to do custom work with the 003's framebuffer.
 const uint16_t Coordmap[8 * 16] = {
     0x0000, 0x0100, 0x0200, 0x0300, 0x0400, 0x0500, 0xffff, 0xffff, 0x0002, 0x0102, 0x0202, 0x0302, 0x0402, 0x0502,
@@ -84,6 +86,13 @@ const uint16_t Coordmap[8 * 16] = {
     0xffff, 0xffff, 0x0105, 0x0305, 0x0505, 0x0705, 0x0608, 0x0708, 0xffff, 0xffff, 0x0104, 0x0304, 0x0504, 0x0704,
     0x0607, 0x0707, 0xffff, 0xffff, 0x0103, 0x0303, 0x0503, 0x0703, 0x0606, 0x0706, 0xffff, 0xffff,
 };
+
+#endif
+
+uint32_t g_ch32v003_buttons;
+uint16_t g_ch32v003_touches[4];
+uint32_t g_ch32v003_vmon;
+uint32_t g_ch32v003_chargemon;
 
 // Keep available outside this file just in case someone wants to access
 // the hardware directly.
@@ -232,6 +241,7 @@ int ch32v003WriteFlash(const uint8_t* buf, int sz)
             ch32v003Teardown();
             return -6;
         }
+        vTaskDelay(1);
     }
 
     int flashok = 1;
@@ -241,6 +251,7 @@ int ch32v003WriteFlash(const uint8_t* buf, int sz)
         unsigned addy = 0x08000000 + j * 4;
         uint32_t by   = 0;
         int ra        = ch32v003ReadMemory((uint8_t*)&by, 4, addy);
+
         if (ra)
         {
             uprintf("Failed to read %08x\n", addy);
@@ -252,6 +263,8 @@ int ch32v003WriteFlash(const uint8_t* buf, int sz)
             flashok = 0;
         }
     }
+
+    printf("Firmware: %d bytes Ok: %d\n", sz, flashok);
 
     return !flashok;
 }
@@ -346,16 +359,107 @@ int ch32v003SetReg(int regno, uint32_t regValue)
  * @brief See if the ch32v003 has any pending printf to print on host processor.
  *
  */
-void ch32v003CheckTerminal()
+void ch32v003Tick()
 {
-    char buffer[257];
-    int r = PollTerminal(&swioContext, (uint8_t*)buffer, sizeof(buffer), 0, 0);
-    if (r > 0 && r < sizeof(buffer) - 1)
+    struct SWIOState* dev = &swioContext;
+
+    int r;
+    uint32_t rr;
+    uint32_t r2;
+    if (dev->statetag != STTAG("TERM"))
     {
-        buffer[r] = 0;
-        // ESP_LOGI("ch32v003", "%s", buffer);
-        uprintf("%s", buffer);
+        MCFWriteReg32(dev, DMABSTRACTAUTO, 0x00000000); // Disable Autoexec.
+        dev->statetag = STTAG("TERM");
     }
+    r = MCFReadReg32(dev, DMDATA0, &rr);
+
+    if (r)
+        goto mcferror;
+
+    //           MSB .... LSB
+    // DMDATA0: char3 char2 char1 [status word]
+    // where [status word] is:
+    //   bit 7 = is a "printf" waiting?
+    //   bit 6 = printf has timed out.
+    //   bit 0..bit 3 = # of bytes in printf (+4).  (5 or higher indicates a print of some kind)
+    //     note: if b7 is 0 in reply, but b0..b3 have >=4 then we received data from host.
+    // Special sentinel:
+    //     status word = 0x80 = default at start
+    //     status word = 0xcx = timed out.
+
+    //  bit  7 = host-acknowledge.
+    if (rr & 0x80)
+    {
+        if ((rr & 0xf) < 4)
+        {
+            int backmode = rr & 0xf;
+            r            = MCFReadReg32(dev, DMDATA1, &r2);
+            if (r)
+                goto mcferror;
+            switch (backmode)
+            {
+                case 1:
+                    // DMDATA1: TOUCH_A, TOUCH_G
+                    g_ch32v003_touches[0] = r2 >> 16;
+                    g_ch32v003_touches[1] = r2 & 0xff;
+                    break;
+                case 2:
+                    // DMDATA1: TOUCH_M, TOUCH_21
+                    g_ch32v003_touches[2] = r2 >> 16;
+                    g_ch32v003_touches[3] = r2 & 0xff;
+                    break;
+            }
+
+            uprintf("%6d%6d%6d%6d\n", g_ch32v003_touches[0], g_ch32v003_touches[1], g_ch32v003_touches[2],
+                    g_ch32v003_touches[3]);
+            // DMDATA0: CHARGE(4 bits), VMON, BUTTONS, 0x81
+            g_ch32v003_vmon      = (rr >> 16) & 0x3ff;
+            g_ch32v003_chargemon = rr >> 28;
+            uint32_t b           = (rr >> 8) & 0xff;
+
+            // Clear register, let 003 know we're waiting for more data.
+
+            // Bridge Emily's world to Adam's world.
+            g_ch32v003_buttons = ((!!(b & 0x01)) << 0) | ((!!(b & 0x08)) << 1) | ((!!(b & 0x02)) << 2)
+                                 | ((!!(b & 0x10)) << 3) | ((!!(b & 0x40)) << 4) | ((!!(b & 0x80)) << 5)
+                                 | ((!!(b & 0x20)) << 6) | ((!!(b & 0x04)) << 7);
+
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+            MCFWriteReg32(dev, DMDATA0, 1);
+#else
+            MCFWriteReg32(dev, DMDATA0, 0);
+#endif
+        }
+        else
+        {
+            char buffer[20];
+            int num_printf_chars = (rr & 0xf) - 4;
+
+            if (num_printf_chars > 0 && num_printf_chars <= 7)
+            {
+                if (num_printf_chars > 3)
+                {
+                    r = MCFReadReg32(dev, DMDATA1, &r2);
+                    memcpy(buffer + 3, &r2, num_printf_chars - 3);
+                }
+                int firstrem = num_printf_chars;
+                if (firstrem > 3)
+                    firstrem = 3;
+                memcpy(buffer, ((uint8_t*)&rr) + 1, firstrem);
+                buffer[num_printf_chars] = 0;
+            }
+            MCFWriteReg32(dev, DMDATA0, 0); // Write that we acknowledge the data.
+
+            // ESP_LOGI("ch32v003", "%s", buffer);
+            uprintf("%s", buffer);
+        }
+    }
+
+    return;
+
+mcferror:
+    uprintf("MCF Error: %d\n", r);
+    return;
 }
 
 /**
@@ -378,6 +482,8 @@ void ch32v003Teardown()
 
     memset(&swioContext, 0, sizeof(swioContext));
 }
+
+#ifndef CONFIG_HARDWARE_FAIRY_PROTO
 
 /**
  * @brief Halt the processor, and write to RAM a greyscale asset image.
@@ -485,6 +591,8 @@ int ch32v003SelectBitmap(int slot)
     return ch32v003WriteMemory((const uint8_t*)&gpioOn, 4, 0x40011000);
 }
 
+#endif
+
 static int ch32v003Check()
 {
     if (!swioContext.t1coeff)
@@ -529,7 +637,7 @@ static int ch32v003Check()
         switch (m.freq_mhz)
         {
             case 240:
-                swioContext.t1coeff = 9; // 9 or 10 is good.  5 is too low. 13 is sometimes too high. ***BUT*** WHEN
+                swioContext.t1coeff = 9; // 9 or 10 is good.  7 is too low. 11 is too high.
                                          // RUNNING FROM SANDBOX NEED BE HIGHER
                 break;
             default:

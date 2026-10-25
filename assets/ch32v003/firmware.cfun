@@ -1,0 +1,246 @@
+// TODO: Get from host if we are proto.
+
+#include "ch32fun.h"
+#include <stdio.h>
+
+#define RANDOM_STRENGTH 2
+#include "lib_rand.h"
+
+#include "ch32v00x_touch.h"
+
+int FLASH_WaitForLastOperation(int timeout);
+
+int is_proto = 0;
+
+void ChipSetup()
+{
+    SystemInit();
+    // Enable DMA
+    RCC->AHBPCENR = RCC_AHBPeriph_SRAM | RCC_AHBPeriph_DMA1;
+
+    // Enable timers and remapping.
+    RCC->APB2PCENR = RCC_APB2Periph_TIM1 | RCC_APB2Periph_AFIO | RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOC
+                     | RCC_APB2Periph_GPIOD | RCC_APB2Periph_ADC1;
+    RCC->APB1PCENR = RCC_APB1Periph_TIM2;
+
+    // First make sure we configure PD7 as an output (GPIO)
+    FLASH->OBKEYR   = FLASH_KEY1;
+    FLASH->OBKEYR   = FLASH_KEY2;
+    FLASH->KEYR     = FLASH_KEY1;
+    FLASH->KEYR     = FLASH_KEY2;
+    FLASH->MODEKEYR = FLASH_KEY1;
+    FLASH->MODEKEYR = FLASH_KEY2;
+
+    uint16_t rdptmp = RDP_Key;
+
+    int status = FLASH_WaitForLastOperation(EraseTimeout);
+    if (status == FLASH_COMPLETE)
+    {
+        FLASH->OBKEYR = FLASH_KEY1;
+        FLASH->OBKEYR = FLASH_KEY2;
+
+        FLASH->CTLR |= CR_OPTER_Set;
+        FLASH->CTLR |= CR_STRT_Set;
+        status = FLASH_WaitForLastOperation(EraseTimeout);
+
+        if (status == FLASH_COMPLETE)
+        {
+            FLASH->CTLR &= CR_OPTER_Reset;
+            FLASH->CTLR |= CR_OPTPG_Set;
+            OB->RDPR = (uint16_t)rdptmp;
+            status   = FLASH_WaitForLastOperation(ProgramTimeout);
+
+            if (status != FLASH_TIMEOUT)
+            {
+                FLASH->CTLR &= CR_OPTPG_Reset;
+            }
+        }
+        else
+        {
+            if (status != FLASH_TIMEOUT)
+            {
+                FLASH->CTLR &= CR_OPTPG_Reset;
+            }
+        }
+    }
+
+    FLASH->OBKEYR = FLASH_KEY1;
+    FLASH->OBKEYR = FLASH_KEY2;
+    status        = FLASH_WaitForLastOperation(10000);
+
+    const uint16_t OB_STOP  = OB_STOP_NoRST;
+    const uint16_t OB_IWDG  = OB_IWDG_SW;
+    const uint16_t OB_STDBY = OB_STDBY_NoRST;
+    const uint16_t OB_RST   = OB_RST_NoEN; // Disable resetting on reset pin
+    const uint16_t OB_BOOT  = OB_STARTMODE_BOOT;
+
+    FLASH->OBKEYR = FLASH_KEY1;
+    FLASH->OBKEYR = FLASH_KEY2;
+    status        = FLASH_WaitForLastOperation(10000);
+
+    if (status == FLASH_COMPLETE)
+    {
+        FLASH->CTLR |= CR_OPTPG_Set;
+        OB->USER = OB_BOOT | OB_IWDG | (uint16_t)(OB_STOP | (uint16_t)(OB_STDBY | (uint16_t)(OB_RST | (uint16_t)0xc0)));
+
+        status = FLASH_WaitForLastOperation(10000);
+        if (status != FLASH_TIMEOUT)
+        {
+            FLASH->CTLR &= CR_OPTPG_Reset;
+        }
+    }
+
+    // Option byte writing done.
+}
+
+int main()
+{
+    ChipSetup();
+
+    *DMDATA0 = 0x80;
+#if 0
+	// Detect if is_proto based on if CHARGE or STANDBY go high after 100ms.
+	// Assume not proto to not mess anything up.
+	is_proto = 0;
+	{
+		int i;
+		funPinMode( PC5, GPIO_CFGLR_IN_FLOAT ); // STANDBY
+		funPinMode( PC6, GPIO_CFGLR_IN_FLOAT ); // CHARGE
+		uint32_t initial_state = (GpioOf(PC5)->INDR) & 0x60;
+		for( i = 0; i < 1000; i++ )
+		{
+			if( initial_state != ((GpioOf(PC5)->INDR) & 0x60) ) { is_proto = 1; break; }
+			Delay_Us(10);
+		}
+	}
+#endif
+    InitTouchADC();
+
+    uint32_t frameno = 0;
+
+    while ((*DMDATA0) & 0x80)
+        ; // Can't do anything else.
+
+    if ((*DMDATA0) & 1)
+        is_proto = 1;
+
+    printf("ch32v003 online.\n");
+
+    if (is_proto)
+    {
+        funPinMode(PD7, GPIO_CFGLR_IN_PUPD); // BTN_1
+        funPinMode(PC0, GPIO_CFGLR_IN_PUPD); // BTN_2
+        funPinMode(PD2, GPIO_CFGLR_IN_PUPD); // BTN_3
+        funPinMode(PC2, GPIO_CFGLR_IN_PUPD); // BTN_4
+        funPinMode(PD0, GPIO_CFGLR_IN_PUPD); // BTN_5
+        funPinMode(PC7, GPIO_CFGLR_IN_PUPD); // BTN_6
+        funPinMode(PD4, GPIO_CFGLR_IN_PUPD); // BTN_7
+        funPinMode(PD3, GPIO_CFGLR_IN_PUPD); // BTN_8
+
+        funPinMode(PC6, GPIO_CFGLR_IN_FLOAT); // STANDBY
+        funPinMode(PC5, GPIO_CFGLR_IN_FLOAT); // CHARGE
+
+        // Pull-up!
+        funDigitalWrite(PD7, FUN_HIGH);
+        funDigitalWrite(PC0, FUN_HIGH);
+        funDigitalWrite(PD2, FUN_HIGH);
+        funDigitalWrite(PC2, FUN_HIGH);
+        funDigitalWrite(PD0, FUN_HIGH);
+        funDigitalWrite(PC7, FUN_HIGH);
+        funDigitalWrite(PD4, FUN_HIGH);
+        funDigitalWrite(PD3, FUN_HIGH);
+    }
+    else
+    {
+        funPinMode(PD7, GPIO_CFGLR_IN_PUPD); // BTN_1 "Up"
+        funPinMode(PC5, GPIO_CFGLR_IN_PUPD); // BTN_2 "Left"
+        funPinMode(PC0, GPIO_CFGLR_IN_PUPD); // BTN_3 "Select"
+        funPinMode(PC3, GPIO_CFGLR_IN_PUPD); // BTN_4 "Down"
+        funPinMode(PC6, GPIO_CFGLR_IN_PUPD); // BTN_5 "Right"
+        funPinMode(PD0, GPIO_CFGLR_IN_PUPD); // BTN_6 "Start"
+        funPinMode(PD3, GPIO_CFGLR_IN_PUPD); // BTN_7 "A"
+        funPinMode(PD2, GPIO_CFGLR_IN_PUPD); // BTN_8 "B"
+
+        funPinMode(PC1, GPIO_CFGLR_IN_FLOAT); // STANDBY
+        funPinMode(PC2, GPIO_CFGLR_IN_FLOAT); // CHARGE
+
+        // Pull-up!
+        funDigitalWrite(PD7, FUN_HIGH);
+        funDigitalWrite(PD3, FUN_HIGH);
+        funDigitalWrite(PD2, FUN_HIGH);
+        funDigitalWrite(PC6, FUN_HIGH);
+        funDigitalWrite(PC5, FUN_HIGH);
+        funDigitalWrite(PC3, FUN_HIGH);
+        funDigitalWrite(PC0, FUN_HIGH);
+        funDigitalWrite(PD0, FUN_HIGH);
+    }
+
+    funPinMode(PC4, GPIO_CFGLR_IN_ANALOG); // VMON
+
+    funAnalogRead(0); // Not Pin number, but rather analog number.
+
+    while (1)
+    {
+        // DMDATA1: TOUCH_A, TOUCH_G    (ending in 0x81)
+        // DMDATA1: TOUCH_M, TOUCH_21   (ending in 0x82)
+        // DMDATA0: CHARGE(4 bits), VMON, BUTTONS, 0x81
+
+        uint32_t send_dmd0  = 0;
+        uint32_t send_dmd1  = 0;
+        uint32_t iterations = 8;
+
+        if (frameno & 1)
+        {
+            uint32_t tg = ReadTouchPin(GPIOA, 2, 0, iterations);
+            uint32_t ta = ReadTouchPin(GPIOA, 1, 1, iterations);
+            send_dmd1   = (ta << 16) | tg;
+            send_dmd0   = 0x81;
+        }
+        else
+        {
+            uint32_t tm  = ReadTouchPin(GPIOD, 5, 5, iterations);
+            uint32_t t21 = ReadTouchPin(GPIOD, 6, 6, iterations);
+            send_dmd1    = (tm << 16) | t21;
+            send_dmd0    = 0x82;
+        }
+
+#define funDigitalRead(pin) ((int)((GpioOf(pin)->INDR >> ((pin) & 0xf)) & 1))
+
+        if (is_proto)
+        {
+            send_dmd0 |= 0x20 | (funAnalogRead(2) << 16) | ((!funDigitalRead(PC6)) << 28) | // Standby
+                         ((!funDigitalRead(PC5)) << 29) |                                   // Charge
+
+                         ((!funDigitalRead(PD7)) << 8) |  // BTN_1
+                         ((!funDigitalRead(PC0)) << 9) |  // BTN_2
+                         ((!funDigitalRead(PD2)) << 10) | // BTN_3
+                         ((!funDigitalRead(PC2)) << 11) | // no BTN_4
+                         ((!funDigitalRead(PD0)) << 12) | // BTN_5
+                         ((!funDigitalRead(PC7)) << 13) | // BTN_6
+                         ((!funDigitalRead(PD4)) << 14) | // BTN_7
+                         ((!funDigitalRead(PD3)) << 15);  // BTN_8
+        }
+        else
+        {
+            send_dmd0 |= (funAnalogRead(2) << 16) | ((!funDigitalRead(PC1)) << 28) | // Standby
+                         ((!funDigitalRead(PC2)) << 29) |                            // Charge
+
+                         ((!funDigitalRead(PD7)) << 8) |  // BTN_1
+                         ((!funDigitalRead(PC5)) << 9) |  // BTN_2
+                         ((!funDigitalRead(PC0)) << 10) | // BTN_3
+                         ((!funDigitalRead(PC3)) << 11) | // BTN_4
+                         ((!funDigitalRead(PC6)) << 12) | // BTN_5
+                         ((!funDigitalRead(PD0)) << 13) | // BTN_6
+                         ((!funDigitalRead(PD3)) << 14) | // BTN_7
+                         ((!funDigitalRead(PD2)) << 15);  // BTN_8
+        }
+
+        while ((*DMDATA0) & 0x80)
+            ; // Can't do anything else til the host reads it.
+
+        *DMDATA1 = send_dmd1;
+        *DMDATA0 = send_dmd0;
+
+        frameno++;
+    }
+}

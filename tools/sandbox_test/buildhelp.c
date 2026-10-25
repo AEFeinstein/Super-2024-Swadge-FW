@@ -13,10 +13,10 @@
 #define PID 0x4269
 
 const char * sym_dump_cmd = "objdump -t %s > build/system_symbols.txt";
-const char * compile_cmd = "xtensa-esp32s2-elf-gcc -mlongcalls %s -DHAVE_CONFIG_H -DSWADGE -ffunction-sections -fdata-sections -Wall -Werror=all -Wno-error=unused-function -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wextra -Wno-unused-parameter -Wno-sign-compare -ggdb -Os -fmacro-prefix-map=/home/cnlohr/git/esp32-c3-playground=. -fmacro-prefix-map=/home/cnlohr/esp/esp-idf=IDF -fstrict-volatile-bitfields -Wno-error=unused-but-set-variable -fno-jump-tables -fno-tree-switch-conversion sandbox.c sandbox.S -T build/sandbox.lds -o build/sandbox.o -nodefaultlibs -nostartfiles";
+const char * compile_cmd = "xtensa-esp32s3-elf-gcc -mlongcalls %s -DHAVE_CONFIG_H -DSWADGE -ffunction-sections -fdata-sections -Wall -Werror=all -Wno-error=unused-function -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wextra -Wno-unused-parameter -Wno-sign-compare -ggdb -Os -fmacro-prefix-map=/home/cnlohr/git/esp32-c3-playground=. -fmacro-prefix-map=/home/cnlohr/esp/esp-idf=IDF -fstrict-volatile-bitfields -Wno-error=unused-but-set-variable -fno-jump-tables -fno-tree-switch-conversion sandbox.c sandbox.S -T build/sandbox.lds -o build/sandbox.o -nodefaultlibs -nostartfiles";
 const char * sym_comp_dump_cmd = "objdump -t build/sandbox.o > build/sandbox_symbols.txt";
-const char * ocpy_cmd_inst = "xtensa-esp32s2-elf-objcopy -j .inst -O binary build/sandbox.o build/sandbox_inst.bin";
-const char * ocpy_cmd_data = "xtensa-esp32s2-elf-objcopy -j .data -O binary build/sandbox.o build/sandbox_data.bin";
+const char * ocpy_cmd_inst = "xtensa-esp32s3-elf-objcopy -j .inst -O binary build/sandbox.o build/sandbox_inst.bin";
+const char * ocpy_cmd_data = "xtensa-esp32s3-elf-objcopy -j .data -O binary build/sandbox.o build/sandbox_data.bin";
 
 const char * idf_path;
 char * extra_cflags;
@@ -125,43 +125,43 @@ int main( int argc, char ** argv )
 		printf( "Allocated addy: 0x%08x\n", allocated_addy );
 		printf( "Allocated size: %d\n", allocated_size );
 
-		advanced_usb_scratch_buffer_address_inst = allocated_addy + 0x70000;
+		advanced_usb_scratch_buffer_address_inst = allocated_addy + /* ESP32-S2 0x70000 */ 0x6F0000;
 		advanced_usb_scratch_buffer_address_data = allocated_addy;
 
 		{
 			char temp[1024];
 			if( extra_cflags ) extra_cflags[0] = 0;
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hal/include", idf_path ); appendcflag( temp );
-			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hal/esp32s2/include", idf_path ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hal/esp32s3/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_wifi/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_event/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/soc/include", idf_path ); appendcflag( temp );
-			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/soc/esp32s2/include", idf_path ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/soc/esp32s3/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_common/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/driver/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_hw_support/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_rom/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/log/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_system/include", idf_path ); appendcflag( temp );
-			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/driver/esp32s2/include", idf_path ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/driver/esp32s3/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_ringbuf/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/heap/include", idf_path ); appendcflag( temp );
-			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_rom/include/esp32s2", idf_path ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_rom/include/esp32s3", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/newlib/platform_include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_timer/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/freertos/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/freertos/port/xtensa/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/freertos/include/esp_additions/freertos", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/xtensa/include", idf_path ); appendcflag( temp );
-			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/xtensa/esp32s2/include", idf_path ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/xtensa/esp32s3/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/driver/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_lcd/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_lcd/interface", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_hw_support/include/soc", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_hw_support/port", idf_path ); appendcflag( temp );
-			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_hw_support/port/esp32s2/private_include", idf_path ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_hw_support/port/esp32s3/private_include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hal/platform_port/include", idf_path ); appendcflag( temp );
-			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_hw_support/port/esp32s2", idf_path ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/esp_hw_support/port/esp32s3", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/driver/i2c/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/freertos/FreeRTOS-Kernel/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/freertos/esp_additions/include/freertos", idf_path ); appendcflag( temp );
@@ -169,11 +169,11 @@ int main( int argc, char ** argv )
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/freertos/FreeRTOS-Kernel/portable/xtensa/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/driver/gpio/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/driver/touch_sensor/include", idf_path ); appendcflag( temp );
-			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/driver/touch_sensor/esp32s2/include", idf_path ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/driver/touch_sensor/esp32s3/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/driver/ledc/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/driver/uart/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/nvs_flash/include", idf_path ); appendcflag( temp );
-			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/soc/esp32s2/include", idf_path ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/soc/esp32s3/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/freertos/FreeRTOS-Kernel/include/freertos", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/driver/dac/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/freertos/config/include/freertos", idf_path ); appendcflag( temp );
@@ -202,6 +202,7 @@ int main( int argc, char ** argv )
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-tft/include", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-led/include", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-nvs/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-sleep-switch/include", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/managed_components/espressif__tinyusb/src", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/managed_components/espressif__esp_tinyusb/include", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/main", argv[2] ); appendcflag( temp );
@@ -214,7 +215,20 @@ int main( int argc, char ** argv )
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/modes/mainMenu", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/modes/music/colorchord", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/modes/system/mainMenu", argv[2] ); appendcflag( temp );
-			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/utils/fl_math", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/utils/math/fl", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/utils/math", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/utils/data_structures", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/utils/draw", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/utils/game", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/utils/midi", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/utils/menu", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/utils/network", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/modes/games/FairyCollection", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/utils/peripherals", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/utils/settings", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/utils/filesystem", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/utils/filesystem/heatshrink", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/utils/filesystem/heatshrink/common", argv[2] ); appendcflag( temp );
 
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/build/config", argv[2] ); appendcflag( temp );
 
@@ -232,7 +246,6 @@ int main( int argc, char ** argv )
 			if( r ) { fprintf( stderr, "Error shelling symbols. Error: %d\n", r ); return -6; }
 		}
 
-
 		// Count
 		{
 			int i = 0;
@@ -246,7 +259,6 @@ int main( int argc, char ** argv )
 				fclose( f );
 			}
 		}
-
 
 		{
 			FILE * provided = fopen( "build/provided.lds", "w" );
@@ -345,8 +357,8 @@ int main( int argc, char ** argv )
 				"		*(.sbss.*)\n"
 				"		*(.gnu.linkonce.sb.*)\n"
 				"		*(.scommon)\n"
-				"		*(.sbss2)\n"
-				"		*(.sbss2.*)\n"
+				"		*(.sbss3)\n"
+				"		*(.sbss3.*)\n"
 				"		*(.gnu.linkonce.sb2.*)\n"
 				"		*(.dynbss)\n"
 				"		*(.data)\n"
@@ -360,9 +372,9 @@ int main( int argc, char ** argv )
 				"	sandbox_bss_size = SIZEOF( .bss );\n"
 				"}\n"
 				"INCLUDE \"build/provided.lds\"\n"
-				"INCLUDE \"%s/components/esp_rom/esp32s2/ld/esp32s2.rom.ld\"\n"
-				"INCLUDE \"%s/components/soc/esp32s2/ld/esp32s2.peripherals.ld\"\n"
-				"INCLUDE \"%s/components/esp_rom/esp32s2/ld/esp32s2.rom.api.ld\"\n"
+				"INCLUDE \"%s/components/esp_rom/esp32s3/ld/esp32s3.rom.ld\"\n"
+				"INCLUDE \"%s/components/soc/esp32s3/ld/esp32s3.peripherals.ld\"\n"
+				"INCLUDE \"%s/components/esp_rom/esp32s3/ld/esp32s3.rom.api.ld\"\n"
 				, advanced_usb_scratch_buffer_address_inst
 				, advanced_usb_scratch_buffer_address_data
 				, advanced_usb_scratch_buffer_address_data
