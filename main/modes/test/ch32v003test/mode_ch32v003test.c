@@ -75,7 +75,7 @@ void ch32v003testEnterMode(void)
 
     // First thing we want to do is wake the ch32v003 up, then we can make it do funny things later.
     // It is normally safe to assume it was already initialized.
-    initial_success = ch32v003RunBinaryAsset(MATRIX_GRADIENT_CFUN_BIN);
+    initial_success = ch32v003RunBinaryAsset(FIRMWARE_CFUN_BIN);
 
     // Load a font
     font_t* ch32v003testFont = (font_t*)heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_8BIT);
