@@ -1,3 +1,7 @@
+//
+// This will need to be re-worked eventually.
+//
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -90,48 +94,6 @@ void ch32v003testEnterMode(void)
 }
 
 /**
- * Update framebuffers on the ch32v003
- */
-void ch32v003testUpdateFramebuffers(void)
-{
-    if (!ch32v003test->didSetFramebuffers)
-    {
-        // Load up framebuffer on ch32v003.
-        uint8_t sendbuffer[6][12];
-        int i;
-
-        for (i = 0; i < 72; i++)
-        {
-            sendbuffer[i / 12][i % 12] = (i & 1) ? 0xff : 0x00;
-        }
-        ch32v003WriteBitmap(0, sendbuffer);
-
-        for (i = 0; i < 72; i++)
-        {
-            sendbuffer[i / 12][i % 12] = i;
-        }
-        ch32v003WriteBitmap(1, sendbuffer);
-
-        for (i = 0; i < 72; i++)
-        {
-            sendbuffer[i / 12][i % 12] = (i % 12) * 23;
-        }
-        ch32v003WriteBitmap(2, sendbuffer);
-
-        ch32v003WriteBitmapAsset(3, EYES_DEAD_GS);
-        ch32v003WriteBitmapAsset(4, EYES_DEFAULT_GS);
-        ch32v003WriteBitmapAsset(5, EYES_HAPPY_GS);
-        ch32v003WriteBitmapAsset(6, EYES_SAD_GS);
-        ch32v003WriteBitmapAsset(7, EYES_SWIRL_0_GS);
-        ch32v003WriteBitmapAsset(8, EYES_SWIRL_1_GS);
-        ch32v003WriteBitmapAsset(9, EYES_SWIRL_2_GS);
-        ch32v003WriteBitmapAsset(10, EYES_SWIRL_3_GS);
-
-        ch32v003test->didSetFramebuffers = true;
-    }
-}
-
-/**
  * Exit the ch32v003test mode, free memory
  */
 void ch32v003testExitMode(void)
@@ -170,29 +132,31 @@ void ch32v003testMainLoop(int64_t elapsedUs)
                 case PB_UP:
                 case PB_LEFT:
                 {
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+#else
                     ch32v003testUpdateFramebuffers();
-
+#endif
                     ch32v003test->mode--;
                     if (ch32v003test->mode < 0)
                     {
                         ch32v003test->mode = MAX_MODES - 1;
                     }
 
-                    ch32v003SelectBitmap(ch32v003test->mode);
                     break;
                 }
                 case PB_DOWN:
                 case PB_RIGHT:
                 {
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+#else
                     ch32v003testUpdateFramebuffers();
-
+#endif
                     ch32v003test->mode++;
                     if (ch32v003test->mode >= MAX_MODES)
                     {
                         ch32v003test->mode = 0;
                     }
 
-                    ch32v003SelectBitmap(ch32v003test->mode);
                     break;
                 }
                 case PB_START:
@@ -218,5 +182,5 @@ void ch32v003testMainLoop(int64_t elapsedUs)
     sprintf(buffer, "%d", ch32v003test->mode);
     drawText(ch32v003test->font, 215, buffer, 2, 110);
 
-    ch32v003CheckTerminal();
+    ch32v003Tick();
 }

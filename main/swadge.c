@@ -107,7 +107,6 @@
  * \subsection led_api LED APIs
  *
  * - hdw-led.h: Learn how to use the LEDs
- * - hdw-ch32v003.h: The matrix array driver on the 2026 Swadge
  * - Colorchord
  *     - embeddedNf.h: The core Colorchord algorithm
  *     - embeddedOut.h: Set LEDs by Colorchord Data
@@ -395,7 +394,7 @@ void app_main(void)
     };
     initButtons(pushButtons, ARRAY_SIZE(pushButtons));
 #else
-    #warning "TODO Handle CH32 Buttons on Fairy. Classic button init left in place for the emulator"
+    // On the ch32v003, buttons are exported from the ch32v003 driver.
     #if !defined(__XTENSA__)
     initButtons(NULL, 0);
     #endif
@@ -480,6 +479,10 @@ void app_main(void)
     if (GPIO_NUM_NC != (gpio_num_t)GPIO_CH32_PROG)
     {
         initCh32v003(GPIO_CH32_PROG);
+#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+        // Required on the fairy.
+        ch32v003RunBinaryAsset(FIRMWARE_CFUN_BIN);
+#endif
     }
 
     // Initialize optional peripherals, depending on the mode's requests
@@ -663,8 +666,12 @@ void app_main(void)
             esp_deep_sleep_start();
         }
 
-        // If you want to allow printf() from the ch32v003, you can call this. Note that it takes about 40us every time
-        // it's called. ch32v003CheckTerminal();
+        // This pulls all data from the ch32v003, like button presses, touch, etc.
+        // and, it provides printf if need be.
+        ch32v003Tick();
+
+        // TODO: How should we make this goezoutta go into the goezinta?
+        buttonUpdateFrom003(g_ch32v003_buttons);
 
         // Yield to let the rest of the RTOS run
         taskYIELD();
@@ -734,8 +741,6 @@ static void initOptionalPeripherals(void)
 #if defined(CONFIG_HARDWARE_PULSE)
     // Load some default firmware that blinks eyes
     ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
-#elif defined(CONFIG_HARDWARE_FAIRY_PROTO)
-    #warning "TODO load CH32 firmware for button handling with ch32v003RunBinaryAsset()"
 #endif
 }
 

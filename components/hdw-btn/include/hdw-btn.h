@@ -93,4 +93,6 @@ void powerDownButtons(void);
 void powerUpButtons(void);
 bool checkButtonQueue(buttonEvt_t*);
 
+void buttonUpdateFrom003(buttonBit_t state);
+
 #endif

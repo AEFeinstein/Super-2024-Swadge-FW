@@ -55,6 +55,8 @@ static dedic_gpio_bundle_handle_t bundle = NULL;
 /// Timer handle used to periodically poll buttons
 static gptimer_handle_t btnTimer = NULL;
 
+static buttonBit_t btnFrom003;
+
 //==============================================================================
 // Prototypes
 //==============================================================================
@@ -208,6 +210,28 @@ void powerUpButtons(void)
  */
 bool checkButtonQueue(buttonEvt_t* evt)
 {
+#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+    uint32_t oldButtonStates = buttonStates;
+    uint32_t bsNew           = btnFrom003;
+    uint32_t bsXor           = oldButtonStates ^ bsNew;
+
+    if (bsXor)
+    {
+        for (uint32_t mask = 1; mask < 0x10000; mask <<= 1)
+        {
+            if (bsXor & mask)
+            {
+                buttonStates ^= mask;
+                evt->button = mask;
+                evt->down   = !!(bsNew & mask);
+                evt->state  = buttonStates;
+                evt->time   = esp_timer_get_time(); // TODO: In future, improve this.
+                return true;
+            }
+        }
+    }
+#else
+
     // Return immediately if not initialized
     if (NULL == btn_evt_queue)
     {
@@ -240,6 +264,7 @@ bool checkButtonQueue(buttonEvt_t* evt)
             return true;
         }
     }
+#endif
     // Nothing happened
     return false;
 }
@@ -295,4 +320,9 @@ static bool IRAM_ATTR btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_ala
     }
     // return whether we need to yield at the end of ISR
     return high_task_awoken == pdTRUE;
+}
+
+void buttonUpdateFrom003(buttonBit_t state)
+{
+    btnFrom003 = state;
 }

@@ -45,7 +45,7 @@ typedef struct
     size_t* output_size; /* bytes pushed to buffer, so far */
 } output_info;
 
-#define MATCH_NOT_FOUND ((uint16_t)-1)
+#define MATCH_NOT_FOUND ((uint16_t) - 1)
 
 static uint16_t get_input_offset(heatshrink_encoder* hse);
 static uint16_t get_input_buffer_size(heatshrink_encoder* hse);

@@ -65,8 +65,8 @@ void gs_drawNothing(gs_entity_t* self)
 
 void gs_drawSkyGradient(gs_entity_t* self)
 {
-    int32_t y     = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1)
-                    - self->gameData->assets[self->assetIndex].originY;
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y) >> DECIMAL_BITS) + (TFT_HEIGHT >> 1)
+                - self->gameData->assets[self->assetIndex].originY;
     int8_t offset = -((self->gameData->entityManager.camera.pos.x >> DECIMAL_BITS)
                       % self->gameData->assets[self->assetIndex].frames[0].w);
     if (self->gameData->entityManager.camera.pos.x < 0)
@@ -586,12 +586,12 @@ void gs_drawGossipStone(gs_entity_t* self)
 
     int asseteIdx = MAX(self->assetIndex + self->gameData->entityManager.zoom, GS_GOSSIP_STONE_TINY_ASSET);
 
-    int32_t x        = ((self->pos.x - self->gameData->entityManager.camera.pos.x)
-                        >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
-                       + (TFT_WIDTH >> 1) - self->gameData->assets[asseteIdx].originX;
-    int32_t y        = ((self->pos.y - self->gameData->entityManager.camera.pos.y)
-                        >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
-                       + (TFT_HEIGHT >> 1) - self->gameData->assets[asseteIdx].originY;
+    int32_t x = ((self->pos.x - self->gameData->entityManager.camera.pos.x)
+                 >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
+                + (TFT_WIDTH >> 1) - self->gameData->assets[asseteIdx].originX;
+    int32_t y = ((self->pos.y - self->gameData->entityManager.camera.pos.y)
+                 >> (DECIMAL_BITS - self->gameData->entityManager.zoom))
+                + (TFT_HEIGHT >> 1) - self->gameData->assets[asseteIdx].originY;
     int32_t finalRot = gsData->rotateDeg >> DECIMAL_BITS;
     finalRot         = (finalRot + 45) % 360;
     if (self->palleteIdx)
@@ -850,8 +850,8 @@ void gs_positionWave(gs_entity_t* self)
     self->currentAnimationFrame = 0;
     self->animationTimer        = 0;
     self->pos.x                 = self->gameData->entityManager.camera.pos.x
-                                  + gs_randomInt(-(TFT_WIDTH << (DECIMAL_BITS - 1)), TFT_WIDTH << (DECIMAL_BITS - 1));
-    self->pos.y                 = 0xFFFF + gs_randomInt(92 << DECIMAL_BITS, 103 << DECIMAL_BITS);
+                  + gs_randomInt(-(TFT_WIDTH << (DECIMAL_BITS - 1)), TFT_WIDTH << (DECIMAL_BITS - 1));
+    self->pos.y = 0xFFFF + gs_randomInt(92 << DECIMAL_BITS, 103 << DECIMAL_BITS);
     self->pos.y += wData->fore * (11 << DECIMAL_BITS);
     wData->velX = gs_randomInt(20, 30);
 }

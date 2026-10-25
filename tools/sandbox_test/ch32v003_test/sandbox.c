@@ -9,7 +9,6 @@
 #include "soc/system_reg.h"
 #include "hdw-tft.h"
 #include "hdw-ch32v003.h"
-#include "mainMenu.h"
 #include "soc/rtc_cntl_reg.h"
 #include "soc/gpio_reg.h"
 #include "soc/io_mux_reg.h"
@@ -19,9 +18,10 @@
 #include "coreutil.h"
 #include "hdw-btn.h"
 #include "hdw-imu.h"
+#include "menuZorldoRenderer.h"
 
 #include "deep_sleep.h"
-#include "matrix_drops.h"
+#include "firmware.h"
 
 int frameno;
 int bQuit;
@@ -29,9 +29,9 @@ int bQuit;
 int global_i = 100;
 menu_t * menu;
 const char * menu_Bootload = "Bootloader";
-const char * menu_matrix_drops = "Matrix Drops";
+const char * menu_firmware = "Firmware";
 const char * menu_deep_sleep = "Deep Sleep";
-menuMegaRenderer_t* menuMegaRenderer;
+menuZorldoRenderer_t* menuZorldoRenderer;
 
 font_t logbook;
 
@@ -46,19 +46,15 @@ static bool mainMenuCb(const char* label, bool selected, unsigned long int setti
 {
 	if( selected )
 	{
-		if( label == menu_matrix_drops )
+		if( label == menu_firmware )
 		{
-			ch32v003WriteFlash( matrix_drops, sizeof( matrix_drops ) );
+			ch32v003WriteFlash( firmware, sizeof( firmware ) );
 			ch32v003Resume();
 		}
 		else if( label == menu_deep_sleep )
 		{
 			ch32v003WriteFlash( deep_sleep, sizeof( deep_sleep ) );
 			ch32v003Resume();
-		}
-		else if( label == mainMenuMode.modeName )
-		{
-			switchToSwadgeMode( &mainMenuMode );
 		}
 		else if( label == menu_Bootload )
 		{
@@ -82,16 +78,15 @@ void sandbox_main(void)
 	REG_WRITE( GPIO_FUNC7_OUT_SEL_CFG_REG,4 ); // select ledc_ls_sig_out0
 
 	menu = initMenu("USB Sandbox", mainMenuCb);
-	addSingleItemToMenu(menu, menu_matrix_drops );
+	addSingleItemToMenu(menu, menu_firmware );
 	addSingleItemToMenu(menu, menu_deep_sleep );
-	addSingleItemToMenu(menu, mainMenuMode.modeName);
 	addSingleItemToMenu(menu, menu_Bootload);
 	static char menent[128];
 	sprintf( menent, "%d\n", initCh32v003( 18) );
 	addSingleItemToMenu(menu, menent);
-    menuMegaRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    menuZorldoRenderer = initMenuZorldoRenderer(NULL, NULL);
 
-	loadWsg(HP_BOTTOM_BIGMA_WSG, &example_sprite, true);
+	loadWsg(H_MOHAWK_WSG, &example_sprite, true);
 
     loadFont(LOGBOOK_FONT, &logbook, false);
 
@@ -119,7 +114,7 @@ void sandbox_tick()
 	{
 		menu = menuButton(menu, evt);
 	}
-    drawMenuMega(menu, menuMegaRenderer, 1);
+    drawMenuZorldo(menu, menuZorldoRenderer, 1);
 
 //	drawText( &logbook, 215, "test", 10, 20 );
 }

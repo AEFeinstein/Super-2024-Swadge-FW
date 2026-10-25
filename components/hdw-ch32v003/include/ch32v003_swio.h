@@ -83,7 +83,7 @@ static int Write64Block(struct SWIOState* iss, uint32_t address_to_write, const 
 static int UnlockFlash(struct SWIOState* iss);
 static int EraseFlash(struct SWIOState* iss, uint32_t address, uint32_t length, int type);
 static void ResetInternalProgrammingState(struct SWIOState* iss);
-static int PollTerminal(struct SWIOState* iss, uint8_t* buffer, int maxlen, uint32_t leavevalA, uint32_t leavevalB);
+// static int PollTerminal(struct SWIOState* iss, uint8_t* buffer, int maxlen, uint32_t leavevalA, uint32_t leavevalB);
 
 #define DMDATA0        0x04
 #define DMDATA1        0x05
@@ -716,6 +716,8 @@ static int ReadWord(struct SWIOState* iss, uint32_t address_to_read, uint32_t* d
     if (iss->autoincrement)
         iss->currentstateval += 4;
 
+    PrecDelay(100);
+
     int r = MCFReadReg32(dev, DMDATA0, data);
 
     return r;
@@ -1014,6 +1016,7 @@ static int Write64Block(struct SWIOState* iss, uint32_t address_to_write, const 
     return 0;
 }
 
+#if 0
 // Polls up to 7 bytes of printf, and can leave a 7-bit flag for the CH32V003.
 static int PollTerminal(struct SWIOState* iss, uint8_t* buffer, int maxlen, uint32_t leavevalA, uint32_t leavevalB)
 {
@@ -1067,5 +1070,6 @@ static int PollTerminal(struct SWIOState* iss, uint8_t* buffer, int maxlen, uint
         return 0;
     }
 }
+#endif
 
 #endif // _CH32V003_SWIO_H
