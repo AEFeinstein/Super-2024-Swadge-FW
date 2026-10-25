@@ -204,8 +204,6 @@ int main()
             send_dmd0    = 0x82;
         }
 
-#define funDigitalRead(pin) ((int)((GpioOf(pin)->INDR >> ((pin) & 0xf)) & 1))
-
         if (is_proto)
         {
             send_dmd0 |= 0x20 | (funAnalogRead(2) << 16) | ((!funDigitalRead(PC6)) << 28) | // Standby
