@@ -223,8 +223,8 @@ static void clockMainLoop(int64_t elapsedUs)
                         // Make sure that it's a valid time
                         if (tv.tv_sec >= 0)
                         {
-                            // settimeofday() doesn't exist in MSYS, so don't bother there
-#if !defined(__CYGWIN__) && !defined(__MSYS__)
+                            // settimeofday() doesn't work (or exist?) for certain OSs, so only call this in firmware
+#if defined(__XTENSA__)
                             // Set the system time to the new time
                             settimeofday(&tv, NULL);
 #endif
@@ -420,8 +420,8 @@ void setDefaultTime(void)
             .tm_sec  = 0,
         };
         tv.tv_sec = mktime(&magTime);
-        // settimeofday() doesn't exist in MSYS, so don't bother there
-#if !defined(__CYGWIN__) && !defined(__MSYS__)
+        // settimeofday() doesn't work (or exist?) for certain OSs, so only call this in firmware
+#if defined(__XTENSA__)
         settimeofday(&tv, NULL);
 #endif
     }
