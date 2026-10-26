@@ -30,8 +30,9 @@
         portbenchmarkINTERRUPT_RESTORE(0); \
         XTOS_SET_INTLEVEL(0);              \
     } while (0)
-int uprintf(const char* fmt, ...);
-// #define uprintf(x...) ESP_LOGE( "ch32v003programmer", x)
+
+//int uprintf(const char* fmt, ...);
+#define uprintf(x...) ESP_LOGE( "ch32v003programmer", x)
 
 #define GPIO_VAR_W1TC        (*GPIO_VAR_W1TC_R)
 #define GPIO_VAR_W1TS        (*GPIO_VAR_W1TS_R)
@@ -235,13 +236,40 @@ int ch32v003WriteFlash(const uint8_t* buf, int sz)
         }
         memcpy(block, buf + i, rem);
 
-        if (Write64Block(&swioContext, i + 0x08000000, block))
+        int retry = 0;
+        for( retry = 0; retry < 10; retry++ )
         {
-            ESP_LOGE("ch32v003", "Failed to write word to flash.");
-            ch32v003Teardown();
-            return -6;
+            int reply;
+            if ( ( reply = Write64Block(&swioContext, i + 0x08000000, block) ) )
+            {
+                ESP_LOGE("ch32v003", "Failed to write block %d to flash (Error %d)", i, reply);
+                continue;
+            }
+
+            // Read back the 64-block.
+            unsigned addy = i + 0x08000000;
+            uint8_t checkblock[64];
+            int ra        = ch32v003ReadMemory(checkblock, 64, addy);
+            if( ra )
+            {
+                ESP_LOGE("ch32v003", "Failed to read block %d from flash (Error %d)", i, ra);
+                continue;
+            }
+
+            if ( memcmp( checkblock, block, 64 ) )
+            {
+                ESP_LOGE("ch32v003", "Contents of block %d disagree, rewriting", i );
+                continue;
+            }
+
+            break;
         }
-        vTaskDelay(1);
+
+        if( retry == 10 )
+        {
+            ch32v003Teardown();
+            ESP_LOGE("ch32v003", "Failed to write to ch32v003\n" );
+        }
     }
 
     int flashok = 1;
@@ -254,17 +282,17 @@ int ch32v003WriteFlash(const uint8_t* buf, int sz)
 
         if (ra)
         {
-            uprintf("Failed to read %08x\n", addy);
+            ESP_LOGE("ch32v003", "Failed to read %08x", addy);
             flashok = 0;
         }
         if (by != ((uint32_t*)buf)[j])
         {
-            uprintf("@%d %02x=%02x\n", j, by, ((uint32_t*)buf)[j]);
+            ESP_LOGE("ch32v003", "@%d %02lx=%02lx", j, by, ((uint32_t*)buf)[j]);
             flashok = 0;
         }
     }
 
-    printf("Firmware: %d bytes Ok: %d\n", sz, flashok);
+    ESP_LOGI("ch32v003", "Firmware: %d bytes Ok: %d", sz, flashok);
 
     return !flashok;
 }
@@ -410,8 +438,8 @@ void ch32v003Tick()
                     break;
             }
 
-            uprintf("%6d%6d%6d%6d\n", g_ch32v003_touches[0], g_ch32v003_touches[1], g_ch32v003_touches[2],
-                    g_ch32v003_touches[3]);
+            //uprintf("%6d%6d%6d%6d\n", g_ch32v003_touches[0], g_ch32v003_touches[1], g_ch32v003_touches[2],
+            //        g_ch32v003_touches[3]);
             // DMDATA0: CHARGE(4 bits), VMON, BUTTONS, 0x81
             g_ch32v003_vmon      = (rr >> 16) & 0x3ff;
             g_ch32v003_chargemon = rr >> 28;
@@ -450,15 +478,15 @@ void ch32v003Tick()
             }
             MCFWriteReg32(dev, DMDATA0, 0); // Write that we acknowledge the data.
 
-            // ESP_LOGI("ch32v003", "%s", buffer);
-            uprintf("%s", buffer);
+            ESP_LOGI("ch32v003", "%s", buffer);
+            //uprintf("%s", buffer);
         }
     }
 
     return;
 
 mcferror:
-    uprintf("MCF Error: %d\n", r);
+    ESP_LOGE("ch32v003", "MCF Error: %d", r);
     return;
 }
 
@@ -499,12 +527,12 @@ int ch32v003WriteBitmapAsset(int slot, int asset_idx)
     const uint8_t* buf = cnfsGetFile(asset_idx, &sz);
     if (sz < 4)
     {
-        printf("Error: Asset wrong size (%d) bytes.\n", (int)sz);
+        printf("Error: Asset wrong size (%d) bytes.", (int)sz);
         return -1;
     }
     if (((const uint16_t*)buf)[0] != EYE_LED_W || ((const uint16_t*)buf)[1] != EYE_LED_H)
     {
-        printf("Error: Asset wrong dimensions (%d x %d) needs (%d, %d).\n", ((const uint16_t*)buf)[0],
+        printf("Error: Asset wrong dimensions (%d x %d) needs (%d, %d).", ((const uint16_t*)buf)[0],
                ((const uint16_t*)buf)[1], EYE_LED_W, EYE_LED_H);
         return -1;
     }
@@ -529,7 +557,7 @@ int ch32v003WriteBitmap(int slot, const uint8_t pixels[EYE_LED_H][EYE_LED_W])
 {
     if (slot >= CH32V003_MAX_IMAGE_SLOTS)
     {
-        ESP_LOGE("ch32v003", "Failed: requested slot too big.\n");
+        ESP_LOGE("ch32v003", "Failed: requested slot too big.");
         return -1;
     }
 
@@ -579,7 +607,7 @@ int ch32v003SelectBitmap(int slot)
 {
     if (slot >= CH32V003_MAX_IMAGE_SLOTS)
     {
-        ESP_LOGE("ch32v003", "Failed: requested slot too big.\n");
+        ESP_LOGE("ch32v003", "Failed: requested slot too big.");
         return -1;
     }
     uint32_t ledPointer = 0x20000200 + slot * 72;
@@ -637,7 +665,7 @@ static int ch32v003Check()
         switch (m.freq_mhz)
         {
             case 240:
-                swioContext.t1coeff = 9; // 9 or 10 is good.  7 is too low. 11 is too high.
+                swioContext.t1coeff = 10; // 9 or 10 is good.  7 is too low. 13 is too high.
                                          // RUNNING FROM SANDBOX NEED BE HIGHER
                 break;
             default:
@@ -646,7 +674,7 @@ static int ch32v003Check()
         }
 
         int r = InitializeSWDSWIO(&swioContext);
-        uprintf("InitializeSWDSWIO = %d / m: %d\n", r, swioContext.t1coeff);
+        ESP_LOGI("ch32v003", "InitializeSWDSWIO = %d / m: %d", r, swioContext.t1coeff);
         if (r)
         {
             ESP_LOGE("ch32v003", "Failed to initialize");

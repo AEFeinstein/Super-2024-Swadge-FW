@@ -401,6 +401,7 @@ void app_main(void)
     initButtons(pushButtons, ARRAY_SIZE(pushButtons));
 #else
     // On the ch32v003, buttons are exported from the ch32v003 driver.
+    ch32v003RunBinaryAsset(DEEP_SLEEP_CFUN_BIN);
     ch32v003RunBinaryAsset(FIRMWARE_CFUN_BIN);
     initButtons(NULL, 0);
 #endif
@@ -549,6 +550,10 @@ void app_main(void)
         {
             checkEspNowRxQueue();
         }
+
+        // This pulls all data from the ch32v003, like button presses, touch, etc.
+        // and, it provides printf if need be.
+        ch32v003Tick();
 
         // Have the ESP poll the CH32 for button input
         checkCh32Buttons();
