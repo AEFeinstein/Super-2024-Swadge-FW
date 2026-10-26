@@ -355,10 +355,6 @@ static bool IRAM_ATTR btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_ala
 
 void checkCh32Buttons(void)
 {
-    // This pulls all data from the ch32v003, like button presses, touch, etc.
-    // and, it provides printf if need be.
-    ch32v003Tick();
-
     // Move button state from ch32 to btn component
     btnFrom003 = getCh32v003Buttons();
 }

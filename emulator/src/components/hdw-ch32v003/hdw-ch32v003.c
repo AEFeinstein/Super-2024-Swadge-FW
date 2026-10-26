@@ -947,5 +947,6 @@ int ch32v003SelectBitmap(int slot)
 
 void ch32v003Tick(void)
 {
-    WARN_UNIMPLEMENTED();
+    // Unimplemented.
 }
+

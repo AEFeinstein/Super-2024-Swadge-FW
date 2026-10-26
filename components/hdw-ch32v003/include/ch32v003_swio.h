@@ -23,7 +23,7 @@
 // resistor, youcan do this.  It glitches the line high very, very briefly.
 // Enable for when you don't have a 10k pull-upand are relying on the internal pull-up.
 // WARNING: If you set this, you should set the drive current to 5mA.
-#define R_GLITCH_HIGH
+//#define R_GLITCH_HIGH
 
 // You should interface to this file via these functions
 
@@ -401,7 +401,7 @@ static int MCFReadReg32(struct SWIOState* state, uint8_t command, uint32_t* valu
 
         if (ReadBitRVSWD(t1coeff, pinmaskD, pinmaskC) != parity)
         {
-            uprintf("PARITY FAILED\n");
+            uprintf("PARITY FAILED");
             EnableISR();
             return -1;
         }
@@ -448,10 +448,10 @@ static int InitializeSWDSWIO(struct SWIOState* state)
     // See if we can see a chip here...
     uint32_t value = 0;
     int readdm     = MCFReadReg32(state, DMCFGR, &value);
-    uprintf("DMCFGR (SWD): %d: %08x\n", (int)readdm, (unsigned)value);
+    uprintf("DMCFGR (SWD): %d: %08x", (int)readdm, (unsigned)value);
     if (readdm == 0 && (value & 0xffff0000) == (0x5aa50000))
     {
-        uprintf("TEST: Read reg passed. Check value: %08x TODO: MAKE SURE THESE MATCH\n", (unsigned)value);
+        uprintf("TEST: Read reg passed. Check value: %08x TODO: MAKE SURE THESE MATCH", (unsigned)value);
         return 0;
     }
 
@@ -467,22 +467,22 @@ static int InitializeSWDSWIO(struct SWIOState* state)
     uint32_t dmstatus, dmcontrol;
     if (MCFReadReg32(state, DMSTATUS, &dmstatus) != 0 || MCFReadReg32(state, DMCONTROL, &dmcontrol) != 0)
     {
-        uprintf("Could not read from RVSWD connection\n");
+        uprintf("Could not read from RVSWD connection");
         return -1;
     }
 
     // See if we can see a chip here...
-    uprintf("DMSTATUS: %08x\n", (unsigned)dmstatus);
-    uprintf("DMCONTROL: %08x\n", (unsigned)dmcontrol);
+    uprintf("DMSTATUS: %08x", (unsigned)dmstatus);
+    uprintf("DMCONTROL: %08x", (unsigned)dmcontrol);
 
     if ((((dmstatus >> 8) & 0xf) != 0x0c && ((dmstatus >> 8) & 0xf) != 0x03) || dmcontrol != 1)
     {
-        uprintf("DMSTATUS invalid (Probably no RVSWD chip)\n");
+        uprintf("DMSTATUS invalid (Probably no RVSWD chip)");
         return -1;
     }
 
     MCFWriteReg32(state, DMABSTRACTCS, 0x08000302); // Clear out abstractcs register.
-    uprintf("Found RVSWD interface\n");
+    uprintf("Found RVSWD interface");
 
     return 0;
 }
@@ -494,7 +494,7 @@ static int DetermineChipTypeAndSectorInfo(struct SWIOState* iss)
         uint32_t rr;
         if (MCFReadReg32(iss, DMHARTINFO, &rr))
         {
-            uprintf("Error: Could not get hart info.\n");
+            uprintf("Error: Could not get hart info.");
             return -1;
         }
 
@@ -568,10 +568,10 @@ static int DetermineChipTypeAndSectorInfo(struct SWIOState* iss)
                     break;
             }
         }
-        uprintf("Detected %d / %d\n", iss->target_chip_type, iss->sectorsize);
-        uprintf("Vendored: %08x\n", (unsigned)vendorid);
-        uprintf("marchid : %08x\n", (unsigned)marchid);
-        uprintf("HARTINFO: %08x\n", (unsigned)rr);
+        uprintf("Detected %d / %d", iss->target_chip_type, iss->sectorsize);
+        uprintf("Vendored: %08x", (unsigned)vendorid);
+        uprintf("marchid : %08x", (unsigned)marchid);
+        uprintf("HARTINFO: %08x", (unsigned)rr);
 
         iss->statetag = STTAG("XXXX");
     }
@@ -930,7 +930,7 @@ static int Write64Block(struct SWIOState* iss, uint32_t address_to_write, const 
         if (rw)
             return rw;
         // 16.4.6 Main memory fast programming, Step 5
-        // if( WaitForFlash( dev ) ) return -11;
+        if( WaitForFlash( dev ) ) return -11;
         // WriteWord( dev, 0x40022010, FLASH_CTLR_BUF_RST );
         // if( WaitForFlash( dev ) ) return -11;
     }
@@ -960,9 +960,10 @@ static int Write64Block(struct SWIOState* iss, uint32_t address_to_write, const 
                 }
                 else
                 {
-                    WaitForFlash(dev);
+                    rw = WaitForFlash(dev);
                     WriteWord(dev, 0x40022010, CR_PAGE_PG); // THIS IS REQUIRED, (intptr_t)&FLASH->CTLR = 0x40022010
                                                             // FTPG ==  CR_PAGE_PG   == ((uint32_t)0x00010000)
+                    if( rw ) return rw;
                 }
             }
 
@@ -978,7 +979,7 @@ static int Write64Block(struct SWIOState* iss, uint32_t address_to_write, const 
                     memcpy(&data, &blob[index], blob_size - index);
                 }
                 WriteWord(dev, wp, data);
-                // if( (rw = WaitForFlash( dev ) ) ) return rw;
+                if( (rw = WaitForFlash( dev ) ) ) return rw;
                 wp += 4;
             }
 
