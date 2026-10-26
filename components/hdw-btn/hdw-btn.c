@@ -14,17 +14,24 @@
 #include <freertos/queue.h>
 
 #include "hdw-btn.h"
+#include "hdw-ch32v003.h"
 
 //==============================================================================
 // Defines
 //==============================================================================
 
-/// The number of samples kept in history to debounce buttons
-#define DEBOUNCE_HIST_LEN 5
+#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+
+    /// The number of samples kept in history to debounce buttons
+    #define DEBOUNCE_HIST_LEN 5
+
+#endif
 
 //==============================================================================
 // Structs
 //==============================================================================
+
+#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
 
 /// @brief A timestamped button event
 typedef struct
@@ -33,14 +40,19 @@ typedef struct
     int32_t time;  /// The timestamp for this state
 } timedEvt_t;
 
+#endif
+
 //==============================================================================
 // Variables
 //==============================================================================
 
-/// A queue to move pushbutton reads from the ISR to the main loop
-static QueueHandle_t btn_evt_queue = NULL;
 /// The current state of the pushbuttons
 static uint32_t buttonStates = 0;
+
+#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+
+/// A queue to move pushbutton reads from the ISR to the main loop
+static QueueHandle_t btn_evt_queue = NULL;
 /// The current state of the pushbuttons, used in btn_timer_isr_cb()
 static volatile uint32_t pushIsrState = 0;
 
@@ -55,13 +67,21 @@ static dedic_gpio_bundle_handle_t bundle = NULL;
 /// Timer handle used to periodically poll buttons
 static gptimer_handle_t btnTimer = NULL;
 
+#else
+
 static buttonBit_t btnFrom003;
+
+#endif
 
 //==============================================================================
 // Prototypes
 //==============================================================================
 
+#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+
 static bool btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx);
+
+#endif
 
 //==============================================================================
 // Functions
@@ -76,6 +96,7 @@ static bool btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_alarm_event_d
  */
 void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons)
 {
+#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
     // Make sure there aren't too many
     if (numPushButtons > 31)
     {
@@ -111,6 +132,7 @@ void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons)
 
     // Set up the GPIO bundle and timer
     powerUpButtons();
+#endif
 }
 
 /**
@@ -118,6 +140,7 @@ void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons)
  */
 void deinitButtons(void)
 {
+#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
     // Return immediately if not initialized
     if (NULL == btn_evt_queue)
     {
@@ -126,6 +149,7 @@ void deinitButtons(void)
 
     powerDownButtons();
     vQueueDelete(btn_evt_queue);
+#endif
 }
 
 /**
@@ -133,6 +157,7 @@ void deinitButtons(void)
  */
 void powerDownButtons(void)
 {
+#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
     // Return immediately if not initialized
     if (NULL == btn_evt_queue)
     {
@@ -144,6 +169,7 @@ void powerDownButtons(void)
     ESP_ERROR_CHECK(gptimer_disable(btnTimer));
     ESP_ERROR_CHECK(gptimer_del_timer(btnTimer));
     ESP_ERROR_CHECK(dedic_gpio_del_bundle(bundle));
+#endif
 }
 
 /**
@@ -151,6 +177,7 @@ void powerDownButtons(void)
  */
 void powerUpButtons(void)
 {
+#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
     // Return immediately if not initialized
     if (NULL == btn_evt_queue)
     {
@@ -198,6 +225,7 @@ void powerUpButtons(void)
     // Start the timer
     ESP_ERROR_CHECK(gptimer_enable(btnTimer));
     ESP_ERROR_CHECK(gptimer_start(btnTimer));
+#endif
 }
 
 /**
@@ -269,6 +297,7 @@ bool checkButtonQueue(buttonEvt_t* evt)
     return false;
 }
 
+#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
 /**
  * @brief Interrupt called by the hardware timer to poll buttons
  *
@@ -322,7 +351,16 @@ static bool IRAM_ATTR btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_ala
     return high_task_awoken == pdTRUE;
 }
 
-void buttonUpdateFrom003(buttonBit_t state)
+#else
+
+void checkCh32Buttons(void)
 {
-    btnFrom003 = state;
+    // This pulls all data from the ch32v003, like button presses, touch, etc.
+    // and, it provides printf if need be.
+    ch32v003Tick();
+
+    // Move button state from ch32 to btn component
+    btnFrom003 = getCh32v003Buttons();
 }
+
+#endif

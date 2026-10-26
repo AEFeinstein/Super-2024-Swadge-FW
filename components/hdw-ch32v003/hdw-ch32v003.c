@@ -656,3 +656,23 @@ static int ch32v003Check()
     }
     return 0;
 }
+
+uint32_t getCh32v003Buttons(void)
+{
+    return g_ch32v003_buttons;
+}
+
+uint16_t* getCh32v003Touches(void)
+{
+    return g_ch32v003_touches;
+}
+
+uint32_t getCh32v003Vmon(void)
+{
+    return g_ch32v003_vmon;
+}
+
+uint32_t getCh32v003Chargemon(void)
+{
+    return g_ch32v003_chargemon;
+}
