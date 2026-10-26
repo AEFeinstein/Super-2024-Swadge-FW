@@ -26,6 +26,7 @@
 
 #include "hdw-ch32v003.h"
 #include "hdw-ch32c003_emu.h"
+#include "emu_main.h"
 
 //==============================================================================
 // Functions being stubbed.
@@ -942,4 +943,9 @@ int ch32v003SelectBitmap(int slot)
     uint32_t ledPointer = 0x20000200 + slot * 72;
     // Overwrite DMA1_Channel5->MADDR, Assume we've been configured.
     return ch32v003WriteMemory((uint8_t*)&ledPointer, 4, 0x40020064);
+}
+
+void ch32v003Tick(void)
+{
+    WARN_UNIMPLEMENTED();
 }

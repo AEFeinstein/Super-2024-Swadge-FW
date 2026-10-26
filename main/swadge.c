@@ -380,6 +380,12 @@ void app_main(void)
     // Initialize sleep switch
     initSleepSwitch(GPIO_SLEEP);
 
+    // Initialize CH32, if it exists
+    if (GPIO_NUM_NC != (gpio_num_t)GPIO_CH32_PROG)
+    {
+        initCh32v003(GPIO_CH32_PROG);
+    }
+
 #if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
     // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
@@ -395,9 +401,8 @@ void app_main(void)
     initButtons(pushButtons, ARRAY_SIZE(pushButtons));
 #else
     // On the ch32v003, buttons are exported from the ch32v003 driver.
-    #if !defined(__XTENSA__)
+    ch32v003RunBinaryAsset(FIRMWARE_CFUN_BIN);
     initButtons(NULL, 0);
-    #endif
 #endif
 
 #if defined(CONFIG_HARDWARE_WAVEBIRD)
@@ -475,16 +480,6 @@ void app_main(void)
 #endif
     initLeds(GPIO_LED, ledMirrorGpio, getLedBrightnessSetting());
 
-    // Initialize CH32, if it exists
-    if (GPIO_NUM_NC != (gpio_num_t)GPIO_CH32_PROG)
-    {
-        initCh32v003(GPIO_CH32_PROG);
-#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
-        // Required on the fairy.
-        ch32v003RunBinaryAsset(FIRMWARE_CFUN_BIN);
-#endif
-    }
-
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();
 
@@ -554,6 +549,9 @@ void app_main(void)
         {
             checkEspNowRxQueue();
         }
+
+        // Have the ESP poll the CH32 for button input
+        checkCh32Buttons();
 
         // Only draw to the TFT every frameRateUs
         static uint64_t tAccumDraw = 0;
@@ -667,13 +665,6 @@ void app_main(void)
             // Sleep until the switch wakes the swadge
             esp_deep_sleep_start();
         }
-
-        // This pulls all data from the ch32v003, like button presses, touch, etc.
-        // and, it provides printf if need be.
-        ch32v003Tick();
-
-        // TODO: How should we make this goezoutta go into the goezinta?
-        buttonUpdateFrom003(g_ch32v003_buttons);
 
         // Yield to let the rest of the RTOS run
         taskYIELD();

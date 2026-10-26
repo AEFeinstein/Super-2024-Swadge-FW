@@ -206,3 +206,8 @@ buttonBit_t emulatorGetButtonState(void)
 {
     return buttonState;
 }
+
+void checkCh32Buttons(void)
+{
+    WARN_UNIMPLEMENTED();
+}

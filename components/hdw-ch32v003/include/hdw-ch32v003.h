@@ -54,10 +54,10 @@ void ch32v003Teardown();
 
 #ifdef CONFIG_HARDWARE_FAIRY_PROTO
 
-extern uint32_t g_ch32v003_buttons;
-extern uint16_t g_ch32v003_touches[4];
-extern uint32_t g_ch32v003_vmon;
-extern uint32_t g_ch32v003_chargemon;
+uint32_t getCh32v003Buttons(void);
+uint16_t* getCh32v003Touches(void);
+uint32_t getCh32v003Vmon(void);
+uint32_t getCh32v003Chargemon(void);
 
 #else
 int ch32v003WriteBitmapAsset(int slot, int asset_idx);
