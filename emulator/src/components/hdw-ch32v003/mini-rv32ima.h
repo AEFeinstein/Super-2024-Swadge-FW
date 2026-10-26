@@ -641,7 +641,7 @@ MINIRV32_STEPPROTO
                                     break;
                                 case 3: // SC.W (0b00011) (Make sure we have a slot, and, it's valid)
                                     rval    = (CSR(extraflags) >> 3
-                                            != (rs1 & 0x1fffffff)); // Validate that our reservation slot is OK.
+                                               != (rs1 & 0x1fffffff)); // Validate that our reservation slot is OK.
                                     dowrite = !rval;                   // Only write if slot is valid.
                                     break;
                                 case 1:
