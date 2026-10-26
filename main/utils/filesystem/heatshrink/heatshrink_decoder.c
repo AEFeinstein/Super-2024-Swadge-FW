@@ -37,7 +37,7 @@ typedef struct
     size_t* output_size; /* bytes pushed to buffer, so far */
 } output_info;
 
-#define NO_BITS ((uint16_t) - 1)
+#define NO_BITS ((uint16_t)-1)
 
 /* Forward references. */
 static uint16_t get_bits(heatshrink_decoder* hsd, uint8_t count);
