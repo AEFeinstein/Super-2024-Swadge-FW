@@ -47,7 +47,9 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text)
     raySwitchToScreen(RAY_CUTSCENE);
 
     // Initialize the cutscene
-    ray->cutscene = initCutscene(rayCutsceneCb, CUTSCENE_NEXT_0_WSG, 0);
+    ray->cutscene         = initCutscene(rayCutsceneCb, CUTSCENE_NEXT_0_WSG, 0);
+    ray->cutsceneBtnState = 0;
+    ray->cutsceneDone     = false;
 
     // Always load these two by default
     addCutsceneStyle(ray->cutscene, c000, TQ_TOMI_PORTRAIT_00_COCKY_WSG, CUTSCENE_TEXTBOX_WSG, "Tomi", 10, false, true,
@@ -243,7 +245,7 @@ void rayCutsceneCheckButtons(ray_t* ray)
 void rayCutsceneRender(ray_t* ray, uint32_t elapsedUs)
 {
     // If the cutscene is done
-    if (ray->cutsceneDone)
+    if (ray->cutsceneDone || NULL == ray->cutscene->lines.first)
     {
         // Switch back to the game. This will free memory
         ray->cutsceneDone = false;
@@ -252,18 +254,9 @@ void rayCutsceneRender(ray_t* ray, uint32_t elapsedUs)
     }
     else
     {
-        // Always update the cutscene
+        // Update and draw the cutscene
         updateCutscene(ray->cutscene, ray->cutsceneBtnState);
-
-        // Safety check to not get stuck in a blank cutscene
-        if (ray->cutscene->lines.first == NULL)
-        {
-            rayCutsceneCb();
-        }
-        else
-        {
-            drawCutscene(ray->cutscene, ray->renderer->menuFont);
-        }
+        drawCutscene(ray->cutscene, ray->renderer->menuFont);
     }
 }
 
