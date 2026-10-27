@@ -100,7 +100,7 @@ void loadEnvTextures(ray_t* ray)
     LOAD_TEXTURE(ray, BG_WALL_DUNGEON_DR);
     LOAD_TEXTURE(ray, BG_WALL_DUNGEON_DL);
     LOAD_TEXTURE(ray, BG_WALL_BOX);
-    LOAD_TEXTURE(ray, BG_WALL_9);
+    LOAD_TEXTURE(ray, BG_WALL_WATER);
     LOAD_TEXTURE(ray, BG_WALL_10);
     LOAD_TEXTURE(ray, BG_WALL_11);
     LOAD_TEXTURE(ray, BG_WALL_12);

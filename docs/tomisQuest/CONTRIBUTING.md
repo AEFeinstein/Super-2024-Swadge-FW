@@ -140,7 +140,7 @@ Map files can be found in [the assets directory](../../assets/tomisQuest/maps/).
 Simply, a map is made of cells, and each cell can have one background type and one foreground type. Backgrounds must be 20px by 20px and have no transparency. Their types are:
 * Floors - Passable, non-interactive (except for `BG_FLOOR_HOLE`, which the player can jump over or fall into).
     * This is the first column in the map editor palette
-* Walls - Impassible, non-interactive
+* Walls - Impassible, non-interactive (except for `BG_WALL_WATER`, which bullets can pass through)
     * This is the second column in the map editor palette
 * Doors - Interactive, may be opened with a slash or respective key.
     * This is the third column in the map editor palette

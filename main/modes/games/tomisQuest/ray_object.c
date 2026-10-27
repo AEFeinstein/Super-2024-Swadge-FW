@@ -365,8 +365,8 @@ bool checkBgCollision(ray_t* ray, q24_8 x, q24_8 y, rayMapCellType_t oType, int3
 
     rayMapCell_t* cell = &ray->map.tiles[vCell.x][vCell.y];
 
-    // If the bullet hit something
-    if (!isPassableCell(cell))
+    // If the bullet hit something (but not water)
+    if ((BG_WALL_WATER != cell->type) && !isPassableCell(cell))
     {
         // If this is a player's bullet
         if (1 == oId)
