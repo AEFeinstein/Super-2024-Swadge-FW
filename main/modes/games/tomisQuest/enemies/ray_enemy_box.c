@@ -3,6 +3,13 @@
 #include "ray_tex_manager.h"
 #include "ray_script.h"
 
+typedef struct
+{
+    int32_t fallRotationTimerUs;
+    int32_t fallTimerUs;
+} boxState_t;
+
+bool rayEnemyBoxMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs);
 void rayEnemyBoxCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY);
 
 void rayInitEnemyBox(ray_t* ray, rayEnemy_t* e)
@@ -15,16 +22,53 @@ void rayInitEnemyBox(ray_t* ray, rayEnemy_t* e)
     e->health = 1;
 
     // No enemy-specific state
-    e->state = NULL;
+    e->state = heap_caps_calloc(1, sizeof(boxState_t), MALLOC_CAP_8BIT);
 
     // Set function pointers
-    e->mainFn      = NULL;
+    e->mainFn      = rayEnemyBoxMain;
     e->collisionFn = rayEnemyBoxCheckPlayerCollision;
     e->getShotFn   = NULL;
 }
 
+bool rayEnemyBoxMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
+{
+    boxState_t* state = enemy->state;
+
+    // Run timer while falling
+    if (state->fallTimerUs)
+    {
+        // Decrement timer
+        state->fallTimerUs -= elapsedUs;
+        if (state->fallTimerUs <= 0)
+        {
+            // Die if timer elapsed
+            enemy->health = 0;
+        }
+
+        // Run animation for sprite rotation animation
+        RUN_TIMER_EVERY(state->fallRotationTimerUs, 2000000 / 30, elapsedUs, {
+            enemy->c.spriteRotation += 24;
+            if (enemy->c.spriteRotation >= 360)
+            {
+                enemy->c.spriteRotation -= 360;
+            }
+        });
+    }
+
+    // Return if dead or not
+    return enemy->health == 0;
+}
+
 void rayEnemyBoxCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY)
 {
+    boxState_t* state = enemy->state;
+
+    // Don't interact when falling
+    if (state->fallTimerUs > 0)
+    {
+        return;
+    }
+
     rectangle_t enemyBB = rayGetObjBB(&enemy->c);
     if (rectRectIntersection(player, enemyBB, NULL))
     {
@@ -60,24 +104,44 @@ void rayEnemyBoxCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t 
                     eNode = eNode->next;
                 }
 
-                // If it fits, update the position
-
-                vec_t oldCell = {
-                    .x = FROM_FX(enemy->c.posX),
-                    .y = FROM_FX(enemy->c.posY),
-                };
-
-                enemy->c.posX += *deltaX;
-                enemy->c.posY += *deltaY;
-
-                vec_t newCell = {
-                    .x = FROM_FX(enemy->c.posX),
-                    .y = FROM_FX(enemy->c.posY),
-                };
-
-                if (oldCell.x != newCell.x || oldCell.y != newCell.y)
+                // Check if the box fell into a hole
+                if (BG_FLOOR_HOLE == ray->map.tiles[FROM_FX(enemy->c.posX)][FROM_FX(enemy->c.posY)].type)
                 {
-                    checkScriptObjEnter(ray, enemy->c.id, newCell.x, newCell.y, enemy->c.sprite);
+                    // While it has been a faithful companion, your Companion Cube cannot accompany you
+                    // through the rest of the test. If it could talk - and the Enrichment Center takes
+                    // this opportunity to remind you that it cannot - it would tell you to go on without
+                    // it, because it would rather die in a fire than become a burden to you.
+
+                    // Snap to the middle of the hole
+                    enemy->c.posX = TO_FX(FROM_FX(enemy->c.posX)) + TO_FX_FRAC(1, 2);
+                    enemy->c.posY = TO_FX(FROM_FX(enemy->c.posY)) + TO_FX_FRAC(1, 2);
+
+                    // Start the fall timer animation
+                    state->fallTimerUs = 2000000;
+
+                    // Return, nothing more to do
+                    return;
+                }
+                else
+                {
+                    // If it fits, update the position
+                    vec_t oldCell = {
+                        .x = FROM_FX(enemy->c.posX),
+                        .y = FROM_FX(enemy->c.posY),
+                    };
+
+                    enemy->c.posX += *deltaX;
+                    enemy->c.posY += *deltaY;
+
+                    vec_t newCell = {
+                        .x = FROM_FX(enemy->c.posX),
+                        .y = FROM_FX(enemy->c.posY),
+                    };
+
+                    if (oldCell.x != newCell.x || oldCell.y != newCell.y)
+                    {
+                        checkScriptObjEnter(ray, enemy->c.id, newCell.x, newCell.y, enemy->c.sprite);
+                    }
                 }
             }
             else
