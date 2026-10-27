@@ -64,7 +64,7 @@ class tileType(Enum):
     BG_WALL_DUNGEON_DR = BG | WALL | 6
     BG_WALL_DUNGEON_DL = BG | WALL | 7
     BG_WALL_BOX = BG | WALL | 8
-    BG_WALL_9 = BG | WALL | 9
+    BG_WALL_WATER = BG | WALL | 9
     BG_WALL_10 = BG | WALL | 10
     BG_WALL_11 = BG | WALL | 11
     BG_WALL_12 = BG | WALL | 12
@@ -303,7 +303,7 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_WALL_DUNGEON_DL,
         tileType.BG_WALL_DUNGEON_DR,
         tileType.BG_WALL_BOX,
-        tileType.BG_WALL_9,
+        tileType.BG_WALL_WATER,
         tileType.BG_WALL_10,
         tileType.BG_WALL_11,
         tileType.BG_WALL_12,
@@ -329,15 +329,15 @@ bgTiles: list[list[tileType]] = [
     ],
     [
         tileType.BG_DOOR_BUSH,
+        tileType.BG_DOOR_ROCKS,
         tileType.BG_DOOR_CRACK_H,
         tileType.BG_DOOR_CRACK_V,
+        tileType.BG_DOOR_DUNGEON,
         tileType.BG_DOOR_R_KEY_LOCKED,
-        tileType.BG_DOOR_ROCKS,
-        tileType.BG_DOOR_SCRIPT_LOCKED,
         tileType.BG_DOOR_G_KEY_LOCKED,
         tileType.BG_DOOR_B_KEY_LOCKED,
         tileType.BG_DOOR_K_KEY_LOCKED,
-        tileType.BG_DOOR_DUNGEON,
+        tileType.BG_DOOR_SCRIPT_LOCKED,
         tileType.BG_DOOR_10,
         tileType.BG_DOOR_11,
         tileType.BG_DOOR_12,
@@ -404,6 +404,16 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ENEMY_BOX,
         tileType.OBJ_ENEMY_GRUNT,
         tileType.OBJ_ENEMY_TURRET,
+        tileType.OBJ_ENEMY_22,
+        tileType.OBJ_ENEMY_23,
+        tileType.OBJ_ENEMY_24,
+        tileType.OBJ_ENEMY_25,
+        tileType.OBJ_ENEMY_26,
+        tileType.OBJ_ENEMY_27,
+        tileType.OBJ_ENEMY_28,
+        tileType.OBJ_ENEMY_29,
+        tileType.OBJ_ENEMY_30,
+        tileType.OBJ_ENEMY_31,
         tileType.OBJ_ENEMY_NPC_FAIRY_1,
         tileType.OBJ_ENEMY_NPC_FAIRY_2,
         tileType.OBJ_ENEMY_NPC_FAIRY_3,
@@ -422,16 +432,6 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ENEMY_NPC_EMBER_DEMON,
         tileType.OBJ_ENEMY_NPC_THE_MAYOR,
         tileType.OBJ_ENEMY_NPC_FREDWARD,
-        tileType.OBJ_ENEMY_22,
-        tileType.OBJ_ENEMY_23,
-        tileType.OBJ_ENEMY_24,
-        tileType.OBJ_ENEMY_25,
-        tileType.OBJ_ENEMY_26,
-        tileType.OBJ_ENEMY_27,
-        tileType.OBJ_ENEMY_28,
-        tileType.OBJ_ENEMY_29,
-        tileType.OBJ_ENEMY_30,
-        tileType.OBJ_ENEMY_31,
     ],
     [
         tileType.OBJ_SCENERY_SHOP_BOMB,

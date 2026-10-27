@@ -115,7 +115,7 @@ typedef enum __attribute__((packed))
     BG_WALL_DUNGEON_DR = (BG | WALL | 6),
     BG_WALL_DUNGEON_DL = (BG | WALL | 7),
     BG_WALL_BOX        = (BG | WALL | 8),
-    BG_WALL_9          = (BG | WALL | 9),
+    BG_WALL_WATER      = (BG | WALL | 9),
     BG_WALL_10         = (BG | WALL | 10),
     BG_WALL_11         = (BG | WALL | 11),
     BG_WALL_12         = (BG | WALL | 12),
