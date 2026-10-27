@@ -175,11 +175,26 @@ It is your job to fill in each room with something interesting. Some ideas for r
 * Switch-hitting puzzles
 * Nothing at all, just some nice scenery!
 
-It is also your job to open the lone scripted door in the template using the key item of the dungeon. This action is not part of template, but the placement of the scripted door is. The dungeon key items are:
+Note, the following section may be removed if/when the key item is moved to the end of the dungeon:
 
-1. Shield
-2. Boomerang
-3. Doria's Lullaby
+> It is also your job to open the lone scripted door in the template using the key item of the dungeon. This action is not part of template, but the placement of the scripted door is. The dungeon key items are:
+> 
+> 1. Shield
+> 2. Boomerang
+> 3. Doria's Lullaby
+
+At each dungeon the player will have a set of items to work with.
+
+1. In the first dungeon, the player has
+    * Sword
+    * Jump
+    * Bombs
+2. In the second dungeon, the player also has
+    * Shield
+    * Bow
+3. In the third dungeon the player also has
+    * Boomerang
+    * Turntables
 
 Scripts make dungeons interactive and interesting. Full script documentation can be found on [the editor's README.md](../../tools/rayMapEditor/README.md). Sorry for the clunky syntax. Some ideas for scripts are:
 
