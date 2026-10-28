@@ -1063,7 +1063,35 @@ void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         {
             // Start timer to not re-trigger immediately
             script->resetTimerSec = 90;
-            // Create objects
+
+            // If the player is in a dungeon
+            if (6 <= ray->p.mapId && ray->p.mapId <= 9)
+            {
+                bool shouldDeleteEnemies = false;
+                // Look at all the things this script spawns
+                for (int32_t sIdx = 0; sIdx < script->thenArgs.spawnList.numSpawns; sIdx++)
+                {
+                    // If an enemy is spawned
+                    if (CELL_IS_TYPE(script->thenArgs.spawnList.spawns[sIdx].type, (OBJ | ENEMY)))
+                    {
+                        // Delete other enemies first
+                        shouldDeleteEnemies = true;
+                        break;
+                    }
+                }
+
+                // If enemies should be deleted
+                if (shouldDeleteEnemies)
+                {
+                    // Clear out the list
+                    while (ray->enemies.length)
+                    {
+                        heap_caps_free(pop(&ray->enemies));
+                    }
+                }
+            }
+
+            // Then create objects
             for (int32_t sIdx = 0; sIdx < script->thenArgs.spawnList.numSpawns; sIdx++)
             {
                 // Get the type
