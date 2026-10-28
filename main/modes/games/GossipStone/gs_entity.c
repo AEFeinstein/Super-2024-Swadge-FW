@@ -330,6 +330,7 @@ void gs_generateMoonTilemap(gs_entity_t* self)
             tData->tiles[x][y].framePlus1 = GS_WALL_FORE;
         }
     }
+    // vertical shaft and boundary
     for (int y = 0; y < 124; y++)
     {
         tData->tiles[131][y].framePlus1 = GS_WALL_FORE_VIP;
@@ -337,6 +338,7 @@ void gs_generateMoonTilemap(gs_entity_t* self)
         tData->tiles[133][y].framePlus1 = GS_WALL_BACK_VIP;
         tData->tiles[134][y].framePlus1 = GS_WALL_FORE_VIP;
     }
+    // foyer and boundary
     for (int y = 120; y < 128; y++)
     {
         for (int x = 128; x < 138; x++)
@@ -359,13 +361,16 @@ void gs_generateMoonTilemap(gs_entity_t* self)
     }
     // tData->tiles[127][124].framePlus1 = GS_WALL_FORE_VIP;
     // tData->tiles[138][124].framePlus1 = GS_WALL_FORE_VIP;
+
+    // space window
     for (int y = 122; y < 126; y++)
     {
         for (int x = 130; x < 136; x++)
         {
-            tData->tiles[x][y].framePlus1 = GS_NO_TILE_VIP;
+            // tData->tiles[x][y].framePlus1 = GS_NO_TILE_VIP;
         }
     }
+    // random walk
     vec_t minerPos = (vec_t){133, 124};
     for (int i = 0; i < 10000; i++)
     {
@@ -399,18 +404,136 @@ void gs_generateMoonTilemap(gs_entity_t* self)
         minerPos.x = CLAMP(minerPos.x, 1, TILE_FIELD_WIDTH - 2);
         minerPos.y = CLAMP(minerPos.y, 1, TILE_FIELD_HEIGHT - 2);
     }
-    for (int month = 0; month < 12; month++)
+    vec_t astroPosits[12]
+        = {(vec_t){148, 128}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0},
+           (vec_t){0, 0},     (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){118, 128}};
+    // place 10 astros in random positions
+    for (int month = 1; month < 11; month++)
     {
-        // find a tile that's not VIP
-        int x;
-        int y;
+        // find a random positions that's not VIP
+        vec_t pos;
         do
         {
-            x = gs_randomInt(0, TILE_FIELD_WIDTH);
-            y = gs_randomInt(0, TILE_FIELD_HEIGHT);
-        } while (tData->tiles[x][y].framePlus1 >= GS_NO_TILE_VIP);
-        tData->tiles[x][y].framePlus1 = GS_ASTRO_1_VIP + month;
+            pos.x = gs_randomInt(0, TILE_FIELD_WIDTH);
+            pos.y = gs_randomInt(0, TILE_FIELD_HEIGHT);
+        } while (tData->tiles[pos.x][pos.y].framePlus1 >= GS_NO_TILE_VIP);
+        astroPosits[month] = pos;
     }
+    for (int i = 0; i < sizeof(astroPosits) / sizeof(astroPosits[0]); i++)
+    {
+        tData->tiles[astroPosits[i].x][astroPosits[i].y].framePlus1 = GS_ASTRO_1_VIP + i;
+    }
+    /////////////////////////////
+    // Begin simulated annealing//
+    /////////////////////////////
+    int edges[11] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    // calculate loop length
+    int curLength = 0;
+    for (int i = 0; i < sizeof(edges) / sizeof(edges[0]); i++)
+    {
+        curLength += sqrt(sqMagVec2d(subVec2d((vec_t){astroPosits[edges[i]].x << 2, astroPosits[edges[i]].y << 2},
+                                              (vec_t){astroPosits[i].x << 2, astroPosits[i].y << 2})));
+    }
+    int temperature = 100 << DECIMAL_BITS; // 100% hot
+    while (temperature > 16)               // while temp is above 1%
+    {
+        // for(int i = 0; i < (100000>>2) - (temperature>>2); i++)
+        // {
+            // swap 2 edges at random
+            int edge1    = gs_randomInt(0, 10);
+            int edge2    = gs_randomInt(0, 10);
+            int tmp      = edges[edge1];
+            edges[edge1] = edges[edge2];
+            edges[edge2] = tmp;
+
+            int nextLength = 0;
+            for (int i = 0; i < sizeof(edges) / sizeof(edges[0]); i++)
+            {
+                nextLength += sqrt(sqMagVec2d(subVec2d((vec_t){astroPosits[edges[i]].x << 2, astroPosits[edges[i]].y << 2},
+                                                    (vec_t){astroPosits[i].x << 2, astroPosits[i].y << 2})));
+            }
+            // exploit or explore
+            if (nextLength < curLength || gs_randomInt(0, 100000) < temperature)
+            {
+                curLength = nextLength;
+            }
+            else // unwilling to take the swap
+            {
+                // unswap the edges
+                edges[edge2] = edges[edge1];
+                edges[edge1] = tmp;
+            }
+        // }
+        // temperature exponentially decays
+        temperature = temperature * 99 / 100;
+    }
+    ////////////////////////////
+    // end simmulated annealing//
+    ////////////////////////////
+
+    // carve out the path
+    vec_t miner = astroPosits[0];
+    for (int i = 0; i < sizeof(edges) / sizeof(edges[0]); i++)
+    {
+        if (i > 0)
+        {
+            miner = astroPosits[edges[i - 1]];
+        }
+        vec_t target = astroPosits[edges[i]];
+        miner.y--;
+        target.y--;
+        while (miner.x != target.x || miner.y != target.y)
+        {
+            if (tData->tiles[miner.x][miner.y].framePlus1 < GS_NO_TILE_VIP)
+            {
+                tData->tiles[miner.x][miner.y].framePlus1 = GS_WALL_BACK;
+            }
+            bool stepFound = false;
+            while (!stepFound)
+            {
+                switch (gs_randomInt(0, 3))
+                {
+                    case 0:
+                    {
+                        if (target.y < miner.y)
+                        {
+                            miner.y--;
+                            stepFound = true;
+                        }
+                        break;
+                    }
+                    case 1:
+                    {
+                        if (target.x > miner.x)
+                        {
+                            miner.x++;
+                            stepFound = true;
+                        }
+                        break;
+                    }
+                    case 2:
+                    {
+                        if (target.y > miner.y)
+                        {
+                            miner.y++;
+                            stepFound = true;
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        if (target.x < miner.x)
+                        {
+                            miner.x--;
+                            stepFound = true;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     // un-VIP any tiles.
     for (int x = 0; x < TILE_FIELD_WIDTH; x++)
     {
