@@ -52,43 +52,43 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text)
     ray->cutsceneDone     = false;
 
     // Always load these two by default
-    addCutsceneStyle(ray->cutscene, c000, TQ_TOMI_PORTRAIT_00_COCKY_WSG, CUTSCENE_TEXTBOX_WSG, "Tomi", 10, false, true,
-                     true);
-    addCutsceneStyle(ray->cutscene, c000, TQ_HYUT_PORTRAIT_00_NEUTRAL_WSG, CUTSCENE_TEXTBOX_WSG, "Hyut", 2, false, true,
-                     true);
+    addCutsceneStyle(ray->cutscene, c000, TQ_TOMI_PORTRAIT_00_COCKY_WSG, CUTSCENE_TEXTBOX_WSG, "Tomi",
+                     NUM_TOMI_EMOTIONS, false, true, true);
+    addCutsceneStyle(ray->cutscene, c000, TQ_HYUT_PORTRAIT_00_NEUTRAL_WSG, CUTSCENE_TEXTBOX_WSG, "Hyut",
+                     NUM_HYUT_EMOTIONS, false, true, true);
 
     // Initialize the cutscene based on NPC or scene
     if (EMPTY != type)
     {
         switch (type)
         {
-            case OBJ_ENEMY_NPC_FAIRY_1:
+            case OBJ_ENEMY_NPC_FAIRY_KAITIE:
             {
                 initNpcCutsceneKaitie(ray, ray->cutscene);
                 break;
             }
-            case OBJ_ENEMY_NPC_FAIRY_2:
+            case OBJ_ENEMY_NPC_FAIRY_SABLE:
             {
                 initNpcCutsceneSable(ray, ray->cutscene);
                 break;
             }
-            case OBJ_ENEMY_NPC_FAIRY_3:
+            case OBJ_ENEMY_NPC_FAIRY_BEAN:
             {
                 initNpcCutsceneBean(ray, ray->cutscene);
                 break;
             }
-            case OBJ_ENEMY_NPC_FAIRY_4:
+            case OBJ_ENEMY_NPC_FAIRY_DACC:
             {
                 initNpcCutsceneDacc(ray, ray->cutscene);
                 break;
             }
-            case OBJ_ENEMY_NPC_FAIRY_5:
-            case OBJ_ENEMY_NPC_FAIRY_6:
+            case OBJ_ENEMY_NPC_FAIRY_KIKI:
+            case OBJ_ENEMY_NPC_FAIRY_BOUBA:
             {
                 initNpcCutsceneKikiBouba(ray, ray->cutscene);
                 break;
             }
-            case OBJ_ENEMY_NPC_BARRY_THE_FAIRY:
+            case OBJ_ENEMY_NPC_FAIRY_BARRY:
             {
                 initNpcCutsceneBarryTheFairy(ray, ray->cutscene);
                 break;

@@ -593,8 +593,8 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
         // drawRect(xOff, yOff, 92, 162, c520);
         drawText(font, style->textColor, style->title, xOff, yOff);
 
-        xOff = 13;
-        yOff = 172;
+        xOff = 17;
+        yOff = 168;
         // Suppress -Wdiscarded-qualifiers because we know the text being drawn isn't const
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
