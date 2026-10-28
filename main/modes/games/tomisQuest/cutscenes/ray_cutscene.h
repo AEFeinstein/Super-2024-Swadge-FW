@@ -35,12 +35,15 @@ typedef enum
     TOMI_CALM,
     TOMI_SAD,
     TOMI_SHOCKED,
+    TOMI_PLEADING_TEARS,
+    NUM_TOMI_EMOTIONS,
 } tomiEmotion_t;
 
 typedef enum
 {
     HYUT_NEUTRAL,
     HYUT_YELLING,
+    NUM_HYUT_EMOTIONS,
 } hyutEmotion_t;
 
 typedef enum
