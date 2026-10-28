@@ -63,13 +63,13 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
             rayInitEnemyTurret(ray, newObj);
             break;
         }
-        case OBJ_ENEMY_NPC_FAIRY_1:
-        case OBJ_ENEMY_NPC_FAIRY_2:
-        case OBJ_ENEMY_NPC_FAIRY_3:
-        case OBJ_ENEMY_NPC_FAIRY_4:
-        case OBJ_ENEMY_NPC_FAIRY_5:
-        case OBJ_ENEMY_NPC_FAIRY_6:
-        case OBJ_ENEMY_NPC_BARRY_THE_FAIRY:
+        case OBJ_ENEMY_NPC_FAIRY_KAITIE:
+        case OBJ_ENEMY_NPC_FAIRY_SABLE:
+        case OBJ_ENEMY_NPC_FAIRY_BEAN:
+        case OBJ_ENEMY_NPC_FAIRY_DACC:
+        case OBJ_ENEMY_NPC_FAIRY_KIKI:
+        case OBJ_ENEMY_NPC_FAIRY_BOUBA:
+        case OBJ_ENEMY_NPC_FAIRY_BARRY:
         case OBJ_ENEMY_NPC_GREAT_DEEJAY_TREE:
         case OBJ_ENEMY_NPC_LOOT:
         case OBJ_ENEMY_NPC_DORIA:

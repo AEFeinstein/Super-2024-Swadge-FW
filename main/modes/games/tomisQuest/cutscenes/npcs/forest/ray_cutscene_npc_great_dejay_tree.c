@@ -100,7 +100,7 @@ void initNpcCutsceneGreatDejayTree(ray_t* ray, cutscene_t* cutscene)
             addCutsceneLine(cutscene, CS_STYLE_GDJT, "I -", false, 0, NULL);
             addCutsceneLine(cutscene, CS_STYLE_TOMI, "You're just like everyone else. Ugh. I can't believe I came to you for advice.", false, TOMI_ANGRY, NULL);
             addCutsceneLine(cutscene, CS_STYLE_GDJT, "Tomi...", false, 0, NULL);
-            addCutsceneLine(cutscene, CS_STYLE_TOMI, "I'll show you - I'll show everyone in these stinkin' woods!", false, TOMI_PLEADING, NULL);
+            addCutsceneLine(cutscene, CS_STYLE_TOMI, "I'll show you - I'll show everyone in these stinkin' woods!", false, TOMI_PLEADING_TEARS, NULL);
             addCutsceneLine(cutscene, CS_STYLE_GDJT, "T-", false, 0, NULL);
             addCutsceneLine(cutscene, CS_STYLE_TOMI, "I'm outta here.", false, TOMI_ANGRY, endDialog1);
         }

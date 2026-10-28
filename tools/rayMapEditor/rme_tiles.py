@@ -126,13 +126,13 @@ class tileType(Enum):
     OBJ_ENEMY_GRUNT = OBJ | ENEMY | 2
     OBJ_ENEMY_TURRET = OBJ | ENEMY | 3
     # Forest NPCs
-    OBJ_ENEMY_NPC_FAIRY_1 = OBJ | ENEMY | 4
-    OBJ_ENEMY_NPC_FAIRY_2 = OBJ | ENEMY | 5
-    OBJ_ENEMY_NPC_FAIRY_3 = OBJ | ENEMY | 6
-    OBJ_ENEMY_NPC_FAIRY_4 = OBJ | ENEMY | 7
-    OBJ_ENEMY_NPC_FAIRY_5 = OBJ | ENEMY | 8
-    OBJ_ENEMY_NPC_FAIRY_6 = OBJ | ENEMY | 9
-    OBJ_ENEMY_NPC_BARRY_THE_FAIRY = OBJ | ENEMY | 10
+    OBJ_ENEMY_NPC_FAIRY_KAITIE      = OBJ | ENEMY | 4
+    OBJ_ENEMY_NPC_FAIRY_SABLE       = OBJ | ENEMY | 5
+    OBJ_ENEMY_NPC_FAIRY_BEAN        = OBJ | ENEMY | 6
+    OBJ_ENEMY_NPC_FAIRY_DACC        = OBJ | ENEMY | 7
+    OBJ_ENEMY_NPC_FAIRY_KIKI        = OBJ | ENEMY | 8
+    OBJ_ENEMY_NPC_FAIRY_BOUBA       = OBJ | ENEMY | 9
+    OBJ_ENEMY_NPC_FAIRY_BARRY       = OBJ | ENEMY | 10
     OBJ_ENEMY_NPC_HYUT = OBJ | ENEMY | 11
     OBJ_ENEMY_NPC_GREAT_DEEJAY_TREE = OBJ | ENEMY | 12
     # Field NPCs
@@ -414,13 +414,13 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ENEMY_29,
         tileType.OBJ_ENEMY_30,
         tileType.OBJ_ENEMY_31,
-        tileType.OBJ_ENEMY_NPC_FAIRY_1,
-        tileType.OBJ_ENEMY_NPC_FAIRY_2,
-        tileType.OBJ_ENEMY_NPC_FAIRY_3,
-        tileType.OBJ_ENEMY_NPC_FAIRY_4,
-        tileType.OBJ_ENEMY_NPC_FAIRY_5,
-        tileType.OBJ_ENEMY_NPC_FAIRY_6,
-        tileType.OBJ_ENEMY_NPC_BARRY_THE_FAIRY,
+        tileType.OBJ_ENEMY_NPC_FAIRY_KAITIE,
+        tileType.OBJ_ENEMY_NPC_FAIRY_SABLE,
+        tileType.OBJ_ENEMY_NPC_FAIRY_BEAN,
+        tileType.OBJ_ENEMY_NPC_FAIRY_DACC,
+        tileType.OBJ_ENEMY_NPC_FAIRY_KIKI,
+        tileType.OBJ_ENEMY_NPC_FAIRY_BOUBA,
+        tileType.OBJ_ENEMY_NPC_FAIRY_BARRY,
         tileType.OBJ_ENEMY_NPC_HYUT,
         tileType.OBJ_ENEMY_NPC_GREAT_DEEJAY_TREE,
         tileType.OBJ_ENEMY_NPC_LOOT,

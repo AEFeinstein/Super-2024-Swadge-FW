@@ -31,39 +31,39 @@ void rayInitEnemyNpc(ray_t* ray, rayEnemy_t* e, rayMapCellType_t type)
     cnfsFileIdx_t tex;
     switch (type)
     {
-        case OBJ_ENEMY_NPC_FAIRY_1:
+        case OBJ_ENEMY_NPC_FAIRY_KAITIE:
         {
-            tex = OBJ_ENEMY_NPC_FAIRY_1_WSG;
+            tex = OBJ_ENEMY_NPC_FAIRY_KAITIE_WSG;
             break;
         }
-        case OBJ_ENEMY_NPC_FAIRY_2:
+        case OBJ_ENEMY_NPC_FAIRY_SABLE:
         {
-            tex = OBJ_ENEMY_NPC_FAIRY_2_WSG;
+            tex = OBJ_ENEMY_NPC_FAIRY_SABLE_WSG;
             break;
         }
-        case OBJ_ENEMY_NPC_FAIRY_3:
+        case OBJ_ENEMY_NPC_FAIRY_BEAN:
         {
-            tex = OBJ_ENEMY_NPC_FAIRY_3_WSG;
+            tex = OBJ_ENEMY_NPC_FAIRY_BEAN_WSG;
             break;
         }
-        case OBJ_ENEMY_NPC_FAIRY_4:
+        case OBJ_ENEMY_NPC_FAIRY_DACC:
         {
-            tex = OBJ_ENEMY_NPC_FAIRY_4_WSG;
+            tex = OBJ_ENEMY_NPC_FAIRY_DACC_WSG;
             break;
         }
-        case OBJ_ENEMY_NPC_FAIRY_5:
+        case OBJ_ENEMY_NPC_FAIRY_KIKI:
         {
-            tex = OBJ_ENEMY_NPC_FAIRY_5_WSG;
+            tex = OBJ_ENEMY_NPC_FAIRY_KIKI_WSG;
             break;
         }
-        case OBJ_ENEMY_NPC_FAIRY_6:
+        case OBJ_ENEMY_NPC_FAIRY_BOUBA:
         {
-            tex = OBJ_ENEMY_NPC_FAIRY_6_WSG;
+            tex = OBJ_ENEMY_NPC_FAIRY_BOUBA_WSG;
             break;
         }
-        case OBJ_ENEMY_NPC_BARRY_THE_FAIRY:
+        case OBJ_ENEMY_NPC_FAIRY_BARRY:
         {
-            tex = OBJ_ENEMY_NPC_BARRY_THE_FAIRY_WSG;
+            tex = OBJ_ENEMY_NPC_FAIRY_BARRY_WSG;
             break;
         }
         case OBJ_ENEMY_NPC_HYUT:
