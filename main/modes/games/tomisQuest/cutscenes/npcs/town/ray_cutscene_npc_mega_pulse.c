@@ -62,9 +62,9 @@ void initNpcCutsceneMegaPulse(ray_t* ray, cutscene_t* cutscene)
     // After getting lullaby
     else
     {
-        addCutsceneLine(cutscene, CS_STYLE_MEGA_PULSE, "Look Tomi, Sawtooth and I finally found each other again!", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_TOMI, "I'm glad to hear it!", false, TOMI_CALM, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_SAWTOOTH, "Yeah, this \"Land of MAGrule\" is pretty neat. I'd come back here. Maybe in a few years or so after we revisit some other themes.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Hey, you guys finally found each other!", false, TOMI_CALM, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_MEGA_PULSE, "Yeah... Sawtooth had to rescue me from a pit...", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_SAWTOOTH, "This \"Land of MAGrule\" is pretty neat. I'd come back here. Maybe in a few years or so after we revisit some other themes.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Themes?", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_SAWTOOTH, "Oh, I mean, like... actually, never mind. It'd be too complicated to explain.", false, 0, NULL);
     }

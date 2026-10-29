@@ -52,7 +52,7 @@ typedef enum
     TQS_PAIRING            = (1 << 1),
     TQS_HYUT_INTRO         = (1 << 2),
     TQS_HYUT_PAIRING       = (1 << 3),
-    TQS_LOOT_INTRO         = (1 << 4),
+    TQS_LOOT_INTRO         = (1 << 4), // TODO not actually a cutscene?
     TQS_DORIA_INTRO        = (1 << 5),
     TQS_DUNGEON_1_COMPLETE = (1 << 6),
     TQS_DUNGEON_2_COMPLETE = (1 << 7),
@@ -71,6 +71,8 @@ typedef enum
     TQS_DJ_TREE_4          = (1 << 20),
     TQS_DJ_TREE_5          = (1 << 21),
     TQS_FREDWARD           = (1 << 22),
+    TQS_LOOT_1             = (1 << 23),
+    TQS_LOOT_2             = (1 << 24),
 } tomisQuestSceneId_t;
 
 typedef bool (*rayCutsceneSceneInitFn_t)(ray_t* ray, cutscene_t* cutscene, const char* title);
