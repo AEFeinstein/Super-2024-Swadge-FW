@@ -21,9 +21,12 @@ bool initCutsceneHyutIntro(ray_t* ray, cutscene_t* cutscene, const char* title)
 {
     if (0 == strcmp(title, "HYUT_INTRO_SCENE"))
     {
-        // If the cutscene was already viewed, don't bother
-        if (ray->p.cutsceneViewed & TQS_HYUT_INTRO)
+        // If you haven't talked to the DJ Tree yet
+        if (!(ray->p.cutsceneViewed & TQS_DJ_TREE_1) ||
+            // or if the cutscene was already viewed
+            ray->p.cutsceneViewed & TQS_HYUT_INTRO)
         {
+            // don't bother
             return true;
         }
 

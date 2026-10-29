@@ -88,6 +88,7 @@ bool initCutsceneHyutPairing(ray_t* ray, cutscene_t* cutscene, const char* title
         addCutsceneLine(cutscene, CS_STYLE_HYUT, "HYUUUUUAAAAAHHH!!!", false, HYUT_YELLING, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Yeah!", false, TOMI_FIREDUP, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, " I mean... I guess we can give it a try?... What could go wrong?", false, TOMI_EMBARASSED, NULL);
+        // TODO update with final instruction
         addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "HYUT has joined your party! Press B to swing Hyut's EWI of Time!", false, 0, getEwi);
 
         // clang-format on

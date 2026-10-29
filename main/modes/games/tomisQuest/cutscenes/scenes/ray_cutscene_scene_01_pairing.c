@@ -64,6 +64,7 @@ bool initCutscenePairing(ray_t* ray, cutscene_t* cutscene, const char* title)
         addCutsceneLine(cutscene, CS_STYLE_KIKI, "Real great selection this time!", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Ooh - Let me see!!", false, TOMI_CALM, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "(They won't let me through! I better SING to get their attention.)", false, TOMI_ANGRY, NULL);
+        // TODO update with final instructions
         addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "Hold A to enter SING mode, then slide up and down the left touch pad to change your note!", false, 0, NULL);
 
         // [as the player presses A, instead of singing...]

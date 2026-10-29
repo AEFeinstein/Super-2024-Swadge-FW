@@ -9,6 +9,7 @@
 #include "ray_enemy_turret.h"
 #include "ray_enemy_npc.h"
 #include "ray_enemy_hyut.h"
+#include "ray_cutscene.h"
 
 //==============================================================================
 // Function Prototypes
@@ -86,13 +87,14 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
         }
         case OBJ_ENEMY_NPC_HYUT:
         {
-            if (!ray->p.i.haveEwiOfTime)
+            // Need to have visited the DJ Tree and not have the Ewi yet to spawn Hyut
+            if ((ray->p.cutsceneViewed & TQS_DJ_TREE_1) && !ray->p.i.haveEwiOfTime)
             {
                 rayInitEnemyHyut(ray, newObj);
             }
             else
             {
-                // Hyut already in the party, don't spawn
+                // Hyut already in the party or not ready yet, don't spawn
                 heap_caps_free(newObj);
                 return;
             }
