@@ -128,6 +128,8 @@ typedef enum __attribute__((packed))
     GS_WALL_FORE_GROUND_VIP,
     GS_WALL_FORE_VIP,
     GS_WALL_BACK_VIP,
+    GS_MINER_A,
+    GS_MINER_B,
 } gs_tileType_t;
 
 typedef struct

@@ -359,6 +359,8 @@ void gs_generateMoonTilemap(gs_entity_t* self)
             }
         }
     }
+
+
     // tData->tiles[127][124].framePlus1 = GS_WALL_FORE_VIP;
     // tData->tiles[138][124].framePlus1 = GS_WALL_FORE_VIP;
 
@@ -367,42 +369,8 @@ void gs_generateMoonTilemap(gs_entity_t* self)
     {
         for (int x = 130; x < 136; x++)
         {
-            // tData->tiles[x][y].framePlus1 = GS_NO_TILE_VIP;
+            tData->tiles[x][y].framePlus1 = GS_NO_TILE_VIP;
         }
-    }
-    // random walk
-    vec_t minerPos = (vec_t){133, 124};
-    for (int i = 0; i < 10000; i++)
-    {
-        if (tData->tiles[minerPos.x][minerPos.y].framePlus1 != GS_NO_TILE)
-        {
-            // tData->tiles[minerPos.x][minerPos.y].framePlus1 = GS_WALL_BACK;
-        }
-        switch (gs_randomInt(0, 3))
-        {
-            case 0:
-            {
-                minerPos = addVec2d(minerPos, (vec_t){0, 1});
-                break;
-            }
-            case 1:
-            {
-                minerPos = addVec2d(minerPos, (vec_t){0, -1});
-                break;
-            }
-            case 2:
-            {
-                minerPos = addVec2d(minerPos, (vec_t){1, 0});
-                break;
-            }
-            default:
-            {
-                minerPos = addVec2d(minerPos, (vec_t){-1, 0});
-                break;
-            }
-        }
-        minerPos.x = CLAMP(minerPos.x, 1, TILE_FIELD_WIDTH - 2);
-        minerPos.y = CLAMP(minerPos.y, 1, TILE_FIELD_HEIGHT - 2);
     }
     vec_t astroPosits[12]
         = {(vec_t){148, 128}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0},
@@ -436,8 +404,8 @@ void gs_generateMoonTilemap(gs_entity_t* self)
             vec_t pos;
             do
             {
-                pos.x = gs_randomInt(1, TILE_FIELD_WIDTH - 1);
-                pos.y = gs_randomInt(1, TILE_FIELD_HEIGHT - 1);
+                pos.x = gs_randomInt(2, TILE_FIELD_WIDTH - 2);
+                pos.y = gs_randomInt(2, TILE_FIELD_HEIGHT - 2);
             } while (tData->tiles[pos.x][pos.y].framePlus1 >= GS_NO_TILE_VIP);
             astroPosits[month] = pos;
         }
@@ -565,66 +533,188 @@ void gs_generateMoonTilemap(gs_entity_t* self)
         }
     } while (crossesEntry);
 
-    // carve out the path
-    vec_t miner = astroPosits[0];
     for (int i = 0; i < sizeof(minEdges) / sizeof(minEdges[0]); i++)
     {
-        if (i > 0)
+        //set up boundaries for 2 miners
+        vec_t bottomLeft = astroPosits[i == 0 ? 0 : minEdges[i - 1]];
+        vec_t topRight = astroPosits[minEdges[i]];
+        bottomLeft.y--;
+        topRight.y--;
+        if(bottomLeft.x > topRight.x)
         {
-            miner = astroPosits[minEdges[i - 1]];
+            int tmp = bottomLeft.x;
+            bottomLeft.x = topRight.x;
+            topRight.x = tmp;
         }
-        vec_t target = astroPosits[minEdges[i]];
-        miner.y--;
-        target.y--;
-        while (miner.x != target.x || miner.y != target.y)
+        if(bottomLeft.y < topRight.y)
         {
-            if (tData->tiles[miner.x][miner.y].framePlus1 < GS_NO_TILE_VIP)
+            int tmp = bottomLeft.y;
+            bottomLeft.y = topRight.y;
+            topRight.y = tmp;
+        }
+        bottomLeft.x--;
+        topRight.x++;
+        vec_t minerA = astroPosits[i == 0 ? 0 : minEdges[i - 1]];
+        vec_t minerB = astroPosits[minEdges[i]];
+        minerA.y--;
+        minerB.y--;
+        while(true)
+        {
+            if(tData->tiles[minerA.x][minerA.y].framePlus1 == GS_MINER_B || tData->tiles[minerB.x][minerB.y].framePlus1 == GS_MINER_A)
             {
-                tData->tiles[miner.x][miner.y].framePlus1 = GS_WALL_BACK;
+                break;
             }
-            bool stepFound = false;
-            while (!stepFound)
+            tData->tiles[minerA.x][minerA.y].framePlus1 = GS_MINER_A;
+            tData->tiles[minerB.x][minerB.y].framePlus1 = GS_MINER_B;
+            vec_t newAPos = minerA;
+            vec_t newBPos = minerB;
+            switch(gs_randomInt(0,3))
             {
-                switch (gs_randomInt(0, 3))
+                case 0:
                 {
-                    case 0:
-                    {
-                        if (target.y < miner.y)
-                        {
-                            miner.y--;
-                            stepFound = true;
-                        }
-                        break;
-                    }
-                    case 1:
-                    {
-                        if (target.x > miner.x)
-                        {
-                            miner.x++;
-                            stepFound = true;
-                        }
-                        break;
-                    }
-                    case 2:
-                    {
-                        if (target.y > miner.y)
-                        {
-                            miner.y++;
-                            stepFound = true;
-                        }
-                        break;
-                    }
-                    default:
-                    {
-                        if (target.x < miner.x)
-                        {
-                            miner.x--;
-                            stepFound = true;
-                        }
-                        break;
-                    }
+                    newAPos.x--;
+                    break;
+                }
+                case 1:
+                {
+                    newAPos.x++;
+                    break;
+                }
+                case 2:
+                {
+                    newAPos.y--;
+                    break;
+                }
+                default:
+                {
+                    newAPos.y++;
+                    break;
                 }
             }
+            switch(gs_randomInt(0,3))
+            {
+                case 0:
+                {
+                    newBPos.x--;
+                    break;
+                }
+                case 1:
+                {
+                    newBPos.x++;
+                    break;
+                }
+                case 2:
+                {
+                    newBPos.y--;
+                    break;
+                }
+                default:
+                {
+                    newBPos.y++;
+                    break;
+                }
+            }
+            if(newAPos.x >= bottomLeft.x && newAPos.x <= topRight.x && newAPos.y >= topRight.y && newAPos.y <= bottomLeft.y && !(tData->tiles[newAPos.x][newAPos.y].framePlus1 >= GS_NO_TILE_VIP && tData->tiles[newAPos.x][newAPos.y].framePlus1 <= GS_WALL_BACK_VIP))
+            {
+                minerA = newAPos;
+            }
+            if(newBPos.x >= bottomLeft.x && newBPos.x <= topRight.x && newBPos.y >= topRight.y && newBPos.y <= bottomLeft.y && !(tData->tiles[newBPos.x][newBPos.y].framePlus1 >= GS_NO_TILE_VIP && tData->tiles[newBPos.x][newBPos.y].framePlus1 <= GS_WALL_BACK_VIP))
+            {
+                minerB = newBPos;
+            }
+        }
+        for (int x = bottomLeft.x; x <= topRight.x; x++)
+        {
+            for (int y = topRight.y; y <= bottomLeft.y; y++)
+            {
+                if(tData->tiles[x][y].framePlus1 == GS_MINER_A || tData->tiles[x][y].framePlus1 == GS_MINER_B)
+                {
+                    tData->tiles[x][y].framePlus1 = GS_WALL_BACK;
+                }
+            }
+        }
+    }
+
+    // carve out the path
+    // vec_t miner = astroPosits[0];
+    // for (int i = 0; i < sizeof(minEdges) / sizeof(minEdges[0]); i++)
+    // {
+    //     if (i > 0)
+    //     {
+    //         miner = astroPosits[minEdges[i - 1]];
+    //     }
+    //     vec_t target = astroPosits[minEdges[i]];
+    //     miner.y--;
+    //     target.y--;
+    //     while (miner.x != target.x || miner.y != target.y)
+    //     {
+    //         if (tData->tiles[miner.x][miner.y].framePlus1 < GS_NO_TILE_VIP)
+    //         {
+    //             tData->tiles[miner.x][miner.y].framePlus1 = GS_WALL_BACK;
+    //         }
+    //         bool stepFound = false;
+    //         while (!stepFound)
+    //         {
+    //             switch (gs_randomInt(0, 3))
+    //             {
+    //                 case 0:
+    //                 {
+    //                     if (target.y < miner.y)
+    //                     {
+    //                         miner.y--;
+    //                         stepFound = true;
+    //                     }
+    //                     break;
+    //                 }
+    //                 case 1:
+    //                 {
+    //                     if (target.x > miner.x)
+    //                     {
+    //                         miner.x++;
+    //                         stepFound = true;
+    //                     }
+    //                     break;
+    //                 }
+    //                 case 2:
+    //                 {
+    //                     if (target.y > miner.y)
+    //                     {
+    //                         miner.y++;
+    //                         stepFound = true;
+    //                     }
+    //                     break;
+    //                 }
+    //                 default:
+    //                 {
+    //                     if (target.x < miner.x)
+    //                     {
+    //                         miner.x--;
+    //                         stepFound = true;
+    //                     }
+    //                     break;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }asdf
+
+    //TO DO make sure astros werene't in these areas....
+    for (int x = 119; x < 149; x++)
+    {
+        tData->tiles[x][127].framePlus1 = GS_WALL_BACK;
+    }
+    for (int x = 113; x < 124; x++)
+    {
+        for (int y = 123; y < 128; y++)
+        {
+            tData->tiles[x][y].framePlus1 = GS_WALL_BACK;
+        }
+    }
+    for (int x = 143; x < 154; x++)
+    {
+        for (int y = 123; y < 128; y++)
+        {
+            tData->tiles[x][y].framePlus1 = GS_WALL_BACK;
         }
     }
 
