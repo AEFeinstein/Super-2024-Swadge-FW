@@ -360,12 +360,12 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_DOOR_29,
         tileType.BG_DOOR_30,
         tileType.BG_DOOR_31,
-        tileType.DELETE,
     ],
 ]
 
 objTiles: list[list[tileType]] = [
     [
+        tileType.DELETE,
         tileType.OBJ_ITEM_EWI,
         tileType.OBJ_ITEM_BOMB,
         tileType.OBJ_ITEM_BOOTS,
@@ -400,6 +400,7 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ITEM_31,
     ],
     [
+        tileType.DELETE,
         tileType.OBJ_ENEMY_START_POINT,
         tileType.OBJ_ENEMY_BOX,
         tileType.OBJ_ENEMY_GRUNT,
@@ -434,6 +435,7 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ENEMY_NPC_FREDWARD,
     ],
     [
+        tileType.DELETE,
         tileType.OBJ_SCENERY_SHOP_BOMB,
         tileType.OBJ_SCENERY_CAVE,
         tileType.OBJ_SCENERY_STAIRS,

@@ -106,12 +106,12 @@ class view:
         self.root.bind("<Control-w>", self.script_camera_advance)
         self.root.bind("<Control-equal>", self.zoom_in)
         self.root.bind("<Control-minus>", self.zoom_out)
-        self.root.bind("<Control-Alt-Up>", self.pan_up)
-        self.root.bind("<Control-Alt-Down>", self.pan_down)
-        self.root.bind("<Control-Alt-Left>", self.pan_left)
-        self.root.bind("<Control-Alt-Right>", self.pan_right)
-        self.root.bind("<Alt-Up>", self.pan_palette_up)
-        self.root.bind("<Alt-Down>", self.pan_palette_down)
+        self.root.bind("<Control-i>", self.pan_up)
+        self.root.bind("<Control-k>", self.pan_down)
+        self.root.bind("<Control-j>", self.pan_left)
+        self.root.bind("<Control-l>", self.pan_right)
+        self.root.bind("<Control-apostrophe>", self.pan_palette_up)
+        self.root.bind("<Control-slash>", self.pan_palette_down)
 
         content = tk.Frame(self.root, background=frameBgColor)
         frame = tk.Frame(content, background=frameBgColor)
@@ -497,11 +497,11 @@ class view:
         if (4 == event.num) or (event.delta < 0):
             # Mouse wheel up scrolls up
             self.paletteCanvas.scan_mark(0, 0)
-            self.paletteCanvas.scan_dragto(0, -self.paletteCellSize, gain=1)
+            self.paletteCanvas.scan_dragto(0, self.paletteCellSize, gain=1)
         elif (5 == event.num) or (event.delta > 0):
             # Mouse wheel down scrolls down
             self.paletteCanvas.scan_mark(0, 0)
-            self.paletteCanvas.scan_dragto(0, self.paletteCellSize, gain=1)
+            self.paletteCanvas.scan_dragto(0, -self.paletteCellSize, gain=1)
 
     def mapLeftClick(self, event: tk.Event):
         x: int = self.mapCanvas.canvasx(event.x)
