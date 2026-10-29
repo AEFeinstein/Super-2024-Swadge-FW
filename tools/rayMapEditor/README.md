@@ -47,8 +47,8 @@ Load, save, or 'save as' the current map and scripts with the buttons on the top
 | `ctrl` + `w` | Advance the script camera helper |
 | `ctrl` + `=` | Zoom the map in |
 | `ctrl` + `-` | Zoom the map out |
-| `ctrl` + `alt` + arrow keys | Move the map around |
-| `alt` + up or down arrow | Scroll the palette up and down |
+| `ctrl` + (`i`, `j`, `k`, `l`) | Move the map around |
+| `ctrl` + (`'`, `/`) | Scroll the palette up and down |
 
 ## Tiles
 
