@@ -50,7 +50,7 @@ void initNpcCutsceneBarryTheFairy(ray_t* ray, cutscene_t* cutscene)
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Yep! The next time you talk to me, you'll be addressing the newest Great Fairy.", false, TOMI_COCKY, NULL);
         addCutsceneLine(cutscene, CS_STYLE_BARRY, "Heh heh - sure, bub. I'll be here waiting as soon as you come crawling back home.", false, 0, NULL);
     }
-    // After visiting Loot, before getting shield
+    // All other dialog
     else
     {
         addCutsceneLine(cutscene, CS_STYLE_BARRY, "Oh hey, look - it's the newest Great Fairy! What, you forget something at home? Heh heh heh!", false, 0, NULL);

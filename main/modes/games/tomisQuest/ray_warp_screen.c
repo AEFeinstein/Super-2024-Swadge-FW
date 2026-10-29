@@ -127,6 +127,12 @@ void warpToDestination(ray_t* ray)
     // Save again after warping
     raySaveGame(ray);
 
+    // Move the camera before checking for enter scripts, which may trigger a cutscene
+    if (false == ray->p.cameraScripted)
+    {
+        rayCenterCameraOnPlayer(ray);
+    }
+
     // Check script from entering the initial cell
     checkScriptEnter(ray, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
 
