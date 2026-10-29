@@ -226,6 +226,7 @@ void initNpcCutsceneGreatDejayTree(ray_t* ray, cutscene_t* cutscene)
                 addCutsceneLine(cutscene, CS_STYLE_TOMI, "Really? Wow!", false, TOMI_FIREDUP, NULL);
                 addCutsceneLine(cutscene, CS_STYLE_GDJT, "Maybe we'll collab one day?", false, 0, NULL);
                 addCutsceneLine(cutscene, CS_STYLE_TOMI, "I'd like that a lot.", false, TOMI_CALM, NULL);
+                // TODO final instructions
                 addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "You Got the Magic Turntables! Activate them by stepping on a DJ pad, and use both touch strips to scratch a fat beat!", false, 0, NULL);
                 addCutsceneLine(cutscene, CS_STYLE_TOMI, "Hey, Great DeJay Tree?", false, TOMI_SUSPICIOUS, NULL);
                 addCutsceneLine(cutscene, CS_STYLE_GDJT, "Yeah, Tomi?", false, 0, NULL);
