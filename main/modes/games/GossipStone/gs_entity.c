@@ -407,79 +407,173 @@ void gs_generateMoonTilemap(gs_entity_t* self)
     vec_t astroPosits[12]
         = {(vec_t){148, 128}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0},
            (vec_t){0, 0},     (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){118, 128}};
-    // place 10 astros in random positions
-    for (int month = 1; month < 11; month++)
-    {
-        // find a random positions that's not VIP
-        vec_t pos;
-        do
-        {
-            pos.x = gs_randomInt(0, TILE_FIELD_WIDTH);
-            pos.y = gs_randomInt(0, TILE_FIELD_HEIGHT);
-        } while (tData->tiles[pos.x][pos.y].framePlus1 >= GS_NO_TILE_VIP);
-        astroPosits[month] = pos;
-    }
-    for (int i = 0; i < sizeof(astroPosits) / sizeof(astroPosits[0]); i++)
-    {
-        tData->tiles[astroPosits[i].x][astroPosits[i].y].framePlus1 = GS_ASTRO_1_VIP + i;
-    }
-    /////////////////////////////
-    // Begin simulated annealing//
-    /////////////////////////////
-    int edges[11] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-    // calculate loop length
-    int curLength = 0;
-    for (int i = 0; i < sizeof(edges) / sizeof(edges[0]); i++)
-    {
-        curLength += sqrt(sqMagVec2d(subVec2d((vec_t){astroPosits[edges[i]].x << 2, astroPosits[edges[i]].y << 2},
-                                              (vec_t){astroPosits[i].x << 2, astroPosits[i].y << 2})));
-    }
-    int temperature = 100 << DECIMAL_BITS; // 100% hot
-    while (temperature > 16)               // while temp is above 1%
-    {
-        // for(int i = 0; i < (100000>>2) - (temperature>>2); i++)
-        // {
-            // swap 2 edges at random
-            int edge1    = gs_randomInt(0, 10);
-            int edge2    = gs_randomInt(0, 10);
-            int tmp      = edges[edge1];
-            edges[edge1] = edges[edge2];
-            edges[edge2] = tmp;
 
-            int nextLength = 0;
-            for (int i = 0; i < sizeof(edges) / sizeof(edges[0]); i++)
+
+
+    bool crossesEntry = false;
+
+    int curEdges[11] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    int newEdges[11] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    int minEdges[11] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    do
+    {
+        crossesEntry = false;
+        //clear any astro tiles from the last failed generation
+        for (int x = 0; x < TILE_FIELD_WIDTH; x++)
+        {
+            for (int y = 0; y < TILE_FIELD_HEIGHT; y++)
             {
-                nextLength += sqrt(sqMagVec2d(subVec2d((vec_t){astroPosits[edges[i]].x << 2, astroPosits[edges[i]].y << 2},
-                                                    (vec_t){astroPosits[i].x << 2, astroPosits[i].y << 2})));
+                if(tData->tiles[x][y].framePlus1 >= GS_ASTRO_1_VIP && tData->tiles[x][y].framePlus1 <= GS_ASTRO_12_VIP)
+                {
+                    tData->tiles[x][y].framePlus1 = GS_WALL_FORE;
+                }
             }
-            // exploit or explore
-            if (nextLength < curLength || gs_randomInt(0, 100000) < temperature)
+        }
+        // place 10 astros in random positions
+        for (int month = 1; month < 11; month++)
+        {
+            // find a random positions that's not VIP
+            vec_t pos;
+            do
             {
-                curLength = nextLength;
-            }
-            else // unwilling to take the swap
+                pos.x = gs_randomInt(1, TILE_FIELD_WIDTH - 1);
+                pos.y = gs_randomInt(1, TILE_FIELD_HEIGHT - 1);
+            } while (tData->tiles[pos.x][pos.y].framePlus1 >= GS_NO_TILE_VIP);
+            astroPosits[month] = pos;
+        }
+        for (int i = 0; i < sizeof(astroPosits) / sizeof(astroPosits[0]); i++)
+        {
+            tData->tiles[astroPosits[i].x][astroPosits[i].y].framePlus1 = GS_ASTRO_1_VIP + i;
+        }
+        //////////////////////////////
+        // Begin simulated annealing//
+        //////////////////////////////
+        // calculate loop length
+        int minLength = 0;
+        for (int i = 0; i < sizeof(curEdges) / sizeof(curEdges[0]); i++)
+        {
+            minLength += sqrt(sqMagVec2d(subVec2d((vec_t){astroPosits[curEdges[i]].x << 2, astroPosits[curEdges[i]].y << 2},
+                                                  (vec_t){astroPosits[i == 0 ? 0 : curEdges[i - 1]].x << 2,
+                                                          astroPosits[i == 0 ? 0 : curEdges[i - 1]].y << 2})));
+            if ((astroPosits[curEdges[i]].x > 132 && astroPosits[curEdges[i]].y <= 128
+                 && astroPosits[i == 0 ? 0 : curEdges[i - 1]].x <= 132)
+                || (astroPosits[curEdges[i]].x <= 132 && astroPosits[curEdges[i]].y <= 128
+                    && astroPosits[i == 0 ? 0 : curEdges[i - 1]].x > 132)
+                || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x > 132 && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128
+                    && astroPosits[curEdges[i]].x <= 132)
+                || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x <= 132 && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128
+                    && astroPosits[curEdges[i]].x > 132))
             {
-                // unswap the edges
-                edges[edge2] = edges[edge1];
-                edges[edge1] = tmp;
+                // punish edges that cross over the entry shaft/foyer
+                minLength += 20000 << 2;
             }
-        // }
-        // temperature exponentially decays
-        temperature = temperature * 99 / 100;
-    }
-    ////////////////////////////
-    // end simmulated annealing//
-    ////////////////////////////
+        }
+        int temperature = 100 << DECIMAL_BITS; // 100% hot
+        while (temperature > 16)                // while temp is above 1%
+        {
+            for(int iteration = 0; iteration < 100; iteration++)
+            {
+            int curLength = 0;
+            for (int i = 0; i < sizeof(curEdges) / sizeof(curEdges[0]); i++)
+            {
+                curLength
+                    += sqrt(sqMagVec2d(subVec2d((vec_t){astroPosits[curEdges[i]].x << 2, astroPosits[curEdges[i]].y << 2},
+                                                (vec_t){astroPosits[i == 0 ? 0 : curEdges[i - 1]].x << 2,
+                                                        astroPosits[i == 0 ? 0 : curEdges[i - 1]].y << 2})));
+                if ((astroPosits[curEdges[i]].x > 132 && astroPosits[curEdges[i]].y <= 128
+                     && astroPosits[i == 0 ? 0 : curEdges[i - 1]].x <= 132)
+                    || (astroPosits[curEdges[i]].x <= 132 && astroPosits[curEdges[i]].y <= 128
+                        && astroPosits[i == 0 ? 0 : curEdges[i - 1]].x > 132)
+                    || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x > 132
+                        && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128 && astroPosits[curEdges[i]].x <= 132)
+                    || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x <= 132
+                        && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128 && astroPosits[curEdges[i]].x > 132))
+                {
+                    // punish edges that cross over the entry shaft/foyer
+                    curLength += 20000 << 2;
+                }
+            }
+            if(curLength < minLength)
+            {
+                minLength = curLength;
+                for(int i = 0; i < sizeof(curEdges) / sizeof(curEdges[0]); i++)
+                {
+                    minEdges[i] = curEdges[i];
+                }
+            }
+            for(int i = 0; i < sizeof(curEdges) / sizeof(curEdges[0]); i++)
+            {
+                newEdges[i] = curEdges[i];
+            }
+            // swap 2 edges at random
+            int edge1    = gs_randomInt(0, 9);
+            int edge2    = gs_randomInt(0, 9);
+            int tmp      = newEdges[edge1];
+            newEdges[edge1] = newEdges[edge2];
+            newEdges[edge2] = tmp;
+            
+            int newLength = 0;
+            for (int i = 0; i < sizeof(curEdges) / sizeof(curEdges[0]); i++)
+            {
+                newLength
+                    += sqrt(sqMagVec2d(subVec2d((vec_t){astroPosits[curEdges[i]].x << 2, astroPosits[curEdges[i]].y << 2},
+                                                (vec_t){astroPosits[i == 0 ? 0 : curEdges[i - 1]].x << 2,
+                                                        astroPosits[i == 0 ? 0 : curEdges[i - 1]].y << 2})));
+                if ((astroPosits[curEdges[i]].x > 132 && astroPosits[curEdges[i]].y <= 128
+                     && astroPosits[i == 0 ? 0 : curEdges[i - 1]].x <= 132)
+                    || (astroPosits[curEdges[i]].x <= 132 && astroPosits[curEdges[i]].y <= 128
+                        && astroPosits[i == 0 ? 0 : curEdges[i - 1]].x > 132)
+                    || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x > 132
+                        && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128 && astroPosits[curEdges[i]].x <= 132)
+                    || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x <= 132
+                        && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128 && astroPosits[curEdges[i]].x > 132))
+                {
+                    // punish edges that cross over the entry shaft/foyer
+                    newLength += 20000 << 2;
+                }
+            }
+
+            if(exp((curLength - newLength) / (double)temperature) > gs_randomInt(0, 100000) / (double)100000)
+            {
+                for(int i = 0; i < sizeof(curEdges) / sizeof(curEdges[0]); i++)
+                {
+                    curEdges[i] = newEdges[i];
+                }
+            }
+        }
+            // temperature decays
+            temperature = 99 * temperature / 100;
+        }
+        /////////////////////////////
+        // end simmulated annealing//
+        /////////////////////////////
+
+        for (int i = 0; i < sizeof(minEdges) / sizeof(minEdges[0]); i++)
+        {
+            if ((astroPosits[minEdges[i]].x > 132 && astroPosits[minEdges[i]].y <= 128
+                 && astroPosits[i == 0 ? 0 : minEdges[i - 1]].x <= 132)
+                || (astroPosits[minEdges[i]].x <= 132 && astroPosits[minEdges[i]].y <= 128
+                    && astroPosits[i == 0 ? 0 : minEdges[i - 1]].x > 132)
+                || (astroPosits[i == 0 ? 0 : minEdges[i - 1]].x > 132 && astroPosits[i == 0 ? 0 : minEdges[i - 1]].y <= 128
+                    && astroPosits[minEdges[i]].x <= 132)
+                || (astroPosits[i == 0 ? 0 : minEdges[i - 1]].x <= 132 && astroPosits[i == 0 ? 0 : minEdges[i - 1]].y <= 128
+                    && astroPosits[minEdges[i]].x > 132))
+            {
+                crossesEntry = true;
+                break;
+            }
+        }
+    } while (crossesEntry);
 
     // carve out the path
     vec_t miner = astroPosits[0];
-    for (int i = 0; i < sizeof(edges) / sizeof(edges[0]); i++)
+    for (int i = 0; i < sizeof(minEdges) / sizeof(minEdges[0]); i++)
     {
         if (i > 0)
         {
-            miner = astroPosits[edges[i - 1]];
+            miner = astroPosits[minEdges[i - 1]];
         }
-        vec_t target = astroPosits[edges[i]];
+        vec_t target = astroPosits[minEdges[i]];
         miner.y--;
         target.y--;
         while (miner.x != target.x || miner.y != target.y)
