@@ -196,7 +196,8 @@ void initNpcCutsceneGreatDejayTree(ray_t* ray, cutscene_t* cutscene)
             addCutsceneLine(cutscene, CS_STYLE_TOMI, "But really though. Why does everyone here look up to you?", false, TOMI_SUSPICIOUS, NULL);
             addCutsceneLine(cutscene, CS_STYLE_GDJT, "I mean, they didn't always. For years I was just \"The Tree.\" I was just a little sapling in this little Glen where people sometimes hung out.", false, 0, NULL);
             addCutsceneLine(cutscene, CS_STYLE_TOMI, "Well, it's not like you had anywhere to go.", false, TOMI_SUSPICIOUS, NULL);
-            addCutsceneLine(cutscene, CS_STYLE_GDJT, "True! I watched other adventurers come and go, but I just kinda stayed put. Did my best to be nice to everyone who came though. Sometimes it was sad, feeling like I was missing out on stuff.", false, 0, NULL);
+            addCutsceneLine(cutscene, CS_STYLE_GDJT, "True! I watched other adventurers come and go, but I just kinda stayed put. Did my best to be nice to everyone who came though.", false, 0, NULL);
+            addCutsceneLine(cutscene, CS_STYLE_GDJT, "Sometimes it was sad, feeling like I was missing out on stuff.", false, 0, NULL);
             addCutsceneLine(cutscene, CS_STYLE_TOMI, "I... never really thought about that.", false, TOMI_SAD, NULL);
             addCutsceneLine(cutscene, CS_STYLE_GDJT, "But it got better! Then you fairies showed up, and adventurers started coming to the Fairy Glen for companions.", false, 0, NULL);
             addCutsceneLine(cutscene, CS_STYLE_HYUT, "Hyaaa!", false, HYUT_NEUTRAL, NULL);
@@ -205,7 +206,7 @@ void initNpcCutsceneGreatDejayTree(ray_t* ray, cutscene_t* cutscene)
             addCutsceneLine(cutscene, CS_STYLE_GDJT, "Ha ha ha!", false, 0, NULL);
             addCutsceneLine(cutscene, CS_STYLE_TOMI, "Sorry...", false, TOMI_EMBARASSED, NULL);
             addCutsceneLine(cutscene, CS_STYLE_GDJT, "You're all good, little sprout. Haven't had a good laugh like that in ages. But hey kiddo, think you could do me a favor?", false, 0, NULL);
-            addCutsceneLine(cutscene, CS_STYLE_TOMI, "Sure, what do you need?", false, TOMI_CALM, NULL);
+            addCutsceneLine(cutscene, CS_STYLE_TOMI, "Sure, what do you need?", false, TOMI_SUSPICIOUS, NULL);
             addCutsceneLine(cutscene, CS_STYLE_GDJT, "I think I misplaced my DJ TURNTABLES around here somewhere. I can't really look around to check. Mind finding them for me?", false, 0, NULL);
             addCutsceneLine(cutscene, CS_STYLE_TOMI, "Sure thing.", false, TOMI_CALM, endDialog4);
         }
