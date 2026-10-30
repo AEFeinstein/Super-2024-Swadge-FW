@@ -66,7 +66,7 @@ void initNpcCutsceneLoot(ray_t* ray, cutscene_t* cutscene)
         addCutsceneLine(cutscene, CS_STYLE_LOOT, "You know what they say about boomerangs, eh?", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "No?", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_LOOT, "I can't remember either, but I'm sure it'll come back to me eventually.", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_TOMI, "GROAN. Good one, I guess.", false, TOMI_ANGRY, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "GROAN. Good one, I guess.", false, TOMI_BORED, NULL);
         addCutsceneLine(cutscene, CS_STYLE_LOOT, "Huh? What do you mean? I told you, I forgot how the saying goes...", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Can we please get on with whatever this is?", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_LOOT, "Sure! Here's a ditty I like to call, \"The Ballad of the Boomerang.\"", false, 0, NULL);
@@ -76,7 +76,7 @@ void initNpcCutsceneLoot(ray_t* ray, cutscene_t* cutscene)
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Please stop.", false, TOMI_BORED, NULL);
         addCutsceneLine(cutscene, CS_STYLE_HYUT, "Hyaaaa!!! Hyaaaaapp!!", false, HYUT_YELLING, NULL);
         addCutsceneLine(cutscene, CS_STYLE_LOOT, "What? Why are you being so cranky?", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Just tell us where to go already!", false, TOMI_BORED, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Just tell us where to go already!", false, TOMI_ANGRY, NULL);
         addCutsceneLine(cutscene, CS_STYLE_LOOT, "How am I supposed to know? I ain't your dad. Do fairies have dads?", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "The Great DeJay Tree is kinda like my dad...", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_LOOT, "Go check with him then, I dunno.", false, 0, NULL);
