@@ -71,7 +71,6 @@ typedef enum
     TQS_DJ_TREE_4          = (1 << 20),
     TQS_DJ_TREE_5          = (1 << 21),
     TQS_FREDWARD           = (1 << 22),
-    TQS_LOOT_1             = (1 << 23),
     TQS_LOOT_2             = (1 << 24),
 } tomisQuestSceneId_t;
 
