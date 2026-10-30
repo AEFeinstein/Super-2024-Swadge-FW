@@ -68,6 +68,11 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
         // Load from the injected file
         fileSize = userLevelLen;
         fileData = userLevel;
+
+        // Always draw the game (skip first cutscene)
+        ray->p.drawGame = true;
+        // Assume we're in a dungeon
+        ray->p.mapId = 6;
     }
     else // Load a map normally from compressed data
     {
