@@ -861,6 +861,8 @@ typedef struct rayGame
     list_t scripts[NUM_IF_OP_TYPES]; ///< An array of lists of scripts
     uint32_t scriptTimer;            ///< A microsecond timer to check for time based scripts
     uint32_t secondsSinceStart;      ///< The number of seconds since this map was loaded
+    bool forceExecute;               ///< A flag to force execution of a script
+    rayScript_t* spawnToExecute;     ///< The next spawn script to execute
 
     list_t bgmSongs;
     midiFile_t sfx_door_open;      ///< SFX when a door opens

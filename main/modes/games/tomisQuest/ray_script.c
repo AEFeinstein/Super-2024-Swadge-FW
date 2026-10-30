@@ -733,7 +733,27 @@ bool checkScriptShootWall(ray_t* ray, int32_t x, int32_t y)
  */
 bool checkScriptEnter(ray_t* ray, int32_t x, int32_t y)
 {
-    return checkScriptCell(ray, &ray->scripts[ENTER], x, y);
+    // Check if entering a cell executes a script
+    if (checkScriptCell(ray, &ray->scripts[ENTER], x, y))
+    {
+        // Script executed!
+        return true;
+    }
+    // If no script was executed (i.e. a cell was exited), but there is a pending spawn
+    else if (ray->spawnToExecute)
+    {
+        // Force execute the spawn
+        ray->forceExecute = true;
+        executeScriptEvent(ray, ray->spawnToExecute, NULL);
+        // Clear after execution
+        ray->forceExecute   = false;
+        ray->spawnToExecute = NULL;
+        // Script executed!
+        return true;
+    }
+
+    // Nothing this time
+    return false;
 }
 
 /**
@@ -1062,31 +1082,42 @@ void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         case SPAWN:
         {
             // Start timer to not re-trigger immediately
-            script->resetTimerSec = 90;
+            // script->resetTimerSec = 90;
 
             // If the player is in a dungeon
             if (6 <= ray->p.mapId && ray->p.mapId <= 9)
             {
-                bool shouldDeleteEnemies = false;
-                // Look at all the things this script spawns
-                for (int32_t sIdx = 0; sIdx < script->thenArgs.spawnList.numSpawns; sIdx++)
+                // If this is an enter->spawn script and execution isn't being forced
+                if (!ray->forceExecute && ENTER == script->ifOp)
                 {
-                    // If an enemy is spawned
-                    if (CELL_IS_TYPE(script->thenArgs.spawnList.spawns[sIdx].type, (OBJ | ENEMY)))
-                    {
-                        // Delete other enemies first
-                        shouldDeleteEnemies = true;
-                        break;
-                    }
+                    // Save this to execute when you leave the cell
+                    ray->spawnToExecute = script;
+                    // Don't execute it yet!
+                    break;
                 }
-
-                // If enemies should be deleted
-                if (shouldDeleteEnemies)
+                else
                 {
-                    // Clear out the list
-                    while (ray->enemies.length)
+                    bool shouldDeleteEnemies = false;
+                    // Look at all the things this script spawns
+                    for (int32_t sIdx = 0; sIdx < script->thenArgs.spawnList.numSpawns; sIdx++)
                     {
-                        heap_caps_free(pop(&ray->enemies));
+                        // If an enemy is spawned
+                        if (CELL_IS_TYPE(script->thenArgs.spawnList.spawns[sIdx].type, (OBJ | ENEMY)))
+                        {
+                            // Delete other enemies first
+                            shouldDeleteEnemies = true;
+                            break;
+                        }
+                    }
+
+                    // If enemies should be deleted
+                    if (shouldDeleteEnemies)
+                    {
+                        // Clear out the list
+                        while (ray->enemies.length)
+                        {
+                            heap_caps_free(pop(&ray->enemies));
+                        }
                     }
                 }
             }
