@@ -19,7 +19,7 @@ void addCutsceneStyleMegaPulse(cutscene_t* cutscene)
  */
 void addCutsceneStyleSawtooth(cutscene_t* cutscene)
 {
-    addCutsceneStyle(cutscene, c000, TQ_SAWTOOTH_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "Sawtooth", 1, true, true, true);
+    addCutsceneStyle(cutscene, c000, TQ_SAWTOOTH_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "Sunny", 1, true, true, true);
 }
 
 /**
@@ -43,7 +43,7 @@ void initNpcCutsceneMegaPulse(ray_t* ray, cutscene_t* cutscene)
     // After visiting Loot, before getting shield
     if (!ray->p.i.haveShield)
     {
-        addCutsceneLine(cutscene, CS_STYLE_MEGA_PULSE, "Sawtooth? Come in, Sawtooth? I think the teleporter malfunctioned again..", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_MEGA_PULSE, "Sawtooth- err, I mean, Sunny? Come in, Sunny? I think the teleporter malfunctioned again..", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "you don't look like you're from around here... or like, this time period...", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_MEGA_PULSE, "uhh, forsooth! Carry on!", false, 0, NULL);
     }
@@ -57,13 +57,13 @@ void initNpcCutsceneMegaPulse(ray_t* ray, cutscene_t* cutscene)
     // After getting turntables, before getting lullaby
     else if (!ray->p.i.haveDoriasLullaby)
     {
-        addCutsceneLine(cutscene, CS_STYLE_MEGA_PULSE, "You again! Did you see Sawtooth? Man, I just missed her again, didn't I...", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_MEGA_PULSE, "You again! Did you see Sunny? Man, I just missed her again, didn't I...", false, 0, NULL);
     }
     // After getting lullaby
     else
     {
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Hey, you guys finally found each other!", false, TOMI_CALM, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_MEGA_PULSE, "Yeah... Sawtooth had to rescue me from a pit...", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_MEGA_PULSE, "Yeah... Sunny had to rescue me from a pit...", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_SAWTOOTH, "This \"Land of MAGrule\" is pretty neat. I'd come back here. Maybe in a few years or so after we revisit some other themes.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Themes?", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_SAWTOOTH, "Oh, I mean, like... actually, never mind. It'd be too complicated to explain.", false, 0, NULL);
