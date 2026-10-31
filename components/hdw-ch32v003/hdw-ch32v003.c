@@ -246,9 +246,16 @@ overallretry:
         }
 
         // Make sure we configure PD7 as an output (GPIO)
-        const uint32_t target_option = 0xa55adf20;
-        if (option != target_option)
+        // 0x20df5aa5 = Disable Bootloader, Enable PD7 as GPIO
+        // 0x00ff5aa5 = Enable Bootloader, Enable PD7 as GPIO
+        static const uint8_t target_options[64]
+            = {0xa5, 0x5a, 0xdf, 0x20, 0x00, 0xff, 0x00, 0xff, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00};
+
+        if (memcmp(&option, target_options, 4))
         {
+            ESP_LOGI("ch32v003", "Option bytes (%08lx) disagrees with target (%02x%02x%02x%02x).  Writing.", option,
+                     target_options[3], target_options[2], target_options[1], target_options[0]);
+
             // Some chips may be locked.  This force unlocks the chip and then flashes that option.
 
             // UnlockFlash handles this part.
@@ -262,25 +269,42 @@ overallretry:
 
             uint32_t rw;
             ReadWord(&swioContext, 0x40022010, &rw); // FLASH->CTLR = 0x40022010
-
             rw &= ((uint32_t)0xFFFFFFDF);            // CR_OPTER_Reset
             rw |= ((uint32_t)0x00000010);            // CR_OPTPG_Set;
             ReadWord(&swioContext, 0x40022010, &rw); // FLASH->CTLR = 0x40022010
 
             // Actually write the option bytes.
-            WriteWord(&swioContext, 0x1FFFF800, (uint8_t*)&target_option);
+            /*			for( int i = 0; i < 4; i++ )
+                        {
+                            WriteWord(&swioContext, 0x1FFFF800 + i*4, *((uint32_t*)&target_options[i*4]) );
+                        }
+            */
+            Write64Block(&swioContext, 0x1FFFF800, target_options);
+
+            esp_rom_delay_us(20000);
 
             // do full-chip-erase.
-            WriteWord(&swioContext, 0x40022010, 0); //  FLASH->CTLR = 0x40022010
-            WriteWord(&swioContext, 0x40022010, FLASH_CTLR_MER);
-            WriteWord(&swioContext, 0x40022010, CR_STRT_Set | FLASH_CTLR_MER);
-            WaitForFlash(&swioContext);
-            WriteWord(&swioContext, 0x40022010, 0); //  FLASH->CTLR = 0x40022010
+            EraseFlash(&swioContext, 0, 0, 1);
 
+            /*		  	swioContext.flash_unlocked = 0;
+                        swioContext.lastwriteflags = 0;
+                        swioContext.statetag = STTAG("XXXX");
+            */
             // We will have to do this again if the chip was locked.
 
             // Actually write the option bytes.
-            WriteWord(&swioContext, 0x1FFFF800, (uint8_t*)&target_option);
+            Write64Block(&swioContext, 0x1FFFF800, target_options);
+
+            uint32_t flobr = 0xaaaaaaaa;
+            ReadWord(&swioContext, 0x4002201C, &flobr); // FLASH_OBR
+
+            option = 0xaaaaaaaa;
+            ch32v003ReadMemory((uint8_t*)&option, 4, 0x1FFFF800);
+
+            uint32_t firstflash = 0x0;
+            ch32v003ReadMemory((uint8_t*)&firstflash, 4, 0x08000000);
+            ESP_LOGI("ch32v003", "Final option bytes: %08lx. FLASH_OBR = %08lx First Flash: %08lx", option, flobr,
+                     firstflash);
         }
     }
 
