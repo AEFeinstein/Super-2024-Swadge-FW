@@ -23,6 +23,8 @@ void ChipSetup()
                      | RCC_APB2Periph_GPIOD | RCC_APB2Periph_ADC1;
     RCC->APB1PCENR = RCC_APB1Periph_TIM2;
 
+    // No longer needed with new host code.
+#if 0
     // First make sure we configure PD7 as an output (GPIO)
     FLASH->OBKEYR   = FLASH_KEY1;
     FLASH->OBKEYR   = FLASH_KEY2;
@@ -91,6 +93,7 @@ void ChipSetup()
     }
 
     // Option byte writing done.
+#endif
 }
 
 int main()
