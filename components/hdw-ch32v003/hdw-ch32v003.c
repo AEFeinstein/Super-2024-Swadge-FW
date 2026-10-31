@@ -258,13 +258,6 @@ overallretry:
 
             // Some chips may be locked.  This force unlocks the chip and then flashes that option.
 
-            // UnlockFlash handles this part.
-            // FLASH->OBKEYR   = FLASH_KEY1;
-            // FLASH->OBKEYR   = FLASH_KEY2;
-            // FLASH->KEYR     = FLASH_KEY1;
-            // FLASH->KEYR     = FLASH_KEY2;
-            // FLASH->MODEKEYR = FLASH_KEY1;
-            // FLASH->MODEKEYR = FLASH_KEY2;
             WaitForFlash(&swioContext);
 
             uint32_t rw;
@@ -273,12 +266,6 @@ overallretry:
             rw |= ((uint32_t)0x00000010);            // CR_OPTPG_Set;
             ReadWord(&swioContext, 0x40022010, &rw); // FLASH->CTLR = 0x40022010
 
-            // Actually write the option bytes.
-            /*			for( int i = 0; i < 4; i++ )
-                        {
-                            WriteWord(&swioContext, 0x1FFFF800 + i*4, *((uint32_t*)&target_options[i*4]) );
-                        }
-            */
             Write64Block(&swioContext, 0x1FFFF800, target_options);
 
             esp_rom_delay_us(20000);
@@ -286,10 +273,6 @@ overallretry:
             // do full-chip-erase.
             EraseFlash(&swioContext, 0, 0, 1);
 
-            /*		  	swioContext.flash_unlocked = 0;
-                        swioContext.lastwriteflags = 0;
-                        swioContext.statetag = STTAG("XXXX");
-            */
             // We will have to do this again if the chip was locked.
 
             // Actually write the option bytes.
