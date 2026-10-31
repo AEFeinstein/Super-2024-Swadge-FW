@@ -107,7 +107,6 @@
  * \subsection led_api LED APIs
  *
  * - hdw-led.h: Learn how to use the LEDs
- * - hdw-ch32v003.h: The matrix array driver on the 2026 Swadge
  * - Colorchord
  *     - embeddedNf.h: The core Colorchord algorithm
  *     - embeddedOut.h: Set LEDs by Colorchord Data
@@ -409,6 +408,12 @@ void app_main(void)
     // Initialize sleep switch
     initSleepSwitch(GPIO_SLEEP);
 
+    // Initialize CH32, if it exists
+    if (GPIO_NUM_NC != (gpio_num_t)GPIO_CH32_PROG)
+    {
+        initCh32v003(GPIO_CH32_PROG);
+    }
+
 #if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
     // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
@@ -423,10 +428,10 @@ void app_main(void)
     };
     initButtons(pushButtons, ARRAY_SIZE(pushButtons));
 #else
-    #warning "TODO Handle CH32 Buttons on Fairy. Classic button init left in place for the emulator"
-    #if !defined(__XTENSA__)
+    // On the ch32v003, buttons are exported from the ch32v003 driver.
+    // ch32v003RunBinaryAsset(DEEP_SLEEP_CFUN_BIN);
+    ch32v003RunBinaryAsset(FIRMWARE_CFUN_BIN);
     initButtons(NULL, 0);
-    #endif
 #endif
 
 #if defined(CONFIG_HARDWARE_WAVEBIRD)
@@ -504,12 +509,6 @@ void app_main(void)
 #endif
     initLeds(GPIO_LED, ledMirrorGpio, getLedBrightnessSetting());
 
-    // Initialize CH32, if it exists
-    if (GPIO_NUM_NC != (gpio_num_t)GPIO_CH32_PROG)
-    {
-        initCh32v003(GPIO_CH32_PROG);
-    }
-
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();
 
@@ -579,6 +578,13 @@ void app_main(void)
         {
             checkEspNowRxQueue();
         }
+
+        // This pulls all data from the ch32v003, like button presses, touch, etc.
+        // and, it provides printf if need be.
+        ch32v003Tick();
+
+        // Have the ESP poll the CH32 for button input
+        checkCh32Buttons();
 
         // Only draw to the TFT every frameRateUs
         static uint64_t tAccumDraw = 0;
@@ -683,6 +689,8 @@ void app_main(void)
         // If the switch says it's time to sleep
         if (sleepSwitchShouldSleep())
         {
+            // Sleep the ch32
+            ch32v003RunBinaryAsset(DEEP_SLEEP_CFUN_BIN);
             // Don't start a specific mode when awoken
             pendingSwadgeMode = NULL;
             // Deinitialize everything (including the swadge mode)
@@ -699,9 +707,6 @@ void app_main(void)
             // Sleep until the switch wakes the swadge
             esp_deep_sleep_start();
         }
-
-        // If you want to allow printf() from the ch32v003, you can call this. Note that it takes about 40us every time
-        // it's called. ch32v003CheckTerminal();
 
         // Yield to let the rest of the RTOS run
         taskYIELD();
@@ -771,8 +776,6 @@ static void initOptionalPeripherals(void)
 #if defined(CONFIG_HARDWARE_PULSE)
     // Load some default firmware that blinks eyes
     ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
-#elif defined(CONFIG_HARDWARE_FAIRY_PROTO)
-    #warning "TODO load CH32 firmware for button handling with ch32v003RunBinaryAsset()"
 #endif
 }
 

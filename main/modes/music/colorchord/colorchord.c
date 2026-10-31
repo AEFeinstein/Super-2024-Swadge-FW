@@ -320,6 +320,9 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
 
         if (change)
         {
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+            // No display on ch32v003.
+#else
             // Draw bars to the eye LEDs
             uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
             for (int x = 0; x < EYE_LED_W; x++)
@@ -332,9 +335,11 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
                     }
                 }
             }
+
             // Write and select the bitmap to an unused slot
             ch32v003WriteBitmap(colorchord->bmpSlot, bitmap);
             ch32v003SelectBitmap(colorchord->bmpSlot);
+#endif
             // Set up the next slot for the next frame
             colorchord->bmpSlot = (colorchord->bmpSlot + 1) % CH32V003_MAX_IMAGE_SLOTS;
         }
