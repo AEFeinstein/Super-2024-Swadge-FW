@@ -31,8 +31,8 @@
         XTOS_SET_INTLEVEL(0);              \
     } while (0)
 
-//int uprintf(const char* fmt, ...);
-#define uprintf(x...) ESP_LOGE( "ch32v003programmer", x)
+// int uprintf(const char* fmt, ...);
+#define uprintf(x...) ESP_LOGE("ch32v003programmer", x)
 
 #define GPIO_VAR_W1TC        (*GPIO_VAR_W1TC_R)
 #define GPIO_VAR_W1TS        (*GPIO_VAR_W1TS_R)
@@ -215,14 +215,74 @@ int ch32v003WriteMemory(const uint8_t* binary, uint32_t length, uint32_t offset)
  */
 int ch32v003WriteFlash(const uint8_t* buf, int sz)
 {
-    if (ch32v003Check())
+    int overallretrycount = 0;
+
+overallretry:
+    if (overallretrycount++ > 10)
         return -1;
+
+    if (ch32v003Check())
+    {
+        ESP_LOGE("ch32v003", "ch32v003Check failed.\n");
+        goto overallretry;
+    }
 
     ResetInternalProgrammingState(&swioContext);
 
     ch32v003SetReg(DMCONTROL, 0x80000001); // Request halt
     ch32v003SetReg(DMCONTROL, 0x80000001); // Really request halt.
     ch32v003SetReg(DMCONTROL, 0x00000001); // Clear halt request.
+
+    UnlockFlash(&swioContext);
+
+    // First, make sure the fuses are set to the desired settings.
+    {
+        uint32_t option = 0;
+        int ra          = ch32v003ReadMemory((uint8_t*)&option, 4, 0x1FFFF800);
+        if (ra)
+        {
+            ESP_LOGE("ch32v003", "Failed to read option bytes from flash (Error %d)", ra);
+            goto overallretry;
+        }
+
+        // Make sure we configure PD7 as an output (GPIO)
+        const uint32_t target_option = 0xa55adf20;
+        if (option != target_option)
+        {
+            // Some chips may be locked.  This force unlocks the chip and then flashes that option.
+
+            // UnlockFlash handles this part.
+            // FLASH->OBKEYR   = FLASH_KEY1;
+            // FLASH->OBKEYR   = FLASH_KEY2;
+            // FLASH->KEYR     = FLASH_KEY1;
+            // FLASH->KEYR     = FLASH_KEY2;
+            // FLASH->MODEKEYR = FLASH_KEY1;
+            // FLASH->MODEKEYR = FLASH_KEY2;
+            WaitForFlash(&swioContext);
+
+            uint32_t rw;
+            ReadWord(&swioContext, 0x40022010, &rw); // FLASH->CTLR = 0x40022010
+
+            rw &= ((uint32_t)0xFFFFFFDF);            // CR_OPTER_Reset
+            rw |= ((uint32_t)0x00000010);            // CR_OPTPG_Set;
+            ReadWord(&swioContext, 0x40022010, &rw); // FLASH->CTLR = 0x40022010
+
+            // Actually write the option bytes.
+            WriteWord(&swioContext, 0x1FFFF800, (uint8_t*)&target_option);
+
+            // do full-chip-erase.
+            WriteWord(&swioContext, 0x40022010, 0); //  FLASH->CTLR = 0x40022010
+            WriteWord(&swioContext, 0x40022010, FLASH_CTLR_MER);
+            WriteWord(&swioContext, 0x40022010, CR_STRT_Set | FLASH_CTLR_MER);
+            WaitForFlash(&swioContext);
+            WriteWord(&swioContext, 0x40022010, 0); //  FLASH->CTLR = 0x40022010
+
+            // We will have to do this again if the chip was locked.
+
+            // Actually write the option bytes.
+            WriteWord(&swioContext, 0x1FFFF800, (uint8_t*)&target_option);
+        }
+    }
 
     uint8_t block[64];
     int i;
@@ -237,38 +297,50 @@ int ch32v003WriteFlash(const uint8_t* buf, int sz)
         memcpy(block, buf + i, rem);
 
         int retry = 0;
-        for( retry = 0; retry < 10; retry++ )
+        for (retry = 0; retry < 10; retry++)
         {
-            int reply;
-            if ( ( reply = Write64Block(&swioContext, i + 0x08000000, block) ) )
-            {
-                ESP_LOGE("ch32v003", "Failed to write block %d to flash (Error %d)", i, reply);
-                continue;
-            }
-
             // Read back the 64-block.
             unsigned addy = i + 0x08000000;
             uint8_t checkblock[64];
-            int ra        = ch32v003ReadMemory(checkblock, 64, addy);
-            if( ra )
+            int ra = ch32v003ReadMemory(checkblock, 64, addy);
+            if (ra)
             {
                 ESP_LOGE("ch32v003", "Failed to read block %d from flash (Error %d)", i, ra);
                 continue;
             }
 
-            if ( memcmp( checkblock, block, 64 ) )
+            if (memcmp(checkblock, block, 64))
             {
-                ESP_LOGE("ch32v003", "Contents of block %d disagree, rewriting", i );
-                continue;
+                int reply;
+                if ((reply = Write64Block(&swioContext, i + 0x08000000, block)))
+                {
+                    ESP_LOGE("ch32v003", "Failed to write block %d to flash (Error %d)", i, reply);
+                    continue;
+                }
+
+                // Read back the 64-block.
+                addy = i + 0x08000000;
+                ra   = ch32v003ReadMemory(checkblock, 64, addy);
+                if (ra)
+                {
+                    ESP_LOGE("ch32v003", "Failed to read block %d from flash (Error %d)", i, ra);
+                    continue;
+                }
+
+                if (memcmp(checkblock, block, 64))
+                {
+                    ESP_LOGE("ch32v003", "Contents of block %d disagree, rewriting", i);
+                    continue;
+                }
             }
 
             break;
         }
 
-        if( retry == 10 )
+        if (retry == 10)
         {
             ch32v003Teardown();
-            ESP_LOGE("ch32v003", "Failed to write to ch32v003\n" );
+            ESP_LOGE("ch32v003", "Failed to write to ch32v003\n");
         }
     }
 
@@ -438,9 +510,9 @@ void ch32v003Tick()
                     break;
             }
 
-            //uprintf("%6d%6d%6d%6d\n", g_ch32v003_touches[0], g_ch32v003_touches[1], g_ch32v003_touches[2],
-            //        g_ch32v003_touches[3]);
-            // DMDATA0: CHARGE(4 bits), VMON, BUTTONS, 0x81
+            // uprintf("%6d%6d%6d%6d\n", g_ch32v003_touches[0], g_ch32v003_touches[1], g_ch32v003_touches[2],
+            //         g_ch32v003_touches[3]);
+            //  DMDATA0: CHARGE(4 bits), VMON, BUTTONS, 0x81
             g_ch32v003_vmon      = (rr >> 16) & 0x3ff;
             g_ch32v003_chargemon = rr >> 28;
             uint32_t b           = (rr >> 8) & 0xff;
@@ -479,7 +551,7 @@ void ch32v003Tick()
             MCFWriteReg32(dev, DMDATA0, 0); // Write that we acknowledge the data.
 
             ESP_LOGI("ch32v003", "%s", buffer);
-            //uprintf("%s", buffer);
+            // uprintf("%s", buffer);
         }
     }
 
@@ -666,7 +738,7 @@ static int ch32v003Check()
         {
             case 240:
                 swioContext.t1coeff = 10; // 9 or 10 is good.  7 is too low. 13 is too high.
-                                         // RUNNING FROM SANDBOX NEED BE HIGHER
+                                          // RUNNING FROM SANDBOX NEED BE HIGHER
                 break;
             default:
                 swioContext.t1coeff = 100; // Untested At Other Speeds

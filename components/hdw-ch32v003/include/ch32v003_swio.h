@@ -23,7 +23,7 @@
 // resistor, youcan do this.  It glitches the line high very, very briefly.
 // Enable for when you don't have a 10k pull-upand are relying on the internal pull-up.
 // WARNING: If you set this, you should set the drive current to 5mA.
-//#define R_GLITCH_HIGH
+// #define R_GLITCH_HIGH
 
 // You should interface to this file via these functions
 
@@ -930,7 +930,8 @@ static int Write64Block(struct SWIOState* iss, uint32_t address_to_write, const 
         if (rw)
             return rw;
         // 16.4.6 Main memory fast programming, Step 5
-        if( WaitForFlash( dev ) ) return -11;
+        if (WaitForFlash(dev))
+            return -11;
         // WriteWord( dev, 0x40022010, FLASH_CTLR_BUF_RST );
         // if( WaitForFlash( dev ) ) return -11;
     }
@@ -963,7 +964,8 @@ static int Write64Block(struct SWIOState* iss, uint32_t address_to_write, const 
                     rw = WaitForFlash(dev);
                     WriteWord(dev, 0x40022010, CR_PAGE_PG); // THIS IS REQUIRED, (intptr_t)&FLASH->CTLR = 0x40022010
                                                             // FTPG ==  CR_PAGE_PG   == ((uint32_t)0x00010000)
-                    if( rw ) return rw;
+                    if (rw)
+                        return rw;
                 }
             }
 
@@ -979,7 +981,8 @@ static int Write64Block(struct SWIOState* iss, uint32_t address_to_write, const 
                     memcpy(&data, &blob[index], blob_size - index);
                 }
                 WriteWord(dev, wp, data);
-                if( (rw = WaitForFlash( dev ) ) ) return rw;
+                if ((rw = WaitForFlash(dev)))
+                    return rw;
                 wp += 4;
             }
 

@@ -949,4 +949,3 @@ void ch32v003Tick(void)
 {
     // Unimplemented.
 }
-
