@@ -451,7 +451,7 @@ static int InitializeSWDSWIO(struct SWIOState* state)
     uprintf("DMCFGR (SWD): %d: %08x", (int)readdm, (unsigned)value);
     if (readdm == 0 && (value & 0xffff0000) == (0x5aa50000))
     {
-        uprintf("TEST: Read reg passed. Check value: %08x TODO: MAKE SURE THESE MATCH", (unsigned)value);
+        uprintf("TEST: Read reg passed (In debug mode). Check value: %08x.", (unsigned)value);
         return 0;
     }
 
@@ -730,7 +730,7 @@ static int WriteWord(struct SWIOState* iss, uint32_t address_to_write, uint32_t 
     int ret = 0;
 
     int is_flash = 0;
-    if ((address_to_write & 0xff000000) == 0x08000000 || (address_to_write & 0x1FFFF800) == 0x1FFFF000)
+    if ((address_to_write & 0xff000000) == 0x08000000 || (address_to_write & 0x1FFFF800) == 0x1FFFF800)
     {
         // Is flash.
         is_flash = 1;
@@ -912,7 +912,7 @@ static int Write64Block(struct SWIOState* iss, uint32_t address_to_write, const 
     int rw              = 0;
 
     if ((address_to_write & 0xff000000) == 0x08000000 || (address_to_write & 0xff000000) == 0x00000000
-        || (address_to_write & 0x1FFFF800) == 0x1FFFF000)
+        || (address_to_write & 0x1FFFF800) == 0x1FFFF800)
     {
         // Need to unlock flash.
         // Flash reg base = 0x40022000,

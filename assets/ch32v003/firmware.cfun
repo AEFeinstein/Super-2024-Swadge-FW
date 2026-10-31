@@ -127,7 +127,7 @@ int main()
     if ((*DMDATA0) & 1)
         is_proto = 1;
 
-    printf("ch32v003 online.\n");
+    _write(0, "003 OK", 6);
 
     if (is_proto)
     {
