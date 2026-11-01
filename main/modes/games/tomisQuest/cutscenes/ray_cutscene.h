@@ -80,5 +80,9 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text);
 void rayCutsceneCheckButtons(ray_t* ray);
 void rayCutsceneRender(ray_t* ray, uint32_t elapsedUs);
 void addCutsceneStyleNarrator(cutscene_t* cutscene);
+void addCutsceneStyleUnknown(cutscene_t* cutscene);
+void addCutsceneStyleHankW(cutscene_t* cutscene);
+void addCutsceneStyleGreatFairy(cutscene_t* cutscene);
+void addCutsceneStyleGreatFairies(cutscene_t* cutscene);
 
 #endif

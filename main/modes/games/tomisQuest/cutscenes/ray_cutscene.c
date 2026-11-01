@@ -269,3 +269,46 @@ void addCutsceneStyleNarrator(cutscene_t* cutscene)
 {
     addCutsceneStyle(cutscene, c000, -1, CUTSCENE_TEXTBOX_WSG, "Narrator", 1, true, false, true);
 }
+
+/**
+ * @brief Add an unknown style to the cutscene
+ *
+ * @param cutscene The cutscene to add a style to
+ */
+void addCutsceneStyleUnknown(cutscene_t* cutscene)
+{
+    addCutsceneStyle(cutscene, c000, -1, CUTSCENE_TEXTBOX_WSG, "???", 1, true, false, true);
+}
+
+/**
+ * @brief Add Hank Waddledorf style to the cutscene
+ *
+ * @param cutscene The cutscene to add a style to
+ */
+void addCutsceneStyleHankW(cutscene_t* cutscene)
+{
+    // TODO add portrait
+    addCutsceneStyle(cutscene, c000, -1, CUTSCENE_TEXTBOX_WSG, "Hank Waddledorf", 1, true, false, true);
+}
+
+/**
+ * @brief Add Great Fairy style to the cutscene
+ *
+ * @param cutscene The cutscene to add a style to
+ */
+void addCutsceneStyleGreatFairy(cutscene_t* cutscene)
+{
+    // TODO add portrait
+    addCutsceneStyle(cutscene, c000, -1, CUTSCENE_TEXTBOX_WSG, "Great Fairy", 1, true, false, true);
+}
+
+/**
+ * @brief Add Great Fairies style to the cutscene
+ *
+ * @param cutscene The cutscene to add a style to
+ */
+void addCutsceneStyleGreatFairies(cutscene_t* cutscene)
+{
+    // TODO add portrait
+    addCutsceneStyle(cutscene, c000, -1, CUTSCENE_TEXTBOX_WSG, "Great Fairies", 1, true, false, true);
+}
