@@ -287,8 +287,8 @@ void addCutsceneStyleUnknown(cutscene_t* cutscene)
  */
 void addCutsceneStyleHankW(cutscene_t* cutscene)
 {
-    // TODO add portrait
-    addCutsceneStyle(cutscene, c000, -1, CUTSCENE_TEXTBOX_WSG, "Hank Waddledorf", 1, true, false, true);
+    addCutsceneStyle(cutscene, c000, TQ_WADDLEDORF_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "Hank Waddledorf", 1, true, true,
+                     true);
 }
 
 /**
@@ -298,8 +298,8 @@ void addCutsceneStyleHankW(cutscene_t* cutscene)
  */
 void addCutsceneStyleGreatFairy(cutscene_t* cutscene)
 {
-    // TODO add portrait
-    addCutsceneStyle(cutscene, c000, -1, CUTSCENE_TEXTBOX_WSG, "Great Fairy", 1, true, false, true);
+    addCutsceneStyle(cutscene, c000, TQ_GREAT_FAIRY_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "Great Fairy", 1, true, true,
+                     true);
 }
 
 /**
@@ -309,6 +309,6 @@ void addCutsceneStyleGreatFairy(cutscene_t* cutscene)
  */
 void addCutsceneStyleGreatFairies(cutscene_t* cutscene)
 {
-    // TODO add portrait
-    addCutsceneStyle(cutscene, c000, -1, CUTSCENE_TEXTBOX_WSG, "Great Fairies", 1, true, false, true);
+    addCutsceneStyle(cutscene, c000, TQ_GREAT_FAIRIES_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "Great Fairies", 1, true,
+                     true, true);
 }
