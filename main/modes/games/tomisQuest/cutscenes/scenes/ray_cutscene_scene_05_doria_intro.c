@@ -33,7 +33,7 @@ bool initCutsceneDoriaIntro(ray_t* ray, cutscene_t* cutscene, const char* title)
         addCutsceneStyleDoria(cutscene);
 
 #define CS_STYLE_UNKN (CS_STYLE_DORIA + 1)
-        addCutsceneStyle(cutscene, c000, TQ_DORIA_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "???", 1, true, false, true);
+        addCutsceneStyleUnknown(cutscene);
 
 #define CS_STYLE_NARRATOR (CS_STYLE_UNKN + 1)
         addCutsceneStyleNarrator(cutscene);

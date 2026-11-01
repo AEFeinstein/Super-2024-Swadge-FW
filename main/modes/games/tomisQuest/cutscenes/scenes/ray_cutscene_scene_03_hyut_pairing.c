@@ -38,7 +38,7 @@ bool initCutsceneHyutPairing(ray_t* ray, cutscene_t* cutscene, const char* title
         // Initialize Styles
 
 #define CS_STYLE_HYUT_QQQ (CS_STYLE_HYUT + 1)
-        addCutsceneStyle(cutscene, c000, TQ_HYUT_PORTRAIT_00_NEUTRAL_WSG, CUTSCENE_TEXTBOX_WSG, "????", 2, false, true,
+        addCutsceneStyle(cutscene, c000, TQ_HYUT_PORTRAIT_00_NEUTRAL_WSG, CUTSCENE_TEXTBOX_WSG, "???", 2, false, true,
                          true);
 
 #define CS_STYLE_NARRATOR (CS_STYLE_HYUT_QQQ + 1)

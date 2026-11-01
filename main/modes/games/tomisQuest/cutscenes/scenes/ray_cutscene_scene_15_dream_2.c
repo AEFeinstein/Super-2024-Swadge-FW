@@ -29,9 +29,21 @@ bool initCutsceneDream2(ray_t* ray, cutscene_t* cutscene, const char* title)
 
         // Initialize Styles
 
+#define CS_STYLE_GFS (CS_STYLE_HYUT + 1)
+        addCutsceneStyleGreatFairies(cutscene);
+
         // clang-format off
 
         // Initialize lines
+
+        // [The second room is a tableau showing Tomi singing in the Gaylordia Town Square. None of the characters are moving except for Tomi's sprite, which is singing.]
+        addCutsceneLine(cutscene, CS_STYLE_GFS, "Remember how scared you were to sing in front of the other fairies at the Connection Ceremony?", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "I do...", false, TOMI_EMBARASSED, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_GFS, "When you sang in the Town Square, were you still afraid?", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "I .. I was.", false, TOMI_SAD, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_GFS, "Indeed. You were. But you did it anyway.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "I... did.", false, TOMI_SAD, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_GFS, "Come now. Not much further.", false, 0, endScene);
 
         // clang-format on
 
