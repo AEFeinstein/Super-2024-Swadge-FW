@@ -10,6 +10,7 @@
 #include "ray_enemy_npc.h"
 #include "ray_enemy_hyut.h"
 #include "ray_enemy_guard.h"
+#include "ray_enemy_ninja.h"
 
 //==============================================================================
 // Function Prototypes
@@ -102,6 +103,11 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
         case OBJ_ENEMY_22:
         {
             rayInitEnemyGuard(ray, newObj);
+            break;
+        }
+        case OBJ_ENEMY_23:
+        {
+            rayInitEnemyNinja(ray, newObj);
             break;
         }
         default:
