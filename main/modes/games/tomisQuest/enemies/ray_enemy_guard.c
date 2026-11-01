@@ -163,8 +163,8 @@ bool rayEnemyGuardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
         }
         case TQ_EN_GUARD_ST_CHASING:
         {
-            state->vel.x = (ray->p.posX - enemy->c.posX) < 0 ? -148 : 148;
-            state->vel.y = (ray->p.posY - enemy->c.posY) < 0 ? -148 : 148;
+            state->vel.x = (ray->p.posX - enemy->c.posX) < 0 ? -132 : 132;
+            state->vel.y = (ray->p.posY - enemy->c.posY) < 0 ? -132 : 132;
             
             state->stateTimer--;
             if(state->stateTimer < 0)
