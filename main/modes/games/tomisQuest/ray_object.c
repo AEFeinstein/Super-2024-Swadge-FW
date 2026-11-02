@@ -949,6 +949,10 @@ void raySetDoorState(ray_t* ray, uint32_t x, uint32_t y, bool isOpening, bool se
             if (setScriptOpen)
             {
                 ray->map.visitedTiles[(y * ray->map.w) + x] = SCRIPT_DOOR_OPEN;
+
+                // When opened, doors turn into default floor tiles.
+                // When closed again, doors turn into default doors.
+                // This keeps doors unlocked after the initial unlock.
             }
 
             if (playSfx)
