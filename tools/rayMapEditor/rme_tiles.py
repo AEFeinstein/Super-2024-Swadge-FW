@@ -65,7 +65,7 @@ class tileType(Enum):
     BG_WALL_DUNGEON_DL = BG | WALL | 7
     BG_WALL_BOX = BG | WALL | 8
     BG_WALL_WATER = BG | WALL | 9
-    BG_WALL_10 = BG | WALL | 10
+    BG_WALL_FENCE = BG | WALL | 10
     BG_WALL_11 = BG | WALL | 11
     BG_WALL_12 = BG | WALL | 12
     BG_WALL_13 = BG | WALL | 13
@@ -231,8 +231,8 @@ class tileType(Enum):
     OBJ_SCENERY_MAYORS_HOUSE = OBJ | SCENERY | 4
     OBJ_SCENERY_TURNTABLE = OBJ | SCENERY | 5
     OBJ_SCENERY_SIGNPOST = OBJ | SCENERY | 6
-    OBJ_SCENERY_7 = OBJ | SCENERY | 7
-    OBJ_SCENERY_8 = OBJ | SCENERY | 8
+    OBJ_SCENERY_WARP_PAD = OBJ | SCENERY | 7
+    OBJ_SCENERY_FOUNTAIN = OBJ | SCENERY | 8
     OBJ_SCENERY_9 = OBJ | SCENERY | 9
     OBJ_SCENERY_10 = OBJ | SCENERY | 10
     OBJ_SCENERY_11 = OBJ | SCENERY | 11
@@ -304,7 +304,7 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_WALL_DUNGEON_DR,
         tileType.BG_WALL_BOX,
         tileType.BG_WALL_WATER,
-        tileType.BG_WALL_10,
+        tileType.BG_WALL_FENCE,
         tileType.BG_WALL_11,
         tileType.BG_WALL_12,
         tileType.BG_WALL_13,
@@ -443,8 +443,8 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_SCENERY_MAYORS_HOUSE,
         tileType.OBJ_SCENERY_TURNTABLE,
         tileType.OBJ_SCENERY_SIGNPOST,
-        tileType.OBJ_SCENERY_7,
-        tileType.OBJ_SCENERY_8,
+        tileType.OBJ_SCENERY_WARP_PAD,
+        tileType.OBJ_SCENERY_FOUNTAIN,
         tileType.OBJ_SCENERY_9,
         tileType.OBJ_SCENERY_10,
         tileType.OBJ_SCENERY_11,

@@ -66,7 +66,7 @@ bool initCutsceneSinging(ray_t* ray, cutscene_t* cutscene, const char* title)
         addCutsceneLine(cutscene, CS_STYLE_CHO, "Nice one, Tomi!", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_EMBER, "Sick tune, dude.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "...", false, TOMI_SHOCKED, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Hiyyya??", false, HYUT_NEUTRAL, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_HYUT, "Hiyyya??", false, HYUT_NEUTRAL, NULL);
         addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "Suddenly, a deep rumbling shakes Gaylordia Town Square. The fountain shook, and a secret warp pad emerged!", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Oh man... I can't believe it actually worked! If nothing happened, I was ready to die of embarrassment.", false, TOMI_EMBARASSED, NULL);
         addCutsceneLine(cutscene, CS_STYLE_HYUT, "HYYAAA!", false, 0, NULL);

@@ -21,6 +21,12 @@ void addCutsceneStyleKaitie(cutscene_t* cutscene)
  */
 void initNpcCutsceneKaitie(ray_t* ray, cutscene_t* cutscene)
 {
+    // NPCs don't interact after the final fight
+    if (ray->p.cutsceneViewed & TQS_FIGHT_COMPLETE)
+    {
+        return;
+    }
+
 #define CS_STYLE_KAITIE (CS_STYLE_HYUT + 1)
     addCutsceneStyleKaitie(cutscene);
 

@@ -59,12 +59,8 @@ bool initCutsceneDream3(ray_t* ray, cutscene_t* cutscene, const char* title)
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "... I think I understand.", false, TOMI_CALM, NULL);
         addCutsceneLine(cutscene, CS_STYLE_GFS, "You do?", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Yes. Thank you, Great Fairies. For everything.", false, TOMI_CALM, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_GFS, "Of course, Tomi. We eagerly await your next adventure.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_GFS, "Of course, Tomi. We eagerly await your next adventure.", false, 0, endScene);
         // [A door opens. The Great Fairies part, allowing Tomi to walk through.
-        // In the final room is a final Warp Pad. Hyut is standing on it. Interact with Hyut to trigger the last line of dialogue and end the game.]
-        addCutsceneLine(cutscene, CS_STYLE_TOMI, "There you are, Hyut! Come on, let's go!", false, TOMI_FIREDUP, endScene);
-        // [Tomi and Hyut warp away.]
-        // THE END
 
         // clang-format on
 
