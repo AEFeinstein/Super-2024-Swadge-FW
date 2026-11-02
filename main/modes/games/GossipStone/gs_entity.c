@@ -360,7 +360,6 @@ void gs_generateMoonTilemap(gs_entity_t* self)
         }
     }
 
-
     // tData->tiles[127][124].framePlus1 = GS_WALL_FORE_VIP;
     // tData->tiles[138][124].framePlus1 = GS_WALL_FORE_VIP;
 
@@ -376,8 +375,6 @@ void gs_generateMoonTilemap(gs_entity_t* self)
         = {(vec_t){148, 128}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0},
            (vec_t){0, 0},     (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){0, 0}, (vec_t){118, 128}};
 
-
-
     bool crossesEntry = false;
 
     int curEdges[11] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
@@ -386,12 +383,12 @@ void gs_generateMoonTilemap(gs_entity_t* self)
     do
     {
         crossesEntry = false;
-        //clear any astro tiles from the last failed generation
+        // clear any astro tiles from the last failed generation
         for (int x = 0; x < TILE_FIELD_WIDTH; x++)
         {
             for (int y = 0; y < TILE_FIELD_HEIGHT; y++)
             {
-                if(tData->tiles[x][y].framePlus1 >= GS_ASTRO_1_VIP && tData->tiles[x][y].framePlus1 <= GS_ASTRO_12_VIP)
+                if (tData->tiles[x][y].framePlus1 >= GS_ASTRO_1_VIP && tData->tiles[x][y].framePlus1 <= GS_ASTRO_12_VIP)
                 {
                     tData->tiles[x][y].framePlus1 = GS_WALL_FORE;
                 }
@@ -420,95 +417,96 @@ void gs_generateMoonTilemap(gs_entity_t* self)
         int minLength = 0;
         for (int i = 0; i < sizeof(curEdges) / sizeof(curEdges[0]); i++)
         {
-            minLength += sqrt(sqMagVec2d(subVec2d((vec_t){astroPosits[curEdges[i]].x << 2, astroPosits[curEdges[i]].y << 2},
-                                                  (vec_t){astroPosits[i == 0 ? 0 : curEdges[i - 1]].x << 2,
-                                                          astroPosits[i == 0 ? 0 : curEdges[i - 1]].y << 2})));
+            minLength
+                += sqrt(sqMagVec2d(subVec2d((vec_t){astroPosits[curEdges[i]].x << 2, astroPosits[curEdges[i]].y << 2},
+                                            (vec_t){astroPosits[i == 0 ? 0 : curEdges[i - 1]].x << 2,
+                                                    astroPosits[i == 0 ? 0 : curEdges[i - 1]].y << 2})));
             if ((astroPosits[curEdges[i]].x > 132 && astroPosits[curEdges[i]].y <= 128
                  && astroPosits[i == 0 ? 0 : curEdges[i - 1]].x <= 132)
                 || (astroPosits[curEdges[i]].x <= 132 && astroPosits[curEdges[i]].y <= 128
                     && astroPosits[i == 0 ? 0 : curEdges[i - 1]].x > 132)
-                || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x > 132 && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128
-                    && astroPosits[curEdges[i]].x <= 132)
-                || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x <= 132 && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128
-                    && astroPosits[curEdges[i]].x > 132))
+                || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x > 132
+                    && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128 && astroPosits[curEdges[i]].x <= 132)
+                || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x <= 132
+                    && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128 && astroPosits[curEdges[i]].x > 132))
             {
                 // punish edges that cross over the entry shaft/foyer
                 minLength += 20000 << 2;
             }
         }
         int temperature = 100 << DECIMAL_BITS; // 100% hot
-        while (temperature > 16)                // while temp is above 1%
+        while (temperature > 16)               // while temp is above 1%
         {
-            for(int iteration = 0; iteration < 100; iteration++)
+            for (int iteration = 0; iteration < 100; iteration++)
             {
-            int curLength = 0;
-            for (int i = 0; i < sizeof(curEdges) / sizeof(curEdges[0]); i++)
-            {
-                curLength
-                    += sqrt(sqMagVec2d(subVec2d((vec_t){astroPosits[curEdges[i]].x << 2, astroPosits[curEdges[i]].y << 2},
-                                                (vec_t){astroPosits[i == 0 ? 0 : curEdges[i - 1]].x << 2,
-                                                        astroPosits[i == 0 ? 0 : curEdges[i - 1]].y << 2})));
-                if ((astroPosits[curEdges[i]].x > 132 && astroPosits[curEdges[i]].y <= 128
-                     && astroPosits[i == 0 ? 0 : curEdges[i - 1]].x <= 132)
-                    || (astroPosits[curEdges[i]].x <= 132 && astroPosits[curEdges[i]].y <= 128
-                        && astroPosits[i == 0 ? 0 : curEdges[i - 1]].x > 132)
-                    || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x > 132
-                        && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128 && astroPosits[curEdges[i]].x <= 132)
-                    || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x <= 132
-                        && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128 && astroPosits[curEdges[i]].x > 132))
+                int curLength = 0;
+                for (int i = 0; i < sizeof(curEdges) / sizeof(curEdges[0]); i++)
                 {
-                    // punish edges that cross over the entry shaft/foyer
-                    curLength += 20000 << 2;
+                    curLength += sqrt(
+                        sqMagVec2d(subVec2d((vec_t){astroPosits[curEdges[i]].x << 2, astroPosits[curEdges[i]].y << 2},
+                                            (vec_t){astroPosits[i == 0 ? 0 : curEdges[i - 1]].x << 2,
+                                                    astroPosits[i == 0 ? 0 : curEdges[i - 1]].y << 2})));
+                    if ((astroPosits[curEdges[i]].x > 132 && astroPosits[curEdges[i]].y <= 128
+                         && astroPosits[i == 0 ? 0 : curEdges[i - 1]].x <= 132)
+                        || (astroPosits[curEdges[i]].x <= 132 && astroPosits[curEdges[i]].y <= 128
+                            && astroPosits[i == 0 ? 0 : curEdges[i - 1]].x > 132)
+                        || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x > 132
+                            && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128 && astroPosits[curEdges[i]].x <= 132)
+                        || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x <= 132
+                            && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128 && astroPosits[curEdges[i]].x > 132))
+                    {
+                        // punish edges that cross over the entry shaft/foyer
+                        curLength += 20000 << 2;
+                    }
                 }
-            }
-            if(curLength < minLength)
-            {
-                minLength = curLength;
-                for(int i = 0; i < sizeof(curEdges) / sizeof(curEdges[0]); i++)
+                if (curLength < minLength)
                 {
-                    minEdges[i] = curEdges[i];
+                    minLength = curLength;
+                    for (int i = 0; i < sizeof(curEdges) / sizeof(curEdges[0]); i++)
+                    {
+                        minEdges[i] = curEdges[i];
+                    }
                 }
-            }
-            for(int i = 0; i < sizeof(curEdges) / sizeof(curEdges[0]); i++)
-            {
-                newEdges[i] = curEdges[i];
-            }
-            // swap 2 edges at random
-            int edge1    = gs_randomInt(0, 9);
-            int edge2    = gs_randomInt(0, 9);
-            int tmp      = newEdges[edge1];
-            newEdges[edge1] = newEdges[edge2];
-            newEdges[edge2] = tmp;
-            
-            int newLength = 0;
-            for (int i = 0; i < sizeof(curEdges) / sizeof(curEdges[0]); i++)
-            {
-                newLength
-                    += sqrt(sqMagVec2d(subVec2d((vec_t){astroPosits[curEdges[i]].x << 2, astroPosits[curEdges[i]].y << 2},
-                                                (vec_t){astroPosits[i == 0 ? 0 : curEdges[i - 1]].x << 2,
-                                                        astroPosits[i == 0 ? 0 : curEdges[i - 1]].y << 2})));
-                if ((astroPosits[curEdges[i]].x > 132 && astroPosits[curEdges[i]].y <= 128
-                     && astroPosits[i == 0 ? 0 : curEdges[i - 1]].x <= 132)
-                    || (astroPosits[curEdges[i]].x <= 132 && astroPosits[curEdges[i]].y <= 128
-                        && astroPosits[i == 0 ? 0 : curEdges[i - 1]].x > 132)
-                    || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x > 132
-                        && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128 && astroPosits[curEdges[i]].x <= 132)
-                    || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x <= 132
-                        && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128 && astroPosits[curEdges[i]].x > 132))
+                for (int i = 0; i < sizeof(curEdges) / sizeof(curEdges[0]); i++)
                 {
-                    // punish edges that cross over the entry shaft/foyer
-                    newLength += 20000 << 2;
+                    newEdges[i] = curEdges[i];
                 }
-            }
+                // swap 2 edges at random
+                int edge1       = gs_randomInt(0, 9);
+                int edge2       = gs_randomInt(0, 9);
+                int tmp         = newEdges[edge1];
+                newEdges[edge1] = newEdges[edge2];
+                newEdges[edge2] = tmp;
 
-            if(exp((curLength - newLength) / (double)temperature) > gs_randomInt(0, 100000) / (double)100000)
-            {
-                for(int i = 0; i < sizeof(curEdges) / sizeof(curEdges[0]); i++)
+                int newLength = 0;
+                for (int i = 0; i < sizeof(curEdges) / sizeof(curEdges[0]); i++)
                 {
-                    curEdges[i] = newEdges[i];
+                    newLength += sqrt(
+                        sqMagVec2d(subVec2d((vec_t){astroPosits[curEdges[i]].x << 2, astroPosits[curEdges[i]].y << 2},
+                                            (vec_t){astroPosits[i == 0 ? 0 : curEdges[i - 1]].x << 2,
+                                                    astroPosits[i == 0 ? 0 : curEdges[i - 1]].y << 2})));
+                    if ((astroPosits[curEdges[i]].x > 132 && astroPosits[curEdges[i]].y <= 128
+                         && astroPosits[i == 0 ? 0 : curEdges[i - 1]].x <= 132)
+                        || (astroPosits[curEdges[i]].x <= 132 && astroPosits[curEdges[i]].y <= 128
+                            && astroPosits[i == 0 ? 0 : curEdges[i - 1]].x > 132)
+                        || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x > 132
+                            && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128 && astroPosits[curEdges[i]].x <= 132)
+                        || (astroPosits[i == 0 ? 0 : curEdges[i - 1]].x <= 132
+                            && astroPosits[i == 0 ? 0 : curEdges[i - 1]].y <= 128 && astroPosits[curEdges[i]].x > 132))
+                    {
+                        // punish edges that cross over the entry shaft/foyer
+                        newLength += 20000 << 2;
+                    }
+                }
+
+                if (exp((curLength - newLength) / (double)temperature) > gs_randomInt(0, 100000) / (double)100000)
+                {
+                    for (int i = 0; i < sizeof(curEdges) / sizeof(curEdges[0]); i++)
+                    {
+                        curEdges[i] = newEdges[i];
+                    }
                 }
             }
-        }
             // temperature decays
             temperature = 99 * temperature / 100;
         }
@@ -522,10 +520,10 @@ void gs_generateMoonTilemap(gs_entity_t* self)
                  && astroPosits[i == 0 ? 0 : minEdges[i - 1]].x <= 132)
                 || (astroPosits[minEdges[i]].x <= 132 && astroPosits[minEdges[i]].y <= 128
                     && astroPosits[i == 0 ? 0 : minEdges[i - 1]].x > 132)
-                || (astroPosits[i == 0 ? 0 : minEdges[i - 1]].x > 132 && astroPosits[i == 0 ? 0 : minEdges[i - 1]].y <= 128
-                    && astroPosits[minEdges[i]].x <= 132)
-                || (astroPosits[i == 0 ? 0 : minEdges[i - 1]].x <= 132 && astroPosits[i == 0 ? 0 : minEdges[i - 1]].y <= 128
-                    && astroPosits[minEdges[i]].x > 132))
+                || (astroPosits[i == 0 ? 0 : minEdges[i - 1]].x > 132
+                    && astroPosits[i == 0 ? 0 : minEdges[i - 1]].y <= 128 && astroPosits[minEdges[i]].x <= 132)
+                || (astroPosits[i == 0 ? 0 : minEdges[i - 1]].x <= 132
+                    && astroPosits[i == 0 ? 0 : minEdges[i - 1]].y <= 128 && astroPosits[minEdges[i]].x > 132))
             {
                 crossesEntry = true;
                 break;
@@ -535,22 +533,22 @@ void gs_generateMoonTilemap(gs_entity_t* self)
 
     for (int i = 0; i < sizeof(minEdges) / sizeof(minEdges[0]); i++)
     {
-        //set up boundaries for 2 miners
+        // set up boundaries for 2 miners
         vec_t bottomLeft = astroPosits[i == 0 ? 0 : minEdges[i - 1]];
-        vec_t topRight = astroPosits[minEdges[i]];
+        vec_t topRight   = astroPosits[minEdges[i]];
         bottomLeft.y--;
         topRight.y--;
-        if(bottomLeft.x > topRight.x)
+        if (bottomLeft.x > topRight.x)
         {
-            int tmp = bottomLeft.x;
+            int tmp      = bottomLeft.x;
             bottomLeft.x = topRight.x;
-            topRight.x = tmp;
+            topRight.x   = tmp;
         }
-        if(bottomLeft.y < topRight.y)
+        if (bottomLeft.y < topRight.y)
         {
-            int tmp = bottomLeft.y;
+            int tmp      = bottomLeft.y;
             bottomLeft.y = topRight.y;
-            topRight.y = tmp;
+            topRight.y   = tmp;
         }
         bottomLeft.x--;
         topRight.x++;
@@ -558,17 +556,18 @@ void gs_generateMoonTilemap(gs_entity_t* self)
         vec_t minerB = astroPosits[minEdges[i]];
         minerA.y--;
         minerB.y--;
-        while(true)
+        while (true)
         {
-            if(tData->tiles[minerA.x][minerA.y].framePlus1 == GS_MINER_B || tData->tiles[minerB.x][minerB.y].framePlus1 == GS_MINER_A)
+            if (tData->tiles[minerA.x][minerA.y].framePlus1 == GS_MINER_B
+                || tData->tiles[minerB.x][minerB.y].framePlus1 == GS_MINER_A)
             {
                 break;
             }
             tData->tiles[minerA.x][minerA.y].framePlus1 = GS_MINER_A;
             tData->tiles[minerB.x][minerB.y].framePlus1 = GS_MINER_B;
-            vec_t newAPos = minerA;
-            vec_t newBPos = minerB;
-            switch(gs_randomInt(0,3))
+            vec_t newAPos                               = minerA;
+            vec_t newBPos                               = minerB;
+            switch (gs_randomInt(0, 3))
             {
                 case 0:
                 {
@@ -591,7 +590,7 @@ void gs_generateMoonTilemap(gs_entity_t* self)
                     break;
                 }
             }
-            switch(gs_randomInt(0,3))
+            switch (gs_randomInt(0, 3))
             {
                 case 0:
                 {
@@ -614,11 +613,17 @@ void gs_generateMoonTilemap(gs_entity_t* self)
                     break;
                 }
             }
-            if(newAPos.x >= bottomLeft.x && newAPos.x <= topRight.x && newAPos.y >= topRight.y && newAPos.y <= bottomLeft.y && !(tData->tiles[newAPos.x][newAPos.y].framePlus1 >= GS_NO_TILE_VIP && tData->tiles[newAPos.x][newAPos.y].framePlus1 <= GS_WALL_BACK_VIP))
+            if (newAPos.x >= bottomLeft.x && newAPos.x <= topRight.x && newAPos.y >= topRight.y
+                && newAPos.y <= bottomLeft.y
+                && !(tData->tiles[newAPos.x][newAPos.y].framePlus1 >= GS_NO_TILE_VIP
+                     && tData->tiles[newAPos.x][newAPos.y].framePlus1 <= GS_WALL_BACK_VIP))
             {
                 minerA = newAPos;
             }
-            if(newBPos.x >= bottomLeft.x && newBPos.x <= topRight.x && newBPos.y >= topRight.y && newBPos.y <= bottomLeft.y && !(tData->tiles[newBPos.x][newBPos.y].framePlus1 >= GS_NO_TILE_VIP && tData->tiles[newBPos.x][newBPos.y].framePlus1 <= GS_WALL_BACK_VIP))
+            if (newBPos.x >= bottomLeft.x && newBPos.x <= topRight.x && newBPos.y >= topRight.y
+                && newBPos.y <= bottomLeft.y
+                && !(tData->tiles[newBPos.x][newBPos.y].framePlus1 >= GS_NO_TILE_VIP
+                     && tData->tiles[newBPos.x][newBPos.y].framePlus1 <= GS_WALL_BACK_VIP))
             {
                 minerB = newBPos;
             }
@@ -627,7 +632,7 @@ void gs_generateMoonTilemap(gs_entity_t* self)
         {
             for (int y = topRight.y; y <= bottomLeft.y; y++)
             {
-                if(tData->tiles[x][y].framePlus1 == GS_MINER_A || tData->tiles[x][y].framePlus1 == GS_MINER_B)
+                if (tData->tiles[x][y].framePlus1 == GS_MINER_A || tData->tiles[x][y].framePlus1 == GS_MINER_B)
                 {
                     tData->tiles[x][y].framePlus1 = GS_WALL_BACK;
                 }
@@ -698,7 +703,7 @@ void gs_generateMoonTilemap(gs_entity_t* self)
     //     }
     // }asdf
 
-    //TO DO make sure astros werene't in these areas....
+    // TO DO make sure astros werene't in these areas....
     for (int x = 119; x < 149; x++)
     {
         tData->tiles[x][127].framePlus1 = GS_WALL_BACK;
@@ -1083,6 +1088,19 @@ void gs_updateMoon(gs_entity_t* self)
     }
 }
 
+void gs_delayBigMoon(gs_entity_t* self)
+{
+    gs_bigMoon_t* bmData = (gs_bigMoon_t*)self->data;
+    bmData->deltaScale++;
+    q24_8 increaseBy = gs_lerp(512, bmData->deltaScale >> 10, bmData->scale);
+    bmData->scale += (increaseBy >> 9);
+    if (bmData->deltaScale > 1000)
+    {
+        bmData->deltaScale   = 0;
+        self->updateFunction = gs_updateBigMoon;
+    }
+}
+
 void gs_updateBigMoon(gs_entity_t* self)
 {
     // The big moon pulls the gossip stone in.
@@ -1097,7 +1115,7 @@ void gs_updateBigMoon(gs_entity_t* self)
     }
     gs_bigMoon_t* bmData = (gs_bigMoon_t*)self->data;
     bmData->deltaScale++;
-    q24_8 increaseBy = gs_lerp(512, bmData->deltaScale, bmData->scale);
+    q24_8 increaseBy = gs_lerp(512, bmData->deltaScale >> 1, bmData->scale);
     bmData->scale += (increaseBy >> 9);
     // printf("scale %d\n", bmData->scale);
     if (self->assetIndex == GS_LANDING_ASSET && bmData->scale > 200 && bmData->scale % 100 == 0
@@ -1150,16 +1168,31 @@ void gs_spawnBigMoon(gs_entity_t* self)
     }
     moonOffset.x *= 16;
     moonOffset.y *= 16;
+
     gs_entity_t* moon = gs_createEntityBefore(
         gs_findLastNodeOfType(self, GS_GOSSIP_STONE_DATA), &self->gameData->entityManager, 1, GS_NO_ANIMATION, false,
         GS_HI_RES_MOON_ASSET, 1, addVec2d(self->gameData->entityManager.gossipStone->pos, moonOffset), self->gameData);
-    moon->updateFunction                     = gs_updateBigMoon;
+    moon->updateFunction                     = gs_delayBigMoon;
     moon->drawFunction                       = gs_drawBigMoon;
     moon->data                               = heap_caps_calloc(1, sizeof(gs_bigMoon_t), MALLOC_CAP_SPIRAM);
     moon->dataType                           = GS_BIG_MOON_DATA;
-    ((gs_bigMoon_t*)moon->data)->scale       = 1;               // q24_8 for 0.125
-    ((gs_bigMoon_t*)moon->data)->callback    = gs_spawnLanding; // q24_8 for 0.125
+    ((gs_bigMoon_t*)moon->data)->scale       = 1;
+    ((gs_bigMoon_t*)moon->data)->callback    = gs_spawnLanding;
     ((gs_bigMoon_t*)moon->data)->targetScale = 700;
+    gs_entity_t* blueMoon                    = gs_createEntityBefore(
+        gs_findLastNodeOfType(self, GS_GOSSIP_STONE_DATA), &self->gameData->entityManager, 1, GS_NO_ANIMATION, false,
+        GS_BLUE_MOON_ASSET, 1, addVec2d(self->gameData->entityManager.gossipStone->pos, moonOffset), self->gameData);
+    blueMoon->updateFunction                     = gs_updateBigMoon;
+    blueMoon->drawFunction                       = gs_drawBigMoon;
+    blueMoon->data                               = heap_caps_calloc(1, sizeof(gs_bigMoon_t), MALLOC_CAP_SPIRAM);
+    blueMoon->dataType                           = GS_BIG_MOON_DATA;
+    ((gs_bigMoon_t*)blueMoon->data)->scale       = 1; // q24_8 for 0.125
+    ((gs_bigMoon_t*)blueMoon->data)->targetScale = 800;
+}
+
+void gs_destroySelf(gs_entity_t* self)
+{
+    self->destroyFlag = true;
 }
 
 void gs_spawnLanding(gs_entity_t* self)

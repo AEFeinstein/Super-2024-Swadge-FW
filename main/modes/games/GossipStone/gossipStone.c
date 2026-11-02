@@ -479,6 +479,7 @@ void gs_submodeStateExit(void)
             case GS_HILL_ASSET:
             case GS_MOON_ASSET:
             case GS_HI_RES_MOON_ASSET:
+            case GS_BLUE_MOON_ASSET:
             case GS_LANDING_ASSET:
             case GS_CRYSTAL_ASSET:
             case GS_WAVE_ASSET:
@@ -730,6 +731,9 @@ void gs_submodeStateEnter(gs_submode_t submode)
             gs_loadAsset(HI_RES_MOON_WSG, 1, &gameData->assets[GS_HI_RES_MOON_ASSET]);
             gameData->assets[GS_HI_RES_MOON_ASSET].originX = 180;
             gameData->assets[GS_HI_RES_MOON_ASSET].originY = 127;
+            gs_loadAsset(BLUE_MOON_WSG, 1, &gameData->assets[GS_BLUE_MOON_ASSET]);
+            // gameData->assets[GS_BLUE_MOON_ASSET].originX = 123;
+            //  gameData->assets[GS_BLUE_MOON_ASSET].originY = 127;
             gs_loadAsset(LANDING_WSG, 1, &gameData->assets[GS_LANDING_ASSET]);
 
             for (int i = 0; i < 200; i++)

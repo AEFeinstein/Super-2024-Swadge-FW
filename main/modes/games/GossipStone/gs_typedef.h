@@ -45,6 +45,7 @@ typedef enum __attribute__((packed))
     GS_STAR_ASSET,
     GS_SPACE_GRADIENT_ASSET,
     GS_HI_RES_MOON_ASSET,
+    GS_BLUE_MOON_ASSET,
     GS_LANDING_ASSET,
     GS_WAVE_ASSET,
     GS_CRYSTAL_ASSET,
