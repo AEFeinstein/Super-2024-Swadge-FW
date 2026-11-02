@@ -54,10 +54,10 @@ bool initCutsceneFinalFight(ray_t* ray, cutscene_t* cutscene, const char* title)
         addCutsceneLine(cutscene, CS_STYLE_HANK, "YOU!! FAIRY!", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Me?", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_HANK, "DERIVATIVE!! UNORIGINAL!!", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Hyaaa!!", false, HYUT_NEUTRAL, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_HYUT, "Hyaaa!!", false, HYUT_NEUTRAL, NULL);
         addCutsceneLine(cutscene, CS_STYLE_HANK, "CEASE AND DESIST THIS HACKNEYED NONSENSE AT ONCE!", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Hey, who are you calling derivative? Hyut, let's bust this loser up!", false, TOMI_ANGRY, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_TOMI, "HEEEYYAAAAAAA!!!!", false, HYUT_YELLING, endScene);
+        addCutsceneLine(cutscene, CS_STYLE_HYUT, "HEEEYYAAAAAAA!!!!", false, HYUT_YELLING, endScene);
 
         // clang-format on
 
