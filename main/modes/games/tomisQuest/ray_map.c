@@ -132,8 +132,8 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
                     // If the key was already used, open the door
                     map->tiles[x][y].doorOpen = TO_FX(1);
 
-                    // Turn DOOR into FLOOR
-                    map->tiles[x][y].type = rayGetDefaultFloor();
+                    // Turn locked door into a normal door
+                    map->tiles[x][y].type = rayGetDefaultDoor();
                 }
             }
 
