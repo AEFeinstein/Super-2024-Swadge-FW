@@ -183,7 +183,7 @@ bool rayEnemyNinjaMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
                 enemy->c.sprite = loadTexture(ray, OBJ_ENEMY_GRUNT_WSG, OBJ_ENEMY_NINJA);
                 state->state = TQ_EN_NINJA_ST_ATTACKING;
                 rayEnemyNinjaPickDirection(enemy);
-                state->stateTimer = 25;
+                state->stateTimer = 500000;
             }
             
             break;
@@ -192,12 +192,12 @@ bool rayEnemyNinjaMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
         {
             state->vel = fpvMulSc(state->dir, TO_FX_FRAC(4,3));
 
-            state->stateTimer--;
+            state->stateTimer-=elapsedUs;
             if(state->stateTimer < 0)
             {
                 rayEnemyNinjaShoot(ray, enemy);
                 state->state = TQ_EN_NINJA_ST_WANDERING;
-                state->stateTimer = 100;
+                state->stateTimer = 2000000;
             }
 
             break;
@@ -206,7 +206,7 @@ bool rayEnemyNinjaMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
         {
             state->vel = state->dir;
                 
-            state->stateTimer--;
+            state->stateTimer-=elapsedUs;
             if(state->stateTimer < 0)
             {
                 state->state = TQ_EN_NINJA_ST_HIDING;
@@ -223,7 +223,7 @@ bool rayEnemyNinjaMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
             {
                 state->state = TQ_EN_NINJA_ST_ATTACKING;
                 rayEnemyNinjaPickDirection(enemy);
-                state->stateTimer = 100;
+                state->stateTimer = 2000000;
             }
             break;
         }
@@ -252,7 +252,7 @@ bool rayEnemyNinjaMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
     {
         // Can't move this way, pick a new direction
         rayEnemyNinjaPickDirection(enemy);
-        state->stateTimer += 10;
+        state->stateTimer += 10000;
     }
 
     // Not dead yet!
@@ -339,7 +339,7 @@ void rayEnemyNinjaGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet
             enemy->iFrameTimer = ENEMY_DEFAULT_IFRAMES_US;
 
             state->state = TQ_EN_NINJA_ST_BUMPED;
-            state->stateTimer = 150;
+            state->stateTimer = 250000;
             break;
         }
         default:
