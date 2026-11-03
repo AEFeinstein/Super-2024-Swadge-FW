@@ -796,6 +796,7 @@ typedef struct
 typedef struct
 {
     uint32_t noteHistory;       ///< Notes are 0-7 (3 bits) and invalid (4th bit) so this stores a history of 8 notes
+    uint32_t numNotesPlayed;    ///< A count of notes played, used during the tutorial
     const char* lastPlayedSong; ///< Text indicating the last song played
     int8_t lTouchZone;          ///< The current left touch zone, or -1
     int8_t rTouchZone;          ///< The current right touch zone, or -1
@@ -891,7 +892,11 @@ typedef struct rayGame
 
     const char* deathText; ///< Text shown on the death screen
 
-    rayInstrumentState_t is; // The instrument state
+    bool instrumentTutorial;          ///< True if the instrument is in tutorial mode, false for free-play
+    bool instrumentTutorialAutoPlay;  ///< True if the song is auto-playing in tutorial mode
+    uint32_t instrumentAutoPlayTimer; ///< A timer to auto-play the song in the tutorial
+    uint32_t instrumentAutoPlayIdx;   ///< The index of the note in the song being auto-played
+    rayInstrumentState_t is;          ///< The instrument state
 
     synthOscillator_t lOsc;            ///< An oscillator for the left touchpad
     synthOscillator_t rOsc;            ///< An oscillator for the right touchpad

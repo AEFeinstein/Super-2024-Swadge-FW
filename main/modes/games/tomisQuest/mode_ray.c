@@ -768,7 +768,8 @@ void raySwitchToScreen(rayScreen_t newScreen)
     rayMode.fnDacCb = NULL;
 
     // Clear the cutscene, just in case
-    if (NULL != ray->cutscene)
+    // Don't clear during the instrument tutorial, which is in the middle of a cutscene
+    if (NULL != ray->cutscene && false == ray->instrumentTutorial)
     {
         deinitCutscene(ray->cutscene);
         ray->cutscene = NULL;
