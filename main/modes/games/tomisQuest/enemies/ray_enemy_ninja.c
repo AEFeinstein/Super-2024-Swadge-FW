@@ -53,7 +53,7 @@ static void rayEnemyNinjaShoot(ray_t* ray, rayEnemy_t* enemy);
 void rayInitEnemyNinja(ray_t* ray, rayEnemy_t* e)
 {
     // Ninja has one texture, for now
-    e->c.sprite = loadTexture(ray, BG_WALL_BOX_WSG, OBJ_ENEMY_23);
+    e->c.sprite = loadTexture(ray, BG_WALL_BOX_WSG, OBJ_ENEMY_NINJA);
     e->portrait = e->c.sprite;
 
     // Load bullet textures
@@ -180,7 +180,7 @@ bool rayEnemyNinjaMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 
             if(rectRectIntersection(rayGetPlayerBB(ray), proximityBox, NULL))
             {
-                enemy->c.sprite = loadTexture(ray, OBJ_ENEMY_GRUNT_WSG, OBJ_ENEMY_23_WSG);
+                enemy->c.sprite = loadTexture(ray, OBJ_ENEMY_GRUNT_WSG, OBJ_ENEMY_NINJA_WSG);
                 state->state = TQ_EN_NINJA_ST_ATTACKING;
                 rayEnemyNinjaPickDirection(enemy);
                 state->stateTimer = 25;
@@ -210,7 +210,7 @@ bool rayEnemyNinjaMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
             if(state->stateTimer < 0)
             {
                 state->state = TQ_EN_NINJA_ST_HIDING;
-                enemy->c.sprite = loadTexture(ray, BG_WALL_BOX_WSG, OBJ_ENEMY_23_WSG);
+                enemy->c.sprite = loadTexture(ray, BG_WALL_BOX_WSG, OBJ_ENEMY_NINJA_WSG);
             }
 
             break;

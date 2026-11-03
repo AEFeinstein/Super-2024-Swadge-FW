@@ -100,12 +100,12 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
             }
             break;
         }
-        case OBJ_ENEMY_22:
+        case OBJ_ENEMY_GUARD:
         {
             rayInitEnemyGuard(ray, newObj);
             break;
         }
-        case OBJ_ENEMY_23:
+        case OBJ_ENEMY_NINJA:
         {
             rayInitEnemyNinja(ray, newObj);
             break;

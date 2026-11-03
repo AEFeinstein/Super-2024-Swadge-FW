@@ -198,8 +198,8 @@ typedef enum __attribute__((packed))
     OBJ_ENEMY_NPC_THE_MAYOR   = (OBJ | ENEMY | 20),
     OBJ_ENEMY_NPC_FREDWARD    = (OBJ | ENEMY | 21),
     // Unallocated enemies
-    OBJ_ENEMY_22 = (OBJ | ENEMY | 22),
-    OBJ_ENEMY_23 = (OBJ | ENEMY | 23),
+    OBJ_ENEMY_GUARD = (OBJ | ENEMY | 22),
+    OBJ_ENEMY_NINJA = (OBJ | ENEMY | 23),
     OBJ_ENEMY_24 = (OBJ | ENEMY | 24),
     OBJ_ENEMY_25 = (OBJ | ENEMY | 25),
     OBJ_ENEMY_26 = (OBJ | ENEMY | 26),
