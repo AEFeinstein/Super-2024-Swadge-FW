@@ -156,7 +156,7 @@ bool rayEnemyGuardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
             if(rectLineIntersection(rayGetPlayerBB(ray), sightLine, NULL))
             {
                 state->state = TQ_EN_GUARD_ST_CHASING;
-                state->stateTimer = 250; //5 PAL seconds
+                state->stateTimer = 5000000; //5 seconds
             }
             
             break;
@@ -166,7 +166,7 @@ bool rayEnemyGuardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
             state->vel.x = (ray->p.posX - enemy->c.posX) < 0 ? -132 : 132;
             state->vel.y = (ray->p.posY - enemy->c.posY) < 0 ? -132 : 132;
             
-            state->stateTimer--;
+            state->stateTimer-=elapsedUs;
             if(state->stateTimer < 0)
             {
                 state->state = TQ_EN_GUARD_ST_WATCHING;
@@ -181,7 +181,7 @@ bool rayEnemyGuardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
             if(state->stateTimer <= 0)
             {
                 state->state = TQ_EN_GUARD_ST_CHASING;
-                state->stateTimer = 300;
+                state->stateTimer = 5000000;
             }
             break;
         }
