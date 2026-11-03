@@ -200,7 +200,7 @@ typedef enum __attribute__((packed))
     // Unallocated enemies
     OBJ_ENEMY_GUARD = (OBJ | ENEMY | 22),
     OBJ_ENEMY_NINJA = (OBJ | ENEMY | 23),
-    OBJ_ENEMY_24 = (OBJ | ENEMY | 24),
+    OBJ_ENEMY_BAT = (OBJ | ENEMY | 24),
     OBJ_ENEMY_25 = (OBJ | ENEMY | 25),
     OBJ_ENEMY_26 = (OBJ | ENEMY | 26),
     OBJ_ENEMY_27 = (OBJ | ENEMY | 27),
