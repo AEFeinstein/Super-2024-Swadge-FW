@@ -1092,8 +1092,12 @@ void gs_delayBigMoon(gs_entity_t* self)
 {
     gs_bigMoon_t* bmData = (gs_bigMoon_t*)self->data;
     bmData->deltaScale++;
-    q24_8 increaseBy = gs_lerp(512, bmData->deltaScale >> 10, bmData->scale);
-    bmData->scale += (increaseBy >> 9);
+    //bmData->scale = (bmData->deltaScale * 64 / 1000);
+    q24_8 increaseBy = gs_lerp(1, bmData->deltaScale, bmData->scale);
+    if(bmData->deltaScale % MAX(1,((1000/40)-(bmData->scale/40))) == 0)
+    {
+        bmData->scale += increaseBy;
+    }
     if (bmData->deltaScale > 1000)
     {
         bmData->deltaScale   = 0;

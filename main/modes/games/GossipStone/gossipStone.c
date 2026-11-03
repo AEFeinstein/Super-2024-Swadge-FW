@@ -732,7 +732,7 @@ void gs_submodeStateEnter(gs_submode_t submode)
             gameData->assets[GS_HI_RES_MOON_ASSET].originX = 180;
             gameData->assets[GS_HI_RES_MOON_ASSET].originY = 127;
             gs_loadAsset(BLUE_MOON_WSG, 1, &gameData->assets[GS_BLUE_MOON_ASSET]);
-            // gameData->assets[GS_BLUE_MOON_ASSET].originX = 123;
+            gameData->assets[GS_BLUE_MOON_ASSET].originX = 145;
             //  gameData->assets[GS_BLUE_MOON_ASSET].originY = 127;
             gs_loadAsset(LANDING_WSG, 1, &gameData->assets[GS_LANDING_ASSET]);
 
