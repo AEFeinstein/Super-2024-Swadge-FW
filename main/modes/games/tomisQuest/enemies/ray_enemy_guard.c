@@ -51,7 +51,7 @@ static void rayEnemyGuardPickDirection(rayEnemy_t* enemy);
 void rayInitEnemyGuard(ray_t* ray, rayEnemy_t* e)
 {
     // Guard has one texture, for now
-    e->c.sprite = loadTexture(ray, OBJ_ENEMY_GRUNT_WSG, OBJ_ENEMY_22);
+    e->c.sprite = loadTexture(ray, OBJ_ENEMY_GRUNT_WSG, OBJ_ENEMY_GUARD);
     e->portrait = e->c.sprite;
 
     // Guard has 1hp to not die
