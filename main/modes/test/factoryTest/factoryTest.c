@@ -851,6 +851,16 @@ void testReadAndValidateTouch(void)
                 }
             }
         }
+
+        // Check if all buttons have passed
+        test->touchPassed = true;
+        for (uint8_t i = 0; i < NUM_TOUCH_STRIPS * NUM_TOUCH_ZONES; i++)
+        {
+            if (BTN_RELEASED != test->touchStates[i])
+            {
+                test->touchPassed = false;
+            }
+        }
     }
 #else
     int32_t intensity;
