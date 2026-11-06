@@ -33,6 +33,7 @@ const char str_lullaby[] = "Doria's Lullaby";
 static void handleRayInstrument(ray_t* ray, const linearTouch_t* touch, int8_t* lastTouchZone, uint32_t noteOffset,
                                 synthOscillator_t* osc);
 static void rayAutoPlayInstrumentNextNote(ray_t* ray);
+static void songOver(void);
 
 //==============================================================================
 // Functions
@@ -85,6 +86,12 @@ void rayInstrumentCheckButtons(ray_t* ray)
 static void handleRayInstrument(ray_t* ray, const linearTouch_t* touch, int8_t* lastTouchZone, uint32_t noteOffset,
                                 synthOscillator_t* osc)
 {
+    // Song after input is playing, just return
+    if (ray->is.lastPlayedSong)
+    {
+        return;
+    }
+
     // If there was a left touch
     if (touch->touched)
     {
@@ -124,20 +131,24 @@ static void handleRayInstrument(ray_t* ray, const linearTouch_t* touch, int8_t* 
                     // Clear note history
                     ray->is.noteHistory = 0xFFFFFFFF;
 
-                    // TODO Auto-play longer song, then do the stuff below
+                    // Stop tutorial auto-play
+                    ray->instrumentTutorialAutoPlay = false;
+                    ray->is.notesActive             = 0;
 
-                    // If this is the tutorial
+                    // Switch back to MIDI output
+                    globalMidiPlayerStop(true);
+                    rayMode.fnDacCb = NULL;
+
+                    // Play the song
                     if (ray->instrumentTutorial)
                     {
-                        // Switch back to the cutscene
-                        raySwitchToScreen(RAY_CUTSCENE);
+                        globalMidiPlayerPlaySongCb(&ray->song_lullaby_first, MIDI_BGM, songOver);
                     }
                     else
                     {
-                        // For non-tutorial, ccheck scripts for this song
-                        checkScriptSong(ray, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY), LULLABY, NULL);
-                        raySwitchToScreen(RAY_GAME);
+                        globalMidiPlayerPlaySongCb(&ray->song_lullaby_short, MIDI_BGM, songOver);
                     }
+                    return;
                 }
 
                 // If we're in the tutorial
@@ -191,7 +202,11 @@ void rayInstrumentRender(ray_t* ray, uint32_t elapsedUs)
 
     // Pick the text to draw
     const char* text = str_sing;
-    if (ray->instrumentTutorial)
+    if (ray->is.lastPlayedSong)
+    {
+        text = ray->is.lastPlayedSong;
+    }
+    else if (ray->instrumentTutorial)
     {
         if (ray->instrumentTutorialAutoPlay)
         {
@@ -201,10 +216,6 @@ void rayInstrumentRender(ray_t* ray, uint32_t elapsedUs)
         {
             text = str_repeat;
         }
-    }
-    else if (ray->is.lastPlayedSong)
-    {
-        text = ray->is.lastPlayedSong;
     }
 
     // Draw the text
@@ -330,5 +341,30 @@ static void rayAutoPlayInstrumentNextNote(ray_t* ray)
 
         // Reset tick to play the next note
         tick = 0;
+    }
+}
+
+/**
+ * @brief Callback when the MIDI finishes
+ *
+ */
+static void songOver(void)
+{
+    ray_t* ray = getRayState();
+
+    // Play this map's music again
+    globalMidiPlayerPlaySong(getAtIndex(&ray->bgmSongs, ray->p.mapId), MIDI_BGM);
+
+    // If this is the tutorial
+    if (ray->instrumentTutorial)
+    {
+        // Switch back to the cutscene
+        raySwitchToScreen(RAY_CUTSCENE);
+    }
+    else
+    {
+        // For non-tutorial, check scripts for this song
+        checkScriptSong(ray, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY), LULLABY, NULL);
+        raySwitchToScreen(RAY_GAME);
     }
 }
