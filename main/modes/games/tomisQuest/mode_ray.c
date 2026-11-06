@@ -241,6 +241,10 @@ static void rayEnterMode(void)
     loadMidiFile(R_HEALTH_MID, &ray->sfx_health, false);
     loadMidiFile(R_GAME_OVER_MID, &ray->sfx_game_over, false);
 
+    loadMidiFile(DORIAS_LULLABY_FIRST_MID, &ray->song_lullaby_first, false);
+    loadMidiFile(DORIAS_LULLABY_SHORT_MID, &ray->song_lullaby_short, false);
+    loadMidiFile(DORIAS_LULLABY_FULL_MID, &ray->song_lullaby_full, false);
+
     // Set the menu as the screen
     raySwitchToScreen(RAY_MENU);
 
@@ -310,6 +314,10 @@ static void rayExitMode(void)
     unloadMidiFile(&ray->sfx_lava_dmg);
     unloadMidiFile(&ray->sfx_health);
     unloadMidiFile(&ray->sfx_game_over);
+
+    unloadMidiFile(&ray->song_lullaby_first);
+    unloadMidiFile(&ray->song_lullaby_short);
+    unloadMidiFile(&ray->song_lullaby_full);
 
     // Free the game state
     heap_caps_free(ray);
@@ -787,10 +795,11 @@ void raySwitchToScreen(rayScreen_t newScreen)
         }
         case RAY_INSTRUMENT:
         {
-            ray->is.lTouchZone  = -1;
-            ray->is.rTouchZone  = -1;
-            ray->is.notesActive = 0;
-            ray->is.noteHistory = 0xFFFFFFFF;
+            ray->is.lTouchZone     = -1;
+            ray->is.rTouchZone     = -1;
+            ray->is.notesActive    = 0;
+            ray->is.noteHistory    = 0xFFFFFFFF;
+            ray->is.lastPlayedSong = NULL;
             globalMidiPlayerPauseAll();
 
             rayMode.fnDacCb = rayInstrumentDacCallback;

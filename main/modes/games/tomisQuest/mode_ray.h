@@ -884,6 +884,10 @@ typedef struct rayGame
     midiFile_t sfx_health;         ///< SFX when picking up health
     midiFile_t sfx_game_over;      ///< SFX when the game is over
 
+    midiFile_t song_lullaby_first; ///<
+    midiFile_t song_lullaby_short; ///<
+    midiFile_t song_lullaby_full;  ///<
+
     int32_t ledTimer;     ///< A timer to change LED hue
     int32_t ledHue;       ///< The current LED hue
     int32_t targetLedHue; ///< The target LED hue
