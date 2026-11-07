@@ -163,7 +163,10 @@ void moveRayObjects(ray_t* ray, uint32_t elapsedUs)
                             cell->openingDirection = 0;
 
                             // Turn FLOOR into DOOR
-                            cell->type = rayGetDefaultDoor();
+                            if (!CELL_IS_TYPE(cell->type, BG | DOOR))
+                            {
+                                cell->type = rayGetDefaultDoor();
+                            }
                         }
                     }
                 }
