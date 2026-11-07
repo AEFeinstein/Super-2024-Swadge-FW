@@ -273,8 +273,9 @@ void drawForeground2d(ray_t* ray)
         playerSolidColor = ((6 * ray->ps.iFrameTimer) / ENEMY_DEFAULT_IFRAMES_US) & 0x01 ? c111 : c444;
     }
 
-    drawWsgSolid(ray->ps.sprite, pSpriteX, pSpriteY + TO_PX(ray->ps.jumpPos), false, false,
-                 rayGetEightWayAngle(ray->p.dirX, ray->p.dirY), playerSolidColor);
+    int32_t playerAngle = rayGetEightWayAngle(ray->p.dirX, ray->p.dirY);
+    drawWsgSolid(ray->ps.sprite, pSpriteX, pSpriteY + TO_PX(ray->ps.jumpPos), false, false, playerAngle,
+                 playerSolidColor);
     // rectangle_t bb = rayGetPlayerBB(ray);
     // drawRect(TO_PX(bb.pos.x) - camX,            //
     //          TO_PX(bb.pos.y) - camY,            //
@@ -285,11 +286,21 @@ void drawForeground2d(ray_t* ray)
     {
         if (ray->ps.swordTimerUs > 0)
         {
-            line_t sword = rayGetSwordLineSegment(ray);
-            drawLineFast(TO_PX(sword.p1.x) - camX,                   //
-                         TO_PX(sword.p1.y + ray->ps.jumpPos) - camY, //
-                         TO_PX(sword.p2.x) - camX,                   //
-                         TO_PX(sword.p2.y + ray->ps.jumpPos) - camY, c005);
+            int16_t ewiX = TO_PX(ray->p.posX) - (ray->ps.ewiOfTime->w / 2) - camX;
+            int16_t ewiY = TO_PX(ray->p.posY + ray->ps.jumpPos) - (ray->ps.ewiOfTime->h / 2) - camY;
+
+            int32_t swordAngle = playerAngle + ray->ps.swordAngle;
+            if (swordAngle > 360)
+            {
+                swordAngle -= 360;
+            }
+
+            drawWsg(ray->ps.ewiOfTime, ewiX, ewiY, false, false, swordAngle);
+            // line_t sword = rayGetSwordLineSegment(ray);
+            // drawLineFast(TO_PX(sword.p1.x) - camX,                   //
+            //              TO_PX(sword.p1.y + ray->ps.jumpPos) - camY, //
+            //              TO_PX(sword.p2.x) - camX,                   //
+            //              TO_PX(sword.p2.y + ray->ps.jumpPos) - camY, c050);
         }
     }
 
