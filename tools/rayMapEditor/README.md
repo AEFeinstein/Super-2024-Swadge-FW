@@ -105,8 +105,9 @@ These are the actions that occur when a script is triggered
 | WARP      | 12    | MAP, CELL   | Warp the player to the given cell                                                                                                         |
 | WIN       | 13    |             | Beat the game                                                                                                                             |
 | CAMERA    | 14    | CELL        | Center the camera on the given cell                                                                                                       |
-| SHOP      | 15    | COST, TYPE | Attempt to spend `COST` MPoints to get `TYPE` |
-| GET_THING       | 16    | \[THING\] | Immediately receive the given thing |
+| SHOP      | 15    | COST, TYPE  | Attempt to spend `COST` MPoints to get `TYPE`                                                                                             |
+| GET_THING | 16    | \[THING\]   | Immediately receive the given thing                                                                                                       |
+| LOCK      | 17    | \[CELLs\]   | Close all doors on the given cells and lock them (i.e. transform into `BG_DOOR_SCRIPT_LOCKED`)                                            |
 
 ### Script Element Syntax
 

@@ -344,6 +344,7 @@ typedef enum
     CAMERA    = 14, ///< Move the camera
     SHOP      = 15, ///< Try to buy an object
     GET_THING = 16, ///< Get a thing
+    LOCK      = 17, ///< Close doors and lock them
 } thenOp_t;
 
 /**

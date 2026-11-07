@@ -44,6 +44,7 @@ class thenOpType(Enum):
     CAMERA = 14
     SHOP = 15
     GET_THING = 16
+    LOCK = 17
 
 
 class orderType(Enum):
@@ -425,7 +426,7 @@ class rme_script:
 
             # Parse the THEN part
             self.thenOp = thenOpType[then_op]
-            if (thenOpType.OPEN == self.thenOp) or (thenOpType.CLOSE == self.thenOp):
+            if (thenOpType.OPEN == self.thenOp) or (thenOpType.CLOSE == self.thenOp) or (thenOpType.LOCK == self.thenOp):
                 # Parse the args
                 self.thenArgs[kCells] = [
                     self.__parseCell(s) for s in self.__parseArray(argParts[0])
@@ -691,7 +692,7 @@ class rme_script:
         idx = idx + 1
 
         # Read the then args
-        if (thenOpType.OPEN == self.thenOp) or (thenOpType.CLOSE == self.thenOp):
+        if (thenOpType.OPEN == self.thenOp) or (thenOpType.CLOSE == self.thenOp) or (thenOpType.LOCK == self.thenOp):
             # Read Number of cells
             numCells: int = bytes[idx]
             idx = idx + 1
