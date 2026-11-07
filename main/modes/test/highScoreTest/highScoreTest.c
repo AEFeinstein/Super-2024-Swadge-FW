@@ -28,7 +28,7 @@ typedef struct
 
     menuZorldoRenderer_t* menuRenderer;
     menu_t* menu;
-    const char addScoreLabel[64];
+    char addScoreLabel[64];
 
     highScores_t highScores;
     displayScore_t displayScores[HIGH_SCORE_COUNT];
@@ -38,7 +38,7 @@ highScoreTest_t* hst = NULL;
 static void hstEnterMode(void);
 static void hstExitMode(void);
 static bool hstMenu(const char* label, bool selected, uint32_t value);
-static void hstSetUserHighScoreLabel();
+static void hstSetUserHighScoreLabel(void);
 static void hstMainLoop(int64_t elapsedUs);
 static void hstBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
@@ -156,7 +156,7 @@ static bool hstMenu(const char* label, bool selected, uint32_t value)
     return false;
 }
 
-static void hstSetUserHighScoreLabel()
+static void hstSetUserHighScoreLabel(void)
 {
     sprintf((char*)hst->addScoreLabel, hstAddScoreLbl, hst->highScores.userHighScore);
 }
