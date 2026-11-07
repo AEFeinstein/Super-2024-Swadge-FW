@@ -109,7 +109,12 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
         for (uint32_t x = 0; x < map->w; x++)
         {
             // Each tile has a type and object
-            map->tiles[x][y].type     = fileData[fileIdx++];
+            map->tiles[x][y].type = fileData[fileIdx++];
+            // Save initial door type if this is a door
+            if (CELL_IS_TYPE(map->tiles[x][y].type, BG | DOOR))
+            {
+                map->tiles[x][y].doorType = map->tiles[x][y].type;
+            }
             map->tiles[x][y].doorOpen = 0;
             rayMapCellType_t oType    = fileData[fileIdx++];
             rayMapCellType_t cType    = map->tiles[x][y].type;
@@ -129,11 +134,9 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
                 // Open doors which were already unlocked
                 if (SCRIPT_DOOR_OPEN == map->visitedTiles[(y * ray->map.w) + x])
                 {
-                    // If the key was already used, open the door
-                    map->tiles[x][y].doorOpen = TO_FX(1);
-
                     // Turn locked door into a normal door
-                    map->tiles[x][y].type = rayGetDefaultDoor();
+                    map->tiles[x][y].type     = rayGetDefaultDoor();
+                    map->tiles[x][y].doorType = map->tiles[x][y].type;
                 }
             }
 

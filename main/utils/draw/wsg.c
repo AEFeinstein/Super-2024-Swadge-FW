@@ -593,3 +593,66 @@ void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff)
         pxWsg += wWidth;
     }
 }
+
+/**
+ * @brief Draw a WSG to the display, but clip it off at a given horizontal line
+ *
+ * @param wsg The WSG to draw
+ * @param xOff The x offset to draw the WSG at
+ * @param yOff The y offset to align the WSG to
+ * @param clipY the y offset to draw the WSG at
+ */
+void drawWsgClipY(const wsg_t* wsg, int32_t xOff, int32_t yOff, int32_t clipY)
+{
+    // The number of rows to clip
+    int clipOffset = clipY - yOff;
+    // The number of rows drawn
+    int drawH = wsg->h - clipOffset;
+
+    // Make sure it's at least a little in bounds
+    if (xOff > TFT_WIDTH || xOff + wsg->w < 0 || clipY > TFT_HEIGHT || clipY + drawH < 0)
+    {
+        return;
+    }
+
+    // Bound in the Y direction
+    int32_t yStart = (clipY < 0) ? 0 : clipY;
+    int32_t yEnd   = ((clipY + drawH) > TFT_HEIGHT) ? TFT_HEIGHT : (clipY + drawH);
+
+    int wWidth        = wsg->w;
+    int dWidth        = TFT_WIDTH;
+    int wsgClipOffset = clipOffset * wWidth;
+    // If the draw would be off the screen
+    if (clipY < 0)
+    {
+        // Adjust it to be on screen
+        wsgClipOffset -= (clipY * wWidth);
+    }
+    const paletteColor_t* pxWsg = &wsg->px[wsgClipOffset];
+    paletteColor_t* pxDisp      = &(getPxTftFramebuffer()[yStart * dWidth + xOff]);
+
+    // Bound in the X direction
+    int32_t copyLen = wsg->w;
+    if (xOff < 0)
+    {
+        copyLen += xOff;
+        pxDisp -= xOff;
+        pxWsg -= xOff;
+        xOff = 0;
+    }
+
+    if (xOff + copyLen > TFT_WIDTH)
+    {
+        copyLen = TFT_WIDTH - xOff;
+    }
+
+    // copy each row
+    for (int32_t y = yStart; y < yEnd; y++)
+    {
+        // Copy the row
+        // probably faster if we can guarantee copyLen is a multiple of 4
+        memcpy(pxDisp, pxWsg, copyLen);
+        pxDisp += dWidth;
+        pxWsg += wWidth;
+    }
+}
