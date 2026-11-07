@@ -137,7 +137,13 @@ void moveRayObjects(ray_t* ray, uint32_t elapsedUs)
                 else if (0 > cell->openingDirection)
                 {
                     // Make sure not to close on the player
-                    if (x != FROM_FX(ray->p.posX) || y != FROM_FX(ray->p.posY))
+                    rectangle_t doorBB;
+                    doorBB.pos.x  = TO_FX(x);
+                    doorBB.pos.y  = TO_FX(y);
+                    doorBB.width  = TO_FX(1);
+                    doorBB.height = TO_FX(1);
+
+                    if (!rectRectIntersection(rayGetPlayerBB(ray), doorBB, NULL))
                     {
                         // Close it a little more
                         if (cell->doorOpen > 0)
