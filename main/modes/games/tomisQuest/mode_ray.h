@@ -780,6 +780,7 @@ typedef struct
     wsg_t* sprite;
     wsg_t* spriteTomi;
     wsg_t* spriteHyut;
+    wsg_t* ewiOfTime;
 
     /// @brief A mask of keys held for the current map
     struct
