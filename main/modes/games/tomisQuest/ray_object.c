@@ -115,19 +115,6 @@ void moveRayObjects(ray_t* ray, uint32_t elapsedUs)
                 // Get a reference to this cell
                 rayMapCell_t* cell = &(ray->map.tiles[x][y]);
 
-                // If the timer to start closing the door is running
-                if (0 < cell->closeTimer)
-                {
-                    // Decrement it
-                    cell->closeTimer--;
-                    // If it expired
-                    if (0 == cell->closeTimer)
-                    {
-                        // When this elapses, start closing the door
-                        raySetDoorState(ray, x, y, false, false, false);
-                    }
-                }
-
                 // If the door is opening
                 if (0 < cell->openingDirection)
                 {
@@ -142,8 +129,8 @@ void moveRayObjects(ray_t* ray, uint32_t elapsedUs)
                         // Door is fully open
                         cell->openingDirection = 0;
 
-                        // Turn DOOR into FLOOR
-                        cell->type = rayGetDefaultFloor();
+                        // Switch door type to unlocked for drawing during the close animation
+                        cell->doorType = rayGetDefaultDoor();
                     }
                 }
                 // Else if the door is closing
@@ -165,7 +152,8 @@ void moveRayObjects(ray_t* ray, uint32_t elapsedUs)
                             // Turn FLOOR into DOOR
                             if (!CELL_IS_TYPE(cell->type, BG | DOOR))
                             {
-                                cell->type = rayGetDefaultDoor();
+                                cell->type     = rayGetDefaultDoor();
+                                cell->doorType = cell->type;
                             }
                         }
                     }
@@ -659,7 +647,6 @@ void checkRayCollisions(ray_t* ray)
                 if (circleRectIntersection(bomb, wall, NULL))
                 {
                     // open the door by changing the floor type
-                    // TODO door animation
                     cell->type = rayGetDefaultFloor();
 
                     // Remove this address from the list
@@ -944,6 +931,9 @@ void raySetDoorState(ray_t* ray, uint32_t x, uint32_t y, bool isOpening, bool se
     // Do additional things if the door is opening
     if (isOpening)
     {
+        // Turn DOOR into FLOOR for drawing the background. The animated door will be in the foreground
+        ray->map.tiles[x][y].type = rayGetDefaultFloor();
+
         // Start opening if not already open
         if (ray->map.tiles[x][y].doorOpen < TO_FX(1))
         {
@@ -995,6 +985,9 @@ void raySetDoorState(ray_t* ray, uint32_t x, uint32_t y, bool isOpening, bool se
             {
                 if (isOpening)
                 {
+                    // Turn DOOR into FLOOR for drawing the background. The animated door will be in the foreground
+                    cell->type = rayGetDefaultFloor();
+
                     // Start opening if not already open
                     if (cell->doorOpen < TO_FX(1))
                     {

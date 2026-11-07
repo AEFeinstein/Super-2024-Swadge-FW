@@ -192,6 +192,32 @@ void drawForeground2d(ray_t* ray)
     int32_t camX = ray->camera.x;
     int32_t camY = ray->camera.y;
 
+    // Iterate through on-screen tiles to draw doors
+    int32_t mapX = (ray->camera.x) / CELL_SIZE;
+    int32_t mapY = (ray->camera.y) / CELL_SIZE;
+    for (int16_t y = mapY; y < mapY + (TFT_HEIGHT / CELL_SIZE) + 1 && y < ray->map.h; y++)
+    {
+        for (int16_t x = mapX; x < mapX + (TFT_WIDTH / CELL_SIZE) + 1 && x < ray->map.w; x++)
+        {
+            // Convenience pointer
+            rayMapCell_t* cell = &ray->map.tiles[x][y];
+
+            // If the door is opening or closing
+            if (cell->openingDirection)
+            {
+                // Find the amount this door is open or closed, in pixels
+                // TO_FX(1) means open, TO_FX(0) is closed
+                int32_t offset = (-1 * cell->doorOpen * CELL_SIZE) / TO_FX(1);
+
+                // Draw the partially opened door
+                drawWsgClipY(getTexByType(ray, cell->doorType), //
+                             x * CELL_SIZE - camX,              //
+                             y * CELL_SIZE - camY + offset,     //
+                             y * CELL_SIZE - camY);
+            }
+        }
+    }
+
     drawCommonList(&ray->scenery, camX, camY, cTransparent);
     drawCommonList(&ray->items, camX, camY, cTransparent);
     drawCommonList(&ray->enemies, camX, camY, cTransparent);

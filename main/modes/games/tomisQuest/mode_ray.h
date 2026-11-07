@@ -585,10 +585,10 @@ typedef struct
  */
 typedef struct
 {
-    uint16_t closeTimer;     ///< Timer to close the door after opening
-    q8_8 doorOpen;           ///< A timer for this cell, if it happens to be a door
-    rayMapCellType_t type;   ///< The type of this cell
-    int8_t openingDirection; ///< If the door is opening or closing
+    rayMapCellType_t type;     ///< The type of this cell
+    rayMapCellType_t doorType; ///< The door type of this cell, while the current type may be floor
+    q8_8 doorOpen;             ///< A timer for this cell, if it happens to be a door
+    int8_t openingDirection;   ///< If the door is opening or closing
 } rayMapCell_t;
 
 /**
