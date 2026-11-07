@@ -397,19 +397,22 @@ void freeRayMap(rayMap_t* map)
  */
 bool isPassableCell(rayMapCell_t* cell)
 {
-    if (CELL_IS_TYPE(cell->type, BG | WALL))
+    // Never pass through walls or closed doors
+    if (CELL_IS_TYPE(cell->type, BG | WALL) ||
+        // or fully closed doors
+        CELL_IS_TYPE(cell->type, BG | DOOR) ||
+        // or opening doors
+        cell->openingDirection > 0)
     {
-        // Never pass through walls
         return false;
-    }
-    else if (CELL_IS_TYPE(cell->type, BG | DOOR))
-    {
-        // Only pass through at least half open doors
-        return (TO_FX_FRAC(1, 2) < cell->doorOpen);
     }
     else
     {
-        // Always pass through everything else
+        // Always pass through everything else (floors, closing doors, etc.)
+        // The player needs to pass through closing doors in case a script
+        // starts the door closing while the player is in that tile. The door
+        // won't close until the player is out of the way, but the player
+        // needs to be able to get out of the way
         return true;
     }
 }
