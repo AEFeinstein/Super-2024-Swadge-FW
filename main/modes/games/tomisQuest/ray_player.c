@@ -40,17 +40,19 @@ bool initializePlayer(ray_t* ray)
     {
         initFromScratch = true;
 
-        // Start at map 0, loaded later
-        ray->p.mapId = 0;
+        // Clear out the entire rayPlayer_t
+        // This also sets mapId = 0 (map is loaded later)
+        // This also clears the rayInventory_t
+        memset(&ray->p, 0, sizeof(rayPlayer_t));
 
         // ray->p.posX and ray->p.posY (starting position) are set by the map
-
         // Set the direction
         ray->p.dirX = TO_FX(0);
         ray->p.dirY = -TO_FX(1);
 
-        // Zero the entire inventory
-        memset(&ray->p.i, 0, sizeof(ray->p.i));
+        // Set initial health
+        ray->p.maxHealth = GAME_START_HEALTH;
+        ray->p.health    = GAME_START_HEALTH;
 
         // Uncomment to start with all items for testing
         // ray->p.i.haveEwiOfTime     = true;
@@ -61,10 +63,6 @@ bool initializePlayer(ray_t* ray)
         // ray->p.i.haveBoomerang     = true;
         // ray->p.i.haveTurntables    = true;
         // ray->p.i.haveDoriasLullaby = true;
-
-        // Set initial health
-        ray->p.maxHealth = GAME_START_HEALTH;
-        ray->p.health    = GAME_START_HEALTH;
     }
     else
     {
