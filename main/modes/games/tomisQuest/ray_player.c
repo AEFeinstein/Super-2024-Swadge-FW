@@ -75,6 +75,7 @@ bool initializePlayer(ray_t* ray)
     // Load sprites
     ray->ps.spriteTomi = loadTexture(ray, ZORLDO_MENU_TOMI_WSG, EMPTY);
     ray->ps.spriteHyut = loadTexture(ray, HYUT_WSG, EMPTY);
+    ray->ps.ewiOfTime  = loadTexture(ray, EWI_OF_TIME_WSG, EMPTY);
     if (ray->p.i.haveEwiOfTime)
     {
         ray->ps.sprite = ray->ps.spriteHyut;
