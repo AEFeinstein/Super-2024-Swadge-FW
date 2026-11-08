@@ -687,6 +687,7 @@ void app_main(void)
             pendingSwadgeMode = NULL;
             // Deinitialize everything (including the swadge mode)
             deinitSystem();
+            powerDownPeripherals();
 
             // Isolate all GPIO except for the sleep pin
             for (gpio_num_t gpio = GPIO_NUM_0; gpio < SOC_RTCIO_PIN_COUNT; gpio++)
@@ -791,16 +792,19 @@ void deinitSystem(void)
         cSwadgeMode->fnExitMode();
     }
 
-    // Deinitialize everything
+    // Deinit software
+    deinitGlobalMidiPlayer();
+    deinitCnfs();
+
+    // Deinitialize hardware components
+    deinitAccelerometer();
     deinitButtons();
     deinitTouchPads();
-    deinitGlobalMidiPlayer();
     deinitDac();
     deinitEspNow();
     deinitLeds();
     deinitMic();
     deinitNvs();
-    deinitCnfs();
     deinitTemperatureSensor();
     deinitTFT();
     deinitUsb();
