@@ -197,6 +197,7 @@ void loadScripts(ray_t* ray, const uint8_t* fileData, uint32_t fileSize, uint32_
         {
             case OPEN:
             case CLOSE:
+            case LOCK:
             {
                 // [CELLs]
                 newScript->thenArgs.cellList.numCells = fileData[fileIdx++];
@@ -367,6 +368,7 @@ static void freeScript(rayScript_t* script)
     {
         case OPEN:
         case CLOSE:
+        case LOCK:
         {
             // [CELLs]
             heap_caps_free(script->thenArgs.cellList.cells);
@@ -1069,6 +1071,7 @@ void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
             break;
         }
         case CLOSE:
+        case LOCK:
         {
             for (int cIdx = 0; cIdx < script->thenArgs.cellList.numCells; cIdx++)
             {
@@ -1076,6 +1079,12 @@ void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
                 int32_t y = script->thenArgs.cellList.cells[cIdx].y;
                 // Start closing the door
                 raySetDoorState(ray, x, y, false, false, false);
+
+                if (LOCK == script->thenOp)
+                {
+                    ray->map.tiles[x][y].type     = BG_DOOR_SCRIPT_LOCKED;
+                    ray->map.tiles[x][y].doorType = BG_DOOR_SCRIPT_LOCKED;
+                }
             }
             break;
         }

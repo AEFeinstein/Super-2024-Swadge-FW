@@ -72,5 +72,6 @@ void drawWsgSimpleScaledDown(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16
 void drawWsgSmoothScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, q24_8 xScale, q24_8 yScale);
 void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff);
 void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff);
+void drawWsgClipY(const wsg_t* wsg, int32_t xOff, int32_t yOff, int32_t clipY);
 
 #endif

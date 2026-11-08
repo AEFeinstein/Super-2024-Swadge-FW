@@ -102,6 +102,7 @@
  *     - imu_utils.h: Utilities to process IMU data
  * - hdw-battmon.h: Learn how to check the battery voltage
  * - hdw-temperature.h: Learn how to use the temperature sensor
+ * - hdw-sleep-switch.h: Learn how the sleep switch controls deep sleep states
  *
  * \subsection led_api LED APIs
  *
@@ -231,6 +232,7 @@
 #include <rom/usb/chip_usb_dw_wrapper.h>
 #include <soc/rtc_cntl_reg.h>
 #include <soc/gpio_num.h>
+#include <driver/rtc_io.h>
 
 #include "advanced_usb_control.h"
 #include "shapes.h"
@@ -243,6 +245,7 @@
 #include "midiPlayer.h"
 #include "introMode.h"
 #include "nameList.h"
+#include "swadgeClock.h"
 
 //==============================================================================
 // Defines
@@ -310,6 +313,9 @@ void app_main(void)
     uart_set_pin(UART_NUM_0, GPIO_SAO_B, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 #endif
 
+    // Set the default time if time hasn't been set
+    setDefaultTime();
+
     // Init NVS. Do this first to get test mode status and crashwrap logs
     initNvs(true);
 
@@ -346,11 +352,34 @@ void app_main(void)
     }
 
     // If the ESP woke from sleep, and there is a pending Swadge Mode
-    if ((ESP_SLEEP_WAKEUP_TIMER == esp_sleep_get_wakeup_cause()) && (NULL != pendingSwadgeMode))
+    switch (esp_sleep_get_wakeup_cause())
     {
-        // Use the pending mode
-        cSwadgeMode       = pendingSwadgeMode;
-        pendingSwadgeMode = NULL;
+        case ESP_SLEEP_WAKEUP_TIMER:
+        {
+            if (NULL != pendingSwadgeMode)
+            {
+                // Use the pending mode
+                cSwadgeMode       = pendingSwadgeMode;
+                pendingSwadgeMode = NULL;
+            }
+            break;
+        }
+        case ESP_SLEEP_WAKEUP_EXT0:
+        {
+            for (gpio_num_t gpio = GPIO_NUM_0; gpio < SOC_RTCIO_PIN_COUNT; gpio++)
+            {
+                if ((gpio_num_t)GPIO_SLEEP != gpio)
+                {
+                    rtc_gpio_hold_dis(gpio);
+                }
+            }
+            break;
+        }
+        default:
+        {
+            // Unknown wake reason...
+            break;
+        }
     }
 
     // Init USB if not overridden by the mode. This also sets up USB printf
@@ -376,6 +405,9 @@ void app_main(void)
 
     // Init file system
     initCnfs();
+
+    // Initialize sleep switch
+    initSleepSwitch(GPIO_SLEEP);
 
 #if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
     // Init buttons and touch pads
@@ -417,21 +449,21 @@ void app_main(void)
 
     // Fairy has two linear touch strips
     touch_pad_t touchPads[] = {
-        GPIO_TOUCH_1, GPIO_TOUCH_2, GPIO_TOUCH_3, GPIO_TOUCH_4, GPIO_TOUCH_5,
-        GPIO_TOUCH_6, GPIO_TOUCH_7, GPIO_TOUCH_8, GPIO_TOUCH_9, GPIO_TOUCH_14,
+        GPIO_TOUCH_8, GPIO_TOUCH_4,  GPIO_TOUCH_5, GPIO_TOUCH_6, GPIO_TOUCH_7,
+        GPIO_TOUCH_3, GPIO_TOUCH_14, GPIO_TOUCH_9, GPIO_TOUCH_2, GPIO_TOUCH_1,
     };
     initTouchPads(touchPads, ARRAY_SIZE(touchPads), 0.2f, true);
 
-    static const uint8_t rightIdxs[]          = {0, 1, 2, 3, 4};
-    static const uint8_t leftIdxs[]           = {5, 6, 7, 8, 9};
+    static const uint8_t leftIdxs[]           = {0, 1, 2, 3, 4};
+    static const uint8_t rightIdxs[]          = {5, 6, 7, 8, 9};
     static const touchLinearCfg_t linearCfg[] = {
-        {
-            .numTouchPads = ARRAY_SIZE(rightIdxs),
-            .touchPadIdxs = rightIdxs,
-        },
         {
             .numTouchPads = ARRAY_SIZE(leftIdxs),
             .touchPadIdxs = leftIdxs,
+        },
+        {
+            .numTouchPads = ARRAY_SIZE(rightIdxs),
+            .touchPadIdxs = rightIdxs,
         },
     };
     initTouchLinear(linearCfg, ARRAY_SIZE(linearCfg));
@@ -645,6 +677,26 @@ void app_main(void)
 
             // Go to sleep. pendingSwadgeMode will be used after waking up
             esp_sleep_enable_timer_wakeup(1);
+            esp_deep_sleep_start();
+        }
+
+        // If the switch says it's time to sleep
+        if (sleepSwitchShouldSleep())
+        {
+            // Don't start a specific mode when awoken
+            pendingSwadgeMode = NULL;
+            // Deinitialize everything (including the swadge mode)
+            deinitSystem();
+
+            // Isolate all GPIO except for the sleep pin
+            for (gpio_num_t gpio = GPIO_NUM_0; gpio < SOC_RTCIO_PIN_COUNT; gpio++)
+            {
+                if ((gpio_num_t)GPIO_SLEEP != gpio)
+                {
+                    rtc_gpio_isolate(gpio);
+                }
+            }
+            // Sleep until the switch wakes the swadge
             esp_deep_sleep_start();
         }
 

@@ -21,6 +21,16 @@
 
 #define NUM_TZ_RING 5
 
+/**
+ * @brief Clamp a number between an upper and lower bound
+ *
+ * @param a A number to clamp between an upper and lower bound
+ * @param l The lower bound, inclusive
+ * @param u The upper bound, inclusive
+ * @return The clamped number
+ */
+#define CLAMP(a, l, u) ((a) < l ? l : ((a) > u ? u : (a)))
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -453,15 +463,78 @@ uint8_t getTouchLinear(linearTouch_t* touches, uint8_t numLinearTouches)
         return 0;
     }
 
-    // Loop over the min of requested and configured linear touches
+    // Read base values
+    int32_t baseVals[_numTouchPads];
+    int numTouchesRead = getBaseTouchVals(baseVals, _numTouchPads);
+    if (numTouchesRead != _numTouchPads)
+    {
+        return 0;
+    }
+
+    // Loop over the min of requested and configured linear touch strips
     if (_numTouchLinearCfgs < numLinearTouches)
     {
         numLinearTouches = _numTouchLinearCfgs;
     }
-    for (uint8_t idx = 0; idx < numLinearTouches; idx++)
+    for (uint8_t sIdx = 0; sIdx < numLinearTouches; sIdx++)
     {
-        // TODO use configuration and calculate touches
-        touches[idx].touched = false;
+        // Get pointers to this strip's output and configuration
+        linearTouch_t* touch        = &touches[sIdx];
+        const touchLinearCfg_t* cfg = &_touchLinearCfgs[sIdx];
+
+        // Find the maximum peak in baseVals[]
+        int peak    = -1;
+        int peakBin = -1;
+        for (int i = 0; i < cfg->numTouchPads; i++)
+        {
+            int32_t bv = baseVals[cfg->touchPadIdxs[i]];
+            if (bv > peak)
+            {
+                peak    = bv;
+                peakBin = i;
+            }
+        }
+
+        // If no peak was found, or the peak is less than 4200 (Arbitrary)
+        if ((peakBin < 0) || (peak < 4200))
+        {
+            // There's no touch
+            touch->touched = false;
+        }
+        else
+        {
+            // We know our peak bin, now we need to know the average and differential of the adjacent bins.
+            int leftOfPeak  = (peakBin > 0) ? baseVals[cfg->touchPadIdxs[peakBin - 1]] : 0;
+            int rightOfPeak = (peakBin < cfg->numTouchPads - 1) ? baseVals[cfg->touchPadIdxs[peakBin + 1]] : 0;
+
+            int oPeak  = peak;
+            int center = peakBin << 8;
+
+            if (rightOfPeak >= leftOfPeak)
+            {
+                // We bend upward (or are neutral)
+                rightOfPeak -= leftOfPeak;
+                peak -= leftOfPeak;
+                center += (rightOfPeak << 8) / (rightOfPeak + peak);
+
+                // Set intensity output
+                touch->intensity = oPeak + rightOfPeak;
+            }
+            else
+            {
+                // We bend downward
+                leftOfPeak -= rightOfPeak;
+                peak -= rightOfPeak;
+                center -= (leftOfPeak << 8) / (leftOfPeak + peak);
+
+                // Set intensity output
+                touch->intensity = oPeak + leftOfPeak;
+            }
+
+            // Set position output
+            touch->position = CLAMP(center, 0, 1024);
+            touch->touched  = true;
+        }
     }
 
     // Return number of read linear touches
