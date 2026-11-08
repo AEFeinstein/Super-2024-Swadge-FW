@@ -109,7 +109,12 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
         for (uint32_t x = 0; x < map->w; x++)
         {
             // Each tile has a type and object
-            map->tiles[x][y].type     = fileData[fileIdx++];
+            map->tiles[x][y].type = fileData[fileIdx++];
+            // Save initial door type if this is a door
+            if (CELL_IS_TYPE(map->tiles[x][y].type, BG | DOOR))
+            {
+                map->tiles[x][y].doorType = map->tiles[x][y].type;
+            }
             map->tiles[x][y].doorOpen = 0;
             rayMapCellType_t oType    = fileData[fileIdx++];
             rayMapCellType_t cType    = map->tiles[x][y].type;
@@ -129,11 +134,9 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
                 // Open doors which were already unlocked
                 if (SCRIPT_DOOR_OPEN == map->visitedTiles[(y * ray->map.w) + x])
                 {
-                    // If the key was already used, open the door
-                    map->tiles[x][y].doorOpen = TO_FX(1);
-
-                    // Turn DOOR into FLOOR
-                    map->tiles[x][y].type = rayGetDefaultFloor();
+                    // Turn locked door into a normal door
+                    map->tiles[x][y].type     = rayGetDefaultDoor();
+                    map->tiles[x][y].doorType = map->tiles[x][y].type;
                 }
             }
 
@@ -394,19 +397,22 @@ void freeRayMap(rayMap_t* map)
  */
 bool isPassableCell(rayMapCell_t* cell)
 {
-    if (CELL_IS_TYPE(cell->type, BG | WALL))
+    // Never pass through walls or closed doors
+    if (CELL_IS_TYPE(cell->type, BG | WALL) ||
+        // or fully closed doors
+        CELL_IS_TYPE(cell->type, BG | DOOR) ||
+        // or opening doors
+        cell->openingDirection > 0)
     {
-        // Never pass through walls
         return false;
-    }
-    else if (CELL_IS_TYPE(cell->type, BG | DOOR))
-    {
-        // Only pass through at least half open doors
-        return (TO_FX_FRAC(1, 2) < cell->doorOpen);
     }
     else
     {
-        // Always pass through everything else
+        // Always pass through everything else (floors, closing doors, etc.)
+        // The player needs to pass through closing doors in case a script
+        // starts the door closing while the player is in that tile. The door
+        // won't close until the player is out of the way, but the player
+        // needs to be able to get out of the way
         return true;
     }
 }

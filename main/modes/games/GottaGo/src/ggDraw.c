@@ -154,7 +154,8 @@ static const char* const rulesText[] = {
     "Rules",
     "Here is a compendium fo the rules of picking a urinal. Some of these will feel pretty intuitive.",
     "Controls",
-    "A: Select Urinal\nB: Use a stall\nLeft/right: Pick a urinal\nLeft swipe pad can also be used\nStart/select: Pause "
+    "A: Select Urinal\n\nB: Use a stall\n\nLeft/right: Pick a urinal\n\nLeft swipe pad can also be "
+    "used\n\nStart/select: Pause "
     "game",
     "Mechanics",
     "There's more that goes into choosing a urinal than you might expect or think about when you use the little boy's "
@@ -166,9 +167,9 @@ static const char* const rulesText[] = {
     "There's always at least three urinals, and up to seven. The number is random. The urinals on the ends are more "
     "desirable.",
     "People",
-    "There's a wide variety of people.",
+    "There's a wide variety of people. Stay away from them.",
     "Weird people",
-    "You want to stay away from the weirder people.",
+    "You want to stay away from the weirder people even more.",
     "Major issues",
     "All of the following options result in a failure. You'll get pee everywhere or at least damage the sign.",
     "Minor issues",
@@ -191,7 +192,7 @@ static const char* const rulesText[] = {
     "worst ones have a red X.",
     "Casual mode",
     "Don't really need to go? Play without the timer looming over your head and spend your time picking the best "
-    "option.\n\n Scores are not tallied, and you can keep playing until you're done.",
+    "option.\n\nScores are not tallied, and you can keep playing until you're done.",
     "Scoring",
     "There are four metrics tracked: Game count, accuracy, total score, and adjusted score.",
     "Game count",
@@ -205,7 +206,13 @@ static const char* const rulesText[] = {
     "score you get to keep.",
     "Adjusted score",
     "Total score multiplied by the overall accuracy for a single overall number to compare the performance of a player "
-    "vs others.\n\nAll four scores are sent through swadgepass, compare with your friends!",
+    "vs others. \n\nAll four scores are sent through swadgepass, compare with your friends!",
+    "Cheatsheet: Penalties",
+    "People (Normal): 200/distance\nPeople (Weird): 300/distance\nPuddles (S/M/L): 50/100/150\nPuddles incur half "
+    "penalties for standing next to them\nDivders (Half): 50\nDividers (Missing): 100\nMinor issues: 50 each\nMajor "
+    "issue: Instant fail\nADA toilet: 200",
+    "Cheatsheet: Bonuses",
+    "\nAutoflusher: 10\nEnd urinal: 20",
 };
 
 static const char* const scoreTypeText[] = {
@@ -959,14 +966,18 @@ static void drawUrinal(ggData_t* ggd, ggUrinal_t* u, int x, int y)
     if (u->brokenBowl)
     {
         drawWsgSimple(&ggd->urinalImages[5], x, y + currHeight);
-        drawWsgSimple(&ggd->urinalImages[6], x + 16, TFT_HEIGHT - FLOOR_HEIGHT + 4);
+        drawWsgSimple(&ggd->urinalImages[6], x, TFT_HEIGHT - FLOOR_HEIGHT - 6);
     }
     else
     {
         drawWsgSimple(&ggd->urinalImages[4], x, y + currHeight);
     }
     // Drain
-    if (u->brokenDrain)
+    if (u->brokenBowl)
+    {
+        ;
+    }
+    else if (u->brokenDrain)
     {
         drawWsgSimple(&ggd->urinalImages[8], x + (ggd->urinalImages[2].w - ggd->urinalImages[8].w) / 2,
                       y + currHeight + ggd->urinalImages[4].h);

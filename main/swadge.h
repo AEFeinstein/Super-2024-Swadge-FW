@@ -177,18 +177,19 @@
 
 // Hardware interfaces
 #include "crashwrap.h"
-#include "hdw-imu.h"
 #include "hdw-battmon.h"
 #include "hdw-btn.h"
-#include "hdw-touch.h"
 #include "hdw-ch32v003.h"
 #include "hdw-dac.h"
 #include "hdw-esp-now.h"
+#include "hdw-imu.h"
 #include "hdw-led.h"
 #include "hdw-mic.h"
 #include "hdw-nvs.h"
+#include "hdw-sleep-switch.h"
 #include "hdw-temperature.h"
 #include "hdw-tft.h"
+#include "hdw-touch.h"
 #include "hdw-usb.h"
 
 // Drawing interfaces

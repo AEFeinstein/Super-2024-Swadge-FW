@@ -192,6 +192,32 @@ void drawForeground2d(ray_t* ray)
     int32_t camX = ray->camera.x;
     int32_t camY = ray->camera.y;
 
+    // Iterate through on-screen tiles to draw doors
+    int32_t mapX = (ray->camera.x) / CELL_SIZE;
+    int32_t mapY = (ray->camera.y) / CELL_SIZE;
+    for (int16_t y = mapY; y < mapY + (TFT_HEIGHT / CELL_SIZE) + 1 && y < ray->map.h; y++)
+    {
+        for (int16_t x = mapX; x < mapX + (TFT_WIDTH / CELL_SIZE) + 1 && x < ray->map.w; x++)
+        {
+            // Convenience pointer
+            rayMapCell_t* cell = &ray->map.tiles[x][y];
+
+            // If the door is opening or closing
+            if (cell->openingDirection)
+            {
+                // Find the amount this door is open or closed, in pixels
+                // TO_FX(1) means open, TO_FX(0) is closed
+                int32_t offset = (-1 * cell->doorOpen * CELL_SIZE) / TO_FX(1);
+
+                // Draw the partially opened door
+                drawWsgClipY(getTexByType(ray, cell->doorType), //
+                             x * CELL_SIZE - camX,              //
+                             y * CELL_SIZE - camY + offset,     //
+                             y * CELL_SIZE - camY);
+            }
+        }
+    }
+
     drawCommonList(&ray->scenery, camX, camY, cTransparent);
     drawCommonList(&ray->items, camX, camY, cTransparent);
     drawCommonList(&ray->enemies, camX, camY, cTransparent);
@@ -247,8 +273,9 @@ void drawForeground2d(ray_t* ray)
         playerSolidColor = ((6 * ray->ps.iFrameTimer) / ENEMY_DEFAULT_IFRAMES_US) & 0x01 ? c111 : c444;
     }
 
-    drawWsgSolid(ray->ps.sprite, pSpriteX, pSpriteY + TO_PX(ray->ps.jumpPos), false, false,
-                 rayGetEightWayAngle(ray->p.dirX, ray->p.dirY), playerSolidColor);
+    int32_t playerAngle = rayGetEightWayAngle(ray->p.dirX, ray->p.dirY);
+    drawWsgSolid(ray->ps.sprite, pSpriteX, pSpriteY + TO_PX(ray->ps.jumpPos), false, false, playerAngle,
+                 playerSolidColor);
     // rectangle_t bb = rayGetPlayerBB(ray);
     // drawRect(TO_PX(bb.pos.x) - camX,            //
     //          TO_PX(bb.pos.y) - camY,            //
@@ -259,11 +286,21 @@ void drawForeground2d(ray_t* ray)
     {
         if (ray->ps.swordTimerUs > 0)
         {
-            line_t sword = rayGetSwordLineSegment(ray);
-            drawLineFast(TO_PX(sword.p1.x) - camX,                   //
-                         TO_PX(sword.p1.y + ray->ps.jumpPos) - camY, //
-                         TO_PX(sword.p2.x) - camX,                   //
-                         TO_PX(sword.p2.y + ray->ps.jumpPos) - camY, c005);
+            int16_t ewiX = TO_PX(ray->p.posX) - (ray->ps.ewiOfTime->w / 2) - camX;
+            int16_t ewiY = TO_PX(ray->p.posY + ray->ps.jumpPos) - (ray->ps.ewiOfTime->h / 2) - camY;
+
+            int32_t swordAngle = playerAngle + ray->ps.swordAngle;
+            if (swordAngle > 360)
+            {
+                swordAngle -= 360;
+            }
+
+            drawWsg(ray->ps.ewiOfTime, ewiX, ewiY, false, false, swordAngle);
+            // line_t sword = rayGetSwordLineSegment(ray);
+            // drawLineFast(TO_PX(sword.p1.x) - camX,                   //
+            //              TO_PX(sword.p1.y + ray->ps.jumpPos) - camY, //
+            //              TO_PX(sword.p2.x) - camX,                   //
+            //              TO_PX(sword.p2.y + ray->ps.jumpPos) - camY, c050);
         }
     }
 

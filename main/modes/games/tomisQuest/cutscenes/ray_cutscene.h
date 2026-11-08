@@ -72,6 +72,7 @@ typedef enum
     TQS_DJ_TREE_5          = (1 << 21),
     TQS_FREDWARD           = (1 << 22),
     TQS_LOOT_2             = (1 << 24),
+    TQS_FINAL_WARP         = (1 << 25),
 } tomisQuestSceneId_t;
 
 typedef bool (*rayCutsceneSceneInitFn_t)(ray_t* ray, cutscene_t* cutscene, const char* title);
@@ -80,5 +81,9 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text);
 void rayCutsceneCheckButtons(ray_t* ray);
 void rayCutsceneRender(ray_t* ray, uint32_t elapsedUs);
 void addCutsceneStyleNarrator(cutscene_t* cutscene);
+void addCutsceneStyleUnknown(cutscene_t* cutscene);
+void addCutsceneStyleHankW(cutscene_t* cutscene);
+void addCutsceneStyleGreatFairy(cutscene_t* cutscene);
+void addCutsceneStyleGreatFairies(cutscene_t* cutscene);
 
 #endif

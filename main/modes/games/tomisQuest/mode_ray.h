@@ -116,7 +116,7 @@ typedef enum __attribute__((packed))
     BG_WALL_DUNGEON_DL = (BG | WALL | 7),
     BG_WALL_BOX        = (BG | WALL | 8),
     BG_WALL_WATER      = (BG | WALL | 9),
-    BG_WALL_10         = (BG | WALL | 10),
+    BG_WALL_FENCE      = (BG | WALL | 10),
     BG_WALL_11         = (BG | WALL | 11),
     BG_WALL_12         = (BG | WALL | 12),
     BG_WALL_13         = (BG | WALL | 13),
@@ -283,8 +283,8 @@ typedef enum __attribute__((packed))
     OBJ_SCENERY_MAYORS_HOUSE = (OBJ | SCENERY | 4),
     OBJ_SCENERY_TURNTABLE    = (OBJ | SCENERY | 5),
     OBJ_SCENERY_SIGNPOST     = (OBJ | SCENERY | 6),
-    OBJ_SCENERY_7            = (OBJ | SCENERY | 7),
-    OBJ_SCENERY_8            = (OBJ | SCENERY | 8),
+    OBJ_SCENERY_WARP_PAD     = (OBJ | SCENERY | 7),
+    OBJ_SCENERY_FOUNTAIN     = (OBJ | SCENERY | 8),
     OBJ_SCENERY_9            = (OBJ | SCENERY | 9),
     OBJ_SCENERY_10           = (OBJ | SCENERY | 10),
     OBJ_SCENERY_11           = (OBJ | SCENERY | 11),
@@ -344,6 +344,7 @@ typedef enum
     CAMERA    = 14, ///< Move the camera
     SHOP      = 15, ///< Try to buy an object
     GET_THING = 16, ///< Get a thing
+    LOCK      = 17, ///< Close doors and lock them
 } thenOp_t;
 
 /**
@@ -584,10 +585,10 @@ typedef struct
  */
 typedef struct
 {
-    uint16_t closeTimer;     ///< Timer to close the door after opening
-    q8_8 doorOpen;           ///< A timer for this cell, if it happens to be a door
-    rayMapCellType_t type;   ///< The type of this cell
-    int8_t openingDirection; ///< If the door is opening or closing
+    rayMapCellType_t type;     ///< The type of this cell
+    rayMapCellType_t doorType; ///< The door type of this cell, while the current type may be floor
+    q8_8 doorOpen;             ///< A timer for this cell, if it happens to be a door
+    int8_t openingDirection;   ///< If the door is opening or closing
 } rayMapCell_t;
 
 /**
@@ -779,6 +780,7 @@ typedef struct
     wsg_t* sprite;
     wsg_t* spriteTomi;
     wsg_t* spriteHyut;
+    wsg_t* ewiOfTime;
 
     /// @brief A mask of keys held for the current map
     struct
@@ -796,6 +798,7 @@ typedef struct
 typedef struct
 {
     uint32_t noteHistory;       ///< Notes are 0-7 (3 bits) and invalid (4th bit) so this stores a history of 8 notes
+    uint32_t numNotesPlayed;    ///< A count of notes played, used during the tutorial
     const char* lastPlayedSong; ///< Text indicating the last song played
     int8_t lTouchZone;          ///< The current left touch zone, or -1
     int8_t rTouchZone;          ///< The current right touch zone, or -1
@@ -883,6 +886,10 @@ typedef struct rayGame
     midiFile_t sfx_health;         ///< SFX when picking up health
     midiFile_t sfx_game_over;      ///< SFX when the game is over
 
+    midiFile_t song_lullaby_first; ///<
+    midiFile_t song_lullaby_short; ///<
+    midiFile_t song_lullaby_full;  ///<
+
     int32_t ledTimer;     ///< A timer to change LED hue
     int32_t ledHue;       ///< The current LED hue
     int32_t targetLedHue; ///< The target LED hue
@@ -891,7 +898,11 @@ typedef struct rayGame
 
     const char* deathText; ///< Text shown on the death screen
 
-    rayInstrumentState_t is; // The instrument state
+    bool instrumentTutorial;          ///< True if the instrument is in tutorial mode, false for free-play
+    bool instrumentTutorialAutoPlay;  ///< True if the song is auto-playing in tutorial mode
+    uint32_t instrumentAutoPlayTimer; ///< A timer to auto-play the song in the tutorial
+    uint32_t instrumentAutoPlayIdx;   ///< The index of the note in the song being auto-played
+    rayInstrumentState_t is;          ///< The instrument state
 
     synthOscillator_t lOsc;            ///< An oscillator for the left touchpad
     synthOscillator_t rOsc;            ///< An oscillator for the right touchpad

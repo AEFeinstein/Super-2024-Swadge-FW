@@ -54,6 +54,7 @@ idf_component_register(SRCS "modes/games/beancatch/bcTables.c"
                             "modes/games/tomisQuest/cutscenes/scenes/ray_cutscene_scene_14_dream_1.c"
                             "modes/games/tomisQuest/cutscenes/scenes/ray_cutscene_scene_15_dream_2.c"
                             "modes/games/tomisQuest/cutscenes/scenes/ray_cutscene_scene_16_dream_3.c"
+                            "modes/games/tomisQuest/cutscenes/scenes/ray_cutscene_scene_17_final_warp.c"
                             "modes/games/tomisQuest/enemies/ray_enemy_box.c"
                             "modes/games/tomisQuest/enemies/ray_enemy.c"
                             "modes/games/tomisQuest/enemies/ray_enemy_grunt.c"
@@ -78,6 +79,7 @@ idf_component_register(SRCS "modes/games/beancatch/bcTables.c"
                             "modes/music/jukebox/jukebox.c"
                             "modes/music/tunernome/tunernome.c"
                             "modes/music/usbsynth/mode_synth.c"
+                            "modes/system/clock/swadgeClock.c"
                             "modes/system/credits/credits_utils.c"
                             "modes/system/credits/mode_credits.c"
                             "modes/system/intro/introMode.c"
@@ -91,6 +93,7 @@ idf_component_register(SRCS "modes/games/beancatch/bcTables.c"
                             "modes/test/canvasTest/canvas.c"
                             "modes/test/ch32v003test/mode_ch32v003test.c"
                             "modes/test/factoryTest/factoryTest.c"
+                            "modes/test/highScoreTest/highScoreTest.c"
                             "modes/test/keebTest/keebTest.c"
                             "modes/test/nameTest/nameTest.c"
                             "modes/test/swadgePassTest/swadgePassTest.c"
@@ -159,20 +162,21 @@ idf_component_register(SRCS "modes/games/beancatch/bcTables.c"
                             "utils/peripherals/imu_utils.c"
                             "utils/peripherals/touchUtils.c"
                             "utils/settings/settingsManager.c"
-                    PRIV_REQUIRES hdw-imu
-                                  hdw-battmon
-                                  hdw-btn
-                                  hdw-ch32v003
-                                  hdw-dac
-                                  hdw-esp-now
-                                  hdw-led
-                                  hdw-mic
-                                  hdw-nvs
-                                  hdw-tft
-                                  hdw-temperature
-                                  hdw-touch
-                                  hdw-usb
-                                  crashwrap
+                    PRIV_REQUIRES hdw-battmon
+                                hdw-btn
+                                hdw-ch32v003
+                                hdw-dac
+                                hdw-esp-now
+                                hdw-imu
+                                hdw-led
+                                hdw-mic
+                                hdw-nvs
+                                hdw-sleep-switch
+                                hdw-temperature
+                                hdw-tft
+                                hdw-touch
+                                hdw-usb
+                                crashwrap
                     REQUIRES esp_timer
                              spi_flash
                     # find main/ -type d | sort | sed -E 's/main\/(.*)/".\/\1"/g'
@@ -203,6 +207,7 @@ idf_component_register(SRCS "modes/games/beancatch/bcTables.c"
                                 "./modes/music/tunernome"
                                 "./modes/music/usbsynth"
                                 "./modes/system"
+                                "./modes/system/clock"
                                 "./modes/system/credits"
                                 "./modes/system/intro"
                                 "./modes/system/mainMenu"
@@ -213,6 +218,7 @@ idf_component_register(SRCS "modes/games/beancatch/bcTables.c"
                                 "./modes/test/canvasTest"
                                 "./modes/test/ch32v003test"
                                 "./modes/test/factoryTest"
+                                "./modes/test/highScoreTest"
                                 "./modes/test/keebTest"
                                 "./modes/test/nameTest"
                                 "./modes/test/swadgePassTest"

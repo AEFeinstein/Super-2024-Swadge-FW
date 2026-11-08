@@ -2,6 +2,20 @@
 #include "ray_cutscene_scene_06_dungeon_1_complete.h"
 
 /**
+ * @brief Dialog callback to start the instrument tutorial
+ */
+static void startLullabyTutorial(void)
+{
+    ray_t* ray = getRayState();
+
+    // Set the tutorial flag before switching screens to not destroy the cutscene
+    ray->instrumentTutorial         = true;
+    ray->instrumentTutorialAutoPlay = true;
+    raySwitchToScreen(RAY_INSTRUMENT);
+    // This will return to the cutscene when finished
+}
+
+/**
  * @brief Callback to mark this scene as viewed
  */
 static void endScene(void)
@@ -51,7 +65,7 @@ bool initCutsceneDungeon1Complete(ray_t* ray, cutscene_t* cutscene, const char* 
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Oh great, this Trial has backtracking in it? Laaaaame...", false, TOMI_ANGRY, NULL);
         addCutsceneLine(cutscene, CS_STYLE_DORIA, "This is a Warp Pad. It will return you to Gaylorida Field once activated.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "How do I activate it?", false, TOMI_SUSPICIOUS, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_DORIA, "You must stand on the pad and sing this Sacred Melody. This is Doria's Lullaby.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_DORIA, "You must stand on the pad and sing this Sacred Melody. This is Doria's Lullaby.", false, 0, startLullabyTutorial);
         // [Doria teaches Doria's Lullaby. NOTE: The player can replay this tutorial later by interacting with a mural on the wall in this room]
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Nice tune. I could swear I've heard it before.", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_DORIA, "Remember it well, fairy. You can return here if you ever need a reminder on how the melody goes.", false, 0, NULL);

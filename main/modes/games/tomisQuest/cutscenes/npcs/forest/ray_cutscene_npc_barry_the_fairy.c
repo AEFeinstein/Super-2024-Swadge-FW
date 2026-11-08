@@ -22,6 +22,12 @@ void addCutsceneStyleBarryTheFairy(cutscene_t* cutscene)
  */
 void initNpcCutsceneBarryTheFairy(ray_t* ray, cutscene_t* cutscene)
 {
+    // NPCs don't interact after the final fight
+    if (ray->p.cutsceneViewed & TQS_FIGHT_COMPLETE)
+    {
+        return;
+    }
+
 #define CS_STYLE_BARRY (CS_STYLE_HYUT + 1)
     addCutsceneStyleBarryTheFairy(cutscene);
 

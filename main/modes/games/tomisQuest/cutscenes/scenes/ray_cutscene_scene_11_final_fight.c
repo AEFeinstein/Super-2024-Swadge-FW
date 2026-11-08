@@ -29,9 +29,35 @@ bool initCutsceneFinalFight(ray_t* ray, cutscene_t* cutscene, const char* title)
 
         // Initialize Styles
 
+#define CS_STYLE_UNKN (CS_STYLE_HYUT + 1)
+        addCutsceneStyleUnknown(cutscene);
+
+#define CS_STYLE_NARRATOR (CS_STYLE_UNKN + 1)
+        addCutsceneStyleNarrator(cutscene);
+
+#define CS_STYLE_HANK (CS_STYLE_NARRATOR + 1)
+        addCutsceneStyleHankW(cutscene);
+
         // clang-format off
 
         // Initialize lines
+
+        // [Tomi and Hyut enter a dark room.]
+        addCutsceneLine(cutscene, CS_STYLE_UNKN, "You have done well to make it this far, young fairy. But now... you must face your greatest challenge yet.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Ummmm... This isn't going to be a boss thing, is it?", false, TOMI_SUSPICIOUS, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_HYUT, "Hyaaaa!!", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "yeah, what they said!", false, TOMI_FIREDUP, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_UNKN, "Prepare yourself, young fairy. Your final trial begins now.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "Suddenly, out of the shadows emerges a demonic, phantom. The figure has a penguin's head, is clad in a suit, and carries a briefcase.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_HANK, "WHERE AM I? FOR WHAT HAVE I BEEN SUMMONED?", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Uhhh...", false, TOMI_EMBARASSED, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_HANK, "YOU!! FAIRY!", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Me?", false, TOMI_SUSPICIOUS, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_HANK, "DERIVATIVE!! UNORIGINAL!!", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_HYUT, "Hyaaa!!", false, HYUT_NEUTRAL, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_HANK, "CEASE AND DESIST THIS HACKNEYED NONSENSE AT ONCE!", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Hey, who are you calling derivative? Hyut, let's bust this loser up!", false, TOMI_ANGRY, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_HYUT, "HEEEYYAAAAAAA!!!!", false, HYUT_YELLING, endScene);
 
         // clang-format on
 

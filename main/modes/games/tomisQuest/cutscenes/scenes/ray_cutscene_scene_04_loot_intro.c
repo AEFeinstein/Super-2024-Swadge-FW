@@ -32,8 +32,8 @@ bool initCutsceneLootIntro(ray_t* ray, cutscene_t* cutscene, const char* title)
 #define CS_STYLE_LOOT (CS_STYLE_HYUT + 1)
         addCutsceneStyleLoot(cutscene);
 
-#define CS_STYLE_UNKNOWN (CS_STYLE_LOOT + 1)
-        addCutsceneStyle(cutscene, c000, TQ_LOOT_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "???", 1, true, false, true);
+#define CS_STYLE_UNKN (CS_STYLE_LOOT + 1)
+        addCutsceneStyleUnknown(cutscene);
 
         // clang-format off
 
@@ -46,7 +46,7 @@ bool initCutsceneLootIntro(ray_t* ray, cutscene_t* cutscene, const char* title)
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Do you know the way?", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_HYUT, "Hyuh! Hah!! Hyaa!", false, HYUT_YELLING, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Right... of course, I don't know what I was expecting.", false, TOMI_BORED, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_UNKNOWN, "Hoo hoo!! I know the way!", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_UNKN, "Hoo hoo!! I know the way!", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Who are you supposed to be?", false, TOMI_BORED, NULL);
         addCutsceneLine(cutscene, CS_STYLE_LOOT, "I'm Loot, hoo hoo! I'm here to guide you!", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Were you... were you just waiting for us? Are you like a stalker or something?", false, TOMI_SUSPICIOUS, NULL);

@@ -26,6 +26,7 @@
 #include "ray_cutscene_scene_14_dream_1.h"
 #include "ray_cutscene_scene_15_dream_2.h"
 #include "ray_cutscene_scene_16_dream_3.h"
+#include "ray_cutscene_scene_17_final_warp.h"
 
 static void rayCutsceneCb(void);
 
@@ -175,6 +176,7 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text)
             initCutsceneDream1,
             initCutsceneDream2,
             initCutsceneDream3,
+            initCutsceneFinalWarp,
         };
 
         bool sceneStarted = false;
@@ -268,4 +270,47 @@ void rayCutsceneRender(ray_t* ray, uint32_t elapsedUs)
 void addCutsceneStyleNarrator(cutscene_t* cutscene)
 {
     addCutsceneStyle(cutscene, c000, -1, CUTSCENE_TEXTBOX_WSG, "Narrator", 1, true, false, true);
+}
+
+/**
+ * @brief Add an unknown style to the cutscene
+ *
+ * @param cutscene The cutscene to add a style to
+ */
+void addCutsceneStyleUnknown(cutscene_t* cutscene)
+{
+    addCutsceneStyle(cutscene, c000, -1, CUTSCENE_TEXTBOX_WSG, "???", 1, true, false, true);
+}
+
+/**
+ * @brief Add Hank Waddledorf style to the cutscene
+ *
+ * @param cutscene The cutscene to add a style to
+ */
+void addCutsceneStyleHankW(cutscene_t* cutscene)
+{
+    addCutsceneStyle(cutscene, c000, TQ_WADDLEDORF_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "Hank Waddledorf", 1, true, true,
+                     true);
+}
+
+/**
+ * @brief Add Great Fairy style to the cutscene
+ *
+ * @param cutscene The cutscene to add a style to
+ */
+void addCutsceneStyleGreatFairy(cutscene_t* cutscene)
+{
+    addCutsceneStyle(cutscene, c000, TQ_GREAT_FAIRY_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "Great Fairy", 1, true, true,
+                     true);
+}
+
+/**
+ * @brief Add Great Fairies style to the cutscene
+ *
+ * @param cutscene The cutscene to add a style to
+ */
+void addCutsceneStyleGreatFairies(cutscene_t* cutscene)
+{
+    addCutsceneStyle(cutscene, c000, TQ_GREAT_FAIRIES_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "Great Fairies", 1, true,
+                     true, true);
 }
