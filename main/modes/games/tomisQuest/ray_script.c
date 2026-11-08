@@ -1082,8 +1082,10 @@ void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
 
                 if (LOCK == script->thenOp)
                 {
-                    ray->map.tiles[x][y].type     = BG_DOOR_SCRIPT_LOCKED;
-                    ray->map.tiles[x][y].doorType = BG_DOOR_SCRIPT_LOCKED;
+                    ray->map.tiles[x][y].type             = BG_DOOR_SCRIPT_LOCKED;
+                    ray->map.tiles[x][y].doorType         = BG_DOOR_SCRIPT_LOCKED;
+                    ray->map.tiles[x][y].openingDirection = 0;
+                    ray->map.tiles[x][y].doorOpen         = 0;
                 }
             }
             break;
