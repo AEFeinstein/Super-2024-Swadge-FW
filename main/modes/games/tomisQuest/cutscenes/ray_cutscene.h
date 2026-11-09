@@ -52,7 +52,7 @@ typedef enum
     TQS_PAIRING            = (1 << 1),
     TQS_HYUT_INTRO         = (1 << 2),
     TQS_HYUT_PAIRING       = (1 << 3),
-    TQS_LOOT_INTRO         = (1 << 4), // TODO not actually a cutscene?
+    TQS_LOOT_INTRO         = (1 << 4),
     TQS_DORIA_INTRO        = (1 << 5),
     TQS_DUNGEON_1_COMPLETE = (1 << 6),
     TQS_DUNGEON_2_COMPLETE = (1 << 7),

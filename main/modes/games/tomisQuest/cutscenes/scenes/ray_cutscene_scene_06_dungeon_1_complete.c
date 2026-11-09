@@ -57,7 +57,7 @@ bool initCutsceneDungeon1Complete(ray_t* ray, cutscene_t* cutscene, const char* 
         addCutsceneLine(cutscene, CS_STYLE_HYUT, "...", false, HYUT_NEUTRAL, NULL);
         addCutsceneLine(cutscene, CS_STYLE_DORIA, "Claim your prize then.", false, 0, NULL);
         // [Hyut opens the treasure chest:]
-        // TODO final instruction
+        // TODO update with final instructions
         addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "You got the Shield Drum! Tap the left touch strip to trigger a protective, color-coded barrier!", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_DORIA, "Tomi, this shield is one of the great Sacred Instruments. Use it wisely.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Sweet! Prizes!", false, TOMI_FIREDUP, NULL);
