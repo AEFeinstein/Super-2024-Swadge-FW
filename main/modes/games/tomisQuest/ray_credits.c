@@ -12,7 +12,7 @@
 
 // clang-format off
 /// @brief Credits text
-/// TODO update credits
+// TODO update credits
 static const creditsEntry_t rayCreditEntries[] = {
     {.name = "----------------\n", .color = c445},
     {.name = "Tomi's Quest\n",     .color = c445},

@@ -207,11 +207,11 @@ void rayEnemyNpcCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t 
 }
 
 /**
- * @brief TODO doc
+ * @brief Function called when an enemy is hit
  *
- * @param ray
- * @param enemy
- * @param bullet
+ * @param ray The whole game state
+ * @param enemy The enemy which was hit
+ * @param bullet The thing that hit the enemy
  */
 static void rayEnemyNpcGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
@@ -226,6 +226,7 @@ static void rayEnemyNpcGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t b
         }
         default:
         {
+            // Not damaged otherwise
             break;
         }
     }

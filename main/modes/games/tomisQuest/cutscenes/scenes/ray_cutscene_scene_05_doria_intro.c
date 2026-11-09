@@ -62,7 +62,7 @@ bool initCutsceneDoriaIntro(ray_t* ray, cutscene_t* cutscene, const char* title)
         addCutsceneLine(cutscene, CS_STYLE_DORIA, "Do you and your companion even understand each other? It seems they merely... follow you around.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "We've got a good thing going! They swipe their sword when I tell 'em to! And we got bombs, so that's pretty cool?", false, TOMI_COCKY, NULL);
         addCutsceneLine(cutscene, CS_STYLE_DORIA, "You lack even basic defensive training. You can't even JUMP.", false, 0, NULL);
-        // TODO final instruction
+        // TODO update with final instructions
         addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "Tap 'A' quickly to command Hyut to jump!", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "See? A jump. We're quick studies.", false, TOMI_COCKY, NULL);
         addCutsceneLine(cutscene, CS_STYLE_DORIA, "Sigh. I suppose we shall see. If you survive, I will see you again.", false, 0, NULL);

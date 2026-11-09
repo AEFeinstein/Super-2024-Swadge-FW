@@ -21,43 +21,6 @@ void addCutsceneStyleDoria(cutscene_t* cutscene)
  */
 void initNpcCutsceneDoria(ray_t* ray, cutscene_t* cutscene)
 {
-    // NPCs don't interact after the final fight
-    if (ray->p.cutsceneViewed & TQS_FIGHT_COMPLETE)
-    {
-        return;
-    }
-
-#define CS_STYLE_DORIA (CS_STYLE_HYUT + 1)
-    addCutsceneStyleDoria(cutscene);
-
-    if (!ray->p.i.haveEwiOfTime)
-    {
-        // Before getting Ewi
-        addCutsceneLine(cutscene, CS_STYLE_DORIA, "TODO", false, 0, NULL);
-    }
-    // After getting Ewi, before visiting Loot
-    else if (!(ray->p.cutsceneViewed & TQS_LOOT_INTRO))
-    {
-        addCutsceneLine(cutscene, CS_STYLE_DORIA, "TODO", false, 0, NULL);
-    }
-    // After visiting Loot, before getting shield
-    else if (!ray->p.i.haveShield)
-    {
-        addCutsceneLine(cutscene, CS_STYLE_DORIA, "TODO", false, 0, NULL);
-    }
-    // After getting shield, before getting turntables
-    else if (!ray->p.i.haveTurntables)
-    {
-        addCutsceneLine(cutscene, CS_STYLE_DORIA, "TODO", false, 0, NULL);
-    }
-    // After getting turntables, before getting lullaby
-    else if (!ray->p.i.haveDoriasLullaby)
-    {
-        addCutsceneLine(cutscene, CS_STYLE_DORIA, "TODO", false, 0, NULL);
-    }
-    // After getting lullaby
-    else
-    {
-        addCutsceneLine(cutscene, CS_STYLE_DORIA, "TODO", false, 0, NULL);
-    }
+    // Doria isn't an interactble NPC, she's only in cutscenes.
+    return;
 }
