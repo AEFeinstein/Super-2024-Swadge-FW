@@ -779,8 +779,10 @@ typedef struct
 
     wsg_t* sprite;
     wsg_t* spriteTomi;
-    wsg_t* spriteHyut;
+    wsg_t* spritesHyut[4];
     wsg_t* ewiOfTime;
+    int32_t animTimer;
+    int32_t spriteIdx;
 
     /// @brief A mask of keys held for the current map
     struct

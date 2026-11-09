@@ -14,6 +14,9 @@ typedef struct
     vec_q24_8 dir;      ///< The direction the hyut is facing
     int32_t dirTimer;   ///< A timer to randomly pick new directions to face
     int32_t deathTimer; ///< A timer to die
+    wsg_t* sprites[4];  ///< Sprites
+    int32_t animTimer;  ///< Timer for animation
+    int32_t spriteIdx;  ///< Index for animation
 } hyutState_t;
 
 //==============================================================================
@@ -37,15 +40,22 @@ static void rayEnemyHyutPickDirection(rayPlayer_t* player, rayEnemy_t* enemy);
  */
 void rayInitEnemyHyut(ray_t* ray, rayEnemy_t* e)
 {
-    // Hyut has one texture, for now
-    e->c.sprite = loadTexture(ray, OBJ_ENEMY_NPC_HYUT_WSG, OBJ_ENEMY_NPC_HYUT);
-    e->portrait = e->c.sprite;
-
     // Hyut has 1hp and dies on a timer
     e->health = 1;
 
     // Allocate state for this enemy
     e->state = heap_caps_calloc(1, sizeof(hyutState_t), MALLOC_CAP_8BIT);
+
+    // Allocate sprites
+    hyutState_t* hs = (hyutState_t*)e->state;
+    hs->sprites[0]  = loadTexture(ray, HYUT_0_WSG, OBJ_ENEMY_NPC_HYUT);
+    hs->sprites[1]  = loadTexture(ray, HYUT_1_WSG, EMPTY);
+    hs->sprites[2]  = loadTexture(ray, HYUT_2_WSG, EMPTY);
+    hs->sprites[3]  = loadTexture(ray, HYUT_3_WSG, EMPTY);
+
+    // Set sprites
+    e->c.sprite = hs->sprites[0];
+    e->portrait = e->c.sprite;
 
     // Set function pointers
     e->mainFn           = rayEnemyHyutMain;
@@ -109,6 +119,15 @@ bool rayEnemyHyutMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 
         // Change direction three seconds
         RUN_TIMER_EVERY(state->dirTimer, 3 * 1000000, elapsedUs, { rayEnemyHyutPickDirection(&ray->p, enemy); });
+
+        RUN_TIMER_EVERY(state->animTimer, 125000, elapsedUs, {
+            state->spriteIdx++;
+            if (state->spriteIdx >= ARRAY_SIZE(state->sprites))
+            {
+                state->spriteIdx = 0;
+            }
+            enemy->c.sprite = state->sprites[state->spriteIdx];
+        });
 
         // Move twice as fast as than the player
         vec_q24_8 delta = {

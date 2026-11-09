@@ -71,12 +71,15 @@ bool initializePlayer(ray_t* ray)
     }
 
     // Load sprites
-    ray->ps.spriteTomi = loadTexture(ray, ZORLDO_MENU_TOMI_WSG, EMPTY);
-    ray->ps.spriteHyut = loadTexture(ray, HYUT_WSG, EMPTY);
-    ray->ps.ewiOfTime  = loadTexture(ray, EWI_OF_TIME_WSG, EMPTY);
+    ray->ps.spriteTomi     = loadTexture(ray, ZORLDO_MENU_TOMI_WSG, EMPTY);
+    ray->ps.spritesHyut[0] = loadTexture(ray, HYUT_0_WSG, EMPTY);
+    ray->ps.spritesHyut[1] = loadTexture(ray, HYUT_1_WSG, EMPTY);
+    ray->ps.spritesHyut[2] = loadTexture(ray, HYUT_2_WSG, EMPTY);
+    ray->ps.spritesHyut[3] = loadTexture(ray, HYUT_3_WSG, EMPTY);
+    ray->ps.ewiOfTime      = loadTexture(ray, EWI_OF_TIME_WSG, EMPTY);
     if (ray->p.i.haveEwiOfTime)
     {
-        ray->ps.sprite = ray->ps.spriteHyut;
+        ray->ps.sprite = ray->ps.spritesHyut[0];
     }
     else
     {
@@ -451,6 +454,20 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
     {
         ray->ps.iFrameTimer -= elapsedUs;
     }
+
+    // If the player isn't Tomi
+    if (ray->ps.sprite != ray->ps.spriteTomi)
+    {
+        // Animate Hyut
+        RUN_TIMER_EVERY(ray->ps.animTimer, 250000, elapsedUs, {
+            ray->ps.spriteIdx++;
+            if (ray->ps.spriteIdx >= ARRAY_SIZE(ray->ps.spritesHyut))
+            {
+                ray->ps.spriteIdx = 0;
+            }
+            ray->ps.sprite = ray->ps.spritesHyut[ray->ps.spriteIdx];
+        });
+    }
 }
 
 /**
@@ -624,7 +641,7 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
         case OBJ_ITEM_EWI:
         {
             inventory->haveEwiOfTime = true;
-            ray->ps.sprite           = ray->ps.spriteHyut;
+            ray->ps.sprite           = ray->ps.spritesHyut[0];
             break;
         }
         case OBJ_ITEM_BOMB:
@@ -1074,17 +1091,21 @@ int32_t rayPlayerIsShielding(ray_t* ray)
 /**
  * @brief Get a bounding box for the player
  *
- * TODO account for sprite rotation
- *
  * @param ray The entire game state
  * @return The bounding box for the player
  */
 rectangle_t rayGetPlayerBB(ray_t* ray)
 {
+    // Hyut is 20x20, so ignore rotation
+
+    // Hardcode numbers to avoid math. TO_FX(1) is 20px
+    // Subtracting 13 is a hair more than 1px (12.8) and is necessary so Hyut can slide through 20px doors
+    static const int32_t sz = TO_FX(1) - 13;
+
     rectangle_t bb;
-    bb.width  = (ray->ps.sprite->w * 256) / CELL_SIZE;
-    bb.height = (ray->ps.sprite->h * 256) / CELL_SIZE;
-    bb.pos.x  = (ray->p.posX) - (bb.width / 2);
-    bb.pos.y  = (ray->p.posY) - (bb.height / 2);
+    bb.width  = sz;
+    bb.height = sz;
+    bb.pos.x  = (ray->p.posX) - (sz / 2);
+    bb.pos.y  = (ray->p.posY) - (sz / 2);
     return bb;
 }
