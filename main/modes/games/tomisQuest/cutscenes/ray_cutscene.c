@@ -27,6 +27,7 @@
 #include "ray_cutscene_scene_15_dream_2.h"
 #include "ray_cutscene_scene_16_dream_3.h"
 #include "ray_cutscene_scene_17_final_warp.h"
+#include "ray_cutscene_scene_18_statue.h"
 
 static void rayCutsceneCb(void);
 
@@ -177,6 +178,7 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text)
             initCutsceneDream2,
             initCutsceneDream3,
             initCutsceneFinalWarp,
+            initCutsceneStatue,
         };
 
         bool sceneStarted = false;
