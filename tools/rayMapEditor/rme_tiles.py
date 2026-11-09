@@ -175,7 +175,7 @@ class tileType(Enum):
     OBJ_ITEM_G_KEY = OBJ | ITEM | 14
     OBJ_ITEM_B_KEY = OBJ | ITEM | 15
     OBJ_ITEM_K_KEY = OBJ | ITEM | 16
-    OBJ_ITEM_17 = OBJ | ITEM | 17
+    OBJ_ITEM_HEART_CONTAINER = OBJ | ITEM | 17
     OBJ_ITEM_18 = OBJ | ITEM | 18
     OBJ_ITEM_19 = OBJ | ITEM | 19
     OBJ_ITEM_20 = OBJ | ITEM | 20
@@ -383,7 +383,7 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ITEM_G_KEY,
         tileType.OBJ_ITEM_B_KEY,
         tileType.OBJ_ITEM_K_KEY,
-        tileType.OBJ_ITEM_17,
+        tileType.OBJ_ITEM_HEART_CONTAINER,
         tileType.OBJ_ITEM_18,
         tileType.OBJ_ITEM_19,
         tileType.OBJ_ITEM_20,

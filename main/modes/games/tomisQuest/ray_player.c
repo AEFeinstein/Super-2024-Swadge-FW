@@ -704,6 +704,7 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
         case OBJ_ITEM_G_KEY:
         case OBJ_ITEM_B_KEY:
         case OBJ_ITEM_K_KEY:
+        case OBJ_ITEM_HEART_CONTAINER:
         {
             for (int idx = 0; idx < ARRAY_SIZE(ray->p.i.items); idx++)
             {
@@ -738,6 +739,12 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
                             ray->ps.keyMask.k_key = true;
                             break;
                         }
+                        case OBJ_ITEM_HEART_CONTAINER:
+                        {
+                            ray->p.maxHealth++;
+                            ray->p.health = ray->p.maxHealth;
+                            break;
+                        }
                         default:
                         {
                             break;
@@ -748,7 +755,6 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
             }
             break;
         }
-        // TODO heart pieces
         default:
         {
             // Don't care about other types
