@@ -33,7 +33,6 @@
 #include "beancatch.h"
 #include "bombadeetle.h"
 #include "canvas.h"
-#include "swadgeClock.h"
 #include "colorchord.h"
 #include "dance.h"
 #include "factoryTest.h"

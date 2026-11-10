@@ -28,7 +28,6 @@ static uint8_t ledBrightness                   = 0;
 static led_t currentLeds[CONFIG_NUM_LEDS]      = {0};
 static led_t prePowerDownLeds[CONFIG_NUM_LEDS] = {0};
 static led_t dimmedLeds[CONFIG_NUM_LEDS]       = {0};
-static bool leds_enabled                       = false;
 
 //==============================================================================
 // Functions
@@ -44,47 +43,43 @@ static bool leds_enabled                       = false;
  */
 esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt, uint8_t brightness)
 {
-    if (!leds_enabled)
+    setLedBrightness(brightness);
+
+    rmt_tx_channel_config_t tx_chan_config = {
+        .clk_src           = RMT_CLK_SRC_DEFAULT, // select source clock
+        .gpio_num          = gpio,
+        .mem_block_symbols = 64, // increase the block size can make the LED less flickering
+        .resolution_hz     = RMT_LED_STRIP_RESOLUTION_HZ,
+        .trans_queue_depth = 4, // set the number of transactions that can be pending in the background
+    };
+    ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &led_chan));
+
+    led_strip_encoder_config_t encoder_config = {
+        .resolution = RMT_LED_STRIP_RESOLUTION_HZ,
+    };
+    ESP_ERROR_CHECK(rmt_new_led_strip_encoder(&encoder_config, &led_encoder));
+
+    ESP_ERROR_CHECK(rmt_enable(led_chan));
+
+    if (GPIO_NUM_NC != gpioAlt)
     {
-        setLedBrightness(brightness);
-
-        rmt_tx_channel_config_t tx_chan_config = {
-            .clk_src           = RMT_CLK_SRC_DEFAULT, // select source clock
-            .gpio_num          = gpio,
-            .mem_block_symbols = 64, // increase the block size can make the LED less flickering
-            .resolution_hz     = RMT_LED_STRIP_RESOLUTION_HZ,
-            .trans_queue_depth = 4, // set the number of transactions that can be pending in the background
+        /* Initialize the GPIO of mirrored LED pin */
+        gpio_config_t mirror_gpio_config = {
+            .mode         = GPIO_MODE_OUTPUT,
+            .pin_bit_mask = 1ULL << gpioAlt,
+            .pull_up_en   = GPIO_PULLUP_ENABLE,
+            .pull_down_en = GPIO_PULLDOWN_DISABLE,
+            .intr_type    = GPIO_INTR_DISABLE,
         };
-        ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &led_chan));
+        ESP_ERROR_CHECK(gpio_config(&mirror_gpio_config));
 
-        led_strip_encoder_config_t encoder_config = {
-            .resolution = RMT_LED_STRIP_RESOLUTION_HZ,
-        };
-        ESP_ERROR_CHECK(rmt_new_led_strip_encoder(&encoder_config, &led_encoder));
-
-        ESP_ERROR_CHECK(rmt_enable(led_chan));
-        leds_enabled = true;
-
-        if (GPIO_NUM_NC != gpioAlt)
-        {
-            /* Initialize the GPIO of mirrored LED pin */
-            gpio_config_t mirror_gpio_config = {
-                .mode         = GPIO_MODE_OUTPUT,
-                .pin_bit_mask = 1ULL << gpioAlt,
-                .pull_up_en   = GPIO_PULLUP_ENABLE,
-                .pull_down_en = GPIO_PULLDOWN_DISABLE,
-                .intr_type    = GPIO_INTR_DISABLE,
-            };
-            ESP_ERROR_CHECK(gpio_config(&mirror_gpio_config));
-
-            // Mirror the output to another GPIO
-            // Warning, this is a hack!! led_chan is a (rmt_channel_handle_t), which is
-            // really a (rmt_channel_t *), and that struct has a private definition in
-            // rmt_private.h. "int channel_id" happens to be the first struct member, so
-            // it is accessed using *((int*)led_chan). If the private struct ever
-            // changes, this will break!!!
-            esp_rom_gpio_connect_out_signal(gpioAlt, RMT_SIG_OUT0_IDX + *((int*)led_chan), false, false);
-        }
+        // Mirror the output to another GPIO
+        // Warning, this is a hack!! led_chan is a (rmt_channel_handle_t), which is
+        // really a (rmt_channel_t *), and that struct has a private definition in
+        // rmt_private.h. "int channel_id" happens to be the first struct member, so
+        // it is accessed using *((int*)led_chan). If the private struct ever
+        // changes, this will break!!!
+        esp_rom_gpio_connect_out_signal(gpioAlt, RMT_SIG_OUT0_IDX + *((int*)led_chan), false, false);
     }
     return ESP_OK;
 }
@@ -107,22 +102,18 @@ esp_err_t deinitLeds(void)
  */
 void powerDownLed(void)
 {
-    if (leds_enabled)
-    {
-        // Save LED state
-        memcpy(prePowerDownLeds, currentLeds, sizeof(currentLeds));
+    // Save LED state
+    memcpy(prePowerDownLeds, currentLeds, sizeof(currentLeds));
 
-        // Turn LEDs off
-        led_t leds[CONFIG_NUM_LEDS] = {0};
-        setLeds(leds, CONFIG_NUM_LEDS);
+    // Turn LEDs off
+    led_t leds[CONFIG_NUM_LEDS] = {0};
+    setLeds(leds, CONFIG_NUM_LEDS);
 
-        // Flush the transaction to not glitch
-        flushLeds();
+    // Flush the transaction to not glitch
+    flushLeds();
 
-        // Disable RMT
-        ESP_ERROR_CHECK(rmt_disable(led_chan));
-        leds_enabled = false;
-    }
+    // Disable RMT
+    ESP_ERROR_CHECK(rmt_disable(led_chan));
 }
 
 /**
@@ -130,15 +121,11 @@ void powerDownLed(void)
  */
 void powerUpLed(void)
 {
-    if (!leds_enabled)
-    {
-        // Enable RMT
-        ESP_ERROR_CHECK(rmt_enable(led_chan));
-        leds_enabled = true;
+    // Enable RMT
+    ESP_ERROR_CHECK(rmt_enable(led_chan));
 
-        // Restore LEDs
-        setLeds(prePowerDownLeds, CONFIG_NUM_LEDS);
-    }
+    // Restore LEDs
+    setLeds(prePowerDownLeds, CONFIG_NUM_LEDS);
 }
 
 /**

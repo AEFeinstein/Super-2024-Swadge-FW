@@ -53,7 +53,7 @@ esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup
  *
  * @return esp_err_t
  */
-esp_err_t deinitAccelerometer(void)
+esp_err_t deInitAccelerometer(void)
 {
     accelInit = false;
     return ESP_OK;

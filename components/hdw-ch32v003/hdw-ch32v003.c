@@ -527,15 +527,9 @@ void ch32v003Tick()
             // Clear register, let 003 know we're waiting for more data.
 
             // Bridge Emily's world to Adam's world.
-            g_ch32v003_buttons =        //
-                ((!!(b & 0x01)) << 0) | // PB_UP
-                ((!!(b & 0x08)) << 1) | // PB_DOWN
-                ((!!(b & 0x02)) << 2) | // PB_LEFT
-                ((!!(b & 0x10)) << 3) | // PB_RIGHT
-                ((!!(b & 0x80)) << 4) | // PB_A
-                ((!!(b & 0x40)) << 5) | // PB_B
-                ((!!(b & 0x04)) << 6) | // PB_START
-                ((!!(b & 0x20)) << 7);  // PB_SELECT
+            g_ch32v003_buttons = ((!!(b & 0x01)) << 0) | ((!!(b & 0x08)) << 1) | ((!!(b & 0x02)) << 2)
+                                 | ((!!(b & 0x10)) << 3) | ((!!(b & 0x40)) << 4) | ((!!(b & 0x80)) << 5)
+                                 | ((!!(b & 0x20)) << 6) | ((!!(b & 0x04)) << 7);
 
 #ifdef CONFIG_HARDWARE_FAIRY_PROTO
             MCFWriteReg32(dev, DMDATA0, 1);

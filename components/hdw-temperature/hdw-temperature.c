@@ -33,12 +33,9 @@ void initTemperatureSensor(void)
  */
 void deinitTemperatureSensor(void)
 {
-    if (temp_sensor)
-    {
-        ESP_ERROR_CHECK(temperature_sensor_disable(temp_sensor));
-        ESP_ERROR_CHECK(temperature_sensor_uninstall(temp_sensor));
-        temp_sensor = NULL;
-    }
+    ESP_ERROR_CHECK(temperature_sensor_disable(temp_sensor));
+    ESP_ERROR_CHECK(temperature_sensor_uninstall(temp_sensor));
+    temp_sensor = NULL;
 }
 
 /**
