@@ -144,6 +144,7 @@ static bool tud_hid_n_gamepad_report_ns(uint8_t instance, uint8_t report_id, int
 // Variables
 //==============================================================================
 
+static bool tUsbInit                      = false;
 fnAdvancedUsbHandler advancedUsbHandler   = NULL;
 fnSetSwadgeMode setSwadgeMode             = NULL;
 bool redirectPrintf                       = false;
@@ -202,9 +203,13 @@ void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHa
  */
 void initTusb(const tinyusb_config_t* config, const uint8_t* descriptor)
 {
-    c_tusb_cfg   = config;
-    c_descriptor = descriptor;
-    ESP_ERROR_CHECK(tinyusb_driver_install(c_tusb_cfg));
+    if (!tUsbInit)
+    {
+        c_tusb_cfg   = config;
+        c_descriptor = descriptor;
+        ESP_ERROR_CHECK(tinyusb_driver_install(c_tusb_cfg));
+        tUsbInit = true;
+    }
 }
 
 /**
@@ -212,7 +217,11 @@ void initTusb(const tinyusb_config_t* config, const uint8_t* descriptor)
  */
 void deinitUsb(void)
 {
-    ESP_ERROR_CHECK(tinyusb_driver_uninstall());
+    if (tUsbInit)
+    {
+        ESP_ERROR_CHECK(tinyusb_driver_uninstall());
+        tUsbInit = false;
+    }
     return;
 }
 

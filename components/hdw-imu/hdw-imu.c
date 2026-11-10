@@ -416,7 +416,7 @@ do_retry:
  *
  * @return ESP_OK
  */
-esp_err_t deInitAccelerometer(void)
+esp_err_t deinitAccelerometer(void)
 {
     return ESP_OK;
 }

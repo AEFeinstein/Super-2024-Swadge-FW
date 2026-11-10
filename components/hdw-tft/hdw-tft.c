@@ -295,7 +295,9 @@ void deinitTFT(void)
     disableTFTBacklight();
 
     esp_lcd_panel_del(panel_handle);
+    panel_handle = NULL;
     esp_lcd_panel_io_del(tft_io_handle);
+    tft_io_handle = NULL;
     spi_bus_free(tftSpiHost);
 
     for (int i = 0; i < NUM_S_LINES; i++)
@@ -341,12 +343,15 @@ paletteColor_t* getPxTftFramebuffer(void)
  */
 void disableTFTBacklight(void)
 {
+    if (tft_io_handle)
+    {
 #if defined(CONFIG_GC9307_240x280)
-    // Display OFF
-    esp_lcd_panel_io_tx_param(tft_io_handle, 0x28, NULL, 0);
-    // Enter sleep mode
-    esp_lcd_panel_io_tx_param(tft_io_handle, 0x10, NULL, 0);
+        // Display OFF
+        esp_lcd_panel_io_tx_param(tft_io_handle, 0x28, NULL, 0);
+        // Enter sleep mode
+        esp_lcd_panel_io_tx_param(tft_io_handle, 0x10, NULL, 0);
 #endif
+    }
 
     ledc_stop(LEDC_LOW_SPEED_MODE, tftLedcChannel, 0);
     gpio_reset_pin(tftBacklightPin);

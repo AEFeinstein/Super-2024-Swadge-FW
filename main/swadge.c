@@ -231,6 +231,7 @@
 #include <rom/usb/chip_usb_dw_wrapper.h>
 #include <soc/rtc_cntl_reg.h>
 #include <soc/gpio_num.h>
+#include <driver/rtc_io.h>
 
 #include "advanced_usb_control.h"
 #include "shapes.h"
@@ -243,6 +244,7 @@
 #include "midiPlayer.h"
 #include "introMode.h"
 #include "nameList.h"
+#include "swadgeClock.h"
 
 //==============================================================================
 // Defines
@@ -310,6 +312,9 @@ void app_main(void)
     uart_set_pin(UART_NUM_0, GPIO_SAO_B, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 #endif
 
+    // Set the default time if time hasn't been set
+    setDefaultTime();
+
     // Init NVS. Do this first to get test mode status and crashwrap logs
     initNvs(true);
 
@@ -346,11 +351,34 @@ void app_main(void)
     }
 
     // If the ESP woke from sleep, and there is a pending Swadge Mode
-    if ((ESP_SLEEP_WAKEUP_TIMER == esp_sleep_get_wakeup_cause()) && (NULL != pendingSwadgeMode))
+    switch (esp_sleep_get_wakeup_cause())
     {
-        // Use the pending mode
-        cSwadgeMode       = pendingSwadgeMode;
-        pendingSwadgeMode = NULL;
+        case ESP_SLEEP_WAKEUP_TIMER:
+        {
+            if (NULL != pendingSwadgeMode)
+            {
+                // Use the pending mode
+                cSwadgeMode       = pendingSwadgeMode;
+                pendingSwadgeMode = NULL;
+            }
+            break;
+        }
+        case ESP_SLEEP_WAKEUP_EXT0:
+        {
+            for (gpio_num_t gpio = GPIO_NUM_0; gpio < SOC_RTCIO_PIN_COUNT; gpio++)
+            {
+                if ((gpio_num_t)GPIO_SLEEP != gpio)
+                {
+                    rtc_gpio_hold_dis(gpio);
+                }
+            }
+            break;
+        }
+        default:
+        {
+            // Unknown wake reason...
+            break;
+        }
     }
 
     // Init USB if not overridden by the mode. This also sets up USB printf
@@ -667,6 +695,16 @@ void app_main(void)
             pendingSwadgeMode = NULL;
             // Deinitialize everything (including the swadge mode)
             deinitSystem();
+            powerDownPeripherals();
+
+            // Isolate all GPIO except for the sleep pin
+            for (gpio_num_t gpio = GPIO_NUM_0; gpio < SOC_RTCIO_PIN_COUNT; gpio++)
+            {
+                if ((gpio_num_t)GPIO_SLEEP != gpio)
+                {
+                    rtc_gpio_isolate(gpio);
+                }
+            }
             // Sleep until the switch wakes the swadge
             esp_deep_sleep_start();
         }
@@ -757,16 +795,19 @@ void deinitSystem(void)
         cSwadgeMode->fnExitMode();
     }
 
-    // Deinitialize everything
+    // Deinit software
+    deinitGlobalMidiPlayer();
+    deinitCnfs();
+
+    // Deinitialize hardware components
+    deinitAccelerometer();
     deinitButtons();
     deinitTouchPads();
-    deinitGlobalMidiPlayer();
     deinitDac();
     deinitEspNow();
     deinitLeds();
     deinitMic();
     deinitNvs();
-    deinitCnfs();
     deinitTemperatureSensor();
     deinitTFT();
     deinitUsb();
