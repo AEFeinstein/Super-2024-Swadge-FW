@@ -1,3 +1,4 @@
 idf_component_register(SRCS "hdw-btn.c"
                     INCLUDE_DIRS "include"
-                    REQUIRES driver esp_timer)
+                    REQUIRES driver esp_timer
+                    PRIV_REQUIRES hdw-ch32v003)

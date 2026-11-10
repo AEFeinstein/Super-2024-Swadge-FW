@@ -114,9 +114,6 @@ static int16_t rBufHead = 0;
 /// The index for the esp-now serial communication ringbuffer's tail
 static int16_t rBufTail = 0;
 
-/// true if ESP-NOW is initialized, false otherwise
-static bool espNowInit = false;
-
 //==============================================================================
 // Prototypes
 //==============================================================================
@@ -156,30 +153,24 @@ static esp_err_t espNowDeinitUart(void);
 esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_num_t rx, gpio_num_t tx,
                      uart_port_t uart, wifiMode_t wifiMode)
 {
-    if (!espNowInit)
+    // Save callback functions
+    hostEspNowRecvCb = recvCb;
+    hostEspNowSendCb = sendCb;
+
+    // Save serial config
+    rxGpio  = rx;
+    txGpio  = tx;
+    uartNum = uart;
+    mode    = wifiMode;
+
+    if (ESP_NOW_IMMEDIATE != mode && NULL == esp_now_queue)
     {
-        // Save callback functions
-        hostEspNowRecvCb = recvCb;
-        hostEspNowSendCb = sendCb;
-
-        // Save serial config
-        rxGpio  = rx;
-        txGpio  = tx;
-        uartNum = uart;
-        mode    = wifiMode;
-
-        if (ESP_NOW_IMMEDIATE != mode && NULL == esp_now_queue)
-        {
-            // Create a queue to move packets from the receive callback to the main task
-            esp_now_queue = xQueueCreate(10, sizeof(espNowPacket_t));
-        }
-
-        connectionMode = CM_NOT_CONNECTED;
-        esp_err_t ret  = espNowUseWireless();
-        espNowInit     = (ret == ESP_OK);
-        return ret;
+        // Create a queue to move packets from the receive callback to the main task
+        esp_now_queue = xQueueCreate(10, sizeof(espNowPacket_t));
     }
-    return ESP_OK;
+
+    connectionMode = CM_NOT_CONNECTED;
+    return espNowUseWireless();
 }
 
 /**
@@ -187,26 +178,21 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
  */
 void deinitEspNow(void)
 {
-    if (espNowInit)
+    if (CM_SERIAL == connectionMode)
     {
-        if (CM_SERIAL == connectionMode)
-        {
-            espNowDeinitUart();
-        }
-        else if (CM_WIRELESS == connectionMode)
-        {
-            espNowStopEspNow();
-            espNowStopWifi();
-            espNowDeinitWifi();
-        }
+        espNowDeinitUart();
+    }
+    else if (CM_WIRELESS == connectionMode)
+    {
+        espNowStopEspNow();
+        espNowStopWifi();
+        espNowDeinitWifi();
+    }
 
-        if (esp_now_queue)
-        {
-            vQueueDelete(esp_now_queue);
-            esp_now_queue = NULL;
-        }
-
-        espNowInit = false;
+    if (esp_now_queue)
+    {
+        vQueueDelete(esp_now_queue);
+        esp_now_queue = NULL;
     }
 }
 

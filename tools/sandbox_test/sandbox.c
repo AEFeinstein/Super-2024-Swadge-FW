@@ -13,10 +13,11 @@
 #include "soc/gpio_reg.h"
 #include "coreutil.h"
 #include "hdw-btn.h"
+#include "menuZorldoRenderer.h"
 
 int global_i = 100;
 menu_t * menu;
-menuMegaRenderer_t* menuMegaRenderer;
+menuZorldoRenderer_t* menuZorldoRenderer;
 font_t logbook;
 int testmode = 0;
 const char * menu_Bootload = "Bootloader";
@@ -82,9 +83,9 @@ void sandbox_main(void)
     addSingleItemToMenu(menu, mainMenuMode.modeName);
     addSingleItemToMenu(menu, menu_Bootload);
     loadFont(LOGBOOK_FONT, &logbook, false);
-    menuMegaRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    menuZorldoRenderer = initMenuZorldoRenderer(NULL, NULL);
 
-    loadWsg(HP_BOTTOM_BIGMA_WSG, &example_sprite, true);
+    loadWsg(H_MOHAWK_WSG, &example_sprite, true);
 #endif
 
     ESP_LOGI( "sandbox", "Loaded" );
@@ -177,7 +178,7 @@ void sandbox_tick()
 	}
 	else
 	{
-	    drawMenuMega(menu, menuMegaRenderer, 1);
+	    drawMenuZorldo(menu, menuZorldoRenderer, 1);
 	}
 
     buttonEvt_t evt              = {0};

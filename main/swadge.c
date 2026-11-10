@@ -107,7 +107,6 @@
  * \subsection led_api LED APIs
  *
  * - hdw-led.h: Learn how to use the LEDs
- * - hdw-ch32v003.h: The matrix array driver on the 2026 Swadge
  * - Colorchord
  *     - embeddedNf.h: The core Colorchord algorithm
  *     - embeddedOut.h: Set LEDs by Colorchord Data
@@ -232,7 +231,6 @@
 #include <rom/usb/chip_usb_dw_wrapper.h>
 #include <soc/rtc_cntl_reg.h>
 #include <soc/gpio_num.h>
-#include <driver/rtc_io.h>
 
 #include "advanced_usb_control.h"
 #include "shapes.h"
@@ -245,7 +243,6 @@
 #include "midiPlayer.h"
 #include "introMode.h"
 #include "nameList.h"
-#include "swadgeClock.h"
 
 //==============================================================================
 // Defines
@@ -313,9 +310,6 @@ void app_main(void)
     uart_set_pin(UART_NUM_0, GPIO_SAO_B, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 #endif
 
-    // Set the default time if time hasn't been set
-    setDefaultTime();
-
     // Init NVS. Do this first to get test mode status and crashwrap logs
     initNvs(true);
 
@@ -352,34 +346,11 @@ void app_main(void)
     }
 
     // If the ESP woke from sleep, and there is a pending Swadge Mode
-    switch (esp_sleep_get_wakeup_cause())
+    if ((ESP_SLEEP_WAKEUP_TIMER == esp_sleep_get_wakeup_cause()) && (NULL != pendingSwadgeMode))
     {
-        case ESP_SLEEP_WAKEUP_TIMER:
-        {
-            if (NULL != pendingSwadgeMode)
-            {
-                // Use the pending mode
-                cSwadgeMode       = pendingSwadgeMode;
-                pendingSwadgeMode = NULL;
-            }
-            break;
-        }
-        case ESP_SLEEP_WAKEUP_EXT0:
-        {
-            for (gpio_num_t gpio = GPIO_NUM_0; gpio < SOC_RTCIO_PIN_COUNT; gpio++)
-            {
-                if ((gpio_num_t)GPIO_SLEEP != gpio)
-                {
-                    rtc_gpio_hold_dis(gpio);
-                }
-            }
-            break;
-        }
-        default:
-        {
-            // Unknown wake reason...
-            break;
-        }
+        // Use the pending mode
+        cSwadgeMode       = pendingSwadgeMode;
+        pendingSwadgeMode = NULL;
     }
 
     // Init USB if not overridden by the mode. This also sets up USB printf
@@ -409,6 +380,12 @@ void app_main(void)
     // Initialize sleep switch
     initSleepSwitch(GPIO_SLEEP);
 
+    // Initialize CH32, if it exists
+    if (GPIO_NUM_NC != (gpio_num_t)GPIO_CH32_PROG)
+    {
+        initCh32v003(GPIO_CH32_PROG);
+    }
+
 #if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
     // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
@@ -423,10 +400,10 @@ void app_main(void)
     };
     initButtons(pushButtons, ARRAY_SIZE(pushButtons));
 #else
-    #warning "TODO Handle CH32 Buttons on Fairy. Classic button init left in place for the emulator"
-    #if !defined(__XTENSA__)
+    // On the ch32v003, buttons are exported from the ch32v003 driver.
+    // ch32v003RunBinaryAsset(DEEP_SLEEP_CFUN_BIN);
+    ch32v003RunBinaryAsset(FIRMWARE_CFUN_BIN);
     initButtons(NULL, 0);
-    #endif
 #endif
 
 #if defined(CONFIG_HARDWARE_WAVEBIRD)
@@ -504,12 +481,6 @@ void app_main(void)
 #endif
     initLeds(GPIO_LED, ledMirrorGpio, getLedBrightnessSetting());
 
-    // Initialize CH32, if it exists
-    if (GPIO_NUM_NC != (gpio_num_t)GPIO_CH32_PROG)
-    {
-        initCh32v003(GPIO_CH32_PROG);
-    }
-
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();
 
@@ -579,6 +550,13 @@ void app_main(void)
         {
             checkEspNowRxQueue();
         }
+
+        // This pulls all data from the ch32v003, like button presses, touch, etc.
+        // and, it provides printf if need be.
+        ch32v003Tick();
+
+        // Have the ESP poll the CH32 for button input
+        checkCh32Buttons();
 
         // Only draw to the TFT every frameRateUs
         static uint64_t tAccumDraw = 0;
@@ -683,26 +661,15 @@ void app_main(void)
         // If the switch says it's time to sleep
         if (sleepSwitchShouldSleep())
         {
+            // Sleep the ch32
+            ch32v003RunBinaryAsset(DEEP_SLEEP_CFUN_BIN);
             // Don't start a specific mode when awoken
             pendingSwadgeMode = NULL;
             // Deinitialize everything (including the swadge mode)
             deinitSystem();
-            powerDownPeripherals();
-
-            // Isolate all GPIO except for the sleep pin
-            for (gpio_num_t gpio = GPIO_NUM_0; gpio < SOC_RTCIO_PIN_COUNT; gpio++)
-            {
-                if ((gpio_num_t)GPIO_SLEEP != gpio)
-                {
-                    rtc_gpio_isolate(gpio);
-                }
-            }
             // Sleep until the switch wakes the swadge
             esp_deep_sleep_start();
         }
-
-        // If you want to allow printf() from the ch32v003, you can call this. Note that it takes about 40us every time
-        // it's called. ch32v003CheckTerminal();
 
         // Yield to let the rest of the RTOS run
         taskYIELD();
@@ -772,8 +739,6 @@ static void initOptionalPeripherals(void)
 #if defined(CONFIG_HARDWARE_PULSE)
     // Load some default firmware that blinks eyes
     ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
-#elif defined(CONFIG_HARDWARE_FAIRY_PROTO)
-    #warning "TODO load CH32 firmware for button handling with ch32v003RunBinaryAsset()"
 #endif
 }
 
@@ -792,19 +757,16 @@ void deinitSystem(void)
         cSwadgeMode->fnExitMode();
     }
 
-    // Deinit software
-    deinitGlobalMidiPlayer();
-    deinitCnfs();
-
-    // Deinitialize hardware components
-    deinitAccelerometer();
+    // Deinitialize everything
     deinitButtons();
     deinitTouchPads();
+    deinitGlobalMidiPlayer();
     deinitDac();
     deinitEspNow();
     deinitLeds();
     deinitMic();
     deinitNvs();
+    deinitCnfs();
     deinitTemperatureSensor();
     deinitTFT();
     deinitUsb();
