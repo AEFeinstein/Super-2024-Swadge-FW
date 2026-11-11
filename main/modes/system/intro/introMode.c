@@ -69,7 +69,11 @@ static const char quickmnuTitle[] = "Quick Settings";
 static const char pauseBtnTitle[] = "Pause Button";
 static const char spkTitle[]      = "Speaker";
 static const char micTitle[]      = "Microphone";
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+static const char touchpadTitle[] = "Touchstrips";
+#else
 static const char touchpadTitle[] = "Touchpad";
+#endif
 static const char imuTitle[]      = "Tilt Controls";
 static const char passTitle[]     = "SwadgePass";
 static const char sonaTitle[]     = "Your Sona";
@@ -128,6 +132,16 @@ static const tutorialStep_t buttonsSteps[] = {
         .title = pauseBtnTitle,
         .detail = "The Pause button is mode-specific, but usually pauses a game. Tap it!",
     },
+    #ifdef CONFIG_HARDWARE_FAIRY_PROTO
+    {
+        .trigger = {
+            .type = TOUCH_PONG,
+            .intData = -1,
+        },
+        .title = touchpadTitle,
+        .detail = "Use your thumbs on the linear touchstrips to volley the ball 3 times!"
+    },
+    #else
     {
         .trigger = {
             .type = TOUCH_SPIN,
@@ -144,6 +158,7 @@ static const tutorialStep_t buttonsSteps[] = {
         .title = touchpadTitle,
         .detail = "OK, now spin your finger around it counter-clockwise."
     },
+    #endif
     {
         .trigger = {
             .type = IMU_ORIENT,
@@ -499,7 +514,7 @@ static void introEnterMode(void)
 
     loadWsg(SPK_WSG, &iv->icon.speaker, true);
     loadWsg(TOUCH_GEM_WSG, &iv->icon.touchGem, true);
-    loadWsg(INTRO_SWADGE_CHOPPED_WSG, &iv->icon.swadge, true);
+    loadWsg(FAIRY_SWADGE_CHOPPED_WSG, &iv->icon.swadge, true);
     loadWsg(PINKIE_WSG, &iv->icon.sona, true);
 
     iv->bgMenu   = initMenu(startTitle, NULL);
@@ -508,53 +523,53 @@ static void introEnterMode(void)
     // up
     iv->buttonIcons[0].icon    = &iv->icon.button.up;
     iv->buttonIcons[0].visible = true;
-    iv->buttonIcons[0].x       = 39;
-    iv->buttonIcons[0].y       = 111;
+    iv->buttonIcons[0].x       = 51;
+    iv->buttonIcons[0].y       = 2;
 
     // down
     iv->buttonIcons[1].icon    = &iv->icon.button.up;
     iv->buttonIcons[1].flipUD  = true;
     iv->buttonIcons[1].visible = true;
-    iv->buttonIcons[1].x       = 39;
-    iv->buttonIcons[1].y       = 131;
+    iv->buttonIcons[1].x       = 51;
+    iv->buttonIcons[1].y       = 22;
 
     // left
     iv->buttonIcons[2].icon    = &iv->icon.button.up;
     iv->buttonIcons[2].rot     = 270;
     iv->buttonIcons[2].visible = true;
-    iv->buttonIcons[2].x       = 29;
-    iv->buttonIcons[2].y       = 121;
+    iv->buttonIcons[2].x       = 41;
+    iv->buttonIcons[2].y       = 12;
 
     // right
     iv->buttonIcons[3].icon    = &iv->icon.button.up;
     iv->buttonIcons[3].rot     = 90;
     iv->buttonIcons[3].visible = true;
-    iv->buttonIcons[3].x       = 49;
-    iv->buttonIcons[3].y       = 121;
+    iv->buttonIcons[3].x       = 61;
+    iv->buttonIcons[3].y       = 12;
 
     // a
     iv->buttonIcons[4].icon    = &iv->icon.button.a;
     iv->buttonIcons[4].visible = true;
-    iv->buttonIcons[4].x       = 240;
-    iv->buttonIcons[4].y       = 110;
+    iv->buttonIcons[4].x       = 184;
+    iv->buttonIcons[4].y       = 10;
 
     // b
     iv->buttonIcons[5].icon    = &iv->icon.button.b;
     iv->buttonIcons[5].visible = true;
-    iv->buttonIcons[5].x       = 220;
-    iv->buttonIcons[5].y       = 120;
+    iv->buttonIcons[5].x       = 164;
+    iv->buttonIcons[5].y       = 16;
 
     // start (pause)
     iv->buttonIcons[6].icon    = &iv->icon.button.pause;
     iv->buttonIcons[6].visible = true;
-    iv->buttonIcons[6].x       = 60;
-    iv->buttonIcons[6].y       = 150;
+    iv->buttonIcons[6].x       = 28;
+    iv->buttonIcons[6].y       = 100;
 
     // select (menu)
     iv->buttonIcons[7].icon    = &iv->icon.button.menu;
     iv->buttonIcons[7].visible = true;
-    iv->buttonIcons[7].x       = 60;
-    iv->buttonIcons[7].y       = 163;
+    iv->buttonIcons[7].x       = 38;
+    iv->buttonIcons[7].y       = 110;
 
     iv->swadgeViewWidth  = iv->icon.swadge.w * 1;
     iv->swadgeViewHeight = iv->icon.swadge.w * 1;
@@ -836,8 +851,8 @@ static void introMainLoop(int64_t elapsedUs)
         default:
         case DRAW_BUTTONS:
         {
-            int16_t viewX = ((TFT_WIDTH - iv->swadgeViewWidth) / 2) - 3;
-            int16_t viewY = titleY + iv->logoFont.height - 70;
+            int16_t viewX = ((TFT_WIDTH - iv->swadgeViewWidth) / 2);
+            int16_t viewY = titleY + iv->logoFont.height - 5;
             introDrawSwadgeButtons(elapsedUs, viewX, viewY, iv->buttons);
             break;
         }
@@ -893,7 +908,7 @@ static void introMainLoop(int64_t elapsedUs)
     }
 
     const char* remaining
-        = drawTextWordWrap(&iv->smallFont, c000, detail, &detailX, &detailY, TFT_WIDTH - 25, detailYmax);
+        = drawTextWordWrap(&iv->smallFont, c555, detail, &detailX, &detailY, TFT_WIDTH - 25, detailYmax);
     if (NULL != remaining)
     {
         ESP_LOGI(TAG, "Remaining text: ...%s", remaining);

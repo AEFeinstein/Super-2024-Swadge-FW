@@ -54,6 +54,9 @@ typedef enum
     // Touch any one of given zones
     TOUCH_ZONE_ANY,
 
+    // Use the touchstrips and complete a mini pong game
+    TOUCH_PONG,
+
     // A number of CCW (or CW if negative) spins
     TOUCH_SPIN,
 
@@ -186,6 +189,9 @@ void tutorialSetup(tutorialState_t* state, tutorialStepCb stepCbFunc, const tuto
 
 // Call with each button press
 void tutorialOnButton(tutorialState_t* state, const buttonEvt_t* evt);
+
+// Call whene linear touch is detected
+void tutorialOnLinearTouch(tutorialState_t* state, int32_t phi, int32_t r, int32_t intensity);
 
 // Call when touch is detected
 void tutorialOnTouch(tutorialState_t* state, int32_t phi, int32_t r, int32_t intensity);
