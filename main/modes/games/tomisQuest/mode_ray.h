@@ -58,6 +58,9 @@
 // The pixel size of each cell
 #define CELL_SIZE 20
 
+// Turntable minigame
+#define MAX_NOTES_PER_TURNTABLE 3
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -812,10 +815,34 @@ typedef struct
 typedef struct
 {
     rayScript_t* turntableScript; ///< The script to execute after the turntable minigame
-    // TODO @jarettmillard to add turntable minigame state variables here
     uint32_t rotationTimer;
-    uint32_t angle;
-    uint32_t turns;
+    uint32_t wiggleTimer;
+
+    int64_t nextNoteSpawnUs;
+    uint8_t nextNoteSpawnSide;
+
+    struct
+    {
+        linearTouch_t touch;
+        int8_t wiggleAngle;
+        int16_t angle;
+
+        struct
+        {
+            uint16_t angle;
+            float distance; ///< Distance from the center of the note to the center of the turntable
+            int8_t wsgIdx;
+        } notes[MAX_NOTES_PER_TURNTABLE];
+    } tables[2];
+
+    struct
+    {
+        wsg_t turntable;
+        wsg_t recordGrooves;
+        wsg_t knobs;
+        wsg_t knobsMirrored;
+        wsg_t notes[2];
+    } wsg;
 } rayTurntableState_t;
 
 /**

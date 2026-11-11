@@ -218,32 +218,32 @@ static void rayEnterMode(void)
     for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(mapMetadata); sIdx++)
     {
         midiFile_t* mapBgm = heap_caps_calloc(1, sizeof(midiFile_t), MALLOC_CAP_8BIT);
-        loadMidiFile(mapMetadata[sIdx].bgmFile, mapBgm, false);
+        loadMidiFile(mapMetadata[sIdx].bgmFile, mapBgm, true);
         push(&ray->bgmSongs, mapBgm);
     }
 
     // Load SFX
-    loadMidiFile(R_DOOR_OPEN_MID, &ray->sfx_door_open, false);
-    loadMidiFile(R_E_DAMAGE_MID, &ray->sfx_e_damage, false);
-    loadMidiFile(R_E_FREEZE_MID, &ray->sfx_e_freeze, false);
-    loadMidiFile(R_P_CHARGE_MID, &ray->sfx_p_charge, false);
-    loadMidiFile(R_P_DAMAGE_MID, &ray->sfx_p_damage, false);
-    loadMidiFile(R_P_SHOOT_MID, &ray->sfx_p_shoot, false);
-    loadMidiFile(R_E_BLOCK_MID, &ray->sfx_e_block, false);
-    loadMidiFile(R_E_DEAD_MID, &ray->sfx_e_dead, false);
-    loadMidiFile(R_ITEM_GET_MID, &ray->sfx_item_get, false);
-    loadMidiFile(R_P_CHARGE_MID, &ray->sfx_p_charge_start, false);
-    loadMidiFile(R_P_MISSILE_MID, &ray->sfx_p_missile, false);
-    loadMidiFile(R_P_ICE_MID, &ray->sfx_p_ice, false);
-    loadMidiFile(R_P_XRAY_MID, &ray->sfx_p_xray, false);
-    loadMidiFile(R_WARP_MID, &ray->sfx_warp, false);
-    loadMidiFile(R_LAVA_DMG_MID, &ray->sfx_lava_dmg, false);
-    loadMidiFile(R_HEALTH_MID, &ray->sfx_health, false);
-    loadMidiFile(R_GAME_OVER_MID, &ray->sfx_game_over, false);
+    loadMidiFile(R_DOOR_OPEN_MID, &ray->sfx_door_open, true);
+    loadMidiFile(R_E_DAMAGE_MID, &ray->sfx_e_damage, true);
+    loadMidiFile(R_E_FREEZE_MID, &ray->sfx_e_freeze, true);
+    loadMidiFile(R_P_CHARGE_MID, &ray->sfx_p_charge, true);
+    loadMidiFile(R_P_DAMAGE_MID, &ray->sfx_p_damage, true);
+    loadMidiFile(R_P_SHOOT_MID, &ray->sfx_p_shoot, true);
+    loadMidiFile(R_E_BLOCK_MID, &ray->sfx_e_block, true);
+    loadMidiFile(R_E_DEAD_MID, &ray->sfx_e_dead, true);
+    loadMidiFile(R_ITEM_GET_MID, &ray->sfx_item_get, true);
+    loadMidiFile(R_P_CHARGE_MID, &ray->sfx_p_charge_start, true);
+    loadMidiFile(R_P_MISSILE_MID, &ray->sfx_p_missile, true);
+    loadMidiFile(R_P_ICE_MID, &ray->sfx_p_ice, true);
+    loadMidiFile(R_P_XRAY_MID, &ray->sfx_p_xray, true);
+    loadMidiFile(R_WARP_MID, &ray->sfx_warp, true);
+    loadMidiFile(R_LAVA_DMG_MID, &ray->sfx_lava_dmg, true);
+    loadMidiFile(R_HEALTH_MID, &ray->sfx_health, true);
+    loadMidiFile(R_GAME_OVER_MID, &ray->sfx_game_over, true);
 
-    loadMidiFile(DORIAS_LULLABY_FIRST_MID, &ray->song_lullaby_first, false);
-    loadMidiFile(DORIAS_LULLABY_SHORT_MID, &ray->song_lullaby_short, false);
-    loadMidiFile(DORIAS_LULLABY_FULL_MID, &ray->song_lullaby_full, false);
+    loadMidiFile(DORIAS_LULLABY_FIRST_MID, &ray->song_lullaby_first, true);
+    loadMidiFile(DORIAS_LULLABY_SHORT_MID, &ray->song_lullaby_short, true);
+    loadMidiFile(DORIAS_LULLABY_FULL_MID, &ray->song_lullaby_full, true);
 
     // Set the menu as the screen
     raySwitchToScreen(RAY_MENU);
@@ -563,7 +563,6 @@ static void rayMainLoop(int64_t elapsedUs)
             rayTurntableCheckButtons(ray);
 
             // Draw game foreground
-            // TODO @jarettmillard: Remove this if you don't want to draw on top of the game screen
             drawForeground2d(ray);
             update2dCamera(ray, elapsedUs);
 
@@ -657,7 +656,6 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         case RAY_SHOP_DIALOG:
         case RAY_INSTRUMENT:
         case RAY_GAME:
-        // TODO @jarettmillard: move this if you don't want to draw on top of the game screen
         case RAY_TURNTABLE:
         case RAY_CUTSCENE:
         {
@@ -809,6 +807,7 @@ void raySwitchToScreen(rayScreen_t newScreen)
         {
             // Clear turntable state
             memset(&ray->ts, 0, sizeof(ray->ts));
+            rayTurntableInit(ray);
             break;
         }
         case RAY_GAME:
