@@ -76,6 +76,9 @@ bool initializePlayer(ray_t* ray)
         ray->camera = ray->p.cameraTarget;
     }
 
+    // Clear transient player state
+    memset(&ray->ps, 0, sizeof(ray->ps));
+
     // Load sprites
     ray->ps.spriteTomi        = loadTexture(ray, ZORLDO_MENU_TOMI_WSG, EMPTY);
     ray->ps.spritesHyut[0][0] = loadTexture(ray, HYUT_D_0_WSG, EMPTY);
