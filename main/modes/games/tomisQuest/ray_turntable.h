@@ -3,6 +3,7 @@
 
 #include "mode_ray.h"
 
+void rayTurntableInit(ray_t* ray);
 void rayTurntableCheckButtons(ray_t* ray);
 void rayTurntableRender(ray_t* ray, uint32_t elapsedUs);
 

@@ -10,7 +10,9 @@
 #include "hdw-tft.h"
 #include "shapes.h"
 #include "fill.h"
+#include "geometry.h"
 #include "macros.h"
+#include "trigonometry.h"
 
 //==============================================================================
 // Defines
@@ -1693,6 +1695,134 @@ void drawEllipseRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, i
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
         drawEllipseRectInner(x0, y0, x1, y1, col, xOrigin + i % yScale, yOrigin + i / xScale, xScale, yScale);
+    }
+}
+
+/**
+ * @brief Helper function to draw the outline of a circle segment with translation and scaling. Will not work for arcs
+ * over 180 degrees. Just draw two of them if you need a longer one.
+ *
+ * @param xm The X coordinate of the center of the circle
+ * @param ym The Y coordinate of the center of the circle
+ * @param r The radius of the arc
+ * @param startDeg The angle to start drawing in degrees. Must be between 0-359
+ * @param endDeg The angle to end drawing in degrees. Must be between 0-359
+ * @param col The color to draw
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
+ */
+static void drawArcInner(int xm, int ym, int r, int startDeg, int endDeg, paletteColor_t col, int xOrigin, int yOrigin,
+                         int xScale, int yScale)
+{
+    // Don't draw off if off screen
+    if (((xm + r) < 0 || (xm - r) > TFT_WIDTH) || ((ym + r) < 0 || (ym - r) > TFT_HEIGHT))
+    {
+        return;
+    }
+
+    SETUP_FOR_TURBO();
+
+    int boundX1 = xOrigin + (xm + getCos1024(startDeg) * r / 1024) * xScale;
+    int boundX2 = xOrigin + (xm + getCos1024(endDeg) * r / 1024) * xScale;
+    int boundY1 = yOrigin + (ym + getSin1024(startDeg) * r / 1024) * yScale;
+    int boundY2 = yOrigin + (ym + getSin1024(endDeg) * r / 1024) * yScale;
+    int minX    = MIN(boundX1, boundX2) - 3; // TODO: Why are these offsets necessary? Rounding error somewhere?
+    int maxX    = MAX(boundX1, boundX2) + 4;
+    int minY    = MIN(boundY1, boundY2) - 3;
+    int maxY    = MAX(boundY1, boundY2) + 4;
+    // Uncomment for a debug bounding box
+    // drawRect(minX, minY, maxX, maxY, c555);
+
+    int32_t startTan1024 = getTan1024(startDeg);
+    int32_t endTan1024   = getTan1024(endDeg);
+
+    int x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
+    int pointX, pointY;
+    do
+    {
+        // Quadrant +x +y
+        pointX = xOrigin + (xm - x) * xScale;
+        pointY = yOrigin + (ym + y) * yScale;
+        if (pointX >= minX && pointX <= maxX && pointY >= minY && pointY <= maxY)
+        {
+            TURBO_SET_PIXEL_BOUNDS(pointX, pointY, col);
+        }
+
+        // Quadrant -x +y
+        pointX = xOrigin + (xm - y) * xScale;
+        pointY = yOrigin + (ym - x) * yScale;
+        if (pointX >= minX && pointX <= maxX && pointY >= minY && pointY <= maxY)
+        {
+            TURBO_SET_PIXEL_BOUNDS(pointX, pointY, col);
+        }
+
+        // Quadrant -x -y
+        pointX = xOrigin + (xm + x) * xScale;
+        pointY = yOrigin + (ym - y) * yScale;
+        if (pointX >= minX && pointX <= maxX && pointY >= minY && pointY <= maxY)
+        {
+            TURBO_SET_PIXEL_BOUNDS(pointX, pointY, col);
+        }
+
+        // Quadrant +x -y
+        pointX = xOrigin + (xm + y) * xScale;
+        pointY = yOrigin + (ym + x) * yScale;
+        if (pointX >= minX && pointX <= maxX && pointY >= minY && pointY <= maxY)
+        {
+            TURBO_SET_PIXEL_BOUNDS(pointX, pointY, col);
+        }
+
+        r = err;
+        if (r <= y)
+        {
+            err += ++y * 2 + 1; /* e_xy+e_y < 0 */
+        }
+        if (r > x || err > y) /* e_xy+e_x > 0 or no 2nd y-step */
+        {
+            err += ++x * 2 + 1; /* -> x-step now */
+        }
+    } while (x < 0);
+}
+
+/**
+ * @brief Draw the one pixel wide outline of an arc. Will not work for arcs over 180 degrees. Just draw two of them if
+ * you need a longer one.
+ *
+ * @param xm The X coordinate of the center of the circle
+ * @param ym The Y coordinate of the center of the circle
+ * @param r The radius of the circle
+ * @param startDeg The angle to start drawing in degrees. Must be between 0-359
+ * @param endDeg The angle to end drawing in degrees. Must be between 0-359
+ * @param col The color to draw
+ */
+void drawArc(int xm, int ym, int r, int startDeg, int endDeg, paletteColor_t col)
+{
+    drawArcInner(xm, ym, r, startDeg, endDeg, col, 0, 0, 1, 1);
+}
+
+/**
+ * @brief Draw the outline of an arc with translation and scaling. Scaling may make it wider than one pixel. Will not
+ * work for arcs over 180 degrees. Just draw two of them if you need a longer one.
+ *
+ * @param xm The X coordinate of the center of the circle
+ * @param ym The Y coordinate of the center of the circle
+ * @param r The radius of the circle
+ * @param startDeg The angle to start drawing in degrees. Must be between 0-359
+ * @param endDeg The angle to end drawing in degrees. Must be between 0-359
+ * @param col The color to draw
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
+ */
+void drawArcScaled(int xm, int ym, int r, int startDeg, int endDeg, paletteColor_t col, int xOrigin, int yOrigin,
+                   int xScale, int yScale)
+{
+    for (uint8_t i = 0; i < xScale * yScale; i++)
+    {
+        drawArcInner(xm, ym, r, startDeg, endDeg, col, xOrigin + i % yScale, yOrigin + i / xScale, xScale, yScale);
     }
 }
 

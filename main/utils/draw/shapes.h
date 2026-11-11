@@ -72,6 +72,9 @@ void drawCircleOutline(int xm, int ym, int r, int stroke, paletteColor_t col);
 void drawEllipseRect(int x0, int y0, int x1, int y1, paletteColor_t col);
 void drawEllipseRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xOrigin, int yOrigin, int xScale,
                            int yScale);
+void drawArc(int xm, int ym, int r, int startDeg, int endDeg, paletteColor_t col);
+void drawArcScaled(int xm, int ym, int r, int startDeg, int endDeg, paletteColor_t col, int xOrigin, int yOrigin,
+                   int xScale, int yScale);
 void drawQuadBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col);
 void drawQuadBezierSegScaled(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xOrigin,
                              int yOrigin, int xScale, int yScale);
