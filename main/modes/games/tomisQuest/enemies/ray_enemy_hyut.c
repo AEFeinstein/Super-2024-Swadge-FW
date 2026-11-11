@@ -11,13 +11,20 @@
 
 typedef struct
 {
-    vec_q24_8 dir;      ///< The direction the hyut is facing
-    int32_t dirTimer;   ///< A timer to randomly pick new directions to face
-    int32_t deathTimer; ///< A timer to die
-    wsg_t* sprites[4];  ///< Sprites
-    int32_t animTimer;  ///< Timer for animation
-    int32_t spriteIdx;  ///< Index for animation
+    vec_q24_8 dir;          ///< The direction the hyut is facing
+    int32_t dirTimer;       ///< A timer to randomly pick new directions to face
+    int32_t deathTimer;     ///< A timer to die
+    wsg_t* sprites[8][3];   ///< Sprites
+    int32_t animTimer;      ///< Timer for animation
+    int32_t spriteIdx;      ///< Index for sprite rotation
+    int32_t spriteCycleIdx; ///< Index for animation
 } hyutState_t;
+
+//==============================================================================
+// Const Variables
+//==============================================================================
+
+static const uint8_t walkCycleIdxs[] = {0, 1, 2, 1};
 
 //==============================================================================
 // Function Declarations
@@ -47,14 +54,37 @@ void rayInitEnemyHyut(ray_t* ray, rayEnemy_t* e)
     e->state = heap_caps_calloc(1, sizeof(hyutState_t), MALLOC_CAP_8BIT);
 
     // Allocate sprites
-    hyutState_t* hs = (hyutState_t*)e->state;
-    hs->sprites[0]  = loadTexture(ray, HYUT_0_WSG, OBJ_ENEMY_NPC_HYUT);
-    hs->sprites[1]  = loadTexture(ray, HYUT_1_WSG, EMPTY);
-    hs->sprites[2]  = loadTexture(ray, HYUT_2_WSG, EMPTY);
-    hs->sprites[3]  = loadTexture(ray, HYUT_3_WSG, EMPTY);
+    hyutState_t* hs   = (hyutState_t*)e->state;
+    hs->sprites[0][0] = loadTexture(ray, HYUT_U_0_WSG, OBJ_ENEMY_NPC_HYUT);
+    hs->sprites[0][1] = loadTexture(ray, HYUT_U_1_WSG, EMPTY);
+    hs->sprites[0][2] = loadTexture(ray, HYUT_U_2_WSG, EMPTY);
+    hs->sprites[1][0] = loadTexture(ray, HYUT_UR_0_WSG, EMPTY);
+    hs->sprites[1][1] = loadTexture(ray, HYUT_UR_1_WSG, EMPTY);
+    hs->sprites[1][2] = loadTexture(ray, HYUT_UR_2_WSG, EMPTY);
+    hs->sprites[2][0] = loadTexture(ray, HYUT_R_0_WSG, EMPTY);
+    hs->sprites[2][1] = loadTexture(ray, HYUT_R_1_WSG, EMPTY);
+    hs->sprites[2][2] = loadTexture(ray, HYUT_R_2_WSG, EMPTY);
+    hs->sprites[3][0] = loadTexture(ray, HYUT_DR_0_WSG, EMPTY);
+    hs->sprites[3][1] = loadTexture(ray, HYUT_DR_1_WSG, EMPTY);
+    hs->sprites[3][2] = loadTexture(ray, HYUT_DR_2_WSG, EMPTY);
+    hs->sprites[4][0] = loadTexture(ray, HYUT_D_0_WSG, EMPTY);
+    hs->sprites[4][1] = loadTexture(ray, HYUT_D_1_WSG, EMPTY);
+    hs->sprites[4][2] = loadTexture(ray, HYUT_D_2_WSG, EMPTY);
+    hs->sprites[5][0] = loadTexture(ray, HYUT_DL_0_WSG, EMPTY);
+    hs->sprites[5][1] = loadTexture(ray, HYUT_DL_1_WSG, EMPTY);
+    hs->sprites[5][2] = loadTexture(ray, HYUT_DL_2_WSG, EMPTY);
+    hs->sprites[6][0] = loadTexture(ray, HYUT_L_0_WSG, EMPTY);
+    hs->sprites[6][1] = loadTexture(ray, HYUT_L_1_WSG, EMPTY);
+    hs->sprites[6][2] = loadTexture(ray, HYUT_L_2_WSG, EMPTY);
+    hs->sprites[7][0] = loadTexture(ray, HYUT_UL_0_WSG, EMPTY);
+    hs->sprites[7][1] = loadTexture(ray, HYUT_UL_1_WSG, EMPTY);
+    hs->sprites[7][2] = loadTexture(ray, HYUT_UL_2_WSG, EMPTY);
+
+    hs->spriteIdx      = 0;
+    hs->spriteCycleIdx = 0;
 
     // Set sprites
-    e->c.sprite = hs->sprites[0];
+    e->c.sprite = hs->sprites[hs->spriteIdx][hs->spriteCycleIdx];
     e->portrait = e->c.sprite;
 
     // Set function pointers
@@ -90,8 +120,13 @@ static void rayEnemyHyutPickDirection(rayPlayer_t* player, rayEnemy_t* enemy)
     fastNormVec(&state->dir.x, &state->dir.y);
 
     // Adjust the sprite to match the direction
-    int32_t angle           = cordicAtan2(state->dir.x, state->dir.y);
-    enemy->c.spriteRotation = (((angle + 23) / 45) * 45);
+    int32_t angle    = cordicAtan2(state->dir.x, -state->dir.y);
+    state->spriteIdx = ((angle + 23) / 45);
+    if (state->spriteIdx >= ARRAY_SIZE(state->sprites))
+    {
+        state->spriteIdx -= ARRAY_SIZE(state->sprites);
+    }
+    enemy->c.sprite = state->sprites[state->spriteIdx][walkCycleIdxs[state->spriteCycleIdx]];
 }
 
 /**
@@ -121,12 +156,12 @@ bool rayEnemyHyutMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
         RUN_TIMER_EVERY(state->dirTimer, 3 * 1000000, elapsedUs, { rayEnemyHyutPickDirection(&ray->p, enemy); });
 
         RUN_TIMER_EVERY(state->animTimer, 125000, elapsedUs, {
-            state->spriteIdx++;
-            if (state->spriteIdx >= ARRAY_SIZE(state->sprites))
+            state->spriteCycleIdx++;
+            if (state->spriteCycleIdx >= ARRAY_SIZE(walkCycleIdxs))
             {
-                state->spriteIdx = 0;
+                state->spriteCycleIdx = 0;
             }
-            enemy->c.sprite = state->sprites[state->spriteIdx];
+            enemy->c.sprite = state->sprites[state->spriteIdx][walkCycleIdxs[state->spriteCycleIdx]];
         });
 
         // Move twice as fast as than the player
@@ -161,8 +196,13 @@ bool rayEnemyHyutMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
                 state->dir.y *= -1;
             }
 
-            int32_t angle           = cordicAtan2(state->dir.x, state->dir.y);
-            enemy->c.spriteRotation = (((angle + 23) / 45) * 45);
+            int32_t angle    = cordicAtan2(state->dir.x, -state->dir.y);
+            state->spriteIdx = ((angle + 23) / 45);
+            if (state->spriteIdx >= ARRAY_SIZE(state->sprites))
+            {
+                state->spriteIdx -= ARRAY_SIZE(state->sprites);
+            }
+            enemy->c.sprite = state->sprites[state->spriteIdx][walkCycleIdxs[state->spriteCycleIdx]];
         }
 
         // Not dead yet!

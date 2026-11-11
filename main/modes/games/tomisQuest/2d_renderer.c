@@ -274,8 +274,7 @@ void drawForeground2d(ray_t* ray)
     }
 
     int32_t playerAngle = rayGetEightWayAngle(ray->p.dirX, ray->p.dirY);
-    drawWsgSolid(ray->ps.sprite, pSpriteX, pSpriteY + TO_PX(ray->ps.jumpPos), false, false, playerAngle,
-                 playerSolidColor);
+    drawWsgSolid(ray->ps.sprite, pSpriteX, pSpriteY + TO_PX(ray->ps.jumpPos), false, false, 0, playerSolidColor);
     // rectangle_t bb = rayGetPlayerBB(ray);
     // drawRect(TO_PX(bb.pos.x) - camX,            //
     //          TO_PX(bb.pos.y) - camY,            //
