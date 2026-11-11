@@ -201,7 +201,7 @@ typedef enum __attribute__((packed))
     OBJ_ENEMY_GUARD = (OBJ | ENEMY | 22),
     OBJ_ENEMY_NINJA = (OBJ | ENEMY | 23),
     OBJ_ENEMY_BAT = (OBJ | ENEMY | 24),
-    OBJ_ENEMY_25 = (OBJ | ENEMY | 25),
+    OBJ_ENEMY_WIZARD = (OBJ | ENEMY | 25),
     OBJ_ENEMY_26 = (OBJ | ENEMY | 26),
     OBJ_ENEMY_27 = (OBJ | ENEMY | 27),
     OBJ_ENEMY_28 = (OBJ | ENEMY | 28),
