@@ -12,7 +12,7 @@
 typedef enum
 {
     TQ_EN_WIZARD_ST_WARPING,
-    TQ_EN_WIZARD_ST_ATTACKING,
+    TQ_EN_WIZARD_ST_APPEARING,
     TQ_EN_WIZARD_ST_IDLE,
     TQ_EN_WIZARD_ST_BUMPED
 } wizardStateIndex_t;
@@ -27,6 +27,8 @@ typedef struct
     int32_t stateTimer; // In microseconds
     int8_t stateCounter;
     vec_q24_8 vel; ///< The direction the wizard got bumped
+    vec_q24_8 tempPos; ///< Used to put wizard off screen to make it "invisible"
+    bool visible;
 } wizardState_t;
 
 //==============================================================================
@@ -68,6 +70,7 @@ void rayInitEnemyWizard(ray_t* ray, rayEnemy_t* e)
 
     ((wizardState_t*) e->state)->state = TQ_EN_WIZARD_ST_WARPING;
     ((wizardState_t*) e->state)->stateTimer = -1;
+    ((wizardState_t*) e->state)->visible = true;
 
     // Set function pointers
     e->mainFn           = rayEnemyWizardMain;
@@ -122,6 +125,27 @@ bool rayEnemyWizardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 
             if(rayBoundingBoxFitsInMap(ray, bb, NULL) && !rectRectIntersection(rayGetPlayerBB(ray), proximityBox, NULL))
             {
+                state->state = TQ_EN_WIZARD_ST_APPEARING;
+                state->tempPos.x=enemy->c.posX;
+                state->tempPos.y=enemy->c.posY;
+                state->stateTimer = 3000000;
+            }
+            
+            break;
+        }
+        case TQ_EN_WIZARD_ST_APPEARING:
+        { 
+            state->visible = !state->visible;
+            enemy->c.posX = ( (state->stateTimer >> 4) & 0b1) ? state->tempPos.x : -TO_FX(1);
+            enemy->c.posY = ( (state->stateTimer >> 4) & 0b1) ? state->tempPos.y : -TO_FX(1);
+            
+            state->stateTimer-=elapsedUs;
+
+            if(state->stateTimer < 0)
+            {
+                enemy->c.posX = state->tempPos.x;
+                enemy->c.posY = state->tempPos.y;
+                
                 vec_q24_8 shotVec;
 
                 bool xAxisMatch = FROM_FX(ray->p.posX) == FROM_FX(enemy->c.posX);
@@ -180,27 +204,21 @@ bool rayEnemyWizardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
                                 0, 0,                                     // Acceleration
                                 -1, false);
                 
-                state->state = TQ_EN_WIZARD_ST_ATTACKING;
-                state->stateTimer = 5000000;
+                state->state = TQ_EN_WIZARD_ST_IDLE;
+                
+                state->stateTimer = 3000000;
             }
-            
+
             break;
         }
-        case TQ_EN_WIZARD_ST_ATTACKING:
+        case TQ_EN_WIZARD_ST_IDLE:
         { 
             state->stateTimer-=elapsedUs;
 
             if(state->stateTimer < 0)
             {
                 state->state = TQ_EN_WIZARD_ST_WARPING;
-            }
-
-            
-            break;
-        }
-        case TQ_EN_WIZARD_ST_IDLE:
-        default:
-        { 
+            }            
             break;
         }
         case TQ_EN_WIZARD_ST_BUMPED:
@@ -257,7 +275,7 @@ bool rayEnemyWizardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 void rayEnemyWizardCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY)
 {
     // If the player is currently hittable
-    if (((wizardState_t*) enemy->state)->state != TQ_EN_WIZARD_ST_WARPING && rayPlayerIsHittable(ray))
+    if (((wizardState_t*) enemy->state)->state == TQ_EN_WIZARD_ST_IDLE && rayPlayerIsHittable(ray))
     {
         // Check if there's a bounding box intersection
         rectangle_t enemyBB = rayGetObjBB(&enemy->c);
@@ -289,6 +307,11 @@ void rayEnemyWizardGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bulle
 {
     // Convenience pointer
     wizardState_t* state = enemy->state;
+
+    if(state->state != TQ_EN_WIZARD_ST_IDLE)
+    {
+        return;
+    }
 
     switch (bullet)
     {
