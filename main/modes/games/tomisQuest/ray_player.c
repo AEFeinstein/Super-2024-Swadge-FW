@@ -23,6 +23,12 @@
 #define SWORD_SWING_ANGLE 180
 
 //==============================================================================
+// Const Variables
+//==============================================================================
+
+static const uint8_t walkCycleIdxs[] = {0, 1, 2, 1};
+
+//==============================================================================
 // Functions
 //==============================================================================
 
@@ -71,15 +77,37 @@ bool initializePlayer(ray_t* ray)
     }
 
     // Load sprites
-    ray->ps.spriteTomi     = loadTexture(ray, ZORLDO_MENU_TOMI_WSG, EMPTY);
-    ray->ps.spritesHyut[0] = loadTexture(ray, HYUT_0_WSG, EMPTY);
-    ray->ps.spritesHyut[1] = loadTexture(ray, HYUT_1_WSG, EMPTY);
-    ray->ps.spritesHyut[2] = loadTexture(ray, HYUT_2_WSG, EMPTY);
-    ray->ps.spritesHyut[3] = loadTexture(ray, HYUT_3_WSG, EMPTY);
-    ray->ps.ewiOfTime      = loadTexture(ray, EWI_OF_TIME_WSG, EMPTY);
+    ray->ps.spriteTomi        = loadTexture(ray, ZORLDO_MENU_TOMI_WSG, EMPTY);
+    ray->ps.spritesHyut[0][0] = loadTexture(ray, HYUT_D_0_WSG, EMPTY);
+    ray->ps.spritesHyut[0][1] = loadTexture(ray, HYUT_D_1_WSG, EMPTY);
+    ray->ps.spritesHyut[0][2] = loadTexture(ray, HYUT_D_2_WSG, EMPTY);
+    ray->ps.spritesHyut[1][0] = loadTexture(ray, HYUT_DL_0_WSG, EMPTY);
+    ray->ps.spritesHyut[1][1] = loadTexture(ray, HYUT_DL_1_WSG, EMPTY);
+    ray->ps.spritesHyut[1][2] = loadTexture(ray, HYUT_DL_2_WSG, EMPTY);
+    ray->ps.spritesHyut[2][0] = loadTexture(ray, HYUT_L_0_WSG, EMPTY);
+    ray->ps.spritesHyut[2][1] = loadTexture(ray, HYUT_L_1_WSG, EMPTY);
+    ray->ps.spritesHyut[2][2] = loadTexture(ray, HYUT_L_2_WSG, EMPTY);
+    ray->ps.spritesHyut[3][0] = loadTexture(ray, HYUT_UL_0_WSG, EMPTY);
+    ray->ps.spritesHyut[3][1] = loadTexture(ray, HYUT_UL_1_WSG, EMPTY);
+    ray->ps.spritesHyut[3][2] = loadTexture(ray, HYUT_UL_2_WSG, EMPTY);
+    ray->ps.spritesHyut[4][0] = loadTexture(ray, HYUT_U_0_WSG, EMPTY);
+    ray->ps.spritesHyut[4][1] = loadTexture(ray, HYUT_U_1_WSG, EMPTY);
+    ray->ps.spritesHyut[4][2] = loadTexture(ray, HYUT_U_2_WSG, EMPTY);
+    ray->ps.spritesHyut[5][0] = loadTexture(ray, HYUT_UR_0_WSG, EMPTY);
+    ray->ps.spritesHyut[5][1] = loadTexture(ray, HYUT_UR_1_WSG, EMPTY);
+    ray->ps.spritesHyut[5][2] = loadTexture(ray, HYUT_UR_2_WSG, EMPTY);
+    ray->ps.spritesHyut[6][0] = loadTexture(ray, HYUT_R_0_WSG, EMPTY);
+    ray->ps.spritesHyut[6][1] = loadTexture(ray, HYUT_R_1_WSG, EMPTY);
+    ray->ps.spritesHyut[6][2] = loadTexture(ray, HYUT_R_2_WSG, EMPTY);
+    ray->ps.spritesHyut[7][0] = loadTexture(ray, HYUT_DR_0_WSG, EMPTY);
+    ray->ps.spritesHyut[7][1] = loadTexture(ray, HYUT_DR_1_WSG, EMPTY);
+    ray->ps.spritesHyut[7][2] = loadTexture(ray, HYUT_DR_2_WSG, EMPTY);
+    ray->ps.ewiOfTime         = loadTexture(ray, EWI_OF_TIME_WSG, EMPTY);
     if (ray->p.i.haveEwiOfTime)
     {
-        ray->ps.sprite = ray->ps.spritesHyut[0];
+        ray->ps.spriteIdx      = 0;
+        ray->ps.spriteCycleIdx = 0;
+        ray->ps.sprite         = ray->ps.spritesHyut[ray->ps.spriteIdx][ray->ps.spriteCycleIdx];
     }
     else
     {
@@ -262,6 +290,67 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
         // If there is movement
         if (deltaX || deltaY)
         {
+            // Pick direction for the sprite
+            // Note, indices are into hyutState_t.sprites
+            if (deltaX > 0)
+            {
+                // Looking right
+                if (deltaY > 0)
+                {
+                    // Up right
+                    ray->ps.spriteIdx = 7;
+                }
+                else if (deltaY < 0)
+                {
+                    // Down right
+                    ray->ps.spriteIdx = 5;
+                }
+                else
+                {
+                    // Right
+                    ray->ps.spriteIdx = 6;
+                }
+            }
+            else if (deltaX < 0)
+            {
+                // Looking left
+                if (deltaY > 0)
+                {
+                    // Up left
+                    ray->ps.spriteIdx = 1;
+                }
+                else if (deltaY < 0)
+                {
+                    // Down left
+                    ray->ps.spriteIdx = 3;
+                }
+                else
+                {
+                    // Left
+                    ray->ps.spriteIdx = 2;
+                }
+            }
+            else
+            {
+                // Looking up or down
+                if (deltaY > 0)
+                {
+                    // Up
+                    ray->ps.spriteIdx = 0;
+                }
+                else if (deltaY < 0)
+                {
+                    // Down
+                    ray->ps.spriteIdx = 4;
+                }
+            }
+
+            if (ray->p.i.haveEwiOfTime)
+            {
+                // Set new directional sprite, preserving the walk cycle
+                ray->ps.sprite = ray->ps.spritesHyut[ray->ps.spriteIdx][walkCycleIdxs[ray->ps.spriteCycleIdx]];
+            }
+
             if (shouldNormalize)
             {
                 // Normalize deltaX and deltaY before scaling with elapsedUs
@@ -460,12 +549,12 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
     {
         // Animate Hyut
         RUN_TIMER_EVERY(ray->ps.animTimer, 250000, elapsedUs, {
-            ray->ps.spriteIdx++;
-            if (ray->ps.spriteIdx >= ARRAY_SIZE(ray->ps.spritesHyut))
+            ray->ps.spriteCycleIdx++;
+            if (ray->ps.spriteCycleIdx >= ARRAY_SIZE(walkCycleIdxs))
             {
-                ray->ps.spriteIdx = 0;
+                ray->ps.spriteCycleIdx = 0;
             }
-            ray->ps.sprite = ray->ps.spritesHyut[ray->ps.spriteIdx];
+            ray->ps.sprite = ray->ps.spritesHyut[ray->ps.spriteIdx][walkCycleIdxs[ray->ps.spriteCycleIdx]];
         });
     }
 }
@@ -641,7 +730,7 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
         case OBJ_ITEM_EWI:
         {
             inventory->haveEwiOfTime = true;
-            ray->ps.sprite           = ray->ps.spritesHyut[0];
+            ray->ps.sprite           = ray->ps.spritesHyut[0][0];
             break;
         }
         case OBJ_ITEM_BOMB:
