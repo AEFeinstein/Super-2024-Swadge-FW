@@ -481,13 +481,11 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
 
         // Run animation for sprite rotation animation
         RUN_TIMER_EVERY(ray->ps.fallRotationTimerUs, 2000000 / 16, elapsedUs, {
-            int32_t angle = rayGetEightWayAngle(ray->p.dirX, ray->p.dirY);
-            angle += 45;
-            if (360 <= angle)
+            ray->ps.fallAngle += 45;
+            if (360 <= ray->ps.fallAngle)
             {
-                angle -= 360;
+                ray->ps.fallAngle -= 360;
             }
-            rayFromEightWayAngle(angle, &ray->p.dirX, &ray->p.dirY);
         });
 
         // If the timer elapsed

@@ -768,6 +768,7 @@ typedef struct
     vec_t lastGoodCell;          ///< The last known good cell, used for moving after falling into a hole
     int32_t fallTimerUs;         ///< Timer for falling down a hole
     int32_t fallRotationTimerUs; ///< Timer for animating falling down a hole
+    int32_t fallAngle;           ///< Angle for fall animation
 
     bool pbaDown;           ///< If PB_A is down, used to differentiate short and long presses
     uint32_t pbaDownTimeUs; ///< The time PB_A has been held down
