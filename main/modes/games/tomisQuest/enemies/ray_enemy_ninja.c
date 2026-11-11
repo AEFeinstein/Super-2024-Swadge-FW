@@ -329,6 +329,10 @@ void rayEnemyNinjaGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet
         // fall through
         case OBJ_BULLET_ARROW:
         case OBJ_BULLET_BOMB:
+        {
+            enemy->health = -1;
+            break;
+        }
         case OBJ_BULLET_BOOMERANG:
         case OBJ_BULLET_SHIELD_0:
         case OBJ_BULLET_SHIELD_1:
