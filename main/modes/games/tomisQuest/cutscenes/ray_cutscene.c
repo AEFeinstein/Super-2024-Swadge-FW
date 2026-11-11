@@ -49,7 +49,7 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text)
     raySwitchToScreen(RAY_CUTSCENE);
 
     // Initialize the cutscene
-    ray->cutscene         = initCutscene(rayCutsceneCb, CUTSCENE_NEXT_0_WSG, 0);
+    ray->cutscene         = initCutscene(rayCutsceneCb, CNFS_NUM_FILES, 0);
     ray->cutsceneBtnState = 0;
     ray->cutsceneDone     = false;
 
