@@ -107,8 +107,8 @@ bool rayEnemyWizardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
             state->vel.y = 0;
 
             //warp
-            enemy->c.posX = TO_FX((((ray->camera.x / 20) + 1) + esp_random() % 13)) + TO_FX_FRAC(1, 2);
-            enemy->c.posY = TO_FX((((ray->camera.y / 20) + 1) + esp_random() % 11)) + TO_FX_FRAC(1, 2);
+            enemy->c.posX = TO_FX((((ray->camera.x / 20) + 1) + esp_random() % 13)) + TO_FX_FRAC(1, 2) - 1;
+            enemy->c.posY = TO_FX((((ray->camera.y / 20) + 1) + esp_random() % 11)) + TO_FX_FRAC(1, 2) - 1;
             
             //update bb after warping
             bb = rayGetObjBB(&enemy->c);
@@ -124,38 +124,52 @@ bool rayEnemyWizardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
             {
                 vec_q24_8 shotVec;
 
-                //Face towards the player on either X or Y axis
-                switch(esp_random() & 0b1)
+                bool xAxisMatch = FROM_FX(ray->p.posX) == FROM_FX(enemy->c.posX);
+                bool yAxisMatch = FROM_FX(ray->p.posY) == FROM_FX(enemy->c.posY);
+                bool randomAxis = esp_random() & 0b1;
+
+                /*
+                    Face directly towards the player if player is axis aligned
+                    Otherwise face towards the player on either axis.
+
+                    xAxisMatch | 0 | 1 | 0 | 1 |
+                    yAxisMatch | 0 | 0 | 1 | 1 |
+                    randomAxis | * | * | * | * |
+                    ----------------------------
+                    axisSelect | * | 0 | 1 | * |
+                */
+
+                bool axisSelect = (xAxisMatch == yAxisMatch) ? randomAxis : yAxisMatch;
+
+                if(axisSelect)
                 {
-                    case 0:
-                    default:
-                        if(ray->p.posX > enemy->c.posX)
-                        {
-                            enemy->c.spriteRotation = 90;
-                            shotVec.x = TO_FX(1);
-                            shotVec.y = 0;
-                        }
-                        else
-                        {
-                            enemy->c.spriteRotation = 270;
-                            shotVec.x = -TO_FX(1);
-                            shotVec.y = 0;
-                        }
-                        break;
-                    case 1:
-                        if(ray->p.posY > enemy->c.posY)
-                        {
-                            enemy->c.spriteRotation = 0;
-                            shotVec.x = 0;
-                            shotVec.y = TO_FX(1);
-                        }
-                        else
-                        {
-                            enemy->c.spriteRotation = 180;
-                            shotVec.x = 0;
-                            shotVec.y = -TO_FX(1);
-                        }
-                        break;
+                    if(ray->p.posX > enemy->c.posX)
+                    {
+                        enemy->c.spriteRotation = 90;
+                        shotVec.x = TO_FX(1);
+                        shotVec.y = 0;
+                    }
+                    else
+                    {
+                        enemy->c.spriteRotation = 270;
+                        shotVec.x = -TO_FX(1);
+                        shotVec.y = 0;
+                    }
+                }
+                else
+                {
+                    if(ray->p.posY > enemy->c.posY)
+                    {
+                        enemy->c.spriteRotation = 0;
+                        shotVec.x = 0;
+                        shotVec.y = TO_FX(1);
+                    }
+                    else
+                    {
+                        enemy->c.spriteRotation = 180;
+                        shotVec.x = 0;
+                        shotVec.y = -TO_FX(1);
+                    }
                 }
 
                 // Shoot a bullet
