@@ -163,8 +163,10 @@ bool rayEnemyGuardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
         }
         case TQ_EN_GUARD_ST_CHASING:
         {
-            state->vel.x = (ray->p.posX - enemy->c.posX) < 0 ? -132 : 132;
-            state->vel.y = (ray->p.posY - enemy->c.posY) < 0 ? -132 : 132;
+            state->vel.x = (ray->p.posX - enemy->c.posX) < 0 ? -TO_FX(1) : TO_FX(1);
+            state->vel.y = (ray->p.posY - enemy->c.posY) < 0 ? -TO_FX(1) : TO_FX(1);
+            fastNormVec(&state->vel.x, &state->vel.y);
+            state->vel = fpvMulSc(state->vel, TO_FX_FRAC(3,5));
             
             state->stateTimer-=elapsedUs;
             if(state->stateTimer < 0)
