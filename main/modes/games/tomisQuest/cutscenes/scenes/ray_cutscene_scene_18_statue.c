@@ -38,7 +38,7 @@ bool initCutsceneStatue(ray_t* ray, cutscene_t* cutscene, const char* title)
 
         // [when the player shoots the statue with the Harpbow]
         addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "A satisfying \"click\" can be heard.", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_TOMI, "I knew it! Let's go see if we unlocked the next stage of the Dungeon!", false, TOMI_FIREDUP, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "I knew it! Let's go see if we unlocked the next stage of the Dungeon!", false, TOMI_FIREDUP, endScene);
 
         // clang-format on
 
