@@ -35,6 +35,11 @@ void tutorialOnButton(tutorialState_t* state, const buttonEvt_t* evt)
     state->lastButtonDown = evt->down;
 }
 
+// Call when linear touch is detected
+void tutorialOnLinearTouch(tutorialState_t* state)
+{
+}
+
 // Call when touch is detected
 void tutorialOnTouch(tutorialState_t* state, int32_t phi, int32_t r, int32_t intensity)
 {

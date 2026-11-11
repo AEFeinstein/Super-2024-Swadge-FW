@@ -42,6 +42,7 @@ static bool introCheckQuickSettingsTrigger(const tutorialState_t* state, const t
 static vec_t getTouchScreenCoord(vec_t touchPoint);
 
 static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons);
+static void introDrawLinearTouchpad(int64_t elapsedUs);
 static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint, list_t* touchHist);
 static void introDrawSwadgeImu(int64_t elapsedUs);
 static void introDrawSwadgeSpeaker(int64_t elapsedUs);
@@ -74,10 +75,10 @@ static const char touchpadTitle[] = "Touchstrips";
 #else
 static const char touchpadTitle[] = "Touchpad";
 #endif
-static const char imuTitle[]      = "Tilt Controls";
-static const char passTitle[]     = "SwadgePass";
-static const char sonaTitle[]     = "Your Sona";
-static const char exitTitle[]     = "Mission Complete";
+static const char imuTitle[]  = "Tilt Controls";
+static const char passTitle[] = "SwadgePass";
+static const char sonaTitle[] = "Your Sona";
+static const char exitTitle[] = "Mission Complete";
 
 static const char* suffixes[] = {"\nIf you don't like it, you can adjust it in the next step.",
                                  "\nIf you don't like it, you can adjust it in the Sona Creator Mode."};
@@ -132,16 +133,16 @@ static const tutorialStep_t buttonsSteps[] = {
         .title = pauseBtnTitle,
         .detail = "The Pause button is mode-specific, but usually pauses a game. Tap it!",
     },
-    #ifdef CONFIG_HARDWARE_FAIRY_PROTO
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
     {
         .trigger = {
             .type = TOUCH_PONG,
             .intData = -1,
         },
         .title = touchpadTitle,
-        .detail = "Use your thumbs on the linear touchstrips to volley the ball 3 times!"
+        .detail = "Use the touchstrips to volley the ball 3 times! Fingers on the back of the touch zones may create false inputs."
     },
-    #else
+#else
     {
         .trigger = {
             .type = TOUCH_SPIN,
@@ -158,7 +159,7 @@ static const tutorialStep_t buttonsSteps[] = {
         .title = touchpadTitle,
         .detail = "OK, now spin your finger around it counter-clockwise."
     },
-    #endif
+#endif
     {
         .trigger = {
             .type = IMU_ORIENT,
@@ -778,6 +779,12 @@ static void introMainLoop(int64_t elapsedUs)
     }
 #endif
 
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+    linearTouch_t linearTouchState[2];
+    getTouchLinear(iv->tut.linearTouchState, ARRAY_SIZE(iv->tut.linearTouchState));
+    tutorialOnLinearTouch(&iv->tut);
+    // if(touchState[0].touched || touchState[1].touched)
+#else
     int32_t phi, r, intensity;
     if (getTouchJoystick(&phi, &r, &intensity))
     {
@@ -796,6 +803,7 @@ static void introMainLoop(int64_t elapsedUs)
         tutorialOnTouch(&iv->tut, 0, 0, 0);
         clear(&iv->touchHist);
     }
+#endif
 
     // Get the current acceleration
     int16_t a_x;
@@ -839,12 +847,12 @@ static void introMainLoop(int64_t elapsedUs)
     iv->bgMenu->title = title;
     drawMenuZorldo(iv->bgMenu, iv->renderer, elapsedUs);
 
-    int16_t detailYmin = titleY + iv->bigFont.height + 1 - 20;
-    int16_t detailYmax = TFT_HEIGHT - 30;
+    int16_t detailYmin = TFT_HEIGHT - 67;
+    int16_t detailYmax = TFT_HEIGHT - 20;
     int16_t detailX    = 25;
 
     uint16_t detailH = textWordWrapHeight(&iv->smallFont, detail, TFT_WIDTH - 60, detailYmax - detailYmin);
-    int16_t detailY  = detailYmax - detailH;
+    int16_t detailY  = ((detailYmax + detailYmin) >> 1) - (detailH >> 1);
 
     switch (iv->drawMode)
     {
@@ -858,7 +866,11 @@ static void introMainLoop(int64_t elapsedUs)
         }
         case DRAW_TOUCHPAD:
         {
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+            introDrawLinearTouchpad(elapsedUs);
+#else
             introDrawSwadgeTouchpad(elapsedUs, iv->touch, &iv->touchHist);
+#endif
             break;
         }
         case DRAW_IMU:
@@ -1210,6 +1222,27 @@ static vec_t getTouchScreenCoord(vec_t touchPoint)
     vec_t drawPoint = addVec2d(cartesianStart, divVec2d(mulVec2d(touchPoint, tpRadius * 2), 1024));
     drawPoint.y     = TOUCHPAD_Y + (TOUCHPAD_Y - drawPoint.y);
     return drawPoint;
+}
+
+static void introDrawLinearTouchpad(int64_t elapsedUs)
+{
+    drawWsgSimple(&iv->icon.swadge, 18, 48);
+    // Animate how the user should touch
+    iv->angleTimer += elapsedUs;
+    int minDeg = 70;
+    int maxDeg = 125;
+    int temp   = getSin1024((iv->angleTimer >> 14) % 359) + 1024;
+    int deg    = temp * (maxDeg - minDeg) / 2048 + minDeg;
+    int32_t x  = 140 + (90 * 3 * getSin1024(deg) / (1024 * 4));
+    int32_t y  = 120 - (90 * 3 * getCos1024(deg) / (1024 * 4));
+    drawCircleFilled(x, y, 8, c531);
+    minDeg = 235;
+    maxDeg = 290;
+    temp   = getSin1024(((iv->angleTimer >> 14) + 90) % 359) + 1024;
+    deg    = temp * (maxDeg - minDeg) / 2048 + minDeg;
+    x      = 140 + (90 * 3 * getSin1024(deg) / (1024 * 4));
+    y      = 120 - (90 * 3 * getCos1024(deg) / (1024 * 4));
+    drawCircleFilled(x, y, 8, c531);
 }
 
 /**

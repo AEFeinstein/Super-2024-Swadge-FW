@@ -155,6 +155,8 @@ typedef struct tutorialState
     buttonBit_t lastButton;
     bool lastButtonDown;
 
+    linearTouch_t linearTouchState[2];
+
     int32_t touchPhi;
     int32_t touchRadius;
     int32_t touchIntensity;
@@ -191,7 +193,7 @@ void tutorialSetup(tutorialState_t* state, tutorialStepCb stepCbFunc, const tuto
 void tutorialOnButton(tutorialState_t* state, const buttonEvt_t* evt);
 
 // Call whene linear touch is detected
-void tutorialOnLinearTouch(tutorialState_t* state, int32_t phi, int32_t r, int32_t intensity);
+void tutorialOnLinearTouch(tutorialState_t* state);
 
 // Call when touch is detected
 void tutorialOnTouch(tutorialState_t* state, int32_t phi, int32_t r, int32_t intensity);
