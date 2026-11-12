@@ -442,6 +442,7 @@ typedef struct
         wsg_t speaker;
         wsg_t touchGem;
         wsg_t swadge;
+        wsg_t rink;
         wsg_t sona;
     } icon;
 
@@ -516,6 +517,7 @@ static void introEnterMode(void)
     loadWsg(SPK_WSG, &iv->icon.speaker, true);
     loadWsg(TOUCH_GEM_WSG, &iv->icon.touchGem, true);
     loadWsg(FAIRY_SWADGE_CHOPPED_WSG, &iv->icon.swadge, true);
+    loadWsg(SWADGE_RINK_WSG, &iv->icon.rink, true);
     loadWsg(PINKIE_WSG, &iv->icon.sona, true);
 
     iv->bgMenu   = initMenu(startTitle, NULL);
@@ -628,6 +630,7 @@ static void introExitMode(void)
     freeWsg(&iv->icon.speaker);
     freeWsg(&iv->icon.touchGem);
     freeWsg(&iv->icon.swadge);
+    freeWsg(&iv->icon.rink);
     freeWsg(&iv->icon.sona);
 
     unloadMidiFile(&iv->song);
@@ -1226,23 +1229,45 @@ static vec_t getTouchScreenCoord(vec_t touchPoint)
 
 static void introDrawLinearTouchpad(int64_t elapsedUs)
 {
-    drawWsgSimple(&iv->icon.swadge, 18, 48);
+    if (iv->tut.linearTouchState[0].touched && iv->tut.linearTouchState[1].touched)
+    {
+        drawWsgSimple(&iv->icon.rink, 18, 85);
+    }
+    else
+    {
+        drawWsgSimple(&iv->icon.swadge, 18, 48);
+    }
     // Animate how the user should touch
     iv->angleTimer += elapsedUs;
     int minDeg = 70;
     int maxDeg = 125;
-    int temp   = getSin1024((iv->angleTimer >> 14) % 359) + 1024;
-    int deg    = temp * (maxDeg - minDeg) / 2048 + minDeg;
-    int32_t x  = 140 + (90 * 3 * getSin1024(deg) / (1024 * 4));
-    int32_t y  = 120 - (90 * 3 * getCos1024(deg) / (1024 * 4));
-    drawCircleFilled(x, y, 8, c531);
+    int input;
+    if (iv->tut.linearTouchState[1].touched)
+    {
+        input = iv->tut.linearTouchState[1].position << 1;
+    }
+    else
+    {
+        input = getSin1024((iv->angleTimer >> 14) % 359) + 1024;
+    }
+    int deg   = input * (maxDeg - minDeg) / 2048 + minDeg;
+    int32_t x = 140 + (91 * 3 * getSin1024(deg) / (1024 * 4));
+    int32_t y = 120 - (91 * 3 * getCos1024(deg) / (1024 * 4));
+    drawCircleFilled(x, y, 8, iv->tut.linearTouchState[1].touched ? c130 : c531);
     minDeg = 235;
     maxDeg = 290;
-    temp   = getSin1024(((iv->angleTimer >> 14) + 90) % 359) + 1024;
-    deg    = temp * (maxDeg - minDeg) / 2048 + minDeg;
-    x      = 140 + (90 * 3 * getSin1024(deg) / (1024 * 4));
-    y      = 120 - (90 * 3 * getCos1024(deg) / (1024 * 4));
-    drawCircleFilled(x, y, 8, c531);
+    if (iv->tut.linearTouchState[0].touched)
+    {
+        input = (1024 - iv->tut.linearTouchState[0].position) << 1;
+    }
+    else
+    {
+        input = getSin1024(((iv->angleTimer >> 14) + 90) % 359) + 1024;
+    }
+    deg = input * (maxDeg - minDeg) / 2048 + minDeg;
+    x   = 140 + (91 * 3 * getSin1024(deg) / (1024 * 4));
+    y   = 120 - (91 * 3 * getCos1024(deg) / (1024 * 4));
+    drawCircleFilled(x, y, 8, iv->tut.linearTouchState[0].touched ? c130 : c531);
 }
 
 /**
