@@ -97,9 +97,14 @@ bool rayEnemyBatMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
             state->vel.x = 0;
             state->vel.y = 0;
 
-            rectangle_t proximityBox = {.pos    = {.x = enemy->c.posX - TO_FX(2), .y = enemy->c.posY - TO_FX(2)},
-                                        .width  = TO_FX(4),
-                                        .height = TO_FX(4)};
+            rectangle_t proximityBox = {
+                .pos = {
+                    .x = enemy->c.posX - TO_FX(2),
+                    .y = enemy->c.posY - TO_FX(2),
+                },
+                .width  = TO_FX(4),
+                .height = TO_FX(4),
+            };
 
             if (rectRectIntersection(rayGetPlayerBB(ray), proximityBox, NULL))
             {
@@ -129,8 +134,8 @@ bool rayEnemyBatMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
                 {
                     vec_t v      = {.x = state->vel.x, .y = state->vel.y};
                     vec_t rv     = rotateVec2d(v, -40 + (esp_random() % 80));
-                    vec_q24_8 nv = {.x = rv.x, .y = rv.y};
-                    state->vel   = nv;
+                    state->vel.x = rv.x;
+                    state->vel.y = rv.y;
 
                     state->stateTimer = 200000;
                 }
@@ -200,26 +205,7 @@ bool rayEnemyBatMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
  */
 void rayEnemyBatCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY)
 {
-    // If the player is currently hittable
-    if (rayPlayerIsHittable(ray))
-    {
-        // Check if there's a bounding box intersection
-        rectangle_t enemyBB = rayGetObjBB(&enemy->c);
-        if (rectRectIntersection(player, enemyBB, NULL))
-        {
-            // Damage the player
-            if (rayPlayerDecrementHealth(ray, 1))
-            {
-                // Give the player a bump away from the bat
-                ray->ps.vel.x = ray->p.posX - enemy->c.posX;
-                ray->ps.vel.y = ray->p.posY - enemy->c.posY;
-                fastNormVec(&ray->ps.vel.x, &ray->ps.vel.y);
-
-                // Bump for 250ms
-                ray->ps.bumpTimer = 250000;
-            }
-        }
-    }
+    checkPlayerEnemyStandardCollision(ray, enemy, player, deltaX, deltaY);
 }
 
 /**

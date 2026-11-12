@@ -121,11 +121,17 @@ bool rayEnemyWizardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
             bb = rayGetObjBB(&enemy->c);
 
             // big box to make sure player is not too close
-            rectangle_t proximityBox
-                = {.pos = {.x = enemy->c.posX - 512, .y = enemy->c.posY - 512}, .width = 1024, .height = 1024};
+            rectangle_t proximityBox = {
+                .pos = {
+                    .x = enemy->c.posX - TO_FX(2),
+                    .y = enemy->c.posY - TO_FX(2),
+                },
+                .width  = TO_FX(4),
+                .height = TO_FX(4),
+            };
 
-            if (rayBoundingBoxFitsInMap(ray, bb, NULL)
-                && !rectRectIntersection(rayGetPlayerBB(ray), proximityBox, NULL))
+            if (rayBoundingBoxFitsInMap(ray, bb, NULL) &&
+                !rectRectIntersection(rayGetPlayerBB(ray), proximityBox, NULL))
             {
                 state->state      = TQ_EN_WIZARD_ST_APPEARING;
                 state->tempPos.x  = enemy->c.posX;
@@ -276,24 +282,9 @@ bool rayEnemyWizardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 void rayEnemyWizardCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY)
 {
     // If the player is currently hittable
-    if (((wizardState_t*)enemy->state)->state == TQ_EN_WIZARD_ST_IDLE && rayPlayerIsHittable(ray))
+    if (((wizardState_t*)enemy->state)->state == TQ_EN_WIZARD_ST_IDLE)
     {
-        // Check if there's a bounding box intersection
-        rectangle_t enemyBB = rayGetObjBB(&enemy->c);
-        if (rectRectIntersection(player, enemyBB, NULL))
-        {
-            // Damage the player
-            if (rayPlayerDecrementHealth(ray, 1))
-            {
-                // Give the player a bump away from the wizard
-                ray->ps.vel.x = ray->p.posX - enemy->c.posX;
-                ray->ps.vel.y = ray->p.posY - enemy->c.posY;
-                fastNormVec(&ray->ps.vel.x, &ray->ps.vel.y);
-
-                // Bump for 250ms
-                ray->ps.bumpTimer = 250000;
-            }
-        }
+        checkPlayerEnemyStandardCollision(ray, enemy, player, deltaX, deltaY);
     }
 }
 

@@ -54,7 +54,7 @@ void rayInitEnemyGuard(ray_t* ray, rayEnemy_t* e)
     e->c.sprite = loadTexture(ray, OBJ_ENEMY_GRUNT_WSG, OBJ_ENEMY_GUARD);
     e->portrait = e->c.sprite;
 
-    // Guard has 1hp to not die
+    // Guard has 3hp to not die
     e->health = 3;
 
     // Allocate state for this enemy
@@ -228,26 +228,7 @@ bool rayEnemyGuardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
  */
 void rayEnemyGuardCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY)
 {
-    // If the player is currently hittable
-    if (rayPlayerIsHittable(ray))
-    {
-        // Check if there's a bounding box intersection
-        rectangle_t enemyBB = rayGetObjBB(&enemy->c);
-        if (rectRectIntersection(player, enemyBB, NULL))
-        {
-            // Damage the player
-            if (rayPlayerDecrementHealth(ray, 1))
-            {
-                // Give the player a bump away from the guard
-                ray->ps.vel.x = ray->p.posX - enemy->c.posX;
-                ray->ps.vel.y = ray->p.posY - enemy->c.posY;
-                fastNormVec(&ray->ps.vel.x, &ray->ps.vel.y);
-
-                // Bump for 250ms
-                ray->ps.bumpTimer = 250000;
-            }
-        }
-    }
+    checkPlayerEnemyStandardCollision(ray, enemy, player, deltaX, deltaY);
 }
 
 /**
