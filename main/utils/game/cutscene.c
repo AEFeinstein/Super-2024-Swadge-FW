@@ -32,19 +32,24 @@ static cutsceneStyle_t* getCurrentStyle(cutscene_t* cutscene);
  * @brief Required to begin a cutscene.
  *
  * @param cbFunc A callback which is called when this cutscene concludes. Use it to unpause your game loop.
- * @param nextIconIdx The file index of the first of four frames of the nextIcon graphic.
+ * @param nextIconIdx The file index of the first of four frames of the nextIcon graphic or CNFS_NUM_FILES to not draw
+ * an icon
  * @param soundBank 0 for general midi, 1 for MAGFest, 2 for MegaManX
- * @return cutscene_t*
+ * @return cutscene_t* A pointer to the allocated and initialized cutscene
  */
 cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx, uint8_t soundBank)
 {
     cutscene_t* cutscene = (cutscene_t*)heap_caps_calloc(1, sizeof(cutscene_t), MALLOC_CAP_SPIRAM);
     cutscene->cbFunc     = cbFunc;
     cutscene->soundBank  = soundBank;
-    for (int i = 0; i < 4; i++)
+
+    if (nextIconIdx < CNFS_NUM_FILES)
     {
-        cutscene->nextIcon[i] = heap_caps_calloc(1, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
-        loadWsg(nextIconIdx + i, cutscene->nextIcon[i], true);
+        for (int i = 0; i < 4; i++)
+        {
+            cutscene->nextIcon[i] = heap_caps_calloc(1, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+            loadWsg(nextIconIdx + i, cutscene->nextIcon[i], true);
+        }
     }
     cutscene->xOffset                = 280; // default start value for antagonists.
     cutscene->nextIconAnimationTimer = 30;
@@ -416,7 +421,8 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
     // click.
     if (!cutscene->isEnding && cutscene->xOffset == 0)
     {
-        if (btnState & PB_A && !(cutscene->btnState_previousFrame & PB_A))
+        // Accept button input when the "A" is flashing
+        if ((cutscene->nextIconAnimationTimer > 30) && btnState & PB_A && !(cutscene->btnState_previousFrame & PB_A))
         {
             if (((cutsceneLine_t*)(cutscene->lines.first->val))->cbFunc != NULL)
             {
@@ -569,10 +575,13 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
         }
         if (cutscene->nextIconAnimationTimer > 30)
         {
-            drawWsgSimple(cutscene->nextIcon[0], 256, 190);
+            if (cutscene->nextIcon[0])
+            {
+                drawWsgSimple(cutscene->nextIcon[0], 256, 190);
+            }
             if (cutscene->blinkTimer > 0)
             {
-                drawText(font, c000, "A", 260, 190);
+                drawText(font, c000, "A", 260, 198);
             }
         }
         else
@@ -582,7 +591,10 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
             {
                 iconFrame = 3;
             }
-            drawWsgSimple(cutscene->nextIcon[iconFrame], 256, 190);
+            if (cutscene->nextIcon[iconFrame])
+            {
+                drawWsgSimple(cutscene->nextIcon[iconFrame], 256, 190);
+            }
         }
     }
 
@@ -629,9 +641,12 @@ void deinitCutscene(cutscene_t* cutscene)
 {
     resetCutscene(cutscene);
     removeAllStyles(cutscene);
-    for (int i = 0; i < ARRAY_SIZE(cutscene->nextIcon); i++)
+    if (cutscene->nextIcon[0])
     {
-        freeWsg(cutscene->nextIcon[i]);
+        for (int i = 0; i < ARRAY_SIZE(cutscene->nextIcon); i++)
+        {
+            freeWsg(cutscene->nextIcon[i]);
+        }
     }
     freeWsg(&cutscene->sprite);
     freeWsg(&cutscene->textBox);

@@ -78,7 +78,7 @@ void initNpcCutsceneFredward(ray_t* ray, cutscene_t* cutscene)
         addCutsceneLine(cutscene, CS_STYLE_FREDWARD, "Oh, is THAT what the acronym means? I just thought it meant setting fire to all your possessions and living in a swamp somewhere.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Is that what you're going to do then?", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_FREDWARD, "Maybe. Or maybe I'll just buy some new synths.", false, 0, NULL);
-        // TODO ACHIEVEMENT UNLOCKED: "Bad Influence" - he's just gonna buy synths, isn't he.
+        // TODO ACHIEVEMENT UNLOCKED: "Bad Influence" - He's just gonna buy synths, isn't he.
     }
     // clang-format on
 }

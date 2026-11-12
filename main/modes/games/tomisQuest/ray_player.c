@@ -23,6 +23,12 @@
 #define SWORD_SWING_ANGLE 180
 
 //==============================================================================
+// Const Variables
+//==============================================================================
+
+static const uint8_t walkCycleIdxs[] = {0, 1, 2, 1};
+
+//==============================================================================
 // Functions
 //==============================================================================
 
@@ -40,17 +46,19 @@ bool initializePlayer(ray_t* ray)
     {
         initFromScratch = true;
 
-        // Start at map 0, loaded later
-        ray->p.mapId = 0;
+        // Clear out the entire rayPlayer_t
+        // This also sets mapId = 0 (map is loaded later)
+        // This also clears the rayInventory_t
+        memset(&ray->p, 0, sizeof(rayPlayer_t));
 
         // ray->p.posX and ray->p.posY (starting position) are set by the map
-
         // Set the direction
         ray->p.dirX = TO_FX(0);
         ray->p.dirY = -TO_FX(1);
 
-        // Zero the entire inventory
-        memset(&ray->p.i, 0, sizeof(ray->p.i));
+        // Set initial health
+        ray->p.maxHealth = GAME_START_HEALTH;
+        ray->p.health    = GAME_START_HEALTH;
 
         // Uncomment to start with all items for testing
         // ray->p.i.haveEwiOfTime     = true;
@@ -61,10 +69,6 @@ bool initializePlayer(ray_t* ray)
         // ray->p.i.haveBoomerang     = true;
         // ray->p.i.haveTurntables    = true;
         // ray->p.i.haveDoriasLullaby = true;
-
-        // Set initial health
-        ray->p.maxHealth = GAME_START_HEALTH;
-        ray->p.health    = GAME_START_HEALTH;
     }
     else
     {
@@ -72,13 +76,41 @@ bool initializePlayer(ray_t* ray)
         ray->camera = ray->p.cameraTarget;
     }
 
+    // Clear transient player state
+    memset(&ray->ps, 0, sizeof(ray->ps));
+
     // Load sprites
-    ray->ps.spriteTomi = loadTexture(ray, ZORLDO_MENU_TOMI_WSG, EMPTY);
-    ray->ps.spriteHyut = loadTexture(ray, HYUT_WSG, EMPTY);
-    ray->ps.ewiOfTime  = loadTexture(ray, EWI_OF_TIME_WSG, EMPTY);
+    ray->ps.spriteTomi        = loadTexture(ray, ZORLDO_MENU_TOMI_WSG, EMPTY);
+    ray->ps.spritesHyut[0][0] = loadTexture(ray, HYUT_D_0_WSG, EMPTY);
+    ray->ps.spritesHyut[0][1] = loadTexture(ray, HYUT_D_1_WSG, EMPTY);
+    ray->ps.spritesHyut[0][2] = loadTexture(ray, HYUT_D_2_WSG, EMPTY);
+    ray->ps.spritesHyut[1][0] = loadTexture(ray, HYUT_DL_0_WSG, EMPTY);
+    ray->ps.spritesHyut[1][1] = loadTexture(ray, HYUT_DL_1_WSG, EMPTY);
+    ray->ps.spritesHyut[1][2] = loadTexture(ray, HYUT_DL_2_WSG, EMPTY);
+    ray->ps.spritesHyut[2][0] = loadTexture(ray, HYUT_L_0_WSG, EMPTY);
+    ray->ps.spritesHyut[2][1] = loadTexture(ray, HYUT_L_1_WSG, EMPTY);
+    ray->ps.spritesHyut[2][2] = loadTexture(ray, HYUT_L_2_WSG, EMPTY);
+    ray->ps.spritesHyut[3][0] = loadTexture(ray, HYUT_UL_0_WSG, EMPTY);
+    ray->ps.spritesHyut[3][1] = loadTexture(ray, HYUT_UL_1_WSG, EMPTY);
+    ray->ps.spritesHyut[3][2] = loadTexture(ray, HYUT_UL_2_WSG, EMPTY);
+    ray->ps.spritesHyut[4][0] = loadTexture(ray, HYUT_U_0_WSG, EMPTY);
+    ray->ps.spritesHyut[4][1] = loadTexture(ray, HYUT_U_1_WSG, EMPTY);
+    ray->ps.spritesHyut[4][2] = loadTexture(ray, HYUT_U_2_WSG, EMPTY);
+    ray->ps.spritesHyut[5][0] = loadTexture(ray, HYUT_UR_0_WSG, EMPTY);
+    ray->ps.spritesHyut[5][1] = loadTexture(ray, HYUT_UR_1_WSG, EMPTY);
+    ray->ps.spritesHyut[5][2] = loadTexture(ray, HYUT_UR_2_WSG, EMPTY);
+    ray->ps.spritesHyut[6][0] = loadTexture(ray, HYUT_R_0_WSG, EMPTY);
+    ray->ps.spritesHyut[6][1] = loadTexture(ray, HYUT_R_1_WSG, EMPTY);
+    ray->ps.spritesHyut[6][2] = loadTexture(ray, HYUT_R_2_WSG, EMPTY);
+    ray->ps.spritesHyut[7][0] = loadTexture(ray, HYUT_DR_0_WSG, EMPTY);
+    ray->ps.spritesHyut[7][1] = loadTexture(ray, HYUT_DR_1_WSG, EMPTY);
+    ray->ps.spritesHyut[7][2] = loadTexture(ray, HYUT_DR_2_WSG, EMPTY);
+    ray->ps.ewiOfTime         = loadTexture(ray, EWI_OF_TIME_WSG, EMPTY);
     if (ray->p.i.haveEwiOfTime)
     {
-        ray->ps.sprite = ray->ps.spriteHyut;
+        ray->ps.spriteIdx      = 0;
+        ray->ps.spriteCycleIdx = 0;
+        ray->ps.sprite         = ray->ps.spritesHyut[ray->ps.spriteIdx][ray->ps.spriteCycleIdx];
     }
     else
     {
@@ -261,6 +293,67 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
         // If there is movement
         if (deltaX || deltaY)
         {
+            // Pick direction for the sprite
+            // Note, indices are into hyutState_t.sprites
+            if (deltaX > 0)
+            {
+                // Looking right
+                if (deltaY > 0)
+                {
+                    // Up right
+                    ray->ps.spriteIdx = 7;
+                }
+                else if (deltaY < 0)
+                {
+                    // Down right
+                    ray->ps.spriteIdx = 5;
+                }
+                else
+                {
+                    // Right
+                    ray->ps.spriteIdx = 6;
+                }
+            }
+            else if (deltaX < 0)
+            {
+                // Looking left
+                if (deltaY > 0)
+                {
+                    // Up left
+                    ray->ps.spriteIdx = 1;
+                }
+                else if (deltaY < 0)
+                {
+                    // Down left
+                    ray->ps.spriteIdx = 3;
+                }
+                else
+                {
+                    // Left
+                    ray->ps.spriteIdx = 2;
+                }
+            }
+            else
+            {
+                // Looking up or down
+                if (deltaY > 0)
+                {
+                    // Up
+                    ray->ps.spriteIdx = 0;
+                }
+                else if (deltaY < 0)
+                {
+                    // Down
+                    ray->ps.spriteIdx = 4;
+                }
+            }
+
+            if (ray->p.i.haveEwiOfTime)
+            {
+                // Set new directional sprite, preserving the walk cycle
+                ray->ps.sprite = ray->ps.spritesHyut[ray->ps.spriteIdx][walkCycleIdxs[ray->ps.spriteCycleIdx]];
+            }
+
             if (shouldNormalize)
             {
                 // Normalize deltaX and deltaY before scaling with elapsedUs
@@ -388,13 +481,11 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
 
         // Run animation for sprite rotation animation
         RUN_TIMER_EVERY(ray->ps.fallRotationTimerUs, 2000000 / 16, elapsedUs, {
-            int32_t angle = rayGetEightWayAngle(ray->p.dirX, ray->p.dirY);
-            angle += 45;
-            if (360 <= angle)
+            ray->ps.fallAngle += 45;
+            if (360 <= ray->ps.fallAngle)
             {
-                angle -= 360;
+                ray->ps.fallAngle -= 360;
             }
-            rayFromEightWayAngle(angle, &ray->p.dirX, &ray->p.dirY);
         });
 
         // If the timer elapsed
@@ -452,6 +543,20 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
     if (ray->ps.iFrameTimer > 0)
     {
         ray->ps.iFrameTimer -= elapsedUs;
+    }
+
+    // If the player isn't Tomi
+    if (ray->ps.sprite != ray->ps.spriteTomi)
+    {
+        // Animate Hyut
+        RUN_TIMER_EVERY(ray->ps.animTimer, 250000, elapsedUs, {
+            ray->ps.spriteCycleIdx++;
+            if (ray->ps.spriteCycleIdx >= ARRAY_SIZE(walkCycleIdxs))
+            {
+                ray->ps.spriteCycleIdx = 0;
+            }
+            ray->ps.sprite = ray->ps.spritesHyut[ray->ps.spriteIdx][walkCycleIdxs[ray->ps.spriteCycleIdx]];
+        });
     }
 }
 
@@ -626,7 +731,7 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
         case OBJ_ITEM_EWI:
         {
             inventory->haveEwiOfTime = true;
-            ray->ps.sprite           = ray->ps.spriteHyut;
+            ray->ps.sprite           = ray->ps.spritesHyut[0][0];
             break;
         }
         case OBJ_ITEM_BOMB:
@@ -706,6 +811,7 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
         case OBJ_ITEM_G_KEY:
         case OBJ_ITEM_B_KEY:
         case OBJ_ITEM_K_KEY:
+        case OBJ_ITEM_HEART_CONTAINER:
         {
             for (int idx = 0; idx < ARRAY_SIZE(ray->p.i.items); idx++)
             {
@@ -740,6 +846,12 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
                             ray->ps.keyMask.k_key = true;
                             break;
                         }
+                        case OBJ_ITEM_HEART_CONTAINER:
+                        {
+                            ray->p.maxHealth++;
+                            ray->p.health = ray->p.maxHealth;
+                            break;
+                        }
                         default:
                         {
                             break;
@@ -750,7 +862,6 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
             }
             break;
         }
-        // TODO heart pieces
         default:
         {
             // Don't care about other types
@@ -1070,17 +1181,21 @@ int32_t rayPlayerIsShielding(ray_t* ray)
 /**
  * @brief Get a bounding box for the player
  *
- * TODO account for sprite rotation
- *
  * @param ray The entire game state
  * @return The bounding box for the player
  */
 rectangle_t rayGetPlayerBB(ray_t* ray)
 {
+    // Hyut is 20x20, so ignore rotation
+
+    // Hardcode numbers to avoid math. TO_FX(1) is 20px
+    // Subtracting 13 is a hair more than 1px (12.8) and is necessary so Hyut can slide through 20px doors
+    static const int32_t sz = TO_FX(1) - 13;
+
     rectangle_t bb;
-    bb.width  = (ray->ps.sprite->w * 256) / CELL_SIZE;
-    bb.height = (ray->ps.sprite->h * 256) / CELL_SIZE;
-    bb.pos.x  = (ray->p.posX) - (bb.width / 2);
-    bb.pos.y  = (ray->p.posY) - (bb.height / 2);
+    bb.width  = sz;
+    bb.height = sz;
+    bb.pos.x  = (ray->p.posX) - (sz / 2);
+    bb.pos.y  = (ray->p.posY) - (sz / 2);
     return bb;
 }
