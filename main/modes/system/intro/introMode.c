@@ -443,6 +443,7 @@ typedef struct
         wsg_t touchGem;
         wsg_t swadge;
         wsg_t rink;
+        wsg_t paddle;
         wsg_t sona;
     } icon;
 
@@ -518,6 +519,7 @@ static void introEnterMode(void)
     loadWsg(TOUCH_GEM_WSG, &iv->icon.touchGem, true);
     loadWsg(FAIRY_SWADGE_CHOPPED_WSG, &iv->icon.swadge, true);
     loadWsg(SWADGE_RINK_WSG, &iv->icon.rink, true);
+    loadWsg(PADDLE_WSG, &iv->icon.paddle, true);
     loadWsg(PINKIE_WSG, &iv->icon.sona, true);
 
     iv->bgMenu   = initMenu(startTitle, NULL);
@@ -631,6 +633,7 @@ static void introExitMode(void)
     freeWsg(&iv->icon.touchGem);
     freeWsg(&iv->icon.swadge);
     freeWsg(&iv->icon.rink);
+    freeWsg(&iv->icon.paddle);
     freeWsg(&iv->icon.sona);
 
     unloadMidiFile(&iv->song);
@@ -1230,7 +1233,8 @@ static vec_t getTouchScreenCoord(vec_t touchPoint)
 static void introDrawLinearTouchpad()
 {
     if (iv->tut.linearTouchState[0].touched && iv->tut.linearTouchState[1].touched)
-    {
+    { // then the hockey game is shown.
+        // show the volley count above the game.
         char volleyCount[15];
         if (iv->tut.pongState.volleyCount < 3)
         {
@@ -1257,11 +1261,25 @@ static void introDrawLinearTouchpad()
         drawWsgSimple(&iv->icon.swadge, 18, 48);
     }
 
-    drawCircleFilled(iv->tut.pongState.leftPos.x >> 4, iv->tut.pongState.leftPos.y >> 4, 8,
-                     iv->tut.linearTouchState[1].touched ? c130 : c531);
+    if (iv->tut.linearTouchState[1].touched)
+    {
+        drawWsgSimple(&iv->icon.paddle, (iv->tut.pongState.leftPos.x >> 4) - 8,
+                      (iv->tut.pongState.leftPos.y >> 4) - 12);
+    }
+    else
+    {
+        drawCircleFilled(iv->tut.pongState.leftPos.x >> 4, iv->tut.pongState.leftPos.y >> 4, 8, c531);
+    }
 
-    drawCircleFilled(iv->tut.pongState.rightPos.x >> 4, iv->tut.pongState.rightPos.y >> 4, 8,
-                     iv->tut.linearTouchState[0].touched ? c130 : c531);
+    if (iv->tut.linearTouchState[0].touched)
+    {
+        drawWsgSimple(&iv->icon.paddle, (iv->tut.pongState.rightPos.x >> 4) - 8,
+                      (iv->tut.pongState.rightPos.y >> 4) - 12);
+    }
+    else
+    {
+        drawCircleFilled(iv->tut.pongState.rightPos.x >> 4, iv->tut.pongState.rightPos.y >> 4, 8, c531);
+    }
 }
 
 /**

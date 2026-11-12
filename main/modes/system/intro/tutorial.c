@@ -39,7 +39,7 @@ void tutorialOnButton(tutorialState_t* state, const buttonEvt_t* evt)
 void tutorialOnLinearTouch(int64_t elapsedUs, tutorialState_t* state, int32_t* angleTimer,
                            linearTouch_t linearTouchState[2])
 {
-    // update thumbs
+    // update paddles
     *angleTimer += elapsedUs;
     int minDeg = 70;
     int maxDeg = 125;
@@ -79,7 +79,11 @@ void tutorialOnLinearTouch(int64_t elapsedUs, tutorialState_t* state, int32_t* a
     {
         state->pongState.volleyCount = 0;
         state->pongState.puckPos     = (vec_t){140 << 4, 120 << 4};
-        state->pongState.puckVel     = rotateVec2d((vec_t){400, 0}, esp_random() % 360);
+        state->pongState.puckVel     = rotateVec2d((vec_t){0, -400}, (esp_random() % 120) + 30);
+        if (esp_random() % 2) // 50% chance
+        {
+            state->pongState.puckVel.x *= -1;
+        }
         state->pongState.initialized = true;
     }
     // update puck position
@@ -92,7 +96,7 @@ void tutorialOnLinearTouch(int64_t elapsedUs, tutorialState_t* state, int32_t* a
         state->pongState.puckVel.y *= -1;
     }
 
-    // puck-thumbs collision checks
+    // puck-paddles collision checks
     if (sqMagVec2d(subVec2d(state->pongState.puckPos, state->pongState.leftPos)) < 40000)
     {
         state->pongState.volleyCount++;
@@ -100,8 +104,6 @@ void tutorialOnLinearTouch(int64_t elapsedUs, tutorialState_t* state, int32_t* a
 
         fastNormVec(&norm.x, &norm.y);
         state->pongState.puckPos = divVec2d(mulVec2d(norm, 5), 6);
-        // state->pongState.puckPos.x /= 256;
-        // state->pongState.puckPos.y /= 256;
         state->pongState.puckPos = addVec2d(state->pongState.leftPos, state->pongState.puckPos);
         // Reflect the velocity vector along the normal
         // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
@@ -119,8 +121,6 @@ void tutorialOnLinearTouch(int64_t elapsedUs, tutorialState_t* state, int32_t* a
 
         fastNormVec(&norm.x, &norm.y);
         state->pongState.puckPos = divVec2d(mulVec2d(norm, 5), 6);
-        // state->pongState.puckPos.x /= 256;
-        // state->pongState.puckPos.y /= 256;
         state->pongState.puckPos = addVec2d(state->pongState.rightPos, state->pongState.puckPos);
         state->pongState.puckVel = divVec2d(
             mulVec2d(subVec2d(state->pongState.puckVel,
