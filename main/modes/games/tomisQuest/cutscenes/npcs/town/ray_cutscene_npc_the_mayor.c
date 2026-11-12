@@ -60,9 +60,6 @@ void initNpcCutsceneTheMayor(ray_t* ray, cutscene_t* cutscene)
     else if (!ray->p.i.haveTurntables)
     {
         addCutsceneLine(cutscene, CS_STYLE_SIGN, "Out to lunch on important matters completely unrelated to my statue", false, 0, NULL);
-        // TODO [when the player shoots the statue with the Harpbow]
-        // addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "A satisfying \"click\" can be heard.", false, 0, NULL);
-        // addCutsceneLine(cutscene, CS_STYLE_TOMI, "I knew it! Let's go see if we unlocked the next stage of the Dungeon!", false, TOMI_FIREDUP, NULL);
     }
     // After getting turntables, before getting lullaby
     else if (!ray->p.i.haveDoriasLullaby)
