@@ -26,7 +26,7 @@ typedef struct
     wizardStateIndex_t state;
     int32_t stateTimer; // In microseconds
     int8_t stateCounter;
-    vec_q24_8 vel; ///< The direction the wizard got bumped
+    vec_q24_8 vel;     ///< The direction the wizard got bumped
     vec_q24_8 tempPos; ///< Used to put wizard off screen to make it "invisible"
     bool visible;
 } wizardState_t;
@@ -37,7 +37,7 @@ typedef struct
 
 static bool rayEnemyWizardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs);
 static void rayEnemyWizardCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX,
-                                              q24_8* deltaY);
+                                               q24_8* deltaY);
 static void rayEnemyWizardGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet);
 
 //==============================================================================
@@ -68,16 +68,15 @@ void rayInitEnemyWizard(ray_t* ray, rayEnemy_t* e)
     // Allocate state for this enemy
     e->state = heap_caps_calloc(1, sizeof(wizardState_t), MALLOC_CAP_8BIT);
 
-    ((wizardState_t*) e->state)->state = TQ_EN_WIZARD_ST_WARPING;
-    ((wizardState_t*) e->state)->stateTimer = -1;
-    ((wizardState_t*) e->state)->visible = true;
+    ((wizardState_t*)e->state)->state      = TQ_EN_WIZARD_ST_WARPING;
+    ((wizardState_t*)e->state)->stateTimer = -1;
+    ((wizardState_t*)e->state)->visible    = true;
 
     // Set function pointers
     e->mainFn           = rayEnemyWizardMain;
     e->collisionFn      = rayEnemyWizardCheckPlayerCollision;
     e->getShotFn        = rayEnemyWizardGetShot;
     e->dropAfterDeathFn = rayEnemyStandardItemDrop;
-
 }
 
 /**
@@ -101,51 +100,49 @@ bool rayEnemyWizardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 
     // Get a bounding box for where the enemy is
     rectangle_t bb = rayGetObjBB(&enemy->c);
-   
-    switch(state->state)
+
+    switch (state->state)
     {
         case TQ_EN_WIZARD_ST_WARPING:
         {
             state->vel.x = 0;
             state->vel.y = 0;
 
-            //warp
+            // warp
             enemy->c.posX = TO_FX((((ray->camera.x / 20) + 1) + esp_random() % 13)) + TO_FX_FRAC(1, 2) - 1;
             enemy->c.posY = TO_FX((((ray->camera.y / 20) + 1) + esp_random() % 11)) + TO_FX_FRAC(1, 2) - 1;
-            
-            //update bb after warping
+
+            // update bb after warping
             bb = rayGetObjBB(&enemy->c);
 
-            //big box to make sure player is not too close
-            rectangle_t proximityBox = {
-                .pos = {.x = enemy->c.posX - 512, .y = enemy->c.posY - 512},
-                .width = 1024,
-                .height = 1024
-            };
+            // big box to make sure player is not too close
+            rectangle_t proximityBox
+                = {.pos = {.x = enemy->c.posX - 512, .y = enemy->c.posY - 512}, .width = 1024, .height = 1024};
 
-            if(rayBoundingBoxFitsInMap(ray, bb, NULL) && !rectRectIntersection(rayGetPlayerBB(ray), proximityBox, NULL))
+            if (rayBoundingBoxFitsInMap(ray, bb, NULL)
+                && !rectRectIntersection(rayGetPlayerBB(ray), proximityBox, NULL))
             {
-                state->state = TQ_EN_WIZARD_ST_APPEARING;
-                state->tempPos.x=enemy->c.posX;
-                state->tempPos.y=enemy->c.posY;
+                state->state      = TQ_EN_WIZARD_ST_APPEARING;
+                state->tempPos.x  = enemy->c.posX;
+                state->tempPos.y  = enemy->c.posY;
                 state->stateTimer = 3000000;
             }
-            
+
             break;
         }
         case TQ_EN_WIZARD_ST_APPEARING:
-        { 
+        {
             state->visible = !state->visible;
-            enemy->c.posX = ( (state->stateTimer >> 4) & 0b1) ? state->tempPos.x : -TO_FX(1);
-            enemy->c.posY = ( (state->stateTimer >> 4) & 0b1) ? state->tempPos.y : -TO_FX(1);
-            
-            state->stateTimer-=elapsedUs;
+            enemy->c.posX  = ((state->stateTimer >> 4) & 0b1) ? state->tempPos.x : -TO_FX(1);
+            enemy->c.posY  = ((state->stateTimer >> 4) & 0b1) ? state->tempPos.y : -TO_FX(1);
 
-            if(state->stateTimer < 0)
+            state->stateTimer -= elapsedUs;
+
+            if (state->stateTimer < 0)
             {
                 enemy->c.posX = state->tempPos.x;
                 enemy->c.posY = state->tempPos.y;
-                
+
                 vec_q24_8 shotVec;
 
                 bool xAxisMatch = FROM_FX(ray->p.posX) == FROM_FX(enemy->c.posX);
@@ -165,34 +162,34 @@ bool rayEnemyWizardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 
                 bool axisSelect = (xAxisMatch == yAxisMatch) ? randomAxis : yAxisMatch;
 
-                if(axisSelect)
+                if (axisSelect)
                 {
-                    if(ray->p.posX > enemy->c.posX)
+                    if (ray->p.posX > enemy->c.posX)
                     {
                         enemy->c.spriteRotation = 90;
-                        shotVec.x = TO_FX(1);
-                        shotVec.y = 0;
+                        shotVec.x               = TO_FX(1);
+                        shotVec.y               = 0;
                     }
                     else
                     {
                         enemy->c.spriteRotation = 270;
-                        shotVec.x = -TO_FX(1);
-                        shotVec.y = 0;
+                        shotVec.x               = -TO_FX(1);
+                        shotVec.y               = 0;
                     }
                 }
                 else
                 {
-                    if(ray->p.posY > enemy->c.posY)
+                    if (ray->p.posY > enemy->c.posY)
                     {
                         enemy->c.spriteRotation = 0;
-                        shotVec.x = 0;
-                        shotVec.y = TO_FX(1);
+                        shotVec.x               = 0;
+                        shotVec.y               = TO_FX(1);
                     }
                     else
                     {
                         enemy->c.spriteRotation = 180;
-                        shotVec.x = 0;
-                        shotVec.y = -TO_FX(1);
+                        shotVec.x               = 0;
+                        shotVec.y               = -TO_FX(1);
                     }
                 }
 
@@ -203,43 +200,42 @@ bool rayEnemyWizardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
                                 shotVec.x, shotVec.y,                     // Velocity
                                 0, 0,                                     // Acceleration
                                 -1, false);
-                
+
                 state->state = TQ_EN_WIZARD_ST_IDLE;
-                
+
                 state->stateTimer = 3000000;
             }
 
             break;
         }
         case TQ_EN_WIZARD_ST_IDLE:
-        { 
-            state->stateTimer-=elapsedUs;
+        {
+            state->stateTimer -= elapsedUs;
 
-            if(state->stateTimer < 0)
+            if (state->stateTimer < 0)
             {
                 state->state = TQ_EN_WIZARD_ST_WARPING;
-            }            
+            }
             break;
         }
         case TQ_EN_WIZARD_ST_BUMPED:
         {
             state->stateTimer -= elapsedUs;
 
-            if(state->stateTimer <= 0)
+            if (state->stateTimer <= 0)
             {
-                state->state = TQ_EN_WIZARD_ST_WARPING;
+                state->state      = TQ_EN_WIZARD_ST_WARPING;
                 state->stateTimer = 200000;
             }
             break;
         }
     }
-    
-    //Move half as fast as than the player
+
+    // Move half as fast as than the player
     vec_q24_8 delta = {
         .x = (state->vel.x * (int32_t)elapsedUs) / (40000 * 6),
         .y = (state->vel.y * (int32_t)elapsedUs) / (40000 * 6),
     };
-
 
     // Move the bounding box without moving the enemy yet
     bb.pos.x += delta.x;
@@ -254,8 +250,8 @@ bool rayEnemyWizardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
     else
     {
         // Can't move this way, pick a new direction
-        state->vel.x=-state->vel.x;
-        state->vel.y=-state->vel.y;
+        state->vel.x = -state->vel.x;
+        state->vel.y = -state->vel.y;
     }
 
     // Not dead yet!
@@ -275,7 +271,7 @@ bool rayEnemyWizardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 void rayEnemyWizardCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY)
 {
     // If the player is currently hittable
-    if (((wizardState_t*) enemy->state)->state == TQ_EN_WIZARD_ST_IDLE && rayPlayerIsHittable(ray))
+    if (((wizardState_t*)enemy->state)->state == TQ_EN_WIZARD_ST_IDLE && rayPlayerIsHittable(ray))
     {
         // Check if there's a bounding box intersection
         rectangle_t enemyBB = rayGetObjBB(&enemy->c);
@@ -308,7 +304,7 @@ void rayEnemyWizardGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bulle
     // Convenience pointer
     wizardState_t* state = enemy->state;
 
-    if(state->state != TQ_EN_WIZARD_ST_IDLE)
+    if (state->state != TQ_EN_WIZARD_ST_IDLE)
     {
         return;
     }
@@ -323,7 +319,7 @@ void rayEnemyWizardGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bulle
             fastNormVec(&state->vel.x, &state->vel.y);
 
             // Bump for 250ms
-            state->state = TQ_EN_WIZARD_ST_BUMPED;
+            state->state      = TQ_EN_WIZARD_ST_BUMPED;
             state->stateTimer = 250000;
         }
         // fall through

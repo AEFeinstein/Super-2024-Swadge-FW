@@ -25,7 +25,7 @@ typedef struct
 {
     ninjaStateIndex_t state;
     int32_t stateTimer;
-    vec_q24_8 dir;     ///< The direction the ninja is facing
+    vec_q24_8 dir; ///< The direction the ninja is facing
     vec_q24_8 vel; ///< The direction the ninja got bumped
 } ninjaState_t;
 
@@ -68,8 +68,8 @@ void rayInitEnemyNinja(ray_t* ray, rayEnemy_t* e)
     // Allocate state for this enemy
     e->state = heap_caps_calloc(1, sizeof(ninjaState_t), MALLOC_CAP_8BIT);
 
-    ((ninjaState_t*) e->state)->state = TQ_EN_NINJA_ST_HIDING;
-    ((ninjaState_t*) e->state)->stateTimer = -1;
+    ((ninjaState_t*)e->state)->state      = TQ_EN_NINJA_ST_HIDING;
+    ((ninjaState_t*)e->state)->stateTimer = -1;
 
     // Set function pointers
     e->mainFn           = rayEnemyNinjaMain;
@@ -126,22 +126,22 @@ static void rayEnemyNinjaPickDirection(rayEnemy_t* enemy)
 void rayEnemyNinjaShoot(ray_t* ray, rayEnemy_t* enemy)
 {
     // Find the direction from the turret to the player
-        vec_q24_8 dirToPlayer;
-        dirToPlayer.x = ray->p.posX - enemy->c.posX;
-        dirToPlayer.y = ray->p.posY - enemy->c.posY;
-        fastNormVec(&dirToPlayer.x, &dirToPlayer.y);
+    vec_q24_8 dirToPlayer;
+    dirToPlayer.x = ray->p.posX - enemy->c.posX;
+    dirToPlayer.y = ray->p.posY - enemy->c.posY;
+    fastNormVec(&dirToPlayer.x, &dirToPlayer.y);
 
-        // Scale to 3/8 speed
-        dirToPlayer.x = (3 * dirToPlayer.x) / 8;
-        dirToPlayer.y = (3 * dirToPlayer.y) / 8;
+    // Scale to 3/8 speed
+    dirToPlayer.x = (3 * dirToPlayer.x) / 8;
+    dirToPlayer.y = (3 * dirToPlayer.y) / 8;
 
-        // Shoot a bullet
-        rayCreateBullet(ray,                                      //
-                        OBJ_BULLET_SHIELD_0 + (esp_random() % 4), // Type
-                        enemy->c.posX, enemy->c.posY,             // Position
-                        dirToPlayer.x, dirToPlayer.y,             // Velocity
-                        0, 0,                                     // Acceleration
-                        -1, false);
+    // Shoot a bullet
+    rayCreateBullet(ray,                                      //
+                    OBJ_BULLET_SHIELD_0 + (esp_random() % 4), // Type
+                    enemy->c.posX, enemy->c.posY,             // Position
+                    dirToPlayer.x, dirToPlayer.y,             // Velocity
+                    0, 0,                                     // Acceleration
+                    -1, false);
 }
 
 /**
@@ -163,40 +163,37 @@ bool rayEnemyNinjaMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
     // Casted pointer for convenience
     ninjaState_t* state = enemy->state;
 
-    switch(state->state)
+    switch (state->state)
     {
         case TQ_EN_NINJA_ST_HIDING:
         default:
         {
             enemy->c.spriteRotation = 0;
-            state->vel.x = 0;
-            state->vel.y = 0;
+            state->vel.x            = 0;
+            state->vel.y            = 0;
 
-            rectangle_t proximityBox = {
-                .pos = {.x = enemy->c.posX - 512, .y = enemy->c.posY - 512},
-                .width = 1024,
-                .height = 1024
-            };
+            rectangle_t proximityBox
+                = {.pos = {.x = enemy->c.posX - 512, .y = enemy->c.posY - 512}, .width = 1024, .height = 1024};
 
-            if(rectRectIntersection(rayGetPlayerBB(ray), proximityBox, NULL))
+            if (rectRectIntersection(rayGetPlayerBB(ray), proximityBox, NULL))
             {
                 enemy->c.sprite = loadTexture(ray, OBJ_ENEMY_GRUNT_WSG, OBJ_ENEMY_NINJA);
-                state->state = TQ_EN_NINJA_ST_ATTACKING;
+                state->state    = TQ_EN_NINJA_ST_ATTACKING;
                 rayEnemyNinjaPickDirection(enemy);
                 state->stateTimer = 500000;
             }
-            
+
             break;
         }
         case TQ_EN_NINJA_ST_ATTACKING:
         {
-            state->vel = fpvMulSc(state->dir, TO_FX_FRAC(4,3));
+            state->vel = fpvMulSc(state->dir, TO_FX_FRAC(4, 3));
 
-            state->stateTimer-=elapsedUs;
-            if(state->stateTimer < 0)
+            state->stateTimer -= elapsedUs;
+            if (state->stateTimer < 0)
             {
                 rayEnemyNinjaShoot(ray, enemy);
-                state->state = TQ_EN_NINJA_ST_WANDERING;
+                state->state      = TQ_EN_NINJA_ST_WANDERING;
                 state->stateTimer = 2000000;
             }
 
@@ -205,11 +202,11 @@ bool rayEnemyNinjaMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
         case TQ_EN_NINJA_ST_WANDERING:
         {
             state->vel = state->dir;
-                
-            state->stateTimer-=elapsedUs;
-            if(state->stateTimer < 0)
+
+            state->stateTimer -= elapsedUs;
+            if (state->stateTimer < 0)
             {
-                state->state = TQ_EN_NINJA_ST_HIDING;
+                state->state    = TQ_EN_NINJA_ST_HIDING;
                 enemy->c.sprite = loadTexture(ray, BG_WALL_BOX_WSG, OBJ_ENEMY_NINJA);
             }
 
@@ -219,7 +216,7 @@ bool rayEnemyNinjaMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
         {
             state->stateTimer -= elapsedUs;
 
-            if(state->stateTimer <= 0)
+            if (state->stateTimer <= 0)
             {
                 state->state = TQ_EN_NINJA_ST_ATTACKING;
                 rayEnemyNinjaPickDirection(enemy);
@@ -228,8 +225,8 @@ bool rayEnemyNinjaMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
             break;
         }
     }
-    
-    //Move half as fast as than the player
+
+    // Move half as fast as than the player
     vec_q24_8 delta = {
         .x = (state->vel.x * (int32_t)elapsedUs) / (40000 * 6),
         .y = (state->vel.y * (int32_t)elapsedUs) / (40000 * 6),
@@ -273,11 +270,11 @@ void rayEnemyNinjaCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_
 {
     ninjaState_t* state = enemy->state;
 
-    if(state->state == TQ_EN_NINJA_ST_HIDING)
+    if (state->state == TQ_EN_NINJA_ST_HIDING)
     {
         return;
     }
-    
+
     // If the player is currently hittable
     if (rayPlayerIsHittable(ray))
     {
@@ -316,7 +313,7 @@ void rayEnemyNinjaGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet
     {
         case OBJ_BULLET_SWORD:
         {
-            if(state->state == TQ_EN_NINJA_ST_HIDING)
+            if (state->state == TQ_EN_NINJA_ST_HIDING)
             {
                 return;
             }
@@ -342,7 +339,7 @@ void rayEnemyNinjaGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet
             enemy->health--;
             enemy->iFrameTimer = ENEMY_DEFAULT_IFRAMES_US;
 
-            state->state = TQ_EN_NINJA_ST_BUMPED;
+            state->state      = TQ_EN_NINJA_ST_BUMPED;
             state->stateTimer = 250000;
             break;
         }

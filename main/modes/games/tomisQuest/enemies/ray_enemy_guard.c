@@ -24,7 +24,7 @@ typedef struct
 {
     guardStateIndex_t state;
     int32_t stateTimer;
-    vec_q24_8 dir;     ///< The direction the guard is facing
+    vec_q24_8 dir; ///< The direction the guard is facing
     vec_q24_8 vel; ///< The direction the guard got bumped
 } guardState_t;
 
@@ -60,8 +60,8 @@ void rayInitEnemyGuard(ray_t* ray, rayEnemy_t* e)
     // Allocate state for this enemy
     e->state = heap_caps_calloc(1, sizeof(guardState_t), MALLOC_CAP_8BIT);
 
-    ((guardState_t*) e->state)->state = TQ_EN_GUARD_ST_WATCHING;
-    ((guardState_t*) e->state)->stateTimer = -1;
+    ((guardState_t*)e->state)->state      = TQ_EN_GUARD_ST_WATCHING;
+    ((guardState_t*)e->state)->stateTimer = -1;
 
     // Set function pointers
     e->mainFn           = rayEnemyGuardMain;
@@ -134,31 +134,28 @@ bool rayEnemyGuardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
     // Casted pointer for convenience
     guardState_t* state = enemy->state;
 
-    switch(state->state)
+    switch (state->state)
     {
         case TQ_EN_GUARD_ST_WATCHING:
         default:
         {
-             // Change direction every second
+            // Change direction every second
             RUN_TIMER_EVERY(state->stateTimer, 1000000, elapsedUs, { rayEnemyGuardPickDirection(enemy); });
 
             state->vel.x = 0;
             state->vel.y = 0;
 
-            vec_t enemyPos = {.x = enemy->c.posX, .y = enemy->c.posY};
+            vec_t enemyPos  = {.x = enemy->c.posX, .y = enemy->c.posY};
             vec_t direction = {.x = state->dir.x, .y = state->dir.y};
 
-            line_t sightLine = {
-                .p1 = enemyPos,
-                .p2 = addVec2d(enemyPos, mulVec2d(direction, 16 ) )
-            };
+            line_t sightLine = {.p1 = enemyPos, .p2 = addVec2d(enemyPos, mulVec2d(direction, 16))};
 
-            if(rectLineIntersection(rayGetPlayerBB(ray), sightLine, NULL))
+            if (rectLineIntersection(rayGetPlayerBB(ray), sightLine, NULL))
             {
-                state->state = TQ_EN_GUARD_ST_CHASING;
-                state->stateTimer = 5000000; //5 seconds
+                state->state      = TQ_EN_GUARD_ST_CHASING;
+                state->stateTimer = 5000000; // 5 seconds
             }
-            
+
             break;
         }
         case TQ_EN_GUARD_ST_CHASING:
@@ -166,10 +163,10 @@ bool rayEnemyGuardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
             state->vel.x = (ray->p.posX - enemy->c.posX) < 0 ? -TO_FX(1) : TO_FX(1);
             state->vel.y = (ray->p.posY - enemy->c.posY) < 0 ? -TO_FX(1) : TO_FX(1);
             fastNormVec(&state->vel.x, &state->vel.y);
-            state->vel = fpvMulSc(state->vel, TO_FX_FRAC(3,5));
-            
-            state->stateTimer-=elapsedUs;
-            if(state->stateTimer < 0)
+            state->vel = fpvMulSc(state->vel, TO_FX_FRAC(3, 5));
+
+            state->stateTimer -= elapsedUs;
+            if (state->stateTimer < 0)
             {
                 state->state = TQ_EN_GUARD_ST_WATCHING;
             }
@@ -180,16 +177,16 @@ bool rayEnemyGuardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
         {
             state->stateTimer -= elapsedUs;
 
-            if(state->stateTimer <= 0)
+            if (state->stateTimer <= 0)
             {
-                state->state = TQ_EN_GUARD_ST_CHASING;
+                state->state      = TQ_EN_GUARD_ST_CHASING;
                 state->stateTimer = 5000000;
             }
             break;
         }
     }
-    
-    //Move half as fast as than the player
+
+    // Move half as fast as than the player
     vec_q24_8 delta = {
         .x = (state->vel.x * (int32_t)elapsedUs) / (40000 * 6),
         .y = (state->vel.y * (int32_t)elapsedUs) / (40000 * 6),
@@ -275,7 +272,7 @@ void rayEnemyGuardGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet
             fastNormVec(&state->vel.x, &state->vel.y);
 
             // Bump for 250ms
-            state->state = TQ_EN_GUARD_ST_BUMPED;
+            state->state      = TQ_EN_GUARD_ST_BUMPED;
             state->stateTimer = 250000;
         }
         // fall through

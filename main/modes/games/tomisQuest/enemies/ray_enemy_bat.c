@@ -34,7 +34,7 @@ typedef struct
 
 static bool rayEnemyBatMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs);
 static void rayEnemyBatCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX,
-                                              q24_8* deltaY);
+                                            q24_8* deltaY);
 static void rayEnemyBatGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet);
 
 //==============================================================================
@@ -59,15 +59,14 @@ void rayInitEnemyBat(ray_t* ray, rayEnemy_t* e)
     // Allocate state for this enemy
     e->state = heap_caps_calloc(1, sizeof(batState_t), MALLOC_CAP_8BIT);
 
-    ((batState_t*) e->state)->state = TQ_EN_BAT_ST_IDLE;
-    ((batState_t*) e->state)->stateTimer = -1;
+    ((batState_t*)e->state)->state      = TQ_EN_BAT_ST_IDLE;
+    ((batState_t*)e->state)->stateTimer = -1;
 
     // Set function pointers
     e->mainFn           = rayEnemyBatMain;
     e->collisionFn      = rayEnemyBatCheckPlayerCollision;
     e->getShotFn        = rayEnemyBatGetShot;
     e->dropAfterDeathFn = rayEnemyStandardItemDrop;
-
 }
 
 /**
@@ -89,57 +88,55 @@ bool rayEnemyBatMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
     // Casted pointer for convenience
     batState_t* state = enemy->state;
 
-    switch(state->state)
+    switch (state->state)
     {
         case TQ_EN_BAT_ST_IDLE:
         default:
         {
-            //enemy->c.spriteRotation = 0;
+            // enemy->c.spriteRotation = 0;
             state->vel.x = 0;
             state->vel.y = 0;
 
-            rectangle_t proximityBox = {
-                .pos = {.x = enemy->c.posX - TO_FX(2), .y = enemy->c.posY - TO_FX(2)},
-                .width = TO_FX(4),
-                .height = TO_FX(4)
-            };
+            rectangle_t proximityBox = {.pos    = {.x = enemy->c.posX - TO_FX(2), .y = enemy->c.posY - TO_FX(2)},
+                                        .width  = TO_FX(4),
+                                        .height = TO_FX(4)};
 
-            if(rectRectIntersection(rayGetPlayerBB(ray), proximityBox, NULL))
+            if (rectRectIntersection(rayGetPlayerBB(ray), proximityBox, NULL))
             {
                 enemy->c.sprite = loadTexture(ray, OBJ_ENEMY_GRUNT_WSG, OBJ_ENEMY_BAT);
-                state->state = TQ_EN_BAT_ST_FLYING;
-                
+                state->state    = TQ_EN_BAT_ST_FLYING;
+
                 state->vel.x = (ray->p.posX - enemy->c.posX) < 0 ? 150 : -150;
                 state->vel.y = (ray->p.posY - enemy->c.posY) < 0 ? 150 : -150;
 
-                state->stateTimer = 200000;
+                state->stateTimer   = 200000;
                 state->stateCounter = 29;
             }
-            
+
             break;
         }
         case TQ_EN_BAT_ST_FLYING:
-        { 
-            state->stateTimer-=elapsedUs;
-            if(state->stateTimer < 0)
+        {
+            state->stateTimer -= elapsedUs;
+            if (state->stateTimer < 0)
             {
-                if( !(state->stateCounter % 10) )
+                if (!(state->stateCounter % 10))
                 {
                     state->vel.x = (ray->p.posX - enemy->c.posX) < 0 ? -150 : 150;
                     state->vel.y = (ray->p.posY - enemy->c.posY) < 0 ? -150 : 150;
                 }
                 else
                 {
-                    vec_t v = {.x = state->vel.x, .y = state->vel.y};
-                    vec_t rv = rotateVec2d(v, -40 + (esp_random() % 80)) ;
+                    vec_t v      = {.x = state->vel.x, .y = state->vel.y};
+                    vec_t rv     = rotateVec2d(v, -40 + (esp_random() % 80));
                     vec_q24_8 nv = {.x = rv.x, .y = rv.y};
-                    state->vel = nv;
+                    state->vel   = nv;
 
                     state->stateTimer = 200000;
                 }
 
                 state->stateCounter--;
-                if(state->stateCounter < 0)
+                if (state->stateCounter < 0)
                 {
                     state->state = TQ_EN_BAT_ST_IDLE;
                 }
@@ -151,17 +148,17 @@ bool rayEnemyBatMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
         {
             state->stateTimer -= elapsedUs;
 
-            if(state->stateTimer <= 0)
+            if (state->stateTimer <= 0)
             {
-                state->state = TQ_EN_BAT_ST_FLYING;
+                state->state        = TQ_EN_BAT_ST_FLYING;
                 state->stateCounter = 29;
-                state->stateTimer = 200000;
+                state->stateTimer   = 200000;
             }
             break;
         }
     }
-    
-    //Move half as fast as than the player
+
+    // Move half as fast as than the player
     vec_q24_8 delta = {
         .x = (state->vel.x * (int32_t)elapsedUs) / (40000 * 6),
         .y = (state->vel.y * (int32_t)elapsedUs) / (40000 * 6),
@@ -183,8 +180,8 @@ bool rayEnemyBatMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
     else
     {
         // Can't move this way, pick a new direction
-        state->vel.x=-state->vel.x;
-        state->vel.y=-state->vel.y;
+        state->vel.x = -state->vel.x;
+        state->vel.y = -state->vel.y;
     }
 
     // Not dead yet!
@@ -247,7 +244,7 @@ void rayEnemyBatGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
             fastNormVec(&state->vel.x, &state->vel.y);
 
             // Bump for 250ms
-            state->state = TQ_EN_BAT_ST_BUMPED;
+            state->state      = TQ_EN_BAT_ST_BUMPED;
             state->stateTimer = 250000;
         }
         // fall through
