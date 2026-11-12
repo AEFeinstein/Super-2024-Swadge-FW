@@ -785,7 +785,7 @@ static void introMainLoop(int64_t elapsedUs)
 #ifdef CONFIG_HARDWARE_FAIRY_PROTO
     linearTouch_t linearTouchState[2];
     getTouchLinear(iv->tut.linearTouchState, ARRAY_SIZE(iv->tut.linearTouchState));
-    tutorialOnLinearTouch(&iv->tut);
+    tutorialOnLinearTouch(elapsedUs, &iv->tut, &iv->angleTimer, &iv->tut.linearTouchState);
     // if(touchState[0].touched || touchState[1].touched)
 #else
     int32_t phi, r, intensity;
@@ -1227,47 +1227,41 @@ static vec_t getTouchScreenCoord(vec_t touchPoint)
     return drawPoint;
 }
 
-static void introDrawLinearTouchpad(int64_t elapsedUs)
+static void introDrawLinearTouchpad()
 {
     if (iv->tut.linearTouchState[0].touched && iv->tut.linearTouchState[1].touched)
     {
+        char volleyCount[15];
+        if (iv->tut.pongState.volleyCount < 3)
+        {
+            sprintf(volleyCount, "%d", iv->tut.pongState.volleyCount);
+        }
+        else
+        {
+            sprintf(volleyCount, "%d - PASSED!", iv->tut.pongState.volleyCount);
+        }
+        int16_t x = 0;
+        int16_t y = 65;
+
+        drawTextWordWrapCentered(&iv->smallFont, iv->tut.pongState.volleyCount < 3 ? c555 : c152, volleyCount, &x, &y,
+                                 TFT_WIDTH, 105);
+
         drawWsgSimple(&iv->icon.rink, 18, 85);
+        drawCircleFilled(iv->tut.pongState.puckPos.x >> 4, iv->tut.pongState.puckPos.y >> 4, 5, c000);
+        drawCircle(iv->tut.pongState.puckPos.x >> 4, iv->tut.pongState.puckPos.y >> 4, 3, c222);
+        drawCircle(iv->tut.pongState.puckPos.x >> 4, iv->tut.pongState.puckPos.y >> 4, 2, c111);
     }
     else
     {
+        iv->tut.pongState.initialized = false;
         drawWsgSimple(&iv->icon.swadge, 18, 48);
     }
-    // Animate how the user should touch
-    iv->angleTimer += elapsedUs;
-    int minDeg = 70;
-    int maxDeg = 125;
-    int input;
-    if (iv->tut.linearTouchState[1].touched)
-    {
-        input = iv->tut.linearTouchState[1].position << 1;
-    }
-    else
-    {
-        input = getSin1024((iv->angleTimer >> 14) % 359) + 1024;
-    }
-    int deg   = input * (maxDeg - minDeg) / 2048 + minDeg;
-    int32_t x = 140 + (91 * 3 * getSin1024(deg) / (1024 * 4));
-    int32_t y = 120 - (91 * 3 * getCos1024(deg) / (1024 * 4));
-    drawCircleFilled(x, y, 8, iv->tut.linearTouchState[1].touched ? c130 : c531);
-    minDeg = 235;
-    maxDeg = 290;
-    if (iv->tut.linearTouchState[0].touched)
-    {
-        input = (1024 - iv->tut.linearTouchState[0].position) << 1;
-    }
-    else
-    {
-        input = getSin1024(((iv->angleTimer >> 14) + 90) % 359) + 1024;
-    }
-    deg = input * (maxDeg - minDeg) / 2048 + minDeg;
-    x   = 140 + (91 * 3 * getSin1024(deg) / (1024 * 4));
-    y   = 120 - (91 * 3 * getCos1024(deg) / (1024 * 4));
-    drawCircleFilled(x, y, 8, iv->tut.linearTouchState[0].touched ? c130 : c531);
+
+    drawCircleFilled(iv->tut.pongState.leftPos.x >> 4, iv->tut.pongState.leftPos.y >> 4, 8,
+                     iv->tut.linearTouchState[1].touched ? c130 : c531);
+
+    drawCircleFilled(iv->tut.pongState.rightPos.x >> 4, iv->tut.pongState.rightPos.y >> 4, 8,
+                     iv->tut.linearTouchState[0].touched ? c130 : c531);
 }
 
 /**

@@ -35,9 +35,99 @@ void tutorialOnButton(tutorialState_t* state, const buttonEvt_t* evt)
     state->lastButtonDown = evt->down;
 }
 
-// Call when linear touch is detected
-void tutorialOnLinearTouch(tutorialState_t* state)
+// Call when linear touch is detected. It's the game logic for pong.
+void tutorialOnLinearTouch(int64_t elapsedUs, tutorialState_t* state, int32_t* angleTimer,
+                           linearTouch_t linearTouchState[2])
 {
+    // update thumbs
+    *angleTimer += elapsedUs;
+    int minDeg = 70;
+    int maxDeg = 125;
+    int input;
+    if (linearTouchState[1].touched)
+    {
+        input = linearTouchState[1].position << 1;
+    }
+    else
+    {
+        input = getSin1024((*angleTimer >> 14) % 359) + 1024;
+    }
+    int deg                  = input * (maxDeg - minDeg) / 2048 + minDeg;
+    state->pongState.leftPos = (vec_t){(140 + (91 * 3 * getSin1024(deg) / (1024 * 4))) << 4,
+                                       (120 - (91 * 3 * getCos1024(deg) / (1024 * 4))) << 4};
+    minDeg                   = 235;
+    maxDeg                   = 290;
+    if (linearTouchState[0].touched)
+    {
+        input = (1024 - linearTouchState[0].position) << 1;
+    }
+    else
+    {
+        input = getSin1024(((*angleTimer >> 14) + 90) % 359) + 1024;
+    }
+    deg                       = input * (maxDeg - minDeg) / 2048 + minDeg;
+    state->pongState.rightPos = (vec_t){(140 + (91 * 3 * getSin1024(deg) / (1024 * 4))) << 4,
+                                        (120 - (91 * 3 * getCos1024(deg) / (1024 * 4))) << 4};
+
+    if (!linearTouchState[0].touched || !linearTouchState[1].touched)
+    {
+        return;
+    }
+
+    // initialize puck position and velocity
+    if (!state->pongState.initialized)
+    {
+        state->pongState.volleyCount = 0;
+        state->pongState.puckPos     = (vec_t){140 << 4, 120 << 4};
+        state->pongState.puckVel     = rotateVec2d((vec_t){400, 0}, esp_random() % 360);
+        state->pongState.initialized = true;
+    }
+    // update puck position
+    state->pongState.puckPos.x += state->pongState.puckVel.x * elapsedUs >> 20;
+    state->pongState.puckPos.y += state->pongState.puckVel.y * elapsedUs >> 20;
+    // walls collision check
+    if (state->pongState.puckPos.y < 1440 || state->pongState.puckPos.y > 2608)
+    {
+        state->pongState.puckPos.y = CLAMP(state->pongState.puckPos.y, 1440, 2608);
+        state->pongState.puckVel.y *= -1;
+    }
+
+    // puck-thumbs collision checks
+    if (sqMagVec2d(subVec2d(state->pongState.puckPos, state->pongState.leftPos)) < 40000)
+    {
+        state->pongState.volleyCount++;
+        vec_t norm = subVec2d(state->pongState.puckPos, state->pongState.leftPos);
+
+        fastNormVec(&norm.x, &norm.y);
+        state->pongState.puckPos = divVec2d(mulVec2d(norm, 5), 6);
+        // state->pongState.puckPos.x /= 256;
+        // state->pongState.puckPos.y /= 256;
+        state->pongState.puckPos = addVec2d(state->pongState.leftPos, state->pongState.puckPos);
+        // Reflect the velocity vector along the normal
+        // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
+
+        state->pongState.puckVel = divVec2d(
+            mulVec2d(subVec2d(state->pongState.puckVel,
+                              divVec2d(mulVec2d(norm, (2 * dotVec2d(state->pongState.puckVel, norm))), 65536)),
+                     11),
+            10);
+    }
+    if (sqMagVec2d(subVec2d(state->pongState.puckPos, state->pongState.rightPos)) < 40000)
+    {
+        state->pongState.volleyCount++;
+        vec_t norm = subVec2d(state->pongState.puckPos, state->pongState.rightPos);
+
+        fastNormVec(&norm.x, &norm.y);
+        state->pongState.puckPos = divVec2d(mulVec2d(norm, 5), 6);
+        // state->pongState.puckPos.x /= 256;
+        // state->pongState.puckPos.y /= 256;
+        state->pongState.puckPos = addVec2d(state->pongState.rightPos, state->pongState.puckPos);
+        state->pongState.puckVel = divVec2d(
+            mulVec2d(subVec2d(state->pongState.puckVel,
+                              divVec2d(mulVec2d(norm, (2 * dotVec2d(state->pongState.puckVel, norm))), 65536)),
+                     11),
+            10);
+    }
 }
 
 // Call when touch is detected
@@ -177,6 +267,9 @@ static bool tutorialCheckTrigger(tutorialState_t* state, const tutorialTrigger_t
 
         case TOUCH_ZONE_ANY:
             return (state->curTouchZone & trigger->touchZones) == trigger->touchZones;
+
+        case TOUCH_PONG:
+            return state->pongState.initialized == 0 && state->pongState.volleyCount >= 3;
 
         case TOUCH_SPIN:
             return trigger->intData == state->spinState.spins;
