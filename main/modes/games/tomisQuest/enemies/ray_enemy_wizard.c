@@ -109,9 +109,14 @@ bool rayEnemyWizardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
             state->vel.y = 0;
 
             // warp
-            enemy->c.posX = TO_FX((((ray->camera.x / 20) + 1) + esp_random() % 13)) + TO_FX_FRAC(1, 2) - 1;
-            enemy->c.posY = TO_FX((((ray->camera.y / 20) + 1) + esp_random() % 11)) + TO_FX_FRAC(1, 2) - 1;
-
+            vec_t warpTile;
+            do
+            {
+                warpTile.x = (ray->camera.x / CELL_SIZE) + (esp_random() % (TFT_WIDTH / CELL_SIZE));
+                warpTile.y = (ray->camera.y / CELL_SIZE) + (esp_random() % (TFT_HEIGHT / CELL_SIZE));
+            } while (isPassableCell(&ray->map.tiles[warpTile.x][warpTile.y]));
+            enemy->c.posX = TO_FX(warpTile.x) + TO_FX_FRAC(1, 2);
+            enemy->c.posY = TO_FX(warpTile.y) + TO_FX_FRAC(1, 2);
             // update bb after warping
             bb = rayGetObjBB(&enemy->c);
 
