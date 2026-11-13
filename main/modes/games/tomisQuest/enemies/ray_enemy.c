@@ -9,6 +9,10 @@
 #include "ray_enemy_turret.h"
 #include "ray_enemy_npc.h"
 #include "ray_enemy_hyut.h"
+#include "ray_enemy_guard.h"
+#include "ray_enemy_ninja.h"
+#include "ray_enemy_bat.h"
+#include "ray_enemy_wizard.h"
 #include "ray_cutscene.h"
 
 //==============================================================================
@@ -98,6 +102,26 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
                 heap_caps_free(newObj);
                 return;
             }
+            break;
+        }
+        case OBJ_ENEMY_GUARD:
+        {
+            rayInitEnemyGuard(ray, newObj);
+            break;
+        }
+        case OBJ_ENEMY_NINJA:
+        {
+            rayInitEnemyNinja(ray, newObj);
+            break;
+        }
+        case OBJ_ENEMY_BAT:
+        {
+            rayInitEnemyBat(ray, newObj);
+            break;
+        }
+        case OBJ_ENEMY_WIZARD:
+        {
+            rayInitEnemyWizard(ray, newObj);
             break;
         }
         default:

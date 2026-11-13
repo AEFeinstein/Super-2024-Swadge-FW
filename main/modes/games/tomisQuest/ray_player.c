@@ -1199,3 +1199,37 @@ rectangle_t rayGetPlayerBB(ray_t* ray)
     bb.pos.y  = (ray->p.posY) - (sz / 2);
     return bb;
 }
+
+/**
+ * @brief Standard check if an enemy intersects the player.
+ * This will damage the player by 1 and bump the player away from the enemy
+ *
+ * @param ray The entire games tate
+ * @param enemy The enemy to check for intersection
+ * @param player The player's bounding box
+ * @param deltaX unused
+ * @param deltaY unused
+ */
+void checkPlayerEnemyStandardCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY)
+{
+    // If the player is currently hittable
+    if (rayPlayerIsHittable(ray))
+    {
+        // Check if there's a bounding box intersection
+        rectangle_t enemyBB = rayGetObjBB(&enemy->c);
+        if (rectRectIntersection(player, enemyBB, NULL))
+        {
+            // Damage the player
+            if (rayPlayerDecrementHealth(ray, 1))
+            {
+                // Give the player a bump away from the enemy
+                ray->ps.vel.x = ray->p.posX - enemy->c.posX;
+                ray->ps.vel.y = ray->p.posY - enemy->c.posY;
+                fastNormVec(&ray->ps.vel.x, &ray->ps.vel.y);
+
+                // Bump for 250ms
+                ray->ps.bumpTimer = 250000;
+            }
+        }
+    }
+}
