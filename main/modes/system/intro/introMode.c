@@ -85,11 +85,15 @@ static const char* suffixes[] = {"\nIf you don't like it, you can adjust it in t
 
 static const cnfsFileIdx_t introwsgs[] = {
 
-    MAGCOM_2_WSG,
-    MAGCOM_3_WSG,
-    MAGCOM_4_WSG,
-    MAGCOM_5_WSG,
-
+    TRIHARD_ANIM_0001_WSG, TRIHARD_ANIM_0002_WSG, TRIHARD_ANIM_0003_WSG, TRIHARD_ANIM_0004_WSG, TRIHARD_ANIM_0005_WSG,
+    TRIHARD_ANIM_0006_WSG, TRIHARD_ANIM_0007_WSG, TRIHARD_ANIM_0008_WSG, TRIHARD_ANIM_0009_WSG, TRIHARD_ANIM_0010_WSG,
+    TRIHARD_ANIM_0011_WSG, TRIHARD_ANIM_0012_WSG, TRIHARD_ANIM_0013_WSG, TRIHARD_ANIM_0014_WSG, TRIHARD_ANIM_0015_WSG,
+    TRIHARD_ANIM_0016_WSG, TRIHARD_ANIM_0017_WSG, TRIHARD_ANIM_0018_WSG, TRIHARD_ANIM_0019_WSG, TRIHARD_ANIM_0020_WSG,
+    TRIHARD_ANIM_0021_WSG, TRIHARD_ANIM_0022_WSG, TRIHARD_ANIM_0023_WSG, TRIHARD_ANIM_0024_WSG, TRIHARD_ANIM_0025_WSG,
+    TRIHARD_ANIM_0026_WSG, TRIHARD_ANIM_0027_WSG, TRIHARD_ANIM_0028_WSG, TRIHARD_ANIM_0029_WSG, TRIHARD_ANIM_0030_WSG,
+    TRIHARD_ANIM_0031_WSG, TRIHARD_ANIM_0032_WSG, TRIHARD_ANIM_0033_WSG, TRIHARD_ANIM_0034_WSG, TRIHARD_ANIM_0035_WSG,
+    TRIHARD_ANIM_0036_WSG, TRIHARD_ANIM_0037_WSG, TRIHARD_ANIM_0038_WSG, TRIHARD_ANIM_0039_WSG, TRIHARD_ANIM_0040_WSG,
+    SWADGE_MAGFEST_WSG,    ZORLDO_MENU_EWI_WSG,
 };
 
 static const tutorialStep_t buttonsSteps[] = {
@@ -660,7 +664,7 @@ static void introExitMode(void)
 static void introMainLoop(int64_t elapsedUs)
 {
 #ifdef INTRO_MUSIC
-    if (iv->animateidx < 50)
+    if (iv->animateidx < 160)
     {
         playIntro(elapsedUs);
         return;
@@ -1450,84 +1454,24 @@ static void playIntro(int64_t elapsedUs)
         iv->animatetimer = 0;
         ESP_LOGI(TAG, "animate index is %d", iv->animateidx);
     }
-
-    switch (iv->animateidx)
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    int idx      = MIN(iv->animateidx, 39);
+    vec_t pos    = (vec_t){(TFT_WIDTH - iv->introimgs[idx].w) / 2, 40};
+    vec_t offset = (vec_t){iv->introimgs[idx].w / 2 + 10, iv->introimgs[0].h + 8};
+    drawWsgSimple(&iv->introimgs[idx], pos.x, MIN(iv->animateidx, 40));
+    drawWsg(&iv->introimgs[idx], pos.x + offset.x + MAX(40 - iv->animateidx, 0),
+            pos.y + offset.y + MAX(40 - iv->animateidx, 0), true, false, 120);
+    drawWsg(&iv->introimgs[idx], pos.x - offset.x - MAX(40 - iv->animateidx, 0),
+            pos.y + offset.y + MAX(40 - iv->animateidx, 0), false, false, 240);
+    if (iv->animateidx > 70)
     {
-        case 0:
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-        case 10:
-        case 11:
-        case 12:
-        case 13:
-        case 14:
-        case 15:
-        case 16:
+        if (iv->animateidx > 90)
         {
-            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-            break;
+            drawWsg(&iv->introimgs[41], MAX(72 - (iv->animateidx - 90) * 22 - iv->animatetimer / 9090, -60),
+                    MIN(-122 + (iv->animateidx - 90) * 37 + iv->animatetimer / 5555, 100), false, false, 300);
         }
-        case 17:
-        {
-            drawWsgSimple(&iv->introimgs[0], (TFT_WIDTH - iv->introimgs[0].w) / 2,
-                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
-            break;
-        }
-        case 18:
-        {
-            drawWsgSimple(&iv->introimgs[1], (TFT_WIDTH - iv->introimgs[0].w) / 2,
-                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
-            break;
-        }
-        case 19:
-        {
-            drawWsgSimple(&iv->introimgs[2], (TFT_WIDTH - iv->introimgs[0].w) / 2,
-                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
-            break;
-        }
-        case 42:
-        {
-            drawWsgSimple(&iv->introimgs[2], (TFT_WIDTH - iv->introimgs[0].w) / 2,
-                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
-            break;
-        }
-        case 43:
-        {
-            drawWsgSimple(&iv->introimgs[1], (TFT_WIDTH - iv->introimgs[0].w) / 2,
-                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
-            break;
-        }
-        case 44:
-        {
-            drawWsgSimple(&iv->introimgs[0], (TFT_WIDTH - iv->introimgs[0].w) / 2,
-                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
-            break;
-        }
-        case 45:
-        case 46:
-        case 47:
-        case 48:
-        case 49:
-        case 50:
-        {
-            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-            break;
-        }
-
-        default:
-        {
-            drawWsgSimple(&iv->introimgs[3], (TFT_WIDTH - iv->introimgs[0].w) / 2,
-                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
-            break;
-        }
-            // add case 26,27, etc for twinkle later
+        drawWsgSimple(&iv->introimgs[40], (TFT_WIDTH - iv->introimgs[40].w) / 2,
+                      (TFT_HEIGHT - iv->introimgs[40].h) / 2);
     }
 }
 
