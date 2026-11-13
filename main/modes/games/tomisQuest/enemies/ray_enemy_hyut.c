@@ -222,24 +222,5 @@ bool rayEnemyHyutMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
  */
 void rayEnemyHyutCheckPlayerCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY)
 {
-    // If the player is currently hittable
-    if (rayPlayerIsHittable(ray))
-    {
-        // Check if there's a bounding box intersection
-        rectangle_t enemyBB = rayGetObjBB(&enemy->c);
-        if (rectRectIntersection(player, enemyBB, NULL))
-        {
-            // Damage the player
-            if (rayPlayerDecrementHealth(ray, 1))
-            {
-                // Give the player a bump away from the hyut
-                ray->ps.vel.x = ray->p.posX - enemy->c.posX;
-                ray->ps.vel.y = ray->p.posY - enemy->c.posY;
-                fastNormVec(&ray->ps.vel.x, &ray->ps.vel.y);
-
-                // Bump for 250ms
-                ray->ps.bumpTimer = 250000;
-            }
-        }
-    }
+    checkPlayerEnemyStandardCollision(ray, enemy, player, deltaX, deltaY);
 }
