@@ -4,12 +4,14 @@
 
 #include "ray_pause.h"
 #include "ray_tex_manager.h"
+#include "ray_instrument.h"
 
 //==============================================================================
 // Function Declarations
 //==============================================================================
 
 static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs);
+static void rayPauseRenderSong(ray_t* ray, uint32_t elapsedUs);
 static void drawPlayerIndicator(ray_t* ray, int16_t cX, int16_t cY);
 
 //==============================================================================
@@ -23,6 +25,8 @@ static void drawPlayerIndicator(ray_t* ray, int16_t cX, int16_t cY);
  */
 void rayShowPause(ray_t* ray)
 {
+    ray->instrumentAutoPlayIdx   = 0;
+    ray->instrumentAutoPlayTimer = 0;
     raySwitchToScreen(RAY_PAUSE);
     globalMidiPlayerPauseAll();
 }
@@ -50,8 +54,13 @@ void rayPauseCheckButtons(ray_t* ray)
                 case PB_A:
                 case PB_B:
                 {
+                    int32_t numScreens = RP_NUM_SCREENS;
+                    if (!ray->p.i.haveDoriasLullaby)
+                    {
+                        numScreens--;
+                    }
                     // Switch between local map and world map
-                    ray->pauseScreen = (ray->pauseScreen + 1) % RP_NUM_SCREENS;
+                    ray->pauseScreen = (ray->pauseScreen + 1) % numScreens;
                     break;
                 }
                 case PB_START:
@@ -91,21 +100,28 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
             rayPauseRenderLocalMap(ray, elapsedUs);
             break;
         }
+        case RP_SONG_REMINDER:
+        {
+            rayPauseRenderSong(ray, elapsedUs);
+            break;
+        }
     }
 
-    //     if (ray->blink)
-    //     {
-    // #define TRIANGLE_OFFSET_X 20
-    // #define TRIANGLE_OFFSET_Y 0
-    //         drawTriangleOutlined(TFT_WIDTH - TRIANGLE_OFFSET_X - 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 4,
-    //                              TFT_WIDTH - TRIANGLE_OFFSET_X - 4, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 10,
-    //                              TFT_WIDTH - TRIANGLE_OFFSET_X - 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 16, c100,
-    //                              c542);
+    if (ray->p.i.haveDoriasLullaby)
+    {
+        if (ray->blink)
+        {
+#define TRIANGLE_OFFSET_X 20
+#define TRIANGLE_OFFSET_Y 0
+            drawTriangleOutlined(TFT_WIDTH - TRIANGLE_OFFSET_X - 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 4,
+                                 TFT_WIDTH - TRIANGLE_OFFSET_X - 4, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 10,
+                                 TFT_WIDTH - TRIANGLE_OFFSET_X - 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 16, c100, c542);
 
-    //         drawTriangleOutlined(TRIANGLE_OFFSET_X + 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 4, TRIANGLE_OFFSET_X + 4,
-    //                              TFT_HEIGHT - TRIANGLE_OFFSET_Y - 10, TRIANGLE_OFFSET_X + 16,
-    //                              TFT_HEIGHT - TRIANGLE_OFFSET_Y - 16, c100, c542);
-    //     }
+            drawTriangleOutlined(TRIANGLE_OFFSET_X + 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 4, TRIANGLE_OFFSET_X + 4,
+                                 TFT_HEIGHT - TRIANGLE_OFFSET_Y - 10, TRIANGLE_OFFSET_X + 16,
+                                 TFT_HEIGHT - TRIANGLE_OFFSET_Y - 16, c100, c542);
+        }
+    }
 }
 
 /**
@@ -189,6 +205,63 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
     int16_t cX = cellOffX + FROM_FX(cellSize * ray->p.posX);
     int16_t cY = cellOffY + FROM_FX(cellSize * ray->p.posY);
     drawPlayerIndicator(ray, cX, cY);
+}
+
+/**
+ * @brief Render a reminder how to play Doria's Lullaby
+ *
+ * @param ray The entire game state
+ * @param elapsedUs The time since this was last called
+ */
+static void rayPauseRenderSong(ray_t* ray, uint32_t elapsedUs)
+{
+    // The notes in the song, with two rests at the end
+    const int16_t songNotes[] = {0, 7, 4, 4, 0, 4, 5, 99, 99};
+
+    // Advance once a second
+    RUN_TIMER_EVERY(ray->instrumentAutoPlayTimer, 1000000, elapsedUs, {
+        ray->instrumentAutoPlayIdx++;
+        if (ray->instrumentAutoPlayIdx >= ARRAY_SIZE(songNotes))
+        {
+            ray->instrumentAutoPlayIdx = 0;
+        }
+    });
+
+    // Draw blocks for the eight notes, four on each side
+    const int16_t step = (TFT_HEIGHT / 4);
+    int16_t xOff       = 0;
+    int16_t yOff       = 0;
+    for (uint8_t i = 0; i < 8; i++)
+    {
+        // Either draw an outline or fill the box
+        if (i == songNotes[ray->instrumentAutoPlayIdx])
+        {
+            fillDisplayArea(xOff, yOff, xOff + step, yOff + step, noteColors[i]);
+
+            // Draw the index on top of the square
+            char idxText[8] = {0};
+            snprintf(idxText, sizeof(idxText) - 1, "%" PRIu8, ray->instrumentAutoPlayIdx + 1);
+            const font_t* f = ray->renderer->titleFont;
+            uint16_t tWidth = textWidth(f, idxText);
+            // Invert the color for high contrast text
+            paletteColor_t invColor = (noteColors[i] + (3) + (3 * 6) + (3 * 6 * 6)) % cTransparent;
+            drawText(f, invColor, idxText, xOff + (step - tWidth) / 2, yOff + (step - f->height) / 2);
+        }
+        else
+        {
+            drawRect(xOff, yOff, xOff + step, yOff + step, noteColors[i]);
+        }
+
+        // Step down
+        yOff += step;
+
+        // If offscreen, shift right
+        if (yOff >= TFT_HEIGHT)
+        {
+            yOff = 0;
+            xOff = TFT_WIDTH - step;
+        }
+    }
 }
 
 /**

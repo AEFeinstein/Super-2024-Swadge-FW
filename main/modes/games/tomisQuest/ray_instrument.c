@@ -9,8 +9,8 @@
 // Const data
 //==============================================================================
 
-static const paletteColor_t noteColors[] = {c500, c530, c250, c051, c055, c015, c205, c503};
-static const uint32_t noteFreqs[]        = {
+const paletteColor_t noteColors[] = {c500, c530, c250, c051, c055, c015, c205, c503};
+static const uint32_t noteFreqs[] = {
     262, // C4
     294, // D4
     330, // E4
