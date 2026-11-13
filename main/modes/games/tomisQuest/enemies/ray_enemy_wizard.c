@@ -130,8 +130,8 @@ bool rayEnemyWizardMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
                 .height = TO_FX(4),
             };
 
-            if (rayBoundingBoxFitsInMap(ray, bb, NULL) &&
-                !rectRectIntersection(rayGetPlayerBB(ray), proximityBox, NULL))
+            if (rayBoundingBoxFitsInMap(ray, bb, NULL)
+                && !rectRectIntersection(rayGetPlayerBB(ray), proximityBox, NULL))
             {
                 state->state      = TQ_EN_WIZARD_ST_APPEARING;
                 state->tempPos.x  = enemy->c.posX;
