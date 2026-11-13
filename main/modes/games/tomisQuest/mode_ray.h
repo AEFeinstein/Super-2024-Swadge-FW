@@ -414,8 +414,9 @@ typedef enum
  */
 typedef enum
 {
-    RP_LOCAL_MAP,   ///< The map the player is currently in
-    RP_NUM_SCREENS, ///< The number of pause screens
+    RP_LOCAL_MAP,     ///< The map the player is currently in
+    RP_SONG_REMINDER, ///< A reminder how to play the song
+    RP_NUM_SCREENS,   ///< The number of pause screens
 } rayPauseScreen_t;
 
 /**
