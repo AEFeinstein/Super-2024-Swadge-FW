@@ -197,17 +197,17 @@ typedef enum __attribute__((packed))
     OBJ_ENEMY_NPC_EMBER_DEMON = (OBJ | ENEMY | 19),
     OBJ_ENEMY_NPC_THE_MAYOR   = (OBJ | ENEMY | 20),
     OBJ_ENEMY_NPC_FREDWARD    = (OBJ | ENEMY | 21),
-    // Unallocated enemies
-    OBJ_ENEMY_22 = (OBJ | ENEMY | 22),
-    OBJ_ENEMY_23 = (OBJ | ENEMY | 23),
-    OBJ_ENEMY_24 = (OBJ | ENEMY | 24),
-    OBJ_ENEMY_25 = (OBJ | ENEMY | 25),
-    OBJ_ENEMY_26 = (OBJ | ENEMY | 26),
-    OBJ_ENEMY_27 = (OBJ | ENEMY | 27),
-    OBJ_ENEMY_28 = (OBJ | ENEMY | 28),
-    OBJ_ENEMY_29 = (OBJ | ENEMY | 29),
-    OBJ_ENEMY_30 = (OBJ | ENEMY | 30),
-    OBJ_ENEMY_31 = (OBJ | ENEMY | 31),
+    // Enemies
+    OBJ_ENEMY_GUARD  = (OBJ | ENEMY | 22),
+    OBJ_ENEMY_NINJA  = (OBJ | ENEMY | 23),
+    OBJ_ENEMY_BAT    = (OBJ | ENEMY | 24),
+    OBJ_ENEMY_WIZARD = (OBJ | ENEMY | 25),
+    OBJ_ENEMY_26     = (OBJ | ENEMY | 26),
+    OBJ_ENEMY_27     = (OBJ | ENEMY | 27),
+    OBJ_ENEMY_28     = (OBJ | ENEMY | 28),
+    OBJ_ENEMY_29     = (OBJ | ENEMY | 29),
+    OBJ_ENEMY_30     = (OBJ | ENEMY | 30),
+    OBJ_ENEMY_31     = (OBJ | ENEMY | 31),
     // Item pickups
     OBJ_ITEM_EWI             = (OBJ | ITEM | 0),
     OBJ_ITEM_BOMB            = (OBJ | ITEM | 1),
@@ -414,8 +414,9 @@ typedef enum
  */
 typedef enum
 {
-    RP_LOCAL_MAP,   ///< The map the player is currently in
-    RP_NUM_SCREENS, ///< The number of pause screens
+    RP_LOCAL_MAP,     ///< The map the player is currently in
+    RP_SONG_REMINDER, ///< A reminder how to play the song
+    RP_NUM_SCREENS,   ///< The number of pause screens
 } rayPauseScreen_t;
 
 /**
