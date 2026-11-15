@@ -664,7 +664,7 @@ static void introExitMode(void)
 static void introMainLoop(int64_t elapsedUs)
 {
 #ifdef INTRO_MUSIC
-    if (iv->animateidx < 160)
+    if (iv->animateidx < 130)
     {
         playIntro(elapsedUs);
         return;
