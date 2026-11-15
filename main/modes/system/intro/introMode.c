@@ -144,7 +144,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .intData = -1,
         },
         .title = touchpadTitle,
-        .detail = "Use the touchstrips to volley the ball 3 times! Fingers on the back of the touch zones may create false inputs."
+        .detail = "Use the touchstrips to hit the puck 3 times! Fingers on the back of the touch zones may create false inputs."
     },
 #else
     {
