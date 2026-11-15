@@ -42,7 +42,7 @@ static bool introCheckQuickSettingsTrigger(const tutorialState_t* state, const t
 static vec_t getTouchScreenCoord(vec_t touchPoint);
 
 static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons);
-static void introDrawLinearTouchpad(int64_t elapsedUs);
+static void introDrawLinearTouchpad();
 static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint, list_t* touchHist);
 static void introDrawSwadgeImu(int64_t elapsedUs);
 static void introDrawSwadgeSpeaker(int64_t elapsedUs);
@@ -1454,7 +1454,16 @@ static void playIntro(int64_t elapsedUs)
         iv->animatetimer = 0;
         ESP_LOGI(TAG, "animate index is %d", iv->animateidx);
     }
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    if (iv->animateidx >= 96)
+    {
+        // background flash starting at frame 96
+        paletteColor_t backgroundFlashes[8] = {c555, c455, c344, c233, c122, c022, c011, c000};
+        fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, backgroundFlashes[CLAMP((iv->animateidx - 96), 0, 7)]);
+    }
+    else
+    {
+        fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    }
     int idx      = MIN(iv->animateidx, 39);
     vec_t pos    = (vec_t){(TFT_WIDTH - iv->introimgs[idx].w) / 2, 40};
     vec_t offset = (vec_t){iv->introimgs[idx].w / 2 + 10, iv->introimgs[0].h + 8};
@@ -1467,9 +1476,11 @@ static void playIntro(int64_t elapsedUs)
     {
         if (iv->animateidx > 90)
         {
+            // sword slides
             drawWsg(&iv->introimgs[41], MAX(72 - (iv->animateidx - 90) * 22 - iv->animatetimer / 9090, -60),
                     MIN(-122 + (iv->animateidx - 90) * 37 + iv->animatetimer / 5555, 100), false, false, 300);
         }
+        // shield & text logo
         drawWsgSimple(&iv->introimgs[40], (TFT_WIDTH - iv->introimgs[40].w) / 2,
                       (TFT_HEIGHT - iv->introimgs[40].h) / 2);
     }
