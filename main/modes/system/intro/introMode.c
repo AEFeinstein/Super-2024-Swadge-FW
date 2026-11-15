@@ -83,8 +83,8 @@ static const char exitTitle[] = "Mission Complete";
 static const char* suffixes[] = {"\nIf you don't like it, you can adjust it in the next step.",
                                  "\nIf you don't like it, you can adjust it in the Sona Creator Mode."};
 
+/* clang-format off */
 static const cnfsFileIdx_t introwsgs[] = {
-
     TRIHARD_ANIM_0001_WSG, TRIHARD_ANIM_0002_WSG, TRIHARD_ANIM_0003_WSG, TRIHARD_ANIM_0004_WSG, TRIHARD_ANIM_0005_WSG,
     TRIHARD_ANIM_0006_WSG, TRIHARD_ANIM_0007_WSG, TRIHARD_ANIM_0008_WSG, TRIHARD_ANIM_0009_WSG, TRIHARD_ANIM_0010_WSG,
     TRIHARD_ANIM_0011_WSG, TRIHARD_ANIM_0012_WSG, TRIHARD_ANIM_0013_WSG, TRIHARD_ANIM_0014_WSG, TRIHARD_ANIM_0015_WSG,
@@ -94,6 +94,26 @@ static const cnfsFileIdx_t introwsgs[] = {
     TRIHARD_ANIM_0031_WSG, TRIHARD_ANIM_0032_WSG, TRIHARD_ANIM_0033_WSG, TRIHARD_ANIM_0034_WSG, TRIHARD_ANIM_0035_WSG,
     TRIHARD_ANIM_0036_WSG, TRIHARD_ANIM_0037_WSG, TRIHARD_ANIM_0038_WSG, TRIHARD_ANIM_0039_WSG, TRIHARD_ANIM_0040_WSG,
     SWADGE_MAGFEST_WSG,    ZORLDO_MENU_EWI_WSG,
+    STAR_0_WSG, STAR_1_WSG, STAR_2_WSG, STAR_3_WSG, STAR_4_WSG,
+    STAR_5_WSG,STAR_6_WSG, STAR_7_WSG, STAR_8_WSG, STAR_9_WSG,
+    STAR_10_WSG, STAR_11_WSG, STAR_12_WSG, STAR_13_WSG, 
+};
+/* clang-format on */
+
+typedef struct
+{
+    vec_t screenPos;
+    uint8_t startFrame;
+    uint8_t endFrame;
+} textSparkle;
+
+//the sparkles on the letters M E M E S
+static const textSparkle sparkles[] = {
+{{78, 63}, 0, 5},
+{{191,127}, 6, 11},
+{{37,95}, 2,7},
+{{189,99}, 8,13},
+{{214,127}, 4, 9},
 };
 
 static const tutorialStep_t buttonsSteps[] = {
@@ -488,6 +508,8 @@ typedef struct
     int animateidx;
     int64_t animatetimer;
     wsg_t* introimgs;
+    int8_t sparkleIdx; //which of the 5 sparkles is being rendered. -1 for none.
+    int8_t sparkleFrame; //the current sparkle frame being rendered. Increment sparkleIdx when it exceeds endFrame.
 
 } introVars_t;
 
@@ -603,6 +625,9 @@ static void introEnterMode(void)
     {
         loadWsg(introwsgs[i], &iv->introimgs[i], true);
     }
+
+    iv->sparkleIdx = 0;
+    iv->sparkleFrame = sparkles[0].startFrame;
 #endif
 
     // Load the test MIDI file
@@ -1479,10 +1504,29 @@ static void playIntro(int64_t elapsedUs)
             // sword slides
             drawWsg(&iv->introimgs[41], MAX(72 - (iv->animateidx - 90) * 22 - iv->animatetimer / 9090, -60),
                     MIN(-122 + (iv->animateidx - 90) * 37 + iv->animatetimer / 5555, 100), false, false, 300);
+
         }
         // shield & text logo
         drawWsgSimple(&iv->introimgs[40], (TFT_WIDTH - iv->introimgs[40].w) / 2,
                       (TFT_HEIGHT - iv->introimgs[40].h) / 2);
+        // draw sparkles
+        if(iv->animateidx > 105 && iv->sparkleIdx > -1)
+        {
+            drawWsgSimpleScaled(&iv->introimgs[42+iv->sparkleFrame/3], sparkles[iv->sparkleIdx].screenPos.x, sparkles[iv->sparkleIdx].screenPos.y, 2, 2);
+            iv->sparkleFrame++;
+            if(iv->sparkleFrame/3 > sparkles[iv->sparkleIdx].endFrame)
+            {
+                iv->sparkleIdx++;
+                if(iv->sparkleIdx > 4)
+                {
+                    iv->sparkleIdx = -1;
+                }
+                else
+                {
+                    iv->sparkleFrame = sparkles[iv->sparkleIdx].startFrame*3;
+                }
+            }
+        }
     }
 }
 
