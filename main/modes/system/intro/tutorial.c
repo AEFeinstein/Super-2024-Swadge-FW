@@ -302,7 +302,7 @@ static bool tutorialCheckTrigger(tutorialState_t* state, const tutorialTrigger_t
             return (state->curTouchZone & trigger->touchZones) == trigger->touchZones;
 
         case TOUCH_PONG:
-            return state->pongState.initialized == 0 && state->pongState.volleyCount >= 300;
+            return state->pongState.initialized == 0 && state->pongState.volleyCount >= 3;
 
         case TOUCH_SPIN:
             return trigger->intData == state->spinState.spins;
