@@ -173,6 +173,7 @@ typedef struct tutorialState
 
     linearTouch_t linearTouchState[2];
     tutorialPongState pongState;
+    midiTimbre_t timbre;
 
     int32_t touchPhi;
     int32_t touchRadius;

@@ -95,13 +95,10 @@ static const cnfsFileIdx_t introwsgs[] = {
     TRIHARD_ANIM_0036_WSG, TRIHARD_ANIM_0037_WSG, TRIHARD_ANIM_0038_WSG, TRIHARD_ANIM_0039_WSG, TRIHARD_ANIM_0040_WSG,
     SWADGE_MAGFEST_WSG,    ZORLDO_MENU_EWI_WSG,
     SPARKLE_0_WSG, SPARKLE_1_WSG, SPARKLE_2_WSG, SPARKLE_3_WSG, SPARKLE_4_WSG,
-    // STAR_0_WSG, STAR_1_WSG, STAR_2_WSG, STAR_3_WSG, STAR_4_WSG,
-    // STAR_5_WSG,STAR_6_WSG, STAR_7_WSG, STAR_8_WSG, STAR_9_WSG,
-    // STAR_10_WSG, STAR_11_WSG, STAR_12_WSG, STAR_13_WSG, 
 };
 /* clang-format on */
 
-// the sparkles on the letters M E M E S
+// the positions for sparkles on the letters M E M E S
 static const vec_t sparkles[] = {
     {85, 66}, {198, 130}, {41, 98}, {192, 102}, {218, 130},
 };
@@ -1245,6 +1242,10 @@ static vec_t getTouchScreenCoord(vec_t touchPoint)
     return drawPoint;
 }
 
+/**
+ * @brief Draws the linear touchpad tutorial.
+ *
+ */
 static void introDrawLinearTouchpad()
 {
     if (iv->tut.linearTouchState[0].touched && iv->tut.linearTouchState[1].touched)

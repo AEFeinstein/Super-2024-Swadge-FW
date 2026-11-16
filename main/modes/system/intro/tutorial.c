@@ -24,6 +24,20 @@ void tutorialSetup(tutorialState_t* state, tutorialStepCb stepCbFunc, const tuto
     state->curStep       = steps;
     state->data          = data;
     state->stepStartTime = esp_timer_get_time();
+
+    // Begin timbre initialization stuff
+    memcpy(&state->timbre, getTimbreForProgram(false, 1, 1), sizeof(midiTimbre_t));
+    state->timbre.envelope.attackTime    = 0;
+    state->timbre.envelope.attackTimeVel = 0;
+    // Using decay instead of release, with a sustain volume of 0, makes the note behave more like percussion
+    // (no note off is necessary)
+    // The control is set in increments of 10ms, so this is equivalent to setting release CC to 60
+    state->timbre.envelope.decayTime    = MS_TO_SAMPLES(20); // 600
+    state->timbre.envelope.decayTimeVel = (MS_TO_SAMPLES(150) << 8) / 127;
+    // Setting sustain volume to 0 means the note ends on its own after decay
+    state->timbre.envelope.sustainVol  = 0;
+    state->timbre.envelope.releaseTime = 0;
+    // End timbre initialization stuff
 }
 
 // Call with each button press
@@ -35,11 +49,11 @@ void tutorialOnButton(tutorialState_t* state, const buttonEvt_t* evt)
     state->lastButtonDown = evt->down;
 }
 
-// Call when linear touch is detected. It's the game logic for pong.
+// Call while on the linear touch tutorial. It's the game logic for pong.
 void tutorialOnLinearTouch(int64_t elapsedUs, tutorialState_t* state, int32_t* angleTimer,
                            linearTouch_t linearTouchState[2])
 {
-    // update paddles
+    // update the paddles either with the touch positions or with a sine wave while not touching.
     *angleTimer += elapsedUs;
     int minDeg = 70;
     int maxDeg = 125;
@@ -52,11 +66,12 @@ void tutorialOnLinearTouch(int64_t elapsedUs, tutorialState_t* state, int32_t* a
     {
         input = getSin1024((*angleTimer >> 14) % 359) + 1024;
     }
-    int deg                  = input * (maxDeg - minDeg) / 2048 + minDeg;
-    state->pongState.leftPos = (vec_t){(140 + (91 * 3 * getSin1024(deg) / (1024 * 4))) << 4,
-                                       (120 - (91 * 3 * getCos1024(deg) / (1024 * 4))) << 4};
-    minDeg                   = 235;
-    maxDeg                   = 290;
+    int deg = input * (maxDeg - minDeg) / 2048 + minDeg;
+    // four decimal bits represent floating point.
+    state->pongState.leftPos
+        = (vec_t){(140 + (273 * getSin1024(deg) / 4096)) << 4, (120 - (273 * getCos1024(deg) / 4096)) << 4};
+    minDeg = 235;
+    maxDeg = 290;
     if (linearTouchState[0].touched)
     {
         input = (1024 - linearTouchState[0].position) << 1;
@@ -65,10 +80,9 @@ void tutorialOnLinearTouch(int64_t elapsedUs, tutorialState_t* state, int32_t* a
     {
         input = getSin1024(((*angleTimer >> 14) + 90) % 359) + 1024;
     }
-    deg                       = input * (maxDeg - minDeg) / 2048 + minDeg;
-    state->pongState.rightPos = (vec_t){(140 + (91 * 3 * getSin1024(deg) / (1024 * 4))) << 4,
-                                        (120 - (91 * 3 * getCos1024(deg) / (1024 * 4))) << 4};
-
+    deg = input * (maxDeg - minDeg) / 2048 + minDeg;
+    state->pongState.rightPos
+        = (vec_t){(140 + (273 * getSin1024(deg) / 4096)) << 4, (120 - (273 * getCos1024(deg) / 4096)) << 4};
     if (!linearTouchState[0].touched || !linearTouchState[1].touched)
     {
         return;
@@ -79,8 +93,9 @@ void tutorialOnLinearTouch(int64_t elapsedUs, tutorialState_t* state, int32_t* a
     {
         state->pongState.volleyCount = 0;
         state->pongState.puckPos     = (vec_t){140 << 4, 120 << 4};
-        state->pongState.puckVel     = rotateVec2d((vec_t){0, -400}, (esp_random() % 120) + 30);
-        if (esp_random() % 2) // 50% chance
+        // This velocity is some general dirction going right. From 30 degrees to 150 degrees.
+        state->pongState.puckVel = rotateVec2d((vec_t){0, -400}, (esp_random() % 120) + 30);
+        if (esp_random() % 2) // 50% chance to send it to the left.
         {
             state->pongState.puckVel.x *= -1;
         }
@@ -92,6 +107,12 @@ void tutorialOnLinearTouch(int64_t elapsedUs, tutorialState_t* state, int32_t* a
     // walls collision check
     if (state->pongState.puckPos.y < 1440 || state->pongState.puckPos.y > 2608)
     {
+        midiPlayer_t* player = globalMidiPlayerGet(MIDI_SFX);
+        midiPause(player, false);
+        player->headroom = 0x8000; // max volume
+        // Setting the channel to something > 15 means the note will not be affected by a song changing MIDI controls.
+        soundNoteOn(player, 15, 78, 127, &state->timbre, false);
+
         state->pongState.puckPos.y = CLAMP(state->pongState.puckPos.y, 1440, 2608);
         state->pongState.puckVel.y *= -1;
     }
@@ -99,6 +120,12 @@ void tutorialOnLinearTouch(int64_t elapsedUs, tutorialState_t* state, int32_t* a
     // puck-paddles collision checks
     if (sqMagVec2d(subVec2d(state->pongState.puckPos, state->pongState.leftPos)) < 40000)
     {
+        midiPlayer_t* player = globalMidiPlayerGet(MIDI_SFX);
+        midiPause(player, false);
+        player->headroom = 0x8000; // max volume
+        // Setting the channel to something > 15 means the note will not be affected by a song changing MIDI controls.
+        soundNoteOn(player, 15, 83, 127, &state->timbre, false);
+
         state->pongState.volleyCount++;
         vec_t norm = subVec2d(state->pongState.puckPos, state->pongState.leftPos);
 
@@ -107,7 +134,7 @@ void tutorialOnLinearTouch(int64_t elapsedUs, tutorialState_t* state, int32_t* a
         state->pongState.puckPos = addVec2d(state->pongState.leftPos, state->pongState.puckPos);
         // Reflect the velocity vector along the normal
         // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
-
+        // It gets a 10% increase in velocity per hit. hence * 11/10.
         state->pongState.puckVel = divVec2d(
             mulVec2d(subVec2d(state->pongState.puckVel,
                               divVec2d(mulVec2d(norm, (2 * dotVec2d(state->pongState.puckVel, norm))), 65536)),
@@ -116,6 +143,12 @@ void tutorialOnLinearTouch(int64_t elapsedUs, tutorialState_t* state, int32_t* a
     }
     if (sqMagVec2d(subVec2d(state->pongState.puckPos, state->pongState.rightPos)) < 40000)
     {
+        midiPlayer_t* player = globalMidiPlayerGet(MIDI_SFX);
+        midiPause(player, false);
+        player->headroom = 0x8000; // max volume
+        // Setting the channel to something > 15 means the note will not be affected by a song changing MIDI controls.
+        soundNoteOn(player, 15, 76, 127, &state->timbre, false);
+
         state->pongState.volleyCount++;
         vec_t norm = subVec2d(state->pongState.puckPos, state->pongState.rightPos);
 
@@ -269,7 +302,7 @@ static bool tutorialCheckTrigger(tutorialState_t* state, const tutorialTrigger_t
             return (state->curTouchZone & trigger->touchZones) == trigger->touchZones;
 
         case TOUCH_PONG:
-            return state->pongState.initialized == 0 && state->pongState.volleyCount >= 3;
+            return state->pongState.initialized == 0 && state->pongState.volleyCount >= 300;
 
         case TOUCH_SPIN:
             return trigger->intData == state->spinState.spins;
