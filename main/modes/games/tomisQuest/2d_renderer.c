@@ -207,13 +207,13 @@ void drawForeground2d(ray_t* ray)
             {
                 // Find the amount this door is open or closed, in pixels
                 // TO_FX(1) means open, TO_FX(0) is closed
-                int32_t offset = (-1 * cell->doorOpen * CELL_SIZE) / TO_FX(1);
+                int32_t offset = (cell->doorOpen * CELL_SIZE) / TO_FX(1);
 
                 // Draw the partially opened door
                 drawWsgClipY(getTexByType(ray, cell->doorType), //
                              x * CELL_SIZE - camX,              //
                              y * CELL_SIZE - camY + offset,     //
-                             y * CELL_SIZE - camY);
+                             (y + 1) * CELL_SIZE - camY - 1);
             }
         }
     }

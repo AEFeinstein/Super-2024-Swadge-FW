@@ -50,7 +50,7 @@ static void rayEnemyBatGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t b
 void rayInitEnemyBat(ray_t* ray, rayEnemy_t* e)
 {
     // Bat has one texture, for now
-    e->c.sprite = loadTexture(ray, OBJ_ENEMY_GRUNT_WSG, OBJ_ENEMY_BAT);
+    e->c.sprite = loadTexture(ray, OBJ_ENEMY_BAT_WSG, OBJ_ENEMY_BAT);
     e->portrait = e->c.sprite;
 
     // Bat has 1hp to not die

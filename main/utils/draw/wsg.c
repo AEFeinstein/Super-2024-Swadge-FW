@@ -604,31 +604,21 @@ void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff)
  */
 void drawWsgClipY(const wsg_t* wsg, int32_t xOff, int32_t yOff, int32_t clipY)
 {
-    // The number of rows to clip
-    int clipOffset = clipY - yOff;
-    // The number of rows drawn
-    int drawH = wsg->h - clipOffset;
-
-    // Make sure it's at least a little in bounds
-    if (xOff > TFT_WIDTH || xOff + wsg->w < 0 || clipY > TFT_HEIGHT || clipY + drawH < 0)
+    if (xOff > TFT_WIDTH || xOff + wsg->w < 0 || yOff > TFT_HEIGHT || yOff + wsg->h < 0)
     {
         return;
     }
 
-    // Bound in the Y direction
-    int32_t yStart = (clipY < 0) ? 0 : clipY;
-    int32_t yEnd   = ((clipY + drawH) > TFT_HEIGHT) ? TFT_HEIGHT : (clipY + drawH);
+    int drawH = (clipY - yOff) + 1;
+    drawH     = (wsg->h < drawH) ? wsg->h : drawH;
 
-    int wWidth        = wsg->w;
-    int dWidth        = TFT_WIDTH;
-    int wsgClipOffset = clipOffset * wWidth;
-    // If the draw would be off the screen
-    if (clipY < 0)
-    {
-        // Adjust it to be on screen
-        wsgClipOffset -= (clipY * wWidth);
-    }
-    const paletteColor_t* pxWsg = &wsg->px[wsgClipOffset];
+    // Bound in the Y direction
+    int32_t yStart = (yOff < 0) ? 0 : yOff;
+    int32_t yEnd   = ((yOff + drawH) > TFT_HEIGHT) ? TFT_HEIGHT : (yOff + drawH);
+
+    int wWidth                  = wsg->w;
+    int dWidth                  = TFT_WIDTH;
+    const paletteColor_t* pxWsg = &wsg->px[(yOff < 0) ? (drawH - (yEnd - yStart)) * wWidth : 0];
     paletteColor_t* pxDisp      = &(getPxTftFramebuffer()[yStart * dWidth + xOff]);
 
     // Bound in the X direction
