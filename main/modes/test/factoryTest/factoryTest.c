@@ -227,9 +227,7 @@ void testEnterMode(void)
     accelPerformCal();
 
     // Load firmware that turns all LEDs on, then sweeps horizontal and vertical test patterns
-#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
-    // Already setup by sandbox.c
-#else
+#if defined(CONFIG_HARDWARE_PULSE)
     ch32v003RunBinaryAsset(MATRIX_FACTORY_CFUN_BIN);
 #endif
 

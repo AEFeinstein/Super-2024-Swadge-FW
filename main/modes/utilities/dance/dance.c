@@ -297,11 +297,13 @@ void danceMainLoop(int64_t elapsedUs)
             // Draw to it
             drawMenuZorldo(danceState->menu, danceState->menuRenderer, elapsedUs);
 
+#if defined(CONFIG_HARDWARE_PULSE)
             // Set the LED eyes. First do a read to nudge it out of deep sleep
             uint32_t var;
             ch32v003ReadMemory((uint8_t*)&var, sizeof(var), 0x08000000);
             // Then reprogram it
             ch32v003RunBinaryAsset(FIRMWARE_CFUN_BIN);
+#endif
         }
     }
     else
@@ -313,8 +315,10 @@ void danceMainLoop(int64_t elapsedUs)
             disableTFTBacklight();
             danceState->blankScreen = true;
 
+#if defined(CONFIG_HARDWARE_PULSE)
             // Sleep the ch32
             ch32v003RunBinaryAsset(DEEP_SLEEP_CFUN_BIN);
+#endif
         }
         else
         {

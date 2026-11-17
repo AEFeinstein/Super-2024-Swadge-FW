@@ -802,7 +802,7 @@ void gamepadNsMainLoop(int64_t elapsedUs __attribute__((unused)))
             // Here is where I would put NS accel handling code... if I had any!
 
             // Display controller state on Eye LED arrays
-#ifndef CONFIG_HARDWARE_FAIRY_PROTO
+#if defined(CONFIG_HARDWARE_PULSE)
         uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
         uint8_t btnBrightness                = 0;
 
@@ -1125,7 +1125,7 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
         }
 
         // Display controller state on Eye LED arrays
-#ifndef CONFIG_HARDWARE_FAIRY_PROTO
+#if defined(CONFIG_HARDWARE_PULSE)
         uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
         uint8_t btnBrightness                = 0;
 
