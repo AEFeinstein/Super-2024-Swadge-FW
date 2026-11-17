@@ -318,6 +318,7 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
             }
         }
 
+#if defined(CONFIG_HARDWARE_PULSE)
         if (change)
         {
             // Draw bars to the eye LEDs
@@ -332,12 +333,15 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
                     }
                 }
             }
+
             // Write and select the bitmap to an unused slot
             ch32v003WriteBitmap(colorchord->bmpSlot, bitmap);
             ch32v003SelectBitmap(colorchord->bmpSlot);
+
             // Set up the next slot for the next frame
             colorchord->bmpSlot = (colorchord->bmpSlot + 1) % CH32V003_MAX_IMAGE_SLOTS;
         }
+#endif
     });
 }
 

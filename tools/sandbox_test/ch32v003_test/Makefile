@@ -17,7 +17,7 @@ SYSELF:=../../../build/swadge.elf
 build : 
 	mkdir -p build
 
-sandbox.o : ../buildhelp sandbox.c $(SYSELF) build matrix_drops.h deep_sleep.h
+sandbox.o : ../buildhelp sandbox.c $(SYSELF) build firmware.h deep_sleep.h
 	../buildhelp $(SYSELF) ../../..
 	xtensa-esp32s2-elf-objdump -s build/sandbox.o > build/debug_sandbox_s.txt
 	xtensa-esp32s2-elf-objdump -t build/sandbox.o > build/debug_sandbox_t.txt
@@ -35,7 +35,7 @@ run : ../sandbox_upload sandbox.o
 ../sandbox_interactive : ../sandbox_interactive.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-monitor : sandbox_interactive
+monitor : ../sandbox_interactive
 	../sandbox_interactive
 
 interactive : ../sandbox_interactive build
@@ -43,7 +43,7 @@ interactive : ../sandbox_interactive build
 
 CH32FLD:=../../ch32v003comp
 
-matrix_drops.h : ../../../assets/ch32v003/matrix_drops.cfun
+firmware.h : ../../../assets/ch32v003/firmware.cfun
 	riscv32-esp-elf-gcc -o build/$*.elf $(CH32FLD)/ch32fun.c $(CH32FLD)/swadge_matrix.c $(CH32FLD)/fakelibgcc.S -x c $< -g -Os -flto -ffunction-sections \
 		-fdata-sections -fmessage-length=0 -msmall-data-limit=8 -march=rv32ec -mabi=ilp32e -DCH32V003 \
 		-static-libgcc -I/usr/include/newlib -I. -T$(CH32FLD)/ch32v003.ld -I$(CH32FLD) -nostdlib -Wl,--print-memory-usage \
@@ -64,5 +64,5 @@ deep_sleep.h : ../../../assets/ch32v003/deep_sleep.cfun
 	echo "};" >> $@
 
 clean :
-	rm -rf *.o *~ buildhelp build/debug_sandbox_s.txt build/debug_sandbox_t.txt build/debug_sandbox_S.txt build/sandbox_inst.bin build/sandbox_data.bin build/buildhelp build/sandbox.o sandbox_upload build/sandbox.lds build/provided.lds build/sandbox_symbols.txt build/system_symbols.txt sandbox_interactive buildhelp.exe sandbox_upload.exe deep_sleep.h build/deep_sleep.bin build/deep_sleep.elf matrix_drops.h build/matrix_drops.bin build/matrix_drops.elf
+	rm -rf *.o *~ buildhelp build/debug_sandbox_s.txt build/debug_sandbox_t.txt build/debug_sandbox_S.txt build/sandbox_inst.bin build/sandbox_data.bin build/buildhelp build/sandbox.o sandbox_upload build/sandbox.lds build/provided.lds build/sandbox_symbols.txt build/system_symbols.txt sandbox_interactive buildhelp.exe sandbox_upload.exe deep_sleep.h build/deep_sleep.bin build/deep_sleep.elf firmware.h build/firmware.bin build/firmware.elf
 
