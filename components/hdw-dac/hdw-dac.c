@@ -3,10 +3,16 @@
 //==============================================================================
 
 #include <inttypes.h>
+#include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
-#include "driver/dac_continuous.h"
 #include "hdw-dac.h"
+
+#if SOC_DAC_SUPPORTED
+#include "driver/dac_continuous.h"
+#else
+#include "driver/i2s_pdm.h"
+#endif
 
 //==============================================================================
 // Defines
@@ -19,31 +25,32 @@
 // Variables
 //==============================================================================
 
+/** A callback which will request DAC samples from the application */
+static fnDacCallback_t dacCb = NULL;
+
 #if SOC_DAC_SUPPORTED
 
 /** The handle created for the DAC */
 static dac_continuous_handle_t dac_handle = NULL;
 
-/** Keep track of if the DAC is writing or not */
-static bool dacWriting = false;
-
 /** A queue to move dac_event_data_t from the interrupt to the main loop*/
 static QueueHandle_t dacIsrQueue = NULL;
-
-/** A callback which will request DAC samples from the application */
-static fnDacCallback_t dacCb = NULL;
 
 /** A temporary buffer for the application to fill with audio samples before */
 static uint8_t tmpDacBuf[DAC_BUF_SIZE] = {0};
 
+/** The GPIO which controls amplifier shutdown */
+static gpio_num_t shdnGpio = GPIO_NUM_NC;
+
+/** Keep track of if the DAC is writing or not */
+static bool dacWriting = false;
+
 #else
 
-    #warning "TODO: define variables for PDM output"
+static i2s_chan_handle_t                dac_chan;        // I2S tx channel handler
 
 #endif
 
-/** The GPIO which controls amplifier shutdown */
-static gpio_num_t shdnGpio = GPIO_NUM_NC;
 
 //==============================================================================
 // Functions
@@ -73,6 +80,23 @@ static bool IRAM_ATTR dac_on_convert_done_callback(dac_continuous_handle_t handl
     xQueueSendFromISR(queue, event, &need_awoke);
     return need_awoke;
 }
+
+#else
+
+static bool IRAM_ATTR i2s_isr_callback(i2s_chan_handle_t handle, i2s_event_data_t *event, void *user_ctx)
+{
+	uint8_t samples[event->size];
+	if( dacCb )
+		dacCb( samples, sizeof(samples) );
+	else
+		memset( samples, 0x7f, sizeof(samples) );
+
+	// Do not block.
+	size_t writ; // Discarded
+	ESP_ERROR_CHECK(i2s_channel_write( dac_chan, samples, sizeof(samples), &writ, 0));
+	return true; // claim high prio task was woken.  XXX TODO: Explore.
+}
+
 #endif
 
 /**
@@ -84,6 +108,7 @@ static bool IRAM_ATTR dac_on_convert_done_callback(dac_continuous_handle_t handl
  */
 void initDac(gpio_num_t spk_gpio, gpio_num_t shdn_gpio, fnDacCallback_t cb)
 {
+#if SOC_DAC_SUPPORTED
     // Both DAC and PDM use the amplifier's shutdown pin
     if (GPIO_NUM_NC == shdnGpio)
     {
@@ -97,7 +122,6 @@ void initDac(gpio_num_t spk_gpio, gpio_num_t shdn_gpio, fnDacCallback_t cb)
         ESP_ERROR_CHECK(gpio_set_level(shdn_gpio, 0));
     }
 
-#if SOC_DAC_SUPPORTED
     // If the DAC isn't initialized
     if (!dac_handle)
     {
@@ -146,7 +170,32 @@ void initDac(gpio_num_t spk_gpio, gpio_num_t shdn_gpio, fnDacCallback_t cb)
         ESP_ERROR_CHECK(dac_continuous_register_event_callback(dac_handle, &cbs, dacIsrQueue));
     }
 #else
-    #warning "TODO: Init PDM output"
+
+    i2s_chan_config_t tx_chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
+	ESP_ERROR_CHECK(i2s_new_channel(&tx_chan_cfg, &dac_chan, NULL));
+
+    i2s_pdm_tx_config_t tx_pdm_cfg = {
+        .clk_cfg  = I2S_PDM_TX_CLK_DAC_DEFAULT_CONFIG(DAC_SAMPLE_RATE_HZ), //TODO: *128 maybe?
+        .slot_cfg = I2S_PDM_TX_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_8BIT, I2S_SLOT_MODE_MONO),
+        .gpio_cfg = {
+            .clk  = GPIO_NUM_NC,
+            .dout2= GPIO_NUM_NC,
+            .dout = spk_gpio,
+            .invert_flags = { 0 },
+        },
+    };
+
+    ESP_ERROR_CHECK(i2s_channel_init_pdm_tx_mode(dac_chan, &tx_pdm_cfg));
+
+    dacCb = cb;
+
+	i2s_event_callbacks_t ecb = {
+		.on_sent = i2s_isr_callback
+	};
+
+	ESP_ERROR_CHECK(i2s_channel_register_event_callback(dac_chan, &ecb, 0 ));
+
+
 #endif
 }
 
@@ -155,7 +204,6 @@ void initDac(gpio_num_t spk_gpio, gpio_num_t shdn_gpio, fnDacCallback_t cb)
  */
 void deinitDac(void)
 {
-    powerDownDac();
 #if SOC_DAC_SUPPORTED
     if (dac_handle)
     {
@@ -172,7 +220,7 @@ void deinitDac(void)
         dacCb = NULL;
     }
 #else
-    #warning "TODO: Deinit PDM output"
+	i2s_del_channel(dac_chan);
 #endif
 }
 
@@ -206,7 +254,20 @@ void dacStart(void)
         dacWriting = true;
     }
 #else
-    #warning "TODO: Start PDM output"
+	//i2s_chan_info_t ci;
+	//ESP_ERROR_CHECK(i2s_channel_get_info(dac_chan, &ci));
+	//ci.total_dma_buf_size is not available in this version of the IDF?
+
+	uint8_t samples[512]; // XXX TODO Update
+	if( dacCb )
+		dacCb( samples, sizeof(samples) );
+	else
+		memset( samples, 0x7f, sizeof(samples) );
+
+	size_t writ = 0; // unused.
+	ESP_ERROR_CHECK(i2s_channel_preload_data(dac_chan, samples, sizeof(samples), &writ));
+
+	i2s_channel_enable(dac_chan);
 #endif
 }
 
@@ -224,7 +285,7 @@ void dacStop(void)
         dacWriting = false;
     }
 #else
-    #warning "TODO: Stop PDM output"
+    i2s_channel_disable(dac_chan);
 #endif
 }
 
@@ -251,7 +312,8 @@ void dacPoll(void)
         }
     }
 #else
-    #warning "TODO: Main loop for PDM output"
+    //#warning "TODO: Main loop for PDM output"
+	// No need to poll.
 #endif
 }
 
@@ -262,20 +324,18 @@ void dacPoll(void)
  */
 void setDacShutdown(bool shutdown)
 {
-    // Return if not initialized
-    if (GPIO_NUM_NC == shdnGpio)
-    {
-        return;
-    }
-
     if (shutdown)
     {
         dacStop();
+#if SOC_DAC_SUPPORTED
         ESP_ERROR_CHECK(gpio_set_level(shdnGpio, 1));
+#endif
     }
     else
     {
+#if SOC_DAC_SUPPORTED
         ESP_ERROR_CHECK(gpio_set_level(shdnGpio, 0));
+#endif
         dacStart();
     }
 }
