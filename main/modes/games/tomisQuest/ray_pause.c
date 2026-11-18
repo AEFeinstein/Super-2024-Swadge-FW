@@ -240,7 +240,7 @@ static void rayPauseRenderSong(ray_t* ray, uint32_t elapsedUs)
 
             // Draw the index on top of the square
             char idxText[8] = {0};
-            snprintf(idxText, sizeof(idxText) - 1, "%" PRIu8, ray->instrumentAutoPlayIdx + 1);
+            snprintf(idxText, sizeof(idxText) - 1, "%" PRIu32, ray->instrumentAutoPlayIdx + 1);
             const font_t* f = ray->renderer->titleFont;
             uint16_t tWidth = textWidth(f, idxText);
             // Invert the color for high contrast text
