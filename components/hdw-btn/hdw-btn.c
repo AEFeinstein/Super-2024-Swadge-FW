@@ -20,7 +20,7 @@
 // Defines
 //==============================================================================
 
-#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if !(defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
 
     /// The number of samples kept in history to debounce buttons
     #define DEBOUNCE_HIST_LEN 5
@@ -31,7 +31,7 @@
 // Structs
 //==============================================================================
 
-#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if !(defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
 
 /// @brief A timestamped button event
 typedef struct
@@ -49,7 +49,7 @@ typedef struct
 /// The current state of the pushbuttons
 static uint32_t buttonStates = 0;
 
-#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if !(defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
 
 /// A queue to move pushbutton reads from the ISR to the main loop
 static QueueHandle_t btn_evt_queue = NULL;
@@ -77,7 +77,7 @@ static buttonBit_t btnFrom003;
 // Prototypes
 //==============================================================================
 
-#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if !(defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
 
 static bool btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx);
 
@@ -96,7 +96,7 @@ static bool btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_alarm_event_d
  */
 void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons)
 {
-#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if !(defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
     // Make sure there aren't too many
     if (numPushButtons > 31)
     {
@@ -140,7 +140,7 @@ void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons)
  */
 void deinitButtons(void)
 {
-#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if !(defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
     // Return immediately if not initialized
     if (NULL == btn_evt_queue)
     {
@@ -157,7 +157,7 @@ void deinitButtons(void)
  */
 void powerDownButtons(void)
 {
-#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if !(defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
     // Return immediately if not initialized
     if (NULL == btn_evt_queue)
     {
@@ -177,7 +177,7 @@ void powerDownButtons(void)
  */
 void powerUpButtons(void)
 {
-#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if !(defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
     // Return immediately if not initialized
     if (NULL == btn_evt_queue)
     {
@@ -238,7 +238,7 @@ void powerUpButtons(void)
  */
 bool checkButtonQueue(buttonEvt_t* evt)
 {
-#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if (defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
     uint32_t oldButtonStates = buttonStates;
     uint32_t bsNew           = btnFrom003;
     uint32_t bsXor           = oldButtonStates ^ bsNew;
@@ -297,7 +297,7 @@ bool checkButtonQueue(buttonEvt_t* evt)
     return false;
 }
 
-#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if !(defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
 /**
  * @brief Interrupt called by the hardware timer to poll buttons
  *

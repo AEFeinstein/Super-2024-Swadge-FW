@@ -132,7 +132,7 @@ void ch32v003testMainLoop(int64_t elapsedUs)
                 case PB_UP:
                 case PB_LEFT:
                 {
-#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+#if (defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
 #else
                     ch32v003testUpdateFramebuffers();
 #endif
@@ -147,7 +147,7 @@ void ch32v003testMainLoop(int64_t elapsedUs)
                 case PB_DOWN:
                 case PB_RIGHT:
                 {
-#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+#if (defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
 #else
                     ch32v003testUpdateFramebuffers();
 #endif

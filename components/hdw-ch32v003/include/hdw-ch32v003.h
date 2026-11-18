@@ -52,7 +52,7 @@ int ch32v003Resume();
 void ch32v003Tick();
 void ch32v003Teardown();
 
-#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+#if (defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
 
 uint32_t getCh32v003Buttons(void);
 uint16_t* getCh32v003Touches(void);

@@ -31,7 +31,7 @@
 
 #define ON_OFF_TEST 0
 
-#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if (defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
     #define NUM_TOUCH_STRIPS 2
     #define NUM_TOUCH_ZONES  10
 
@@ -83,7 +83,7 @@ void testReadAndValidateTouch(void);
 void testReadAndValidateAccelerometer(void);
 
 void plotButtonState(int16_t x, int16_t y, testButtonState_t state);
-#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if !(defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
 static void touchFillCircleSegments(int16_t x, int16_t y, int16_t r, int16_t segs, bool center);
 #endif
 
@@ -112,7 +112,7 @@ typedef struct
     bool spkActive;
     // Button
     testButtonState_t buttonStates[8];
-#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if (defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
     // Touch is two linear 5-segment strips
     bool touched[NUM_TOUCH_STRIPS];
     int32_t touchPositions[NUM_TOUCH_STRIPS];
@@ -196,7 +196,7 @@ void testEnterMode(void)
     loadWsg(KID_0_WSG, &test->kd_idle0, true);
     loadWsg(KID_1_WSG, &test->kd_idle1, true);
 
-#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if !(defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
     // Init last touchState index to indicate no previous state
     test->lastTouchStateIdx = UINT8_MAX;
 #endif
@@ -428,7 +428,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     fillDisplayArea(ACCEL_BAR_WIDTH * 13, ACCEL_BAR_CENT + barDelta, ACCEL_BAR_WIDTH * 14,
                     ACCEL_BAR_CENT + MAX_ACCEL_BAR_SIZE, accelColor);
 
-#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if (defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
     // Draw linear touch strips. For each strip
     for (int32_t sIdx = 0; sIdx < NUM_TOUCH_STRIPS; sIdx++)
     {
@@ -791,7 +791,7 @@ touchJoystick_t touchIdxToTouchJoystick(uint8_t touchIdx)
  */
 void testReadAndValidateTouch(void)
 {
-#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if (defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
 
     // Read the touch strips
     linearTouch_t touches[NUM_TOUCH_STRIPS] = {0};
@@ -1011,7 +1011,7 @@ void testReadAndValidateAccelerometer(void)
     }
 }
 
-#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if !(defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
 static void touchFillCircleSegments(int16_t x, int16_t y, int16_t r, int16_t segs, bool center)
 {
     uint8_t numTouchElem = (ARRAY_SIZE(test->touchStates));

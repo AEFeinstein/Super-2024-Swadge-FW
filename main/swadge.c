@@ -414,7 +414,7 @@ void app_main(void)
         initCh32v003(GPIO_CH32_PROG);
     }
 
-#if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if !(defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
     // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
         GPIO_BTN_UP,    // Up
@@ -449,7 +449,7 @@ void app_main(void)
     };
     initTouchLinear(linearCfg, ARRAY_SIZE(linearCfg));
 
-#elif defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#elif (defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
 
     // Fairy has two linear touch strips
     touch_pad_t touchPads[] = {
@@ -578,7 +578,7 @@ void app_main(void)
             checkEspNowRxQueue();
         }
 
-#if defined(CONFIG_HARDWARE_FAIRY_PROTO)
+#if (defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
         // This pulls all data from the ch32v003, like button presses, touch, etc.
         // and, it provides printf if need be.
         ch32v003Tick();

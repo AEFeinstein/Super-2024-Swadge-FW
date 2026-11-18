@@ -249,7 +249,7 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
     // Both of the prior functions write to the 0x36 register
     esp_lcd_panel_io_tx_param(tft_io_handle, 0x36,
                               (uint8_t[]){
-    #if !defined(CONFIG_HARDWARE_FAIRY_PROTO)
+    #if !(defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
                                   0xE8 //  MX,  MY, MV, !ML, !BGR, !MH, 0, 0  (Memory Access Control)
     #else
                                   0x28 // !MY, !MX, MV, !ML, !BGR, !MH, 0, 0  (Memory Access Control)

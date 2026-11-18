@@ -35,6 +35,11 @@ menu "Swadge Configuration"
 			depends on IDF_TARGET_ESP32S3
 			help
 				Build for the prototype Fairy Swadge (2027)
+		config HARDWARE_FAIRY_PRODUCTION
+			bool "HARDWARE_FAIRY_PRODUCTION"
+			depends on IDF_TARGET_ESP32S3
+			help
+				Build for the production Fairy Swadge (2027)
 	endchoice
 
 	choice DEBUG_OUTPUT_TYPE

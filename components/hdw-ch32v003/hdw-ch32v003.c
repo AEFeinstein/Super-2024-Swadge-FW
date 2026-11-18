@@ -75,7 +75,7 @@ const uint8_t* cnfsGetFile(int index, size_t* size);
 // Variables
 //==============================================================================
 
-#ifndef CONFIG_HARDWARE_FAIRY_PROTO
+#if !(defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
 
 // Coordinate map is used any time you want to do custom work with the 003's framebuffer.
 const uint16_t Coordmap[8 * 16] = {
@@ -537,7 +537,7 @@ void ch32v003Tick()
                 ((!!(b & 0x04)) << 6) | // PB_START
                 ((!!(b & 0x20)) << 7);  // PB_SELECT
 
-#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+#if (defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
             MCFWriteReg32(dev, DMDATA0, 1);
 #else
             MCFWriteReg32(dev, DMDATA0, 0);
@@ -596,7 +596,7 @@ void ch32v003Teardown()
     memset(&swioContext, 0, sizeof(swioContext));
 }
 
-#ifndef CONFIG_HARDWARE_FAIRY_PROTO
+#if !(defined(CONFIG_HARDWARE_FAIRY_PROTO) || defined(CONFIG_HARDWARE_FAIRY_PRODUCTION))
 
 /**
  * @brief Halt the processor, and write to RAM a greyscale asset image.
