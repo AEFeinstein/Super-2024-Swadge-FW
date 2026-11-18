@@ -80,8 +80,10 @@ static const char passTitle[] = "SwadgePass";
 static const char sonaTitle[] = "Your Sona";
 static const char exitTitle[] = "Mission Complete";
 
-static const char* suffixes[] = {"\nIf you don't like it, you can adjust it in the next step.",
-                                 "\nIf you don't like it, you can adjust it in the Sona Creator Mode."};
+static const char* suffixes[] = {"\nIf you don't like it, you can adjust it in the next step. Leave the main menu "
+                                 "idling to enter Lightdance mode to send and receive fairies.",
+                                 "\nIf you don't like it, you can adjust it in the Fairy Creator Mode. Leave the main "
+                                 "menu idling to enter Lightdance mode to send and receive fairies."};
 
 /* clang-format off */
 static const cnfsFileIdx_t introwsgs[] = {
@@ -177,7 +179,12 @@ static const tutorialStep_t buttonsSteps[] = {
             .orientation = {0, 0, 245},
         },
         .title = imuTitle,
-        .detail = "The Swadge is tilt-sensitive. Try looking at the bunny top-down by putting the Swadge face up on a flat surface."
+        .detail = "The Swadge is tilt-sensitive. Try looking at the bunny top-down by putting the Swadge face up on a flat surface.",
+        .backtrack = {
+            .type = BUTTON_PRESS,
+            .buttons = PB_B,//Allow B to go back to the pong game for fun.
+        },
+        .backtrackSteps = 1,
     },
     {
         .trigger = {
@@ -185,7 +192,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .orientation = {0, 0, -245},
         },
         .title = imuTitle,
-        .detail = "Now try looking at the bunny from the bottom. You may need to hold the Swadge over your head."
+        .detail = "Now try looking at the bunny from the bottom. You may need to hold the Swadge over your head.",
     },
     {
         .trigger = {
@@ -200,7 +207,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .buttons = PB_A,
         },
         .title = spkTitle,
-        .detail = "The Swadge has a speaker, so enjoy this tune! The volume dial is on the left. Adjust to your liking. Press A to continue."
+        .detail = "The Swadge has a speaker and audio jack! The volume dial is on the right. Adjust to your liking. Press A to continue."
     },
     {
         .trigger = {
@@ -238,26 +245,24 @@ static const tutorialStep_t buttonsSteps[] = {
             .custom.checkFn = introCheckQuickSettingsTrigger,
         },
         .title = quickmnuTitle,
-        .detail = "It's in most modes but Main Menu & Gamepad. Press Menu again to close.",
+        .detail = "It's in most modes except Main Menu & Gamepad. Press Menu again to close.",
     },
-        {
+    {
         .trigger = {
             .type = BUTTON_PRESS_ANY,
             .buttons = PB_A,
             
         },
         .title = passTitle,
-        .detail = "SwadgePass shares your profile data with other users nearby. Leave your Swadge turned on to meet others.",
-        
+        .detail = "Lightdance mode is when the screen is off and LED lights are animated. It consumes very little power.",
     },
-        {
+    {
         .trigger = {
             .type = BUTTON_PRESS_ANY,
             .buttons = PB_B, 
                     },
         .title = sonaTitle,
-        .detail = "This is a Sona, your Swadge Avatar! You can make yours in the Sona Creator Mode. Press B to continue.",
-        
+        .detail = "This is a fairy! You can make yours in the Fairy Creator Mode. Press B to continue.",
     },
     {
 
@@ -615,7 +620,7 @@ static void introEnterMode(void)
 #endif
 
     // Load the test MIDI file
-    loadMidiFile(MAXIMUM_HYPE_CREDITS_TEASER_MID, &iv->song, true);
+    loadMidiFile(ADVENTURE_AWAITS_MID, &iv->song, true);
 
     // Init CC
     InitColorChord(&iv->end, &iv->dd);
@@ -1097,17 +1102,21 @@ static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, 
     }
 
     // TODO maybe don't hardcode this
-    if (next == (buttonsSteps + 12))
+    int offset = 12;
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+    offset--;
+#endif
+    if (next == (buttonsSteps + offset))
     {
         setDacShutdown(true);
     }
-    else if (next == (buttonsSteps + 14))
+    else if (next == (buttonsSteps + offset + 2))
     {
         ESP_LOGI(TAG, "Oh it's the one we want: %s", next->title);
         iv->quickSettingsOpened = true;
         openQuickSettings();
     }
-    else if (next == (buttonsSteps + 14))
+    else if (next == (buttonsSteps + offset + 2))
     {
         iv->quickSettingsOpened = false;
     }
@@ -1533,5 +1542,5 @@ static void introSwadgePass(int64_t elapsedUs)
 
     int16_t x = 25;
     int16_t y = 60;
-    drawTextWordWrap(&iv->smallFont, c000, buf, &x, &y, TFT_WIDTH - 25, 140);
+    drawTextWordWrap(&iv->smallFont, c555, buf, &x, &y, TFT_WIDTH - 25, 160);
 }
