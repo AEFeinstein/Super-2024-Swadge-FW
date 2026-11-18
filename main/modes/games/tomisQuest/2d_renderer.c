@@ -274,6 +274,10 @@ void drawForeground2d(ray_t* ray)
     }
 
     int32_t playerAngle = rayGetEightWayAngle(ray->p.dirX, ray->p.dirY);
+    if (ray->ps.isTomi)
+    {
+        pSpriteY += ray->ps.bob;
+    }
     drawWsgSolid(ray->ps.sprite, pSpriteX, pSpriteY + TO_PX(ray->ps.jumpPos), false, false, ray->ps.fallAngle,
                  playerSolidColor);
     // rectangle_t bb = rayGetPlayerBB(ray);

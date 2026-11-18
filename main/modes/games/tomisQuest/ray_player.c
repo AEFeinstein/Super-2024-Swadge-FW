@@ -80,7 +80,10 @@ bool initializePlayer(ray_t* ray)
     memset(&ray->ps, 0, sizeof(ray->ps));
 
     // Load sprites
-    ray->ps.spriteTomi        = loadTexture(ray, ZORLDO_MENU_TOMI_WSG, EMPTY);
+    ray->ps.spritesTomi[0]    = loadTexture(ray, TOMI_0_WSG, EMPTY);
+    ray->ps.spritesTomi[1]    = loadTexture(ray, TOMI_1_WSG, EMPTY);
+    ray->ps.spritesTomi[2]    = loadTexture(ray, TOMI_2_WSG, EMPTY);
+    ray->ps.spritesTomi[3]    = loadTexture(ray, TOMI_3_WSG, EMPTY);
     ray->ps.spritesHyut[0][0] = loadTexture(ray, HYUT_D_0_WSG, EMPTY);
     ray->ps.spritesHyut[0][1] = loadTexture(ray, HYUT_D_1_WSG, EMPTY);
     ray->ps.spritesHyut[0][2] = loadTexture(ray, HYUT_D_2_WSG, EMPTY);
@@ -111,10 +114,12 @@ bool initializePlayer(ray_t* ray)
         ray->ps.spriteIdx      = 0;
         ray->ps.spriteCycleIdx = 0;
         ray->ps.sprite         = ray->ps.spritesHyut[ray->ps.spriteIdx][ray->ps.spriteCycleIdx];
+        ray->ps.isTomi         = false;
     }
     else
     {
-        ray->ps.sprite = ray->ps.spriteTomi;
+        ray->ps.sprite = ray->ps.spritesTomi[0];
+        ray->ps.isTomi = true;
     }
     loadTexture(ray, OBJ_BULLET_NORMAL_WSG, OBJ_BULLET_ARROW);
     loadTexture(ray, OBJ_BULLET_MISSILE_WSG, OBJ_BULLET_BOMB);
@@ -348,7 +353,7 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
                 }
             }
 
-            if (ray->p.i.haveEwiOfTime)
+            if (!ray->ps.isTomi)
             {
                 // Set new directional sprite, preserving the walk cycle
                 ray->ps.sprite = ray->ps.spritesHyut[ray->ps.spriteIdx][walkCycleIdxs[ray->ps.spriteCycleIdx]];
@@ -545,19 +550,58 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
         ray->ps.iFrameTimer -= elapsedUs;
     }
 
-    // If the player isn't Tomi
-    if (ray->ps.sprite != ray->ps.spriteTomi)
-    {
-        // Animate Hyut
-        RUN_TIMER_EVERY(ray->ps.animTimer, 250000, elapsedUs, {
+    animatePlayer(ray, elapsedUs);
+}
+
+/**
+ * @brief Animate the player
+ *
+ * @param ray The whole game state
+ * @param elapsedUs The time since this function was last called
+ */
+void animatePlayer(ray_t* ray, uint32_t elapsedUs)
+{
+    RUN_TIMER_EVERY(ray->ps.animTimer, 250000, elapsedUs, {
+        if (ray->ps.isTomi)
+        {
+            if (ray->ps.bobUp)
+            {
+                ray->ps.bob++;
+                if (ray->ps.bob > 1)
+                {
+                    ray->ps.bobUp = false;
+                }
+            }
+            else
+            {
+                ray->ps.bob--;
+                if (ray->ps.bob < -1)
+                {
+                    ray->ps.bobUp = true;
+                }
+            }
+
+            // Animate singing on the instrument screen
+            if (RAY_INSTRUMENT == ray->screen)
+            {
+                ray->ps.spriteCycleIdx++;
+                if (ray->ps.spriteCycleIdx >= ARRAY_SIZE(ray->ps.spritesTomi))
+                {
+                    ray->ps.spriteCycleIdx = 0;
+                }
+                ray->ps.sprite = ray->ps.spritesTomi[ray->ps.spriteCycleIdx];
+            }
+        }
+        else // is Hyut
+        {
             ray->ps.spriteCycleIdx++;
             if (ray->ps.spriteCycleIdx >= ARRAY_SIZE(walkCycleIdxs))
             {
                 ray->ps.spriteCycleIdx = 0;
             }
             ray->ps.sprite = ray->ps.spritesHyut[ray->ps.spriteIdx][walkCycleIdxs[ray->ps.spriteCycleIdx]];
-        });
-    }
+        }
+    });
 }
 
 /**
@@ -732,6 +776,7 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
         {
             inventory->haveEwiOfTime = true;
             ray->ps.sprite           = ray->ps.spritesHyut[0][0];
+            ray->ps.isTomi           = false;
             break;
         }
         case OBJ_ITEM_BOMB:

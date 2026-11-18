@@ -780,7 +780,7 @@ typedef struct
     int32_t iFrameTimer; ///< A timer for invincibility frames
 
     wsg_t* sprite;
-    wsg_t* spriteTomi;
+    wsg_t* spritesTomi[4];
     wsg_t* spritesHyut[8][3];
     wsg_t* ewiOfTime;
     int32_t animTimer;
@@ -798,6 +798,10 @@ typedef struct
 
     bool firstShopVisit; ///< For Fredward's dialog, if this is the first time the player visits the shop
     bool itemPurchased;  ///< For Fredward's dialog, if the player purchased an item in the current map
+
+    bool isTomi; ///< True if the player is currently Tomi, false if Hyut
+    int16_t bob; ///< A Y offset bob to apply to Tomi sprites
+    bool bobUp;  ///< The direction of Tomi's bob
 } rayPlayerState_t;
 
 typedef struct

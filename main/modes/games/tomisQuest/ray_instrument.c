@@ -4,6 +4,7 @@
 
 #include "ray_instrument.h"
 #include "ray_script.h"
+#include "ray_player.h"
 
 //==============================================================================
 // Const data
@@ -194,6 +195,9 @@ static void handleRayInstrument(ray_t* ray, const linearTouch_t* touch, int8_t* 
  */
 void rayInstrumentRender(ray_t* ray, uint32_t elapsedUs)
 {
+    // Animate Tomi
+    animatePlayer(ray, elapsedUs);
+
     // Run a timer to play demo songs
     if (ray->instrumentTutorialAutoPlay)
     {
@@ -221,7 +225,7 @@ void rayInstrumentRender(ray_t* ray, uint32_t elapsedUs)
     // Draw the text
     const int16_t step = (TFT_HEIGHT / 4);
     int16_t xOff       = step;
-    int16_t yOff       = step;
+    int16_t yOff       = 4;
     font_t* f          = ray->renderer->titleFont;
     drawTextWordWrapCentered(f, c000, text, &xOff, &yOff, TFT_WIDTH - step, TFT_HEIGHT);
 

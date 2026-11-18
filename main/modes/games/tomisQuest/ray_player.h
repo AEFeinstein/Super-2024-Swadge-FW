@@ -18,5 +18,6 @@ bool rayPlayerIsHittable(ray_t* ray);
 int32_t rayPlayerIsShielding(ray_t* ray);
 rectangle_t rayGetPlayerBB(ray_t* ray);
 void checkPlayerEnemyStandardCollision(ray_t* ray, rayEnemy_t* enemy, rectangle_t player, q24_8* deltaX, q24_8* deltaY);
+void animatePlayer(ray_t* ray, uint32_t elapsedUs);
 
 #endif

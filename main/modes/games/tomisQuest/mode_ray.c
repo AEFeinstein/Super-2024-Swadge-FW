@@ -783,6 +783,18 @@ void raySwitchToScreen(rayScreen_t newScreen)
         ray->cutscene = NULL;
     }
 
+    // Switch the player sprite back in case it was tweaked by RAY_INSTRUMENT singing
+    if (ray->p.i.haveEwiOfTime)
+    {
+        ray->ps.isTomi = false;
+        // Hyut sprite will be selected on next animation
+    }
+    else
+    {
+        ray->ps.isTomi = true;
+        ray->ps.sprite = ray->ps.spritesTomi[0];
+    }
+
     // Initialize depending on the screen
     switch (newScreen)
     {
@@ -803,6 +815,9 @@ void raySwitchToScreen(rayScreen_t newScreen)
             globalMidiPlayerPauseAll();
 
             rayMode.fnDacCb = rayInstrumentDacCallback;
+
+            // Switch player to Tomi
+            ray->ps.isTomi = true;
             break;
         }
         case RAY_TURNTABLE:
