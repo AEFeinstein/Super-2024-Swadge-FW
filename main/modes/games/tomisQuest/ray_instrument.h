@@ -4,6 +4,7 @@
 #include "mode_ray.h"
 
 extern const paletteColor_t noteColors[];
+extern const char str_lullaby[];
 
 void rayInstrumentCheckButtons(ray_t* ray);
 void rayInstrumentRender(ray_t* ray, uint32_t elapsedUs);

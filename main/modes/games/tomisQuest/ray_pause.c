@@ -229,8 +229,13 @@ static void rayPauseRenderSong(ray_t* ray, uint32_t elapsedUs)
 
     // Draw blocks for the eight notes, four on each side
     const int16_t step = (TFT_HEIGHT / 4);
-    int16_t xOff       = 0;
-    int16_t yOff       = 0;
+
+    int16_t xOff = step;
+    int16_t yOff = (TFT_HEIGHT / 2) - ray->renderer->titleFont->height;
+    drawTextWordWrapCentered(ray->renderer->titleFont, c555, str_lullaby, &xOff, &yOff, TFT_WIDTH - step, TFT_HEIGHT);
+
+    xOff = 0;
+    yOff = 0;
     for (uint8_t i = 0; i < 8; i++)
     {
         // Either draw an outline or fill the box
