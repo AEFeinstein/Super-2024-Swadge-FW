@@ -227,7 +227,9 @@ void testEnterMode(void)
     accelPerformCal();
 
     // Load firmware that turns all LEDs on, then sweeps horizontal and vertical test patterns
+#if defined(CONFIG_HARDWARE_PULSE)
     ch32v003RunBinaryAsset(MATRIX_FACTORY_CFUN_BIN);
+#endif
 
     // Set NVM to indicate test not passed yet
     // setTestModePassedSetting(false);
@@ -845,6 +847,16 @@ void testReadAndValidateTouch(void)
                         *state = BTN_RELEASED;
                     }
                 }
+            }
+        }
+
+        // Check if all buttons have passed
+        test->touchPassed = true;
+        for (uint8_t i = 0; i < NUM_TOUCH_STRIPS * NUM_TOUCH_ZONES; i++)
+        {
+            if (BTN_RELEASED != test->touchStates[i])
+            {
+                test->touchPassed = false;
             }
         }
     }
