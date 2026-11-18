@@ -805,7 +805,7 @@ static void introMainLoop(int64_t elapsedUs)
 
 #ifdef CONFIG_HARDWARE_FAIRY_PROTO
     getTouchLinear(iv->tut.linearTouchState, ARRAY_SIZE(iv->tut.linearTouchState));
-    tutorialOnLinearTouch(elapsedUs, &iv->tut, &iv->angleTimer, &iv->tut.linearTouchState);
+    tutorialOnLinearTouch(elapsedUs, &iv->tut, &iv->angleTimer, iv->tut.linearTouchState);
     // if(touchState[0].touched || touchState[1].touched)
 #else
     int32_t phi, r, intensity;
