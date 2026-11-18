@@ -769,13 +769,13 @@ void ch32v003CheckTerminal()
     // Discuss: Is this needed/useful?  We already detect and printf in the emulationc ode above.
 }
 
-void ch32v003Teardown()
+void ch32v003Teardown(void)
 {
     ch32v003quitMode = true;
     OGJoinThread(ch32v003thread);
 }
 
-int ch32v003Resume()
+int ch32v003Resume(void)
 {
     ResetPeripherals();
     memset(&ch32v003state, 0, sizeof(ch32v003state));

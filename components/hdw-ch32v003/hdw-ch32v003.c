@@ -381,7 +381,7 @@ overallretry:
  *
  * @return 0 if OK, nonzero in error condition.
  */
-int ch32v003Resume()
+int ch32v003Resume(void)
 {
     if (ch32v003Check())
         return -1;
@@ -466,7 +466,7 @@ int ch32v003SetReg(int regno, uint32_t regValue)
  * @brief See if the ch32v003 has any pending printf to print on host processor.
  *
  */
-void ch32v003Tick()
+void ch32v003Tick(void)
 {
     struct SWIOState* dev = &swioContext;
 
@@ -579,7 +579,7 @@ mcferror:
  * @brief Disables ch32v003 communications
  *
  */
-void ch32v003Teardown()
+void ch32v003Teardown(void)
 {
     // Power-Down
     if (SWIO_PIN < 32)

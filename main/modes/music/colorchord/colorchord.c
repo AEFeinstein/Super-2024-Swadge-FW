@@ -295,8 +295,10 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
         // This prevents visualizing noise on the LEDs
         maxBinAvg = MAX(87 * gain, maxBinAvg);
 
+#if defined(CONFIG_HARDWARE_PULSE)
         // Don't bother drawing if there is no change
         bool change = false;
+#endif
 
         // Normalize the values to LED_H
         if (maxBinAvg)
@@ -308,12 +310,16 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
                 if (binAvgs[bIdx] > colorchord->barHeights[bIdx])
                 {
                     colorchord->barHeights[bIdx] = binAvgs[bIdx];
-                    change                       = true;
+#if defined(CONFIG_HARDWARE_PULSE)
+                    change = true;
+#endif
                 }
                 else if (colorchord->barHeights[bIdx])
                 {
                     colorchord->barHeights[bIdx]--;
+#if defined(CONFIG_HARDWARE_PULSE)
                     change = true;
+#endif
                 }
             }
         }

@@ -48,9 +48,9 @@ int ch32v003WriteMemory(const uint8_t* binary, uint32_t length, uint32_t address
 int ch32v003ReadMemory(uint8_t* binary, uint32_t length, uint32_t address);
 int ch32v003GetReg(int regno, uint32_t* value);
 int ch32v003SetReg(int regno, uint32_t regValue);
-int ch32v003Resume();
-void ch32v003Tick();
-void ch32v003Teardown();
+int ch32v003Resume(void);
+void ch32v003Tick(void);
+void ch32v003Teardown(void);
 
 #ifdef CONFIG_HARDWARE_FAIRY_PROTO
 

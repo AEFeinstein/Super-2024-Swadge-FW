@@ -645,7 +645,9 @@ void gamepadNsMainLoop(int64_t elapsedUs __attribute__((unused)))
         };
 
         // For each hat direction
+#if defined(CONFIG_HARDWARE_PULSE)
         uint8_t hatsDrawn = 0;
+#endif
         for (uint8_t i = 0; i < ARRAY_SIZE(hatDirs); i++)
         {
             // The degree around the cluster
@@ -723,10 +725,12 @@ void gamepadNsMainLoop(int64_t elapsedUs __attribute__((unused)))
                 }
             }
 
+#if defined(CONFIG_HARDWARE_PULSE)
             if (isPressed)
             {
                 hatsDrawn |= (1 << i);
             }
+#endif
             drawFunc = isPressed ? &drawCircleFilled : &drawCircle;
             drawFunc(xc, yc, DPAD_BTN_RADIUS, c551);
         }
@@ -954,7 +958,9 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
         };
 
         // For each hat direction
+#if defined(CONFIG_HARDWARE_PULSE)
         uint8_t hatsDrawn = 0;
+#endif
         for (uint8_t i = 0; i < ARRAY_SIZE(hatDirs); i++)
         {
             // The degree around the cluster
@@ -1024,10 +1030,12 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
                 }
             }
 
+#if defined(CONFIG_HARDWARE_PULSE)
             if (isPressed)
             {
                 hatsDrawn |= (1 << i);
             }
+#endif
             drawFunc = isPressed ? &drawCircleFilled : &drawCircle;
             drawFunc(xc, yc, DPAD_BTN_RADIUS, c551);
         }
