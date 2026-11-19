@@ -66,12 +66,12 @@ class tileType(Enum):
     BG_WALL_BOX = BG | WALL | 8
     BG_WALL_WATER = BG | WALL | 9
     BG_WALL_FENCE = BG | WALL | 10
-    BG_WALL_11 = BG | WALL | 11
-    BG_WALL_12 = BG | WALL | 12
-    BG_WALL_13 = BG | WALL | 13
-    BG_WALL_14 = BG | WALL | 14
-    BG_WALL_15 = BG | WALL | 15
-    BG_WALL_16 = BG | WALL | 16
+    BG_WALL_K0 = BG | WALL | 11
+    BG_WALL_K1 = BG | WALL | 12
+    BG_WALL_K2 = BG | WALL | 13
+    BG_WALL_K3 = BG | WALL | 14
+    BG_WALL_K4 = BG | WALL | 15
+    BG_WALL_K5 = BG | WALL | 16
     BG_WALL_17 = BG | WALL | 17
     BG_WALL_18 = BG | WALL | 18
     BG_WALL_19 = BG | WALL | 19
@@ -305,12 +305,12 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_WALL_BOX,
         tileType.BG_WALL_WATER,
         tileType.BG_WALL_FENCE,
-        tileType.BG_WALL_11,
-        tileType.BG_WALL_12,
-        tileType.BG_WALL_13,
-        tileType.BG_WALL_14,
-        tileType.BG_WALL_15,
-        tileType.BG_WALL_16,
+        tileType.BG_WALL_K0,
+        tileType.BG_WALL_K1,
+        tileType.BG_WALL_K2,
+        tileType.BG_WALL_K3,
+        tileType.BG_WALL_K4,
+        tileType.BG_WALL_K5,
         tileType.BG_WALL_17,
         tileType.BG_WALL_18,
         tileType.BG_WALL_19,
