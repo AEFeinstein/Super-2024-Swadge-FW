@@ -85,7 +85,7 @@
 #else
 
 /** @brief The sample rate for the PDM */
-#define DAC_SAMPLE_RATE_HZ 19531
+#define DAC_SAMPLE_RATE_HZ 16000
 
 /** The size of each buffer to fill with PDM samples */
 #define DAC_BUF_SIZE 512

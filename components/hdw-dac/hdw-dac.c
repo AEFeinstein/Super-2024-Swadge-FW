@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include <inttypes.h>
+#include <esp_log.h>
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
@@ -28,6 +29,9 @@
 /** A callback which will request DAC samples from the application */
 static fnDacCallback_t dacCb = NULL;
 
+/** The GPIO which controls amplifier shutdown */
+static gpio_num_t shdnGpio = GPIO_NUM_NC;
+
 #if SOC_DAC_SUPPORTED
 
 /** The handle created for the DAC */
@@ -38,9 +42,6 @@ static QueueHandle_t dacIsrQueue = NULL;
 
 /** A temporary buffer for the application to fill with audio samples before */
 static uint8_t tmpDacBuf[DAC_BUF_SIZE] = {0};
-
-/** The GPIO which controls amplifier shutdown */
-static gpio_num_t shdnGpio = GPIO_NUM_NC;
 
 /** Keep track of if the DAC is writing or not */
 static bool dacWriting = false;
@@ -85,16 +86,33 @@ static bool IRAM_ATTR dac_on_convert_done_callback(dac_continuous_handle_t handl
 
 static bool IRAM_ATTR i2s_isr_callback(i2s_chan_handle_t handle, i2s_event_data_t *event, void *user_ctx)
 {
-	uint8_t samples[event->size];
+	int nmcnt = event->size/2;
+	//uint16_t * samples = event->data;//[nmcnt];
+	uint16_t samples[nmcnt];
+	uint8_t samples8[nmcnt];
+#if 0
+static int n;
+int i;
+for( i = 0; i < nmcnt; i++ )
+{
+	samples8[i] = n++;
+}
+#endif
 	if( dacCb )
-		dacCb( samples, sizeof(samples) );
+		dacCb( samples8, sizeof(samples8) );
 	else
-		memset( samples, 0x7f, sizeof(samples) );
+		memset( samples8, 0x7f, sizeof(samples8) );
+
+	for( int i = 0; i < nmcnt; i++ )
+	{
+		samples[i] = samples8[i]>>8;
+	}
 
 	// Do not block.
 	size_t writ; // Discarded
-	ESP_ERROR_CHECK(i2s_channel_write( dac_chan, samples, sizeof(samples), &writ, 0));
-	return true; // claim high prio task was woken.  XXX TODO: Explore.
+	ESP_ERROR_CHECK(i2s_channel_write( dac_chan, samples, nmcnt*2, &writ, 1000));
+
+	return false; // claim high prio task was woken.  XXX TODO: Explore.
 }
 
 #endif
@@ -108,7 +126,6 @@ static bool IRAM_ATTR i2s_isr_callback(i2s_chan_handle_t handle, i2s_event_data_
  */
 void initDac(gpio_num_t spk_gpio, gpio_num_t shdn_gpio, fnDacCallback_t cb)
 {
-#if SOC_DAC_SUPPORTED
     // Both DAC and PDM use the amplifier's shutdown pin
     if (GPIO_NUM_NC == shdnGpio)
     {
@@ -121,6 +138,8 @@ void initDac(gpio_num_t spk_gpio, gpio_num_t shdn_gpio, fnDacCallback_t cb)
         ESP_ERROR_CHECK(gpio_config(&shdn_gpio_config));
         ESP_ERROR_CHECK(gpio_set_level(shdn_gpio, 0));
     }
+
+#if SOC_DAC_SUPPORTED
 
     // If the DAC isn't initialized
     if (!dac_handle)
@@ -175,8 +194,8 @@ void initDac(gpio_num_t spk_gpio, gpio_num_t shdn_gpio, fnDacCallback_t cb)
 	ESP_ERROR_CHECK(i2s_new_channel(&tx_chan_cfg, &dac_chan, NULL));
 
     i2s_pdm_tx_config_t tx_pdm_cfg = {
-        .clk_cfg  = I2S_PDM_TX_CLK_DAC_DEFAULT_CONFIG(DAC_SAMPLE_RATE_HZ), //TODO: *128 maybe?
-        .slot_cfg = I2S_PDM_TX_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_8BIT, I2S_SLOT_MODE_MONO),
+        .clk_cfg  = I2S_PDM_TX_CLK_DAC_DEFAULT_CONFIG(DAC_SAMPLE_RATE_HZ),
+        .slot_cfg = I2S_PDM_TX_SLOT_DAC_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO),
         .gpio_cfg = {
             .clk  = GPIO_NUM_NC,
             .dout2= GPIO_NUM_NC,
@@ -194,8 +213,6 @@ void initDac(gpio_num_t spk_gpio, gpio_num_t shdn_gpio, fnDacCallback_t cb)
 	};
 
 	ESP_ERROR_CHECK(i2s_channel_register_event_callback(dac_chan, &ecb, 0 ));
-
-
 #endif
 }
 
@@ -327,15 +344,11 @@ void setDacShutdown(bool shutdown)
     if (shutdown)
     {
         dacStop();
-#if SOC_DAC_SUPPORTED
         ESP_ERROR_CHECK(gpio_set_level(shdnGpio, 1));
-#endif
     }
     else
     {
-#if SOC_DAC_SUPPORTED
         ESP_ERROR_CHECK(gpio_set_level(shdnGpio, 0));
-#endif
         dacStart();
     }
 }
