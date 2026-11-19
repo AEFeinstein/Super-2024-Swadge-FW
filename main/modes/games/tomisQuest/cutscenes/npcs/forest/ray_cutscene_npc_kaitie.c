@@ -26,6 +26,12 @@ void initNpcCutsceneKaitie(ray_t* ray, cutscene_t* cutscene)
     {
         return;
     }
+    else if (!(ray->p.cutsceneViewed & TQS_PAIRING))
+    {
+        // Before the pairing cutscene
+        initCutscenePairing(ray, cutscene, PAIRING_SCENE_TITLE);
+        return;
+    }
 
 #define CS_STYLE_KAITIE (CS_STYLE_HYUT + 1)
     addCutsceneStyleKaitie(cutscene);

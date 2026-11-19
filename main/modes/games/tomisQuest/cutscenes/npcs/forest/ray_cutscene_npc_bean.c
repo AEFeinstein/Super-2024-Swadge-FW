@@ -26,6 +26,12 @@ void initNpcCutsceneBean(ray_t* ray, cutscene_t* cutscene)
     {
         return;
     }
+    else if (!(ray->p.cutsceneViewed & TQS_PAIRING))
+    {
+        // Before the pairing cutscene
+        initCutscenePairing(ray, cutscene, PAIRING_SCENE_TITLE);
+        return;
+    }
 
 #define CS_STYLE_BEAN (CS_STYLE_HYUT + 1)
     addCutsceneStyleBean(cutscene);
