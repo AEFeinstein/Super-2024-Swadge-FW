@@ -16,6 +16,8 @@
 #include "esp_random.h"
 #include "esp_log.h"
 #include "macros.h"
+#include <time.h>
+#include <sys/time.h>
 
 //==============================================================================
 // Consts
@@ -228,7 +230,7 @@ void beancatchMainLoop(int64_t elapsedUs)
         beancatch->usCounter -= 1000000;
         beancatch->clockSecondsPulse = true;
         beancatch->clockHalfSecondsPulse = true;
-
+    /*
         beancatch->clockSeconds++;
         if(beancatch->clockSeconds > 59) {
             beancatch->clockSeconds = 0;
@@ -244,8 +246,19 @@ void beancatchMainLoop(int64_t elapsedUs)
                     beancatch->clockHours = 0;
                 }
             }
-        }
+        }*/
     }
+
+    // Get the current time
+    struct timeval tv = {0};
+    gettimeofday(&tv, NULL);
+
+    time_t epochSec   = tv.tv_sec;
+    struct tm* tmTime = localtime(&epochSec);
+
+    beancatch->clockSeconds = tmTime->tm_sec;
+    beancatch->clockMinutes = tmTime->tm_min;
+    beancatch->clockHours = tmTime->tm_hour;
 
     beancatch->prevBtnState = beancatch->btnState;
 }
