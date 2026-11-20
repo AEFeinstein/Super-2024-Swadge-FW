@@ -10,9 +10,9 @@
 //==============================================================================
 // Constants
 //==============================================================================
-#define BC_WSG_SIZE 44
-#define BC_SEGMENTS_SIZE 43
-#define BC_DIFFICULTY_MAX_BEANS_SIZE 17
+#define BC_WSG_SIZE                  44
+#define BC_SEGMENTS_SIZE             43
+#define BC_DIFFICULTY_MAX_BEANS_SIZE 18
 
 //==============================================================================
 // Macros

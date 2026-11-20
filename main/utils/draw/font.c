@@ -288,10 +288,7 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
         // handle newlines
         if (*textPtr == '\n')
         {
-            textX = xStart;
-            textY += font->height + gCharSpacing;
-            textPtr++;
-            continue;
+            textPtr++; // Only need to advance pointer. The rest of the program already handles the logic
         }
 
         // copy as much text as will fit into the buffer

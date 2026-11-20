@@ -295,8 +295,10 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
         // This prevents visualizing noise on the LEDs
         maxBinAvg = MAX(87 * gain, maxBinAvg);
 
+#if defined(CONFIG_HARDWARE_PULSE)
         // Don't bother drawing if there is no change
         bool change = false;
+#endif
 
         // Normalize the values to LED_H
         if (maxBinAvg)
@@ -308,16 +310,21 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
                 if (binAvgs[bIdx] > colorchord->barHeights[bIdx])
                 {
                     colorchord->barHeights[bIdx] = binAvgs[bIdx];
-                    change                       = true;
+#if defined(CONFIG_HARDWARE_PULSE)
+                    change = true;
+#endif
                 }
                 else if (colorchord->barHeights[bIdx])
                 {
                     colorchord->barHeights[bIdx]--;
+#if defined(CONFIG_HARDWARE_PULSE)
                     change = true;
+#endif
                 }
             }
         }
 
+#if defined(CONFIG_HARDWARE_PULSE)
         if (change)
         {
             // Draw bars to the eye LEDs
@@ -332,12 +339,15 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
                     }
                 }
             }
+
             // Write and select the bitmap to an unused slot
             ch32v003WriteBitmap(colorchord->bmpSlot, bitmap);
             ch32v003SelectBitmap(colorchord->bmpSlot);
+
             // Set up the next slot for the next frame
             colorchord->bmpSlot = (colorchord->bmpSlot + 1) % CH32V003_MAX_IMAGE_SLOTS;
         }
+#endif
     });
 }
 

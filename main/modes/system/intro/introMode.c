@@ -15,7 +15,6 @@
 #include "shapes.h"
 #include "wsg.h"
 #include "nameList.h"
-#include "swsnCreator.h"
 
 #include "embeddedOut.h"
 #include "bunny.h"
@@ -878,7 +877,6 @@ static void introMainLoop(int64_t elapsedUs)
             {
                 trophyUpdate(&tutorialTrophies[2], 1, 1);
                 setTutorialCompletedSetting(1);
-                switchToSwadgeMode(&swsnCreatorMode);
             }
             else
             {

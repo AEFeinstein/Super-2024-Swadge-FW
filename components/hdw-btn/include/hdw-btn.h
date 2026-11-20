@@ -91,6 +91,7 @@ void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons);
 void deinitButtons(void);
 void powerDownButtons(void);
 void powerUpButtons(void);
+void checkCh32Buttons(void);
 bool checkButtonQueue(buttonEvt_t*);
 
 #endif

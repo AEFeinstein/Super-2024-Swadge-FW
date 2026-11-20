@@ -40,8 +40,8 @@ void dancePoliceSiren(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)),
 
         // These are the LEDs on each side
         static const uint8_t halves[2][7] = {
-            {0, 5, 6, 7, 8, 9, 10},
-            {1, 2, 3, 4, 11, 12, 13},
+            {0, 4, 5, 6, 11, 12, 13},
+            {1, 2, 3, 7, 8, 9, 10},
         };
 
         // These are the colors for each side

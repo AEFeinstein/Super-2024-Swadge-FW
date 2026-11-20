@@ -1,6 +1,12 @@
 # find main/ -iname "*.c" | sort | sed -E 's/main\/(.*)/"\1"/g'
-idf_component_register(SRCS "modes/games/atrium/atrium.c"
+idf_component_register(SRCS "modes/games/beancatch/bcTables.c"
+                            "modes/games/beancatch/beancatch.c"
                             "modes/games/Bombadeetle/bombadeetle.c"
+                            "modes/games/FairyCollection/Creation/fairyCreation.c"
+                            "modes/games/FairyCollection/Display/fairyDisplay.c"
+                            "modes/games/FairyCollection/fairyCollection.c"
+                            "modes/games/FairyCollection/fairyCollectionData.c"
+                            "modes/games/FairyCollection/fairyDraw.c"
                             "modes/games/GossipStone/gossipStone.c"
                             "modes/games/GossipStone/gs_collision.c"
                             "modes/games/GossipStone/gs_entity.c"
@@ -15,9 +21,9 @@ idf_component_register(SRCS "modes/games/atrium/atrium.c"
                             "modes/games/RoboRunner/roboRunner.c"
                             "modes/games/tomisQuest/2d_renderer.c"
                             "modes/games/tomisQuest/enemies/ray_enemy_box.c"
-                            "modes/games/tomisQuest/enemies/ray_enemy.c"
                             "modes/games/tomisQuest/enemies/ray_enemy_grunt.c"
                             "modes/games/tomisQuest/enemies/ray_enemy_turret.c"
+                            "modes/games/tomisQuest/enemies/ray_enemy.c"
                             "modes/games/tomisQuest/mode_ray.c"
                             "modes/games/tomisQuest/ray_credits.c"
                             "modes/games/tomisQuest/ray_death_screen.c"
@@ -36,6 +42,7 @@ idf_component_register(SRCS "modes/games/atrium/atrium.c"
                             "modes/music/jukebox/jukebox.c"
                             "modes/music/tunernome/tunernome.c"
                             "modes/music/usbsynth/mode_synth.c"
+                            "modes/system/clock/swadgeClock.c"
                             "modes/system/credits/credits_utils.c"
                             "modes/system/credits/mode_credits.c"
                             "modes/system/intro/introMode.c"
@@ -43,16 +50,15 @@ idf_component_register(SRCS "modes/games/atrium/atrium.c"
                             "modes/system/mainMenu/mainMenu.c"
                             "modes/system/quickSettings/menuQuickSettingsRenderer.c"
                             "modes/system/quickSettings/quickSettings.c"
-                            "modes/system/swsnCreator/swsnCreator.c"
                             "modes/system/trophyCase/trophyCase.c"
                             "modes/test/accelTest/accelTest.c"
                             "modes/test/accelTest/bunny.c"
                             "modes/test/canvasTest/canvas.c"
                             "modes/test/ch32v003test/mode_ch32v003test.c"
                             "modes/test/factoryTest/factoryTest.c"
+                            "modes/test/highScoreTest/highScoreTest.c"
                             "modes/test/keebTest/keebTest.c"
                             "modes/test/nameTest/nameTest.c"
-                            "modes/test/sonaTest/sonaTest.c"
                             "modes/test/swadgePassTest/swadgePassTest.c"
                             "modes/test/touchTest/touchTest.c"
                             "modes/test/trophyTest/trophyTest.c"
@@ -73,8 +79,8 @@ idf_component_register(SRCS "modes/games/atrium/atrium.c"
                             "utils/draw/wsg.c"
                             "utils/draw/wsgCanvas.c"
                             "utils/draw/wsgPalette.c"
-                            "utils/filesystem/cnfs.c"
                             "utils/filesystem/cnfs_image.c"
+                            "utils/filesystem/cnfs.c"
                             "utils/filesystem/fs_font.c"
                             "utils/filesystem/fs_json.c"
                             "utils/filesystem/fs_txt.c"
@@ -87,7 +93,6 @@ idf_component_register(SRCS "modes/games/atrium/atrium.c"
                             "utils/game/helpPages.c"
                             "utils/game/highScores.c"
                             "utils/game/nameList.c"
-                            "utils/game/swadgesona.c"
                             "utils/game/trophy.c"
                             "utils/input/textEntry.c"
                             "utils/input/touchTextEntry.c"
@@ -99,11 +104,11 @@ idf_component_register(SRCS "modes/games/atrium/atrium.c"
                             "utils/math/quaternions.c"
                             "utils/math/trigonometry.c"
                             "utils/math/vector2d.c"
+                            "utils/menu/menu_utils.c"
                             "utils/menu/menu.c"
                             "utils/menu/menuManiaRenderer.c"
                             "utils/menu/menuMegaRenderer.c"
                             "utils/menu/menuSimpleRenderer.c"
-                            "utils/menu/menu_utils.c"
                             "utils/menu/menuZorldoRenderer.c"
                             "utils/menu/modeIncludeList.c"
                             "utils/midi/bakedDrums.c"
@@ -120,29 +125,33 @@ idf_component_register(SRCS "modes/games/atrium/atrium.c"
                             "utils/peripherals/imu_utils.c"
                             "utils/peripherals/touchUtils.c"
                             "utils/settings/settingsManager.c"
-                    PRIV_REQUIRES hdw-imu
-                                  hdw-battmon
-                                  hdw-btn
-                                  hdw-ch32v003
-                                  hdw-dac
-                                  hdw-esp-now
-                                  hdw-led
-                                  hdw-mic
-                                  hdw-nvs
-                                  hdw-tft
-                                  hdw-temperature
-                                  hdw-touch
-                                  hdw-usb
-                                  crashwrap
+                    PRIV_REQUIRES hdw-battmon
+                                hdw-btn
+                                hdw-ch32v003
+                                hdw-dac
+                                hdw-esp-now
+                                hdw-imu
+                                hdw-led
+                                hdw-mic
+                                hdw-nvs
+                                hdw-sleep-switch
+                                hdw-temperature
+                                hdw-tft
+                                hdw-touch
+                                hdw-usb
+                                crashwrap
                     REQUIRES esp_timer
                              spi_flash
                     # find main/ -type d | sort | sed -E 's/main\/(.*)/".\/\1"/g'
                     INCLUDE_DIRS "./"
                                 "./modes"
                                 "./modes/games"
-                                "./modes/games/atrium"
+                                "./modes/games/beancatch"
                                 "./modes/games/Bombadeetle"
                                 "./modes/games/GossipStone"
+                                "./modes/games/FairyCollection"
+                                "./modes/games/FairyCollection/Creation"
+                                "./modes/games/FairyCollection/Display"
                                 "./modes/games/GottaGo"
                                 "./modes/games/GottaGo/Data"
                                 "./modes/games/GottaGo/src"
@@ -155,20 +164,20 @@ idf_component_register(SRCS "modes/games/atrium/atrium.c"
                                 "./modes/music/tunernome"
                                 "./modes/music/usbsynth"
                                 "./modes/system"
+                                "./modes/system/clock"
                                 "./modes/system/credits"
                                 "./modes/system/intro"
                                 "./modes/system/mainMenu"
                                 "./modes/system/quickSettings"
-                                "./modes/system/swsnCreator"
                                 "./modes/system/trophyCase"
                                 "./modes/test"
                                 "./modes/test/accelTest"
                                 "./modes/test/canvasTest"
                                 "./modes/test/ch32v003test"
                                 "./modes/test/factoryTest"
+                                "./modes/test/highScoreTest"
                                 "./modes/test/keebTest"
                                 "./modes/test/nameTest"
-                                "./modes/test/sonaTest"
                                 "./modes/test/swadgePassTest"
                                 "./modes/test/touchTest"
                                 "./modes/test/trophyTest"

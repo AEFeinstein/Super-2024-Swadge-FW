@@ -14,3 +14,4 @@ project(swadge)
 
 idf_build_set_property(COMPILE_OPTIONS "-finline-functions" APPEND)
 idf_build_set_property(COMPILE_OPTIONS "-DCFG_TUD_HID_EP_BUFSIZE=255" APPEND)
+idf_build_set_property(COMPILE_OPTIONS "-Wno-packed-bitfield-compat" APPEND)

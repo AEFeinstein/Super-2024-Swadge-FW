@@ -5,8 +5,8 @@
  * @date 2026-09-18
  *
  */
- 
-//==============================================================================
+
+//==================== ==========================================================
 // Includes
 //==============================================================================
 #include "beancatch.h"
@@ -21,15 +21,17 @@
 // Consts
 //==============================================================================
 
-const char beancatchModeName[]   = "Bean Catch";
-const char beancatchNVSKey[] = "beancatch";
+const char beancatchModeName[] = "Bean Catch";
+const char beancatchNVSKey[]   = "beancatch";
 
 //==============================================================================
 // Structs
 //==============================================================================
+
 typedef void (*gameUpdateFuncton_t)();
 
-struct beancatch_t {
+typedef struct
+{
     int16_t btnState;
     int16_t prevBtnState;
     int16_t frameCounter;
@@ -67,7 +69,6 @@ struct beancatch_t {
     bc_conveyorIndex_t droppedBeanLocation;
 
     bc_conveyorIndex_t playerPosition;
-    
     bool eggyDevito;
     bool eggyDevitoed;
 
@@ -77,7 +78,7 @@ struct beancatch_t {
     uint16_t score;
     uint16_t highScoreGameA;
     uint16_t highScoreGameB;
-};
+} beancatch_t;
 
 //==============================================================================
 // Function declarations
@@ -152,7 +153,7 @@ void beancatchEnterMode(void)
     // Allocate mode memory
     beancatch = (beancatch_t*)heap_caps_calloc(1, sizeof(beancatch_t), MALLOC_CAP_8BIT);
 
-    //beancatch->wsgs = heap_caps_calloc(BC_WSG_SIZE, sizeof(wsg_t), MALLOC_CAP_8BIT);
+    // beancatch->wsgs = heap_caps_calloc(BC_WSG_SIZE, sizeof(wsg_t), MALLOC_CAP_8BIT);
 
     for (uint16_t i = 0; i < BC_WSG_SIZE; i++)
     {
@@ -204,7 +205,7 @@ void beancatchMainLoop(int64_t elapsedUs)
     while (checkButtonQueueWrapper(&evt))
     {
         // Save the button state
-        beancatch->btnState          = evt.state;
+        beancatch->btnState = evt.state;
 
         // if (beancatch->update == &bcUpdateMainMenu)
         // {
@@ -238,7 +239,7 @@ void beancatchMainLoop(int64_t elapsedUs)
                 beancatch->clockMinutes = 0;
 
                 beancatch->clockHours++;
-                if(beancatch->clockHours > 23)
+                if (beancatch->clockHours > 23)
                 {
                     beancatch->clockHours = 0;
                 }
@@ -246,34 +247,34 @@ void beancatchMainLoop(int64_t elapsedUs)
         }
     }
 
-    beancatch->prevBtnState          = beancatch->btnState;
+    beancatch->prevBtnState = beancatch->btnState;
 }
 
 void bcUpdateAcl(void)
 {
-    if(beancatch->refreshScreen)
+    if (beancatch->refreshScreen)
     {
-        //Unit outer bezel
+        // Unit outer bezel
         fillDisplayArea(0, 0, TFT_WIDTH, 21, c540);
         fillDisplayArea(0, 221, TFT_WIDTH, TFT_HEIGHT, c540);
         drawWsgSimple(&beancatch->wsgs[BC_WSG_TOP_LABEL], 0, 5);
         drawWsgSimple(&beancatch->wsgs[BC_WSG_BOTTOM_LBL], 0, 226);
 
-        //Unit inner bezel
+        // Unit inner bezel
         fillDisplayArea(0, 21, TFT_WIDTH, 28, c510);
-        fillDisplayArea(0, 212,TFT_WIDTH , 221, c510);
+        fillDisplayArea(0, 212, TFT_WIDTH, 221, c510);
 
-        //Reflector
+        // Reflector
         fillDisplayArea(0, 36, TFT_WIDTH, 204, c445);
-        
+
         drawWsgSimple(&beancatch->wsgs[BC_WSG_BEAN_CATCH_BG], 0, 28);
 
         bc_LcdSegment_t segment;
         for (uint16_t i = 0; i < ARRAY_SIZE(BC_LCD_SEGMENTS); i++)
         {
-            //if(esp_random() % 2){ //testing segments for now...
-                segment = BC_LCD_SEGMENTS[i];
-                drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
+            // if(esp_random() % 2){ //testing segments for now...
+            segment = BC_LCD_SEGMENTS[i];
+            drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
             //}
         }
 
@@ -289,7 +290,7 @@ void bcUpdateAcl(void)
     }
 
     beancatch->frameCounter++;
-    if(beancatch->frameCounter > 59)
+    if (beancatch->frameCounter > 59)
     {
         beancatch->frameCounter = 0;
         bcChangeStateClock();
@@ -307,13 +308,11 @@ void bcUpdateClock(void)
     {
         beancatch->refreshScreen = true;
     }
-    
     if ((beancatch->prevBtnState & PB_A) && !(beancatch->btnState & PB_A))
     {
         bcChangeStateGameA();
         return;
     }
-    
     if ((beancatch->prevBtnState & PB_B) && !(beancatch->btnState & PB_B))
     {
         bcChangeStateGameB();
@@ -598,53 +597,52 @@ void bcDrawGame(void)
         drawWsgSimple(&beancatch->wsgs[BC_WSG_TOP_LABEL], 0, 5);
         drawWsgSimple(&beancatch->wsgs[BC_WSG_BOTTOM_LBL], 0, 226);
 
-        //Unit inner bezel
+        // Unit inner bezel
         fillDisplayArea(0, 21, TFT_WIDTH, 28, c510);
-        fillDisplayArea(0, 212,TFT_WIDTH , 221, c510);
+        fillDisplayArea(0, 212, TFT_WIDTH, 221, c510);
 
-        //Reflector
+        // Reflector
         fillDisplayArea(0, 36, TFT_WIDTH, 204, c445);
 
         drawWsgSimple(&beancatch->wsgs[BC_WSG_BEAN_CATCH_BG], 0, 28);
 
         bc_LcdSegment_t segment;
- 
+
         for (uint16_t i = 0; i < 5; i++)
         {
-            if( (beancatch->beans[BC_CONVEYOR_LU] >> i) & 0b1)
+            if ((beancatch->beans[BC_CONVEYOR_LU] >> i) & 0b1)
             {
                 segment = BC_LCD_SEGMENTS[BC_SEG_BEAN_UL_00 + i];
                 drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
             }
 
-            if( (beancatch->beans[BC_CONVEYOR_LD] >> i) & 0b1)
+            if ((beancatch->beans[BC_CONVEYOR_LD] >> i) & 0b1)
             {
                 segment = BC_LCD_SEGMENTS[BC_SEG_BEAN_DL_00 + i];
                 drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
             }
 
-            if( (beancatch->beans[BC_CONVEYOR_RU] >> i) & 0b1)
+            if ((beancatch->beans[BC_CONVEYOR_RU] >> i) & 0b1)
             {
                 segment = BC_LCD_SEGMENTS[BC_SEG_BEAN_UR_00 + i];
                 drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
             }
 
-            if( (beancatch->beans[BC_CONVEYOR_RD] >> i) & 0b1)
+            if ((beancatch->beans[BC_CONVEYOR_RD] >> i) & 0b1)
             {
                 segment = BC_LCD_SEGMENTS[BC_SEG_BEAN_DR_00 + i];
                 drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
             }
         }
 
-        switch(beancatch->playerPosition)
+        switch (beancatch->playerPosition)
         {
             case BC_CONVEYOR_LU:
-                
+
                 segment = BC_LCD_SEGMENTS[BC_SEG_PLAYER_UL];
                 drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
                 segment = BC_LCD_SEGMENTS[BC_SEG_BEANBERT_L];
                 drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
-                
                 break;
             case BC_CONVEYOR_LD:
 
@@ -674,7 +672,7 @@ void bcDrawGame(void)
                 break;
         }
 
-        if(beancatch->strikes)
+        if (beancatch->strikes)
         {
             segment = BC_LCD_SEGMENTS[BC_SEG_STRIKE_LBL];
             drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
@@ -682,11 +680,11 @@ void bcDrawGame(void)
 
         for (uint16_t i = 0; i < beancatch->strikes; i++)
         {
-            if(beancatch->halfStrike && i == beancatch->strikes-1 && (beancatch->usCounter > 500000) )
+            if (beancatch->halfStrike && i == beancatch->strikes - 1 && (beancatch->usCounter > 500000))
             {
                 break;
             }
-            
+
             segment = BC_LCD_SEGMENTS[BC_SEG_STRIKE_ICON_00 + i];
             drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
         }
@@ -784,13 +782,13 @@ void bcDrawGame(void)
                 break;
         }
 
-        if(beancatch->eggyDevito)
+        if (beancatch->eggyDevito)
         {
             segment = BC_LCD_SEGMENTS[BC_SEG_EGGY_DEVITO];
             drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
         }
 
-        switch(beancatch->droppedBeanLocation)
+        switch (beancatch->droppedBeanLocation)
         {
             case BC_CONVEYOR_NULL:
             default:
@@ -817,15 +815,16 @@ void bcDrawScoreHud(uint16_t value)
     char digitBuffer[3];
 
     snprintf(scoreBuffer, sizeof(scoreBuffer) - 1, "%4d", (value % 2000));
-                
-    if(value > 99){
+
+    if (value > 99)
+    {
         digitBuffer[0] = scoreBuffer[0];
         digitBuffer[1] = scoreBuffer[1];
         digitBuffer[2] = '\0';
         drawText(&beancatch->lcdNumbersFont, c000, digitBuffer, 25, 53);
     }
 
-    digitBuffer[0] = scoreBuffer[2]; 
+    digitBuffer[0] = scoreBuffer[2];
     digitBuffer[1] = scoreBuffer[3];
     digitBuffer[2] = '\0';
     drawText(&beancatch->lcdNumbersFont, c000, digitBuffer, 68, 53);
@@ -839,12 +838,12 @@ void bcDrawScoreHud(uint16_t value)
 
 void bcClearBeans(void)
 {
-    for(uint16_t i = 0; i < 4; i++)
+    for (uint16_t i = 0; i < 4; i++)
     {
         beancatch->beans[i] = 0;
     }
 
-    beancatch->beanCount = 0;
+    beancatch->beanCount             = 0;
     beancatch->occupiedConveyorCount = 0;
 
     beancatch->refreshScreen = true;
@@ -857,7 +856,7 @@ bool bcIgnoreCurrentConveyorForGameA(void)
         return false;
     }
 
-    return (beancatch->currentConveyor ==((beancatch->strikes+2) % 4));
+    return (beancatch->currentConveyor == ((beancatch->strikes + 2) % 4));
 }
 
 void bcScorePoint(void)
@@ -899,7 +898,7 @@ void bcScorePoint(void)
             }
             break;
         case BC_GAME_LEVEL_B:
-            if(beancatch->score > beancatch->highScoreGameB)
+            if (beancatch->score > beancatch->highScoreGameB)
             {
                 beancatch->highScoreGameB = beancatch->score;
             }
@@ -1002,9 +1001,9 @@ void bcResumeTempState(void)
 
 void bcCheckPlayerCatchBean(void)
 {
-    if(beancatch->beanInDanger == beancatch->playerPosition)
+    if (beancatch->beanInDanger == beancatch->playerPosition)
     {
-        //Catch bean
+        // Catch bean
         beancatch->beanCount--;
         beancatch->beans[beancatch->playerPosition] = beancatch->beans[beancatch->playerPosition] & 0b011111;
         if (!beancatch->beans[beancatch->playerPosition])

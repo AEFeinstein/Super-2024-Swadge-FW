@@ -52,10 +52,12 @@
 
 // TODO: Figure out LEDs once we have prototype boards
 static const uint8_t ledConveyorOrder[CONFIG_NUM_LEDS] = {
-    // Clockwise around the circle
-    7, 6, 5, 4, 3, 2, 1, 0,
-    // Clockwise around the wings
-    8, 9, 10, 11, 12, 13};
+    // Down the right wing
+    10, 9, 8, 7,
+    // Up the left wing
+    6, 13, 12, 11,
+    // Around the screen
+    3, 2, 1, 0, 5, 4};
 
 //==============================================================================
 // Function Prototypes

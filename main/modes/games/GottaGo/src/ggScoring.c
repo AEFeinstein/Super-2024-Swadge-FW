@@ -1,4 +1,5 @@
 #include "ggScoring.h"
+#include "nameList.h"
 
 //==============================================================================
 // Defines
@@ -469,10 +470,10 @@ static void initHSTableFomSwadgepass(swadgeMode_t* mode, ggHSTable_t* tables)
     {
         swadgePassData_t* data     = (swadgePassData_t*)currNode->val;
         swadgePassPacket_t* packet = &data->data.packet;
-        updateHSTable(&tables[0], packet->gottaGo.maxLevels, packet->swadgesona.core.packedName);
-        updateHSTable(&tables[1], packet->gottaGo.accuracy, packet->swadgesona.core.packedName);
-        updateHSTable(&tables[2], packet->gottaGo.totalScore, packet->swadgesona.core.packedName);
-        updateHSTable(&tables[3], packet->gottaGo.adjScore, packet->swadgesona.core.packedName);
+        updateHSTable(&tables[0], packet->gottaGo.maxLevels, packet->username);
+        updateHSTable(&tables[1], packet->gottaGo.accuracy, packet->username);
+        updateHSTable(&tables[2], packet->gottaGo.totalScore, packet->username);
+        updateHSTable(&tables[3], packet->gottaGo.adjScore, packet->username);
         setPacketUsedByMode(data, mode, true);
     }
     dacStart();

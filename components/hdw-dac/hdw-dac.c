@@ -155,6 +155,7 @@ void initDac(gpio_num_t spk_gpio, gpio_num_t shdn_gpio, fnDacCallback_t cb)
  */
 void deinitDac(void)
 {
+    powerDownDac();
 #if SOC_DAC_SUPPORTED
     if (dac_handle)
     {
@@ -261,6 +262,12 @@ void dacPoll(void)
  */
 void setDacShutdown(bool shutdown)
 {
+    // Return if not initialized
+    if (GPIO_NUM_NC == shdnGpio)
+    {
+        return;
+    }
+
     if (shutdown)
     {
         dacStop();

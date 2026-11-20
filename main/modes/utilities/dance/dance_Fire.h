@@ -35,13 +35,13 @@ void danceFire(uint32_t tElapsedUs, uint32_t arg, bool reset)
         tAccumulated -= 75000;
         ledsUpdated = true;
 
-        // How bright each level flickers
-        const int32_t baseLevels[][2] = {{105, 150}, {40, 24}, {16, 4}};
+        // How bright each level flickers (randomness, base value)
+        const int32_t baseLevels[][2] = {
+            {105, 150}, {90, 126}, {75, 101}, {61, 77}, {46, 53}, {31, 28}, {16, 4},
+        };
         // What LEDs are in each level. -1 means "no led"
         static const int8_t baseLeds[][2] = {
-            {4, 1},
-            {3, 2},
-            {5, 0},
+            {6, 7}, {13, 8}, {0, 1}, {5, 2}, {12, 9}, {4, 3}, {11, 10},
         };
 
         // for each level of the fire

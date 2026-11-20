@@ -79,4 +79,19 @@ menu "Swadge Configuration"
 		default 6 if HARDWARE_PULSE
 		default 14 if HARDWARE_FAIRY_PROTO
 
+	choice BUILD_TYPE
+		prompt "Select Build Type"
+		default BUILD_TYPE_DEBUG
+		help
+			Select debug or release build mode
+		config BUILD_TYPE_RELEASE
+			bool "BUILD_TYPE_RELEASE"
+			help
+				Release build mode for retail Swadges
+		config BUILD_TYPE_DEBUG
+			bool "BUILD_TYPE_DEBUG"
+			help
+				Debug build mode for in-development Swadges
+	endchoice
+
 endmenu

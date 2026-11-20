@@ -16,51 +16,60 @@ void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset);
  */
 void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset)
 {
-    static const int8_t ledOrder[][2] = {
-        {4, -1}, {5, -1}, {3, -1}, {2, -1}, {0, -1}, {1, -1},
+    static const int8_t ledOrder[][4] = {
+        {6, 11, 12, 13},
+        {0, 4, 5, -1},
+        {1, 2, 3, -1},
+        {7, 8, 9, 10},
     };
 
-    static int32_t sweepTimer                      = 0;
-    static int32_t stripExciter                    = 0;
+    static int32_t exciterTimer                    = 0;
+    static int32_t exciterIdx                      = 0;
     static int16_t stripVals[ARRAY_SIZE(ledOrder)] = {0};
-    static bool stripDir                           = true;
-    static int32_t rgbAngle                        = 0;
+    static bool exciterIncrementing                = true;
+
+    static int32_t decayTimer = 0;
+
+    static int32_t rgbAngle = 0;
 
     if (reset)
     {
-        sweepTimer   = 0;
-        stripExciter = 0;
+        exciterTimer = 0;
+        exciterIdx   = 0;
         memset(stripVals, 0, sizeof(stripVals));
-        stripDir = true;
-        rgbAngle = 0;
+        exciterIncrementing = true;
+        decayTimer          = 0;
+        rgbAngle            = 0;
     }
 
     // Declare some LEDs, all off
     led_t leds[CONFIG_NUM_LEDS] = {{0}};
     bool ledsUpdated            = false;
 
-    RUN_TIMER_EVERY(sweepTimer, DEFAULT_FRAME_RATE_US, tElapsedUs, {
-        // Run an exciter to lead the strip
-        int8_t stripIdx = stripExciter / 12;
-        if (stripExciter % 12 == 0 && stripIdx < ARRAY_SIZE(ledOrder))
-        {
-            stripVals[stripIdx] = 0xFF;
-        }
-
-        // Flip directions at the end
-        if (stripIdx < 0 || stripIdx >= ARRAY_SIZE(ledOrder))
-        {
-            stripDir = !stripDir;
-        }
+    RUN_TIMER_EVERY(exciterTimer, 250000, tElapsedUs, {
+        // Excite a set of LEDs
+        stripVals[exciterIdx] = 0xFF;
 
         // Move the exciter
-        if (stripDir)
+        if (exciterIncrementing)
         {
-            stripExciter++;
+            exciterIdx++;
         }
         else
         {
-            stripExciter--;
+            exciterIdx--;
+        }
+
+        // Flip directions at the end
+        if (exciterIdx < 0)
+        {
+            exciterIncrementing = true;
+            exciterIdx          = 1;
+        }
+        else if (exciterIdx >= ARRAY_SIZE(ledOrder))
+        {
+            exciterIncrementing = false;
+            exciterIdx          = ARRAY_SIZE(ledOrder) - 2;
         }
 
         // Apply rainbow if there's no color
@@ -73,11 +82,14 @@ void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset)
                 rgbAngle = 0;
             }
         }
+    });
 
+    // Run a timer to decay the LEDs
+    RUN_TIMER_EVERY(decayTimer, 2000, tElapsedUs, {
         // Decay the strip
         for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(ledOrder); sIdx++)
         {
-            stripVals[sIdx] -= 8;
+            stripVals[sIdx]--;
             if (stripVals[sIdx] < 0)
             {
                 stripVals[sIdx] = 0;

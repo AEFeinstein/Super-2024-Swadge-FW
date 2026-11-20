@@ -21,6 +21,16 @@
 
 #define NUM_TZ_RING 5
 
+/**
+ * @brief Clamp a number between an upper and lower bound
+ *
+ * @param a A number to clamp between an upper and lower bound
+ * @param l The lower bound, inclusive
+ * @param u The upper bound, inclusive
+ * @return The clamped number
+ */
+#define CLAMP(a, l, u) ((a) < l ? l : ((a) > u ? u : (a)))
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -35,6 +45,9 @@ typedef enum
 //==============================================================================
 // Variables
 //==============================================================================
+
+/// true if touchPads are initialized, false otherwise
+static bool touchPadsInit = false;
 
 /// The number of configured touchPads
 static int _numTouchPads = 0;
@@ -83,87 +96,90 @@ static int getBaseTouchVals(int32_t* data, int count);
 void initTouchPads(const touch_pad_t* touchPads, uint8_t numTouchPads, float touchPadSensitivity, bool denoiseEnable)
 {
     ESP_LOGD("TOUCH", "Initializing touch pads");
-
-    /* Save the list of touchPads */
-    if (NULL != touchPads)
+    if (!touchPadsInit)
     {
-        _numTouchPads        = numTouchPads;
-        _touchPads           = touchPads;
-        _touchPadSensitivity = touchPadSensitivity;
-        _denoiseEnable       = denoiseEnable;
-    }
+        /* Save the list of touchPads */
+        if (NULL != touchPads)
+        {
+            _numTouchPads        = numTouchPads;
+            _touchPads           = touchPads;
+            _touchPadSensitivity = touchPadSensitivity;
+            _denoiseEnable       = denoiseEnable;
+        }
 
-    /* Initialize touch pad peripheral. */
-    ESP_ERROR_CHECK(touch_pad_init());
+        /* Initialize touch pad peripheral. */
+        ESP_ERROR_CHECK(touch_pad_init());
+        touchPadsInit = true;
 
-    /* Initialize each touch pad */
-    for (uint8_t i = 0; i < _numTouchPads; i++)
-    {
-        ESP_ERROR_CHECK(touch_pad_config(_touchPads[i]));
-    }
+        /* Initialize each touch pad */
+        for (uint8_t i = 0; i < _numTouchPads; i++)
+        {
+            ESP_ERROR_CHECK(touch_pad_config(_touchPads[i]));
+        }
 
-    /* Initialize denoise if requested */
-    if (_denoiseEnable)
-    {
-        /* Denoise setting at TouchPads 0. */
-        touch_pad_denoise_t denoise = {
-            /* The bits to be cancelled are determined according to the noise
-             * level.
-             */
-            .grade = TOUCH_PAD_DENOISE_BIT4,
-            /* By adjusting the parameters, the reading of T0 should be
-             * approximated to the reading of the measured channel.
-             */
-            .cap_level = TOUCH_PAD_DENOISE_CAP_L4,
+        /* Initialize denoise if requested */
+        if (_denoiseEnable)
+        {
+            /* Denoise setting at TouchPads 0. */
+            touch_pad_denoise_t denoise = {
+                /* The bits to be cancelled are determined according to the noise
+                 * level.
+                 */
+                .grade = TOUCH_PAD_DENOISE_BIT4,
+                /* By adjusting the parameters, the reading of T0 should be
+                 * approximated to the reading of the measured channel.
+                 */
+                .cap_level = TOUCH_PAD_DENOISE_CAP_L4,
+            };
+            ESP_ERROR_CHECK(touch_pad_denoise_set_config(&denoise));
+            ESP_ERROR_CHECK(touch_pad_denoise_enable());
+            ESP_LOGD("TOUCH", "Denoise function init");
+        }
+
+        /* Filter setting */
+        touch_filter_config_t filter_info = {
+            .mode         = TOUCH_PAD_FILTER_IIR_16, // Test jitter and filter 1/4.
+            .debounce_cnt = 1,                       // 1 time count.
+            .noise_thr    = 0,                       // 50%
+            .jitter_step  = 4,                       // use for jitter mode.
+            .smh_lvl      = TOUCH_PAD_SMOOTH_IIR_2,
         };
-        ESP_ERROR_CHECK(touch_pad_denoise_set_config(&denoise));
-        ESP_ERROR_CHECK(touch_pad_denoise_enable());
-        ESP_LOGD("TOUCH", "Denoise function init");
-    }
-
-    /* Filter setting */
-    touch_filter_config_t filter_info = {
-        .mode         = TOUCH_PAD_FILTER_IIR_16, // Test jitter and filter 1/4.
-        .debounce_cnt = 1,                       // 1 time count.
-        .noise_thr    = 0,                       // 50%
-        .jitter_step  = 4,                       // use for jitter mode.
-        .smh_lvl      = TOUCH_PAD_SMOOTH_IIR_2,
-    };
-    ESP_ERROR_CHECK(touch_pad_filter_set_config(&filter_info));
-    ESP_ERROR_CHECK(touch_pad_filter_enable());
-    ESP_LOGD("TOUCH", "touch pad filter init");
+        ESP_ERROR_CHECK(touch_pad_filter_set_config(&filter_info));
+        ESP_ERROR_CHECK(touch_pad_filter_enable());
+        ESP_LOGD("TOUCH", "touch pad filter init");
 #if defined(SOC_TOUCH_PAD_THRESHOLD_MAX)
-    ESP_ERROR_CHECK(touch_pad_timeout_set(true, SOC_TOUCH_PAD_THRESHOLD_MAX));
+        ESP_ERROR_CHECK(touch_pad_timeout_set(true, SOC_TOUCH_PAD_THRESHOLD_MAX));
 #elif defined(TOUCH_PAD_THRESHOLD_MAX)
-    ESP_ERROR_CHECK(touch_pad_timeout_set(true, TOUCH_PAD_THRESHOLD_MAX));
+        ESP_ERROR_CHECK(touch_pad_timeout_set(true, TOUCH_PAD_THRESHOLD_MAX));
 #else
     #error "Touch pad threshold max not defined"
 #endif
 
-    /* Enable interrupts, but not TOUCH_PAD_INTR_MASK_SCAN_DONE */
-    ESP_ERROR_CHECK(
-        touch_pad_intr_enable(TOUCH_PAD_INTR_MASK_ACTIVE | TOUCH_PAD_INTR_MASK_INACTIVE | TOUCH_PAD_INTR_MASK_TIMEOUT));
+        /* Enable interrupts, but not TOUCH_PAD_INTR_MASK_SCAN_DONE */
+        ESP_ERROR_CHECK(touch_pad_intr_enable(TOUCH_PAD_INTR_MASK_ACTIVE | TOUCH_PAD_INTR_MASK_INACTIVE
+                                              | TOUCH_PAD_INTR_MASK_TIMEOUT));
 
-    /* Enable touch pad clock. Work mode is "timer trigger" */
-    ESP_ERROR_CHECK(touch_pad_set_fsm_mode(TOUCH_FSM_MODE_TIMER));
-    ESP_ERROR_CHECK(touch_pad_fsm_start());
+        /* Enable touch pad clock. Work mode is "timer trigger" */
+        ESP_ERROR_CHECK(touch_pad_set_fsm_mode(TOUCH_FSM_MODE_TIMER));
+        ESP_ERROR_CHECK(touch_pad_fsm_start());
 
-    /* Wait touch pad init done */
-    vTaskDelay(50 / portTICK_PERIOD_MS);
+        /* Wait touch pad init done */
+        vTaskDelay(50 / portTICK_PERIOD_MS);
 
-    /* Set thresholds */
-    uint32_t touch_value;
-    for (int i = 0; i < _numTouchPads; i++)
-    {
-        /* read benchmark value */
-        ESP_ERROR_CHECK(touch_pad_read_benchmark(_touchPads[i], &touch_value));
-        /* set interrupt threshold */
-        ESP_ERROR_CHECK(touch_pad_set_thresh(_touchPads[i], touch_value * _touchPadSensitivity));
-        ESP_LOGD("TOUCH", "touch pad [%d] base %lu, thresh %lu", _touchPads[i], touch_value,
-                 (uint32_t)(touch_value * _touchPadSensitivity));
+        /* Set thresholds */
+        uint32_t touch_value;
+        for (int i = 0; i < _numTouchPads; i++)
+        {
+            /* read benchmark value */
+            ESP_ERROR_CHECK(touch_pad_read_benchmark(_touchPads[i], &touch_value));
+            /* set interrupt threshold */
+            ESP_ERROR_CHECK(touch_pad_set_thresh(_touchPads[i], touch_value * _touchPadSensitivity));
+            ESP_LOGD("TOUCH", "touch pad [%d] base %lu, thresh %lu", _touchPads[i], touch_value,
+                     (uint32_t)(touch_value * _touchPadSensitivity));
+        }
+
+        getTouchJoystick(0, 0, 0);
     }
-
-    getTouchJoystick(0, 0, 0);
 }
 
 /**
@@ -187,10 +203,14 @@ void powerUpTouchPads(void)
  */
 void powerDownTouchPads(void)
 {
-    // Disable touch pads
-    ESP_ERROR_CHECK(touch_pad_fsm_stop());
-    ESP_ERROR_CHECK(touch_pad_reset());
-    ESP_ERROR_CHECK(touch_pad_deinit());
+    if (touchPadsInit)
+    {
+        // Disable touch pads
+        ESP_ERROR_CHECK(touch_pad_fsm_stop());
+        ESP_ERROR_CHECK(touch_pad_reset());
+        ESP_ERROR_CHECK(touch_pad_deinit());
+        touchPadsInit = false;
+    }
 
     if (baseOffsets)
     {
@@ -453,15 +473,78 @@ uint8_t getTouchLinear(linearTouch_t* touches, uint8_t numLinearTouches)
         return 0;
     }
 
-    // Loop over the min of requested and configured linear touches
+    // Read base values
+    int32_t baseVals[_numTouchPads];
+    int numTouchesRead = getBaseTouchVals(baseVals, _numTouchPads);
+    if (numTouchesRead != _numTouchPads)
+    {
+        return 0;
+    }
+
+    // Loop over the min of requested and configured linear touch strips
     if (_numTouchLinearCfgs < numLinearTouches)
     {
         numLinearTouches = _numTouchLinearCfgs;
     }
-    for (uint8_t idx = 0; idx < numLinearTouches; idx++)
+    for (uint8_t sIdx = 0; sIdx < numLinearTouches; sIdx++)
     {
-        // TODO use configuration and calculate touches
-        touches[idx].touched = false;
+        // Get pointers to this strip's output and configuration
+        linearTouch_t* touch        = &touches[sIdx];
+        const touchLinearCfg_t* cfg = &_touchLinearCfgs[sIdx];
+
+        // Find the maximum peak in baseVals[]
+        int peak    = -1;
+        int peakBin = -1;
+        for (int i = 0; i < cfg->numTouchPads; i++)
+        {
+            int32_t bv = baseVals[cfg->touchPadIdxs[i]];
+            if (bv > peak)
+            {
+                peak    = bv;
+                peakBin = i;
+            }
+        }
+
+        // If no peak was found, or the peak is less than 4200 (Arbitrary)
+        if ((peakBin < 0) || (peak < 4200))
+        {
+            // There's no touch
+            touch->touched = false;
+        }
+        else
+        {
+            // We know our peak bin, now we need to know the average and differential of the adjacent bins.
+            int leftOfPeak  = (peakBin > 0) ? baseVals[cfg->touchPadIdxs[peakBin - 1]] : 0;
+            int rightOfPeak = (peakBin < cfg->numTouchPads - 1) ? baseVals[cfg->touchPadIdxs[peakBin + 1]] : 0;
+
+            int oPeak  = peak;
+            int center = peakBin << 8;
+
+            if (rightOfPeak >= leftOfPeak)
+            {
+                // We bend upward (or are neutral)
+                rightOfPeak -= leftOfPeak;
+                peak -= leftOfPeak;
+                center += (rightOfPeak << 8) / (rightOfPeak + peak);
+
+                // Set intensity output
+                touch->intensity = oPeak + rightOfPeak;
+            }
+            else
+            {
+                // We bend downward
+                leftOfPeak -= rightOfPeak;
+                peak -= rightOfPeak;
+                center -= (leftOfPeak << 8) / (leftOfPeak + peak);
+
+                // Set intensity output
+                touch->intensity = oPeak + leftOfPeak;
+            }
+
+            // Set position output
+            touch->position = CLAMP(center, 0, 1024);
+            touch->touched  = true;
+        }
     }
 
     // Return number of read linear touches

@@ -645,7 +645,9 @@ void gamepadNsMainLoop(int64_t elapsedUs __attribute__((unused)))
         };
 
         // For each hat direction
+#if defined(CONFIG_HARDWARE_PULSE)
         uint8_t hatsDrawn = 0;
+#endif
         for (uint8_t i = 0; i < ARRAY_SIZE(hatDirs); i++)
         {
             // The degree around the cluster
@@ -723,10 +725,12 @@ void gamepadNsMainLoop(int64_t elapsedUs __attribute__((unused)))
                 }
             }
 
+#if defined(CONFIG_HARDWARE_PULSE)
             if (isPressed)
             {
                 hatsDrawn |= (1 << i);
             }
+#endif
             drawFunc = isPressed ? &drawCircleFilled : &drawCircle;
             drawFunc(xc, yc, DPAD_BTN_RADIUS, c551);
         }
@@ -799,9 +803,10 @@ void gamepadNsMainLoop(int64_t elapsedUs __attribute__((unused)))
                 break;
         }
 
-        // Here is where I would put NS accel handling code... if I had any!
+            // Here is where I would put NS accel handling code... if I had any!
 
-        // Display controller state on Eye LED arrays
+            // Display controller state on Eye LED arrays
+#if defined(CONFIG_HARDWARE_PULSE)
         uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
         uint8_t btnBrightness                = 0;
 
@@ -885,6 +890,7 @@ void gamepadNsMainLoop(int64_t elapsedUs __attribute__((unused)))
             // Write and select the bitmap to an unused slot
             ch32v003WriteBitmap(gamepad->bmpSlot, bitmap);
             ch32v003SelectBitmap(gamepad->bmpSlot);
+
             // Set up the next slot for the next frame
             gamepad->bmpSlot = (gamepad->bmpSlot + 1) % CH32V003_MAX_IMAGE_SLOTS;
 
@@ -892,6 +898,7 @@ void gamepadNsMainLoop(int64_t elapsedUs __attribute__((unused)))
             gamepad->previousButtons = gamepad->gpNsState.buttons;
             gamepad->previousHat     = gamepad->gpNsState.hat;
         }
+#endif
 
         // Send state to host
         // gamepadNsReportStateToHost();
@@ -951,7 +958,9 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
         };
 
         // For each hat direction
+#if defined(CONFIG_HARDWARE_PULSE)
         uint8_t hatsDrawn = 0;
+#endif
         for (uint8_t i = 0; i < ARRAY_SIZE(hatDirs); i++)
         {
             // The degree around the cluster
@@ -1021,10 +1030,12 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
                 }
             }
 
+#if defined(CONFIG_HARDWARE_PULSE)
             if (isPressed)
             {
                 hatsDrawn |= (1 << i);
             }
+#endif
             drawFunc = isPressed ? &drawCircleFilled : &drawCircle;
             drawFunc(xc, yc, DPAD_BTN_RADIUS, c551);
         }
@@ -1122,6 +1133,7 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
         }
 
         // Display controller state on Eye LED arrays
+#if defined(CONFIG_HARDWARE_PULSE)
         uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
         uint8_t btnBrightness                = 0;
 
@@ -1205,6 +1217,7 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
             // Write and select the bitmap to an unused slot
             ch32v003WriteBitmap(gamepad->bmpSlot, bitmap);
             ch32v003SelectBitmap(gamepad->bmpSlot);
+
             // Set up the next slot for the next frame
             gamepad->bmpSlot = (gamepad->bmpSlot + 1) % CH32V003_MAX_IMAGE_SLOTS;
 
@@ -1212,6 +1225,7 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
             gamepad->previousButtons = gamepad->gpState.buttons;
             gamepad->previousHat     = gamepad->gpState.hat;
         }
+#endif
 
         // Send state to host
         // gamepadGenericReportStateToHost();

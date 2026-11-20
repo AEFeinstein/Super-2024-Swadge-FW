@@ -16,15 +16,11 @@
 
 /// @brief Add swadgeMode_t pointers to this struct to include them in emulator and main menu
 swadgeMode_t* const allSwadgeModes[] = {
-    &accelTestMode,    &atriumMode,  &beancatchMode,  &canvasTestMode, &colorchordMode, &danceMode,      &factoryTestMode,
-    &gamepadMode,      &gottaGoMode, &introMode,      &jukeboxMode,    &keebTestMode,   &mainMenuMode,
-    &modeCh32v003test, &modeCredits, &nameTestMode,   &roboRunnerMode, &sonaTestMode,   &swadgePassTestMode,
-    &swsnCreatorMode,  &synthMode,   &tCaseMode,      &touchTestMode,  &trophyTestMode, &tunernomeMode,
-    &accelTestMode,   &atriumMode,     &bombadeetleMode, &canvasTestMode,     &colorchordMode,  &danceMode,
-    &factoryTestMode, &gamepadMode,    &gossipStoneMode, &gottaGoMode,        &heyListenMode,   &introMode,
-    &jukeboxMode,     &keebTestMode,   &mainMenuMode,    &modeCh32v003test,   &modeCredits,     &nameTestMode,
-    &rayMode,         &roboRunnerMode, &sonaTestMode,    &swadgePassTestMode, &swsnCreatorMode, &synthMode,
-    &tCaseMode,       &touchTestMode,  &trophyTestMode,  &tunernomeMode,
+    &accelTestMode,    &beancatchMode,     &bombadeetleMode,     &canvasTestMode, &clockMode,       &colorchordMode,
+    &danceMode,        &factoryTestMode,   &fairyCollectionMode, &gamepadMode,    &gossipStoneMode, &gottaGoMode,
+    &heyListenMode,    &highScoreTestMode, &introMode,           &jukeboxMode,    &keebTestMode,    &mainMenuMode,
+    &modeCh32v003test, &modeCredits,       &nameTestMode,        &rayMode,        &roboRunnerMode,  &swadgePassTestMode,
+    &synthMode,        &tCaseMode,         &touchTestMode,       &trophyTestMode, &tunernomeMode,
 };
 
 //==============================================================================
@@ -58,6 +54,7 @@ void modeListSetMenu(menu_t* menu)
     // Utilities sub menu
     menu = startSubMenu(menu, "Utilities");
 
+    addSingleItemToMenu(menu, clockMode.modeName);
     addSingleItemToMenu(menu, tCaseMode.modeName);
     addSingleItemToMenu(menu, danceMode.modeName);
     addSingleItemToMenu(menu, heyListenMode.modeName);
@@ -69,8 +66,7 @@ void modeListSetMenu(menu_t* menu)
 
     // Swadgepass
     menu = startSubMenu(menu, "SwadgePass");
-    addSingleItemToMenu(menu, swsnCreatorMode.modeName);
-    addSingleItemToMenu(menu, atriumMode.modeName);
+    addSingleItemToMenu(menu, fairyCollectionMode.modeName);
     menu = endSubMenu(menu);
 }
 
@@ -78,6 +74,7 @@ void modeListAddSecretMenuModes(menu_t* menu)
 {
     addSingleItemToMenu(menu, synthMode.modeName);
     addSingleItemToMenu(menu, factoryTestMode.modeName);
+    addSingleItemToMenu(menu, highScoreTestMode.modeName);
     addSingleItemToMenu(menu, keebTestMode.modeName);
     addSingleItemToMenu(menu, accelTestMode.modeName);
     addSingleItemToMenu(menu, touchTestMode.modeName);
@@ -85,7 +82,6 @@ void modeListAddSecretMenuModes(menu_t* menu)
     addSingleItemToMenu(menu, trophyTestMode.modeName);
     addSingleItemToMenu(menu, nameTestMode.modeName);
     addSingleItemToMenu(menu, canvasTestMode.modeName);
-    addSingleItemToMenu(menu, sonaTestMode.modeName);
     addSingleItemToMenu(menu, modeCh32v003test.modeName);
 }
 

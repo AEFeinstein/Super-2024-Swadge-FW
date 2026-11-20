@@ -11,8 +11,8 @@ else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Linux)
         HOST_OS = Linux
-		# Check if this is WSL. 0 for not WSL, 1 for WSL
-	    IS_WSL := $(shell uname -a | grep -i WSL | wc -l)
+        # Check if this is WSL. 0 for not WSL, 1 for WSL
+        IS_WSL := $(shell uname -a | grep -i WSL | wc -l)
     else ifeq ($(UNAME_S),Darwin)
         HOST_OS = Darwin
     endif
@@ -23,35 +23,38 @@ endif
 ################################################################################
 
 ifeq ($(HOST_OS),Windows)
-	CC = gcc
+    CC = gcc
 else ifeq ($(HOST_OS),Linux)
-	CC = gcc
+    CC = gcc
 else ifeq ($(UNAME_S),Darwin)
-	CC = gcc
+    CC = gcc
 endif
 
 FIND:=find
 ifeq ($(HOST_OS),Windows)
-	FIND:=$(shell cygpath `where find | grep bin | grep -v " "`)
+    FIND:=$(shell cygpath `where find | grep bin | grep -v " "`)
 endif
 
 # clang-format may actually be clang-format-22. Push stderr to null if which returns nothing.
-CLANG_FORMAT:=clang-format-22
-ifeq (, $(shell which $(CLANG_FORMAT) 2>/dev/null))
-	CLANG_FORMAT:=clang-format
-ifneq ($(shell clang-format --version | grep -Pc "22\.\d+\.\d+"), 1)
-$(warning Your clang-format version is not 22. Formatting may be inconsistent)
-endif
+ifeq ($(shell /usr/lib/llvm22/bin/clang-format --version | grep -Pc "22\.\d+\.\d+"), 1)
+    CLANG_FORMAT:=/usr/lib/llvm22/bin/clang-format
+else ifeq ($(shell clang-format-22 --version | grep -Pc "22\.\d+\.\d+"), 1)
+    CLANG_FORMAT:=clang-format-22
+else ifeq ($(shell clang-format --version | grep -Pc "22\.\d+\.\d+"), 1)
+    CLANG_FORMAT:=clang-format
+else
+    $(warning Your clang-format version is not 22. Formatting may be inconsistent)
+    CLANG_FORMAT:=clang-format
 endif
 
 ifeq ($(HOST_OS),Linux)
-	ifneq (,$(shell getent group plugdev))
-		UDEV_GROUP:=plugdev
-	else ifneq (,$(shell getent group uucp))
-		UDEV_GROUP:=uucp
-	else
-		UDEV_GROUP:=$(USER)
-	endif
+    ifneq (,$(shell getent group plugdev))
+        UDEV_GROUP:=plugdev
+    else ifneq (,$(shell getent group uucp))
+        UDEV_GROUP:=uucp
+    else
+        UDEV_GROUP:=$(USER)
+    endif
 endif
 
 # if user has not configured their esp idf and launched the virtual environment idf.py doesnt
@@ -114,64 +117,64 @@ INC = $(patsubst %, -I%, $(INC_DIRS) )
 
 # These are flags for the compiler, all files
 CFLAGS = \
-	-c \
-	-g \
-	-fdiagnostics-color=always \
-	-ffunction-sections \
-	-fdata-sections \
-	-gdwarf-4 \
-	-ggdb \
-	-fno-jump-tables \
-	-finline-functions \
-	-std=gnu17
+    -c \
+    -g \
+    -fdiagnostics-color=always \
+    -ffunction-sections \
+    -fdata-sections \
+    -gdwarf-4 \
+    -ggdb \
+    -fno-jump-tables \
+    -finline-functions \
+    -std=gnu17
 
 ifneq ($(HOST_OS),Darwin)
 # Incompatible flags for clang on MacOS
 CFLAGS += \
-	-static-libgcc \
-	-static-libstdc++ \
-	-fstrict-volatile-bitfields \
-	-fno-tree-switch-conversion \
-	-fno-omit-frame-pointer
+    -static-libgcc \
+    -static-libstdc++ \
+    -fstrict-volatile-bitfields \
+    -fno-tree-switch-conversion \
+    -fno-omit-frame-pointer
 else
 # Required for OpenGL and some other libraries
 CFLAGS += \
-	-I/opt/X11/include \
-	-I/opt/homebrew/include \
-	-mmacosx-version-min=10.0
+    -I/opt/X11/include \
+    -I/opt/homebrew/include \
+    -mmacosx-version-min=10.0
 endif
 
 CFLAGS_SANITIZE=
 ifeq ($(HOST_OS),Linux)
 CFLAGS_SANITIZE += \
-	-fsanitize=address \
-	-fsanitize=bounds-strict \
-	-fsanitize=leak \
-	-fsanitize=undefined \
-	-fsanitize=pointer-compare \
-	-fsanitize=shift \
-	-fsanitize=shift-exponent \
-	-fsanitize=shift-base \
-	-fsanitize=integer-divide-by-zero \
-	-fsanitize=unreachable \
-	-fsanitize=vla-bound \
-	-fsanitize=null \
-	-fsanitize=return \
-	-fsanitize=signed-integer-overflow \
-	-fsanitize=bounds \
-	-fsanitize=bounds-strict \
-	-fsanitize=alignment \
-	-fsanitize=object-size \
-	-fsanitize=float-divide-by-zero \
-	-fsanitize=float-cast-overflow \
-	-fsanitize=nonnull-attribute \
-	-fsanitize=returns-nonnull-attribute \
-	-fsanitize=bool \
-	-fsanitize=enum \
-	-fsanitize=vptr \
-	-fsanitize=pointer-overflow \
-	-fsanitize=builtin \
-	-fsanitize-address-use-after-scope
+    -fsanitize=address \
+    -fsanitize=bounds-strict \
+    -fsanitize=leak \
+    -fsanitize=undefined \
+    -fsanitize=pointer-compare \
+    -fsanitize=shift \
+    -fsanitize=shift-exponent \
+    -fsanitize=shift-base \
+    -fsanitize=integer-divide-by-zero \
+    -fsanitize=unreachable \
+    -fsanitize=vla-bound \
+    -fsanitize=null \
+    -fsanitize=return \
+    -fsanitize=signed-integer-overflow \
+    -fsanitize=bounds \
+    -fsanitize=bounds-strict \
+    -fsanitize=alignment \
+    -fsanitize=object-size \
+    -fsanitize=float-divide-by-zero \
+    -fsanitize=float-cast-overflow \
+    -fsanitize=nonnull-attribute \
+    -fsanitize=returns-nonnull-attribute \
+    -fsanitize=bool \
+    -fsanitize=enum \
+    -fsanitize=vptr \
+    -fsanitize=pointer-overflow \
+    -fsanitize=builtin \
+    -fsanitize-address-use-after-scope
 
 ENABLE_GCOV=false
 
@@ -182,55 +185,55 @@ endif
 
 # These are warning flags that the IDF uses
 CFLAGS_WARNINGS = \
-	-Wall \
-	-Werror=all \
-	-Wno-error=unused-function \
-	-Wno-error=unused-variable \
-	-Wno-error=deprecated-declarations \
-	-Wextra \
-	-Wno-unused-parameter \
-	-Wno-sign-compare \
-	-Wno-enum-conversion \
-	-Wno-error=unused-but-set-variable \
-	-Wno-packed-bitfield-compat
+    -Wall \
+    -Werror=all \
+    -Wno-error=unused-function \
+    -Wno-error=unused-variable \
+    -Wno-error=deprecated-declarations \
+    -Wextra \
+    -Wno-unused-parameter \
+    -Wno-sign-compare \
+    -Wno-enum-conversion \
+    -Wno-error=unused-but-set-variable \
+    -Wno-packed-bitfield-compat
 
 # These are warning flags that I like
 CFLAGS_WARNINGS_EXTRA = \
-	-Wundef \
-	-Wformat=2 \
-	-Winvalid-pch \
-	-Wmissing-format-attribute \
-	-Wmissing-include-dirs \
-	-Wpointer-arith \
-	-Wunused-local-typedefs \
-	-Wuninitialized \
-	-Wshadow \
-	-Wswitch \
-	-Wcast-align \
-	-Wformat-nonliteral \
-	-Wno-switch-default \
-	-Wunused \
-	-Wunused-macros \
-	-Wmissing-declarations \
-	-Wmissing-prototypes \
-	-Wcast-qual \
-	-Wno-switch \
-	-Wunused-result \
-#	-Wstrict-prototypes \
-#	-Wpedantic \
-#	-Wconversion \
-#	-Wsign-conversion \
-#	-Wredundant-decls \
-#	-Wdouble-promotion
+    -Wundef \
+    -Wformat=2 \
+    -Winvalid-pch \
+    -Wmissing-format-attribute \
+    -Wmissing-include-dirs \
+    -Wpointer-arith \
+    -Wunused-local-typedefs \
+    -Wuninitialized \
+    -Wshadow \
+    -Wswitch \
+    -Wcast-align \
+    -Wformat-nonliteral \
+    -Wno-switch-default \
+    -Wunused \
+    -Wunused-macros \
+    -Wmissing-declarations \
+    -Wmissing-prototypes \
+    -Wcast-qual \
+    -Wno-switch \
+    -Wunused-result \
+#    -Wstrict-prototypes \
+#    -Wpedantic \
+#    -Wconversion \
+#    -Wsign-conversion \
+#    -Wredundant-decls \
+#    -Wdouble-promotion
 
 ifneq ($(HOST_OS),Darwin)
 # Incompatible warnings for clang on MacOS
 CFLAGS_WARNINGS += \
-	-Wno-old-style-declaration
+    -Wno-old-style-declaration
 
 CFLAGS_WARNINGS_EXTRA += \
-	-Wlogical-op \
-	-Wjump-misses-init
+    -Wlogical-op \
+    -Wjump-misses-init
 endif
 
 ################################################################################
@@ -242,38 +245,38 @@ GIT_HASH  = $(shell git rev-parse --short=7 HEAD)
 
 # Used by the ESP SDK
 DEFINES_LIST = \
-	CONFIG_ESP_SYSTEM_PANIC=y\
-	CONFIG_ESP_SYSTEM_GDBSTUB_RUNTIME=y\
-	CONFIG_DEBUG_OUTPUT_USB=y\
-	CONFIG_HARDWARE_FAIRY_PROTO=y \
-	CONFIG_IDF_TARGET_ESP32S3=y \
-	SOC_RMT_CHANNELS_PER_GROUP=4 \
-	SOC_TOUCH_SENSOR_NUM=15 \
-	SOC_ULP_SUPPORTED=y \
-	SOC_PM_SUPPORT_EXT_WAKEUP=y \
-	SOC_GPIO_SUPPORT_SLP_SWITCH=y \
-	SOC_TIMER_GROUP_TIMERS_PER_GROUP=2 \
-	SOC_TIMER_GROUPS=2 \
-	SOC_I2C_NUM=2 \
-	SOC_I2C_SUPPORT_SLAVE=y \
-	SOC_LEDC_CHANNEL_NUM=8 \
-	SOC_UART_NUM=2 \
-	SOC_ADC_DIGI_RESULT_BYTES=2 \
-	CONFIG_ESP_TIMER_SUPPORTS_ISR_DISPATCH_METHOD=0 \
-	CONFIG_LOG_MAXIMUM_LEVEL=3 \
-	CONFIG_GC9307_240x280=y \
-	CONFIG_TFT_MAX_BRIGHTNESS=200 \
-	CONFIG_TFT_MIN_BRIGHTNESS=10 \
-	CONFIG_NUM_LEDS=14 \
-	configENABLE_FREERTOS_DEBUG_OCDAWARE=1 \
-	_GNU_SOURCE \
-	IDF_VER="v5.2.8" \
-	ESP_PLATFORM \
-	_POSIX_READER_WRITER_LOCKS \
-	CFG_TUSB_MCU=OPT_MCU_ESP32S2 \
-	CONFIG_FACTORY_TEST_NORMAL=y \
-	SOC_TOUCH_PAD_THRESHOLD_MAX=0x1FFFFF \
-	SOC_DAC_SUPPORTED=0
+    CONFIG_ESP_SYSTEM_PANIC=y\
+    CONFIG_ESP_SYSTEM_GDBSTUB_RUNTIME=y\
+    CONFIG_DEBUG_OUTPUT_USB=y\
+    CONFIG_HARDWARE_FAIRY_PROTO=y \
+    CONFIG_IDF_TARGET_ESP32S3=y \
+    SOC_RMT_CHANNELS_PER_GROUP=4 \
+    SOC_TOUCH_SENSOR_NUM=15 \
+    SOC_ULP_SUPPORTED=y \
+    SOC_PM_SUPPORT_EXT_WAKEUP=y \
+    SOC_GPIO_SUPPORT_SLP_SWITCH=y \
+    SOC_TIMER_GROUP_TIMERS_PER_GROUP=2 \
+    SOC_TIMER_GROUPS=2 \
+    SOC_I2C_NUM=2 \
+    SOC_I2C_SUPPORT_SLAVE=y \
+    SOC_LEDC_CHANNEL_NUM=8 \
+    SOC_UART_NUM=2 \
+    SOC_ADC_DIGI_RESULT_BYTES=2 \
+    CONFIG_ESP_TIMER_SUPPORTS_ISR_DISPATCH_METHOD=0 \
+    CONFIG_LOG_MAXIMUM_LEVEL=3 \
+    CONFIG_GC9307_240x280=y \
+    CONFIG_TFT_MAX_BRIGHTNESS=200 \
+    CONFIG_TFT_MIN_BRIGHTNESS=10 \
+    CONFIG_NUM_LEDS=14 \
+    configENABLE_FREERTOS_DEBUG_OCDAWARE=1 \
+    _GNU_SOURCE \
+    IDF_VER="v5.2.8" \
+    ESP_PLATFORM \
+    _POSIX_READER_WRITER_LOCKS \
+    CFG_TUSB_MCU=OPT_MCU_ESP32S2 \
+    CONFIG_FACTORY_TEST_NORMAL=y \
+    SOC_TOUCH_PAD_THRESHOLD_MAX=0x1FFFFF \
+    SOC_DAC_SUPPORTED=0
 
 # If this is not WSL
 ifeq ($(IS_WSL),0)
@@ -286,9 +289,9 @@ endif
 
 # Extra defines
 DEFINES_LIST += \
-	GIT_SHA1=\\\"${GIT_HASH}\\\" \
-	HAS_XINERAMA=1 \
-	FULL_SCREEN_STEAL_FOCUS=1
+    GIT_SHA1=\\\"${GIT_HASH}\\\" \
+    HAS_XINERAMA=1 \
+    FULL_SCREEN_STEAL_FOCUS=1
 
 DEFINES = $(patsubst %, -D%, $(DEFINES_LIST))
 
@@ -336,33 +339,33 @@ endif
 
 # This combines the flags for the linker to find and use libraries
 LIBRARY_FLAGS = $(patsubst %, -L%, $(LIB_DIRS)) $(patsubst %, -l%, $(LIBS)) \
-	-ggdb
+    -ggdb
 
 # Incompatible flags for clang on MacOS
 ifneq ($(HOST_OS),Darwin)
 LIBRARY_FLAGS += \
-	-static-libgcc \
-	-static-libstdc++
+    -static-libgcc \
+    -static-libstdc++
 else
 LIBRARY_FLAGS += \
     -framework Carbon \
     -framework Foundation \
-	-framework CoreFoundation \
-	-framework CoreMIDI \
-	-framework AudioToolbox
+    -framework CoreFoundation \
+    -framework CoreMIDI \
+    -framework AudioToolbox
 endif
 
 ifeq ($(HOST_OS),Linux)
 LIBRARY_FLAGS += \
-	$(CFLAGS_SANITIZE) \
-	-fno-omit-frame-pointer
+    $(CFLAGS_SANITIZE) \
+    -fno-omit-frame-pointer
 ifeq ($(ENABLE_GCOV),true)
     LIBRARY_FLAGS += -lgcov -fprofile-arcs -ftest-coverage
 endif
 endif
 
 ifeq ($(HOST_OS),Windows)
-	LIBRARY_FLAGS += -Wl,-Bstatic -lpthread
+    LIBRARY_FLAGS += -Wl,-Bstatic -lpthread
 endif
 
 ################################################################################
@@ -383,10 +386,10 @@ MACOS_PLIST   = emulator/resources/Info.plist
 
 # This list of targets do not build files which match their name
 .PHONY: all assets preprocess-assets firmware bundle \
-	clean clean-firmware clean-docs clean-assets clean-git clean-utils fullclean \
-	docs format gen-coverage update-dependencies cppcheck \
-	usbflash monitor installudev \
-	print-%
+    clean clean-firmware clean-docs clean-assets clean-git clean-utils fullclean \
+    docs format gen-coverage update-dependencies cppcheck \
+    usbflash monitor installudev \
+    print-%
 
 # Build the executable
 all: $(EXECUTABLE)

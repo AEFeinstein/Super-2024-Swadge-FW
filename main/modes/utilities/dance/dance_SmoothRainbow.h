@@ -16,26 +16,10 @@ void danceSmoothRainbow(uint32_t tElapsedUs, uint32_t arg, bool reset);
 void danceSmoothRainbow(uint32_t tElapsedUs, uint32_t arg, bool reset)
 {
     // Map comet index to LED index
-    const int8_t ledMap[CONFIG_NUM_LEDS] = {
-        // Down the right side
-        8,
-        9,
-        7,
-        6,
-        5,
-        10,
-        // Across the bottom
-        4,
-        // Up the left side
-        11,
-        3,
-        2,
-        1,
-        12,
-        13,
-        // Across the top
-        0,
-    };
+    const int8_t ledMap[CONFIG_NUM_LEDS] = {// Down the right side
+                                            10, 3, 9, 2, 1, 8, 7,
+                                            // Up the left side
+                                            6, 13, 0, 5, 12, 4, 11};
 
     static uint32_t tAccumulated = 0;
     static uint8_t ledCount      = 0;
