@@ -76,19 +76,19 @@
 
 #ifdef SOC_DAC_SUPPORTED
 
-/** @brief The sample rate for the DAC */
-#define DAC_SAMPLE_RATE_HZ 16384
+    /** @brief The sample rate for the DAC */
+    #define DAC_SAMPLE_RATE_HZ 16384
 
-/** The size of each buffer to fill with DAC samples */
-#define DAC_BUF_SIZE 512
+    /** The size of each buffer to fill with DAC samples */
+    #define DAC_BUF_SIZE 512
 
 #else
 
-/** @brief The sample rate for the PDM */
-#define DAC_SAMPLE_RATE_HZ 16000
+    /** @brief The sample rate for the PDM */
+    #define DAC_SAMPLE_RATE_HZ 32000
 
 /** The size of each buffer to fill with PDM samples */
-#define DAC_BUF_SIZE 512
+// #define DAC_BUF_SIZE 512
 
 #endif
 

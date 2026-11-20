@@ -7,12 +7,26 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
+#include "freertos/portmacro.h"
 #include "hdw-dac.h"
 
+#define DisableISR()                         \
+    do                                       \
+    {                                        \
+        XTOS_SET_INTLEVEL(XCHAL_EXCM_LEVEL); \
+        portbenchmarkINTERRUPT_DISABLE();    \
+    } while (0)
+#define EnableISR()                        \
+    do                                     \
+    {                                      \
+        portbenchmarkINTERRUPT_RESTORE(0); \
+        XTOS_SET_INTLEVEL(0);              \
+    } while (0)
+
 #if SOC_DAC_SUPPORTED
-#include "driver/dac_continuous.h"
+    #include "driver/dac_continuous.h"
 #else
-#include "driver/i2s_pdm.h"
+    #include "driver/i2s_pdm.h"
 #endif
 
 //==============================================================================
@@ -48,10 +62,11 @@ static bool dacWriting = false;
 
 #else
 
-static i2s_chan_handle_t                dac_chan;        // I2S tx channel handler
+static i2s_chan_handle_t dac_chan = 0; // I2S tx channel handler
+
+static uint32_t freeSpace;
 
 #endif
-
 
 //==============================================================================
 // Functions
@@ -84,35 +99,11 @@ static bool IRAM_ATTR dac_on_convert_done_callback(dac_continuous_handle_t handl
 
 #else
 
-static bool IRAM_ATTR i2s_isr_callback(i2s_chan_handle_t handle, i2s_event_data_t *event, void *user_ctx)
+static bool IRAM_ATTR i2s_isr_callback(i2s_chan_handle_t handle, i2s_event_data_t* event, void* user_ctx)
 {
-	int nmcnt = event->size/2;
-	//uint16_t * samples = event->data;//[nmcnt];
-	uint16_t samples[nmcnt];
-	uint8_t samples8[nmcnt];
-#if 0
-static int n;
-int i;
-for( i = 0; i < nmcnt; i++ )
-{
-	samples8[i] = n++;
-}
-#endif
-	if( dacCb )
-		dacCb( samples8, sizeof(samples8) );
-	else
-		memset( samples8, 0x7f, sizeof(samples8) );
-
-	for( int i = 0; i < nmcnt; i++ )
-	{
-		samples[i] = samples8[i]>>8;
-	}
-
-	// Do not block.
-	size_t writ; // Discarded
-	ESP_ERROR_CHECK(i2s_channel_write( dac_chan, samples, nmcnt*2, &writ, 1000));
-
-	return false; // claim high prio task was woken.  XXX TODO: Explore.
+    int nmcnt = event->size / 2;
+    freeSpace += nmcnt;
+    return false;
 }
 
 #endif
@@ -189,9 +180,8 @@ void initDac(gpio_num_t spk_gpio, gpio_num_t shdn_gpio, fnDacCallback_t cb)
         ESP_ERROR_CHECK(dac_continuous_register_event_callback(dac_handle, &cbs, dacIsrQueue));
     }
 #else
-
     i2s_chan_config_t tx_chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
-	ESP_ERROR_CHECK(i2s_new_channel(&tx_chan_cfg, &dac_chan, NULL));
+    ESP_ERROR_CHECK(i2s_new_channel(&tx_chan_cfg, &dac_chan, NULL));
 
     i2s_pdm_tx_config_t tx_pdm_cfg = {
         .clk_cfg  = I2S_PDM_TX_CLK_DAC_DEFAULT_CONFIG(DAC_SAMPLE_RATE_HZ),
@@ -208,11 +198,9 @@ void initDac(gpio_num_t spk_gpio, gpio_num_t shdn_gpio, fnDacCallback_t cb)
 
     dacCb = cb;
 
-	i2s_event_callbacks_t ecb = {
-		.on_sent = i2s_isr_callback
-	};
+    i2s_event_callbacks_t ecb = {.on_sent = i2s_isr_callback};
 
-	ESP_ERROR_CHECK(i2s_channel_register_event_callback(dac_chan, &ecb, 0 ));
+    ESP_ERROR_CHECK(i2s_channel_register_event_callback(dac_chan, &ecb, 0));
 #endif
 }
 
@@ -237,7 +225,13 @@ void deinitDac(void)
         dacCb = NULL;
     }
 #else
-	i2s_del_channel(dac_chan);
+    if (dac_chan)
+    {
+        ESP_LOGI("dac", "Deleting");
+        i2s_channel_disable(dac_chan);
+        i2s_del_channel(dac_chan);
+        dac_chan = 0;
+    }
 #endif
 }
 
@@ -271,20 +265,20 @@ void dacStart(void)
         dacWriting = true;
     }
 #else
-	//i2s_chan_info_t ci;
-	//ESP_ERROR_CHECK(i2s_channel_get_info(dac_chan, &ci));
-	//ci.total_dma_buf_size is not available in this version of the IDF?
+    // i2s_chan_info_t ci;
+    // ESP_ERROR_CHECK(i2s_channel_get_info(dac_chan, &ci));
+    // ci.total_dma_buf_size is not available in this version of the IDF?
 
-	uint8_t samples[512]; // XXX TODO Update
-	if( dacCb )
-		dacCb( samples, sizeof(samples) );
-	else
-		memset( samples, 0x7f, sizeof(samples) );
+    uint8_t samples[240 * 4]; // XXX TODO reinvestigate - this seems to work well, though.
+    if (dacCb)
+        dacCb(samples, sizeof(samples));
+    else
+        memset(samples, 0x7f, sizeof(samples));
 
-	size_t writ = 0; // unused.
-	ESP_ERROR_CHECK(i2s_channel_preload_data(dac_chan, samples, sizeof(samples), &writ));
+    size_t writ = 0; // unused.
+    ESP_ERROR_CHECK(i2s_channel_preload_data(dac_chan, samples, sizeof(samples), &writ));
 
-	i2s_channel_enable(dac_chan);
+    i2s_channel_enable(dac_chan);
 #endif
 }
 
@@ -329,8 +323,31 @@ void dacPoll(void)
         }
     }
 #else
-    //#warning "TODO: Main loop for PDM output"
-	// No need to poll.
+    if (freeSpace)
+    {
+        DisableISR();
+        uint32_t nmcnt = freeSpace;
+        freeSpace      = 0;
+        EnableISR();
+
+        uint16_t samples[nmcnt];
+        uint8_t samples8[nmcnt];
+
+        if (dacCb)
+            dacCb(samples8, sizeof(samples8));
+        else
+            memset(samples8, 0x7f, sizeof(samples8));
+
+        for (int i = 0; i < nmcnt; i++)
+        {
+            samples[i] = ((int8_t)(samples8[i] - 0x80)) << 8;
+        }
+
+        // Do not block.
+        size_t writ; // Discarded
+        ESP_ERROR_CHECK(i2s_channel_write(dac_chan, samples, nmcnt * 2, &writ, 1000));
+    }
+
 #endif
 }
 
