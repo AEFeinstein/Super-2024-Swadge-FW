@@ -39,11 +39,13 @@ static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, 
                             bool backtrack);
 static bool introCheckQuickSettingsTrigger(const tutorialState_t* state, const tutorialTrigger_t* trigger);
 
-static vec_t getTouchScreenCoord(vec_t touchPoint);
-
 static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons);
-static void introDrawLinearTouchpad();
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+static void introDrawLinearTouchpad(void);
+#else
+static vec_t getTouchScreenCoord(vec_t touchPoint);
 static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint, list_t* touchHist);
+#endif
 static void introDrawSwadgeImu(int64_t elapsedUs);
 static void introDrawSwadgeSpeaker(int64_t elapsedUs);
 static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, uint16_t maxValue);
@@ -1227,35 +1229,13 @@ static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, butt
     }
 }
 
-#define TOUCHPAD_X (TFT_WIDTH / 2)
-#define TOUCHPAD_Y ((TFT_HEIGHT / 2) - 5)
-
-/**
- * @brief TODO
- *
- * @param touchPoint
- * @return vec_t
- */
-static vec_t getTouchScreenCoord(vec_t touchPoint)
-{
-    int32_t tpRadius = iv->icon.touchGem.w / 2;
-
-    // Draw the dot (0 to 1024)
-    vec_t cartesianStart = {
-        .x = TOUCHPAD_X - tpRadius,
-        .y = TOUCHPAD_Y - tpRadius,
-    };
-
-    vec_t drawPoint = addVec2d(cartesianStart, divVec2d(mulVec2d(touchPoint, tpRadius * 2), 1024));
-    drawPoint.y     = TOUCHPAD_Y + (TOUCHPAD_Y - drawPoint.y);
-    return drawPoint;
-}
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
 
 /**
  * @brief Draws the linear touchpad tutorial.
  *
  */
-static void introDrawLinearTouchpad()
+static void introDrawLinearTouchpad(void)
 {
     if (iv->tut.linearTouchState[0].touched && iv->tut.linearTouchState[1].touched)
     {
@@ -1306,6 +1286,32 @@ static void introDrawLinearTouchpad()
     {
         drawCircleFilled(iv->tut.pongState.rightPos.x >> 4, iv->tut.pongState.rightPos.y >> 4, 8, c531);
     }
+}
+
+#else
+
+    #define TOUCHPAD_X (TFT_WIDTH / 2)
+    #define TOUCHPAD_Y ((TFT_HEIGHT / 2) - 5)
+
+/**
+ * @brief TODO
+ *
+ * @param touchPoint
+ * @return vec_t
+ */
+static vec_t getTouchScreenCoord(vec_t touchPoint)
+{
+    int32_t tpRadius = iv->icon.touchGem.w / 2;
+
+    // Draw the dot (0 to 1024)
+    vec_t cartesianStart = {
+        .x = TOUCHPAD_X - tpRadius,
+        .y = TOUCHPAD_Y - tpRadius,
+    };
+
+    vec_t drawPoint = addVec2d(cartesianStart, divVec2d(mulVec2d(touchPoint, tpRadius * 2), 1024));
+    drawPoint.y     = TOUCHPAD_Y + (TOUCHPAD_Y - drawPoint.y);
+    return drawPoint;
 }
 
 /**
@@ -1375,6 +1381,8 @@ static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint, list_t*
         touchNode = touchNode->next;
     }
 }
+
+#endif
 
 /**
  * @brief TODO doc
