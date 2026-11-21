@@ -81,9 +81,9 @@ static const char sonaTitle[] = "Your Sona";
 static const char exitTitle[] = "Mission Complete";
 
 static const char* suffixes[] = {"\nIf you don't like it, you can adjust it in the next step. Leave the main menu "
-                                 "idling to enter Lightdance mode to send and receive fairies.",
+                                 "idling to enter \"Light Dances\" mode to send and receive fairies.",
                                  "\nIf you don't like it, you can adjust it in the Fairy Creator Mode. Leave the main "
-                                 "menu idling to enter Lightdance mode to send and receive fairies."};
+                                 "menu idling to enter \"Light Dances\" mode to send and receive fairies."};
 
 /* clang-format off */
 static const cnfsFileIdx_t introwsgs[] = {
@@ -254,7 +254,7 @@ static const tutorialStep_t buttonsSteps[] = {
             
         },
         .title = passTitle,
-        .detail = "Lightdance mode is when the screen is off and LED lights are animated. It consumes very little power.",
+        .detail = "\"Light Dances\" mode is when the screen is off and LED lights are animated. It consumes very little power.",
     },
     {
         .trigger = {
@@ -1258,7 +1258,8 @@ static vec_t getTouchScreenCoord(vec_t touchPoint)
 static void introDrawLinearTouchpad()
 {
     if (iv->tut.linearTouchState[0].touched && iv->tut.linearTouchState[1].touched)
-    { // then the hockey game is shown.
+    {
+        // then the hockey game is shown.
         // show the volley count above the game.
         char volleyCount[15];
         if (iv->tut.pongState.volleyCount < 3)
