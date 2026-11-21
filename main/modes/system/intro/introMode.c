@@ -39,10 +39,13 @@ static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, 
                             bool backtrack);
 static bool introCheckQuickSettingsTrigger(const tutorialState_t* state, const tutorialTrigger_t* trigger);
 
-static vec_t getTouchScreenCoord(vec_t touchPoint);
-
 static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons);
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+static void introDrawLinearTouchpad(void);
+#else
+static vec_t getTouchScreenCoord(vec_t touchPoint);
 static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint, list_t* touchHist);
+#endif
 static void introDrawSwadgeImu(int64_t elapsedUs);
 static void introDrawSwadgeSpeaker(int64_t elapsedUs);
 static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, uint16_t maxValue);
@@ -69,22 +72,39 @@ static const char quickmnuTitle[] = "Quick Settings";
 static const char pauseBtnTitle[] = "Pause Button";
 static const char spkTitle[]      = "Speaker";
 static const char micTitle[]      = "Microphone";
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+static const char touchpadTitle[] = "Touchstrips";
+#else
 static const char touchpadTitle[] = "Touchpad";
-static const char imuTitle[]      = "Tilt Controls";
-static const char passTitle[]     = "SwadgePass";
-static const char sonaTitle[]     = "Your Sona";
-static const char exitTitle[]     = "Mission Complete";
+#endif
+static const char imuTitle[]  = "Tilt Controls";
+static const char passTitle[] = "SwadgePass";
+static const char sonaTitle[] = "Your Sona";
+static const char exitTitle[] = "Mission Complete";
 
-static const char* suffixes[] = {"\nIf you don't like it, you can adjust it in the next step.",
-                                 "\nIf you don't like it, you can adjust it in the Sona Creator Mode."};
+static const char* suffixes[] = {"\nIf you don't like it, you can adjust it in the next step. Leave the main menu "
+                                 "idling to enter \"Light Dances\" mode to send and receive fairies.",
+                                 "\nIf you don't like it, you can adjust it in the Fairy Creator Mode. Leave the main "
+                                 "menu idling to enter \"Light Dances\" mode to send and receive fairies."};
 
+/* clang-format off */
 static const cnfsFileIdx_t introwsgs[] = {
+    TRIHARD_ANIM_0001_WSG, TRIHARD_ANIM_0002_WSG, TRIHARD_ANIM_0003_WSG, TRIHARD_ANIM_0004_WSG, TRIHARD_ANIM_0005_WSG,
+    TRIHARD_ANIM_0006_WSG, TRIHARD_ANIM_0007_WSG, TRIHARD_ANIM_0008_WSG, TRIHARD_ANIM_0009_WSG, TRIHARD_ANIM_0010_WSG,
+    TRIHARD_ANIM_0011_WSG, TRIHARD_ANIM_0012_WSG, TRIHARD_ANIM_0013_WSG, TRIHARD_ANIM_0014_WSG, TRIHARD_ANIM_0015_WSG,
+    TRIHARD_ANIM_0016_WSG, TRIHARD_ANIM_0017_WSG, TRIHARD_ANIM_0018_WSG, TRIHARD_ANIM_0019_WSG, TRIHARD_ANIM_0020_WSG,
+    TRIHARD_ANIM_0021_WSG, TRIHARD_ANIM_0022_WSG, TRIHARD_ANIM_0023_WSG, TRIHARD_ANIM_0024_WSG, TRIHARD_ANIM_0025_WSG,
+    TRIHARD_ANIM_0026_WSG, TRIHARD_ANIM_0027_WSG, TRIHARD_ANIM_0028_WSG, TRIHARD_ANIM_0029_WSG, TRIHARD_ANIM_0030_WSG,
+    TRIHARD_ANIM_0031_WSG, TRIHARD_ANIM_0032_WSG, TRIHARD_ANIM_0033_WSG, TRIHARD_ANIM_0034_WSG, TRIHARD_ANIM_0035_WSG,
+    TRIHARD_ANIM_0036_WSG, TRIHARD_ANIM_0037_WSG, TRIHARD_ANIM_0038_WSG, TRIHARD_ANIM_0039_WSG, TRIHARD_ANIM_0040_WSG,
+    SWADGE_MAGFEST_WSG,    ZORLDO_MENU_EWI_WSG,
+    SPARKLE_0_WSG, SPARKLE_1_WSG, SPARKLE_2_WSG, SPARKLE_3_WSG, SPARKLE_4_WSG,
+};
+/* clang-format on */
 
-    MAGCOM_2_WSG,
-    MAGCOM_3_WSG,
-    MAGCOM_4_WSG,
-    MAGCOM_5_WSG,
-
+// the positions for sparkles on the letters M E M E S
+static const vec_t sparkles[] = {
+    {85, 66}, {198, 130}, {41, 98}, {192, 102}, {218, 130},
 };
 
 static const tutorialStep_t buttonsSteps[] = {
@@ -128,6 +148,16 @@ static const tutorialStep_t buttonsSteps[] = {
         .title = pauseBtnTitle,
         .detail = "The Pause button is mode-specific, but usually pauses a game. Tap it!",
     },
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+    {
+        .trigger = {
+            .type = TOUCH_PONG,
+            .intData = -1,
+        },
+        .title = touchpadTitle,
+        .detail = "Use the touchstrips to hit the puck 3 times! Fingers on the back of the touch zones may create false inputs."
+    },
+#else
     {
         .trigger = {
             .type = TOUCH_SPIN,
@@ -144,13 +174,19 @@ static const tutorialStep_t buttonsSteps[] = {
         .title = touchpadTitle,
         .detail = "OK, now spin your finger around it counter-clockwise."
     },
+#endif
     {
         .trigger = {
             .type = IMU_ORIENT,
             .orientation = {0, 0, 245},
         },
         .title = imuTitle,
-        .detail = "The Swadge is tilt-sensitive. Try looking at the bunny top-down by putting the Swadge face up on a flat surface."
+        .detail = "The Swadge is tilt-sensitive. Try looking at the bunny top-down by putting the Swadge face up on a flat surface.",
+        .backtrack = {
+            .type = BUTTON_PRESS,
+            .buttons = PB_B,//Allow B to go back to the pong game for fun.
+        },
+        .backtrackSteps = 1,
     },
     {
         .trigger = {
@@ -158,7 +194,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .orientation = {0, 0, -245},
         },
         .title = imuTitle,
-        .detail = "Now try looking at the bunny from the bottom. You may need to hold the Swadge over your head."
+        .detail = "Now try looking at the bunny from the bottom. You may need to hold the Swadge over your head.",
     },
     {
         .trigger = {
@@ -173,7 +209,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .buttons = PB_A,
         },
         .title = spkTitle,
-        .detail = "The Swadge has a speaker, so enjoy this tune! The volume dial is on the left. Adjust to your liking. Press A to continue."
+        .detail = "The Swadge has a speaker and audio jack! The volume dial is on the right. Adjust to your liking. Press A to continue."
     },
     {
         .trigger = {
@@ -211,26 +247,24 @@ static const tutorialStep_t buttonsSteps[] = {
             .custom.checkFn = introCheckQuickSettingsTrigger,
         },
         .title = quickmnuTitle,
-        .detail = "It's in most modes but Main Menu & Gamepad. Press Menu again to close.",
+        .detail = "It's in most modes except Main Menu & Gamepad. Press Menu again to close.",
     },
-        {
+    {
         .trigger = {
             .type = BUTTON_PRESS_ANY,
             .buttons = PB_A,
             
         },
         .title = passTitle,
-        .detail = "SwadgePass shares your profile data with other users nearby. Leave your Swadge turned on to meet others.",
-        
+        .detail = "\"Light Dances\" mode is when the screen is off and LED lights are animated. It consumes very little power.",
     },
-        {
+    {
         .trigger = {
             .type = BUTTON_PRESS_ANY,
             .buttons = PB_B, 
                     },
         .title = sonaTitle,
-        .detail = "This is a Sona, your Swadge Avatar! You can make yours in the Sona Creator Mode. Press B to continue.",
-        
+        .detail = "This is a fairy! You can make yours in the Fairy Creator Mode. Press B to continue.",
     },
     {
 
@@ -426,6 +460,8 @@ typedef struct
         wsg_t speaker;
         wsg_t touchGem;
         wsg_t swadge;
+        wsg_t rink;
+        wsg_t paddle;
         wsg_t sona;
     } icon;
 
@@ -466,6 +502,8 @@ typedef struct
     int animateidx;
     int64_t animatetimer;
     wsg_t* introimgs;
+    int8_t sparkleIdx;   // which of the 5 sparkle positions is being rendered. -1 for none.
+    int8_t sparkleFrame; // the current sparkle frame being rendered. Increment sparkleIdx when it exceeds 4.
 
 } introVars_t;
 
@@ -499,7 +537,9 @@ static void introEnterMode(void)
 
     loadWsg(SPK_WSG, &iv->icon.speaker, true);
     loadWsg(TOUCH_GEM_WSG, &iv->icon.touchGem, true);
-    loadWsg(INTRO_SWADGE_CHOPPED_WSG, &iv->icon.swadge, true);
+    loadWsg(FAIRY_SWADGE_CHOPPED_WSG, &iv->icon.swadge, true);
+    loadWsg(SWADGE_RINK_WSG, &iv->icon.rink, true);
+    loadWsg(PADDLE_WSG, &iv->icon.paddle, true);
     loadWsg(PINKIE_WSG, &iv->icon.sona, true);
 
     iv->bgMenu   = initMenu(startTitle, NULL);
@@ -508,53 +548,53 @@ static void introEnterMode(void)
     // up
     iv->buttonIcons[0].icon    = &iv->icon.button.up;
     iv->buttonIcons[0].visible = true;
-    iv->buttonIcons[0].x       = 39;
-    iv->buttonIcons[0].y       = 111;
+    iv->buttonIcons[0].x       = 51;
+    iv->buttonIcons[0].y       = 2;
 
     // down
     iv->buttonIcons[1].icon    = &iv->icon.button.up;
     iv->buttonIcons[1].flipUD  = true;
     iv->buttonIcons[1].visible = true;
-    iv->buttonIcons[1].x       = 39;
-    iv->buttonIcons[1].y       = 131;
+    iv->buttonIcons[1].x       = 51;
+    iv->buttonIcons[1].y       = 22;
 
     // left
     iv->buttonIcons[2].icon    = &iv->icon.button.up;
     iv->buttonIcons[2].rot     = 270;
     iv->buttonIcons[2].visible = true;
-    iv->buttonIcons[2].x       = 29;
-    iv->buttonIcons[2].y       = 121;
+    iv->buttonIcons[2].x       = 41;
+    iv->buttonIcons[2].y       = 12;
 
     // right
     iv->buttonIcons[3].icon    = &iv->icon.button.up;
     iv->buttonIcons[3].rot     = 90;
     iv->buttonIcons[3].visible = true;
-    iv->buttonIcons[3].x       = 49;
-    iv->buttonIcons[3].y       = 121;
+    iv->buttonIcons[3].x       = 61;
+    iv->buttonIcons[3].y       = 12;
 
     // a
     iv->buttonIcons[4].icon    = &iv->icon.button.a;
     iv->buttonIcons[4].visible = true;
-    iv->buttonIcons[4].x       = 240;
-    iv->buttonIcons[4].y       = 110;
+    iv->buttonIcons[4].x       = 184;
+    iv->buttonIcons[4].y       = 10;
 
     // b
     iv->buttonIcons[5].icon    = &iv->icon.button.b;
     iv->buttonIcons[5].visible = true;
-    iv->buttonIcons[5].x       = 220;
-    iv->buttonIcons[5].y       = 120;
+    iv->buttonIcons[5].x       = 164;
+    iv->buttonIcons[5].y       = 16;
 
     // start (pause)
     iv->buttonIcons[6].icon    = &iv->icon.button.pause;
     iv->buttonIcons[6].visible = true;
-    iv->buttonIcons[6].x       = 60;
-    iv->buttonIcons[6].y       = 150;
+    iv->buttonIcons[6].x       = 28;
+    iv->buttonIcons[6].y       = 100;
 
     // select (menu)
     iv->buttonIcons[7].icon    = &iv->icon.button.menu;
     iv->buttonIcons[7].visible = true;
-    iv->buttonIcons[7].x       = 60;
-    iv->buttonIcons[7].y       = 163;
+    iv->buttonIcons[7].x       = 38;
+    iv->buttonIcons[7].y       = 110;
 
     iv->swadgeViewWidth  = iv->icon.swadge.w * 1;
     iv->swadgeViewHeight = iv->icon.swadge.w * 1;
@@ -582,7 +622,7 @@ static void introEnterMode(void)
 #endif
 
     // Load the test MIDI file
-    loadMidiFile(MAXIMUM_HYPE_CREDITS_TEASER_MID, &iv->song, true);
+    loadMidiFile(ADVENTURE_AWAITS_MID, &iv->song, true);
 
     // Init CC
     InitColorChord(&iv->end, &iv->dd);
@@ -612,6 +652,8 @@ static void introExitMode(void)
     freeWsg(&iv->icon.speaker);
     freeWsg(&iv->icon.touchGem);
     freeWsg(&iv->icon.swadge);
+    freeWsg(&iv->icon.rink);
+    freeWsg(&iv->icon.paddle);
     freeWsg(&iv->icon.sona);
 
     unloadMidiFile(&iv->song);
@@ -638,7 +680,7 @@ static void introExitMode(void)
 static void introMainLoop(int64_t elapsedUs)
 {
 #ifdef INTRO_MUSIC
-    if (iv->animateidx < 50)
+    if (iv->animateidx < 130)
     {
         playIntro(elapsedUs);
         return;
@@ -763,6 +805,11 @@ static void introMainLoop(int64_t elapsedUs)
     }
 #endif
 
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+    getTouchLinear(iv->tut.linearTouchState, ARRAY_SIZE(iv->tut.linearTouchState));
+    tutorialOnLinearTouch(elapsedUs, &iv->tut, &iv->angleTimer, iv->tut.linearTouchState);
+    // if(touchState[0].touched || touchState[1].touched)
+#else
     int32_t phi, r, intensity;
     if (getTouchJoystick(&phi, &r, &intensity))
     {
@@ -781,6 +828,7 @@ static void introMainLoop(int64_t elapsedUs)
         tutorialOnTouch(&iv->tut, 0, 0, 0);
         clear(&iv->touchHist);
     }
+#endif
 
     // Get the current acceleration
     int16_t a_x;
@@ -824,26 +872,30 @@ static void introMainLoop(int64_t elapsedUs)
     iv->bgMenu->title = title;
     drawMenuZorldo(iv->bgMenu, iv->renderer, elapsedUs);
 
-    int16_t detailYmin = titleY + iv->bigFont.height + 1 - 20;
-    int16_t detailYmax = TFT_HEIGHT - 30;
+    int16_t detailYmin = TFT_HEIGHT - 67;
+    int16_t detailYmax = TFT_HEIGHT - 20;
     int16_t detailX    = 25;
 
     uint16_t detailH = textWordWrapHeight(&iv->smallFont, detail, TFT_WIDTH - 60, detailYmax - detailYmin);
-    int16_t detailY  = detailYmax - detailH;
+    int16_t detailY  = ((detailYmax + detailYmin) >> 1) - (detailH >> 1);
 
     switch (iv->drawMode)
     {
         default:
         case DRAW_BUTTONS:
         {
-            int16_t viewX = ((TFT_WIDTH - iv->swadgeViewWidth) / 2) - 3;
-            int16_t viewY = titleY + iv->logoFont.height - 70;
+            int16_t viewX = ((TFT_WIDTH - iv->swadgeViewWidth) / 2);
+            int16_t viewY = titleY + iv->logoFont.height - 5;
             introDrawSwadgeButtons(elapsedUs, viewX, viewY, iv->buttons);
             break;
         }
         case DRAW_TOUCHPAD:
         {
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+            introDrawLinearTouchpad();
+#else
             introDrawSwadgeTouchpad(elapsedUs, iv->touch, &iv->touchHist);
+#endif
             break;
         }
         case DRAW_IMU:
@@ -893,7 +945,7 @@ static void introMainLoop(int64_t elapsedUs)
     }
 
     const char* remaining
-        = drawTextWordWrap(&iv->smallFont, c000, detail, &detailX, &detailY, TFT_WIDTH - 25, detailYmax);
+        = drawTextWordWrap(&iv->smallFont, c555, detail, &detailX, &detailY, TFT_WIDTH - 25, detailYmax);
     if (NULL != remaining)
     {
         ESP_LOGI(TAG, "Remaining text: ...%s", remaining);
@@ -1052,17 +1104,21 @@ static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, 
     }
 
     // TODO maybe don't hardcode this
-    if (next == (buttonsSteps + 12))
+    int offset = 12;
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+    offset--;
+#endif
+    if (next == (buttonsSteps + offset))
     {
         setDacShutdown(true);
     }
-    else if (next == (buttonsSteps + 14))
+    else if (next == (buttonsSteps + offset + 2))
     {
         ESP_LOGI(TAG, "Oh it's the one we want: %s", next->title);
         iv->quickSettingsOpened = true;
         openQuickSettings();
     }
-    else if (next == (buttonsSteps + 14))
+    else if (next == (buttonsSteps + offset + 2))
     {
         iv->quickSettingsOpened = false;
     }
@@ -1173,8 +1229,69 @@ static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, butt
     }
 }
 
-#define TOUCHPAD_X (TFT_WIDTH / 2)
-#define TOUCHPAD_Y ((TFT_HEIGHT / 2) - 5)
+#ifdef CONFIG_HARDWARE_FAIRY_PROTO
+
+/**
+ * @brief Draws the linear touchpad tutorial.
+ *
+ */
+static void introDrawLinearTouchpad(void)
+{
+    if (iv->tut.linearTouchState[0].touched && iv->tut.linearTouchState[1].touched)
+    {
+        // then the hockey game is shown.
+        // show the volley count above the game.
+        char volleyCount[15];
+        if (iv->tut.pongState.volleyCount < 3)
+        {
+            sprintf(volleyCount, "%d", iv->tut.pongState.volleyCount);
+        }
+        else
+        {
+            sprintf(volleyCount, "%d - PASSED!", iv->tut.pongState.volleyCount);
+        }
+        int16_t x = 0;
+        int16_t y = 65;
+
+        drawTextWordWrapCentered(&iv->smallFont, iv->tut.pongState.volleyCount < 3 ? c555 : c152, volleyCount, &x, &y,
+                                 TFT_WIDTH, 105);
+
+        drawWsgSimple(&iv->icon.rink, 18, 85);
+        drawCircleFilled(iv->tut.pongState.puckPos.x >> 4, iv->tut.pongState.puckPos.y >> 4, 5, c000);
+        drawCircle(iv->tut.pongState.puckPos.x >> 4, iv->tut.pongState.puckPos.y >> 4, 3, c222);
+        drawCircle(iv->tut.pongState.puckPos.x >> 4, iv->tut.pongState.puckPos.y >> 4, 2, c111);
+    }
+    else
+    {
+        iv->tut.pongState.initialized = false;
+        drawWsgSimple(&iv->icon.swadge, 18, 48);
+    }
+
+    if (iv->tut.linearTouchState[1].touched)
+    {
+        drawWsgSimple(&iv->icon.paddle, (iv->tut.pongState.leftPos.x >> 4) - 8,
+                      (iv->tut.pongState.leftPos.y >> 4) - 12);
+    }
+    else
+    {
+        drawCircleFilled(iv->tut.pongState.leftPos.x >> 4, iv->tut.pongState.leftPos.y >> 4, 8, c531);
+    }
+
+    if (iv->tut.linearTouchState[0].touched)
+    {
+        drawWsgSimple(&iv->icon.paddle, (iv->tut.pongState.rightPos.x >> 4) - 8,
+                      (iv->tut.pongState.rightPos.y >> 4) - 12);
+    }
+    else
+    {
+        drawCircleFilled(iv->tut.pongState.rightPos.x >> 4, iv->tut.pongState.rightPos.y >> 4, 8, c531);
+    }
+}
+
+#else
+
+    #define TOUCHPAD_X (TFT_WIDTH / 2)
+    #define TOUCHPAD_Y ((TFT_HEIGHT / 2) - 5)
 
 /**
  * @brief TODO
@@ -1264,6 +1381,8 @@ static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint, list_t*
         touchNode = touchNode->next;
     }
 }
+
+#endif
 
 /**
  * @brief TODO doc
@@ -1365,84 +1484,54 @@ static void playIntro(int64_t elapsedUs)
         iv->animatetimer = 0;
         ESP_LOGI(TAG, "animate index is %d", iv->animateidx);
     }
-
-    switch (iv->animateidx)
+    if (iv->animateidx >= 96)
     {
-        case 0:
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-        case 10:
-        case 11:
-        case 12:
-        case 13:
-        case 14:
-        case 15:
-        case 16:
+        // background flash starting at frame 96
+        paletteColor_t backgroundFlashes[8] = {c555, c455, c344, c233, c122, c022, c011, c000};
+        fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, backgroundFlashes[CLAMP((iv->animateidx - 96), 0, 7)]);
+    }
+    else
+    {
+        fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    }
+    int idx      = MIN(iv->animateidx, 39);
+    vec_t pos    = (vec_t){(TFT_WIDTH - iv->introimgs[idx].w) / 2, 40};
+    vec_t offset = (vec_t){iv->introimgs[idx].w / 2 + 10, iv->introimgs[0].h + 8};
+    drawWsgSimple(&iv->introimgs[idx], pos.x, MIN(iv->animateidx, 40));
+    drawWsg(&iv->introimgs[idx], pos.x + offset.x + MAX(40 - iv->animateidx, 0),
+            pos.y + offset.y + MAX(40 - iv->animateidx, 0), true, false, 120);
+    drawWsg(&iv->introimgs[idx], pos.x - offset.x - MAX(40 - iv->animateidx, 0),
+            pos.y + offset.y + MAX(40 - iv->animateidx, 0), false, false, 240);
+    if (iv->animateidx > 70)
+    {
+        if (iv->animateidx > 90)
         {
-            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-            break;
+            // sword slides
+            drawWsg(&iv->introimgs[41], MAX(72 - (iv->animateidx - 90) * 22 - iv->animatetimer / 9090, -60),
+                    MIN(-122 + (iv->animateidx - 90) * 37 + iv->animatetimer / 5555, 100), false, false, 300);
         }
-        case 17:
+        // shield & text logo
+        drawWsgSimple(&iv->introimgs[40], (TFT_WIDTH - iv->introimgs[40].w) / 2,
+                      (TFT_HEIGHT - iv->introimgs[40].h) / 2);
+        // draw sparkles
+        if (iv->animateidx > 100 && iv->sparkleIdx > -1)
         {
-            drawWsgSimple(&iv->introimgs[0], (TFT_WIDTH - iv->introimgs[0].w) / 2,
-                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
-            break;
+            drawWsgSimple(&iv->introimgs[42 + iv->sparkleFrame / 4], sparkles[iv->sparkleIdx].x,
+                          sparkles[iv->sparkleIdx].y);
+            iv->sparkleFrame++;
+            if (iv->sparkleFrame / 4 > 4)
+            {
+                iv->sparkleIdx++;
+                if (iv->sparkleIdx > 4)
+                {
+                    iv->sparkleIdx = -1;
+                }
+                else
+                {
+                    iv->sparkleFrame = 0;
+                }
+            }
         }
-        case 18:
-        {
-            drawWsgSimple(&iv->introimgs[1], (TFT_WIDTH - iv->introimgs[0].w) / 2,
-                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
-            break;
-        }
-        case 19:
-        {
-            drawWsgSimple(&iv->introimgs[2], (TFT_WIDTH - iv->introimgs[0].w) / 2,
-                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
-            break;
-        }
-        case 42:
-        {
-            drawWsgSimple(&iv->introimgs[2], (TFT_WIDTH - iv->introimgs[0].w) / 2,
-                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
-            break;
-        }
-        case 43:
-        {
-            drawWsgSimple(&iv->introimgs[1], (TFT_WIDTH - iv->introimgs[0].w) / 2,
-                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
-            break;
-        }
-        case 44:
-        {
-            drawWsgSimple(&iv->introimgs[0], (TFT_WIDTH - iv->introimgs[0].w) / 2,
-                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
-            break;
-        }
-        case 45:
-        case 46:
-        case 47:
-        case 48:
-        case 49:
-        case 50:
-        {
-            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-            break;
-        }
-
-        default:
-        {
-            drawWsgSimple(&iv->introimgs[3], (TFT_WIDTH - iv->introimgs[0].w) / 2,
-                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
-            break;
-        }
-            // add case 26,27, etc for twinkle later
     }
 }
 
@@ -1462,5 +1551,5 @@ static void introSwadgePass(int64_t elapsedUs)
 
     int16_t x = 25;
     int16_t y = 60;
-    drawTextWordWrap(&iv->smallFont, c000, buf, &x, &y, TFT_WIDTH - 25, 140);
+    drawTextWordWrap(&iv->smallFont, c555, buf, &x, &y, TFT_WIDTH - 25, 160);
 }
