@@ -468,12 +468,10 @@ bool danceMenuCb(const char* label, bool selected, uint32_t value)
     else if ((str_pattern == label || str_body_pattern == label) && danceState->dance->danceIndex != value)
     {
         portableDanceSetByIndex(danceState->dance, value, false);
-
     }
     else if (str_wings_pattern == label && danceState->dance->wingDanceIndex != value)
     {
         portableDanceSetByIndex(danceState->dance, value, true);
-
     }
     return false;
 }
