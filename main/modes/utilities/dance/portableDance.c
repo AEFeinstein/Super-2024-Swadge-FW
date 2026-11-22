@@ -14,6 +14,7 @@ void portableDanceLoadSetting(portableDance_t* dance);
 // Const Variables
 //==============================================================================
 
+static const char nvsKeyDanceSplit[] = "dance_split";
 static const char nvsKeyDanceIndex[] = "dance_index";
 static const char nvsKeyDanceSpeed[] = "dance_speed";
 
@@ -86,20 +87,21 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
  */
 void portableDanceLoadSetting(portableDance_t* dance)
 {
+    int32_t split = 0;
+    if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceSplit, &split))
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSplit, split);
+    }
+
+    dance->split = (uint8_t)split;
+
     int32_t danceIndex = 0;
     if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceIndex, &danceIndex))
     {
         writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceIndex, danceIndex);
     }
 
-    if (danceIndex < 0)
-    {
-        danceIndex = 0;
-    }
-    else if (danceIndex >= getNumDances())
-    {
-        danceIndex = getNumDances() - 1;
-    }
+    danceIndex = CLAMP(danceIndex, 0, getNumDances() - 1);
 
     dance->danceIndex = (uint8_t)danceIndex;
 
@@ -109,6 +111,24 @@ void portableDanceLoadSetting(portableDance_t* dance)
         writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSpeed, speed);
     }
     dance->speed = speed;
+}
+
+/**
+ * @brief Sets the current LED split to the one specified, and updates the saved split. This works even
+ * if a dance is disabled.
+ *
+ * @param dance The portableDance_t pointer to update
+ * @param split The split value of the dance to update
+ */
+void portableDanceSetSplit(portableDance_t* dance, uint8_t split)
+{
+    dance->split = split;
+    dance->resetDance = true;
+
+    if(dance->nvsNs != NULL)
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSplit, dance->split);
+    }
 }
 
 /**

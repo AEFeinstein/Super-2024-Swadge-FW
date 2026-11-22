@@ -88,6 +88,14 @@ static void danceEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t sta
 static const char danceName[]      = "Light Dances";
 static const char str_exit[]       = "Exit";
 static const char str_brightness[] = "Brightness";
+static const char str_split[]     = "Fairy Split: ";
+static const char str_On[]            = "On";
+static const char str_Off[]           = "Off";
+static const char* strs_on_off[]      = {str_Off, str_On};
+static const int32_t trueFalseVals[] = {
+    false,
+    true,
+};
 
 static const char str_speed[]    = "Speed: ";
 static const char* speedLabels[] = {
@@ -203,6 +211,15 @@ void danceEnterMode(void)
     //                          c542, c541,               // outerRingColor, innerRingColor
     //                          c111, c455,               // rowColor, rowTextColor
     //                          shadowColors, ARRAY_SIZE(shadowColors), offLed);
+
+    settingParam_t sp_tf = {
+        .min = trueFalseVals[0],
+        .max = trueFalseVals[ARRAY_SIZE(trueFalseVals) - 1],
+        .def = trueFalseVals[0],
+    };
+    // Add a toggle to use one light dance, or two.
+    addSettingsOptionsItemToMenu(danceState->menu, str_split, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
+                                 danceState->dance->split);
 
     // Add dances to the menu
     danceState->danceNames = heap_caps_calloc(ARRAY_SIZE(ledDances), sizeof(char*), MALLOC_CAP_SPIRAM);
@@ -403,6 +420,10 @@ bool danceMenuCb(const char* label, bool selected, uint32_t value)
         {
             portableDanceSetByIndex(danceState->dance, value);
         }
+    }
+    else if (label == str_split)
+    {
+        portableDanceSetSplit(danceState->dance, (int32_t)value);
     }
     return false;
 }

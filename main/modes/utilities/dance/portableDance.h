@@ -24,6 +24,10 @@ typedef struct
     uint8_t danceIndex;
     int32_t speed;
 
+    // 0 for normal, 1 for different fairy body and wing patterns
+    // It's an int not a bool because the menu structures use ints.
+    uint8_t split;
+
     // If non-NULL, the dance index and speed will be saved/loaded from this NVS namespace
     const char* nvsNs;
 } portableDance_t;
@@ -31,6 +35,7 @@ typedef struct
 portableDance_t* initPortableDance(const char* nvsNs);
 void freePortableDance(portableDance_t* dance);
 void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs);
+void portableDanceSetSplit(portableDance_t* dance, uint8_t split);
 bool portableDanceSetByIndex(portableDance_t* dance, uint8_t danceIndex);
 bool portableDanceSetByName(portableDance_t* dance, const char* danceName);
 void portableDanceNext(portableDance_t* dance);
