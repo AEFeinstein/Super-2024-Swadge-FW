@@ -273,14 +273,9 @@ void setupMenu(const char* currentLabel)
     if (subMenu)
     {
         endSubMenu(subMenu);
-        subMenu                                          = startSubMenu(danceState->menu, str_wings);
-        const settingParam_t danceParamWithoutShuffleAll = {
-            .min = 0,
-            .max = ARRAY_SIZE(ledDances) - 2,
-        };
+        subMenu = startSubMenu(danceState->menu, str_wings);
         addSettingsOptionsItemToMenu(subMenu, str_wings_pattern, danceState->danceNames, danceState->danceVals,
-                                     ARRAY_SIZE(ledDances), &danceParamWithoutShuffleAll,
-                                     danceState->dance->wingDanceIndex);
+                                     ARRAY_SIZE(ledDances), &danceParam, danceState->dance->wingDanceIndex);
         addSettingsOptionsItemToMenu(subMenu, str_wings_speed, speedLabels, speedVals, ARRAY_SIZE(speedVals),
                                      &speedParam, danceState->dance->wingSpeed);
         endSubMenu(subMenu);

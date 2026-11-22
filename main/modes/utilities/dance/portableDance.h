@@ -28,6 +28,8 @@ typedef struct
     // Only used if split is on.
     uint8_t wingDanceIndex;
     int32_t wingSpeed;
+    led_t bodyLeds[CONFIG_NUM_LEDS];
+    led_t wingLeds[CONFIG_NUM_LEDS];
 
     // 0 for normal, 1 for different fairy body and wing patterns
     // It's an int not a bool because the menu structures use ints.

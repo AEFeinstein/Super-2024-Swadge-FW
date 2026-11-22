@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include "portableDance.h"
+#include <string.h>
 
 //==============================================================================
 // Prototypes
@@ -77,8 +78,53 @@ void freePortableDance(portableDance_t* dance)
  */
 void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
 {
-    dance->dances[dance->danceIndex].dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
-                                                 dance->dances[dance->danceIndex].dance->arg, dance->resetDance);
+    if (dance->split)//yup, we can remove this whole block in a future year when there are not different groups of LEDs.
+    {// but in all likelyhood, "Fairy Split" may simply be renamed to fit the design. i.e. condiment & bun for the hotdog.
+        led_t leds[CONFIG_NUM_LEDS] = {{0}};
+
+        uint32_t updateCount = getLedUpdateCount();
+        dance->dances[dance->danceIndex].dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
+                                                     dance->dances[dance->danceIndex].dance->arg, dance->resetDance);
+
+        if (updateCount != getLedUpdateCount())
+        {
+            const led_t* currentLeds = getLedState();
+            for (uint8_t i = 0; i < 6; i++)
+            {
+                dance->bodyLeds[i] = currentLeds[i];
+            }
+        }
+
+        updateCount = getLedUpdateCount();
+        dance->dances[dance->wingDanceIndex].dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->wingSpeed,
+                                                         dance->dances[dance->wingDanceIndex].dance->arg,
+                                                         dance->resetDance);
+
+        if (updateCount != getLedUpdateCount())
+        {
+            const led_t* currentLeds = getLedState();
+            for (uint8_t i = 6; i < CONFIG_NUM_LEDS; i++)
+            {
+                dance->wingLeds[i] = currentLeds[i];
+            }
+        }
+
+        for (uint8_t i = 0; i < 6; i++)
+        {
+            leds[i] = dance->bodyLeds[i];
+        }
+        for (uint8_t i = 6; i < CONFIG_NUM_LEDS; i++)
+        {
+            leds[i] = dance->wingLeds[i];
+        }
+
+        setLeds(leds, CONFIG_NUM_LEDS);
+    }
+    else
+    {
+        dance->dances[dance->danceIndex].dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
+                                                     dance->dances[dance->danceIndex].dance->arg, dance->resetDance);
+    }
     dance->resetDance = false;
 }
 
@@ -138,6 +184,8 @@ void portableDanceSetSplit(portableDance_t* dance, uint8_t split)
 {
     dance->split      = split;
     dance->resetDance = true;
+    memset(dance->bodyLeds, 0, sizeof(dance->bodyLeds));
+    memset(dance->wingLeds, 0, sizeof(dance->wingLeds));
     if (dance->nvsNs != NULL)
     {
         writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSplit, dance->split);
