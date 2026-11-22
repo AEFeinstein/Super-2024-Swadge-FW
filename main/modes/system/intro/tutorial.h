@@ -54,6 +54,9 @@ typedef enum
     // Touch any one of given zones
     TOUCH_ZONE_ANY,
 
+    // Use the touchstrips and complete a mini pong game
+    TOUCH_PONG,
+
     // A number of CCW (or CW if negative) spins
     TOUCH_SPIN,
 
@@ -145,12 +148,32 @@ typedef struct tutorialStep
     int cooldown;
 } tutorialStep_t;
 
+typedef struct tutorialPongState
+{
+    /// @brief true when the velocity is set on the puck and the game is in play.
+    bool initialized;
+    /// @brief a count of volleys. At 3, the tutorial will progress once the puck is lost or a thumb is lifted.
+    uint8_t volleyCount;
+    /// @brief  The pixel position of the puck shifted left by 4 decimal bits.
+    vec_t puckPos;
+    /// @brief  The velocity of the puck.
+    vec_t puckVel;
+    /// @brief  Left thumb position.
+    vec_t leftPos;
+    /// @brief  Right thumb position.
+    vec_t rightPos;
+} tutorialPongState;
+
 typedef struct tutorialState
 {
     buttonBit_t allButtons;
     buttonBit_t curButtons;
     buttonBit_t lastButton;
     bool lastButtonDown;
+
+    linearTouch_t linearTouchState[2];
+    tutorialPongState pongState;
+    midiTimbre_t timbre;
 
     int32_t touchPhi;
     int32_t touchRadius;
@@ -186,6 +209,10 @@ void tutorialSetup(tutorialState_t* state, tutorialStepCb stepCbFunc, const tuto
 
 // Call with each button press
 void tutorialOnButton(tutorialState_t* state, const buttonEvt_t* evt);
+
+// Call whene linear touch is detected
+void tutorialOnLinearTouch(int64_t elapsedUs, tutorialState_t* state, int32_t* angleTimer,
+                           linearTouch_t linearTouchState[2]);
 
 // Call when touch is detected
 void tutorialOnTouch(tutorialState_t* state, int32_t phi, int32_t r, int32_t intensity);
