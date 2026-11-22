@@ -14,9 +14,11 @@ void portableDanceLoadSetting(portableDance_t* dance);
 // Const Variables
 //==============================================================================
 
-static const char nvsKeyDanceSplit[] = "dance_split";
-static const char nvsKeyDanceIndex[] = "dance_index";
-static const char nvsKeyDanceSpeed[] = "dance_speed";
+static const char nvsKeyDanceSplit[]     = "dance_split";
+static const char nvsKeyDanceIndex[]     = "dance_index";
+static const char nvsKeyDanceSpeed[]     = "dance_speed";
+static const char nvsKeyWingDanceIndex[] = "wing_dance_index";
+static const char nvsKeyWingDanceSpeed[] = "wing_dance_speed";
 
 //==============================================================================
 // Functions
@@ -92,7 +94,6 @@ void portableDanceLoadSetting(portableDance_t* dance)
     {
         writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSplit, split);
     }
-
     dance->split = (uint8_t)split;
 
     int32_t danceIndex = 0;
@@ -100,10 +101,16 @@ void portableDanceLoadSetting(portableDance_t* dance)
     {
         writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceIndex, danceIndex);
     }
-
-    danceIndex = CLAMP(danceIndex, 0, getNumDances() - 1);
-
+    danceIndex        = CLAMP(danceIndex, 0, getNumDances() - 1);
     dance->danceIndex = (uint8_t)danceIndex;
+
+    int32_t wingDanceIndex = 0;
+    if (!readNamespaceNvs32(dance->nvsNs, nvsKeyWingDanceIndex, &wingDanceIndex))
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyWingDanceIndex, wingDanceIndex);
+    }
+    wingDanceIndex        = CLAMP(wingDanceIndex, 0, getNumDances() - 1);
+    dance->wingDanceIndex = (uint8_t)wingDanceIndex;
 
     int32_t speed = DANCE_SPEED_MULT;
     if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceSpeed, &speed))
@@ -111,6 +118,13 @@ void portableDanceLoadSetting(portableDance_t* dance)
         writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSpeed, speed);
     }
     dance->speed = speed;
+
+    int32_t wingSpeed = DANCE_SPEED_MULT;
+    if (!readNamespaceNvs32(dance->nvsNs, nvsKeyWingDanceSpeed, &wingSpeed))
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyWingDanceSpeed, wingSpeed);
+    }
+    dance->wingSpeed = wingSpeed;
 }
 
 /**
@@ -122,10 +136,10 @@ void portableDanceLoadSetting(portableDance_t* dance)
  */
 void portableDanceSetSplit(portableDance_t* dance, uint8_t split)
 {
-    dance->split = split;
+    dance->split      = split;
     dance->resetDance = true;
-    if(dance->nvsNs != NULL)
-    {   
+    if (dance->nvsNs != NULL)
+    {
         writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSplit, dance->split);
     }
 }
@@ -136,21 +150,29 @@ void portableDanceSetSplit(portableDance_t* dance, uint8_t split)
  *
  * @param dance The portableDance_t pointer to update
  * @param danceIndex The index of the dance to select
+ * @param wings Whether or not this is specific to the wing LEDS
  * @return true if the dance was within the array range, false if not
  */
-bool portableDanceSetByIndex(portableDance_t* dance, uint8_t danceIndex)
+bool portableDanceSetByIndex(portableDance_t* dance, uint8_t danceIndex, bool wings)
 {
     if (danceIndex >= getNumDances())
     {
         return false;
     }
 
-    dance->danceIndex = danceIndex;
+    if (wings)
+    {
+        dance->wingDanceIndex = danceIndex;
+    }
+    else
+    {
+        dance->danceIndex = danceIndex;
+    }
     dance->resetDance = true;
 
     if (dance->nvsNs != NULL)
     {
-        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceIndex, dance->danceIndex);
+        writeNamespaceNvs32(dance->nvsNs, wings ? nvsKeyWingDanceIndex : nvsKeyDanceIndex, danceIndex);
     }
     return true;
 }
@@ -161,15 +183,16 @@ bool portableDanceSetByIndex(portableDance_t* dance, uint8_t danceIndex)
  *
  * @param dance The portableDance_t pointer to update
  * @param danceName The name of the dance to select
+ * @param wings Whether or not this is specific to the wing LEDS
  * @return true if the dance was found, false if not
  */
-bool portableDanceSetByName(portableDance_t* dance, const char* danceName)
+bool portableDanceSetByName(portableDance_t* dance, const char* danceName, bool wings)
 {
     for (uint8_t i = 0; i < getNumDances(); i++)
     {
         if (!strcmp(dance->dances[i].dance->name, danceName))
         {
-            return portableDanceSetByIndex(dance, i);
+            return portableDanceSetByIndex(dance, i, wings);
         }
     }
     return false;
@@ -180,13 +203,21 @@ bool portableDanceSetByName(portableDance_t* dance, const char* danceName)
  *
  * @param dance The portableDance_t pointer to update
  * @param speed The dance speed to set. Dance will run at ::DANCE_SPEED_MULT / speed
+ * @param wings Whether or not this is specific to the wing LEDS
  */
-void portableDanceSetSpeed(portableDance_t* dance, int32_t speed)
+void portableDanceSetSpeed(portableDance_t* dance, int32_t speed, bool wings)
 {
-    dance->speed = speed;
+    if (wings)
+    {
+        dance->wingSpeed = speed;
+    }
+    else
+    {
+        dance->speed = speed;
+    }
     if (dance->nvsNs != NULL)
     {
-        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSpeed, speed);
+        writeNamespaceNvs32(dance->nvsNs, wings ? nvsKeyWingDanceSpeed : nvsKeyDanceSpeed, speed);
     }
 }
 

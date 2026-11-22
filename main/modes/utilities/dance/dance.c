@@ -81,28 +81,31 @@ static bool danceMenuCb(const char* label, bool selected, uint32_t value);
 static void danceEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 static void danceEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 
-static void setupMenu(const char *currentLabel);
+static void setupMenu(const char* currentLabel);
 
 //==============================================================================
 // Const Variables
 //==============================================================================
 
-static const char danceName[]      = "Light Dances";
-static const char str_exit[]       = "Exit";
-static const char str_brightness[] = "Brightness";
-static const char str_split[]     = "Fairy Split: ";
-static const char str_On[]            = "On";
-static const char str_Off[]           = "Off";
-static const char* strs_on_off[]      = {str_Off, str_On};
+static const char danceName[]        = "Light Dances";
+static const char str_exit[]         = "Exit";
+static const char str_brightness[]   = "Brightness";
+static const char str_split[]        = "Fairy Split: ";
+static const char str_On[]           = "On";
+static const char str_Off[]          = "Off";
+static const char* strs_on_off[]     = {str_Off, str_On};
 static const int32_t trueFalseVals[] = {
     false,
     true,
 };
 
-static const char str_speed[]    = "Speed: ";
-static const char str_body_speed[] = "Body Speed: ";
+static const char str_body[]  = "Body";
+static const char str_wings[] = "Wings";
+
+static const char str_speed[]       = "Speed: ";
+static const char str_body_speed[]  = "Body Speed: ";
 static const char str_wings_speed[] = "Wings Speed: ";
-static const char* speedLabels[] = {
+static const char* speedLabels[]    = {
     "1/8x", "1/6x", "1/4x", "1/3x", "1/2x", "1x", "1.5x", "2x", "4x",
 };
 static const int32_t speedVals[] = {
@@ -116,11 +119,11 @@ static const int32_t speedVals[] = {
     4,  // 2x
     2,  // 4x
 };
-static const char nvsNs[] = "light_dances";
-static const char str_pattern[] = "Pattern: ";
-static const char str_body_pattern[] = "Body Pattern: ";
+static const char nvsNs[]             = "light_dances";
+static const char str_pattern[]       = "Pattern: ";
+static const char str_body_pattern[]  = "Body Pattern: ";
 static const char str_wings_pattern[] = "Wings Pattern: ";
-const ledDance_t ledDances[] = {
+const ledDance_t ledDances[]          = {
     {.func = danceComet, .arg = RGB_2_ARG(0, 0, 0), .name = "Comet RGB"},
     {.func = danceComet, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Comet R"},
     {.func = danceComet, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Comet G"},
@@ -217,7 +220,7 @@ void danceEnterMode(void)
     //                          c111, c455,               // rowColor, rowTextColor
     //                          shadowColors, ARRAY_SIZE(shadowColors), offLed);
 
-    danceState->menu         = initMenu(danceName, danceMenuCb);
+    danceState->menu       = initMenu(danceName, danceMenuCb);
     danceState->danceNames = heap_caps_calloc(ARRAY_SIZE(ledDances), sizeof(char*), MALLOC_CAP_SPIRAM);
     danceState->danceVals  = heap_caps_calloc(ARRAY_SIZE(ledDances), sizeof(int32_t), MALLOC_CAP_SPIRAM);
     for (int32_t dIdx = 0; dIdx < ARRAY_SIZE(ledDances); dIdx++)
@@ -228,42 +231,59 @@ void danceEnterMode(void)
     setupMenu(str_brightness);
 }
 
-void setupMenu(const char *currentLabel)
+void setupMenu(const char* currentLabel)
 {
     // Add brightness to the menu
     addSettingsItemToMenu(danceState->menu, str_brightness, getLedBrightnessSettingBounds(), getLedBrightnessSetting());
 
     // Add a toggle to use one light dance, or two for the fairy.
-        settingParam_t sp_tf = {
+    settingParam_t sp_tf = {
         .min = trueFalseVals[0],
         .max = trueFalseVals[ARRAY_SIZE(trueFalseVals) - 1],
         .def = trueFalseVals[0],
     };
-    addSettingsOptionsItemToMenu(danceState->menu, str_split, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
-                                 danceState->dance->split);
-    
+    addSettingsOptionsItemToMenu(danceState->menu, str_split, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off),
+                                 &sp_tf, danceState->dance->split);
+
+    menu_t* subMenu;
+    if (danceState->dance->split)
+    {
+        subMenu = startSubMenu(danceState->menu, str_body);
+    }
+
     // Add dances to the menu
     const settingParam_t danceParam = {
         .min = 0,
         .max = ARRAY_SIZE(ledDances) - 1,
     };
-    addSettingsOptionsItemToMenu(danceState->menu, danceState->dance->split ? str_body_pattern : str_pattern, danceState->danceNames, danceState->danceVals,
-                                 ARRAY_SIZE(ledDances), &danceParam, danceState->dance->danceIndex);
+    addSettingsOptionsItemToMenu(danceState->dance->split ? subMenu : danceState->menu,
+                                 danceState->dance->split ? str_body_pattern : str_pattern, danceState->danceNames,
+                                 danceState->danceVals, ARRAY_SIZE(ledDances), &danceParam,
+                                 danceState->dance->danceIndex);
 
     // Add speed to the menu
     const settingParam_t speedParam = {
         .min = speedVals[0],
         .max = speedVals[ARRAY_SIZE(speedVals) - 1],
     };
-    addSettingsOptionsItemToMenu(danceState->menu, danceState->dance->split ? str_body_speed : str_speed, speedLabels, speedVals, ARRAY_SIZE(speedVals),
-                                 &speedParam, danceState->dance->speed);
+    addSettingsOptionsItemToMenu(danceState->dance->split ? subMenu : danceState->menu,
+                                 danceState->dance->split ? str_body_speed : str_speed, speedLabels, speedVals,
+                                 ARRAY_SIZE(speedVals), &speedParam, danceState->dance->speed);
 
-    if(danceState->dance->split)
+    if (subMenu)
     {
-        addSettingsOptionsItemToMenu(danceState->menu, str_wings_pattern, danceState->danceNames, danceState->danceVals,
-                                 ARRAY_SIZE(ledDances), &danceParam, danceState->dance->danceIndex);
-        addSettingsOptionsItemToMenu(danceState->menu, str_wings_speed, speedLabels, speedVals, ARRAY_SIZE(speedVals),
-                                 &speedParam, danceState->dance->speed);
+        endSubMenu(subMenu);
+        subMenu                                          = startSubMenu(danceState->menu, str_wings);
+        const settingParam_t danceParamWithoutShuffleAll = {
+            .min = 0,
+            .max = ARRAY_SIZE(ledDances) - 2,
+        };
+        addSettingsOptionsItemToMenu(subMenu, str_wings_pattern, danceState->danceNames, danceState->danceVals,
+                                     ARRAY_SIZE(ledDances), &danceParamWithoutShuffleAll,
+                                     danceState->dance->wingDanceIndex);
+        addSettingsOptionsItemToMenu(subMenu, str_wings_speed, speedLabels, speedVals, ARRAY_SIZE(speedVals),
+                                     &speedParam, danceState->dance->wingSpeed);
+        endSubMenu(subMenu);
     }
 
     // Add exit to the menu
@@ -430,7 +450,8 @@ bool danceMenuCb(const char* label, bool selected, uint32_t value)
     {
         setLedBrightnessSetting(value);
     }
-    else if (str_split == label && ((menuItem_t*)danceState->menu->currentItem->val)->currentSetting != danceState->dance->split)
+    else if (str_split == label
+             && ((menuItem_t*)danceState->menu->currentItem->val)->currentSetting != danceState->dance->split)
     {
         portableDanceSetSplit(danceState->dance, (int32_t)value);
         removeAllItemsFromMenu(danceState->menu);
@@ -438,14 +459,21 @@ bool danceMenuCb(const char* label, bool selected, uint32_t value)
     }
     else if (str_speed == label || str_body_speed == label)
     {
-        portableDanceSetSpeed(danceState->dance, (int32_t)value);
+        portableDanceSetSpeed(danceState->dance, (int32_t)value, false);
     }
-    else if (str_pattern == label || str_body_pattern == label)
+    else if (str_wings_speed == label)
     {
-        if (danceState->dance->danceIndex != value)
-        {
-            portableDanceSetByIndex(danceState->dance, value);
-        }
+        portableDanceSetSpeed(danceState->dance, (int32_t)value, true);
+    }
+    else if ((str_pattern == label || str_body_pattern == label) && danceState->dance->danceIndex != value)
+    {
+        portableDanceSetByIndex(danceState->dance, value, false);
+
+    }
+    else if (str_wings_pattern == label && danceState->dance->wingDanceIndex != value)
+    {
+        portableDanceSetByIndex(danceState->dance, value, true);
+
     }
     return false;
 }

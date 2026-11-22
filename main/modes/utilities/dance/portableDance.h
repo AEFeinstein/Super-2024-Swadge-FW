@@ -21,8 +21,13 @@ typedef struct
     // Set when dance needs to be reset
     bool resetDance;
 
+    // Used for the body if split is on. Used for everything if split is off.
     uint8_t danceIndex;
     int32_t speed;
+
+    // Only used if split is on.
+    uint8_t wingDanceIndex;
+    int32_t wingSpeed;
 
     // 0 for normal, 1 for different fairy body and wing patterns
     // It's an int not a bool because the menu structures use ints.
@@ -36,11 +41,11 @@ portableDance_t* initPortableDance(const char* nvsNs);
 void freePortableDance(portableDance_t* dance);
 void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs);
 void portableDanceSetSplit(portableDance_t* dance, uint8_t split);
-bool portableDanceSetByIndex(portableDance_t* dance, uint8_t danceIndex);
-bool portableDanceSetByName(portableDance_t* dance, const char* danceName);
+bool portableDanceSetByIndex(portableDance_t* dance, uint8_t danceIndex, bool wings);
+bool portableDanceSetByName(portableDance_t* dance, const char* danceName, bool wings);
 void portableDanceNext(portableDance_t* dance);
 void portableDancePrev(portableDance_t* dance);
-void portableDanceSetSpeed(portableDance_t* dance, int32_t speed);
+void portableDanceSetSpeed(portableDance_t* dance, int32_t speed, bool wings);
 bool portableDanceDisableDance(portableDance_t* dance, const char* danceName);
 const char* portableDanceGetName(portableDance_t* dance);
 
