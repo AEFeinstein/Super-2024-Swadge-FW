@@ -789,7 +789,7 @@ void bcDrawGame(void)
                         drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
                     }
 
-                    bcDrawScoreHud( (( (beancatch->clockHours == 0) ? 12 : beancatch->clockHours) % 13) * 100 + beancatch->clockMinutes );
+                    bcDrawScoreHud( (( (beancatch->clockHours == 0) ? 12 : beancatch->clockHours) % 12) * 100 + beancatch->clockMinutes );
                 }
             default:
                 break;
