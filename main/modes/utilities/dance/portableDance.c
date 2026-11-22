@@ -124,9 +124,8 @@ void portableDanceSetSplit(portableDance_t* dance, uint8_t split)
 {
     dance->split = split;
     dance->resetDance = true;
-
     if(dance->nvsNs != NULL)
-    {
+    {   
         writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSplit, dance->split);
     }
 }
