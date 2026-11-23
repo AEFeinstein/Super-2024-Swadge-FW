@@ -1728,15 +1728,12 @@ static void drawArcInner(int xm, int ym, int r, int startDeg, int endDeg, palett
     int boundX2 = xOrigin + (xm + getCos1024(endDeg) * r / 1024) * xScale;
     int boundY1 = yOrigin + (ym + getSin1024(startDeg) * r / 1024) * yScale;
     int boundY2 = yOrigin + (ym + getSin1024(endDeg) * r / 1024) * yScale;
-    int minX    = MIN(boundX1, boundX2) - 3; // TODO: Why are these offsets necessary? Rounding error somewhere?
-    int maxX    = MAX(boundX1, boundX2) + 4;
-    int minY    = MIN(boundY1, boundY2) - 3;
-    int maxY    = MAX(boundY1, boundY2) + 4;
+    int minX    = MIN(boundX1, boundX2) - 2; // TODO: Why are these offsets necessary? Rounding error somewhere?
+    int maxX    = MAX(boundX1, boundX2) + 2;
+    int minY    = MIN(boundY1, boundY2) - 2;
+    int maxY    = MAX(boundY1, boundY2) + 2;
     // Uncomment for a debug bounding box
     // drawRect(minX, minY, maxX, maxY, c555);
-
-    int32_t startTan1024 = getTan1024(startDeg);
-    int32_t endTan1024   = getTan1024(endDeg);
 
     int x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
     int pointX, pointY;

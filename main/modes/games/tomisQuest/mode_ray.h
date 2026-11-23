@@ -822,6 +822,8 @@ typedef struct
     rayScript_t* turntableScript; ///< The script to execute after the turntable minigame
     uint32_t rotationTimer;
     uint32_t wiggleTimer;
+    uint32_t scoreTimer;
+    int32_t score;
 
     int64_t nextNoteSpawnUs;
     uint8_t nextNoteSpawnSide;
@@ -830,12 +832,13 @@ typedef struct
     {
         linearTouch_t touch;
         int8_t wiggleAngle;
-        int16_t angle;
+        int16_t catcherAngle;
 
         struct
         {
             uint16_t angle;
-            float distance; ///< Distance from the center of the note to the center of the turntable
+            float distance;     ///< Distance from the center of the note to the center of the turntable
+            int64_t hitTimeUs; ///< Time remaining for the hit image to display
             int8_t wsgIdx;
         } notes[MAX_NOTES_PER_TURNTABLE];
     } tables[2];
@@ -847,6 +850,8 @@ typedef struct
         wsg_t knobs;
         wsg_t knobsMirrored;
         wsg_t notes[2];
+        wsg_t noteHit;
+        wsg_t meterCorner;
     } wsg;
 } rayTurntableState_t;
 
