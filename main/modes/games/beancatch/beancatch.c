@@ -18,7 +18,7 @@
 #include "macros.h"
 #include <time.h>
 #include <sys/time.h>
-#include "mainMenu.h"l
+#include "mainMenu.h"
 
 //==============================================================================
 // Consts
