@@ -130,10 +130,10 @@ static const char str_color[]         = "Color";
 static const char str_red[]           = "Red: ";
 static const char str_green[]         = "Green: ";
 static const char str_blue[]          = "Blue: ";
-const char* colors[] = {
-    "0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15",
+const char* colors[]                  = {
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15",
 };
-const ledDance_t ledDances[]          = {
+const ledDance_t ledDances[] = {
     {.func = danceComet, .arg = RGB_2_ARG(0, 0, 0), .name = "Comet RGB"},
     {.func = danceComet, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Comet R"},
     {.func = danceComet, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Comet G"},
@@ -239,11 +239,11 @@ void danceEnterMode(void)
         danceState->danceVals[dIdx]  = dIdx;
     }
     danceState->colorNames = heap_caps_calloc(ARRAY_SIZE(colors), sizeof(char*), MALLOC_CAP_SPIRAM);
-    danceState->colorVals = heap_caps_calloc(ARRAY_SIZE(colors), sizeof(int32_t), MALLOC_CAP_SPIRAM);
+    danceState->colorVals  = heap_caps_calloc(ARRAY_SIZE(colors), sizeof(int32_t), MALLOC_CAP_SPIRAM);
     for (int32_t cIdx = 0; cIdx < ARRAY_SIZE(colors); cIdx++)
     {
-        danceState->colorNames[cIdx] =  colors[cIdx];
-        danceState->colorVals[cIdx] = cIdx;
+        danceState->colorNames[cIdx] = colors[cIdx];
+        danceState->colorVals[cIdx]  = cIdx;
     }
     setupMenu(str_brightness);
 }
@@ -279,20 +279,17 @@ void setupMenu(const char* currentLabel)
                                  danceState->dance->danceIndex);
 
     // Add color to the menu
-    menu_t* colorMenu = startSubMenu(danceState->dance->split ? subMenu : danceState->menu, str_color);
+    menu_t* colorMenu               = startSubMenu(danceState->dance->split ? subMenu : danceState->menu, str_color);
     const settingParam_t colorParam = {
         .min = 0,
         .max = ARRAY_SIZE(colors) - 1,
     };
-    addSettingsOptionsItemToMenu(colorMenu, str_red,
-                                 danceState->colorNames, danceState->colorVals, ARRAY_SIZE(colors), &colorParam,
-                                 danceState->dance->red);
-    addSettingsOptionsItemToMenu(colorMenu, str_green,
-                                 danceState->colorNames, danceState->colorVals, ARRAY_SIZE(colors), &colorParam,
-                                 danceState->dance->green);
-    addSettingsOptionsItemToMenu(colorMenu, str_blue,
-                                 danceState->colorNames, danceState->colorVals, ARRAY_SIZE(colors), &colorParam,
-                                 danceState->dance->blue);
+    addSettingsOptionsItemToMenu(colorMenu, str_red, danceState->colorNames, danceState->colorVals, ARRAY_SIZE(colors),
+                                 &colorParam, (danceState->dance->color >> 16)/17);
+    addSettingsOptionsItemToMenu(colorMenu, str_green, danceState->colorNames, danceState->colorVals,
+                                 ARRAY_SIZE(colors), &colorParam, ((danceState->dance->color >> 8) & 0xFF)/17);
+    addSettingsOptionsItemToMenu(colorMenu, str_blue, danceState->colorNames, danceState->colorVals, ARRAY_SIZE(colors),
+                                 &colorParam, (danceState->dance->color & 0xFF)/17);
     endSubMenu(colorMenu);
 
     // Add speed to the menu
@@ -311,15 +308,12 @@ void setupMenu(const char* currentLabel)
         addSettingsOptionsItemToMenu(subMenu, str_wings_pattern, danceState->danceNames, danceState->danceVals,
                                      ARRAY_SIZE(ledDances), &danceParam, danceState->dance->wingDanceIndex);
         colorMenu = startSubMenu(danceState->menu, str_color);
-        addSettingsOptionsItemToMenu(colorMenu, str_red,
-                                    danceState->colorNames, danceState->colorVals, ARRAY_SIZE(colors), &colorParam,
-                                    danceState->dance->red);
-        addSettingsOptionsItemToMenu(colorMenu, str_green,
-                                    danceState->colorNames, danceState->colorVals, ARRAY_SIZE(colors), &colorParam,
-                                    danceState->dance->green);
-        addSettingsOptionsItemToMenu(colorMenu, str_blue,
-                                    danceState->colorNames, danceState->colorVals, ARRAY_SIZE(colors), &colorParam,
-                                    danceState->dance->blue);
+        addSettingsOptionsItemToMenu(colorMenu, str_red, danceState->colorNames, danceState->colorVals,
+                                     ARRAY_SIZE(colors), &colorParam, (danceState->dance->wingColor >> 16)/17);
+        addSettingsOptionsItemToMenu(colorMenu, str_green, danceState->colorNames, danceState->colorVals,
+                                     ARRAY_SIZE(colors), &colorParam, ((danceState->dance->wingColor >> 8) & 255)/17);
+        addSettingsOptionsItemToMenu(colorMenu, str_blue, danceState->colorNames, danceState->colorVals,
+                                     ARRAY_SIZE(colors), &colorParam, (danceState->dance->wingColor & 255)/17);
         endSubMenu(colorMenu);
         addSettingsOptionsItemToMenu(subMenu, str_wings_speed, speedLabels, speedVals, ARRAY_SIZE(speedVals),
                                      &speedParam, danceState->dance->wingSpeed);

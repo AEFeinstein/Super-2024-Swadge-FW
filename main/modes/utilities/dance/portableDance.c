@@ -18,8 +18,10 @@ void portableDanceLoadSetting(portableDance_t* dance);
 static const char nvsKeyDanceSplit[]     = "dance_split";
 static const char nvsKeyDanceIndex[]     = "dance_index";
 static const char nvsKeyDanceSpeed[]     = "dance_speed";
+static const char nvsKeyDanceColor[]     = "dance_color";
 static const char nvsKeyWingDanceIndex[] = "wing_dance_index";
 static const char nvsKeyWingDanceSpeed[] = "wing_dance_speed";
+static const char nvsKeyDanceWingColor[] = "wing_dance_color";
 
 //==============================================================================
 // Functions
@@ -144,6 +146,25 @@ void portableDanceLoadSetting(portableDance_t* dance)
     }
     dance->split = (uint8_t)split;
 
+    int32_t color = 0;
+    if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceColor, &color))
+    {
+        //(255<<16) + (136<<8) + (0<<0)
+        // which is orange for a default start
+        color = 0xFF8800;
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceColor, color);
+    }
+    dance->color = color;
+    color        = 0;
+    if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceWingColor, &color))
+    {
+        //(255<<16) + (136<<8) + (0<<0)
+        // which is orange for a default start
+        color = 0xFF8800;
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceWingColor, color);
+    }
+    dance->wingColor = color;
+
     int32_t danceIndex = 0;
     if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceIndex, &danceIndex))
     {
@@ -246,6 +267,29 @@ bool portableDanceSetByName(portableDance_t* dance, const char* danceName, bool 
         }
     }
     return false;
+}
+
+/**
+ * @brief Sets the current dance color.
+ *
+ * @param dance The portableDance_t pointer to update
+ * @param color bit packed color with values from 0-254 for R, G, and B.
+ * @param wings Whether or not this is specific to the wing LEDS
+ */
+void portableDanceSetColor(portableDance_t* dance, int32_t color, bool wings)
+{
+    if (wings)
+    {
+        dance->wingColor = color;
+    }
+    else
+    {
+        dance->color = color;
+    }
+    if (dance->nvsNs != NULL)
+    {
+        writeNamespaceNvs32(dance->nvsNs, wings ? nvsKeyDanceWingColor : nvsKeyDanceColor, wings ? dance->wingColor : dance->color);
+    }
 }
 
 /**

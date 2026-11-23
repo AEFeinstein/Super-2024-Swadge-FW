@@ -24,19 +24,14 @@ typedef struct
     // Used for the body if split is on. Used for everything if split is off.
     uint8_t danceIndex;
     int32_t speed;
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
+    int32_t color;
 
     // Only used if split is on.
     uint8_t wingDanceIndex;
     int32_t wingSpeed;
-    paletteColor_t wingColor;
     led_t bodyLeds[CONFIG_NUM_LEDS];
     led_t wingLeds[CONFIG_NUM_LEDS];
-    uint8_t wingRed;
-    uint8_t wingGreen;
-    uint8_t wingBlue;
+    int32_t wingColor;
 
     // 0 for normal, 1 for different fairy body and wing patterns
     // It's an int not a bool because the menu structures use ints.
@@ -54,6 +49,7 @@ bool portableDanceSetByIndex(portableDance_t* dance, uint8_t danceIndex, bool wi
 bool portableDanceSetByName(portableDance_t* dance, const char* danceName, bool wings);
 void portableDanceNext(portableDance_t* dance);
 void portableDancePrev(portableDance_t* dance);
+void portableDanceSetColor(portableDance_t* dance, int32_t color, bool wings);
 void portableDanceSetSpeed(portableDance_t* dance, int32_t speed, bool wings);
 bool portableDanceDisableDance(portableDance_t* dance, const char* danceName);
 const char* portableDanceGetName(portableDance_t* dance);
