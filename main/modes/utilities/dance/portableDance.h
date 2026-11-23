@@ -24,10 +24,12 @@ typedef struct
     // Used for the body if split is on. Used for everything if split is off.
     uint8_t danceIndex;
     int32_t speed;
+    uint32_t color;
 
     // Only used if split is on.
     uint8_t wingDanceIndex;
     int32_t wingSpeed;
+    paletteColor_t wingColor;
     led_t bodyLeds[CONFIG_NUM_LEDS];
     led_t wingLeds[CONFIG_NUM_LEDS];
 

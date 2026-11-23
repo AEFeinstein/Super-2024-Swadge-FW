@@ -61,6 +61,9 @@ typedef struct
     const char** danceNames;
     int32_t* danceVals;
 
+    const char** colorNames;
+    int32_t* colorVals;
+
     int32_t bcastTimer;
     int32_t listenTimer;
     bool maySleep;
@@ -123,6 +126,13 @@ static const char nvsNs[]             = "light_dances";
 static const char str_pattern[]       = "Pattern: ";
 static const char str_body_pattern[]  = "Body Pattern: ";
 static const char str_wings_pattern[] = "Wings Pattern: ";
+static const char str_color[]         = "Color";
+static const char str_red[]           = "Red: ";
+static const char str_green[]         = "Green: ";
+static const char str_blue[]          = "Blue: ";
+const char* colors[] = {
+    "0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15",
+}
 const ledDance_t ledDances[]          = {
     {.func = danceComet, .arg = RGB_2_ARG(0, 0, 0), .name = "Comet RGB"},
     {.func = danceComet, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Comet R"},
@@ -228,6 +238,13 @@ void danceEnterMode(void)
         danceState->danceNames[dIdx] = ledDances[dIdx].name;
         danceState->danceVals[dIdx]  = dIdx;
     }
+    dance->colorNames = heap_caps_calloc(ARRAY_SIZE(colors), sizeof(char*), MALLOC_CAP_SPIRAM);
+    danceState->colorVals = heap_caps_calloc(ARRAY_SIZE(colors), sizeof(int32_t), MALLOC_CAP_SPIRAM);
+    for (int32_t cIdx = 0; cIdx < ARRAY_SIZE(colors); cIdx++)
+    {
+        danceState->colorNames[cIdx] =  colors[cIdx];
+        danceState->colorVals = cIdx;
+    }
     setupMenu(str_brightness);
 }
 
@@ -260,6 +277,14 @@ void setupMenu(const char* currentLabel)
                                  danceState->dance->split ? str_body_pattern : str_pattern, danceState->danceNames,
                                  danceState->danceVals, ARRAY_SIZE(ledDances), &danceParam,
                                  danceState->dance->danceIndex);
+
+    // Add color to the menu
+    menu_t* colorMenu;
+    colorMenu = startSubMenu(danceState->menu, str_body);
+    addSettingsOptionsItemToMenu(colorMenu, str_color,
+                                 danceState->danceNames, danceState->danceVals, ARRAY_SIZE(ledDances), &danceParam,
+                                 danceState->dance->danceIndex);
+    endSubMenu(colorMenu);
 
     // Add speed to the menu
     const settingParam_t speedParam = {

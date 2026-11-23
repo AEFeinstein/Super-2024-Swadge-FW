@@ -78,8 +78,10 @@ void freePortableDance(portableDance_t* dance)
  */
 void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
 {
-    if (dance->split)//yup, we can remove this whole block in a future year when there are not different groups of LEDs.
-    {// but in all likelyhood, "Fairy Split" may simply be renamed to fit the design. i.e. condiment & bun for the hotdog.
+    if (dance->split) // yup, we can remove this whole block in a future year when there are not different groups of
+                      // LEDs.
+    { // but in all likelyhood, "Fairy Split" may simply be renamed to fit the design. i.e. condiment & bun for the
+      // hotdog.
         led_t leds[CONFIG_NUM_LEDS] = {{0}};
 
         uint32_t updateCount = getLedUpdateCount();
@@ -171,6 +173,9 @@ void portableDanceLoadSetting(portableDance_t* dance)
         writeNamespaceNvs32(dance->nvsNs, nvsKeyWingDanceSpeed, wingSpeed);
     }
     dance->wingSpeed = wingSpeed;
+
+    dance->color     = c550;
+    dance->wingColor = c550;
 }
 
 /**
