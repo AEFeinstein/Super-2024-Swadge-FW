@@ -26,6 +26,12 @@
 const char beancatchModeName[] = "Bean Catch";
 const char beancatchNVSKey[]   = "beancatch";
 
+const char beancatchStrGameA[] = "Game A (Easy)";
+const char beancatchStrGameB[] = "Game B (Normal)";
+const char beancatchStrClock[] = "Clock Mode";
+const char beancatchStrExit[] = "Exit";
+
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -80,6 +86,9 @@ typedef struct
     uint16_t score;
     uint16_t highScoreGameA;
     uint16_t highScoreGameB;
+
+    menu_t* menu;
+    menuZorldoRenderer_t* menuRenderer;
 } beancatch_t;
 
 //==============================================================================
@@ -90,12 +99,16 @@ static void beancatchEnterMode(void);
 static void beancatchExitMode(void);
 static void beancatchMainLoop(int64_t elapsedUs);
 
+static void bcPopulateMenu(void);
+bool bcMenuCb(const char* label, bool selected, uint32_t value);
+
 static void bcUpdateAcl(void);
 static void bcUpdateClock(void);
 static void bcUpdateGame(void);
 static void bcUpdateMiss(void);
 static void bcUpdateGameOver(void);
 static void bcUpdatePause(void);
+static void bcUpdateMainMenu(void);
 
 static void bcDrawGame(void);
 static void bcDrawScoreHud(uint16_t value);
@@ -110,6 +123,7 @@ static void bcChangeStateClock(void);
 static void bcChangeStateMiss(void);
 static void bcChangeStateGameOver(void);
 static void bcChangeStatePause(void);
+static void bcChangeStateMenu(void);
 static void bcResumeTempState(void);
 
 static void bcCheckPlayerCatchBean(void);
@@ -178,9 +192,14 @@ void beancatchEnterMode(void)
 
     beancatch->refreshScreen = true;
 
+    beancatch->menuRenderer = initMenuZorldoRenderer(NULL, NULL);
+    beancatch->menu = initMenu(beancatchModeName, bcMenuCb);
+    bcPopulateMenu();
+
     beancatch->state = BC_ST_ACL;
     beancatch->tempState = BC_ST_NULL;
-    beancatch->update = &bcUpdateAcl;
+
+    beancatch->update = &bcUpdateMainMenu;
 }
 
 void beancatchExitMode(void)
@@ -209,11 +228,11 @@ void beancatchMainLoop(int64_t elapsedUs)
         // Save the button state
         beancatch->btnState = evt.state;
 
-        // if (beancatch->update == &bcUpdateMainMenu)
-        // {
-        //     // Pass button events to the menu
-        //     beancatch->menu = menuButton(beancatch->menu, evt);
-        // }
+        if (beancatch->update == &bcUpdateMainMenu)
+        {
+            // Pass button events to the menu
+            beancatch->menu = menuButton(beancatch->menu, evt);
+        }
     }
 
     beancatch->update();
@@ -261,6 +280,41 @@ void beancatchMainLoop(int64_t elapsedUs)
     beancatch->clockHours = tmTime->tm_hour;
 
     beancatch->prevBtnState = beancatch->btnState;
+}
+
+void bcPopulateMenu(void)
+{
+    removeAllItemsFromMenu(beancatch->menu);
+
+    addSingleItemToMenu(beancatch->menu, beancatchStrGameB);
+    addSingleItemToMenu(beancatch->menu, beancatchStrGameA);
+    addSingleItemToMenu(beancatch->menu, beancatchStrClock);
+    addSingleItemToMenu(beancatch->menu, beancatchStrExit);
+}
+
+bool bcMenuCb(const char* label, bool selected, uint32_t value)
+{
+    if(selected)
+    {
+        if(label == beancatchStrGameB)
+        {
+            bcChangeStateGameB();
+        }
+        else if(label == beancatchStrGameA)
+        {
+            bcChangeStateGameA();
+        }
+        else if(label == beancatchStrClock)
+        {
+            bcChangeStateClock();
+        }
+        else if(label == beancatchStrExit)
+        {
+            beancatchExitMode();
+        }
+    }
+
+    return false;
 }
 
 void bcUpdateAcl(void)
@@ -312,24 +366,31 @@ void bcUpdateAcl(void)
 
 void bcUpdateClock(void)
 {
-    if (!(beancatch->prevBtnState & PB_A) && (beancatch->btnState & PB_A))
-    {
-        beancatch->refreshScreen = true;
-    }
+    /*
+        if (!(beancatch->prevBtnState & PB_A) && (beancatch->btnState & PB_A))
+        {
+            beancatch->refreshScreen = true;
+        }
+
+        if (!(beancatch->prevBtnState & PB_B) && (beancatch->btnState & PB_B))
+        {
+            beancatch->refreshScreen = true;
+        }
+        if ((beancatch->prevBtnState & PB_A) && !(beancatch->btnState & PB_A))
+        {
+            bcChangeStateGameA();
+            return;
+        }
+        if ((beancatch->prevBtnState & PB_B) && !(beancatch->btnState & PB_B))
+        {
+            bcChangeStateGameB();
+            return;
+        }
+    */
 
     if (!(beancatch->prevBtnState & PB_B) && (beancatch->btnState & PB_B))
     {
-        beancatch->refreshScreen = true;
-    }
-    if ((beancatch->prevBtnState & PB_A) && !(beancatch->btnState & PB_A))
-    {
-        bcChangeStateGameA();
-        return;
-    }
-    if ((beancatch->prevBtnState & PB_B) && !(beancatch->btnState & PB_B))
-    {
-        bcChangeStateGameB();
-        return;
+        beancatch->update = &bcUpdateMainMenu;
     }
 
     if (beancatch->clockSecondsPulse)
@@ -577,19 +638,19 @@ void bcUpdateGameOver(void)
 
     if(beancatch->frameCounter > 18000) // Automatically return to clock after 5 minutes
     {
-        bcChangeStateClock();
+        beancatch->update = &bcUpdateMainMenu;
         return;
     }
 
     if ((beancatch->prevBtnState & PB_A) && !(beancatch->btnState & PB_A))
     {
-        bcChangeStateClock();
+        beancatch->update = &bcUpdateMainMenu;
         return;
     }
     
     if ((beancatch->prevBtnState & PB_B) && !(beancatch->btnState & PB_B))
     {
-        bcChangeStateClock();
+        beancatch->update = &bcUpdateMainMenu;
         return;
     }
 
@@ -598,6 +659,29 @@ void bcUpdateGameOver(void)
 
 void bcUpdatePause(void)
 {
+}
+
+void bcUpdateMainMenu(void)
+{
+    drawMenuZorldo(beancatch->menu, beancatch->menuRenderer, 16000);
+
+    char scoreBuffer[13l];
+
+    snprintf(scoreBuffer, sizeof(scoreBuffer) - 1, "Best: %5d", beancatch->highScoreGameB);
+
+    drawText(beancatch->menuRenderer->menuFont, c000, scoreBuffer, 171, 61);
+    drawText(beancatch->menuRenderer->menuFont, c000, scoreBuffer, 173, 61);
+    drawText(beancatch->menuRenderer->menuFont, c000, scoreBuffer, 172, 60);
+    drawText(beancatch->menuRenderer->menuFont, c000, scoreBuffer, 172, 62);
+    drawText(beancatch->menuRenderer->menuFont, c555, scoreBuffer, 172, 61);
+
+    snprintf(scoreBuffer, sizeof(scoreBuffer) - 1, "Best: %5d", beancatch->highScoreGameA);
+
+    drawText(beancatch->menuRenderer->menuFont, c000, scoreBuffer, 171, 93);
+    drawText(beancatch->menuRenderer->menuFont, c000, scoreBuffer, 173, 93);
+    drawText(beancatch->menuRenderer->menuFont, c000, scoreBuffer, 172, 92);
+    drawText(beancatch->menuRenderer->menuFont, c000, scoreBuffer, 172, 94);
+    drawText(beancatch->menuRenderer->menuFont, c555, scoreBuffer, 172, 93);
 }
 
 void bcDrawGame(void)
@@ -763,7 +847,7 @@ void bcDrawGame(void)
 
                 break;
             case BC_ST_CLOCK:
-                if(beancatch->btnState & PB_A)
+                /*if(beancatch->btnState & PB_A)
                 {
                     segment = BC_LCD_SEGMENTS[BC_SEG_GAME_A_LBL];
                     drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
@@ -777,7 +861,7 @@ void bcDrawGame(void)
                     
                     bcDrawScoreHud(beancatch->highScoreGameB);
                 } 
-                else
+                else*/
                 {
                     //draw clock
                     segment = BC_LCD_SEGMENTS[BC_SEG_HOURS_SEP];
