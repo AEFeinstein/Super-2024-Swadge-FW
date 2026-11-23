@@ -173,9 +173,6 @@ void portableDanceLoadSetting(portableDance_t* dance)
         writeNamespaceNvs32(dance->nvsNs, nvsKeyWingDanceSpeed, wingSpeed);
     }
     dance->wingSpeed = wingSpeed;
-
-    dance->color     = c550;
-    dance->wingColor = c550;
 }
 
 /**

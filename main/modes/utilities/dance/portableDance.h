@@ -24,7 +24,9 @@ typedef struct
     // Used for the body if split is on. Used for everything if split is off.
     uint8_t danceIndex;
     int32_t speed;
-    uint32_t color;
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
 
     // Only used if split is on.
     uint8_t wingDanceIndex;
@@ -32,6 +34,9 @@ typedef struct
     paletteColor_t wingColor;
     led_t bodyLeds[CONFIG_NUM_LEDS];
     led_t wingLeds[CONFIG_NUM_LEDS];
+    uint8_t wingRed;
+    uint8_t wingGreen;
+    uint8_t wingBlue;
 
     // 0 for normal, 1 for different fairy body and wing patterns
     // It's an int not a bool because the menu structures use ints.
