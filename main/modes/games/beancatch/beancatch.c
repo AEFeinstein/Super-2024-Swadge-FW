@@ -18,6 +18,7 @@
 #include "macros.h"
 #include <time.h>
 #include <sys/time.h>
+#include "mainMenu.h"l
 
 //==============================================================================
 // Consts
@@ -215,6 +216,8 @@ void beancatchExitMode(void)
     }
 
     freeFont(&beancatch->lcdNumbersFont);
+    deinitMenuZorldoRenderer(beancatch->menuRenderer);
+    deinitMenu(beancatch->menu);
 
     heap_caps_free(beancatch);
 }
@@ -310,7 +313,7 @@ bool bcMenuCb(const char* label, bool selected, uint32_t value)
         }
         else if(label == beancatchStrExit)
         {
-            beancatchExitMode();
+            switchToSwadgeMode(&mainMenuMode);
         }
     }
 
