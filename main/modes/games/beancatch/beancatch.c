@@ -32,6 +32,8 @@ const char beancatchStrGameB[] = "Game B (Normal)";
 const char beancatchStrClock[] = "Clock Mode";
 const char beancatchStrExit[] = "Exit";
 
+const char KEY_SCORE_PB_GAME_A[] = "bc_hiscore_pb_a";
+const char KEY_SCORE_PB_GAME_B[] = "bc_hiscore_pb_b";
 
 //==============================================================================
 // Structs
@@ -196,6 +198,21 @@ void beancatchEnterMode(void)
     beancatch->menuRenderer = initMenuZorldoRenderer(NULL, NULL);
     beancatch->menu = initMenu(beancatchModeName, bcMenuCb);
     bcPopulateMenu();
+
+    size_t size = sizeof(uint16_t);
+    // Load Game A high score
+    if (false == readNvsBlob(KEY_SCORE_PB_GAME_A, &(beancatch->highScoreGameA), &(size)))
+    {
+        // Value didn't exist, so write the default
+        beancatch->highScoreGameA = 0;
+    }
+
+    // Load Game B high score
+    if (false == readNvsBlob(KEY_SCORE_PB_GAME_B, &(beancatch->highScoreGameB), &(size)))
+    {
+        // Value didn't exist, so write the default
+        beancatch->highScoreGameB = 0;
+    }
 
     beancatch->state = BC_ST_ACL;
     beancatch->tempState = BC_ST_NULL;
@@ -1080,6 +1097,19 @@ void bcChangeStateGameOver(void)
 {
     beancatch->state = BC_ST_GAME_OVER;
     beancatch->frameCounter = 0;
+
+    //Write personal best high score
+    switch(beancatch->gameLevel)
+    {
+        case BC_GAME_LEVEL_A:
+            writeNvsBlob(KEY_SCORE_PB_GAME_A, &(beancatch->highScoreGameA), sizeof(uint16_t));
+            break;
+        case BC_GAME_LEVEL_B:
+            writeNvsBlob(KEY_SCORE_PB_GAME_B, &(beancatch->highScoreGameB), sizeof(uint16_t));
+            break;
+        default:
+            break;
+    }
 
     beancatch->refreshScreen = true;
     beancatch->update = &bcUpdateGameOver;
