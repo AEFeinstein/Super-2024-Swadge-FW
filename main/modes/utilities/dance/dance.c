@@ -104,6 +104,7 @@ static const int32_t trueFalseVals[] = {
 
 static const char str_body[]  = "Body";
 static const char str_wings[] = "Wings";
+static const char str_color[] = "Color";
 
 static const char str_speed[]       = "Speed: ";
 static const char str_body_speed[]  = "Body Speed: ";
@@ -126,10 +127,15 @@ static const char nvsNs[]             = "light_dances";
 static const char str_pattern[]       = "Pattern: ";
 static const char str_body_pattern[]  = "Body Pattern: ";
 static const char str_wings_pattern[] = "Wings Pattern: ";
-static const char str_color[]         = "Color";
 static const char str_red[]           = "Red: ";
 static const char str_green[]         = "Green: ";
 static const char str_blue[]          = "Blue: ";
+static const char str_body_red[]      = "Body Red: ";
+static const char str_body_green[]    = "Body Green: ";
+static const char str_body_blue[]     = "Body Blue: ";
+static const char str_wings_red[]     = "Wings Red: ";
+static const char str_wings_green[]   = "Wings Green: ";
+static const char str_wings_blue[]    = "Wings Blue: ";
 const char* colors[]                  = {
     "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15",
 };
@@ -284,12 +290,15 @@ void setupMenu(const char* currentLabel)
         .min = 0,
         .max = ARRAY_SIZE(colors) - 1,
     };
-    addSettingsOptionsItemToMenu(colorMenu, str_red, danceState->colorNames, danceState->colorVals, ARRAY_SIZE(colors),
-                                 &colorParam, (danceState->dance->color >> 16)/17);
-    addSettingsOptionsItemToMenu(colorMenu, str_green, danceState->colorNames, danceState->colorVals,
-                                 ARRAY_SIZE(colors), &colorParam, ((danceState->dance->color >> 8) & 0xFF)/17);
-    addSettingsOptionsItemToMenu(colorMenu, str_blue, danceState->colorNames, danceState->colorVals, ARRAY_SIZE(colors),
-                                 &colorParam, (danceState->dance->color & 0xFF)/17);
+    addSettingsOptionsItemToMenu(colorMenu, danceState->dance->split ? str_body_red : str_red, danceState->colorNames,
+                                 danceState->colorVals, ARRAY_SIZE(colors), &colorParam,
+                                 (danceState->dance->color >> 16) / 17);
+    addSettingsOptionsItemToMenu(colorMenu, danceState->dance->split ? str_body_green : str_green,
+                                 danceState->colorNames, danceState->colorVals, ARRAY_SIZE(colors), &colorParam,
+                                 ((danceState->dance->color >> 8) & 0xFF) / 17);
+    addSettingsOptionsItemToMenu(colorMenu, danceState->dance->split ? str_body_blue : str_blue, danceState->colorNames,
+                                 danceState->colorVals, ARRAY_SIZE(colors), &colorParam,
+                                 (danceState->dance->color & 0xFF) / 17);
     endSubMenu(colorMenu);
 
     // Add speed to the menu
@@ -307,13 +316,13 @@ void setupMenu(const char* currentLabel)
         subMenu = startSubMenu(danceState->menu, str_wings);
         addSettingsOptionsItemToMenu(subMenu, str_wings_pattern, danceState->danceNames, danceState->danceVals,
                                      ARRAY_SIZE(ledDances), &danceParam, danceState->dance->wingDanceIndex);
-        colorMenu = startSubMenu(danceState->menu, str_color);
-        addSettingsOptionsItemToMenu(colorMenu, str_red, danceState->colorNames, danceState->colorVals,
-                                     ARRAY_SIZE(colors), &colorParam, (danceState->dance->wingColor >> 16)/17);
-        addSettingsOptionsItemToMenu(colorMenu, str_green, danceState->colorNames, danceState->colorVals,
-                                     ARRAY_SIZE(colors), &colorParam, ((danceState->dance->wingColor >> 8) & 255)/17);
-        addSettingsOptionsItemToMenu(colorMenu, str_blue, danceState->colorNames, danceState->colorVals,
-                                     ARRAY_SIZE(colors), &colorParam, (danceState->dance->wingColor & 255)/17);
+        colorMenu = startSubMenu(subMenu, str_color);
+        addSettingsOptionsItemToMenu(colorMenu, str_wings_red, danceState->colorNames, danceState->colorVals,
+                                     ARRAY_SIZE(colors), &colorParam, (danceState->dance->wingColor >> 16) / 17);
+        addSettingsOptionsItemToMenu(colorMenu, str_wings_green, danceState->colorNames, danceState->colorVals,
+                                     ARRAY_SIZE(colors), &colorParam, ((danceState->dance->wingColor >> 8) & 255) / 17);
+        addSettingsOptionsItemToMenu(colorMenu, str_wings_blue, danceState->colorNames, danceState->colorVals,
+                                     ARRAY_SIZE(colors), &colorParam, (danceState->dance->wingColor & 255) / 17);
         endSubMenu(colorMenu);
         addSettingsOptionsItemToMenu(subMenu, str_wings_speed, speedLabels, speedVals, ARRAY_SIZE(speedVals),
                                      &speedParam, danceState->dance->wingSpeed);
@@ -506,6 +515,31 @@ bool danceMenuCb(const char* label, bool selected, uint32_t value)
     else if (str_wings_pattern == label && danceState->dance->wingDanceIndex != value)
     {
         portableDanceSetByIndex(danceState->dance, value, true);
+    }
+    else if (str_red == label || str_body_red == label)
+    {
+        portableDanceSetColor(danceState->dance, ((value * 17) << 16) | (danceState->dance->color & 0x00FFFF), false);
+    }
+    else if (str_green == label || str_body_green == label)
+    {
+        portableDanceSetColor(danceState->dance, ((value * 17) << 8) | (danceState->dance->color & 0xFF00FF), false);
+    }
+    else if (str_blue == label || str_body_blue == label)
+    {
+        portableDanceSetColor(danceState->dance, (value * 17) | (danceState->dance->color & 0xFFFF00), false);
+    }
+    else if (str_wings_red == label)
+    {
+        portableDanceSetColor(danceState->dance, ((value * 17) << 16) | (danceState->dance->wingColor & 0x00FFFF),
+                              true);
+    }
+    else if (str_wings_green == label)
+    {
+        portableDanceSetColor(danceState->dance, ((value * 17) << 8) | (danceState->dance->wingColor & 0xFF00FF), true);
+    }
+    else if (str_wings_blue == label)
+    {
+        portableDanceSetColor(danceState->dance, (value * 17) | (danceState->dance->wingColor & 0xFFFF00), true);
     }
     return false;
 }

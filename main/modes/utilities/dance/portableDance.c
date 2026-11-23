@@ -288,7 +288,8 @@ void portableDanceSetColor(portableDance_t* dance, int32_t color, bool wings)
     }
     if (dance->nvsNs != NULL)
     {
-        writeNamespaceNvs32(dance->nvsNs, wings ? nvsKeyDanceWingColor : nvsKeyDanceColor, wings ? dance->wingColor : dance->color);
+        writeNamespaceNvs32(dance->nvsNs, wings ? nvsKeyDanceWingColor : nvsKeyDanceColor,
+                            wings ? dance->wingColor : dance->color);
     }
 }
 
