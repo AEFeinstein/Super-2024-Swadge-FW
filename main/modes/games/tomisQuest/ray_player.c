@@ -181,6 +181,8 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
             // Switch to instrument mode
             ray->ps.pbaDown       = false;
             ray->ps.pbaDownTimeUs = 0;
+            ray->instrumentTutorial         = false;
+            ray->instrumentTutorialAutoPlay = false;
             raySwitchToScreen(RAY_INSTRUMENT);
         }
     }
