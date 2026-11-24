@@ -23,7 +23,7 @@ static void startLullabyTutorial(void)
  */
 static void getShield(void)
 {
-    ray_t* ray = getRayState();
+    ray_t* ray            = getRayState();
     rayObjCommon_t shield = {.type = OBJ_ITEM_SHIELD};
     rayPlayerTouchItem(ray, &shield, ray->p.mapId);
 }
@@ -81,7 +81,7 @@ bool initCutsceneDungeon1Complete(ray_t* ray, cutscene_t* cutscene, const char* 
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Nice tune. I could swear I've heard it before.", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_DORIA, "Remember it well, fairy.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "The Pause menu can remind you how to play Doria's Lullaby.", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Sure thing, weird ninja-lady.", false, TOMI_SUSPICIOUS, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "Sure thing, weird ninja-lady.", false, TOMI_SUSPICIOUS, deleteDoria);
         addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "Doria vanishes without another word.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Huh. Weird...", false, TOMI_SUSPICIOUS, endScene);
 

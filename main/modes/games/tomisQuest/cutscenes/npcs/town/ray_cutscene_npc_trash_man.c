@@ -55,7 +55,7 @@ void initNpcCutsceneTrashMan(ray_t* ray, cutscene_t* cutscene)
     {
         addCutsceneLine(cutscene, CS_STYLE_TRASH_MAN, "Brave adventurers! Please do not ignore me again, I have vital information for you to complete your quest!", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Sigh, fine. What do you got for us?", false, TOMI_BORED, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_TRASH_MAN, "did you know... that to the west of us, there lies a mysterious DUNGEON? What mysteries could it possi-", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TRASH_MAN, "did you know... that to the west of us, there lies mysterious DUNGEONS? What mysteries could it possi-", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Yeah dude, we already checked it out. Like, a while ago.", false, TOMI_BORED, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TRASH_MAN, "Oh.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "See ya.", false, TOMI_BORED, NULL);

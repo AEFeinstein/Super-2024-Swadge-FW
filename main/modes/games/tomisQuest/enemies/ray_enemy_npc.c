@@ -24,9 +24,33 @@ static void rayEnemyNpcGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t b
  *
  * @param ray The whole game state
  * @param e The npc to initialize
+ * @return true if the NPC should spawn, false otherwise
  */
-void rayInitEnemyNpc(ray_t* ray, rayEnemy_t* e, rayMapCellType_t type)
+bool rayInitEnemyNpc(ray_t* ray, rayEnemy_t* e, rayMapCellType_t type)
 {
+    // These fairies don't spawn in Tomi's House after the cutscene
+    switch (type)
+    {
+        case OBJ_ENEMY_NPC_FAIRY_KAITIE:
+        case OBJ_ENEMY_NPC_FAIRY_SABLE:
+        case OBJ_ENEMY_NPC_FAIRY_BEAN:
+        case OBJ_ENEMY_NPC_FAIRY_DACC:
+        case OBJ_ENEMY_NPC_FAIRY_KIKI:
+        case OBJ_ENEMY_NPC_FAIRY_BOUBA:
+        {
+            // If you're in map 0 (Tomi's house) and TQS_PAIRING was viewed
+            if ((0 == ray->p.mapId) && (ray->p.cutsceneViewed & TQS_PAIRING))
+            {
+                // Don't spawn these fairies
+                return false;
+            }
+        }
+        default:
+        {
+            break;
+        }
+    }
+
     // NPC has one texture, for now
     cnfsFileIdx_t tex;
     switch (type)
@@ -83,7 +107,36 @@ void rayInitEnemyNpc(ray_t* ray, rayEnemy_t* e, rayMapCellType_t type)
         }
         case OBJ_ENEMY_NPC_DORIA:
         {
-            tex = OBJ_ENEMY_NPC_DORIA_WSG;
+            // In the field
+            if (5 == ray->p.mapId && (ray->p.cutsceneViewed & TQS_DORIA_INTRO))
+            {
+                return false;
+            }
+            // Dungeon 1
+            else if (6 == ray->p.mapId && (ray->p.cutsceneViewed & TQS_DUNGEON_1_COMPLETE))
+            {
+                return false;
+            }
+            // Dungeon 2
+            else if (7 == ray->p.mapId && (ray->p.cutsceneViewed & TQS_DUNGEON_2_COMPLETE))
+            {
+                return false;
+            }
+            // Dungeon 3
+            else if (8 == ray->p.mapId && (ray->p.cutsceneViewed & TQS_DUNGEON_3_COMPLETE))
+            {
+                return false;
+            }
+            // Dungeon 4
+            else if (9 == ray->p.mapId && (ray->p.cutsceneViewed & TQS_DUNGEON_4_COMPLETE))
+            {
+                return false;
+            }
+            else
+            {
+                // Good to spawn
+                tex = OBJ_ENEMY_NPC_DORIA_WSG;
+            }
             break;
         }
         case OBJ_ENEMY_NPC_KING_DONUT:
@@ -152,7 +205,7 @@ void rayInitEnemyNpc(ray_t* ray, rayEnemy_t* e, rayMapCellType_t type)
         default:
         {
             // Not a valid NPC
-            return;
+            return false;
         }
     }
     e->c.sprite = loadTexture(ray, tex, type);
@@ -169,6 +222,8 @@ void rayInitEnemyNpc(ray_t* ray, rayEnemy_t* e, rayMapCellType_t type)
     e->collisionFn      = rayEnemyNpcCheckPlayerCollision;
     e->getShotFn        = rayEnemyNpcGetShot;
     e->dropAfterDeathFn = NULL;
+
+    return true;
 }
 
 /**

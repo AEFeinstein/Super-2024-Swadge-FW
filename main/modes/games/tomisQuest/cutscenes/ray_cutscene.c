@@ -296,3 +296,28 @@ void addCutsceneStyleGreatFairies(cutscene_t* cutscene)
     addCutsceneStyle(cutscene, c000, TQ_GREAT_FAIRIES_PORTRAIT_WSG, CUTSCENE_TEXTBOX_WSG, "Great Fairies", 1, true,
                      true, true);
 }
+
+/**
+ * @brief Delete Doria from the scene
+ *
+ */
+void deleteDoria(void)
+{
+    ray_t* ray = getRayState();
+
+    // Iterate through all enemies
+    node_t* eNode = ray->enemies.first;
+    while (eNode)
+    {
+        rayEnemy_t* e = eNode->val;
+        node_t* next  = eNode->next;
+
+        // If this is Doria, delete her
+        if (OBJ_ENEMY_NPC_DORIA == e->c.type)
+        {
+            heap_caps_free(removeEntry(&ray->enemies, eNode));
+        }
+
+        eNode = next;
+    }
+}

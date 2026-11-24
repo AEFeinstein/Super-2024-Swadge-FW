@@ -106,5 +106,6 @@ void addCutsceneStyleUnknown(cutscene_t* cutscene);
 void addCutsceneStyleHankW(cutscene_t* cutscene);
 void addCutsceneStyleGreatFairy(cutscene_t* cutscene);
 void addCutsceneStyleGreatFairies(cutscene_t* cutscene);
+void deleteDoria(void);
 
 #endif

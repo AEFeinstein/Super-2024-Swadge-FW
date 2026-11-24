@@ -50,9 +50,9 @@ void initNpcCutsceneTheMayor(ray_t* ray, cutscene_t* cutscene)
     {
         addCutsceneLine(cutscene, CS_STYLE_MAYOR, "Welcome, brave adventures to the fine town of Gaylordia! Here, heroes from all walks of life come to connect, play games, hear great tunes, and maybe purchase some fine goods from our merch- I mean, ITEM SHOP!", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "That's a cool-looking statue you got there.", false, TOMI_SUSPICIOUS, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_MAYOR, "Ah, you have a fine eye for antiquities, but sadly that item is not for sale! It is said to have strange connections to the DUNGEON that sits to the West of our fair village.", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_TOMI, "You have a Dungeon? Oh, I bet that's where I'll find the Great Fairy Trials!", false, TOMI_FIREDUP, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_MAYOR, "Ah, true, but sadly the way to the DUNGEON has been blocked by RUBBLE for some time.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_MAYOR, "Ah, you have a fine eye for antiquities, but sadly that item is not for sale! It is said to have strange connections to the DUNGEONS that sits to the West of our fair village.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "You have Dungeons? Oh, I bet that's where I'll find the Great Fairy Trials!", false, TOMI_FIREDUP, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_MAYOR, "Ah, true, but sadly the way to the DUNGEONS has been blocked by RUBBLE for some time.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_HYUT, "Hyaaa! HYUP!", false, HYUT_NEUTRAL, NULL);
         addCutsceneLine(cutscene, CS_STYLE_MAYOR, "I like your positive attitude, brave adventurer!", false, 0, NULL);
     }
@@ -76,7 +76,7 @@ void initNpcCutsceneTheMayor(ray_t* ray, cutscene_t* cutscene)
     {
         addCutsceneLine(cutscene, CS_STYLE_MAYOR, "Hello, brave adventurer!", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Good day, Mayor.", false, TOMI_CALM, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_MAYOR, "Have you figured out the secret of the DUNGEON yet?", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_MAYOR, "Have you figured out the secret of the DUNGEONS yet?", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "I have... but it's going to require me to do something I really don't want to do...", false, TOMI_EMBARASSED, NULL);
         addCutsceneLine(cutscene, CS_STYLE_MAYOR, "What's that?", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "I'm going to have to SING in the Town Square...", false, TOMI_EMBARASSED, NULL);
