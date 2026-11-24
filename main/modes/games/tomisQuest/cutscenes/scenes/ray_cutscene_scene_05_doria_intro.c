@@ -1,5 +1,16 @@
 #include <string.h>
 #include "ray_cutscene_scene_05_doria_intro.h"
+#include "ray_player.h"
+
+/**
+ * @brief Add the shield to the inventory
+ */
+static void getBoots(void)
+{
+    ray_t* ray           = getRayState();
+    rayObjCommon_t boots = {.type = OBJ_ITEM_BOOTS};
+    rayPlayerTouchItem(ray, &boots, ray->p.mapId);
+}
 
 /**
  * @brief Callback to mark this scene as viewed
@@ -44,7 +55,7 @@ bool initCutsceneDoriaIntro(ray_t* ray, cutscene_t* cutscene, const char* title)
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Who's there?", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "A perfectly-placed arrow strikes the ground in front of Hyut's feet.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "!!", false, TOMI_SHOCKED, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_UNKN, "State your business in the dungeon, child.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_UNKN, "State your business at the dungeons, child.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_HYUT, "Hyaaa!! Hyup!! Hut!", false, HYUT_YELLING, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "(It's ok Hyut, I got this.)", false, TOMI_COCKY, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Hi - whoever you are. We're here to... uhh", false, TOMI_CALM, NULL);
@@ -52,7 +63,7 @@ bool initCutsceneDoriaIntro(ray_t* ray, cutscene_t* cutscene, const char* title)
         addCutsceneLine(cutscene, CS_STYLE_UNKN, "Does this fairy speak for you, child?", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Yeah, I do.", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_UNKN, "... Very well.", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_DORIA, "I am Doria. Protector of this space and the trials within. I ask you again - why do you seek to explore the Dungeon?", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_DORIA, "I am Doria. Protector of this space and the trials within. I ask you again - why do you seek to explore the Dungeons?", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "I 'unno, it seems like the sort of thing you'd want to do as part of the Great Fairy Trials...", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_DORIA, "Sigh... another group of \"adventurers.\" Have you considered what completing the trials may bring you?", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "A legacy of greatness, obviously.", false, TOMI_FIREDUP, NULL);
@@ -61,11 +72,11 @@ bool initCutsceneDoriaIntro(ray_t* ray, cutscene_t* cutscene, const char* title)
         addCutsceneLine(cutscene, CS_STYLE_HYUT, "Hyup! Haa!", false, HYUT_NEUTRAL, NULL);
         addCutsceneLine(cutscene, CS_STYLE_DORIA, "Do you and your companion even understand each other? It seems they merely... follow you around.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "We've got a good thing going! They swipe their sword when I tell 'em to! And we got bombs, so that's pretty cool?", false, TOMI_COCKY, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_DORIA, "You lack even basic defensive training. You can't even JUMP.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_DORIA, "You lack even basic defensive training. You can't even JUMP. Here, take some jumping boots. They're not limited edition or anything.", false, 0, getBoots);
         // TODO update with final instructions
         addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "Tap 'A' quickly to command Hyut to jump!", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "See? A jump. We're quick studies.", false, TOMI_COCKY, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_DORIA, "Sigh. I suppose we shall see. If you survive, I will see you again.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_DORIA, "Sigh. I suppose we shall see. If you survive, I will see you again.", false, 0, deleteDoria);
         addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "Doria vanishes in a puff of smoke.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Welp, here goes nothing...", false, TOMI_EMBARASSED, endScene);
 

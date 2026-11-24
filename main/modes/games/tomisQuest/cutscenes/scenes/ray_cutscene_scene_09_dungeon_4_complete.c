@@ -55,7 +55,7 @@ bool initCutsceneDungeon4Complete(ray_t* ray, cutscene_t* cutscene, const char* 
         addCutsceneLine(cutscene, CS_STYLE_DORIA, "You seemed like such a nice fairy... I wanted to protect you from ... that. But maybe, if you're here... you're the type who needs to see it the most.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "...", false, TOMI_BORED, NULL);
         addCutsceneLine(cutscene, CS_STYLE_DORIA, "Good luck, Tomi.", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_TOMI, "...", false, TOMI_BORED, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "...", false, TOMI_BORED, deleteDoria);
         addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "Doria vanishes with a flourish.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_HYUT, "Hyaaa?", false, HYUT_NEUTRAL, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "it... it doesn't matter, Hyut. We're finishing this. Let's go.", false, TOMI_BORED, endScene);

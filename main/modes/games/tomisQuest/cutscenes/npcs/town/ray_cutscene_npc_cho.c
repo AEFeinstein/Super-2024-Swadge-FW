@@ -43,7 +43,7 @@ void initNpcCutsceneCho(ray_t* ray, cutscene_t* cutscene)
     else if (!ray->p.i.haveTurntables)
     {
         addCutsceneLine(cutscene, CS_STYLE_CHO, "Man, have you seen the statue in the MAYOR's house?", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_TOMI, "The thing with the mysterious connection to the Dungeon?", false, TOMI_SUSPICIOUS, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_TOMI, "The thing with the mysterious connection to the Dungeons?", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_CHO, "Look dude - when I see something suspicious like that, I just have to SHOOT it.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "That seems crazy. Are you crazy? What if you break it?", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_CHO, "Well, guess we'll never know. I lost my gear again. Why does this always happen to me?", false, 0, NULL);
@@ -51,7 +51,7 @@ void initNpcCutsceneCho(ray_t* ray, cutscene_t* cutscene)
     // After getting turntables, before getting lullaby
     else if (!ray->p.i.haveDoriasLullaby)
     {
-        addCutsceneLine(cutscene, CS_STYLE_CHO, "Seems like you're getting stronger. Nearly ready to tackle the bottom of the Dungeon, eh?", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_CHO, "Seems like you're getting stronger. Nearly ready to tackle the next Dungeon, eh?", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "I think so...", false, TOMI_EMBARASSED, NULL);
         addCutsceneLine(cutscene, CS_STYLE_CHO, "Make sure you have lots of energy tanks and missile upgrades.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Huh? What's a \"missile\"?", false, TOMI_SUSPICIOUS, NULL);

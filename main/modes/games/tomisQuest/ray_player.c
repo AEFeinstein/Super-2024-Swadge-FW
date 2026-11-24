@@ -179,8 +179,10 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
         if (ray->ps.pbaDownTimeUs >= 1000000)
         {
             // Switch to instrument mode
-            ray->ps.pbaDown       = false;
-            ray->ps.pbaDownTimeUs = 0;
+            ray->ps.pbaDown                 = false;
+            ray->ps.pbaDownTimeUs           = 0;
+            ray->instrumentTutorial         = false;
+            ray->instrumentTutorialAutoPlay = false;
             raySwitchToScreen(RAY_INSTRUMENT);
         }
     }

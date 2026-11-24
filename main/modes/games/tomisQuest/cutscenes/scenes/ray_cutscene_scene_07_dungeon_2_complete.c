@@ -1,5 +1,16 @@
 #include <string.h>
 #include "ray_cutscene_scene_07_dungeon_2_complete.h"
+#include "ray_player.h"
+
+/**
+ * @brief Add the Boomerang to the inventory
+ */
+static void getBoomerang(void)
+{
+    ray_t* ray               = getRayState();
+    rayObjCommon_t Boomerang = {.type = OBJ_ITEM_BOOMERANG};
+    rayPlayerTouchItem(ray, &Boomerang, ray->p.mapId);
+}
 
 /**
  * @brief Callback to mark this scene as viewed
@@ -38,7 +49,8 @@ bool initCutsceneDungeon2Complete(ray_t* ray, cutscene_t* cutscene, const char* 
         // clang-format off
 
         // [Tomi and Hyut clear the second phase of the dungeon and open the chest to receive the magical boomerang. Then Doria appears.]
-        addCutsceneLine(cutscene, CS_STYLE_DORIA, "I see you've made some progress.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_DORIA, "I see you've made some progress. I suppose you've earned this boomerang.", false, 0, getBoomerang);
+        addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "Tap the right touch strip to throw a boomerang.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_HYUT, "Hyaa! Hyup!! Ha!", false, HYUT_NEUTRAL, NULL);
         addCutsceneLine(cutscene, CS_STYLE_DORIA, "Have you achieved \"greatness\" yet?", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "What's that supposed to mean? That's what we're doing here. Questing. Great Fairy Trials. It's in the name.", false, TOMI_SUSPICIOUS, NULL);
@@ -54,7 +66,7 @@ bool initCutsceneDungeon2Complete(ray_t* ray, cutscene_t* cutscene, const char* 
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Yeah, I don't know what your angle is, lady. We were just fighting for our lives back there, I didn't see you helping at all.", false, TOMI_SUSPICIOUS, NULL);
         addCutsceneLine(cutscene, CS_STYLE_DORIA, "You didn't appear to need my help when it came to combat.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Easy for you to say NOW. Any tips on where to use this magical boomerang then?", false, TOMI_BORED, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_DORIA, "... I don't have to answer your questions.", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_DORIA, "... I don't have to answer your questions.", false, 0, deleteDoria);
         addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "Doria vanishes in a huff.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Yeah, figures.", false, TOMI_BORED, endScene);
 

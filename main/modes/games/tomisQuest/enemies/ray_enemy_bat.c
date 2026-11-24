@@ -108,8 +108,8 @@ bool rayEnemyBatMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 
             if (rectRectIntersection(rayGetPlayerBB(ray), proximityBox, NULL))
             {
-                enemy->c.sprite = loadTexture(ray, OBJ_ENEMY_GRUNT_WSG, OBJ_ENEMY_BAT);
-                state->state    = TQ_EN_BAT_ST_FLYING;
+                // enemy->c.sprite = loadTexture(ray, OBJ_ENEMY_GRUNT_WSG, OBJ_ENEMY_BAT);
+                state->state = TQ_EN_BAT_ST_FLYING;
 
                 state->vel.x = (ray->p.posX - enemy->c.posX) < 0 ? 150 : -150;
                 state->vel.y = (ray->p.posY - enemy->c.posY) < 0 ? 150 : -150;

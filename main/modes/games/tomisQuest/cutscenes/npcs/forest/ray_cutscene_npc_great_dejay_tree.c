@@ -167,7 +167,7 @@ void initNpcCutsceneGreatDejayTree(ray_t* ray, cutscene_t* cutscene)
             addCutsceneLine(cutscene, CS_STYLE_GDJT, "Welcome home, Tomi.", false, 0, NULL);
             addCutsceneLine(cutscene, CS_STYLE_TOMI, "Oh hey... \"Sup.\" Didn't see you there.", false, TOMI_COCKY, NULL);
             addCutsceneLine(cutscene, CS_STYLE_GDJT, "That seems unlikely.", false, 0, NULL);
-            addCutsceneLine(cutscene, CS_STYLE_TOMI, "So, I don't know if you'd heard, but I'm a big deal now. Cleared the whole first level of the Dungeon. Beat a bunch of baddies, got a sacred instrument.", false, TOMI_COCKY, NULL);
+            addCutsceneLine(cutscene, CS_STYLE_TOMI, "So, I don't know if you'd heard, but I'm a big deal now. Cleared the whole first Dungeon. Beat a bunch of baddies, got a sacred instrument.", false, TOMI_COCKY, NULL);
             addCutsceneLine(cutscene, CS_STYLE_GDJT, "Well done!", false, 0, NULL);
             addCutsceneLine(cutscene, CS_STYLE_TOMI, "Yeah, at this point I'll probably become a Great Fairy in no time. I bet they'll name a speedrunning category after me and everything.", false, TOMI_COCKY, NULL);
             addCutsceneLine(cutscene, CS_STYLE_GDJT, "We're all very impressed, Tomi.", false, 0, NULL);

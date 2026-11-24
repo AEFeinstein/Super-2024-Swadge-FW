@@ -359,6 +359,9 @@ static void songOver(void)
     // Play this map's music again
     globalMidiPlayerPlaySong(getAtIndex(&ray->bgmSongs, ray->p.mapId), MIDI_BGM);
 
+    // Check for scripts
+    checkScriptSong(ray, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY), LULLABY, NULL);
+
     // If this is the tutorial
     if (ray->instrumentTutorial)
     {
@@ -367,8 +370,7 @@ static void songOver(void)
     }
     else
     {
-        // For non-tutorial, check scripts for this song
-        checkScriptSong(ray, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY), LULLABY, NULL);
+        // For non-tutorial, switch back to the game
         raySwitchToScreen(RAY_GAME);
     }
 }

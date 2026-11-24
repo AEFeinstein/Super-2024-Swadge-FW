@@ -74,16 +74,6 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
         case OBJ_ENEMY_NPC_FAIRY_DACC:
         case OBJ_ENEMY_NPC_FAIRY_KIKI:
         case OBJ_ENEMY_NPC_FAIRY_BOUBA:
-        {
-            // If you're in map 0 (Tomi's house) and TQS_PAIRING was viewed
-            if ((0 == ray->p.mapId) && (ray->p.cutsceneViewed & TQS_PAIRING))
-            {
-                // Don't spawn these fairies
-                heap_caps_free(newObj);
-                return;
-            }
-        }
-        // fall through
         case OBJ_ENEMY_NPC_FAIRY_BARRY:
         case OBJ_ENEMY_NPC_GREAT_DEEJAY_TREE:
         case OBJ_ENEMY_NPC_LOOT:
@@ -96,7 +86,12 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
         case OBJ_ENEMY_NPC_THE_MAYOR:
         case OBJ_ENEMY_NPC_FREDWARD:
         {
-            rayInitEnemyNpc(ray, newObj, type);
+            if (false == rayInitEnemyNpc(ray, newObj, type))
+            {
+                // Don't spawn this NPC
+                heap_caps_free(newObj);
+                return;
+            }
             break;
         }
         case OBJ_ENEMY_NPC_HYUT:
