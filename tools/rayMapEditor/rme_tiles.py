@@ -148,8 +148,8 @@ class tileType(Enum):
     OBJ_ENEMY_NPC_FREDWARD = OBJ | ENEMY | 21
     # Unallocated enemies
     OBJ_ENEMY_GUARD = OBJ | ENEMY | 22
-    OBJ_ENEMY_NINJA = OBJ | ENEMY | 23
-    OBJ_ENEMY_BAT = OBJ | ENEMY | 24
+    OBJ_ENEMY_NINJA_0 = OBJ | ENEMY | 23
+    OBJ_ENEMY_BAT_0 = OBJ | ENEMY | 24
     OBJ_ENEMY_WIZARD = OBJ | ENEMY | 25
     OBJ_ENEMY_26 = OBJ | ENEMY | 26
     OBJ_ENEMY_27 = OBJ | ENEMY | 27
@@ -406,8 +406,8 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ENEMY_GRUNT,
         tileType.OBJ_ENEMY_TURRET,
         tileType.OBJ_ENEMY_GUARD,
-        tileType.OBJ_ENEMY_NINJA,
-        tileType.OBJ_ENEMY_BAT,
+        tileType.OBJ_ENEMY_NINJA_0,
+        tileType.OBJ_ENEMY_BAT_0,
         tileType.OBJ_ENEMY_WIZARD,
         tileType.OBJ_ENEMY_26,
         tileType.OBJ_ENEMY_27,

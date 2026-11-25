@@ -27,6 +27,9 @@ typedef struct
     int32_t stateTimer;
     vec_q24_8 dir; ///< The direction the ninja is facing
     vec_q24_8 vel; ///< The direction the ninja got bumped
+    wsg_t* sprites[3];
+    int32_t animTimer;
+    int8_t spriteIdx;
 } ninjaState_t;
 
 //==============================================================================
@@ -52,9 +55,12 @@ static void rayEnemyNinjaShoot(ray_t* ray, rayEnemy_t* enemy);
  */
 void rayInitEnemyNinja(ray_t* ray, rayEnemy_t* e)
 {
-    // Start as a box
-    e->c.sprite = loadTexture(ray, OBJ_ENEMY_BOX_WSG, OBJ_ENEMY_BOX);
-    e->portrait = e->c.sprite;
+    // Ninja has 2hp to not die
+    e->health = 2;
+
+    // Allocate state for this enemy
+    e->state         = heap_caps_calloc(1, sizeof(ninjaState_t), MALLOC_CAP_8BIT);
+    ninjaState_t* ns = e->state;
 
     // Load bullet textures
     loadTexture(ray, OBJ_BULLET_SHIELD_0_WSG, OBJ_BULLET_SHIELD_0);
@@ -62,14 +68,18 @@ void rayInitEnemyNinja(ray_t* ray, rayEnemy_t* e)
     loadTexture(ray, OBJ_BULLET_SHIELD_2_WSG, OBJ_BULLET_SHIELD_2);
     loadTexture(ray, OBJ_BULLET_SHIELD_3_WSG, OBJ_BULLET_SHIELD_3);
 
-    // Ninja has 2hp to not die
-    e->health = 2;
+    // Load enemy textures
+    ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_BOX_WSG, OBJ_ENEMY_BOX);
+    ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NINJA_0_WSG, OBJ_ENEMY_NINJA);
+    ns->sprites[2] = loadTexture(ray, OBJ_ENEMY_NINJA_1_WSG, EMPTY);
 
-    // Allocate state for this enemy
-    e->state = heap_caps_calloc(1, sizeof(ninjaState_t), MALLOC_CAP_8BIT);
+    // Start as a box
+    ns->spriteIdx = 0;
+    e->c.sprite   = ns->sprites[ns->spriteIdx];
+    e->portrait   = ns->sprites[1];
 
-    ((ninjaState_t*)e->state)->state      = TQ_EN_NINJA_ST_HIDING;
-    ((ninjaState_t*)e->state)->stateTimer = -1;
+    ns->state      = TQ_EN_NINJA_ST_HIDING;
+    ns->stateTimer = -1;
 
     // Set function pointers
     e->mainFn           = rayEnemyNinjaMain;
@@ -163,6 +173,20 @@ bool rayEnemyNinjaMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
     // Casted pointer for convenience
     ninjaState_t* state = enemy->state;
 
+    // Run animation for chomping
+    RUN_TIMER_EVERY(state->animTimer, 100000, elapsedUs, {
+        if (1 == state->spriteIdx)
+        {
+            state->spriteIdx = 2;
+            enemy->c.sprite  = state->sprites[state->spriteIdx];
+        }
+        else if (2 == state->spriteIdx)
+        {
+            state->spriteIdx = 1;
+            enemy->c.sprite  = state->sprites[state->spriteIdx];
+        }
+    });
+
     switch (state->state)
     {
         case TQ_EN_NINJA_ST_HIDING:
@@ -183,8 +207,9 @@ bool rayEnemyNinjaMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 
             if (rectRectIntersection(rayGetPlayerBB(ray), proximityBox, NULL))
             {
-                enemy->c.sprite = loadTexture(ray, OBJ_ENEMY_NINJA_WSG, OBJ_ENEMY_NINJA);
-                state->state    = TQ_EN_NINJA_ST_ATTACKING;
+                state->state     = TQ_EN_NINJA_ST_ATTACKING;
+                state->spriteIdx = 1;
+                enemy->c.sprite  = state->sprites[state->spriteIdx];
                 rayEnemyNinjaPickDirection(enemy);
                 state->stateTimer = 500000;
             }
@@ -214,7 +239,8 @@ bool rayEnemyNinjaMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
             {
                 state->state = TQ_EN_NINJA_ST_HIDING;
                 // Return to box
-                enemy->c.sprite = loadTexture(ray, OBJ_ENEMY_BOX_WSG, OBJ_ENEMY_BOX);
+                state->spriteIdx = 0;
+                enemy->c.sprite  = state->sprites[state->spriteIdx];
             }
 
             break;

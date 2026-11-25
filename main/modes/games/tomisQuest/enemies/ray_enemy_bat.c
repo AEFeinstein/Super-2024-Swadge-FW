@@ -25,7 +25,10 @@ typedef struct
     batStateIndex_t state;
     int32_t stateTimer; // In microseconds
     int8_t stateCounter;
-    vec_q24_8 vel; ///< The direction the bat got bumped
+    vec_q24_8 vel;     ///< The direction the bat got bumped
+    wsg_t* sprites[3]; ///< Rest and two flaps
+    int32_t animTimer;
+    int8_t spriteIdx;
 } batState_t;
 
 //==============================================================================
@@ -49,18 +52,25 @@ static void rayEnemyBatGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t b
  */
 void rayInitEnemyBat(ray_t* ray, rayEnemy_t* e)
 {
-    // Bat has one texture, for now
-    e->c.sprite = loadTexture(ray, OBJ_ENEMY_BAT_WSG, OBJ_ENEMY_BAT);
-    e->portrait = e->c.sprite;
-
     // Bat has 1hp to not die
     e->health = 1;
 
     // Allocate state for this enemy
-    e->state = heap_caps_calloc(1, sizeof(batState_t), MALLOC_CAP_8BIT);
+    e->state       = heap_caps_calloc(1, sizeof(batState_t), MALLOC_CAP_8BIT);
+    batState_t* bs = e->state;
 
-    ((batState_t*)e->state)->state      = TQ_EN_BAT_ST_IDLE;
-    ((batState_t*)e->state)->stateTimer = -1;
+    // Load sprites
+    bs->sprites[0] = loadTexture(ray, OBJ_ENEMY_BAT_REST_WSG, EMPTY);
+    bs->sprites[1] = loadTexture(ray, OBJ_ENEMY_BAT_0_WSG, OBJ_ENEMY_BAT);
+    bs->sprites[2] = loadTexture(ray, OBJ_ENEMY_BAT_1_WSG, EMPTY);
+
+    // Set initial sprites
+    bs->spriteIdx = 0;
+    e->c.sprite   = bs->sprites[bs->spriteIdx];
+    e->portrait   = bs->sprites[1];
+
+    bs->state      = TQ_EN_BAT_ST_IDLE;
+    bs->stateTimer = -1;
 
     // Set function pointers
     e->mainFn           = rayEnemyBatMain;
@@ -88,6 +98,20 @@ bool rayEnemyBatMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
     // Casted pointer for convenience
     batState_t* state = enemy->state;
 
+    // Run animation for flight
+    RUN_TIMER_EVERY(state->animTimer, 100000, elapsedUs, {
+        if (1 == state->spriteIdx)
+        {
+            state->spriteIdx = 2;
+            enemy->c.sprite  = state->sprites[state->spriteIdx];
+        }
+        else if (2 == state->spriteIdx)
+        {
+            state->spriteIdx = 1;
+            enemy->c.sprite  = state->sprites[state->spriteIdx];
+        }
+    });
+
     switch (state->state)
     {
         case TQ_EN_BAT_ST_IDLE:
@@ -108,8 +132,9 @@ bool rayEnemyBatMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 
             if (rectRectIntersection(rayGetPlayerBB(ray), proximityBox, NULL))
             {
-                // enemy->c.sprite = loadTexture(ray, OBJ_ENEMY_GRUNT_WSG, OBJ_ENEMY_BAT);
-                state->state = TQ_EN_BAT_ST_FLYING;
+                state->state     = TQ_EN_BAT_ST_FLYING;
+                state->spriteIdx = 1;
+                enemy->c.sprite  = state->sprites[state->spriteIdx];
 
                 state->vel.x = (ray->p.posX - enemy->c.posX) < 0 ? 150 : -150;
                 state->vel.y = (ray->p.posY - enemy->c.posY) < 0 ? 150 : -150;
@@ -143,7 +168,9 @@ bool rayEnemyBatMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
                 state->stateCounter--;
                 if (state->stateCounter < 0)
                 {
-                    state->state = TQ_EN_BAT_ST_IDLE;
+                    state->state     = TQ_EN_BAT_ST_IDLE;
+                    state->spriteIdx = 0;
+                    enemy->c.sprite  = state->sprites[state->spriteIdx];
                 }
             }
 
