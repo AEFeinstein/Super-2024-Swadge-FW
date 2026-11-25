@@ -795,6 +795,11 @@ void raySwitchToScreen(rayScreen_t newScreen)
         ray->ps.sprite = ray->ps.spritesTomi[0];
     }
 
+    // Clear button state to not have lingering directional input
+    ray->btnState         = 0;
+    ray->ps.pbaDown       = false;
+    ray->ps.pbaDownTimeUs = 0;
+
     // Initialize depending on the screen
     switch (newScreen)
     {

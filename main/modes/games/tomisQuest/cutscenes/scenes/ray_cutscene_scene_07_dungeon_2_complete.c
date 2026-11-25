@@ -50,6 +50,7 @@ bool initCutsceneDungeon2Complete(ray_t* ray, cutscene_t* cutscene, const char* 
 
         // [Tomi and Hyut clear the second phase of the dungeon and open the chest to receive the magical boomerang. Then Doria appears.]
         addCutsceneLine(cutscene, CS_STYLE_DORIA, "I see you've made some progress. I suppose you've earned this boomerang.", false, 0, getBoomerang);
+        // Note: input instructions (boomerang)
         addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "Tap the right touch strip to throw a boomerang.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_HYUT, "Hyaa! Hyup!! Ha!", false, HYUT_NEUTRAL, NULL);
         addCutsceneLine(cutscene, CS_STYLE_DORIA, "Have you achieved \"greatness\" yet?", false, 0, NULL);

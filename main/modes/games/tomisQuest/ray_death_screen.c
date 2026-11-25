@@ -10,7 +10,6 @@
 
 static const char* gameOverTitle = "Game Over";
 
-// TODO update death texts
 static const char* const deathTexts[] = {
     "Oof Hyut, let's try that again!", "Come on, get back up!", "Don't give up, Hyut!",
     "You're not done, Hyut!",          "Focus, Hyut!",          "We can do this, Hyut!",

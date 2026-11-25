@@ -61,14 +61,14 @@ bool initializePlayer(ray_t* ray)
         ray->p.health    = GAME_START_HEALTH;
 
         // Uncomment to start with all items for testing
-        // ray->p.i.haveEwiOfTime     = true;
-        // ray->p.i.haveBombs         = true;
-        // ray->p.i.haveJumpBoots     = true;
-        // ray->p.i.haveShield        = true;
-        // ray->p.i.haveBow           = true;
-        // ray->p.i.haveBoomerang     = true;
-        // ray->p.i.haveTurntables    = true;
-        // ray->p.i.haveDoriasLullaby = true;
+        // ray->p.i.haveEwiOfTime     = true; // Instructions written
+        // ray->p.i.haveBombs         = true; // TODO add instructions
+        // ray->p.i.haveJumpBoots     = true; // Instructions written
+        // ray->p.i.haveShield        = true; // Instructions written
+        // ray->p.i.haveBow           = true; // TODO add instructions
+        // ray->p.i.haveBoomerang     = true; // Instructions written
+        // ray->p.i.haveTurntables    = true; // Instructions written
+        // ray->p.i.haveDoriasLullaby = true; // Instructions written
     }
     else
     {
@@ -203,30 +203,30 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
         }
         else if (acceptInput)
         {
-            // The B button swings the sword
+            // The B button jumps
             if (PB_B == evt.button)
             {
-                if (evt.down && (false == ray->ps.swordActive))
+                // If not already jumping, add an impulse to jump
+                if (ray->p.i.haveJumpBoots && !rayPlayerIsJumping(ray))
                 {
-                    // Start a sword swing
-                    ray->ps.swordAngle   = 270; // -90
-                    ray->ps.swordTimerUs = SWORD_SWING_TIME;
-                    ray->ps.swordActive  = true;
-
-                    // Cancel any shields
-                    ray->ps.shieldTimerUs = 0;
-                    ray->ps.shieldZone    = -1;
+                    ray->ps.jumpVel = -TO_FX_FRAC(5, 8);
                 }
             }
-            // The A button shoots. Make sure there is a gun
+            // The A button swings the sword, if there is one
             else if (PB_A == evt.button)
             {
                 if (evt.down)
                 {
-                    // If not already jumping, add an impulse to jump
-                    if (ray->p.i.haveJumpBoots && !rayPlayerIsJumping(ray))
+                    if (false == ray->ps.swordActive)
                     {
-                        ray->ps.jumpVel = -TO_FX_FRAC(5, 8);
+                        // Start a sword swing
+                        ray->ps.swordAngle   = 270; // -90
+                        ray->ps.swordTimerUs = SWORD_SWING_TIME;
+                        ray->ps.swordActive  = true;
+
+                        // Cancel any shields
+                        ray->ps.shieldTimerUs = 0;
+                        ray->ps.shieldZone    = -1;
                     }
 
                     // When the button is pressed, start accumulating time
