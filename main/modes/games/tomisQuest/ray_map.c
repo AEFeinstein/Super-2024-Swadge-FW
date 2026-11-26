@@ -175,6 +175,7 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
                                 break;
                             }
                             case OBJ_ITEM_BOMB:
+                            case OBJ_SCENERY_SHOP_BOMB:
                             {
                                 if (inv->haveBombs)
                                 {
@@ -225,6 +226,14 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
                             case OBJ_ITEM_LULLABY:
                             {
                                 if (inv->haveDoriasLullaby)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_SCENERY_SHOP_HEART_CONTAINER:
+                            {
+                                if(ray->p.i.haveShopHeartHolder)
                                 {
                                     shouldCreate = false;
                                 }

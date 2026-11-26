@@ -36,14 +36,32 @@ void rayShowShopDialog(ray_t* ray, wsg_t* icon, uint32_t cost, rayMapCellType_t 
 
     // Translate item to name
     const char* itemName = "Item";
-    if (OBJ_ITEM_BOMB == type)
+    switch (type)
     {
-        itemName = "Bombs";
+        case OBJ_ITEM_BOMB:
+        {
+            itemName = "Bombs";
+            break;
+        }
+        case OBJ_ITEM_HEART:
+        {
+            itemName = "Heart";
+            break;
+        }
+        case OBJ_ITEM_HEART_CONTAINER:
+        {
+            itemName = "Heart Holder";
+            break;
+        }
+        default:
+        {
+            break;
+        }
     }
 
     // Build description string
     ray->shopDescription = heap_caps_calloc(128, sizeof(char), MALLOC_CAP_SPIRAM);
-    snprintf(ray->shopDescription, 128, "Buy %s for %" PRIu32 " MPoints", itemName, cost);
+    snprintf(ray->shopDescription, 128, "Buy %s for %" PRIu32 " Stupees", itemName, cost);
 
     // Build the dialog
     ray->shopDialog = initDialogBox(SHOP_TITLE, ray->shopDescription, icon, rayShopDialogCb);
@@ -91,7 +109,7 @@ void rayShopDialogCheckButtons(ray_t* ray)
 void rayShopDialogRender(ray_t* ray, uint32_t elapsedUs)
 {
     drawDialogBox(ray->shopDialog, ray->renderer->titleFont, ray->renderer->menuFont, DIALOG_CENTER, DIALOG_CENTER,
-                  TFT_WIDTH - 80, TFT_HEIGHT - 80, 8);
+                  TFT_WIDTH - 40, TFT_HEIGHT - 40, 8);
 }
 
 /**
@@ -106,6 +124,39 @@ void rayShopDialogCb(const char* label)
     {
         if (ray->p.mpoints >= ray->shopCost)
         {
+            // Delete some scenery after purchase
+            rayMapCellType_t toDelete = EMPTY;
+            if (OBJ_ITEM_BOMB == ray->shopObj)
+            {
+                toDelete = OBJ_SCENERY_SHOP_BOMB;
+            }
+            else if (OBJ_ITEM_HEART_CONTAINER == ray->shopObj)
+            {
+                toDelete = OBJ_SCENERY_SHOP_HEART_CONTAINER;
+                ray->p.i.haveShopHeartHolder  = true;
+            }
+
+            // If there's something to delete
+            if (EMPTY != toDelete)
+            {
+                // Iterate
+                node_t* sNode = ray->scenery.first;
+                while (sNode)
+                {
+                    rayObjCommon_t* obj = sNode->val;
+                    node_t* next        = sNode->next;
+
+                    // Check type and delete
+                    if (toDelete == obj->type)
+                    {
+                        heap_caps_free(removeEntry(&ray->scenery, sNode));
+                    }
+
+                    sNode = next;
+                }
+            }
+
+            // Pay for the item
             ray->p.mpoints -= ray->shopCost;
             rayObjCommon_t item = {
                 .type = ray->shopObj,

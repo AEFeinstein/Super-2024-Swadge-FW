@@ -33,18 +33,27 @@
 #define COL_TITLE c000
 ///< The color of the dialog detail text
 #define COL_DETAIL c000
+///< The color of the dialog disabled detail text
+#define COL_DETAIL_DISABLED c333
 
 ///< The color of the dialog's background
-#define COL_DIALOG_BG c555
+#define COL_DIALOG_BG c443
 ///< The color of the dialog border outline
-#define COL_DIALOG_BORDER c000
+#define COL_DIALOG_BORDER c110
 
 ///< The background color of non-selected options
-#define COL_OPTION_BG c333
+#define COL_OPTION_BG c443
+///< The background shade of disabled options
+#define COL_OPTION_SHADE_BG c444
 ///< The background color of the selected option
-#define COL_OPTION_BG_SEL c455
+#define COL_OPTION_BG_SEL c332
 ///< The color of the dialog's border outline
-#define COL_OPTION_BORDER c444
+#define COL_OPTION_BORDER c110
+
+///< The color of the select option border
+#define COL_OPTION_BORDER_SEL c110
+///< The color of the select option border when pressed
+#define COL_OPTION_BORDER_SEL_PRESSED c110
 
 //==============================================================================
 // Structs
@@ -279,7 +288,7 @@ static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFon
                                              maxH - DIALOG_PADDING - curY);
     dialogInfo->detailX = curX;
     dialogInfo->detailY = curY;
-    curY += detailH + 1;
+    curY += detailH + 3;
 
     if (autoW)
     {
@@ -501,7 +510,8 @@ void drawDialogBox(const dialogBox_t* dialogBox, const font_t* titleFont, const 
         // Button background
         if (drawInfo->disabled)
         {
-            shadeDisplayArea(drawInfo->x, drawInfo->y, drawInfo->x + drawInfo->w, drawInfo->y + drawInfo->h, 3, c444);
+            shadeDisplayArea(drawInfo->x, drawInfo->y, drawInfo->x + drawInfo->w, drawInfo->y + drawInfo->h, 3,
+                             COL_OPTION_SHADE_BG);
         }
         else
         {
@@ -509,7 +519,9 @@ void drawDialogBox(const dialogBox_t* dialogBox, const font_t* titleFont, const 
                             drawInfo->selected ? (drawInfo->pressed ? COL_DETAIL : COL_OPTION_BG_SEL) : COL_OPTION_BG);
         }
 
-        paletteColor_t borderCol = drawInfo->selected ? (drawInfo->pressed ? c555 : c333) : COL_OPTION_BORDER;
+        paletteColor_t borderCol = drawInfo->selected
+                                       ? (drawInfo->pressed ? COL_OPTION_BORDER_SEL_PRESSED : COL_OPTION_BORDER_SEL)
+                                       : COL_OPTION_BORDER;
 
         // Button border - don't draw the corner pixels
         // Top
@@ -524,7 +536,8 @@ void drawDialogBox(const dialogBox_t* dialogBox, const font_t* titleFont, const 
                      drawInfo->y + drawInfo->h + 1, borderCol);
 
         // Draw the actual label text
-        drawText(detailFont, drawInfo->disabled ? c333 : (drawInfo->pressed ? COL_OPTION_BG : COL_DETAIL),
+        drawText(detailFont,
+                 drawInfo->disabled ? COL_DETAIL_DISABLED : (drawInfo->pressed ? COL_OPTION_BG : COL_DETAIL),
                  option->label, drawInfo->x + OPTION_PADDING, drawInfo->y + OPTION_PADDING);
     }
 }

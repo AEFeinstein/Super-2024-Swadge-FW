@@ -25,7 +25,7 @@ class tileType(Enum):
     BG_FLOOR_HOLE = BG | FLOOR | 0
     BG_FLOOR_GRASS = BG | FLOOR | 1
     BG_FLOOR_DUNGEON = BG | FLOOR | 2
-    BG_FLOOR_3 = BG | FLOOR | 3
+    BG_FLOOR_TOWN = BG | FLOOR | 3
     BG_FLOOR_4 = BG | FLOOR | 4
     BG_FLOOR_5 = BG | FLOOR | 5
     BG_FLOOR_6 = BG | FLOOR | 6
@@ -72,12 +72,12 @@ class tileType(Enum):
     BG_WALL_K3 = BG | WALL | 14
     BG_WALL_K4 = BG | WALL | 15
     BG_WALL_K5 = BG | WALL | 16
-    BG_WALL_17 = BG | WALL | 17
-    BG_WALL_18 = BG | WALL | 18
-    BG_WALL_19 = BG | WALL | 19
-    BG_WALL_20 = BG | WALL | 20
-    BG_WALL_21 = BG | WALL | 21
-    BG_WALL_22 = BG | WALL | 22
+    BG_WALL_TOWN_H  = BG | WALL | 17
+    BG_WALL_TOWN_V  = BG | WALL | 18
+    BG_WALL_TOWN_UL = BG | WALL | 19
+    BG_WALL_TOWN_UR = BG | WALL | 20
+    BG_WALL_TOWN_DR = BG | WALL | 21
+    BG_WALL_TOWN_DL = BG | WALL | 22
     BG_WALL_23 = BG | WALL | 23
     BG_WALL_24 = BG | WALL | 24
     BG_WALL_25 = BG | WALL | 25
@@ -233,9 +233,9 @@ class tileType(Enum):
     OBJ_SCENERY_SIGNPOST = OBJ | SCENERY | 6
     OBJ_SCENERY_WARP_PAD = OBJ | SCENERY | 7
     OBJ_SCENERY_FOUNTAIN = OBJ | SCENERY | 8
-    OBJ_SCENERY_9 = OBJ | SCENERY | 9
-    OBJ_SCENERY_10 = OBJ | SCENERY | 10
-    OBJ_SCENERY_11 = OBJ | SCENERY | 11
+    OBJ_SCENERY_SHOP_HEART_CONTAINER = OBJ | SCENERY | 9
+    OBJ_SCENERY_SHOP_HEART = OBJ | SCENERY | 10
+    OBJ_SCENERY_STATUE = OBJ | SCENERY | 11
     OBJ_SCENERY_12 = OBJ | SCENERY | 12
     OBJ_SCENERY_13 = OBJ | SCENERY | 13
     OBJ_SCENERY_14 = OBJ | SCENERY | 14
@@ -263,7 +263,7 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_FLOOR_HOLE,
         tileType.BG_FLOOR_GRASS,
         tileType.BG_FLOOR_DUNGEON,
-        tileType.BG_FLOOR_3,
+        tileType.BG_FLOOR_TOWN,
         tileType.BG_FLOOR_4,
         tileType.BG_FLOOR_5,
         tileType.BG_FLOOR_6,
@@ -311,12 +311,12 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_WALL_K3,
         tileType.BG_WALL_K4,
         tileType.BG_WALL_K5,
-        tileType.BG_WALL_17,
-        tileType.BG_WALL_18,
-        tileType.BG_WALL_19,
-        tileType.BG_WALL_20,
-        tileType.BG_WALL_21,
-        tileType.BG_WALL_22,
+        tileType.BG_WALL_TOWN_H,
+        tileType.BG_WALL_TOWN_V,
+        tileType.BG_WALL_TOWN_UL,
+        tileType.BG_WALL_TOWN_UR,
+        tileType.BG_WALL_TOWN_DR,
+        tileType.BG_WALL_TOWN_DL,
         tileType.BG_WALL_23,
         tileType.BG_WALL_24,
         tileType.BG_WALL_25,
@@ -445,9 +445,9 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_SCENERY_SIGNPOST,
         tileType.OBJ_SCENERY_WARP_PAD,
         tileType.OBJ_SCENERY_FOUNTAIN,
-        tileType.OBJ_SCENERY_9,
-        tileType.OBJ_SCENERY_10,
-        tileType.OBJ_SCENERY_11,
+        tileType.OBJ_SCENERY_SHOP_HEART_CONTAINER,
+        tileType.OBJ_SCENERY_SHOP_HEART,
+        tileType.OBJ_SCENERY_STATUE,
         tileType.OBJ_SCENERY_12,
         tileType.OBJ_SCENERY_13,
         tileType.OBJ_SCENERY_14,
@@ -474,7 +474,7 @@ objTiles: list[list[tileType]] = [
 
 class tile:
     def __init__(self):
-        self.background: tileType = tileType.BG_FLOOR_31
+        self.background: tileType = tileType.BG_FLOOR_GRASS
         self.object: tileType = tileType.EMPTY
         self.objectId: int = -1
 

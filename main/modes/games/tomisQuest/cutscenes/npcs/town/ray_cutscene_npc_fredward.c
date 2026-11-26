@@ -35,8 +35,8 @@ void initNpcCutsceneFredward(ray_t* ray, cutscene_t* cutscene)
 #define CS_STYLE_FREDWARD (CS_STYLE_HYUT + 1)
     addCutsceneStyleFredward(cutscene);
 
-    // TODO add more items to the shop
-    bool allItemsPurchased = ray->p.i.haveBombs;
+    // Different dialog if the big stuff is purchased
+    bool allItemsPurchased = ray->p.i.haveBombs && ray->p.i.haveShopHeartHolder;
 
     // clang-format off
 
@@ -46,7 +46,7 @@ void initNpcCutsceneFredward(ray_t* ray, cutscene_t* cutscene)
         {
             addCutsceneLine(cutscene, CS_STYLE_FREDWARD, "Hello! I hope you take stock of our fine... um.. Stock!", false, 0, NULL);
             addCutsceneLine(cutscene, CS_STYLE_TOMI, "Oh wow, you got a lot of great stuff here!", false, TOMI_FIREDUP, NULL);
-            addCutsceneLine(cutscene, CS_STYLE_FREDWARD, "Yep! Support local creators by spending your hard-earned m-Points!", false, 0, shopVisited);
+            addCutsceneLine(cutscene, CS_STYLE_FREDWARD, "Yep! Support local creators by spending your hard-earned Stupees!", false, 0, shopVisited);
         }
         else
         {
