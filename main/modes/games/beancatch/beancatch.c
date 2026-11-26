@@ -483,6 +483,12 @@ void bcUpdateGame(void)
     
     if(beancatch->state != BC_ST_CLOCK)
     {
+        if((beancatch->btnState & PB_START) && !(beancatch->prevBtnState & PB_START))
+        {
+            bcChangeStatePause();
+            return;
+        }
+        
         switch (beancatch->playerPosition)
         {
             case BC_CONVEYOR_LU:
@@ -659,6 +665,13 @@ void bcUpdateGameOver(void)
 
 void bcUpdatePause(void)
 {
+    if((beancatch->btnState & PB_START) && !(beancatch->prevBtnState & PB_START))
+    {
+        beancatch->refreshScreen = true;
+        bcResumeTempState();
+    }
+
+    bcDrawGame();
 }
 
 void bcUpdateMainMenu(void)
@@ -876,6 +889,12 @@ void bcDrawGame(void)
 
                     bcDrawScoreHud( (( (beancatch->clockHours == 0) ? 12 : beancatch->clockHours) % 12) * 100 + beancatch->clockMinutes );
                 }
+                break;
+            case BC_ST_PAUSE:
+                drawRectFilled(0, 96, TFT_WIDTH, 150, c131);
+                drawText(beancatch->menuRenderer->titleFont, c000, "- PAUSE -", 52, 110);
+                drawText(beancatch->menuRenderer->titleFont, c555, "- PAUSE -", 50, 107);
+                break;
             default:
                 break;
         }
@@ -1098,7 +1117,11 @@ void bcChangeStateGameOver(void)
 
 void bcChangeStatePause(void)
 {
+    beancatch->tempState = beancatch->state;
     beancatch->state = BC_ST_PAUSE;
+    beancatch->btnState = 0;
+    beancatch->prevBtnState = 0;
+    beancatch->refreshScreen = true;
     beancatch->frameCounter = 0;
     beancatch->update = &bcUpdatePause;
 }
