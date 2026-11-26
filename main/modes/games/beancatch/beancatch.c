@@ -887,7 +887,7 @@ void bcDrawGame(void)
                         drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
                     }
 
-                    bcDrawScoreHud( (( (beancatch->clockHours == 0) ? 12 : beancatch->clockHours) % 12) * 100 + beancatch->clockMinutes );
+                    bcDrawScoreHud( (( (beancatch->clockHours == 0 || beancatch->clockHours == 12) ? 12 : beancatch->clockHours % 12)) * 100 + beancatch->clockMinutes );
                 }
                 break;
             case BC_ST_PAUSE:
