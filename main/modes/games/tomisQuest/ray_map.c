@@ -233,7 +233,7 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
                             }
                             case OBJ_SCENERY_SHOP_HEART_CONTAINER:
                             {
-                                if(ray->p.i.haveShopHeartHolder)
+                                if (ray->p.i.haveShopHeartHolder)
                                 {
                                     shouldCreate = false;
                                 }

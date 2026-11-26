@@ -5,6 +5,7 @@
 #include "ray_player.h"
 #include "ray_shop_dialog.h"
 #include "dialogBox.h"
+#include "ray_script.h"
 
 //==============================================================================
 // Defines
@@ -119,7 +120,8 @@ void rayShopDialogRender(ray_t* ray, uint32_t elapsedUs)
  */
 void rayShopDialogCb(const char* label)
 {
-    ray_t* ray = getRayState();
+    int32_t purchaseId = -1;
+    ray_t* ray         = getRayState();
     if (label == BUY)
     {
         if (ray->p.mpoints >= ray->shopCost)
@@ -128,12 +130,14 @@ void rayShopDialogCb(const char* label)
             rayMapCellType_t toDelete = EMPTY;
             if (OBJ_ITEM_BOMB == ray->shopObj)
             {
-                toDelete = OBJ_SCENERY_SHOP_BOMB;
+                toDelete   = OBJ_SCENERY_SHOP_BOMB;
+                purchaseId = 99;
             }
             else if (OBJ_ITEM_HEART_CONTAINER == ray->shopObj)
             {
-                toDelete = OBJ_SCENERY_SHOP_HEART_CONTAINER;
-                ray->p.i.haveShopHeartHolder  = true;
+                toDelete                     = OBJ_SCENERY_SHOP_HEART_CONTAINER;
+                purchaseId                   = 98;
+                ray->p.i.haveShopHeartHolder = true;
             }
 
             // If there's something to delete
@@ -160,6 +164,7 @@ void rayShopDialogCb(const char* label)
             ray->p.mpoints -= ray->shopCost;
             rayObjCommon_t item = {
                 .type = ray->shopObj,
+                .id   = purchaseId,
             };
             rayPlayerTouchItem(ray, &item, ray->p.mapId);
 
@@ -177,4 +182,10 @@ void rayShopDialogCb(const char* label)
     heap_caps_free(ray->shopDescription);
     ray->shopDialog = NULL;
     raySwitchToScreen(RAY_GAME);
+
+    // Check scripts
+    if (purchaseId >= 0)
+    {
+        checkScriptGet(ray, purchaseId, NULL);
+    }
 }

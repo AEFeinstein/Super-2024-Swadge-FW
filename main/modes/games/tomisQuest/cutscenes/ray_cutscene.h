@@ -39,6 +39,7 @@
 #include "ray_cutscene_scene_16_dream_3.h"
 #include "ray_cutscene_scene_17_final_warp.h"
 #include "ray_cutscene_scene_18_statue.h"
+#include "ray_cutscene_scene_19_bomb_get.h"
 
 #define CS_STYLE_TOMI 0
 #define CS_STYLE_HYUT 1
@@ -94,6 +95,7 @@ typedef enum
     TQS_LOOT_2             = (1 << 24),
     TQS_FINAL_WARP         = (1 << 25),
     TQS_STATUE             = (1 << 26),
+    TQS_BOMB_GET           = (1 << 27),
 } tomisQuestSceneId_t;
 
 typedef bool (*rayCutsceneSceneInitFn_t)(ray_t* ray, cutscene_t* cutscene, const char* title);

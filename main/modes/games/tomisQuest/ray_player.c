@@ -61,14 +61,14 @@ bool initializePlayer(ray_t* ray)
         ray->p.health    = GAME_START_HEALTH;
 
         // Uncomment to start with all items for testing
-        // ray->p.i.haveEwiOfTime     = true; // Instructions written
-        // ray->p.i.haveBombs         = true; // TODO add instructions
-        // ray->p.i.haveJumpBoots     = true; // Instructions written
-        // ray->p.i.haveShield        = true; // Instructions written
+        // ray->p.i.haveEwiOfTime     = true;
+        // ray->p.i.haveBombs         = true;
+        // ray->p.i.haveJumpBoots     = true;
+        // ray->p.i.haveShield        = true;
         // ray->p.i.haveBow           = true; // TODO add instructions
-        // ray->p.i.haveBoomerang     = true; // Instructions written
-        // ray->p.i.haveTurntables    = true; // Instructions written
-        // ray->p.i.haveDoriasLullaby = true; // Instructions written
+        // ray->p.i.haveBoomerang     = true;
+        // ray->p.i.haveTurntables    = true;
+        // ray->p.i.haveDoriasLullaby = true;
     }
     else
     {

@@ -159,6 +159,7 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text)
             initCutsceneDream3,
             initCutsceneFinalWarp,
             initCutsceneStatue,
+            initCutsceneBombGet,
         };
 
         bool sceneStarted = false;
