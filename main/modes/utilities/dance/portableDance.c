@@ -15,13 +15,15 @@ void portableDanceLoadSetting(portableDance_t* dance);
 // Const Variables
 //==============================================================================
 
-static const char nvsKeyDanceSplit[]     = "dance_split";
-static const char nvsKeyDanceIndex[]     = "dance_index";
-static const char nvsKeyDanceSpeed[]     = "dance_speed";
-static const char nvsKeyDanceColor[]     = "dance_color";
-static const char nvsKeyWingDanceIndex[] = "wing_dance_index";
-static const char nvsKeyWingDanceSpeed[] = "wing_dance_speed";
-static const char nvsKeyDanceWingColor[] = "wing_dance_color";
+static const char nvsKeyDanceSplit[]        = "dance_split";
+static const char nvsKeyDanceUseColor[]     = "dance_use_color";
+static const char nvsKeyDanceWingUseColor[] = "dance_wing_use_color";
+static const char nvsKeyDanceIndex[]        = "dance_index";
+static const char nvsKeyDanceSpeed[]        = "dance_speed";
+static const char nvsKeyDanceColor[]        = "dance_color";
+static const char nvsKeyWingDanceIndex[]    = "wing_dance_index";
+static const char nvsKeyWingDanceSpeed[]    = "wing_dance_speed";
+static const char nvsKeyDanceWingColor[]    = "wing_dance_color";
 
 //==============================================================================
 // Functions
@@ -80,18 +82,16 @@ void freePortableDance(portableDance_t* dance)
  */
 void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
 {
-    if (dance->split) // yup, we can remove this whole block in a future year when there are not different groups of
+    if (dance->split) // yup, we can remove this whole block in a future year when there are not two distinct groups of
                       // LEDs.
-    { // but in all likelyhood, "Fairy Split" may simply be renamed to fit the design. i.e. condiment & bun for the
-      // hotdog.
+    { // but in all likelyhood, "Fairy Split" may simply be renamed to fit the design. i.e. "Hotdog Split" with
+      // "Condiment" & "Bun" menu strings.
         led_t leds[CONFIG_NUM_LEDS] = {{0}};
 
         uint32_t updateCount = getLedUpdateCount();
-        dance->dances[dance->danceIndex].dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
-                                                     dance->dances[dance->danceIndex].dance->userColor
-                                                         ? dance->color
-                                                         : dance->dances[dance->danceIndex].dance->arg,
-                                                     dance->resetDance);
+        dance->dances[dance->danceIndex].dance->func(
+            (int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
+            dance->useColor ? dance->color : dance->dances[dance->danceIndex].dance->arg, dance->resetDance);
 
         if (updateCount != getLedUpdateCount())
         {
@@ -103,11 +103,9 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
         }
 
         updateCount = getLedUpdateCount();
-        dance->dances[dance->wingDanceIndex].dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->wingSpeed,
-                                                         dance->dances[dance->danceIndex].dance->userColor
-                                                             ? dance->wingColor
-                                                             : dance->dances[dance->danceIndex].dance->arg,
-                                                         dance->resetDance);
+        dance->dances[dance->wingDanceIndex].dance->func(
+            (int32_t)elapsedUs * DANCE_SPEED_MULT / dance->wingSpeed,
+            dance->wingUseColor ? dance->wingColor : dance->dances[dance->danceIndex].dance->arg, dance->resetDance);
 
         if (updateCount != getLedUpdateCount())
         {
@@ -131,11 +129,9 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
     }
     else
     {
-        dance->dances[dance->danceIndex].dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
-                                                     dance->dances[dance->danceIndex].dance->userColor
-                                                         ? dance->color
-                                                         : dance->dances[dance->danceIndex].dance->arg,
-                                                     dance->resetDance);
+        dance->dances[dance->danceIndex].dance->func(
+            (int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
+            dance->useColor ? dance->color : dance->dances[dance->danceIndex].dance->arg, dance->resetDance);
     }
     dance->resetDance = false;
 }
@@ -152,7 +148,21 @@ void portableDanceLoadSetting(portableDance_t* dance)
     {
         writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSplit, split);
     }
-    dance->split = (uint8_t)split;
+    dance->split = (bool)split;
+
+    int32_t useColor = 0;
+    if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceUseColor, &useColor))
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceUseColor, useColor);
+    }
+    dance->useColor = (bool)useColor;
+
+    int32_t wingUseColor = 0;
+    if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceWingUseColor, &wingUseColor))
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceWingUseColor, wingUseColor);
+    }
+    dance->useColor = (bool)wingUseColor;
 
     int32_t color = 0;
     if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceColor, &color))
@@ -162,7 +172,8 @@ void portableDanceLoadSetting(portableDance_t* dance)
         writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceColor, color);
     }
     dance->color = color;
-    color        = 0;
+
+    color = 0;
     if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceWingColor, &color))
     {
         //(255<<16) + (136<<8) + (0<<0)
@@ -210,7 +221,7 @@ void portableDanceLoadSetting(portableDance_t* dance)
  * @param dance The portableDance_t pointer to update
  * @param split The split value of the dance to update
  */
-void portableDanceSetSplit(portableDance_t* dance, uint8_t split)
+void portableDanceSetSplit(portableDance_t* dance, bool split)
 {
     dance->split      = split;
     dance->resetDance = true;
@@ -219,6 +230,30 @@ void portableDanceSetSplit(portableDance_t* dance, uint8_t split)
     if (dance->nvsNs != NULL)
     {
         writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSplit, dance->split);
+    }
+}
+
+void portableDanceSetUseColor(portableDance_t* dance, bool useColor)
+{
+    dance->useColor   = useColor;
+    dance->resetDance = true;
+    memset(dance->bodyLeds, 0, sizeof(dance->bodyLeds));
+    memset(dance->wingLeds, 0, sizeof(dance->wingLeds));
+    if (dance->nvsNs != NULL)
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSplit, dance->useColor);
+    }
+}
+
+void portableDanceSetWingUseColor(portableDance_t* dance, bool useColor)
+{
+    dance->wingUseColor = useColor;
+    dance->resetDance   = true;
+    memset(dance->bodyLeds, 0, sizeof(dance->bodyLeds));
+    memset(dance->wingLeds, 0, sizeof(dance->wingLeds));
+    if (dance->nvsNs != NULL)
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSplit, dance->wingUseColor);
     }
 }
 

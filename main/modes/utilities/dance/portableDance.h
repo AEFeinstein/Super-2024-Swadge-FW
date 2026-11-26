@@ -33,9 +33,9 @@ typedef struct
     led_t wingLeds[CONFIG_NUM_LEDS];
     int32_t wingColor;
 
-    // 0 for normal, 1 for different fairy body and wing patterns
-    // It's an int not a bool because the menu structures use ints.
-    uint8_t split;
+    bool split;        // True for different fairy body and wing patterns
+    bool useColor;     // True to override the algorithmic colors with a user color
+    bool wingUseColor; // True to override the algorithmic colors with a user color
 
     // If non-NULL, the dance index and speed will be saved/loaded from this NVS namespace
     const char* nvsNs;
@@ -44,7 +44,9 @@ typedef struct
 portableDance_t* initPortableDance(const char* nvsNs);
 void freePortableDance(portableDance_t* dance);
 void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs);
-void portableDanceSetSplit(portableDance_t* dance, uint8_t split);
+void portableDanceSetSplit(portableDance_t* dance, bool split);
+void portableDanceSetUseColor(portableDance_t* dance, bool useColor);
+void portableDanceSetWingUseColor(portableDance_t* dance, bool useColor);
 bool portableDanceSetByIndex(portableDance_t* dance, uint8_t danceIndex, bool wings);
 bool portableDanceSetByName(portableDance_t* dance, const char* danceName, bool wings);
 void portableDanceNext(portableDance_t* dance);
