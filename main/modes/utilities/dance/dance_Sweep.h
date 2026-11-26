@@ -31,6 +31,7 @@ void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset)
     static int32_t decayTimer = 0;
 
     static int32_t rgbAngle = 0;
+    static uint32_t rainbowColor = 0;
 
     if (reset)
     {
@@ -40,6 +41,7 @@ void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset)
         exciterIncrementing = true;
         decayTimer          = 0;
         rgbAngle            = 0;
+        rainbowColor        = 0;
     }
 
     // Declare some LEDs, all off
@@ -75,7 +77,7 @@ void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset)
         // Apply rainbow if there's no color
         if (0 == arg)
         {
-            arg = EHSVtoHEXhelper(rgbAngle, 0xFF, 0xFF, false);
+            rainbowColor = EHSVtoHEXhelper(rgbAngle, 0xFF, 0xFF, false);
             rgbAngle++;
             if (256 == rgbAngle)
             {
@@ -83,6 +85,8 @@ void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset)
             }
         }
     });
+
+    uint32_t color = (0 == arg) ? rainbowColor : arg;
 
     // Run a timer to decay the LEDs
     RUN_TIMER_EVERY(decayTimer, 2000, tElapsedUs, {
@@ -100,9 +104,9 @@ void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset)
                 int8_t numLed = ledOrder[sIdx][lIdx];
                 if (0 <= numLed)
                 {
-                    leds[ledOrder[sIdx][lIdx]].r = (stripVals[sIdx] * ARG_R(arg)) / 256;
-                    leds[ledOrder[sIdx][lIdx]].g = (stripVals[sIdx] * ARG_G(arg)) / 256;
-                    leds[ledOrder[sIdx][lIdx]].b = (stripVals[sIdx] * ARG_B(arg)) / 256;
+                    leds[ledOrder[sIdx][lIdx]].r = (stripVals[sIdx] * ARG_R(color)) / 256;
+                    leds[ledOrder[sIdx][lIdx]].g = (stripVals[sIdx] * ARG_G(color)) / 256;
+                    leds[ledOrder[sIdx][lIdx]].b = (stripVals[sIdx] * ARG_B(color)) / 256;
                 }
             }
             ledsUpdated = true;
