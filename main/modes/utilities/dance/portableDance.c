@@ -88,7 +88,10 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
 
         uint32_t updateCount = getLedUpdateCount();
         dance->dances[dance->danceIndex].dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
-                                                     dance->dances[dance->danceIndex].dance->arg, dance->resetDance);
+                                                     dance->dances[dance->danceIndex].dance->userColor
+                                                         ? dance->color
+                                                         : dance->dances[dance->danceIndex].dance->arg,
+                                                     dance->resetDance);
 
         if (updateCount != getLedUpdateCount())
         {
@@ -101,7 +104,9 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
 
         updateCount = getLedUpdateCount();
         dance->dances[dance->wingDanceIndex].dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->wingSpeed,
-                                                         dance->dances[dance->wingDanceIndex].dance->arg,
+                                                         dance->dances[dance->danceIndex].dance->userColor
+                                                             ? dance->wingColor
+                                                             : dance->dances[dance->danceIndex].dance->arg,
                                                          dance->resetDance);
 
         if (updateCount != getLedUpdateCount())
@@ -127,7 +132,10 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
     else
     {
         dance->dances[dance->danceIndex].dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
-                                                     dance->dances[dance->danceIndex].dance->arg, dance->resetDance);
+                                                     dance->dances[dance->danceIndex].dance->userColor
+                                                         ? dance->color
+                                                         : dance->dances[dance->danceIndex].dance->arg,
+                                                     dance->resetDance);
     }
     dance->resetDance = false;
 }
@@ -149,9 +157,8 @@ void portableDanceLoadSetting(portableDance_t* dance)
     int32_t color = 0;
     if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceColor, &color))
     {
-        //(255<<16) + (136<<8) + (0<<0)
-        // which is orange for a default start
-        color = 0xFF8800;
+        // which is pinkish for a default start
+        color = 0xFF33BB;
         writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceColor, color);
     }
     dance->color = color;
