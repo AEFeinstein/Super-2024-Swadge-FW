@@ -7,6 +7,17 @@
 #include "ray_cutscene.h"
 
 //==============================================================================
+// Structs
+//==============================================================================
+
+typedef struct
+{
+    wsg_t* sprites[2];
+    int32_t animTimer;
+    int8_t spriteIdx;
+} npcState_t;
+
+//==============================================================================
 // Function Declarations
 //==============================================================================
 
@@ -51,97 +62,99 @@ bool rayInitEnemyNpc(ray_t* ray, rayEnemy_t* e, rayMapCellType_t type)
         }
     }
 
+    npcState_t* ns = heap_caps_calloc(1, sizeof(npcState_t), MALLOC_CAP_8BIT);
+
     // NPC has one texture, for now
-    cnfsFileIdx_t tex;
     switch (type)
     {
         case OBJ_ENEMY_NPC_FAIRY_KAITIE:
         {
-            tex = OBJ_ENEMY_NPC_FAIRY_KAITIE_WSG;
+            ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_FAIRY_KAITIE_WSG, OBJ_ENEMY_NPC_FAIRY_KAITIE);
+            ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_FAIRY_KAITIE_1_WSG, EMPTY);
             break;
         }
         case OBJ_ENEMY_NPC_FAIRY_SABLE:
         {
-            tex = OBJ_ENEMY_NPC_FAIRY_SABLE_WSG;
+            ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_FAIRY_SABLE_WSG, OBJ_ENEMY_NPC_FAIRY_SABLE);
+            ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_FAIRY_SABLE_1_WSG, EMPTY);
             break;
         }
         case OBJ_ENEMY_NPC_FAIRY_BEAN:
         {
-            tex = OBJ_ENEMY_NPC_FAIRY_BEAN_WSG;
+            ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_FAIRY_BEAN_WSG, OBJ_ENEMY_NPC_FAIRY_BEAN);
+            ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_FAIRY_BEAN_1_WSG, EMPTY);
             break;
         }
         case OBJ_ENEMY_NPC_FAIRY_DACC:
         {
-            tex = OBJ_ENEMY_NPC_FAIRY_DACC_WSG;
+            ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_FAIRY_DACC_WSG, OBJ_ENEMY_NPC_FAIRY_DACC);
+            ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_FAIRY_DACC_1_WSG, EMPTY);
             break;
         }
         case OBJ_ENEMY_NPC_FAIRY_KIKI:
         {
-            tex = OBJ_ENEMY_NPC_FAIRY_KIKI_WSG;
+            ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_FAIRY_KIKI_WSG, OBJ_ENEMY_NPC_FAIRY_KIKI);
+            ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_FAIRY_KIKI_1_WSG, EMPTY);
             break;
         }
         case OBJ_ENEMY_NPC_FAIRY_BOUBA:
         {
-            tex = OBJ_ENEMY_NPC_FAIRY_BOUBA_WSG;
+            ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_FAIRY_BOUBA_WSG, OBJ_ENEMY_NPC_FAIRY_BOUBA);
+            ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_FAIRY_BOUBA_1_WSG, EMPTY);
             break;
         }
         case OBJ_ENEMY_NPC_FAIRY_BARRY:
         {
-            tex = OBJ_ENEMY_NPC_FAIRY_BARRY_WSG;
+            ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_FAIRY_BARRY_WSG, OBJ_ENEMY_NPC_FAIRY_BARRY);
+            ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_FAIRY_BARRY_1_WSG, EMPTY);
             break;
         }
         case OBJ_ENEMY_NPC_HYUT:
         {
-            tex = OBJ_ENEMY_NPC_HYUT_WSG;
+            ns->sprites[0] = loadTexture(ray, HYUT_D_0_WSG, OBJ_ENEMY_NPC_HYUT);
+            ns->sprites[1] = loadTexture(ray, HYUT_D_2_WSG, EMPTY);
             break;
         }
         case OBJ_ENEMY_NPC_GREAT_DEEJAY_TREE:
         {
-            tex = OBJ_ENEMY_NPC_GREAT_DEEJAY_TREE_WSG;
+            ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_GREAT_DEEJAY_TREE_WSG, OBJ_ENEMY_NPC_GREAT_DEEJAY_TREE);
+            ns->sprites[1] = NULL;
             break;
         }
         case OBJ_ENEMY_NPC_LOOT:
         {
-            tex = OBJ_ENEMY_NPC_LOOT_WSG;
+            ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_LOOT_WSG, OBJ_ENEMY_NPC_LOOT);
+            ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_LOOT_1_WSG, EMPTY);
             break;
         }
         case OBJ_ENEMY_NPC_DORIA:
         {
             // In the field
-            if (5 == ray->p.mapId && (ray->p.cutsceneViewed & TQS_DORIA_INTRO))
+            if ((5 == ray->p.mapId && (ray->p.cutsceneViewed & TQS_DORIA_INTRO)) ||
+                // Dungeon 1
+                (6 == ray->p.mapId && (ray->p.cutsceneViewed & TQS_DUNGEON_1_COMPLETE)) ||
+                // Dungeon 2
+                (7 == ray->p.mapId && (ray->p.cutsceneViewed & TQS_DUNGEON_2_COMPLETE)) ||
+                // Dungeon 3
+                (8 == ray->p.mapId && (ray->p.cutsceneViewed & TQS_DUNGEON_3_COMPLETE)) ||
+                // Dungeon 4
+                (9 == ray->p.mapId && (ray->p.cutsceneViewed & TQS_DUNGEON_4_COMPLETE)))
             {
-                return false;
-            }
-            // Dungeon 1
-            else if (6 == ray->p.mapId && (ray->p.cutsceneViewed & TQS_DUNGEON_1_COMPLETE))
-            {
-                return false;
-            }
-            // Dungeon 2
-            else if (7 == ray->p.mapId && (ray->p.cutsceneViewed & TQS_DUNGEON_2_COMPLETE))
-            {
-                return false;
-            }
-            // Dungeon 3
-            else if (8 == ray->p.mapId && (ray->p.cutsceneViewed & TQS_DUNGEON_3_COMPLETE))
-            {
-                return false;
-            }
-            // Dungeon 4
-            else if (9 == ray->p.mapId && (ray->p.cutsceneViewed & TQS_DUNGEON_4_COMPLETE))
-            {
+                heap_caps_free(ns);
                 return false;
             }
             else
             {
                 // Good to spawn
-                tex = OBJ_ENEMY_NPC_DORIA_WSG;
+                ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_DORIA_WSG, OBJ_ENEMY_NPC_DORIA);
+                ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_DORIA_1_WSG, EMPTY);
             }
             break;
         }
         case OBJ_ENEMY_NPC_KING_DONUT:
         {
-            tex = OBJ_ENEMY_NPC_KING_DONUT_WSG;
+            ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_KING_DONUT_WSG, OBJ_ENEMY_NPC_KING_DONUT);
+            ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_KING_DONUT_1_WSG, EMPTY);
             break;
         }
         case OBJ_ENEMY_NPC_MEGA_PULSE:
@@ -149,38 +162,45 @@ bool rayInitEnemyNpc(ray_t* ray, rayEnemy_t* e, rayMapCellType_t type)
             // After visiting Loot, before getting shield
             if (!ray->p.i.haveShield)
             {
-                tex = OBJ_ENEMY_NPC_MEGA_PULSE_WSG;
+                ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_MEGA_PULSE_WSG, OBJ_ENEMY_NPC_MEGA_PULSE);
+                ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_MEGA_PULSE_1_WSG, EMPTY);
             }
             // After getting shield, before getting turntables
             else if (!ray->p.i.haveTurntables)
             {
-                tex = OBJ_ENEMY_NPC_SAWTOOTH_WSG;
+                ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_SAWTOOTH_WSG, EMPTY);
+                ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_SAWTOOTH_1_WSG, EMPTY);
             }
             // After getting turntables, before getting lullaby
             else if (!ray->p.i.haveDoriasLullaby)
             {
-                tex = OBJ_ENEMY_NPC_MEGA_PULSE_WSG;
+                ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_MEGA_PULSE_WSG, OBJ_ENEMY_NPC_MEGA_PULSE);
+                ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_MEGA_PULSE_1_WSG, EMPTY);
             }
             // After getting lullaby
             else
             {
-                tex = OBJ_ENEMY_NPC_MEGA_PULSE_SAWTOOTH_WSG;
+                ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_MEGA_PULSE_SAWTOOTH_WSG, EMPTY);
+                ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_MEGA_PULSE_SAWTOOTH_1_WSG, EMPTY);
             }
             break;
         }
         case OBJ_ENEMY_NPC_CHO:
         {
-            tex = OBJ_ENEMY_NPC_CHO_WSG;
+            ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_CHO_WSG, OBJ_ENEMY_NPC_CHO);
+            ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_CHO_1_WSG, EMPTY);
             break;
         }
         case OBJ_ENEMY_NPC_TRASH_MAN:
         {
-            tex = OBJ_ENEMY_NPC_TRASH_MAN_WSG;
+            ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_TRASH_MAN_WSG, OBJ_ENEMY_NPC_TRASH_MAN);
+            ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_TRASH_MAN_1_WSG, EMPTY);
             break;
         }
         case OBJ_ENEMY_NPC_EMBER_DEMON:
         {
-            tex = OBJ_ENEMY_NPC_EMBER_DEMON_WSG;
+            ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_EMBER_DEMON_WSG, OBJ_ENEMY_NPC_EMBER_DEMON);
+            ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_EMBER_DEMON_1_WSG, EMPTY);
             break;
         }
         case OBJ_ENEMY_NPC_THE_MAYOR:
@@ -188,34 +208,40 @@ bool rayInitEnemyNpc(ray_t* ray, rayEnemy_t* e, rayMapCellType_t type)
             // Mayor is actually a sign between getting the shield and turntables
             if (ray->p.i.haveShield && !ray->p.i.haveTurntables)
             {
-                tex = OBJ_SCENERY_SIGNPOST_WSG;
+                ns->sprites[0] = loadTexture(ray, OBJ_SCENERY_SIGNPOST_WSG, OBJ_SCENERY_SIGNPOST);
+                ns->sprites[1] = NULL;
             }
             // After getting turntables, before getting lullaby
             else
             {
-                tex = OBJ_ENEMY_NPC_THE_MAYOR_WSG;
+                ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_THE_MAYOR_WSG, OBJ_ENEMY_NPC_THE_MAYOR);
+                ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_THE_MAYOR_1_WSG, EMPTY);
             }
             break;
         }
         case OBJ_ENEMY_NPC_FREDWARD:
         {
-            tex = OBJ_ENEMY_NPC_FREDWARD_WSG;
+            ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_NPC_FREDWARD_WSG, OBJ_ENEMY_NPC_FREDWARD);
+            ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NPC_FREDWARD_1_WSG, EMPTY);
             break;
         }
         default:
         {
             // Not a valid NPC
+            heap_caps_free(ns);
             return false;
         }
     }
-    e->c.sprite = loadTexture(ray, tex, type);
+    e->c.sprite = ns->sprites[0];
     e->portrait = e->c.sprite;
 
     // NPC has 1hp, indestructible
     e->health = 1;
 
-    // No internal state
-    e->state = NULL;
+    // Internal state for animation
+    e->state = ns;
+    // Offset everyone's animation to not be weirdly in sync
+    ns->animTimer = (100000 * type) % 500000;
 
     // Set function pointers
     e->mainFn           = rayEnemyNpcMain;
@@ -236,6 +262,16 @@ bool rayInitEnemyNpc(ray_t* ray, rayEnemy_t* e, rayMapCellType_t type)
  */
 bool rayEnemyNpcMain(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 {
+    // Animate NPCs
+    npcState_t* ns = enemy->state;
+    if (ns && ns->sprites[1])
+    {
+        RUN_TIMER_EVERY(ns->animTimer, 500000, elapsedUs, {
+            ns->spriteIdx   = (ns->spriteIdx + 1) % ARRAY_SIZE(ns->sprites);
+            enemy->c.sprite = ns->sprites[ns->spriteIdx];
+        });
+    }
+
     // Invincible!
     return false;
 }
