@@ -6,7 +6,7 @@
  *
  */
 
-//==================== ==========================================================
+//==============================================================================
 // Includes
 //==============================================================================
 #include "beancatch.h"
@@ -126,7 +126,6 @@ static void bcChangeStateClock(void);
 static void bcChangeStateMiss(void);
 static void bcChangeStateGameOver(void);
 static void bcChangeStatePause(void);
-static void bcChangeStateMenu(void);
 static void bcResumeTempState(void);
 
 static void bcCheckPlayerCatchBean(void);
@@ -269,23 +268,6 @@ void beancatchMainLoop(int64_t elapsedUs)
         beancatch->usCounter -= 1000000;
         beancatch->clockSecondsPulse = true;
         beancatch->clockHalfSecondsPulse = true;
-    /*
-        beancatch->clockSeconds++;
-        if(beancatch->clockSeconds > 59) {
-            beancatch->clockSeconds = 0;
-
-            beancatch->clockMinutes++;
-            if(beancatch->clockMinutes > 59)
-            {
-                beancatch->clockMinutes = 0;
-
-                beancatch->clockHours++;
-                if (beancatch->clockHours > 23)
-                {
-                    beancatch->clockHours = 0;
-                }
-            }
-        }*/
     }
 
     // Get the current time
@@ -359,10 +341,8 @@ void bcUpdateAcl(void)
         bc_LcdSegment_t segment;
         for (uint16_t i = 0; i < ARRAY_SIZE(BC_LCD_SEGMENTS); i++)
         {
-            // if(esp_random() % 2){ //testing segments for now...
             segment = BC_LCD_SEGMENTS[i];
             drawWsgSimple(&beancatch->wsgs[segment.wsgIndex], segment.x, segment.y);
-            //}
         }
 
         char buffer[5];
@@ -386,6 +366,7 @@ void bcUpdateAcl(void)
 
 void bcUpdateClock(void)
 {
+    //Uncomment for classic UX
     /*
         if (!(beancatch->prevBtnState & PB_A) && (beancatch->btnState & PB_A))
         {
@@ -636,7 +617,6 @@ void bcUpdateMiss(void)
         if(beancatch->strikes >= 3 && !beancatch->halfStrike)
         {
             //Game Over
-            // beancatch->emptyLoopCountdown = 240;
             bcChangeStateGameOver();
             return;
         }
@@ -867,6 +847,7 @@ void bcDrawGame(void)
 
                 break;
             case BC_ST_CLOCK:
+                //Uncomment for classic UX
                 /*if(beancatch->btnState & PB_A)
                 {
                     segment = BC_LCD_SEGMENTS[BC_SEG_GAME_A_LBL];
