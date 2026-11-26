@@ -102,7 +102,7 @@ static const char str_wing_color[] = "Wings Color";
 static const char str_exit[]         = "Exit";
 static const char str_brightness[]   = "Brightness";
 static const char str_split[]        = "Fairy Split: ";
-static const char str_useColor[]     = "Use My Color: ";
+static const char str_useColor[]     = "Use My Own Color: ";
 static const char str_On[]           = "On";
 static const char str_Off[]          = "Off";
 static const char* strs_on_off[]     = {str_Off, str_On};
@@ -154,7 +154,7 @@ const ledDance_t ledDances[] = {
     {.func = dancePureRandom, .algorithmicColor = true, .userColor = false, .name = "Random LEDs"},
     {.func = danceChristmas, .arg = 1, .algorithmicColor = true, .userColor = false, .name = "Holiday 1"},
     {.func = danceChristmas, .algorithmicColor = true, .userColor = false, .name = "Holiday 2"},
-    {.func = danceFlashlight, .algorithmicColor = false, .userColor = true, .name = "Flashlight"},
+    {.func = danceFlashlight, .arg = 0xFFFFFF, .algorithmicColor = false, .userColor = true, .name = "Flashlight"},
     {.func = danceNone, .algorithmicColor = false, .userColor = false, .name = "None"},
     {.func = danceRandomDance, .algorithmicColor = true, .userColor = true, .name = "Shuffle All"},
 };

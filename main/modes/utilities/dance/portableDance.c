@@ -89,9 +89,13 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
         led_t leds[CONFIG_NUM_LEDS] = {{0}};
 
         uint32_t updateCount = getLedUpdateCount();
+
         dance->dances[dance->danceIndex].dance->func(
             (int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
-            dance->useColor ? dance->color : dance->dances[dance->danceIndex].dance->arg, dance->resetDance);
+            (dance->dances[dance->danceIndex].dance->userColor && dance->useColor)
+                ? dance->color
+                : dance->dances[dance->danceIndex].dance->arg,
+            dance->resetDance);
 
         if (updateCount != getLedUpdateCount())
         {
@@ -105,7 +109,10 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
         updateCount = getLedUpdateCount();
         dance->dances[dance->wingDanceIndex].dance->func(
             (int32_t)elapsedUs * DANCE_SPEED_MULT / dance->wingSpeed,
-            dance->wingUseColor ? dance->wingColor : dance->dances[dance->danceIndex].dance->arg, dance->resetDance);
+            (dance->dances[dance->danceIndex].dance->userColor && dance->wingUseColor)
+                ? dance->wingColor
+                : dance->dances[dance->danceIndex].dance->arg,
+            dance->resetDance);
 
         if (updateCount != getLedUpdateCount())
         {
@@ -131,7 +138,10 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
     {
         dance->dances[dance->danceIndex].dance->func(
             (int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
-            dance->useColor ? dance->color : dance->dances[dance->danceIndex].dance->arg, dance->resetDance);
+            (dance->dances[dance->danceIndex].dance->userColor && dance->useColor)
+                ? dance->color
+                : dance->dances[dance->danceIndex].dance->arg,
+            dance->resetDance);
     }
     dance->resetDance = false;
 }
