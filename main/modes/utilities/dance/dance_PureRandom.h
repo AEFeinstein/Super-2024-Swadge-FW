@@ -3,7 +3,17 @@
 #include <stdint.h>
 #include "dance.h"
 
-void dancePureRandom(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor);
+typedef struct
+{
+    uint32_t tAccumulated;
+    uint8_t randLedMask;
+    uint32_t randColor;
+    uint8_t ledVal;
+    bool ledRising;
+    uint32_t randInterval;
+} dancePureRandomState_t;
+
+void dancePureRandom(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor, void* state);
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -13,23 +23,18 @@ void dancePureRandom(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColo
  * @param tElapsedUs The time elapsed since last call, in microseconds
  * @param reset      true to reset this dance's variables
  */
-void dancePureRandom(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor)
+void dancePureRandom(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor, void* state)
 {
-    static uint32_t tAccumulated = 0;
-    static uint8_t randLedMask   = 0;
-    static uint32_t randColor    = 0;
-    static uint8_t ledVal        = 0;
-    static bool ledRising        = true;
-    static uint32_t randInterval = 5000;
+    dancePureRandomState_t* danceState = state;
 
     if (reset)
     {
-        randInterval = 5000;
-        tAccumulated = randInterval;
-        randLedMask  = 0;
-        randColor    = 0;
-        ledVal       = 0;
-        ledRising    = true;
+        danceState->randInterval = 5000;
+        danceState->tAccumulated = danceState->randInterval;
+        danceState->randLedMask  = 0;
+        danceState->randColor    = 0;
+        danceState->ledVal       = 0;
+        danceState->ledRising    = true;
         return;
     }
 
@@ -37,40 +42,40 @@ void dancePureRandom(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColo
     led_t leds[CONFIG_NUM_LEDS] = {{0}};
     bool ledsUpdated            = false;
 
-    tAccumulated += tElapsedUs;
-    while (tAccumulated >= randInterval)
+    danceState->tAccumulated += tElapsedUs;
+    while (danceState->tAccumulated >= danceState->randInterval)
     {
-        tAccumulated -= randInterval;
+        danceState->tAccumulated -= danceState->randInterval;
 
-        if (0 == ledVal)
+        if (0 == danceState->ledVal)
         {
-            randColor    = danceRand(256);
-            randLedMask  = danceRand(1 << CONFIG_NUM_LEDS);
-            randInterval = 500 + danceRand(4096);
-            ledVal++;
+            danceState->randColor    = danceRand(256);
+            danceState->randLedMask  = danceRand(1 << CONFIG_NUM_LEDS);
+            danceState->randInterval = 500 + danceRand(4096);
+            danceState->ledVal++;
         }
-        else if (ledRising)
+        else if (danceState->ledRising)
         {
-            ledVal++;
-            if (255 == ledVal)
+            danceState->ledVal++;
+            if (255 == danceState->ledVal)
             {
-                ledRising = false;
+                danceState->ledRising = false;
             }
         }
         else
         {
-            ledVal--;
-            if (0 == ledVal)
+            danceState->ledVal--;
+            if (0 == danceState->ledVal)
             {
-                ledRising = true;
+                danceState->ledRising = true;
             }
         }
 
         ledsUpdated    = true;
-        uint32_t color = EHSVtoHEXhelper(randColor, 0xFF, ledVal, false);
+        uint32_t color = EHSVtoHEXhelper(danceState->randColor, 0xFF, danceState->ledVal, false);
         for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
-            if ((1 << i) & randLedMask)
+            if ((1 << i) & danceState->randLedMask)
             {
                 if (useColor)
                 {

@@ -11,6 +11,8 @@ typedef struct
 {
     const ledDance_t* dance;
     bool enable;
+    void* bodyState;
+    void* wingState;
 } ledDanceOpt_t;
 
 typedef struct

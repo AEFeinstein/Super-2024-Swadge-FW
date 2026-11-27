@@ -46,6 +46,11 @@ portableDance_t* initPortableDance(const char* nvsNs)
     {
         dance->dances[i].dance  = ledDances + i;
         dance->dances[i].enable = true;
+        if (ledDances[i].stateSize)
+        {
+            dance->dances[i].bodyState = heap_caps_calloc(1, ledDances[i].stateSize, MALLOC_CAP_8BIT);
+            dance->dances[i].wingState = heap_caps_calloc(1, ledDances[i].stateSize, MALLOC_CAP_8BIT);
+        }
     }
 
     dance->resetDance = true;
@@ -71,6 +76,16 @@ void freePortableDance(portableDance_t* dance)
     {
         if (dance->dances != NULL)
         {
+            for (uint8_t i = 0; i < getNumDances(); i++)
+            {
+                if (dance->dances[i].dance->deinit)
+                {
+                    dance->dances[i].dance->deinit(dance->dances[i].bodyState);
+                    dance->dances[i].dance->deinit(dance->dances[i].wingState);
+                }
+                heap_caps_free(dance->dances[i].bodyState);
+                heap_caps_free(dance->dances[i].wingState);
+            }
             heap_caps_free(dance->dances);
         }
         heap_caps_free(dance);
@@ -105,7 +120,7 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
         ledDanceOpt_t* bodyDance = &dance->dances[dance->danceIndex];
         bodyDance->dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
                                (bodyDance->dance->userColor && dance->useColor) ? dance->color : bodyDance->dance->arg,
-                               dance->resetDance, dance->useColor);
+                               dance->resetDance, dance->useColor, bodyDance->bodyState);
 
         if (updateCount != getLedUpdateCount())
         {
@@ -117,7 +132,7 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
         wingDance->dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->wingSpeed,
                                (wingDance->dance->userColor && dance->wingUseColor) ? dance->wingColor
                                                                                     : wingDance->dance->arg,
-                               dance->resetDance, dance->wingUseColor);
+                               dance->resetDance, dance->wingUseColor, wingDance->wingState);
 
         if (updateCount != getLedUpdateCount())
         {
@@ -137,7 +152,7 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
             (dance->dances[dance->danceIndex].dance->userColor && dance->useColor)
                 ? dance->color
                 : dance->dances[dance->danceIndex].dance->arg,
-            dance->resetDance, dance->useColor);
+            dance->resetDance, dance->useColor, dance->dances[dance->danceIndex].bodyState);
     }
     dance->resetDance = false;
 }

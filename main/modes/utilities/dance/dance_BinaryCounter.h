@@ -3,8 +3,14 @@
 #include <stdint.h>
 #include "dance.h"
 
+typedef struct
+{
+    int32_t binaryCount;
+    uint32_t binaryCountTimer;
+} danceBinaryCounterState_t;
+
 void danceBinaryCounter(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset,
-                        bool useColor __attribute__((unused)));
+                        bool useColor __attribute__((unused)), void* state);
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -17,15 +23,14 @@ void danceBinaryCounter(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)
  * @param reset      true to reset this dance's variables
  */
 void danceBinaryCounter(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset,
-                        bool useColor __attribute__((unused)))
+                        bool useColor __attribute__((unused)), void* state)
 {
-    static int32_t binaryCount       = 0;
-    static uint32_t binaryCountTimer = 0;
+    danceBinaryCounterState_t* danceState = state;
 
     if (reset)
     {
-        binaryCount      = 0;
-        binaryCountTimer = 1000000;
+        danceState->binaryCount      = 0;
+        danceState->binaryCountTimer = 1000000;
         return;
     }
 
@@ -34,19 +39,19 @@ void danceBinaryCounter(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)
     bool ledsUpdated            = false;
 
     // Run timer every 1s
-    RUN_TIMER_EVERY(binaryCountTimer, 1000000, tElapsedUs, {
+    RUN_TIMER_EVERY(danceState->binaryCountTimer, 1000000, tElapsedUs, {
         // Increment count
-        binaryCount++;
+        danceState->binaryCount++;
 
         // Pick colors
-        int16_t angle     = binaryCount % 256;
+        int16_t angle     = danceState->binaryCount % 256;
         uint32_t colorOn  = EHSVtoHEXhelper(angle, 0xFF, 0xFF, false);
         uint32_t colorOff = EHSVtoHEXhelper((angle + 128) % 256, 0xFF, 0xFF, false);
 
         // Set each LED
         for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
-            if (binaryCount & (1 << i))
+            if (danceState->binaryCount & (1 << i))
             {
                 leds[i].r = (colorOn >> 0) & 0xFF;
                 leds[i].g = (colorOn >> 8) & 0xFF;

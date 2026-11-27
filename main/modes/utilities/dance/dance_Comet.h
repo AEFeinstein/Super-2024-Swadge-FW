@@ -3,7 +3,16 @@
 #include <stdint.h>
 #include "dance.h"
 
-void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor);
+typedef struct
+{
+    int32_t ledCount;
+    uint8_t rainbow;
+    int32_t msCount;
+    uint32_t tAccumulated;
+    led_t leds[CONFIG_NUM_LEDS];
+} danceCometState_t;
+
+void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor, void* state);
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -13,8 +22,9 @@ void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor);
  * @param tElapsedUs The time elapsed since last call, in microseconds
  * @param reset      true to reset this dance's variables
  */
-void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor)
+void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor, void* state)
 {
+    danceCometState_t* danceState = state;
     // Map comet index to LED index
     const int8_t ledMap[CONFIG_NUM_LEDS] = {// Down the right wing
                                             10, 9, 8, 7,
@@ -23,31 +33,25 @@ void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor)
                                             // Around the screen
                                             3, 2, 1, 0, 5, 4};
 
-    static int32_t ledCount            = 0;
-    static uint8_t rainbow             = 0;
-    static int32_t msCount             = 0;
-    static uint32_t tAccumulated       = 0;
-    static led_t leds[CONFIG_NUM_LEDS] = {{0}};
-
     if (reset)
     {
-        ledCount     = 0;
-        rainbow      = 0;
-        msCount      = 80;
-        tAccumulated = 2000;
-        memset(leds, 0, sizeof(leds));
+        danceState->ledCount     = 0;
+        danceState->rainbow      = 0;
+        danceState->msCount      = 80;
+        danceState->tAccumulated = 2000;
+        memset(danceState->leds, 0, sizeof(danceState->leds));
         return;
     }
 
     bool ledsUpdated = false;
 
-    tAccumulated += tElapsedUs;
-    while (tAccumulated >= 2000)
+    danceState->tAccumulated += tElapsedUs;
+    while (danceState->tAccumulated >= 2000)
     {
-        tAccumulated -= 2000;
+        danceState->tAccumulated -= 2000;
         for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
-            led_t* led = &leds[ledMap[i]];
+            led_t* led = &danceState->leds[ledMap[i]];
             if (led->r > 0)
             {
                 led->r--;
@@ -61,16 +65,16 @@ void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor)
                 led->b--;
             }
         }
-        msCount++;
+        danceState->msCount++;
 
-        if (msCount % 10 == 0)
+        if (danceState->msCount % 10 == 0)
         {
-            rainbow++;
+            danceState->rainbow++;
         }
 
-        if (msCount >= 80)
+        if (danceState->msCount >= 80)
         {
-            led_t* led = &leds[ledMap[ledCount]];
+            led_t* led = &danceState->leds[ledMap[danceState->ledCount]];
             if (useColor)
             {
                 led->r = ARG_R(arg);
@@ -79,20 +83,20 @@ void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor)
             }
             else
             {
-                int32_t color = EHSVtoHEXhelper(rainbow, 0xFF, 0xFF, false);
+                int32_t color = EHSVtoHEXhelper(danceState->rainbow, 0xFF, 0xFF, false);
                 led->r        = (color >> 0) & 0xFF;
                 led->g        = (color >> 8) & 0xFF;
                 led->b        = (color >> 16) & 0xFF;
             }
-            ledCount = (ledCount + 1) % CONFIG_NUM_LEDS;
-            msCount  = 0;
+            danceState->ledCount = (danceState->ledCount + 1) % CONFIG_NUM_LEDS;
+            danceState->msCount  = 0;
         }
         ledsUpdated = true;
     }
 
     if (ledsUpdated)
     {
-        setLeds(leds, CONFIG_NUM_LEDS);
+        setLeds(danceState->leds, CONFIG_NUM_LEDS);
     }
 }
 

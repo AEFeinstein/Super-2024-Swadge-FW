@@ -3,7 +3,12 @@
 #include <stdint.h>
 #include "dance.h"
 
-void danceFire(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)));
+typedef struct
+{
+    uint32_t tAccumulated;
+} danceFireState_t;
+
+void danceFire(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)), void* state);
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -15,13 +20,13 @@ void danceFire(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __at
  * @param tElapsedUs The time elapsed since last call, in microseconds
  * @param reset      true to reset this dance's variables
  */
-void danceFire(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)))
+void danceFire(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)), void* state)
 {
-    static uint32_t tAccumulated = 0;
+    danceFireState_t* danceState = state;
 
     if (reset)
     {
-        tAccumulated = 100000;
+        danceState->tAccumulated = 100000;
         return;
     }
 
@@ -29,10 +34,10 @@ void danceFire(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __at
     led_t leds[CONFIG_NUM_LEDS] = {{0}};
     bool ledsUpdated            = false;
 
-    tAccumulated += tElapsedUs;
-    while (tAccumulated >= 75000)
+    danceState->tAccumulated += tElapsedUs;
+    while (danceState->tAccumulated >= 75000)
     {
-        tAccumulated -= 75000;
+        danceState->tAccumulated -= 75000;
         ledsUpdated = true;
 
         // How bright each level flickers (randomness, base value)

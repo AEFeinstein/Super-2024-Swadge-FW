@@ -145,28 +145,40 @@ static const int32_t colorVals[] = {
 static const char nvsNs[] = "light_dances";
 
 const ledDance_t ledDances[] = {
-    {.func = danceComet, .userColor = true, .name = "Comet"},
+    {.func = danceComet, .userColor = true, .name = "Comet", .stateSize = sizeof(danceCometState_t)},
     // {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0x00, 0x00), .name = "Ketchup"},
     // {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0xFF, 0x00), .name = "Mustard"},
     // {.func = danceCondiment, .arg = RGB_2_ARG(0x00, 0xFF, 0x00), .name = "Relish"},
     // {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0xFF, 0xFF), .name = "Mayo"},
-    {.func = danceSharpRainbow, .userColor = false, .name = "Rainbow Sharp"},
-    {.func = danceSmoothRainbow, .arg = 20000, .userColor = false, .name = "Rainbow Slow"},
-    {.func = danceSmoothRainbow, .arg = 4000, .userColor = false, .name = "Rainbow Fast"},
-    {.func = danceRainbowSolid, .userColor = false, .name = "Rainbow Solid"},
-    {.func = danceSweep, .userColor = true, .name = "Sweep"},
-    {.func = danceRise, .userColor = true, .name = "Rise"},
-    {.func = dancePulse, .userColor = true, .name = "Pulse"},
-    {.func = danceFire, .arg = RGB_2_ARG(0xFF, 51, 0), .userColor = true, .name = "Fire"},
-    {.func = danceBinaryCounter, .userColor = false, .name = "Binary"},
-    {.func = dancePoliceSiren, .userColor = false, .name = "Siren"},
-    {.func = dancePureRandom, .userColor = true, .name = "Random LEDs"},
-    {.func = danceChristmas, .arg = 1, .userColor = false, .name = "Holiday 1"},
-    {.func = danceChristmas, .userColor = false, .name = "Holiday 2"},
-    {.func = danceFlashlight, .arg = 0xFFFFFF, .userColor = true, .name = "Flashlight"},
-    {.func = hardwareIndices, .userColor = true, .name = "Cool SAO"},
+    {.func = danceSharpRainbow, .userColor = false, .name = "Rainbow Sharp",
+     .stateSize = sizeof(danceSharpRainbowState_t)},
+    {.func = danceSmoothRainbow, .arg = 20000, .userColor = false, .name = "Rainbow Slow",
+     .stateSize = sizeof(danceSmoothRainbowState_t)},
+    {.func = danceSmoothRainbow, .arg = 4000, .userColor = false, .name = "Rainbow Fast",
+     .stateSize = sizeof(danceSmoothRainbowState_t)},
+    {.func = danceRainbowSolid, .userColor = false, .name = "Rainbow Solid",
+     .stateSize = sizeof(danceRainbowSolidState_t)},
+    {.func = danceSweep, .userColor = true, .name = "Sweep", .stateSize = sizeof(danceSweepState_t)},
+    {.func = danceRise, .userColor = true, .name = "Rise", .stateSize = sizeof(danceRiseState_t)},
+    {.func = dancePulse, .userColor = true, .name = "Pulse", .stateSize = sizeof(dancePulseState_t)},
+    {.func = danceFire, .arg = RGB_2_ARG(0xFF, 51, 0), .userColor = true, .name = "Fire",
+     .stateSize = sizeof(danceFireState_t)},
+    {.func = danceBinaryCounter, .userColor = false, .name = "Binary",
+     .stateSize = sizeof(danceBinaryCounterState_t)},
+    {.func = dancePoliceSiren, .userColor = false, .name = "Siren",
+     .stateSize = sizeof(dancePoliceSirenState_t)},
+    {.func = dancePureRandom, .userColor = true, .name = "Random LEDs",
+     .stateSize = sizeof(dancePureRandomState_t)},
+    {.func = danceChristmas, .arg = 1, .userColor = false, .name = "Holiday 1",
+     .stateSize = sizeof(danceChristmasState_t)},
+    {.func = danceChristmas, .userColor = false, .name = "Holiday 2", .stateSize = sizeof(danceChristmasState_t)},
+    {.func = danceFlashlight, .arg = 0xFFFFFF, .userColor = true, .name = "Flashlight",
+     .stateSize = sizeof(danceFlashlightState_t)},
+    {.func = hardwareIndices, .userColor = true, .name = "Cool SAO",
+     .stateSize = sizeof(hardwareIndicesState_t)},
     {.func = danceNone, .userColor = false, .name = "None"},
-    {.func = danceRandomDance, .userColor = true, .name = "Shuffle All"},
+    {.func = danceRandomDance, .userColor = true, .name = "Shuffle All",
+     .stateSize = sizeof(danceRandomDanceState_t), .deinit = danceRandomDanceDeinit},
 };
 
 //==============================================================================
@@ -248,11 +260,11 @@ void setupMenu(const char* currentLabel)
     {
         menu_t* bodyMenu = startSubMenu(danceState->menu, str_body);
         addDanceSettings(bodyMenu, false);
-        endSubMenu(bodyMenu);
+        bodyMenu = endSubMenu(bodyMenu);
 
         menu_t* wingMenu = startSubMenu(danceState->menu, str_wings);
         addDanceSettings(wingMenu, true);
-        endSubMenu(wingMenu);
+        wingMenu = endSubMenu(wingMenu);
     }
     else
     {
@@ -306,7 +318,7 @@ static void addDanceSettings(menu_t* parentMenu, bool isWing)
         {
             addColorChannelSettings(colorMenu, color);
         }
-        endSubMenu(colorMenu);
+        colorMenu = endSubMenu(colorMenu);
     }
 
     addSettingsOptionsItemToMenu(parentMenu, str_speed, speedLabels, speedVals, ARRAY_SIZE(speedVals), &speedParam,
