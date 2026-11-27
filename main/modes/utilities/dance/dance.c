@@ -277,8 +277,8 @@ void setupMenu(const char* currentLabel)
             colorMenu->title = str_body_color;
         }
 
-        addSettingsOptionsItemToMenu(colorMenu, str_useColor, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
-                                     danceState->dance->useColor);
+        addSettingsOptionsItemToMenu(colorMenu, str_useColor, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off),
+                                     &sp_tf, danceState->dance->useColor);
 
         if (danceState->dance->useColor)
         {
@@ -305,7 +305,7 @@ void setupMenu(const char* currentLabel)
         if (wingDance->userColor)
         {
             menu_t* colorMenu = startSubMenu(subMenu, str_color);
-            colorMenu->title = str_wing_color;
+            colorMenu->title  = str_wing_color;
             addSettingsOptionsItemToMenu(colorMenu, str_useColor, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off),
                                          &sp_tf, danceState->dance->wingUseColor);
             if (danceState->dance->wingUseColor)
@@ -326,7 +326,7 @@ void setupMenu(const char* currentLabel)
 
 static void rebuildDanceMenu(void)
 {
-    bool isWingMenu = danceState->menu->title == str_wings;
+    bool isWingMenu  = danceState->menu->title == str_wings;
     menu_t* rootMenu = danceState->menu;
     while (rootMenu->parentMenu)
     {
@@ -546,14 +546,14 @@ bool danceMenuCb(const char* label, bool selected, uint32_t value, menu_t* menu)
              && ((menu->title == str_wings && danceState->dance->wingDanceIndex != value)
                  || ((menu->title == str_body || menu->title == danceName) && danceState->dance->danceIndex != value)))
     {
-        bool isWing = menu->title == str_wings;
+        bool isWing      = menu->title == str_wings;
         uint8_t oldIndex = isWing ? danceState->dance->wingDanceIndex : danceState->dance->danceIndex;
         portableDanceSetByIndex(danceState->dance, value, isWing);
 
         const ledDance_t* oldDance = danceState->dance->dances[oldIndex].dance;
         const ledDance_t* newDance = danceState->dance->dances[value].dance;
-        bool hadColorMenu = oldDance->userColor;
-        bool hasColorMenu = newDance->userColor;
+        bool hadColorMenu          = oldDance->userColor;
+        bool hasColorMenu          = newDance->userColor;
         if (hadColorMenu != hasColorMenu)
         {
             danceState->rebuildMenuAfterPatternChange = true;

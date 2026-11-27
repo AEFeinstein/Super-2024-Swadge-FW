@@ -27,10 +27,10 @@ typedef void (*ledDanceFunc)(uint32_t tElapsedUs, uint32_t arg, bool reset, bool
 
 typedef struct
 {
-    ledDanceFunc func;     ///< A 'main loop' function to animate and set the LEDs
-    uint32_t arg;          ///< An optional argument for the \c func, may be color, speed, etc.
-    bool userColor;        ///< true if the dance may accept a monochromatic color set by the user
-    char* name;            ///< The name of this LED dance
+    ledDanceFunc func; ///< A 'main loop' function to animate and set the LEDs
+    uint32_t arg;      ///< An optional argument for the \c func, may be color, speed, etc.
+    bool userColor;    ///< true if the dance may accept a monochromatic color set by the user
+    char* name;        ///< The name of this LED dance
 } ledDance_t;
 
 extern swadgeMode_t danceMode;
