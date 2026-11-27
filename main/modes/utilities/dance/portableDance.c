@@ -10,6 +10,9 @@
 //==============================================================================
 
 void portableDanceLoadSetting(portableDance_t* dance);
+static int32_t clampDanceSpeed(int32_t speed);
+
+#define BODY_LED_COUNT 6
 
 //==============================================================================
 // Const Variables
@@ -75,6 +78,16 @@ void freePortableDance(portableDance_t* dance)
 }
 
 /**
+ * @brief Clamp speed because a value of 0 causes division by zero in DANCE_SPEED_MULT / dance->speed
+ *
+ * @param speed speed of a dance
+ */
+static int32_t clampDanceSpeed(int32_t speed)
+{
+    return CLAMP(speed, 2, 64);
+}
+
+/**
  * @brief Runs the current LED dance. Should be called from the main loop every frame.
  *
  * @param dance The portableDance_t pointer
@@ -88,50 +101,33 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
       // "Condiment" & "Bun" menu strings.
         led_t leds[CONFIG_NUM_LEDS] = {{0}};
 
-        uint32_t updateCount = getLedUpdateCount();
-
-        dance->dances[dance->danceIndex].dance->func(
-            (int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
-            (dance->dances[dance->danceIndex].dance->userColor && dance->useColor)
-                ? dance->color
-                : dance->dances[dance->danceIndex].dance->arg,
-            dance->resetDance, dance->useColor);
+        uint32_t updateCount     = getLedUpdateCount();
+        ledDanceOpt_t* bodyDance = &dance->dances[dance->danceIndex];
+        bodyDance->dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
+                               (bodyDance->dance->userColor && dance->useColor) ? dance->color : bodyDance->dance->arg,
+                               dance->resetDance, dance->useColor);
 
         if (updateCount != getLedUpdateCount())
         {
-            const led_t* currentLeds = getLedState();
-            for (uint8_t i = 0; i < 6; i++)
-            {
-                dance->bodyLeds[i] = currentLeds[i];
-            }
+            memcpy(dance->bodyLeds, getLedState(), BODY_LED_COUNT * sizeof(led_t));
         }
 
-        updateCount = getLedUpdateCount();
-        dance->dances[dance->wingDanceIndex].dance->func(
-            (int32_t)elapsedUs * DANCE_SPEED_MULT / dance->wingSpeed,
-            (dance->dances[dance->wingDanceIndex].dance->userColor && dance->wingUseColor)
-                ? dance->wingColor
-                : dance->dances[dance->wingDanceIndex].dance->arg,
-            dance->resetDance, dance->wingUseColor);
+        updateCount              = getLedUpdateCount();
+        ledDanceOpt_t* wingDance = &dance->dances[dance->wingDanceIndex];
+        wingDance->dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->wingSpeed,
+                               (wingDance->dance->userColor && dance->wingUseColor) ? dance->wingColor
+                                                                                    : wingDance->dance->arg,
+                               dance->resetDance, dance->wingUseColor);
 
         if (updateCount != getLedUpdateCount())
         {
-            const led_t* currentLeds = getLedState();
-            for (uint8_t i = 6; i < CONFIG_NUM_LEDS; i++)
-            {
-                dance->wingLeds[i] = currentLeds[i];
-            }
+            memcpy(&dance->wingLeds[BODY_LED_COUNT], &getLedState()[BODY_LED_COUNT],
+                   (CONFIG_NUM_LEDS - BODY_LED_COUNT) * sizeof(led_t));
         }
 
-        for (uint8_t i = 0; i < 6; i++)
-        {
-            leds[i] = dance->bodyLeds[i];
-        }
-        for (uint8_t i = 6; i < CONFIG_NUM_LEDS; i++)
-        {
-            leds[i] = dance->wingLeds[i];
-        }
-
+        memcpy(leds, dance->bodyLeds, BODY_LED_COUNT * sizeof(led_t));
+        memcpy(&leds[BODY_LED_COUNT], &dance->wingLeds[BODY_LED_COUNT],
+               (CONFIG_NUM_LEDS - BODY_LED_COUNT) * sizeof(led_t));
         setLeds(leds, CONFIG_NUM_LEDS);
     }
     else
@@ -214,14 +210,14 @@ void portableDanceLoadSetting(portableDance_t* dance)
     {
         writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSpeed, speed);
     }
-    dance->speed = speed;
+    dance->speed = clampDanceSpeed(speed);
 
     int32_t wingSpeed = DANCE_SPEED_MULT;
     if (!readNamespaceNvs32(dance->nvsNs, nvsKeyWingDanceSpeed, &wingSpeed))
     {
         writeNamespaceNvs32(dance->nvsNs, nvsKeyWingDanceSpeed, wingSpeed);
     }
-    dance->wingSpeed = wingSpeed;
+    dance->wingSpeed = clampDanceSpeed(wingSpeed);
 }
 
 /**
@@ -354,6 +350,7 @@ void portableDanceSetColor(portableDance_t* dance, int32_t color, bool wings)
  */
 void portableDanceSetSpeed(portableDance_t* dance, int32_t speed, bool wings)
 {
+    speed = clampDanceSpeed(speed);
     if (wings)
     {
         dance->wingSpeed = speed;

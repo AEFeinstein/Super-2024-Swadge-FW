@@ -86,7 +86,7 @@ void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor)
         }
     });
 
-    uint32_t color = (0 == arg) ? rainbowColor : arg;
+    uint32_t color = useColor ? arg : rainbowColor;
 
     // Run a timer to decay the LEDs
     RUN_TIMER_EVERY(decayTimer, 2000, tElapsedUs, {
