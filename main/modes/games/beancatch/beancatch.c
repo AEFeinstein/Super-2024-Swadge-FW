@@ -35,6 +35,129 @@ const char beancatchStrExit[] = "Exit";
 const char KEY_SCORE_PB_GAME_A[] = "bc_hiscore_pb_a";
 const char KEY_SCORE_PB_GAME_B[] = "bc_hiscore_pb_b";
 
+const trophyData_t bcTrophies[] = {
+    {
+        .title       = "Out of sight, out of mind",
+        .description = "Drop a bean unseen",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "My Watch? Game &.",
+        .description = "Start clock mode",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Cool Beans",
+        .description = "Start Game A",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Bean Intern (unpaid)",
+        .description = "Scored 200 Points in Game A",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 200,
+    },
+    {
+        .title       = "Bean Candidate (Interview Round 7)",
+        .description = "Scored 400 Points in Game A",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 400,
+    },
+    {
+        .title       = "Jr. Bean Counter",
+        .description = "Scored 600 Points in Game A",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 600,
+    },
+    {
+        .title       = "Senior Jr. Bean Counter",
+        .description = "Scored 800 Points in Game A",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 800,
+    },
+    {
+        .title       = "Dr. Jr. Bean Counter",
+        .description = "Scored 1000 Points in Game A",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1000,
+    },
+    {
+        .title       = "How you BEAN?",
+        .description = "Start Game B",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Bean Contractor",
+        .description = "Scored 200 Points in Game B",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 200,
+    },
+    {
+        .title       = "Bean Employee (Part Time)",
+        .description = "Scored 400 Points in Game B",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 400,
+    },
+    {
+        .title       = "Bean Employee (Full Time, Hourly)",
+        .description = "Scored 600 Points in Game B",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 600,
+    },
+    {
+        .title       = "Bean Salaryman",
+        .description = "Scored 800 Points in Game B",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 800,
+    },
+    {
+        .title       = "Bean <four titles at once, same pay though>",
+        .description = "Scored 1000 Points in Game B",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1000,
+    },
+    {
+        .title       = "John Bean Catch, CEO of Beans",
+        .description = "All trophies awarded!",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1,
+    }
+};
+
 //==============================================================================
 // Structs
 //==============================================================================
