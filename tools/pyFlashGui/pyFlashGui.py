@@ -51,17 +51,18 @@ class LabelThread(threading.Thread):
 
             # Flash it
             esptool.main([
-                "--chip", "esp32s2",
-                "-p", str(self.serialPort.device),
-                "-b", "2000000",
-                "--before=default-reset",
-                "--after=no-reset-stub",
+                "--chip", "esp32s3",
+                "--port", str(self.serialPort.device),
+                "--baud", "9600",
+                "--before", "no-reset",
+                "--after", "no-reset",
                 "write-flash",
                 "--flash-mode", "dio",
                 "--flash-freq", "80m",
-                "--flash-size", "4MB",
-                "0x1000",  "bootloader.bin",
+                "--flash-size", "16MB",
+                "0x0000",  "bootloader.bin",
                 "0x8000",  "partition-table.bin",
+                "0xf000", "phy_init_data.bin",
                 "0x10000", "swadge.bin"])
 
             # It worked! Display a nice green message
@@ -79,10 +80,14 @@ class LabelThread(threading.Thread):
         time.sleep(2)
 
         try:
+            self.labelText = "Reseting Device on " + str(self.serialPort.device)
+            self.labelColor = "green"
+            updateUI = True
+            
             # Reboot out of the bootloader
             esptool.main([
                 "-p", str(self.serialPort.device),
-                "--after", "hard-reset",
+                "--after", "watchdog-reset",
                 "chip-id"
             ])
         except:
@@ -130,7 +135,7 @@ class ProgrammerApplication:
             self.root.protocol("WM_DELETE_WINDOW", exit_function)
 
             # Start the main UI loop
-            self.root.winfo_toplevel().title("ESP32-S2 Swadge Programmer")
+            self.root.winfo_toplevel().title("ESP32-S3 Swadge Programmer")
 
             # Set the initial window size
             self.root.geometry("500x200")
@@ -149,8 +154,10 @@ class ProgrammerApplication:
             for serialPort in serialPortList:
                 # If the serial port exists but isn't in swadgeSerialPorts
                 if serialPort not in self.swadgeSerialPorts:
-                    # If the VID and PID match the ESP32-S2's values, use it
-                    if(serialPort.vid == 0x303A and serialPort.pid == 0x0002):
+                    # If the VID and PID match the ESP32-S3's values, use it
+                    # As a USB Device VID is 0x04B9 and PID is 0x10AD
+                    # As a Serial Device VID is 303A and PID is 1001
+                    if(serialPort.vid == 0x303A and serialPort.pid == 0x1001):
                         self.swadgeSerialPorts.append(serialPort)
                         # Then create a thread for esptool associated with this serial port and label and run it
                         programmerThread = LabelThread(_serialPort=serialPort)
