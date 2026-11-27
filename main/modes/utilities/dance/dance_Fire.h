@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include "dance.h"
 
-void danceFire(uint32_t tElapsedUs, uint32_t arg, bool reset);
+void danceFire(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)));
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -15,7 +15,7 @@ void danceFire(uint32_t tElapsedUs, uint32_t arg, bool reset);
  * @param tElapsedUs The time elapsed since last call, in microseconds
  * @param reset      true to reset this dance's variables
  */
-void danceFire(uint32_t tElapsedUs, uint32_t arg, bool reset)
+void danceFire(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)))
 {
     static uint32_t tAccumulated = 0;
 

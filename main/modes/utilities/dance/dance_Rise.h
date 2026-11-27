@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include "dance.h"
 
-void danceRise(uint32_t tElapsedUs, uint32_t arg, bool reset);
+void danceRise(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor);
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -13,7 +13,7 @@ void danceRise(uint32_t tElapsedUs, uint32_t arg, bool reset);
  * @param tElapsedUs The time elapsed since last call, in microseconds
  * @param reset      true to reset this dance's variables
  */
-void danceRise(uint32_t tElapsedUs, uint32_t arg, bool reset)
+void danceRise(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor)
 {
     #define RISE_LEVELS 7
     static const int8_t ledsPerLevel[RISE_LEVELS][2] = {
@@ -49,13 +49,13 @@ void danceRise(uint32_t tElapsedUs, uint32_t arg, bool reset)
 
         // Select the color
         int32_t color;
-        if (0 == arg)
+        if (useColor)
         {
-            color = EHSVtoHEXhelper(angle, 0xFF, 0xFF, false);
+            color = arg;
         }
         else
         {
-            color = arg;
+            color = EHSVtoHEXhelper(angle, 0xFF, 0xFF, false);
         }
 
         // For each level

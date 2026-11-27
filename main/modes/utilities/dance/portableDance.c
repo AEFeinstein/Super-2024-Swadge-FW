@@ -95,7 +95,7 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
             (dance->dances[dance->danceIndex].dance->userColor && dance->useColor)
                 ? dance->color
                 : dance->dances[dance->danceIndex].dance->arg,
-            dance->resetDance);
+            dance->resetDance, dance->useColor);
 
         if (updateCount != getLedUpdateCount())
         {
@@ -109,10 +109,10 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
         updateCount = getLedUpdateCount();
         dance->dances[dance->wingDanceIndex].dance->func(
             (int32_t)elapsedUs * DANCE_SPEED_MULT / dance->wingSpeed,
-            (dance->dances[dance->danceIndex].dance->userColor && dance->wingUseColor)
+            (dance->dances[dance->wingDanceIndex].dance->userColor && dance->wingUseColor)
                 ? dance->wingColor
-                : dance->dances[dance->danceIndex].dance->arg,
-            dance->resetDance);
+                : dance->dances[dance->wingDanceIndex].dance->arg,
+            dance->resetDance, dance->wingUseColor);
 
         if (updateCount != getLedUpdateCount())
         {
@@ -141,7 +141,7 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
             (dance->dances[dance->danceIndex].dance->userColor && dance->useColor)
                 ? dance->color
                 : dance->dances[dance->danceIndex].dance->arg,
-            dance->resetDance);
+            dance->resetDance, dance->useColor);
     }
     dance->resetDance = false;
 }
@@ -251,7 +251,7 @@ void portableDanceSetUseColor(portableDance_t* dance, bool useColor)
     memset(dance->wingLeds, 0, sizeof(dance->wingLeds));
     if (dance->nvsNs != NULL)
     {
-        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSplit, dance->useColor);
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceUseColor, dance->useColor);
     }
 }
 
@@ -263,7 +263,7 @@ void portableDanceSetWingUseColor(portableDance_t* dance, bool useColor)
     memset(dance->wingLeds, 0, sizeof(dance->wingLeds));
     if (dance->nvsNs != NULL)
     {
-        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSplit, dance->wingUseColor);
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceWingUseColor, dance->wingUseColor);
     }
 }
 

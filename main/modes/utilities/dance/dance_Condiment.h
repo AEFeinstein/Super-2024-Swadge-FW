@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include "dance.h"
 
-void danceCondiment(uint32_t tElapsedUs, uint32_t arg, bool reset);
+void danceCondiment(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)));
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -14,7 +14,7 @@ void danceCondiment(uint32_t tElapsedUs, uint32_t arg, bool reset);
  * @param arg        The base color to use
  * @param reset      true to reset this dance's variables
  */
-void danceCondiment(uint32_t tElapsedUs, uint32_t arg, bool reset)
+void danceCondiment(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)))
 {
     static const int8_t pulseLeds[] = {0, 1, 2, 3, 4};
     static const int8_t stripLeds[] = {5, 6, 7, 8};

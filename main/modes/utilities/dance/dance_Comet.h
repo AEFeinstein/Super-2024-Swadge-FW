@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include "dance.h"
 
-void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset);
+void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor);
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -13,7 +13,7 @@ void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset);
  * @param tElapsedUs The time elapsed since last call, in microseconds
  * @param reset      true to reset this dance's variables
  */
-void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset)
+void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor)
 {
     // Map comet index to LED index
     const int8_t ledMap[CONFIG_NUM_LEDS] = {// Down the right wing
@@ -71,18 +71,18 @@ void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset)
         if (msCount >= 80)
         {
             led_t* led = &leds[ledMap[ledCount]];
-            if (0 == arg)
+            if (useColor)
+            {
+                led->r = ARG_R(arg);
+                led->g = ARG_G(arg);
+                led->b = ARG_B(arg);
+            }
+            else
             {
                 int32_t color = EHSVtoHEXhelper(rainbow, 0xFF, 0xFF, false);
                 led->r        = (color >> 0) & 0xFF;
                 led->g        = (color >> 8) & 0xFF;
                 led->b        = (color >> 16) & 0xFF;
-            }
-            else
-            {
-                led->r = ARG_R(arg);
-                led->g = ARG_G(arg);
-                led->b = ARG_B(arg);
             }
             ledCount = (ledCount + 1) % CONFIG_NUM_LEDS;
             msCount  = 0;

@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include "dance.h"
 
-void danceChristmas(uint32_t tElapsedUs, uint32_t arg, bool reset);
+void danceChristmas(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)));
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -17,7 +17,7 @@ void danceChristmas(uint32_t tElapsedUs, uint32_t arg, bool reset);
  * @param arg        unused
  * @param reset      true to reset this dance's variables
  */
-void danceChristmas(uint32_t tElapsedUs, uint32_t arg, bool reset)
+void danceChristmas(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)))
 {
     static int32_t ledCount                        = 0;
     static int32_t ledCount2                       = 0;

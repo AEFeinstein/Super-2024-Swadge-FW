@@ -23,7 +23,7 @@
  * @param arg An optional argument such as color, timing, etc.
  * @param reset true to reset state variables, false to run normally
  */
-typedef void (*ledDanceFunc)(uint32_t tElapsedUs, uint32_t arg, bool reset);
+typedef void (*ledDanceFunc)(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor);
 
 typedef struct
 {

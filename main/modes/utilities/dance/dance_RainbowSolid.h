@@ -3,7 +3,8 @@
 #include <stdint.h>
 #include "dance.h"
 
-void danceRainbowSolid(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset);
+void danceRainbowSolid(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset,
+                       bool useColor __attribute__((unused)));
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -13,7 +14,8 @@ void danceRainbowSolid(uint32_t tElapsedUs, uint32_t arg __attribute__((unused))
  * @param tElapsedUs The time elapsed since last call, in microseconds
  * @param reset      true to reset this dance's variables
  */
-void danceRainbowSolid(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset)
+void danceRainbowSolid(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset,
+                       bool useColor __attribute__((unused)))
 {
     static int32_t ledCount      = 0;
     static int32_t color_save    = 0;

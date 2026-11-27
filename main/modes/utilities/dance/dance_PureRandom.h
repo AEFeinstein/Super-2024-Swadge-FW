@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include "dance.h"
 
-void dancePureRandom(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset);
+void dancePureRandom(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor);
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -13,7 +13,7 @@ void dancePureRandom(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), 
  * @param tElapsedUs The time elapsed since last call, in microseconds
  * @param reset      true to reset this dance's variables
  */
-void dancePureRandom(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset)
+void dancePureRandom(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor)
 {
     static uint32_t tAccumulated = 0;
     static uint8_t randLedMask   = 0;
@@ -72,9 +72,18 @@ void dancePureRandom(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), 
         {
             if ((1 << i) & randLedMask)
             {
-                leds[i].r = (color >> 0) & 0xFF;
-                leds[i].g = (color >> 8) & 0xFF;
-                leds[i].b = (color >> 16) & 0xFF;
+                if (useColor)
+                {
+                    leds[i].r = ARG_R(arg);
+                    leds[i].g = ARG_G(arg);
+                    leds[i].b = ARG_B(arg);
+                }
+                else
+                {
+                    leds[i].r = (color >> 0) & 0xFF;
+                    leds[i].g = (color >> 8) & 0xFF;
+                    leds[i].b = (color >> 16) & 0xFF;
+                }
             }
         }
     }

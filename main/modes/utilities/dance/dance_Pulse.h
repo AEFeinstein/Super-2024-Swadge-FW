@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include "dance.h"
 
-void dancePulse(uint32_t tElapsedUs, uint32_t arg, bool reset);
+void dancePulse(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor);
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -13,7 +13,7 @@ void dancePulse(uint32_t tElapsedUs, uint32_t arg, bool reset);
  * @param tElapsedUs The time elapsed since last call, in microseconds
  * @param reset      true to reset this dance's variables
  */
-void dancePulse(uint32_t tElapsedUs, uint32_t arg, bool reset)
+void dancePulse(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor)
 {
     static uint8_t ledVal        = 0;
     static uint8_t randColor     = 0;
@@ -58,18 +58,18 @@ void dancePulse(uint32_t tElapsedUs, uint32_t arg, bool reset)
 
         for (int i = 0; i < CONFIG_NUM_LEDS; i++)
         {
-            if (0 == arg)
+            if (useColor)
+            {
+                leds[i].r = (ledVal * ARG_R(arg)) >> 8;
+                leds[i].g = (ledVal * ARG_G(arg)) >> 8;
+                leds[i].b = (ledVal * ARG_B(arg)) >> 8;
+            }
+            else
             {
                 int32_t color = EHSVtoHEXhelper(randColor, 0xFF, 0xFF, false);
                 leds[i].r     = (ledVal * ((color >> 0) & 0xFF) >> 8);
                 leds[i].g     = (ledVal * ((color >> 8) & 0xFF) >> 8);
                 leds[i].b     = (ledVal * ((color >> 16) & 0xFF) >> 8);
-            }
-            else
-            {
-                leds[i].r = (ledVal * ARG_R(arg)) >> 8;
-                leds[i].g = (ledVal * ARG_G(arg)) >> 8;
-                leds[i].b = (ledVal * ARG_B(arg)) >> 8;
             }
         }
         ledsUpdated = true;

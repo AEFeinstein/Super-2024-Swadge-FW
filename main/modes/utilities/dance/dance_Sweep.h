@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include "dance.h"
 
-void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset);
+void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)));
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -14,7 +14,7 @@ void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset);
  * @param arg        The color for this sweep
  * @param reset      true to reset this dance's variables
  */
-void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset)
+void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor)
 {
     static const int8_t ledOrder[][4] = {
         {6, 11, 12, 13},
@@ -30,7 +30,7 @@ void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset)
 
     static int32_t decayTimer = 0;
 
-    static int32_t rgbAngle = 0;
+    static int32_t rgbAngle      = 0;
     static uint32_t rainbowColor = 0;
 
     if (reset)
@@ -75,7 +75,7 @@ void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset)
         }
 
         // Apply rainbow if there's no color
-        if (0 == arg)
+        if (!useColor)
         {
             rainbowColor = EHSVtoHEXhelper(rgbAngle, 0xFF, 0xFF, false);
             rgbAngle++;

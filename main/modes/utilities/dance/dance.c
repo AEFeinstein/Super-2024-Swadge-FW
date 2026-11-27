@@ -148,10 +148,10 @@ const ledDance_t ledDances[] = {
     {.func = danceSweep, .algorithmicColor = true, .userColor = true, .name = "Sweep"},
     {.func = danceRise, .algorithmicColor = true, .userColor = true, .name = "Rise"},
     {.func = dancePulse, .algorithmicColor = true, .userColor = true, .name = "Pulse"},
-    {.func = danceFire, .algorithmicColor = false, .userColor = true, .name = "Fire"},
+    {.func = danceFire, .arg = RGB_2_ARG(0xFF, 51, 0), .algorithmicColor = false, .userColor = true, .name = "Fire"},
     {.func = danceBinaryCounter, .algorithmicColor = true, .userColor = false, .name = "Binary"},
     {.func = dancePoliceSiren, .algorithmicColor = true, .userColor = false, .name = "Siren"},
-    {.func = dancePureRandom, .algorithmicColor = true, .userColor = false, .name = "Random LEDs"},
+    {.func = dancePureRandom, .algorithmicColor = true, .userColor = true, .name = "Random LEDs"},
     {.func = danceChristmas, .arg = 1, .algorithmicColor = true, .userColor = false, .name = "Holiday 1"},
     {.func = danceChristmas, .algorithmicColor = true, .userColor = false, .name = "Holiday 2"},
     {.func = danceFlashlight, .arg = 0xFFFFFF, .algorithmicColor = false, .userColor = true, .name = "Flashlight"},
@@ -501,7 +501,7 @@ bool danceMenuCb(const char* label, bool selected, uint32_t value, menu_t* menu)
     }
     else if (str_useColor == label)
     {
-        if (menu->title == str_wings)
+        if (menu->title == str_wing_color)
         {
             portableDanceSetWingUseColor(danceState->dance, (bool)value);
         }

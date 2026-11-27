@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include "dance.h"
 
-void danceSmoothRainbow(uint32_t tElapsedUs, uint32_t arg, bool reset);
+void danceSmoothRainbow(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)));
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -13,7 +13,7 @@ void danceSmoothRainbow(uint32_t tElapsedUs, uint32_t arg, bool reset);
  * @param tElapsedUs The time elapsed since last call, in microseconds
  * @param reset      true to reset this dance's variables
  */
-void danceSmoothRainbow(uint32_t tElapsedUs, uint32_t arg, bool reset)
+void danceSmoothRainbow(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)))
 {
     // Map comet index to LED index
     const int8_t ledMap[CONFIG_NUM_LEDS] = {// Down the right side
