@@ -31,6 +31,7 @@
 #include "dance_PoliceSiren.h"
 #include "dance_PureRandom.h"
 #include "dance_Christmas.h"
+#include "dance_HardwareIndices.h"
 #include "dance_Flashlight.h"
 #include "dance_None.h"
 #include "dance_RandomDance.h"
@@ -158,6 +159,7 @@ const ledDance_t ledDances[] = {
     {.func = danceChristmas, .arg = 1, .userColor = false, .name = "Holiday 1"},
     {.func = danceChristmas, .userColor = false, .name = "Holiday 2"},
     {.func = danceFlashlight, .arg = 0xFFFFFF, .userColor = true, .name = "Flashlight"},
+    {.func = hardwareIndices, .userColor = true, .name = "Cool SAO"},
     {.func = danceNone, .userColor = false, .name = "None"},
     {.func = danceRandomDance, .userColor = true, .name = "Shuffle All"},
 };
