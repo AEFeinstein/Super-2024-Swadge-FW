@@ -70,8 +70,10 @@ typedef struct
     wsg_t* teleporterSprites;
     wsg_t* instructionsPages;
     wsg_t* goal;
+    wsg_t* goalSmallText;
     wsg_t backgroundTile;
-    wsg_t success;
+    wsg_t popupBackground;
+    wsg_t successTitle;
     wsg_t unsuccessful;
     wsg_t genericBackground;
     wsg_t mainTitle;
@@ -105,6 +107,8 @@ typedef struct
     int8_t goalFrame;
     int16_t goalTime;
     int8_t goalCount;
+    int16_t goalX;
+    int16_t goalY;
 
     int16_t animationTime;
 
