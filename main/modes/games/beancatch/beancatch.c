@@ -334,7 +334,7 @@ void bcUpdateAcl(void)
         fillDisplayArea(0, 212, TFT_WIDTH, 221, c510);
 
         // Reflector
-        fillDisplayArea(0, 36, TFT_WIDTH, 204, c445);
+        fillDisplayArea(0, 36, TFT_WIDTH, 205, c445);
 
         drawWsgSimple(&beancatch->wsgs[BC_WSG_BEAN_CATCH_BG], 0, 28);
 
