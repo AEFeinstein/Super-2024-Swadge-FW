@@ -27,9 +27,9 @@ void dancePulse(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor, vo
 
     if (reset)
     {
-        danceState->ledVal        = 0;
-        danceState->randColor     = 0;
-        danceState->goingUp       = true;
+        danceState->ledVal       = 0;
+        danceState->randColor    = 0;
+        danceState->goingUp      = true;
         danceState->tAccumulated = 5000;
         return;
     }

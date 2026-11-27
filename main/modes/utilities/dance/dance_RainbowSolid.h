@@ -49,7 +49,7 @@ void danceRainbowSolid(uint32_t tElapsedUs, uint32_t arg __attribute__((unused))
         {
             danceState->ledCount = 0;
         }
-        int16_t angle = danceState->ledCount % 256;
+        int16_t angle          = danceState->ledCount % 256;
         danceState->color_save = EHSVtoHEXhelper(angle, 0xFF, 0xFF, false);
 
         uint8_t i;

@@ -28,7 +28,7 @@ void danceRise(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor, voi
  */
 void danceRise(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor, void* state)
 {
-    danceRiseState_t* danceState = state;
+    danceRiseState_t* danceState                     = state;
     static const int8_t ledsPerLevel[RISE_LEVELS][2] = {
         {6, 7}, {13, 8}, {0, 1}, {5, 2}, {12, 9}, {4, 3}, {11, 10},
     };

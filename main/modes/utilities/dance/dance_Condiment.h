@@ -27,14 +27,14 @@ void danceCondiment(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor
 void danceCondiment(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)), void* state)
 {
     danceCondimentState_t* danceState = state;
-    static const int8_t pulseLeds[] = {0, 1, 2, 3, 4};
-    static const int8_t stripLeds[] = {5, 6, 7, 8};
+    static const int8_t pulseLeds[]   = {0, 1, 2, 3, 4};
+    static const int8_t stripLeds[]   = {5, 6, 7, 8};
 
     if (reset)
     {
-        danceState->isPulse      = false;
-        danceState->pulseVal     = 0;
-        danceState->pulseRising  = true;
+        danceState->isPulse     = false;
+        danceState->pulseVal    = 0;
+        danceState->pulseRising = true;
         memset(danceState->stripVals, 0, sizeof(danceState->stripVals));
         danceState->stripExciter = 0;
     }

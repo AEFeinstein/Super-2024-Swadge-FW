@@ -27,7 +27,7 @@ void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor, vo
  */
 void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor, void* state)
 {
-    danceSweepState_t* danceState = state;
+    danceSweepState_t* danceState     = state;
     static const int8_t ledOrder[][4] = {
         {6, 11, 12, 13},
         {0, 4, 5, -1},

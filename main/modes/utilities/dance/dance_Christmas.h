@@ -107,8 +107,8 @@ void danceChristmas(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor
         {
             danceState->ledCount  = 0;
             danceState->ledCount2 = danceRand(1000) + 50; // 350ms to 7350ms
-            int color_picker = danceRand(CONFIG_NUM_LEDS - 1);
-            int node_select  = danceRand(CONFIG_NUM_LEDS);
+            int color_picker      = danceRand(CONFIG_NUM_LEDS - 1);
+            int node_select       = danceRand(CONFIG_NUM_LEDS);
 
             if (color_picker < 4)
             {
@@ -172,18 +172,18 @@ void danceChristmas(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor
         // Calculate actual LED values
         for (i = 0; i < CONFIG_NUM_LEDS; i++)
         {
-            leds[i].r
-                = (EHSVtoHEXhelper(danceState->current_color_hue[i], danceState->current_color_saturation[i],
-                                   danceState->current_value[i], false) >> 0)
-                  & 0xFF;
-            leds[i].g
-                = (EHSVtoHEXhelper(danceState->current_color_hue[i], danceState->current_color_saturation[i],
-                                   danceState->current_value[i], false) >> 8)
-                  & 0xFF;
-            leds[i].b
-                = (EHSVtoHEXhelper(danceState->current_color_hue[i], danceState->current_color_saturation[i],
-                                   danceState->current_value[i], false) >> 16)
-                  & 0xFF;
+            leds[i].r = (EHSVtoHEXhelper(danceState->current_color_hue[i], danceState->current_color_saturation[i],
+                                         danceState->current_value[i], false)
+                         >> 0)
+                        & 0xFF;
+            leds[i].g = (EHSVtoHEXhelper(danceState->current_color_hue[i], danceState->current_color_saturation[i],
+                                         danceState->current_value[i], false)
+                         >> 8)
+                        & 0xFF;
+            leds[i].b = (EHSVtoHEXhelper(danceState->current_color_hue[i], danceState->current_color_saturation[i],
+                                         danceState->current_value[i], false)
+                         >> 16)
+                        & 0xFF;
         }
         ledsUpdated = true;
     }

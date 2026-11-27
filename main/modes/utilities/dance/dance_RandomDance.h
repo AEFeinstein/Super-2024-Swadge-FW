@@ -19,9 +19,7 @@ static void danceRandomDanceFreeChild(danceRandomDanceState_t* danceState)
 {
     if (danceState->childState)
     {
-        const ledDance_t* selected = danceState->random_choice >= 0
-                                         ? &ledDances[danceState->random_choice]
-                                         : NULL;
+        const ledDance_t* selected = danceState->random_choice >= 0 ? &ledDances[danceState->random_choice] : NULL;
         if (selected && selected->deinit)
         {
             selected->deinit(danceState->childState);

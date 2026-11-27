@@ -9,7 +9,8 @@ typedef struct
     uint8_t ledCount;
 } danceSmoothRainbowState_t;
 
-void danceSmoothRainbow(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)), void* state);
+void danceSmoothRainbow(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)),
+                        void* state);
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -19,7 +20,8 @@ void danceSmoothRainbow(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useC
  * @param tElapsedUs The time elapsed since last call, in microseconds
  * @param reset      true to reset this dance's variables
  */
-void danceSmoothRainbow(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)), void* state)
+void danceSmoothRainbow(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)),
+                        void* state)
 {
     danceSmoothRainbowState_t* danceState = state;
     // Map comet index to LED index
