@@ -19,7 +19,7 @@
 // Defines
 //==============================================================================
 
-#define SWORD_SWING_TIME  300000
+#define SWORD_SWING_TIME  250000
 #define SWORD_SWING_ANGLE 180
 
 //==============================================================================
@@ -1052,8 +1052,8 @@ line_t rayGetSwordLineSegment(ray_t* ray)
         {
             swordAngle -= 360;
         }
-        sword.p2.x += (9 * getSin1024(swordAngle)) / 32;
-        sword.p2.y += -(9 * getCos1024(swordAngle)) / 32;
+        sword.p2.x += (11 * getSin1024(swordAngle)) / 32;
+        sword.p2.y += -(11 * getCos1024(swordAngle)) / 32;
     }
     return sword;
 }
