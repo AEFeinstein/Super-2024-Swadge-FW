@@ -352,7 +352,11 @@ static void rebuildDanceMenu(void)
 
 static void addColorChannelSettings(menu_t* colorMenu, int32_t color)
 {
-    removeSingleItemFromMenu(colorMenu, mnuBackStr);
+    bool hadBack = colorMenu->items->last && ((menuItem_t*)colorMenu->items->last->val)->label == mnuBackStr;
+    if (hadBack)
+    {
+        removeSingleItemFromMenu(colorMenu, mnuBackStr);
+    }
 
     const settingParam_t colorParam = {
         .min = 0,
@@ -366,7 +370,10 @@ static void addColorChannelSettings(menu_t* colorMenu, int32_t color)
     addSettingsOptionsItemToMenu(colorMenu, str_blue, danceState->colorNames, danceState->colorVals, ARRAY_SIZE(colors),
                                  &colorParam, (color & 0xFF) / 17);
 
-    addSingleItemToMenu(colorMenu, mnuBackStr);
+    if (hadBack)
+    {
+        addSingleItemToMenu(colorMenu, mnuBackStr);
+    }
 }
 
 /**
