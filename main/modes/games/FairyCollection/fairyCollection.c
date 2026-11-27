@@ -102,7 +102,7 @@ static void fcMainLoop(int64_t elapsedUs);
 static void fcAddToSwadgePassPacket(struct swadgePassPacket* packet);
 static void loadUserFairy(void);
 static void loadFromSwadgePass(void);
-static bool fcMenuCb(const char* label, bool selected, uint32_t settingVal);
+static bool fcMenuCb(const char* label, bool selected, uint32_t settingVal, menu_t* menu);
 
 //==============================================================================
 // Variables
@@ -265,7 +265,7 @@ static void loadFromSwadgePass(void)
                           sizeof(fcd->fcspf->spFairies));
 }
 
-static bool fcMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool fcMenuCb(const char* label, bool selected, uint32_t settingVal, menu_t* menu)
 {
     if (selected)
     {

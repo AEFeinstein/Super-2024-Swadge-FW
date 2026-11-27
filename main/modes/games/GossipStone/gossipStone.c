@@ -42,7 +42,7 @@ static void gs_initializeGame(void);
 static void gs_freeAssets(void);
 static void gs_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void gs_updateLEDs(void);
-bool gs_menuCb(const char* label, bool selected, uint32_t value);
+bool gs_menuCb(const char* label, bool selected, uint32_t value, menu_t* menu);
 void gs_switchState(gs_submode_t submode);
 void gs_submodeStateExit(void);
 void gs_submodeStateEnter(gs_submode_t submode);
@@ -425,7 +425,7 @@ static void gs_updateLEDs(void)
  * @param selected true if this was selected, false if it was moved to
  * @param value The value for settings, unused.
  */
-bool gs_menuCb(const char* label, bool selected, uint32_t value)
+bool gs_menuCb(const char* label, bool selected, uint32_t value, menu_t* menu)
 {
     if (selected)
     {

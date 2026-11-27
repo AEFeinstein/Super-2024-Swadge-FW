@@ -42,7 +42,7 @@ typedef struct
 static void mainMenuEnterMode(void);
 static void mainMenuExitMode(void);
 static void mainMenuMainLoop(int64_t elapsedUs);
-static bool mainMenuCb(const char* label, bool selected, uint32_t settingVal);
+static bool mainMenuCb(const char* label, bool selected, uint32_t settingVal, menu_t* menu);
 void addSecretsMenu(void);
 #if defined(CONFIG_FACTORY_TEST_NORMAL)
 static void fanfareFinishedCb(void);
@@ -412,7 +412,7 @@ static void fanfareFinishedCb(void)
  * @param settingVal The value of the setting, if the menu item is a settings item
  * @return true to go up a menu level, false to remain here
  */
-static bool mainMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool mainMenuCb(const char* label, bool selected, uint32_t settingVal, menu_t* menu)
 {
     // Stop the buzzer first no matter what, so that it turns off
     // if we scroll away from the BGM or SFX settings.

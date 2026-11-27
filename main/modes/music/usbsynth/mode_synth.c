@@ -376,7 +376,7 @@ static void drawSampleGraphCircular(void);
 static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo);
 static int writeMidiText(char* dest, size_t n, midiTextInfo_t* text, bool kar);
 static void midiTextCallback(metaEventType_t type, const char* text, uint32_t length);
-static bool synthMenuCb(const char* label, bool selected, uint32_t value);
+static bool synthMenuCb(const char* label, bool selected, uint32_t value, menu_t* menu);
 static void songEndCb(void);
 static void setupShuffle(int numSongs);
 static void prevSong(void);
@@ -4178,7 +4178,7 @@ static void midiTextCallback(metaEventType_t type, const char* text, uint32_t le
     }
 }
 
-static bool synthMenuCb(const char* label, bool selected, uint32_t value)
+static bool synthMenuCb(const char* label, bool selected, uint32_t value, menu_t* menu)
 {
     // printf("synthMenuCb(%s, %s, %" PRIu32 ")\n", label, selected ? "true" : "false", value);
     if (NULL == label)

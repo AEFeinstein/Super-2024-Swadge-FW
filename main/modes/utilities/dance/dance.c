@@ -286,7 +286,7 @@ void setupMenu(const char* currentLabel)
         {
             addColorChannelSettings(colorMenu, danceState->dance->color);
         }
-        endSubMenu(colorMenu);
+        colorMenu = endSubMenu(colorMenu);
     }
 
     // Add speed to the menu
@@ -299,7 +299,7 @@ void setupMenu(const char* currentLabel)
 
     if (subMenu)
     {
-        endSubMenu(subMenu);
+        subMenu = endSubMenu(subMenu);
         subMenu = startSubMenu(danceState->menu, str_wings);
         addSettingsOptionsItemToMenu(subMenu, str_pattern, danceState->danceNames, danceState->danceVals,
                                      ARRAY_SIZE(ledDances), &danceParam, danceState->dance->wingDanceIndex);
@@ -314,11 +314,11 @@ void setupMenu(const char* currentLabel)
             {
                 addColorChannelSettings(colorMenu, danceState->dance->wingColor);
             }
-            endSubMenu(colorMenu);
+            colorMenu = endSubMenu(colorMenu);
         }
         addSettingsOptionsItemToMenu(subMenu, str_speed, speedLabels, speedVals, ARRAY_SIZE(speedVals), &speedParam,
                                      danceState->dance->wingSpeed);
-        endSubMenu(subMenu);
+        subMenu = endSubMenu(subMenu);
     }
 
     // Add exit to the menu

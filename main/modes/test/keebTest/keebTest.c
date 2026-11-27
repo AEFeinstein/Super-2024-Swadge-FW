@@ -82,7 +82,7 @@ static void keebMainLoop(int64_t elapsedUs);
  * @param settingVal If scrolled to, indicates the value
  * @return true to go up a menu level, false to remain here
  */
-static bool kbMenuCb(const char* label, bool selected, uint32_t settingVal);
+static bool kbMenuCb(const char* label, bool selected, uint32_t settingVal, menu_t* menu);
 
 /**
  * @brief Draws the result of the text stream
@@ -261,7 +261,7 @@ static void keebMainLoop(int64_t elapsedUs)
     }
 }
 
-static bool kbMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool kbMenuCb(const char* label, bool selected, uint32_t settingVal, menu_t* menu)
 {
     if (selected)
     {
