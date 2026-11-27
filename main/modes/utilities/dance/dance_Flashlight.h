@@ -36,18 +36,9 @@ void danceFlashlight(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColo
         uint8_t i;
         for (i = 0; i < CONFIG_NUM_LEDS; i++)
         {
-            if (useColor)
-            {
-                leds[i].r = ARG_R(arg);
-                leds[i].g = ARG_G(arg);
-                leds[i].b = ARG_B(arg);
-            }
-            else
-            {
-                leds[i].r = ARG_R(0xFFFFFF);
-                leds[i].r = ARG_R(0xFFFFFF);
-                leds[i].r = ARG_R(0xFFFFFF);
-            }
+            leds[i].r = ARG_R(arg);
+            leds[i].g = ARG_G(arg);
+            leds[i].b = ARG_B(arg);
         }
     }
     // Output the LED data, actually turning them on
