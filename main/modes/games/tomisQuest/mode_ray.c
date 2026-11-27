@@ -169,6 +169,49 @@ const rayMapMetadata_t mapMetadata[] = {
 
 const char TOMIS_QUEST_FINISHED[] = "tq_finished";
 
+// Modify the following with your trophies
+const trophyData_t tqTrophies[] = {
+    {
+        .title       = "You've Made Your Point",
+        .description = "Show the Great DeJay Tree you're serious",
+        .image       = SILVER_TROPHY_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Bad Influence",
+        .description = "He's just gonna buy synths, isn't he",
+        .image       = KID_1_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "You did it!",
+        .description = "Completed the Great Fairy Trials",
+        .image       = WINGED_TROPHY_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1,
+    },
+};
+
+// Individual mode settings
+const trophySettings_t tqTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 6,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = rayName,
+};
+
+// This is passed to the swadgeMode_t
+const trophyDataList_t tqTrophyData = {
+    .settings = &tqTrophySettings,
+    .list     = tqTrophies,
+    .length   = ARRAY_SIZE(tqTrophies),
+};
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -189,6 +232,8 @@ swadgeMode_t rayMode = {
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
     .fnDacCb                  = NULL,
+    .fnAddToSwadgePassPacket  = NULL,
+    .trophyData               = &tqTrophyData,
 };
 
 ray_t* ray;

@@ -38,7 +38,7 @@ bool initCutsceneTurntablesGet(ray_t* ray, cutscene_t* cutscene, const char* tit
 
         // Note: input instructions (turntables)
         addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "You Got the Magic Turntables! Activate them by slashing a DJ Booth.", false, 0, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "Use both touch strips to catch notes and scratch a fat beat!", false, 0, NULL);
+        addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "Use both touch strips to catch notes and scratch a fat beat!", false, 0, endScene);
 
         // clang-format on
 

@@ -53,6 +53,14 @@ static void endDialog5(void)
 }
 
 /**
+ * @brief Get a trophy for talking to the DeJay Tree
+ */
+static void getTrophy(void)
+{
+    trophyUpdate(&rayMode.trophyData->list[0], 1, true);
+}
+
+/**
  * @brief Initialize the cutscene for Great DeJay Tree
  *
  * Note that Tomi is style 0 and Hyut is style 1
@@ -113,8 +121,7 @@ void initNpcCutsceneGreatDejayTree(ray_t* ray, cutscene_t* cutscene)
         else
         {
             addCutsceneLine(cutscene, CS_STYLE_TOMI, "I MEAN IT! I'M OUTTA HERE!", false, TOMI_ANGRY, NULL);
-            addCutsceneLine(cutscene, CS_STYLE_GDJT, "I heard you the first time.", false, 0, NULL);
-            // TODO ACHIEVEMENT UNLOCKED: "I Think You've Made Your Point Now" - Show the Great DeJay Tree you're a serious adventurer.
+            addCutsceneLine(cutscene, CS_STYLE_GDJT, "I heard you the first time.", false, 0, getTrophy);
         }
     }
     // After getting Ewi, before visiting Loot

@@ -2,6 +2,14 @@
 #include "ray_cutscene_scene_13_great_fairy.h"
 
 /**
+ * @brief Get a trophy for finishing the game
+ */
+static void getTrophy(void)
+{
+    trophyUpdate(&rayMode.trophyData->list[2], 1, true);
+}
+
+/**
  * @brief Callback to mark this scene as viewed
  */
 static void endScene(void)
@@ -75,8 +83,7 @@ bool initCutsceneGreatFairy(ray_t* ray, cutscene_t* cutscene, const char* title)
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Huh? But... But... I did the whole adventure!", false, TOMI_PLEADING, NULL);
         addCutsceneLine(cutscene, CS_STYLE_GF, "Yes! And for that, we congratulate you.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "That... That's it?", false, TOMI_PLEADING, NULL);
-        addCutsceneLine(cutscene, CS_STYLE_GF, "Yes? What else were you expecting? An achievement?", false, 0, NULL);
-        // TODO ACHIEVEMENT UNLOCKED: "You did it!" - Completed the Great Fairy Trials.
+        addCutsceneLine(cutscene, CS_STYLE_GF, "Yes? What else were you expecting? An achievement?", false, 0, getTrophy);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "I... I thought... I did everything you asked!", false, TOMI_PLEADING, NULL);
         addCutsceneLine(cutscene, CS_STYLE_GF, "Yes. You did. You walked the path we set for you.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "But - I did all this work!", false, TOMI_PLEADING, NULL);
