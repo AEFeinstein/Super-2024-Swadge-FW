@@ -590,18 +590,30 @@ bool danceMenuCb(const char* label, bool selected, uint32_t value, menu_t* menu)
     }
     else if (str_red == label)
     {
-        portableDanceSetColor(danceState->dance, ((value * 17) << 16) | (danceState->dance->color & 0x00FFFF),
-                              menu->title == str_wing_color);
+        portableDanceSetColor(
+            danceState->dance,
+            ((value * 17) << 16)
+                | ((menu->title == str_wing_color ? danceState->dance->wingColor : danceState->dance->color)
+                   & 0x00FFFF),
+            menu->title == str_wing_color);
     }
     else if (str_green == label)
     {
-        portableDanceSetColor(danceState->dance, ((value * 17) << 8) | (danceState->dance->color & 0xFF00FF),
-                              menu->title == str_wing_color);
+        portableDanceSetColor(
+            danceState->dance,
+            ((value * 17) << 8)
+                | ((menu->title == str_wing_color ? danceState->dance->wingColor : danceState->dance->color)
+                   & 0xFF00FF),
+            menu->title == str_wing_color);
     }
     else if (str_blue == label)
     {
-        portableDanceSetColor(danceState->dance, (value * 17) | (danceState->dance->color & 0xFFFF00),
-                              menu->title == str_wing_color);
+        portableDanceSetColor(
+            danceState->dance,
+            (value * 17)
+                | ((menu->title == str_wing_color ? danceState->dance->wingColor : danceState->dance->color)
+                   & 0xFFFF00),
+            menu->title == str_wing_color);
     }
     return false;
 }

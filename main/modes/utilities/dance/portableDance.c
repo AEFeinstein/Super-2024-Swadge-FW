@@ -172,7 +172,7 @@ void portableDanceLoadSetting(portableDance_t* dance)
     {
         writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceWingUseColor, wingUseColor);
     }
-    dance->useColor = (bool)wingUseColor;
+    dance->wingUseColor = (bool)wingUseColor;
 
     int32_t color = 0;
     if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceColor, &color))
