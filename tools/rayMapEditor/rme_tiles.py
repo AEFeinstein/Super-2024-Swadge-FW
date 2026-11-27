@@ -98,7 +98,7 @@ class tileType(Enum):
     BG_DOOR_B_KEY_LOCKED = BG | DOOR | 7
     BG_DOOR_K_KEY_LOCKED = BG | DOOR | 8
     BG_DOOR_DUNGEON = BG | DOOR | 9
-    BG_DOOR_10 = BG | DOOR | 10
+    BG_DOOR_TREES = BG | DOOR | 10
     BG_DOOR_11 = BG | DOOR | 11
     BG_DOOR_12 = BG | DOOR | 12
     BG_DOOR_13 = BG | DOOR | 13
@@ -236,7 +236,7 @@ class tileType(Enum):
     OBJ_SCENERY_SHOP_HEART_CONTAINER = OBJ | SCENERY | 9
     OBJ_SCENERY_SHOP_HEART = OBJ | SCENERY | 10
     OBJ_SCENERY_STATUE = OBJ | SCENERY | 11
-    OBJ_SCENERY_12 = OBJ | SCENERY | 12
+    OBJ_SCENERY_CRYSTAL = OBJ | SCENERY | 12
     OBJ_SCENERY_13 = OBJ | SCENERY | 13
     OBJ_SCENERY_14 = OBJ | SCENERY | 14
     OBJ_SCENERY_15 = OBJ | SCENERY | 15
@@ -338,7 +338,7 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_DOOR_B_KEY_LOCKED,
         tileType.BG_DOOR_K_KEY_LOCKED,
         tileType.BG_DOOR_SCRIPT_LOCKED,
-        tileType.BG_DOOR_10,
+        tileType.BG_DOOR_TREES,
         tileType.BG_DOOR_11,
         tileType.BG_DOOR_12,
         tileType.BG_DOOR_13,
@@ -448,7 +448,7 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_SCENERY_SHOP_HEART_CONTAINER,
         tileType.OBJ_SCENERY_SHOP_HEART,
         tileType.OBJ_SCENERY_STATUE,
-        tileType.OBJ_SCENERY_12,
+        tileType.OBJ_SCENERY_CRYSTAL,
         tileType.OBJ_SCENERY_13,
         tileType.OBJ_SCENERY_14,
         tileType.OBJ_SCENERY_15,

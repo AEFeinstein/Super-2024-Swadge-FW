@@ -65,7 +65,7 @@ bool initializePlayer(ray_t* ray)
         // ray->p.i.haveBombs         = true;
         // ray->p.i.haveJumpBoots     = true;
         // ray->p.i.haveShield        = true;
-        // ray->p.i.haveBow           = true; // TODO add instructions
+        // ray->p.i.haveBow           = true;
         // ray->p.i.haveBoomerang     = true;
         // ray->p.i.haveTurntables    = true;
         // ray->p.i.haveDoriasLullaby = true;
@@ -1001,20 +1001,20 @@ bool rayPlayerDecrementHealth(ray_t* ray, int32_t health)
         return false;
     }
 
-    // Start player iframes
-    ray->ps.iFrameTimer = ENEMY_DEFAULT_IFRAMES_US;
-
-    // Decrement health
-    ray->p.health -= health;
-
     if (health > 0)
     {
+        // Start player iframes
+        ray->ps.iFrameTimer = ENEMY_DEFAULT_IFRAMES_US;
+
+        // Decrement health
+        ray->p.health -= health;
+
         // Play SFX
         globalMidiPlayerPlaySong(&ray->sfx_p_damage, MIDI_SFX);
-    }
 
-    // Make LEDs red
-    ray->ledHue = 0;
+        // Make LEDs red
+        ray->ledHue = 0;
+    }
 
     // Check for death happens not in the middle of processing because
     // it can free state while it's still being used. Search for
