@@ -94,6 +94,8 @@ typedef struct
     bool building;
     bool goalAnimating;
     bool losePrompt;
+    bool trackLoop;
+    bool teleporterUse;
 
     // QoL
     bool backgroundMoving;
@@ -124,6 +126,7 @@ typedef struct
 
     int8_t holdingDir;
     int32_t timeHeldDireciton;
+    int32_t timeRunning;
 
     int16_t successTime;
 
@@ -171,6 +174,7 @@ typedef enum
     BT_INSTRUCTIONS,
     BT_MORE_OR_LESS,
     BT_COMPLETE,
+    BT_TRACKLOOP,
 } bombadeetleTrophyType;
 
 

@@ -161,6 +161,22 @@ const trophyData_t bombadeetleTrophies[] ={
         .difficulty     = TROPHY_DIFF_HARD,
         .maxVal         = 1,
     },
+    {
+        .title          = "Thank you for listening",
+        .description    = "Listen to the entire \"Go!\" track",
+        .image          = NO_IMAGE_SET,
+        .type           = TROPHY_TYPE_TRIGGER,
+        .difficulty     = TROPHY_DIFF_MEDIUM,
+        .maxVal         = 1,
+    },
+    {
+        .title          = "Fine then!",
+        .description    = "Don't use my teleporters",
+        .image          = NO_IMAGE_SET,
+        .type           = TROPHY_TYPE_TRIGGER,
+        .difficulty     = TROPHY_DIFF_MEDIUM,
+        .maxVal         = 1,
+    },
 };
 
 
@@ -242,17 +258,17 @@ static const cnfsFileIdx_t bombadeetleLevels[] = {
     BOMB_LVL_WOOBLY_BIN,
     BOMB_LVL_RABBIT_BIN,
     BOMB_LVL_ASTLE_BIN,
-    BOMB_LVL_MANIMIES_JSON,
+    BOMB_LVL_MANIMIES_BIN,
     BOMB_LVL_MELLOR_BIN,
     BOMB_LVL_JERO_BIN,
-    BOMB_LVL_ROGER_BIN,
-    BOMB_LVL_UNDERDEFEAT_BIN,
     BOMB_LVL_DIPDIPDIP_BIN,
+    BOMB_LVL_UNDERDEFEAT_BIN,
+    BOMB_LVL_ROGER_BIN,
     BOMB_LVL_TRISKAIDEKAPHOBIA_2_BIN,
+    BOMB_LVL_LERNDELEPORT_BIN, //Rename and move to bottom
+    BOMB_LVL_DODGENIT_BIN, // One of the final levels
     BOMB_LVL_MAG_2_BIN,
     BOMB_LVL_TRAP_BIN,
-    BOMB_LVL_DODGENIT_BIN, // One of the final levels
-    BOMB_LVL_LERNDELEPORT_BIN, //Rename and move to bottom
 };
 
 static const cnfsFileIdx_t bombadeetleTeleporter[] = {
@@ -798,6 +814,7 @@ static void bombadeetleCheckBombadeetles(bool update)
         if (bombadeetle->map[checkTile] & TELEPORT && update)
         {
             ESP_LOGI(TAG, "OMG! TELEPORT!");
+            bombadeetle->teleporterUse = true;
             for (int ndx = 1; ndx < 108; ndx++)
             {
                 if (bombadeetle->map[(checkTile + ndx) % 108] & TELEPORT)
@@ -1910,6 +1927,9 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                     if (evt.button & PB_B && !bombadeetle->building)
                     {
                         bombadeetle->state        = STATE_RUNNING;
+                        bombadeetle->timeRunning  = 0;
+                        bombadeetle->trackLoop    = false;
+                        bombadeetle->teleporterUse = false;
                         
                         globalMidiPlayerPlaySong(&bombadeetle->music[MUSIC_GO], MIDI_BGM);
                         globalMidiPlayerGet(MIDI_BGM)->loop = true;
@@ -2057,6 +2077,7 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
     if (bombadeetle->state == STATE_RUNNING)
     {
         bombadeetle->gameMoveTime += tick;
+        bombadeetle->timeRunning += tick;
 
         while (bombadeetle->gameMoveTime >= GAME_MOVE_TIME)
         {
@@ -2128,6 +2149,20 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
             bombadeetle->state       = STATE_WIN;
             bombadeetle->successTime = 0;
 
+            bool hasTeleporter = false;
+            for (int i = 0; i < GRIDHEIGHT * GRIDWIDTH; i ++)
+            {
+                if (bombadeetle->map[i] & TELEPORT)
+                {
+                    hasTeleporter = true;
+                    break;
+                }
+            }
+            if (hasTeleporter && bombadeetle->teleporterUse == false)
+            {
+                ESP_LOGI(TAG, "FINE! Don't use my teleporters.");
+            }
+
             //Check if all arrows were used
             if (bombadeetle->mapFile.up > 0 || bombadeetle->mapFile.down > 0 || bombadeetle->mapFile.left > 0 || bombadeetle->mapFile.right > 0)
             {
@@ -2190,6 +2225,14 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
     if (bombadeetle->cursorX >= GRIDWIDTH)
     {
         bombadeetle->cursorX = GRIDWIDTH - 1;
+    }
+    
+    if (bombadeetle->trackLoop == false && bombadeetle->timeRunning > 27000)
+    {
+        bombadeetle->trackLoop = true;
+        ESP_LOGI(TAG, "%d", bombadeetle->timeRunning);
+        trophyUpdate(&bombadeetleTrophies[BT_TRACKLOOP],  true, true);
+
     }
 
     bombadeetleDrawGame();
