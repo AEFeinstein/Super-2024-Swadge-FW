@@ -84,9 +84,9 @@ void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor, vo
             else
             {
                 int32_t color = EHSVtoHEXhelper(danceState->rainbow, 0xFF, 0xFF, false);
-                led->r        = (color >> 0) & 0xFF;
-                led->g        = (color >> 8) & 0xFF;
-                led->b        = (color >> 16) & 0xFF;
+                led->r        = ARG_R(color);
+                led->g        = ARG_G(color);
+                led->b        = ARG_B(color);
             }
             danceState->ledCount = (danceState->ledCount + 1) % CONFIG_NUM_LEDS;
             danceState->msCount  = 0;

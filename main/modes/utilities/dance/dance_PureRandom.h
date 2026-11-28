@@ -85,9 +85,9 @@ void dancePureRandom(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColo
                 }
                 else
                 {
-                    leds[i].r = (color >> 0) & 0xFF;
-                    leds[i].g = (color >> 8) & 0xFF;
-                    leds[i].b = (color >> 16) & 0xFF;
+                    leds[i].r = ARG_R(color);
+                    leds[i].g = ARG_G(color);
+                    leds[i].b = ARG_B(color);
                 }
             }
         }

@@ -72,9 +72,9 @@ void dancePulse(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor, vo
             else
             {
                 int32_t color = EHSVtoHEXhelper(danceState->randColor, 0xFF, 0xFF, false);
-                leds[i].r     = (danceState->ledVal * ((color >> 0) & 0xFF) >> 8);
-                leds[i].g     = (danceState->ledVal * ((color >> 8) & 0xFF) >> 8);
-                leds[i].b     = (danceState->ledVal * ((color >> 16) & 0xFF) >> 8);
+                leds[i].r     = (danceState->ledVal * ARG_R(color)) >> 8;
+                leds[i].g     = (danceState->ledVal * ARG_G(color)) >> 8;
+                leds[i].b     = (danceState->ledVal * ARG_B(color)) >> 8;
             }
         }
         ledsUpdated = true;

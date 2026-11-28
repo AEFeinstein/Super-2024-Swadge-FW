@@ -58,9 +58,9 @@ void danceSharpRainbow(uint32_t tElapsedUs, uint32_t arg __attribute__((unused))
             int16_t angle  = (((i * 256) / CONFIG_NUM_LEDS)) % 256;
             uint32_t color = EHSVtoHEXhelper(angle, 0xFF, 0xFF, false);
 
-            leds[ledMap[(i + danceState->ledCount) % CONFIG_NUM_LEDS]].r = (color >> 0) & 0xFF;
-            leds[ledMap[(i + danceState->ledCount) % CONFIG_NUM_LEDS]].g = (color >> 8) & 0xFF;
-            leds[ledMap[(i + danceState->ledCount) % CONFIG_NUM_LEDS]].b = (color >> 16) & 0xFF;
+            leds[ledMap[(i + danceState->ledCount) % CONFIG_NUM_LEDS]].r = ARG_R(color);
+            leds[ledMap[(i + danceState->ledCount) % CONFIG_NUM_LEDS]].g = ARG_G(color);
+            leds[ledMap[(i + danceState->ledCount) % CONFIG_NUM_LEDS]].b = ARG_B(color);
         }
     }
     // Output the LED data, actually turning them on

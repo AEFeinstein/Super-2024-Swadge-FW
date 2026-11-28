@@ -55,9 +55,9 @@ void danceSmoothRainbow(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useC
             int16_t angle  = ((((i * 256) / CONFIG_NUM_LEDS)) + danceState->ledCount) % 256;
             uint32_t color = EHSVtoHEXhelper(angle, 0xFF, 0xFF, false);
 
-            leds[ledMap[i]].r = (color >> 0) & 0xFF;
-            leds[ledMap[i]].g = (color >> 8) & 0xFF;
-            leds[ledMap[i]].b = (color >> 16) & 0xFF;
+            leds[ledMap[i]].r = ARG_R(color);
+            leds[ledMap[i]].g = ARG_G(color);
+            leds[ledMap[i]].b = ARG_B(color);
         }
     }
     // Output the LED data, actually turning them on

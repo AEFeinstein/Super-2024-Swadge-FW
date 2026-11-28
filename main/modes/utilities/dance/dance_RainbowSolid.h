@@ -55,9 +55,9 @@ void danceRainbowSolid(uint32_t tElapsedUs, uint32_t arg __attribute__((unused))
         uint8_t i;
         for (i = 0; i < CONFIG_NUM_LEDS; i++)
         {
-            leds[i].r = (danceState->color_save >> 0) & 0xFF;
-            leds[i].g = (danceState->color_save >> 8) & 0xFF;
-            leds[i].b = (danceState->color_save >> 16) & 0xFF;
+            leds[i].r = ARG_R(danceState->color_save);
+            leds[i].g = ARG_G(danceState->color_save);
+            leds[i].b = ARG_B(danceState->color_save);
         }
     }
     // Output the LED data, actually turning them on

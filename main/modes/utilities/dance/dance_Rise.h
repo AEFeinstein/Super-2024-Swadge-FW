@@ -103,9 +103,9 @@ void danceRise(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor, voi
                     if (-1 != ledNum)
                     {
                         // Set the LEDs
-                        leds[ledNum].r = (danceState->levels[i] * ((color >> 16) & 0xFF) >> 8);
-                        leds[ledNum].g = (danceState->levels[i] * ((color >> 8) & 0xFF) >> 8);
-                        leds[ledNum].b = (danceState->levels[i] * ((color >> 0) & 0xFF) >> 8);
+                        leds[ledNum].r = (danceState->levels[i] * ARG_R(color)) >> 8;
+                        leds[ledNum].g = (danceState->levels[i] * ARG_G(color)) >> 8;
+                        leds[ledNum].b = (danceState->levels[i] * ARG_B(color)) >> 8;
                     }
                 }
             }

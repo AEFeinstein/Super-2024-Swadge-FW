@@ -82,16 +82,16 @@ void hardwareIndices(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColo
                 }
                 else
                 {
-                    leds[thisLed].r = (color >> 0) & 0xFF;
-                    leds[thisLed].g = (color >> 8) & 0xFF;
-                    leds[thisLed].b = (color >> 16) & 0xFF;
+                    leds[thisLed].r = ARG_R(color);
+                    leds[thisLed].g = ARG_G(color);
+                    leds[thisLed].b = ARG_B(color);
                 }
             }
             else
             {
-                leds[thisLed].r = 0x0;
-                leds[thisLed].g = 0x0;
-                leds[thisLed].b = 0x0;
+                leds[thisLed].r = 0;
+                leds[thisLed].g = 0;
+                leds[thisLed].b = 0;
             }
         }
     }
