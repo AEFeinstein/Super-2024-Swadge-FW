@@ -208,7 +208,6 @@ static const cnfsFileIdx_t bombadeetleInstructions[] = {
     BOMB_INSTRUCTIONS_1_WSG,
     BOMB_INSTRUCTIONS_2_WSG,
     BOMB_INSTRUCTIONS_3_WSG,
-
 };
 
 static const cnfsFileIdx_t bombadeetleGoal[] = {
@@ -276,6 +275,10 @@ static const int bombadeetleBeetleFrames[] = {
 
 static const int bombadeetleGoalAnimation[] = {
     0, 1, 2, 3, 4, 5, 4, 3, 0
+};
+
+static bool bombadeetleReadInstructions[] = {
+    true, false, false,
 };
 
 static const int bombadeetleTitleXLocations[] = {110, 75, 115};
@@ -1385,6 +1388,7 @@ static void bombadeetleInstructionsLoop(int64_t elapsedUs)
     {
         if (evt.down)
         {
+            bool success = false;
             if (evt.button & PB_B)
             {
                 bombadeetle->state = bombadeetle->lastState;
@@ -1397,12 +1401,52 @@ static void bombadeetleInstructionsLoop(int64_t elapsedUs)
                 {
                     bombadeetle->instructionsPage = ARRAY_SIZE(bombadeetleInstructions) - 1;
                 }
+
+                if (bombadeetle->instructionsPage  < ARRAY_SIZE(bombadeetleReadInstructions) - 1)
+                {
+                    success = true;
+                    bombadeetleReadInstructions[bombadeetle->instructionsPage] = true;
+
+                    for (int i = 0; i < ARRAY_SIZE(bombadeetleReadInstructions); i++)
+                    {
+                        if (bombadeetleReadInstructions[i] != true)
+                        {
+                            success = true;
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                }
             }
 
             if (evt.button & PB_RIGHT || evt.button & PB_A)
             {
                 bombadeetle->instructionsPage++;
                 bombadeetle->instructionsPage %= ARRAY_SIZE(bombadeetleInstructions);
+
+                
+                if (bombadeetle->instructionsPage  < ARRAY_SIZE(bombadeetleReadInstructions) - 1)
+                {
+                    success = true;
+                    bombadeetleReadInstructions[bombadeetle->instructionsPage] = true;
+
+                    for (int i = 0; i < ARRAY_SIZE(bombadeetleReadInstructions); i++)
+                    {
+                        if (bombadeetleReadInstructions[i] != true)
+                        {
+                            success = true;
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (success)
+            {
+                trophyUpdate(&bombadeetleTrophies[BT_INSTRUCTIONS],  true, true);
             }
         }
     }
@@ -1571,6 +1615,8 @@ static void bombadeetlePauseMenu(int64_t elapsedUs)
                 {
                     case 0:                    
                         bombadeetle->state = STATE_INSTRUCTIONS;
+                        trophyUpdate(&bombadeetleTrophies[BT_INSTRUCTIONS],  true, true);
+
                         break;
                     case 1:
                     
@@ -2081,6 +2127,12 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
             ESP_LOGI(TAG, "WIN!");
             bombadeetle->state       = STATE_WIN;
             bombadeetle->successTime = 0;
+
+            //Check if all arrows were used
+            if (bombadeetle->mapFile.up > 0 || bombadeetle->mapFile.down > 0 || bombadeetle->mapFile.left > 0 || bombadeetle->mapFile.right > 0)
+            {
+                trophyUpdate(&bombadeetleTrophies[BT_MORE_OR_LESS],  true, true);
+            }
             
             globalMidiPlayerPlaySong(&bombadeetle->music[STINGER_WIN], MIDI_BGM);
             globalMidiPlayerGet(MIDI_BGM)->loop = false;
