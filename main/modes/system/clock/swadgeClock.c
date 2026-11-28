@@ -38,6 +38,7 @@ typedef struct
     int32_t ySpacing;
     bool drawArrows;
     int32_t blinkTimer;
+    wsg_t clockBG;
 } swadgeClock_t;
 
 //==============================================================================
@@ -103,6 +104,8 @@ static void clockEnterMode(void)
     loadFont(PIX_ROMANA_FONT, &sc->clockFont, false);
     loadFont(MINISHCAP_FONT, &sc->noteFont, false);
 
+    loadWsg(CLOCK_BG_WSG, &sc->clockBG, false);
+
     // Find the width of the largest integer
     sc->maxWidth = 0;
     for (int32_t i = 0; i < 10; i++)
@@ -141,6 +144,7 @@ static void clockExitMode(void)
 {
     freeFont(&sc->clockFont);
     freeFont(&sc->noteFont);
+    freeWsg(&sc->clockBG);
     heap_caps_free(sc);
 }
 
@@ -381,7 +385,8 @@ static void clockMainLoop(int64_t elapsedUs)
  */
 static void clockBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-    memset(&(getPxTftFramebuffer()[(y * TFT_WIDTH) + x]), c001, w * h);
+    int32_t idx = (y * w) + x;
+    memcpy(&getPxTftFramebuffer()[idx], &sc->clockBG.px[idx], w * h);
 }
 
 /**
