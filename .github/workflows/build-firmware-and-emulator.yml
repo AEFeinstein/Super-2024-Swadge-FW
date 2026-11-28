@@ -139,6 +139,7 @@ jobs:
         mkdir -p ${{ env.FIRMWARE_ARTIFACT_PATH }}/
         cp build/swadge.elf ${{ env.FIRMWARE_ARTIFACT_PATH }}/
         cp build/swadge.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/phy_init_data.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
         cp build/dfu.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
         cp build/bootloader/bootloader.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
         cp build/partition_table/partition-table.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/

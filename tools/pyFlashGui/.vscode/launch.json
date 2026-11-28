@@ -5,10 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "pyFlashGui.py",
-            "type": "python",
+            "name": "Run Python Flash Utility",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/pyFlashGui.py",
+            "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "justMyCode": false
         }
