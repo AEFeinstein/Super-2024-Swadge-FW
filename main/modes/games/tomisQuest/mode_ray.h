@@ -289,7 +289,7 @@ typedef enum __attribute__((packed))
     OBJ_SCENERY_SHOP_HEART           = (OBJ | SCENERY | 10),
     OBJ_SCENERY_STATUE               = (OBJ | SCENERY | 11),
     OBJ_SCENERY_CRYSTAL              = (OBJ | SCENERY | 12),
-    OBJ_SCENERY_13                   = (OBJ | SCENERY | 13),
+    OBJ_SCENERY_TOMBSTONE            = (OBJ | SCENERY | 13),
     OBJ_SCENERY_14                   = (OBJ | SCENERY | 14),
     OBJ_SCENERY_15                   = (OBJ | SCENERY | 15),
     OBJ_SCENERY_16                   = (OBJ | SCENERY | 16),

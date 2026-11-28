@@ -1098,8 +1098,26 @@ void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
             // If the player is in a dungeon
             if (6 <= ray->p.mapId && ray->p.mapId <= 9)
             {
+                bool shouldDeleteEnemies = false;
+                bool doriaSpawn          = false;
+                // Look at all the things this script spawns
+                for (int32_t sIdx = 0; sIdx < script->thenArgs.spawnList.numSpawns; sIdx++)
+                {
+                    if (OBJ_ENEMY_NPC_DORIA == script->thenArgs.spawnList.spawns[sIdx].type)
+                    {
+                        doriaSpawn = true;
+                    }
+                    // If an enemy is spawned
+                    else if (CELL_IS_TYPE(script->thenArgs.spawnList.spawns[sIdx].type, (OBJ | ENEMY)))
+                    {
+                        // Delete other enemies first
+                        shouldDeleteEnemies = true;
+                        break;
+                    }
+                }
+
                 // If this is an enter->spawn script and execution isn't being forced
-                if (!ray->forceExecute && ENTER == script->ifOp)
+                if (!doriaSpawn && !ray->forceExecute && ENTER == script->ifOp)
                 {
                     // Save this to execute when you leave the cell
                     ray->spawnToExecute = script;
@@ -1108,19 +1126,6 @@ void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
                 }
                 else
                 {
-                    bool shouldDeleteEnemies = false;
-                    // Look at all the things this script spawns
-                    for (int32_t sIdx = 0; sIdx < script->thenArgs.spawnList.numSpawns; sIdx++)
-                    {
-                        // If an enemy is spawned
-                        if (CELL_IS_TYPE(script->thenArgs.spawnList.spawns[sIdx].type, (OBJ | ENEMY)))
-                        {
-                            // Delete other enemies first
-                            shouldDeleteEnemies = true;
-                            break;
-                        }
-                    }
-
                     // If enemies should be deleted
                     if (shouldDeleteEnemies)
                     {
