@@ -32,6 +32,9 @@ bool initCutsceneDungeon3Complete(ray_t* ray, cutscene_t* cutscene, const char* 
 #define CS_STYLE_DORIA (CS_STYLE_HYUT + 1)
         addCutsceneStyleDoria(cutscene);
 
+#define CS_STYLE_NARRATOR (CS_STYLE_DORIA + 1)
+        addCutsceneStyleNarrator(cutscene);
+
         // clang-format off
 
         // Initialize lines
@@ -47,8 +50,8 @@ bool initCutsceneDungeon3Complete(ray_t* ray, cutscene_t* cutscene, const char* 
         addCutsceneLine(cutscene, CS_STYLE_DORIA, "Stand by the fountain in Gaylordia Town Square and sing my Lullaby. Then the path will become clear.", false, 0, NULL);
         addCutsceneLine(cutscene, CS_STYLE_HYUT, "Hyaaa?? Huh! Hiyaa!!", false, HYUT_NEUTRAL, NULL);
         addCutsceneLine(cutscene, CS_STYLE_TOMI, "Yeah Doria, thanks, but... why didn't you tell us this sooner? This all seems pretty shady. And why shouldn't we see what's at the end of the Dungeon?", false, TOMI_SUSPICIOUS, NULL);
-        // TODO edit line if there is more dungeon
-        addCutsceneLine(cutscene, CS_STYLE_DORIA, "Again, I am simply trying to - perhaps - spare you some pain. Like I said: play my melody in the town square and complete the Trial. Or you can continue on here and see what lies ahead. The choice is yours.", false, 0, endScene);
+        addCutsceneLine(cutscene, CS_STYLE_DORIA, "Again, I am simply trying to - perhaps - spare you some pain. Like I said: play my melody in the town square and complete the Trial. Or you can continue on here and see what lies ahead. The choice is yours.", false, 0, deleteDoria);
+        addCutsceneLine(cutscene, CS_STYLE_NARRATOR, "Doria vanishes quietly.", false, 0, endScene);
 
         // clang-format on
 

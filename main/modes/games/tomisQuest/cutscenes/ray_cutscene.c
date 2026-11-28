@@ -162,6 +162,7 @@ void rayShowCutscene(ray_t* ray, rayMapCellType_t type, char* text)
             initCutsceneBombGet,
             initCutsceneBowGet,
             initCutsceneTurntablesGet,
+            initCutsceneDungeon4Tomb,
         };
 
         bool sceneStarted = false;

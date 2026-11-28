@@ -42,6 +42,7 @@
 #include "ray_cutscene_scene_19_bomb_get.h"
 #include "ray_cutscene_scene_20_bow_get.h"
 #include "ray_cutscene_scene_21_turntables_get.h"
+#include "ray_cutscene_scene_22_dungeon_4_tomb.h"
 
 #define CS_STYLE_TOMI 0
 #define CS_STYLE_HYUT 1
@@ -100,6 +101,7 @@ typedef enum
     TQS_BOMB_GET           = (1 << 27),
     TQS_BOW_GET            = (1 << 28),
     TQS_TURNTABLES_GET     = (1 << 29),
+    TQS_DUNGEON_4_TOMB     = (1 << 30),
 } tomisQuestSceneId_t;
 
 typedef bool (*rayCutsceneSceneInitFn_t)(ray_t* ray, cutscene_t* cutscene, const char* title);
