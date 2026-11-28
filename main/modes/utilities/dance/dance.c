@@ -381,11 +381,11 @@ static void addColorChannelSettings(menu_t* colorMenu, int32_t color)
     };
 
     addSettingsOptionsItemToMenu(colorMenu, str_red, danceState->colorNames, danceState->colorVals, ARRAY_SIZE(colors),
-                                 &colorParam, (color >> 16) / 17);
+                                 &colorParam, ARG_R(color) / 17);
     addSettingsOptionsItemToMenu(colorMenu, str_green, danceState->colorNames, danceState->colorVals,
-                                 ARRAY_SIZE(colors), &colorParam, ((color >> 8) & 0xFF) / 17);
+                                 ARRAY_SIZE(colors), &colorParam, ARG_G(color) / 17);
     addSettingsOptionsItemToMenu(colorMenu, str_blue, danceState->colorNames, danceState->colorVals, ARRAY_SIZE(colors),
-                                 &colorParam, (color & 0xFF) / 17);
+                                 &colorParam, ARG_B(color) / 17);
 
     if (hadBack)
     {
