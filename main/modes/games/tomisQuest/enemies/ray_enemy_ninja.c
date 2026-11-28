@@ -70,7 +70,7 @@ void rayInitEnemyNinja(ray_t* ray, rayEnemy_t* e)
 
     // Load enemy textures
     ns->sprites[0] = loadTexture(ray, OBJ_ENEMY_BOX_WSG, OBJ_ENEMY_BOX);
-    ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NINJA_0_WSG, OBJ_ENEMY_NINJA);
+    ns->sprites[1] = loadTexture(ray, OBJ_ENEMY_NINJA_WSG, OBJ_ENEMY_NINJA);
     ns->sprites[2] = loadTexture(ray, OBJ_ENEMY_NINJA_1_WSG, EMPTY);
 
     // Start as a box

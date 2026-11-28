@@ -61,7 +61,7 @@ void rayInitEnemyBat(ray_t* ray, rayEnemy_t* e)
 
     // Load sprites
     bs->sprites[0] = loadTexture(ray, OBJ_ENEMY_BAT_REST_WSG, EMPTY);
-    bs->sprites[1] = loadTexture(ray, OBJ_ENEMY_BAT_0_WSG, OBJ_ENEMY_BAT);
+    bs->sprites[1] = loadTexture(ray, OBJ_ENEMY_BAT_WSG, OBJ_ENEMY_BAT);
     bs->sprites[2] = loadTexture(ray, OBJ_ENEMY_BAT_1_WSG, EMPTY);
 
     // Set initial sprites
