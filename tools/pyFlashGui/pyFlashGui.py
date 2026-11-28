@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import serial.tools.list_ports
 import serial.tools.list_ports_common
@@ -53,7 +53,7 @@ class LabelThread(threading.Thread):
             esptool.main([
                 "--chip", "esp32s3",
                 "--port", str(self.serialPort.device),
-                "--baud", "9600",
+                "--baud", "460800",
                 "--before", "no-reset",
                 "--after", "no-reset",
                 "write-flash",
