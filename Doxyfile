@@ -1030,6 +1030,8 @@ INPUT                  = ./main \
                          ./main/utils/filesystem/heatshrink/heatshrink_helper.h \
                          ./main/utils/filesystem/heatshrink/heatshrink_helper.c \
                          ./tools/assets_preprocessor/src \
+                         ./tools/swadgeterm \
+                         ./tools/reflash_and_monitor.bat\
                          ./components \
                          ./docs/CODE_OF_CONDUCT.md \
                          ./docs/CONTRIBUTING.md \
@@ -1039,7 +1041,8 @@ INPUT                  = ./main \
                          ./docs/PORTING.md \
                          ./docs/SERIAL_DEBUG.md \
                          ./docs/SETUP.md \
-                         ./docs/tutorial.md
+                         ./docs/tutorial.md \
+                         ./docs/SwadgePalette.gpl
 
 # This tag can be used to specify the character encoding of the source files
 # that Doxygen parses. Internally Doxygen uses the UTF-8 encoding. Doxygen uses

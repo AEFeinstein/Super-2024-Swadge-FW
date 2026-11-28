@@ -3,7 +3,17 @@
 #include <stdint.h>
 #include "dance.h"
 
-void danceCondiment(uint32_t tElapsedUs, uint32_t arg, bool reset);
+typedef struct
+{
+    bool isPulse;
+    int16_t pulseVal;
+    bool pulseRising;
+    int16_t stripVals[4];
+    int32_t stripExciter;
+    uint32_t condimentTimer;
+} danceCondimentState_t;
+
+void danceCondiment(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)), void* state);
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -14,24 +24,19 @@ void danceCondiment(uint32_t tElapsedUs, uint32_t arg, bool reset);
  * @param arg        The base color to use
  * @param reset      true to reset this dance's variables
  */
-void danceCondiment(uint32_t tElapsedUs, uint32_t arg, bool reset)
+void danceCondiment(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor __attribute__((unused)), void* state)
 {
-    static const int8_t pulseLeds[] = {0, 1, 2, 3, 4};
-    static const int8_t stripLeds[] = {5, 6, 7, 8};
-
-    static bool isPulse                             = false;
-    static int16_t pulseVal                         = 0;
-    static bool pulseRising                         = true;
-    static int16_t stripVals[ARRAY_SIZE(stripLeds)] = {0};
-    static int32_t stripExciter                     = 0;
+    danceCondimentState_t* danceState = state;
+    static const int8_t pulseLeds[]   = {0, 1, 2, 3, 4};
+    static const int8_t stripLeds[]   = {5, 6, 7, 8};
 
     if (reset)
     {
-        isPulse     = false;
-        pulseVal    = 0;
-        pulseRising = true;
-        memset(stripVals, 0, sizeof(stripVals));
-        stripExciter = 0;
+        danceState->isPulse     = false;
+        danceState->pulseVal    = 0;
+        danceState->pulseRising = true;
+        memset(danceState->stripVals, 0, sizeof(danceState->stripVals));
+        danceState->stripExciter = 0;
     }
 
     // Declare some LEDs, all off
@@ -39,72 +44,71 @@ void danceCondiment(uint32_t tElapsedUs, uint32_t arg, bool reset)
     bool ledsUpdated            = false;
 
     // Run this code every frame
-    static uint32_t condimentTimer = 0;
-    RUN_TIMER_EVERY(condimentTimer, DEFAULT_FRAME_RATE_US, tElapsedUs, {
-        if (isPulse)
+    RUN_TIMER_EVERY(danceState->condimentTimer, DEFAULT_FRAME_RATE_US, tElapsedUs, {
+        if (danceState->isPulse)
         {
-            if (pulseRising)
+            if (danceState->pulseRising)
             {
-                pulseVal += 8;
-                if (0xFF <= pulseVal)
+                danceState->pulseVal += 8;
+                if (0xFF <= danceState->pulseVal)
                 {
-                    pulseRising = false;
-                    pulseVal    = 0xFF;
+                    danceState->pulseRising = false;
+                    danceState->pulseVal    = 0xFF;
                 }
             }
             else
             {
-                pulseVal -= 8;
-                if (0 >= pulseVal)
+                danceState->pulseVal -= 8;
+                if (0 >= danceState->pulseVal)
                 {
-                    isPulse     = false;
-                    pulseRising = true;
-                    pulseVal    = 0;
+                    danceState->isPulse     = false;
+                    danceState->pulseRising = true;
+                    danceState->pulseVal    = 0;
                 }
             }
 
             // Light the pulse LEDs
             for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(pulseLeds); lIdx++)
             {
-                leds[lIdx].r = (pulseVal * ARG_R(arg)) / 256;
-                leds[lIdx].g = (pulseVal * ARG_G(arg)) / 256;
-                leds[lIdx].b = (pulseVal * ARG_B(arg)) / 256;
+                leds[lIdx].r = (danceState->pulseVal * ARG_R(arg)) / 256;
+                leds[lIdx].g = (danceState->pulseVal * ARG_G(arg)) / 256;
+                leds[lIdx].b = (danceState->pulseVal * ARG_B(arg)) / 256;
             }
             ledsUpdated = true;
         }
         else
         {
             // Run an exciter to lead the strip
-            if (stripExciter % 8 == 0 && (stripExciter / 8) < ARRAY_SIZE(stripLeds))
+            if (danceState->stripExciter % 8 == 0 && (danceState->stripExciter / 8) < ARRAY_SIZE(stripLeds))
             {
-                stripVals[stripExciter / 8] = 0xFF;
+                danceState->stripVals[danceState->stripExciter / 8] = 0xFF;
             }
-            stripExciter++;
+            danceState->stripExciter++;
 
             // Decay the strip
             bool someLedOn = false;
             for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(stripLeds); lIdx++)
             {
-                stripVals[lIdx] -= 8;
-                if (stripVals[lIdx] < 0)
+                danceState->stripVals[lIdx] -= 8;
+                if (danceState->stripVals[lIdx] < 0)
                 {
-                    stripVals[lIdx] = 0;
+                    danceState->stripVals[lIdx] = 0;
                 }
                 else
                 {
                     someLedOn = true;
                 }
-                leds[stripLeds[lIdx]].r = (stripVals[lIdx] * ARG_R(arg)) / 256;
-                leds[stripLeds[lIdx]].g = (stripVals[lIdx] * ARG_G(arg)) / 256;
-                leds[stripLeds[lIdx]].b = (stripVals[lIdx] * ARG_B(arg)) / 256;
+                leds[stripLeds[lIdx]].r = (danceState->stripVals[lIdx] * ARG_R(arg)) / 256;
+                leds[stripLeds[lIdx]].g = (danceState->stripVals[lIdx] * ARG_G(arg)) / 256;
+                leds[stripLeds[lIdx]].b = (danceState->stripVals[lIdx] * ARG_B(arg)) / 256;
             }
             ledsUpdated = true;
 
             // All off, switch back to pulse
             if (!someLedOn)
             {
-                isPulse      = true;
-                stripExciter = 0;
+                danceState->isPulse      = true;
+                danceState->stripExciter = 0;
             }
         }
     });

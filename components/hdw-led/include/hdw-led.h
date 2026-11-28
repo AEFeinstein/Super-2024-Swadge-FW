@@ -73,6 +73,7 @@ void powerUpLed(void);
 esp_err_t setLeds(led_t* leds, uint8_t numLeds);
 void setLedBrightness(uint8_t brightness);
 const led_t* getLedState(void);
+uint32_t getLedUpdateCount(void);
 void flushLeds(void);
 
 #endif

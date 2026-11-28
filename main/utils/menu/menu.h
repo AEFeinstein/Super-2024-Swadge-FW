@@ -141,16 +141,17 @@
 #include "font.h"
 #include "settingsManager.h"
 
+typedef struct _menu_t menu_t;
+
 /**
  * @brief A callback which is called when a menu changes or items are selected
  * @param label A pointer to the label which was selected or scrolled to
  * @param selected true if the item was selected with the A button, false if it was scrolled to
  * @param value If a settings item was selected or scrolled, this is the new value for the setting
+ * @param menu The menu to which this label belongs
  * @return true if the submenu should be exited, false to stay on it
  */
-typedef bool (*menuCb)(const char* label, bool selected, uint32_t value);
-
-typedef struct _menu_t menu_t;
+typedef bool (*menuCb)(const char* label, bool selected, uint32_t value, menu_t* menu);
 
 /**
  * @brief The underlying data for an item in a menu. The item may be a single-select, multi-select, or submenu item.

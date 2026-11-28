@@ -176,7 +176,7 @@ static void runTrophy(int64_t elapsedUs);
  * @param settingVal Value when a setting is changed
  * @return true to go up a menu level, false to remain here
  */
-static bool trophyMenuCb(const char* label, bool selected, uint32_t settingVal);
+static bool trophyMenuCb(const char* label, bool selected, uint32_t settingVal, menu_t* menu);
 
 //==============================================================================
 // Variables
@@ -424,7 +424,7 @@ static void runTrophy(int64_t elapsedUs)
     }
 }
 
-static bool trophyMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool trophyMenuCb(const char* label, bool selected, uint32_t settingVal, menu_t* menu)
 {
     if (selected)
     {

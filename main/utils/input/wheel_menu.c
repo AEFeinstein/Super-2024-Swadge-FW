@@ -713,7 +713,7 @@ menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t ang
             {
                 renderer->timer   = 0;
                 menu->currentItem = NULL;
-                menu->cbFunc(NULL, false, 0);
+                menu->cbFunc(NULL, false, 0, menu);
             }
             return menu;
         }

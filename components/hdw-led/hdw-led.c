@@ -29,6 +29,7 @@ static led_t currentLeds[CONFIG_NUM_LEDS]      = {0};
 static led_t prePowerDownLeds[CONFIG_NUM_LEDS] = {0};
 static led_t dimmedLeds[CONFIG_NUM_LEDS]       = {0};
 static bool leds_enabled                       = false;
+static uint32_t ledUpdateCount                 = 0;
 
 //==============================================================================
 // Functions
@@ -163,6 +164,8 @@ void setLedBrightness(uint8_t brightness)
  */
 esp_err_t setLeds(led_t* leds, uint8_t numLeds)
 {
+    ledUpdateCount++;
+
     rmt_transmit_config_t tx_config = {
         .loop_count = 0, // no transfer loop
     };
@@ -196,6 +199,16 @@ esp_err_t setLeds(led_t* leds, uint8_t numLeds)
 const led_t* getLedState(void)
 {
     return currentLeds;
+}
+
+/**
+ * @brief Return the number of times setLeds() has been called
+ *
+ * @return The LED update count
+ */
+uint32_t getLedUpdateCount(void)
+{
+    return ledUpdateCount;
 }
 
 /**

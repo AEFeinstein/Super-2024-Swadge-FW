@@ -3,7 +3,15 @@
 #include <stdint.h>
 #include "dance.h"
 
-void dancePulse(uint32_t tElapsedUs, uint32_t arg, bool reset);
+typedef struct
+{
+    uint8_t ledVal;
+    uint8_t randColor;
+    bool goingUp;
+    uint32_t tAccumulated;
+} dancePulseState_t;
+
+void dancePulse(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor, void* state);
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -13,19 +21,16 @@ void dancePulse(uint32_t tElapsedUs, uint32_t arg, bool reset);
  * @param tElapsedUs The time elapsed since last call, in microseconds
  * @param reset      true to reset this dance's variables
  */
-void dancePulse(uint32_t tElapsedUs, uint32_t arg, bool reset)
+void dancePulse(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor, void* state)
 {
-    static uint8_t ledVal        = 0;
-    static uint8_t randColor     = 0;
-    static bool goingUp          = true;
-    static uint32_t tAccumulated = 0;
+    dancePulseState_t* danceState = state;
 
     if (reset)
     {
-        ledVal       = 0;
-        randColor    = 0;
-        goingUp      = true;
-        tAccumulated = 5000;
+        danceState->ledVal       = 0;
+        danceState->randColor    = 0;
+        danceState->goingUp      = true;
+        danceState->tAccumulated = 5000;
         return;
     }
 
@@ -33,43 +38,43 @@ void dancePulse(uint32_t tElapsedUs, uint32_t arg, bool reset)
     led_t leds[CONFIG_NUM_LEDS] = {{0}};
     bool ledsUpdated            = false;
 
-    tAccumulated += tElapsedUs;
-    while (tAccumulated >= 5000)
+    danceState->tAccumulated += tElapsedUs;
+    while (danceState->tAccumulated >= 5000)
     {
-        tAccumulated -= 5000;
+        danceState->tAccumulated -= 5000;
 
-        if (goingUp)
+        if (danceState->goingUp)
         {
-            ledVal++;
-            if (255 == ledVal)
+            danceState->ledVal++;
+            if (255 == danceState->ledVal)
             {
-                goingUp = false;
+                danceState->goingUp = false;
             }
         }
         else
         {
-            ledVal--;
-            if (0 == ledVal)
+            danceState->ledVal--;
+            if (0 == danceState->ledVal)
             {
-                goingUp   = true;
-                randColor = danceRand(256);
+                danceState->goingUp   = true;
+                danceState->randColor = danceRand(256);
             }
         }
 
         for (int i = 0; i < CONFIG_NUM_LEDS; i++)
         {
-            if (0 == arg)
+            if (useColor)
             {
-                int32_t color = EHSVtoHEXhelper(randColor, 0xFF, 0xFF, false);
-                leds[i].r     = (ledVal * ((color >> 0) & 0xFF) >> 8);
-                leds[i].g     = (ledVal * ((color >> 8) & 0xFF) >> 8);
-                leds[i].b     = (ledVal * ((color >> 16) & 0xFF) >> 8);
+                leds[i].r = (danceState->ledVal * ARG_R(arg)) >> 8;
+                leds[i].g = (danceState->ledVal * ARG_G(arg)) >> 8;
+                leds[i].b = (danceState->ledVal * ARG_B(arg)) >> 8;
             }
             else
             {
-                leds[i].r = (ledVal * ARG_R(arg)) >> 8;
-                leds[i].g = (ledVal * ARG_G(arg)) >> 8;
-                leds[i].b = (ledVal * ARG_B(arg)) >> 8;
+                int32_t color = EHSVtoHEXhelper(danceState->randColor, 0xFF, 0xFF, false);
+                leds[i].r     = (danceState->ledVal * ARG_R(color)) >> 8;
+                leds[i].g     = (danceState->ledVal * ARG_G(color)) >> 8;
+                leds[i].b     = (danceState->ledVal * ARG_B(color)) >> 8;
             }
         }
         ledsUpdated = true;

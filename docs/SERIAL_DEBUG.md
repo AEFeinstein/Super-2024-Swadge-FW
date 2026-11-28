@@ -123,7 +123,7 @@ Then any time you wish to reboot the swadge into bootloader, flash, reboot back 
 make usbflash
 ```
 
-For more background, the Swadge doesn't enumerate as a regular serial port, so you must run our own serial monitor, [`swadgeterm`](../tools/swadgeterm/) to view the output. To build `swadgeterm` from the root of this repository, run:
+For more background, the Swadge doesn't enumerate as a regular serial port, so you must run our own serial monitor, [`swadgeterm`](../tools/swadgeterm) to view the output. To build `swadgeterm` from the root of this repository, run:
 
 ```bash
 make -C tools/swadgeterm

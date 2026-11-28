@@ -149,7 +149,7 @@ void gamepadNsMainLoop(int64_t elapsedUs);
 void gamepadNsButtonCb(buttonEvt_t* evt);
 void gamepadNsReportStateToHost(void);
 
-bool gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal);
+bool gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal, menu_t* menu);
 void gamepadMenuLoop(int64_t elapsedUs);
 void gamepadStart(gamepadType_t type);
 
@@ -415,7 +415,7 @@ void gamepadExitMode(void)
     heap_caps_free(gamepad);
 }
 
-bool gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
+bool gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal, menu_t* menu)
 {
     if (selected)
     {

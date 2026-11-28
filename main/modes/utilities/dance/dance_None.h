@@ -3,7 +3,8 @@
 #include <stdint.h>
 #include "dance.h"
 
-void danceNone(uint32_t tElapsedUs __attribute__((unused)), uint32_t arg __attribute__((unused)), bool reset);
+void danceNone(uint32_t tElapsedUs __attribute__((unused)), uint32_t arg __attribute__((unused)), bool reset,
+               bool useColor __attribute__((unused)), void* state __attribute__((unused)));
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -14,7 +15,8 @@ void danceNone(uint32_t tElapsedUs __attribute__((unused)), uint32_t arg __attri
  * @param arg
  * @param reset
  */
-void danceNone(uint32_t tElapsedUs __attribute__((unused)), uint32_t arg __attribute__((unused)), bool reset)
+void danceNone(uint32_t tElapsedUs __attribute__((unused)), uint32_t arg __attribute__((unused)), bool reset,
+               bool useColor __attribute__((unused)), void* state __attribute__((unused)))
 {
     if (reset)
     {

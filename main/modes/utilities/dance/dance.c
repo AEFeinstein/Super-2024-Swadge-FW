@@ -31,6 +31,7 @@
 #include "dance_PoliceSiren.h"
 #include "dance_PureRandom.h"
 #include "dance_Christmas.h"
+#include "dance_HardwareIndices.h"
 #include "dance_Flashlight.h"
 #include "dance_None.h"
 #include "dance_RandomDance.h"
@@ -57,9 +58,13 @@ typedef struct
 
     menu_t* menu;
     menuZorldoRenderer_t* menuRenderer;
+    bool rebuildMenuAfterPatternChange;
 
     const char** danceNames;
     int32_t* danceVals;
+
+    const char** colorNames;
+    const int32_t* colorVals;
 
     int32_t bcastTimer;
     int32_t listenTimer;
@@ -76,19 +81,41 @@ typedef struct
 static void danceEnterMode(void);
 static void danceExitMode(void);
 static void danceMainLoop(int64_t elapsedUs);
-static bool danceMenuCb(const char* label, bool selected, uint32_t value);
+static bool danceMenuCb(const char* label, bool selected, uint32_t value, menu_t* menu);
 
 static void danceEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 static void danceEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
+
+static void setupMenu(const char* currentLabel);
+static void rebuildDanceMenu(void);
+static void addColorChannelSettings(menu_t* colorMenu, int32_t color);
+static void addDanceSettings(menu_t* parentMenu, bool isWing);
+static void setDanceColorChannel(bool isWing, uint32_t shift, uint32_t preservedMask, uint32_t value);
 
 //==============================================================================
 // Const Variables
 //==============================================================================
 
+// Some menu titles
 static const char danceName[]      = "Light Dances";
-static const char str_exit[]       = "Exit";
-static const char str_brightness[] = "Brightness";
+static const char str_body[]       = "Body";
+static const char str_wings[]      = "Wings";
+static const char str_color[]      = "Color";
+static const char str_body_color[] = "Body Color";
+static const char str_wing_color[] = "Wings Color";
 
+// some label titles
+static const char str_exit[]         = "Exit";
+static const char str_brightness[]   = "Brightness";
+static const char str_split[]        = "Fairy Split: ";
+static const char str_useColor[]     = "Use My Own Color: ";
+static const char str_On[]           = "On";
+static const char str_Off[]          = "Off";
+static const char* strs_on_off[]     = {str_Off, str_On};
+static const int32_t trueFalseVals[] = {
+    false,
+    true,
+};
 static const char str_speed[]    = "Speed: ";
 static const char* speedLabels[] = {
     "1/8x", "1/6x", "1/4x", "1/3x", "1/2x", "1x", "1.5x", "2x", "4x",
@@ -104,44 +131,72 @@ static const int32_t speedVals[] = {
     4,  // 2x
     2,  // 4x
 };
+static const char str_pattern[] = "Pattern: ";
+static const char str_red[]     = "Red: ";
+static const char str_green[]   = "Green: ";
+static const char str_blue[]    = "Blue: ";
+static const char* colors[]     = {
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15",
+};
+static const int32_t colorVals[] = {
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+};
+
 static const char nvsNs[] = "light_dances";
 
 const ledDance_t ledDances[] = {
-    {.func = danceComet, .arg = RGB_2_ARG(0, 0, 0), .name = "Comet RGB"},
-    {.func = danceComet, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Comet R"},
-    {.func = danceComet, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Comet G"},
-    {.func = danceComet, .arg = RGB_2_ARG(0, 0, 0xFF), .name = "Comet B"},
+    {.func = danceComet, .userColor = true, .name = "Comet", .stateSize = sizeof(danceCometState_t)},
     // {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0x00, 0x00), .name = "Ketchup"},
     // {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0xFF, 0x00), .name = "Mustard"},
     // {.func = danceCondiment, .arg = RGB_2_ARG(0x00, 0xFF, 0x00), .name = "Relish"},
     // {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0xFF, 0xFF), .name = "Mayo"},
-    {.func = danceSharpRainbow, .arg = 0, .name = "Rainbow Sharp"},
-    {.func = danceSmoothRainbow, .arg = 20000, .name = "Rainbow Slow"},
-    {.func = danceSmoothRainbow, .arg = 4000, .name = "Rainbow Fast"},
-    {.func = danceRainbowSolid, .arg = 0, .name = "Rainbow Solid"},
-    {.func = danceSweep, .arg = RGB_2_ARG(0, 0, 0), .name = "Sweep RGB"},
-    {.func = danceSweep, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Sweep R"},
-    {.func = danceSweep, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Sweep G"},
-    {.func = danceSweep, .arg = RGB_2_ARG(0, 0, 0xFF), .name = "Sweep B"},
-    {.func = danceRise, .arg = RGB_2_ARG(0, 0, 0), .name = "Rise RGB"},
-    {.func = danceRise, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Rise R"},
-    {.func = danceRise, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Rise G"},
-    {.func = danceRise, .arg = RGB_2_ARG(0, 0, 0xFF), .name = "Rise B"},
-    {.func = dancePulse, .arg = RGB_2_ARG(0, 0, 0), .name = "Pulse RGB"},
-    {.func = dancePulse, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Pulse R"},
-    {.func = dancePulse, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Pulse G"},
-    {.func = dancePulse, .arg = RGB_2_ARG(0, 0, 0xFF), .name = "Pulse B"},
-    {.func = danceFire, .arg = RGB_2_ARG(0xFF, 51, 0), .name = "Fire R"},
-    {.func = danceFire, .arg = RGB_2_ARG(0, 0xFF, 51), .name = "Fire G"},
-    {.func = danceFire, .arg = RGB_2_ARG(51, 0, 0xFF), .name = "Fire B"},
-    {.func = danceBinaryCounter, .arg = 0, .name = "Binary"},
-    {.func = dancePoliceSiren, .arg = 0, .name = "Siren"},
-    {.func = dancePureRandom, .arg = 0, .name = "Random LEDs"},
-    {.func = danceChristmas, .arg = 1, .name = "Holiday 1"},
-    {.func = danceChristmas, .arg = 0, .name = "Holiday 2"},
-    {.func = danceFlashlight, .arg = 0, .name = "Flashlight"},
-    {.func = danceNone, .arg = 0, .name = "None"},
-    {.func = danceRandomDance, .arg = 0, .name = "Shuffle All"},
+    {.func      = danceSharpRainbow,
+     .userColor = false,
+     .name      = "Rainbow Sharp",
+     .stateSize = sizeof(danceSharpRainbowState_t)},
+    {.func      = danceSmoothRainbow,
+     .arg       = 20000,
+     .userColor = false,
+     .name      = "Rainbow Slow",
+     .stateSize = sizeof(danceSmoothRainbowState_t)},
+    {.func      = danceSmoothRainbow,
+     .arg       = 4000,
+     .userColor = false,
+     .name      = "Rainbow Fast",
+     .stateSize = sizeof(danceSmoothRainbowState_t)},
+    {.func      = danceRainbowSolid,
+     .userColor = false,
+     .name      = "Rainbow Solid",
+     .stateSize = sizeof(danceRainbowSolidState_t)},
+    {.func = danceSweep, .userColor = true, .name = "Sweep", .stateSize = sizeof(danceSweepState_t)},
+    {.func = danceRise, .userColor = true, .name = "Rise", .stateSize = sizeof(danceRiseState_t)},
+    {.func = dancePulse, .userColor = true, .name = "Pulse", .stateSize = sizeof(dancePulseState_t)},
+    {.func      = danceFire,
+     .arg       = RGB_2_ARG(0xFF, 51, 0),
+     .userColor = true,
+     .name      = "Fire",
+     .stateSize = sizeof(danceFireState_t)},
+    {.func = danceBinaryCounter, .userColor = false, .name = "Binary", .stateSize = sizeof(danceBinaryCounterState_t)},
+    {.func = dancePoliceSiren, .userColor = false, .name = "Siren", .stateSize = sizeof(dancePoliceSirenState_t)},
+    {.func = dancePureRandom, .userColor = true, .name = "Random LEDs", .stateSize = sizeof(dancePureRandomState_t)},
+    {.func      = danceChristmas,
+     .arg       = 1,
+     .userColor = false,
+     .name      = "Holiday 1",
+     .stateSize = sizeof(danceChristmasState_t)},
+    {.func = danceChristmas, .userColor = false, .name = "Holiday 2", .stateSize = sizeof(danceChristmasState_t)},
+    {.func      = danceFlashlight,
+     .arg       = 0xFFFFFF,
+     .userColor = true,
+     .name      = "Flashlight",
+     .stateSize = sizeof(danceFlashlightState_t)},
+    {.func = hardwareIndices, .userColor = true, .name = "Cool SAO", .stateSize = sizeof(hardwareIndicesState_t)},
+    {.func = danceNone, .userColor = false, .name = "None"},
+    {.func      = danceRandomDance,
+     .userColor = true,
+     .name      = "Shuffle All",
+     .stateSize = sizeof(danceRandomDanceState_t),
+     .deinit    = danceRandomDanceDeinit},
 };
 
 //==============================================================================
@@ -190,21 +245,10 @@ void danceEnterMode(void)
     danceState->maySleep = true;
     espNowPreLightSleep();
 
-    danceState->menu         = initMenu(danceName, danceMenuCb);
     danceState->menuRenderer = initMenuZorldoRenderer(NULL, NULL);
     setZorldoLedsOn(danceState->menuRenderer, false);
-    // static const paletteColor_t shadowColors[] = {
-    //     c430, c431, c442, c543, c554, c555, c554, c543, c442, c431,
-    // };
-    // led_t offLed = {0};
-    // recolorMenuManiaRenderer(danceState->menuRenderer, // Pango palette!
-    //                          c320, c542, c111,         // titleBgColor, titleTextColor, textOutlineColor
-    //                          c045,                     // bgColor
-    //                          c542, c541,               // outerRingColor, innerRingColor
-    //                          c111, c455,               // rowColor, rowTextColor
-    //                          shadowColors, ARRAY_SIZE(shadowColors), offLed);
 
-    // Add dances to the menu
+    danceState->menu       = initMenu(danceName, danceMenuCb);
     danceState->danceNames = heap_caps_calloc(ARRAY_SIZE(ledDances), sizeof(char*), MALLOC_CAP_SPIRAM);
     danceState->danceVals  = heap_caps_calloc(ARRAY_SIZE(ledDances), sizeof(int32_t), MALLOC_CAP_SPIRAM);
     for (int32_t dIdx = 0; dIdx < ARRAY_SIZE(ledDances); dIdx++)
@@ -212,26 +256,141 @@ void danceEnterMode(void)
         danceState->danceNames[dIdx] = ledDances[dIdx].name;
         danceState->danceVals[dIdx]  = dIdx;
     }
+    danceState->colorNames = colors;
+    danceState->colorVals  = colorVals;
+    setupMenu(str_brightness);
+}
+
+void setupMenu(const char* currentLabel)
+{
+    // Add brightness to the menu
+    addSettingsItemToMenu(danceState->menu, str_brightness, getLedBrightnessSettingBounds(), getLedBrightnessSetting());
+
+    settingParam_t sp_tf = {
+        .min = trueFalseVals[0],
+        .max = trueFalseVals[ARRAY_SIZE(trueFalseVals) - 1],
+        .def = trueFalseVals[0],
+    };
+    addSettingsOptionsItemToMenu(danceState->menu, str_split, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off),
+                                 &sp_tf, danceState->dance->split);
+
+    if (danceState->dance->split)
+    {
+        menu_t* bodyMenu = startSubMenu(danceState->menu, str_body);
+        addDanceSettings(bodyMenu, false);
+        bodyMenu = endSubMenu(bodyMenu);
+
+        menu_t* wingMenu = startSubMenu(danceState->menu, str_wings);
+        addDanceSettings(wingMenu, true);
+        wingMenu = endSubMenu(wingMenu);
+    }
+    else
+    {
+        addDanceSettings(danceState->menu, false);
+    }
+
+    addSingleItemToMenu(danceState->menu, str_exit);
+    menuNavigateToItem(danceState->menu, currentLabel);
+}
+
+static void addDanceSettings(menu_t* parentMenu, bool isWing)
+{
     const settingParam_t danceParam = {
         .min = 0,
         .max = ARRAY_SIZE(ledDances) - 1,
     };
-    addSettingsOptionsItemToMenu(danceState->menu, NULL, danceState->danceNames, danceState->danceVals,
-                                 ARRAY_SIZE(ledDances), &danceParam, danceState->dance->danceIndex);
-
-    // Add brightness to the menu
-    addSettingsItemToMenu(danceState->menu, str_brightness, getLedBrightnessSettingBounds(), getLedBrightnessSetting());
-
-    // Add speed to the menu
     const settingParam_t speedParam = {
         .min = speedVals[0],
         .max = speedVals[ARRAY_SIZE(speedVals) - 1],
     };
-    addSettingsOptionsItemToMenu(danceState->menu, str_speed, speedLabels, speedVals, ARRAY_SIZE(speedVals),
-                                 &speedParam, danceState->dance->speed);
+    const settingParam_t onOffParam = {
+        .min = trueFalseVals[0],
+        .max = trueFalseVals[ARRAY_SIZE(trueFalseVals) - 1],
+        .def = trueFalseVals[0],
+    };
 
-    // Add exit to the menu
-    addSingleItemToMenu(danceState->menu, str_exit);
+    uint8_t danceIndex = isWing ? danceState->dance->wingDanceIndex : danceState->dance->danceIndex;
+    int32_t speed      = isWing ? danceState->dance->wingSpeed : danceState->dance->speed;
+    bool useColor      = isWing ? danceState->dance->wingUseColor : danceState->dance->useColor;
+    int32_t color      = isWing ? danceState->dance->wingColor : danceState->dance->color;
+
+    addSettingsOptionsItemToMenu(parentMenu, str_pattern, danceState->danceNames, danceState->danceVals,
+                                 ARRAY_SIZE(ledDances), &danceParam, danceIndex);
+
+    const ledDance_t* dance = danceState->dance->dances[danceIndex].dance;
+    if (dance->userColor)
+    {
+        menu_t* colorMenu = startSubMenu(parentMenu, str_color);
+        if (isWing)
+        {
+            colorMenu->title = str_wing_color;
+        }
+        else if (danceState->dance->split)
+        {
+            colorMenu->title = str_body_color;
+        }
+
+        addSettingsOptionsItemToMenu(colorMenu, str_useColor, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off),
+                                     &onOffParam, useColor);
+        if (useColor)
+        {
+            addColorChannelSettings(colorMenu, color);
+        }
+        colorMenu = endSubMenu(colorMenu);
+    }
+
+    addSettingsOptionsItemToMenu(parentMenu, str_speed, speedLabels, speedVals, ARRAY_SIZE(speedVals), &speedParam,
+                                 speed);
+}
+
+static void rebuildDanceMenu(void)
+{
+    bool isWingMenu  = danceState->menu->title == str_wings;
+    menu_t* rootMenu = danceState->menu;
+    while (rootMenu->parentMenu)
+    {
+        rootMenu = rootMenu->parentMenu;
+    }
+
+    deinitMenu(rootMenu);
+    danceState->menu = initMenu(danceName, danceMenuCb);
+
+    if (danceState->dance->split)
+    {
+        setupMenu(isWingMenu ? str_wings : str_body);
+        danceState->menu = menuSelectCurrentItem(danceState->menu);
+        menuNavigateToItem(danceState->menu, str_pattern);
+    }
+    else
+    {
+        setupMenu(str_pattern);
+    }
+}
+
+static void addColorChannelSettings(menu_t* colorMenu, int32_t color)
+{
+    bool hadBack = colorMenu->items->last && ((menuItem_t*)colorMenu->items->last->val)->label == mnuBackStr;
+    if (hadBack)
+    {
+        removeSingleItemFromMenu(colorMenu, mnuBackStr);
+    }
+
+    const settingParam_t colorParam = {
+        .min = 0,
+        .max = ARRAY_SIZE(colors) - 1,
+    };
+
+    addSettingsOptionsItemToMenu(colorMenu, str_red, danceState->colorNames, danceState->colorVals, ARRAY_SIZE(colors),
+                                 &colorParam, ARG_R(color) / 17);
+    addSettingsOptionsItemToMenu(colorMenu, str_green, danceState->colorNames, danceState->colorVals,
+                                 ARRAY_SIZE(colors), &colorParam, ARG_G(color) / 17);
+    addSettingsOptionsItemToMenu(colorMenu, str_blue, danceState->colorNames, danceState->colorVals, ARRAY_SIZE(colors),
+                                 &colorParam, ARG_B(color) / 17);
+
+    if (hadBack)
+    {
+        addSingleItemToMenu(colorMenu, mnuBackStr);
+    }
 }
 
 /**
@@ -279,6 +438,11 @@ void danceMainLoop(int64_t elapsedUs)
         }
 
         danceState->menu = menuButton(danceState->menu, evt);
+        if (danceState->rebuildMenuAfterPatternChange)
+        {
+            danceState->rebuildMenuAfterPatternChange = false;
+            rebuildDanceMenu();
+        }
     }
 
     // Light the LEDs!
@@ -382,7 +546,7 @@ void danceMainLoop(int64_t elapsedUs)
  * @param value The setting value for this operation
  * @return true to go up a menu level, false to remain here
  */
-bool danceMenuCb(const char* label, bool selected, uint32_t value)
+bool danceMenuCb(const char* label, bool selected, uint32_t value, menu_t* menu)
 {
     if (selected && str_exit == label)
     {
@@ -393,18 +557,80 @@ bool danceMenuCb(const char* label, bool selected, uint32_t value)
     {
         setLedBrightnessSetting(value);
     }
+    else if (str_split == label && danceState->dance->split != (bool)value)
+    {
+        portableDanceSetSplit(danceState->dance, (bool)value);
+        removeAllItemsFromMenu(danceState->menu);
+        setupMenu(label);
+    }
     else if (str_speed == label)
     {
-        portableDanceSetSpeed(danceState->dance, (int32_t)value);
+        portableDanceSetSpeed(danceState->dance, (int32_t)value, menu->title == str_wings);
     }
-    else if (NULL == label) // Dance names are label-less
+    else if ((str_pattern == label)
+             && ((menu->title == str_wings && danceState->dance->wingDanceIndex != value)
+                 || ((menu->title == str_body || menu->title == danceName) && danceState->dance->danceIndex != value)))
     {
-        if (danceState->dance->danceIndex != value)
+        bool isWing      = menu->title == str_wings;
+        uint8_t oldIndex = isWing ? danceState->dance->wingDanceIndex : danceState->dance->danceIndex;
+        portableDanceSetByIndex(danceState->dance, value, isWing);
+
+        const ledDance_t* oldDance = danceState->dance->dances[oldIndex].dance;
+        const ledDance_t* newDance = danceState->dance->dances[value].dance;
+        bool hadColorMenu          = oldDance->userColor;
+        bool hasColorMenu          = newDance->userColor;
+        if (hadColorMenu != hasColorMenu)
         {
-            portableDanceSetByIndex(danceState->dance, value);
+            danceState->rebuildMenuAfterPatternChange = true;
         }
     }
+    else if (str_useColor == label)
+    {
+        bool isWing     = menu->title == str_wing_color;
+        bool wasEnabled = isWing ? danceState->dance->wingUseColor : danceState->dance->useColor;
+        if (isWing)
+        {
+            portableDanceSetWingUseColor(danceState->dance, (bool)value);
+        }
+        else
+        {
+            portableDanceSetUseColor(danceState->dance, (bool)value);
+        }
+
+        if (wasEnabled != (bool)value)
+        {
+            if (value)
+            {
+                addColorChannelSettings(menu, isWing ? danceState->dance->wingColor : danceState->dance->color);
+            }
+            else
+            {
+                removeSettingsItemFromMenu(menu, str_red);
+                removeSettingsItemFromMenu(menu, str_green);
+                removeSettingsItemFromMenu(menu, str_blue);
+            }
+        }
+    }
+    else if (str_red == label)
+    {
+        setDanceColorChannel(menu->title == str_wing_color, 16, 0x00FFFF, value);
+    }
+    else if (str_green == label)
+    {
+        setDanceColorChannel(menu->title == str_wing_color, 8, 0xFF00FF, value);
+    }
+    else if (str_blue == label)
+    {
+        setDanceColorChannel(menu->title == str_wing_color, 0, 0xFFFF00, value);
+    }
     return false;
+}
+
+static void setDanceColorChannel(bool isWing, uint32_t shift, uint32_t preservedMask, uint32_t value)
+{
+    int32_t color = isWing ? danceState->dance->wingColor : danceState->dance->color;
+    color         = (color & preservedMask) | ((value * 17) << shift);
+    portableDanceSetColor(danceState->dance, color, isWing);
 }
 
 /**

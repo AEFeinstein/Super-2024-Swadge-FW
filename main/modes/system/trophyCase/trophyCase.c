@@ -95,7 +95,7 @@ static void runTCase(int64_t elapsedUs);
  * @param selected
  * @param settingVal
  */
-static bool tCaseMenuCb(const char* label, bool selected, uint32_t settingVal);
+static bool tCaseMenuCb(const char* label, bool selected, uint32_t settingVal, menu_t* menu);
 
 /**
  * @brief DRaw the score and latests trophy screen
@@ -232,7 +232,7 @@ static void runTCase(int64_t elapsedUs)
     }
 }
 
-static bool tCaseMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool tCaseMenuCb(const char* label, bool selected, uint32_t settingVal, menu_t* menu)
 {
     if (selected)
     {

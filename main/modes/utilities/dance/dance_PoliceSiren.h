@@ -3,7 +3,14 @@
 #include <stdint.h>
 #include "dance.h"
 
-void dancePoliceSiren(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset);
+typedef struct
+{
+    bool sideLit;
+    uint32_t tAccumulated;
+} dancePoliceSirenState_t;
+
+void dancePoliceSiren(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset,
+                      bool useColor __attribute__((unused)), void* state);
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -13,15 +20,15 @@ void dancePoliceSiren(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)),
  * @param tElapsedUs The time elapsed since last call, in microseconds
  * @param reset      true to reset this dance's variables
  */
-void dancePoliceSiren(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset)
+void dancePoliceSiren(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset,
+                      bool useColor __attribute__((unused)), void* state)
 {
-    static bool sideLit;
-    static uint32_t tAccumulated = 0;
+    dancePoliceSirenState_t* danceState = state;
 
     if (reset)
     {
-        sideLit      = false;
-        tAccumulated = 500000;
+        danceState->sideLit      = false;
+        danceState->tAccumulated = 500000;
         return;
     }
 
@@ -29,14 +36,14 @@ void dancePoliceSiren(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)),
     led_t leds[CONFIG_NUM_LEDS] = {{0}};
     bool ledsUpdated            = false;
 
-    tAccumulated += tElapsedUs;
-    while (tAccumulated >= 500000)
+    danceState->tAccumulated += tElapsedUs;
+    while (danceState->tAccumulated >= 500000)
     {
-        tAccumulated -= 500000;
+        danceState->tAccumulated -= 500000;
         ledsUpdated = true;
 
         // Alternate which side is lit
-        sideLit = !sideLit;
+        danceState->sideLit = !danceState->sideLit;
 
         // These are the LEDs on each side
         static const uint8_t halves[2][7] = {
@@ -61,7 +68,7 @@ void dancePoliceSiren(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)),
         // Set the appropriate LEDs to the appropriate color
         for (uint32_t i = 0; i < ARRAY_SIZE(halves[0]); i++)
         {
-            leds[halves[sideLit][i]] = colors[sideLit];
+            leds[halves[danceState->sideLit][i]] = colors[danceState->sideLit];
         }
     }
     // Output the LED data, actually turning them on

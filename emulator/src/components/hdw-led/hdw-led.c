@@ -14,6 +14,7 @@
 static led_t currentLeds[CONFIG_NUM_LEDS] = {0};
 static led_t dimmedLeds[CONFIG_NUM_LEDS]  = {0};
 static uint8_t ledBrightness              = 0;
+static uint32_t ledUpdateCount            = 0;
 
 //==============================================================================
 // Functions
@@ -81,6 +82,8 @@ void setLedBrightness(uint8_t brightness)
  */
 esp_err_t setLeds(led_t* leds, uint8_t numLeds)
 {
+    ledUpdateCount++;
+
     if (numLeds > CONFIG_NUM_LEDS)
     {
         numLeds = CONFIG_NUM_LEDS;
@@ -103,6 +106,11 @@ esp_err_t setLeds(led_t* leds, uint8_t numLeds)
 const led_t* getLedState(void)
 {
     return currentLeds;
+}
+
+uint32_t getLedUpdateCount(void)
+{
+    return ledUpdateCount;
 }
 
 /**

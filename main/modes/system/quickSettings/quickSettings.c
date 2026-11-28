@@ -86,7 +86,7 @@ static int32_t setupQuickSettingParams(const settingParam_t* bounds, int32_t cur
 static void quickSettingsMainLoop(int64_t elapsedUs);
 static void quickSettingsEnterMode(void);
 static void quickSettingsExitMode(void);
-static bool quickSettingsMenuCb(const char* label, bool selected, uint32_t settingVal);
+static bool quickSettingsMenuCb(const char* label, bool selected, uint32_t settingVal, menu_t* menu);
 static int32_t quickSettingsFlipValue(const char* label, int32_t value);
 static void quickSettingsOnChange(const char* label, int32_t value);
 static int32_t quickSettingsMenuFlipItem(const char* label);
@@ -325,7 +325,7 @@ static void quickSettingsExitMode(void)
  * @param settingVal The value of the setting, if the menu item is a settings item
  * @return true to go up a menu level, false to remain here
  */
-static bool quickSettingsMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool quickSettingsMenuCb(const char* label, bool selected, uint32_t settingVal, menu_t* menu)
 {
     if (selected)
     {

@@ -42,7 +42,7 @@ static void heyListenMainLoop(int64_t elapsedUs);
 static void heyListenDacCallback(uint8_t* samples, int16_t len);
 static void heyListenAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 static void heyListenCheckSpeech(int64_t elapsedUs);
-static bool heyListenMenuCb(const char* label, bool selected, uint32_t value);
+static bool heyListenMenuCb(const char* label, bool selected, uint32_t value, menu_t* menu);
 static void heyListenSwitchToScreen(heyListenScreen_t newScreen);
 bool heyListenCheckForShake(void);
 
@@ -771,7 +771,7 @@ static void heyListenSwitchToScreen(heyListenScreen_t newScreen)
  * @param value If a settings item was selected or scrolled, this is the new value for the setting
  * @return true to go up a menu level, false to remain here
  */
-static bool heyListenMenuCb(const char* label, bool selected, uint32_t value)
+static bool heyListenMenuCb(const char* label, bool selected, uint32_t value, menu_t* menu)
 {
     if (selected)
     {

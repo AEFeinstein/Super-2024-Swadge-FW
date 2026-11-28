@@ -37,7 +37,7 @@ highScoreTest_t* hst = NULL;
 
 static void hstEnterMode(void);
 static void hstExitMode(void);
-static bool hstMenu(const char* label, bool selected, uint32_t value);
+static bool hstMenu(const char* label, bool selected, uint32_t value, menu_t* menu);
 static void hstSetUserHighScoreLabel(void);
 static void hstMainLoop(int64_t elapsedUs);
 static void hstBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
@@ -99,7 +99,7 @@ static void hstExitMode(void)
     heap_caps_free(hst);
 }
 
-static bool hstMenu(const char* label, bool selected, uint32_t value)
+static bool hstMenu(const char* label, bool selected, uint32_t value, menu_t* menu)
 {
     if (selected)
     {

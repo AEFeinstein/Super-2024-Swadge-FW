@@ -3,19 +3,30 @@
 //==============================================================================
 
 #include "portableDance.h"
+#include <string.h>
 
 //==============================================================================
 // Prototypes
 //==============================================================================
 
 void portableDanceLoadSetting(portableDance_t* dance);
+static int32_t clampDanceSpeed(int32_t speed);
+
+#define BODY_LED_COUNT 6
 
 //==============================================================================
 // Const Variables
 //==============================================================================
 
-static const char nvsKeyDanceIndex[] = "dance_index";
-static const char nvsKeyDanceSpeed[] = "dance_speed";
+static const char nvsKeyDanceSplit[]        = "dance_split";
+static const char nvsKeyDanceUseColor[]     = "dance_use_color";
+static const char nvsKeyDanceWingUseColor[] = "dance_wing_use_color";
+static const char nvsKeyDanceIndex[]        = "dance_index";
+static const char nvsKeyDanceSpeed[]        = "dance_speed";
+static const char nvsKeyDanceColor[]        = "dance_color";
+static const char nvsKeyWingDanceIndex[]    = "wing_dance_index";
+static const char nvsKeyWingDanceSpeed[]    = "wing_dance_speed";
+static const char nvsKeyDanceWingColor[]    = "wing_dance_color";
 
 //==============================================================================
 // Functions
@@ -35,6 +46,11 @@ portableDance_t* initPortableDance(const char* nvsNs)
     {
         dance->dances[i].dance  = ledDances + i;
         dance->dances[i].enable = true;
+        if (ledDances[i].stateSize)
+        {
+            dance->dances[i].bodyState = heap_caps_calloc(1, ledDances[i].stateSize, MALLOC_CAP_8BIT);
+            dance->dances[i].wingState = heap_caps_calloc(1, ledDances[i].stateSize, MALLOC_CAP_8BIT);
+        }
     }
 
     dance->resetDance = true;
@@ -60,10 +76,30 @@ void freePortableDance(portableDance_t* dance)
     {
         if (dance->dances != NULL)
         {
+            for (uint8_t i = 0; i < getNumDances(); i++)
+            {
+                if (dance->dances[i].dance->deinit)
+                {
+                    dance->dances[i].dance->deinit(dance->dances[i].bodyState);
+                    dance->dances[i].dance->deinit(dance->dances[i].wingState);
+                }
+                heap_caps_free(dance->dances[i].bodyState);
+                heap_caps_free(dance->dances[i].wingState);
+            }
             heap_caps_free(dance->dances);
         }
         heap_caps_free(dance);
     }
+}
+
+/**
+ * @brief Clamp speed because a value of 0 causes division by zero in DANCE_SPEED_MULT / dance->speed
+ *
+ * @param speed speed of a dance
+ */
+static int32_t clampDanceSpeed(int32_t speed)
+{
+    return CLAMP(speed, 2, 64);
 }
 
 /**
@@ -74,8 +110,50 @@ void freePortableDance(portableDance_t* dance)
  */
 void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
 {
-    dance->dances[dance->danceIndex].dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
-                                                 dance->dances[dance->danceIndex].dance->arg, dance->resetDance);
+    if (dance->split) // yup, we can remove this whole block in a future year when there are not two distinct groups of
+                      // LEDs.
+    { // but in all likelyhood, "Fairy Split" may simply be renamed to fit the design. i.e. "Hotdog Split" with
+      // "Condiment" & "Bun" menu strings.
+        led_t leds[CONFIG_NUM_LEDS] = {{0}};
+
+        uint32_t updateCount     = getLedUpdateCount();
+        ledDanceOpt_t* bodyDance = &dance->dances[dance->danceIndex];
+        bodyDance->dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
+                               (bodyDance->dance->userColor && dance->useColor) ? dance->color : bodyDance->dance->arg,
+                               dance->resetDance, dance->useColor, bodyDance->bodyState);
+
+        if (updateCount != getLedUpdateCount())
+        {
+            memcpy(dance->bodyLeds, getLedState(), BODY_LED_COUNT * sizeof(led_t));
+        }
+
+        updateCount              = getLedUpdateCount();
+        ledDanceOpt_t* wingDance = &dance->dances[dance->wingDanceIndex];
+        wingDance->dance->func((int32_t)elapsedUs * DANCE_SPEED_MULT / dance->wingSpeed,
+                               (wingDance->dance->userColor && dance->wingUseColor) ? dance->wingColor
+                                                                                    : wingDance->dance->arg,
+                               dance->resetDance, dance->wingUseColor, wingDance->wingState);
+
+        if (updateCount != getLedUpdateCount())
+        {
+            memcpy(&dance->wingLeds[BODY_LED_COUNT], &getLedState()[BODY_LED_COUNT],
+                   (CONFIG_NUM_LEDS - BODY_LED_COUNT) * sizeof(led_t));
+        }
+
+        memcpy(leds, dance->bodyLeds, BODY_LED_COUNT * sizeof(led_t));
+        memcpy(&leds[BODY_LED_COUNT], &dance->wingLeds[BODY_LED_COUNT],
+               (CONFIG_NUM_LEDS - BODY_LED_COUNT) * sizeof(led_t));
+        setLeds(leds, CONFIG_NUM_LEDS);
+    }
+    else
+    {
+        dance->dances[dance->danceIndex].dance->func(
+            (int32_t)elapsedUs * DANCE_SPEED_MULT / dance->speed,
+            (dance->dances[dance->danceIndex].dance->userColor && dance->useColor)
+                ? dance->color
+                : dance->dances[dance->danceIndex].dance->arg,
+            dance->resetDance, dance->useColor, dance->dances[dance->danceIndex].bodyState);
+    }
     dance->resetDance = false;
 }
 
@@ -86,29 +164,118 @@ void portableDanceMainLoop(portableDance_t* dance, int64_t elapsedUs)
  */
 void portableDanceLoadSetting(portableDance_t* dance)
 {
+    int32_t split = 0;
+    if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceSplit, &split))
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSplit, split);
+    }
+    dance->split = (bool)split;
+
+    int32_t useColor = 0;
+    if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceUseColor, &useColor))
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceUseColor, useColor);
+    }
+    dance->useColor = (bool)useColor;
+
+    int32_t wingUseColor = 0;
+    if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceWingUseColor, &wingUseColor))
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceWingUseColor, wingUseColor);
+    }
+    dance->wingUseColor = (bool)wingUseColor;
+
+    int32_t color = 0;
+    if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceColor, &color))
+    {
+        // which is pinkish for a default start
+        color = 0xFF33BB;
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceColor, color);
+    }
+    dance->color = color;
+
+    color = 0;
+    if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceWingColor, &color))
+    {
+        //(255<<16) + (136<<8) + (0<<0)
+        // which is orange for a default start
+        color = 0xFF8800;
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceWingColor, color);
+    }
+    dance->wingColor = color;
+
     int32_t danceIndex = 0;
     if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceIndex, &danceIndex))
     {
         writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceIndex, danceIndex);
     }
-
-    if (danceIndex < 0)
-    {
-        danceIndex = 0;
-    }
-    else if (danceIndex >= getNumDances())
-    {
-        danceIndex = getNumDances() - 1;
-    }
-
+    danceIndex        = CLAMP(danceIndex, 0, getNumDances() - 1);
     dance->danceIndex = (uint8_t)danceIndex;
+
+    int32_t wingDanceIndex = 0;
+    if (!readNamespaceNvs32(dance->nvsNs, nvsKeyWingDanceIndex, &wingDanceIndex))
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyWingDanceIndex, wingDanceIndex);
+    }
+    wingDanceIndex        = CLAMP(wingDanceIndex, 0, getNumDances() - 1);
+    dance->wingDanceIndex = (uint8_t)wingDanceIndex;
 
     int32_t speed = DANCE_SPEED_MULT;
     if (!readNamespaceNvs32(dance->nvsNs, nvsKeyDanceSpeed, &speed))
     {
         writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSpeed, speed);
     }
-    dance->speed = speed;
+    dance->speed = clampDanceSpeed(speed);
+
+    int32_t wingSpeed = DANCE_SPEED_MULT;
+    if (!readNamespaceNvs32(dance->nvsNs, nvsKeyWingDanceSpeed, &wingSpeed))
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyWingDanceSpeed, wingSpeed);
+    }
+    dance->wingSpeed = clampDanceSpeed(wingSpeed);
+}
+
+/**
+ * @brief Sets the current LED split to the one specified, and updates the saved split. This works even
+ * if a dance is disabled.
+ *
+ * @param dance The portableDance_t pointer to update
+ * @param split The split value of the dance to update
+ */
+void portableDanceSetSplit(portableDance_t* dance, bool split)
+{
+    dance->split      = split;
+    dance->resetDance = true;
+    memset(dance->bodyLeds, 0, sizeof(dance->bodyLeds));
+    memset(dance->wingLeds, 0, sizeof(dance->wingLeds));
+    if (dance->nvsNs != NULL)
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSplit, dance->split);
+    }
+}
+
+void portableDanceSetUseColor(portableDance_t* dance, bool useColor)
+{
+    dance->useColor   = useColor;
+    dance->resetDance = true;
+    memset(dance->bodyLeds, 0, sizeof(dance->bodyLeds));
+    memset(dance->wingLeds, 0, sizeof(dance->wingLeds));
+    if (dance->nvsNs != NULL)
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceUseColor, dance->useColor);
+    }
+}
+
+void portableDanceSetWingUseColor(portableDance_t* dance, bool useColor)
+{
+    dance->wingUseColor = useColor;
+    dance->resetDance   = true;
+    memset(dance->bodyLeds, 0, sizeof(dance->bodyLeds));
+    memset(dance->wingLeds, 0, sizeof(dance->wingLeds));
+    if (dance->nvsNs != NULL)
+    {
+        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceWingUseColor, dance->wingUseColor);
+    }
 }
 
 /**
@@ -117,21 +284,29 @@ void portableDanceLoadSetting(portableDance_t* dance)
  *
  * @param dance The portableDance_t pointer to update
  * @param danceIndex The index of the dance to select
+ * @param wings Whether or not this is specific to the wing LEDS
  * @return true if the dance was within the array range, false if not
  */
-bool portableDanceSetByIndex(portableDance_t* dance, uint8_t danceIndex)
+bool portableDanceSetByIndex(portableDance_t* dance, uint8_t danceIndex, bool wings)
 {
     if (danceIndex >= getNumDances())
     {
         return false;
     }
 
-    dance->danceIndex = danceIndex;
+    if (wings)
+    {
+        dance->wingDanceIndex = danceIndex;
+    }
+    else
+    {
+        dance->danceIndex = danceIndex;
+    }
     dance->resetDance = true;
 
     if (dance->nvsNs != NULL)
     {
-        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceIndex, dance->danceIndex);
+        writeNamespaceNvs32(dance->nvsNs, wings ? nvsKeyWingDanceIndex : nvsKeyDanceIndex, danceIndex);
     }
     return true;
 }
@@ -142,18 +317,43 @@ bool portableDanceSetByIndex(portableDance_t* dance, uint8_t danceIndex)
  *
  * @param dance The portableDance_t pointer to update
  * @param danceName The name of the dance to select
+ * @param wings Whether or not this is specific to the wing LEDS
  * @return true if the dance was found, false if not
  */
-bool portableDanceSetByName(portableDance_t* dance, const char* danceName)
+bool portableDanceSetByName(portableDance_t* dance, const char* danceName, bool wings)
 {
     for (uint8_t i = 0; i < getNumDances(); i++)
     {
         if (!strcmp(dance->dances[i].dance->name, danceName))
         {
-            return portableDanceSetByIndex(dance, i);
+            return portableDanceSetByIndex(dance, i, wings);
         }
     }
     return false;
+}
+
+/**
+ * @brief Sets the current dance color.
+ *
+ * @param dance The portableDance_t pointer to update
+ * @param color bit packed color with values from 0-254 for R, G, and B.
+ * @param wings Whether or not this is specific to the wing LEDS
+ */
+void portableDanceSetColor(portableDance_t* dance, int32_t color, bool wings)
+{
+    if (wings)
+    {
+        dance->wingColor = color;
+    }
+    else
+    {
+        dance->color = color;
+    }
+    if (dance->nvsNs != NULL)
+    {
+        writeNamespaceNvs32(dance->nvsNs, wings ? nvsKeyDanceWingColor : nvsKeyDanceColor,
+                            wings ? dance->wingColor : dance->color);
+    }
 }
 
 /**
@@ -161,13 +361,22 @@ bool portableDanceSetByName(portableDance_t* dance, const char* danceName)
  *
  * @param dance The portableDance_t pointer to update
  * @param speed The dance speed to set. Dance will run at ::DANCE_SPEED_MULT / speed
+ * @param wings Whether or not this is specific to the wing LEDS
  */
-void portableDanceSetSpeed(portableDance_t* dance, int32_t speed)
+void portableDanceSetSpeed(portableDance_t* dance, int32_t speed, bool wings)
 {
-    dance->speed = speed;
+    speed = clampDanceSpeed(speed);
+    if (wings)
+    {
+        dance->wingSpeed = speed;
+    }
+    else
+    {
+        dance->speed = speed;
+    }
     if (dance->nvsNs != NULL)
     {
-        writeNamespaceNvs32(dance->nvsNs, nvsKeyDanceSpeed, speed);
+        writeNamespaceNvs32(dance->nvsNs, wings ? nvsKeyWingDanceSpeed : nvsKeyDanceSpeed, speed);
     }
 }
 

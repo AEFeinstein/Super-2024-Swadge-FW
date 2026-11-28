@@ -3,7 +3,12 @@
 #include <stdint.h>
 #include "dance.h"
 
-void danceFlashlight(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset);
+typedef struct
+{
+    uint32_t tAccumulated;
+} danceFlashlightState_t;
+
+void danceFlashlight(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor, void* state);
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -13,13 +18,13 @@ void danceFlashlight(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), 
  * @param tElapsedUs The time elapsed since last call, in microseconds
  * @param reset      true to reset this dance's variables
  */
-void danceFlashlight(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset)
+void danceFlashlight(uint32_t tElapsedUs, uint32_t arg, bool reset, bool useColor, void* state)
 {
-    static uint32_t tAccumulated = 0;
+    danceFlashlightState_t* danceState = state;
 
     if (reset)
     {
-        tAccumulated = 70000;
+        danceState->tAccumulated = 70000;
         return;
     }
 
@@ -27,18 +32,18 @@ void danceFlashlight(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), 
     led_t leds[CONFIG_NUM_LEDS] = {{0}};
     bool ledsUpdated            = false;
 
-    tAccumulated += tElapsedUs;
-    while (tAccumulated >= 70000)
+    danceState->tAccumulated += tElapsedUs;
+    while (danceState->tAccumulated >= 70000)
     {
-        tAccumulated -= 70000;
+        danceState->tAccumulated -= 70000;
         ledsUpdated = true;
 
         uint8_t i;
         for (i = 0; i < CONFIG_NUM_LEDS; i++)
         {
-            leds[i].r = 0xFF;
-            leds[i].g = 0xFF;
-            leds[i].b = 0xFF;
+            leds[i].r = ARG_R(arg);
+            leds[i].g = ARG_G(arg);
+            leds[i].b = ARG_B(arg);
         }
     }
     // Output the LED data, actually turning them on

@@ -28,7 +28,7 @@ static void rayEnterMode(void);
 static void rayExitMode(void);
 static void rayMainLoop(int64_t elapsedUs);
 static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
-static bool rayMenuCb(const char* label, bool selected, uint32_t settingVal);
+static bool rayMenuCb(const char* label, bool selected, uint32_t settingVal, menu_t* menu);
 static void rayInitMenu(void);
 static void rayInstrumentDacCallback(uint8_t* samples, int16_t len);
 
@@ -666,7 +666,7 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
  * @param selected if the menu option was selected
  * @param settingVal The setting value, if this is a setting
  */
-static bool rayMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool rayMenuCb(const char* label, bool selected, uint32_t settingVal, menu_t* menu)
 {
     if (selected)
     {

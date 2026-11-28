@@ -604,7 +604,7 @@ static void menuCallCallbackForItem(menu_t* menu, menuItem_t* item, bool selecte
         selected,
         // If the item is a setting with options, pass the current option value. Otherwise, the regular
         // setting
-        item->settingVals ? item->settingVals[item->currentOpt] : item->currentSetting);
+        item->settingVals ? item->settingVals[item->currentOpt] : item->currentSetting, menu);
 }
 
 /**
@@ -862,24 +862,24 @@ menu_t* menuSelectCurrentItem(menu_t* menu)
         else if (item->subMenu)
         {
             // If this item has a submenu, call the callback, then enter it
-            menu->cbFunc(item->label, true, 0);
+            menu->cbFunc(item->label, true, 0, menu);
             return item->subMenu;
         }
         else if (item->settingVals)
         {
-            menu->cbFunc(item->label, true, item->settingVals[item->currentOpt]);
+            menu->cbFunc(item->label, true, item->settingVals[item->currentOpt], menu);
         }
         else if (item->minSetting != item->maxSetting || (item->numOptions != 0 && !item->options))
         {
             // Call the callback, not selected
-            menu->cbFunc(item->label, true, item->currentSetting);
+            menu->cbFunc(item->label, true, item->currentSetting, menu);
         }
         else if (item->label)
         {
             // Call the callback for single items
             // If a back was requested, or if this is the back option, and a parent exists
             bool backRequested = (item->label == mnuBackStr);
-            backRequested |= (menu->cbFunc(item->label, true, 0) && menu->parentMenu);
+            backRequested |= (menu->cbFunc(item->label, true, 0, menu) && menu->parentMenu);
             if (backRequested)
             {
                 // Reset the current item when leaving a submenu
@@ -891,7 +891,7 @@ menu_t* menuSelectCurrentItem(menu_t* menu)
         else if (item->options)
         {
             // If this is a multi item, call the callback
-            menu->cbFunc(item->options[item->currentOpt], true, 0);
+            menu->cbFunc(item->options[item->currentOpt], true, 0, menu);
         }
     }
     // maybe return menu?

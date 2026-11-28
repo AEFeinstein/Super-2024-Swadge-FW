@@ -3,7 +3,15 @@
 #include <stdint.h>
 #include "dance.h"
 
-void danceRainbowSolid(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset);
+typedef struct
+{
+    int32_t ledCount;
+    int32_t color_save;
+    uint32_t tAccumulated;
+} danceRainbowSolidState_t;
+
+void danceRainbowSolid(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset,
+                       bool useColor __attribute__((unused)), void* state);
 
 #ifdef DANCE_IMPLEMENTATION
 
@@ -13,17 +21,16 @@ void danceRainbowSolid(uint32_t tElapsedUs, uint32_t arg __attribute__((unused))
  * @param tElapsedUs The time elapsed since last call, in microseconds
  * @param reset      true to reset this dance's variables
  */
-void danceRainbowSolid(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset)
+void danceRainbowSolid(uint32_t tElapsedUs, uint32_t arg __attribute__((unused)), bool reset,
+                       bool useColor __attribute__((unused)), void* state)
 {
-    static int32_t ledCount      = 0;
-    static int32_t color_save    = 0;
-    static uint32_t tAccumulated = 0;
+    danceRainbowSolidState_t* danceState = state;
 
     if (reset)
     {
-        ledCount     = 0;
-        color_save   = 0;
-        tAccumulated = 70000;
+        danceState->ledCount     = 0;
+        danceState->color_save   = 0;
+        danceState->tAccumulated = 70000;
         return;
     }
 
@@ -31,26 +38,26 @@ void danceRainbowSolid(uint32_t tElapsedUs, uint32_t arg __attribute__((unused))
     led_t leds[CONFIG_NUM_LEDS] = {{0}};
     bool ledsUpdated            = false;
 
-    tAccumulated += tElapsedUs;
-    while (tAccumulated >= 70000)
+    danceState->tAccumulated += tElapsedUs;
+    while (danceState->tAccumulated >= 70000)
     {
-        tAccumulated -= 70000;
+        danceState->tAccumulated -= 70000;
         ledsUpdated = true;
 
-        ledCount = ledCount + 1;
-        if (ledCount > 255)
+        danceState->ledCount = danceState->ledCount + 1;
+        if (danceState->ledCount > 255)
         {
-            ledCount = 0;
+            danceState->ledCount = 0;
         }
-        int16_t angle = ledCount % 256;
-        color_save    = EHSVtoHEXhelper(angle, 0xFF, 0xFF, false);
+        int16_t angle          = danceState->ledCount % 256;
+        danceState->color_save = EHSVtoHEXhelper(angle, 0xFF, 0xFF, false);
 
         uint8_t i;
         for (i = 0; i < CONFIG_NUM_LEDS; i++)
         {
-            leds[i].r = (color_save >> 0) & 0xFF;
-            leds[i].g = (color_save >> 8) & 0xFF;
-            leds[i].b = (color_save >> 16) & 0xFF;
+            leds[i].r = ARG_R(danceState->color_save);
+            leds[i].g = ARG_G(danceState->color_save);
+            leds[i].b = ARG_B(danceState->color_save);
         }
     }
     // Output the LED data, actually turning them on
