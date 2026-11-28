@@ -630,7 +630,7 @@ void app_main(void)
                 {
                     // Draw 'progress' bar for exiting. This is done right before the TFT is drawn
                     int16_t numPx = (tHeldUs * TFT_WIDTH) / EXIT_TIME_US;
-                    fillDisplayArea(0, TFT_HEIGHT - 10, numPx, TFT_HEIGHT, c333);
+                    fillDisplayArea(0, TFT_HEIGHT - 10, numPx, TFT_HEIGHT, c520);
                 }
             }
 
