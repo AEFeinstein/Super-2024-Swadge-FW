@@ -92,7 +92,7 @@ cp ./build/bootloader/bootloader.bin ./build/swadge.bin ./build/partition_table/
 > ```bash
 > python3 -m venv .venv
 > source .venv/bin/activate
-> 
+> ```
 > If you use a venv for `pyFlashGui.py`, it will replace the IDF's venv, so `idf.py` commands will no longer work.
 
 1. Download and install the dependencies
