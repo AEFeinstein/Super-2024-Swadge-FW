@@ -17,6 +17,7 @@
 #include "palette.h"
 #include "shapes.h"
 #include "swadge.h"
+#include "trophy.h"
 #include "wsg.h"
 #include <ctype.h>
 #include <stdbool.h>
@@ -93,6 +94,13 @@
 #define GOAL_IDLE                       0
 #define GOAL_WINFR                      6
 
+#define SUCCESS_TIME_OFFSET             200
+#define SUCCESS_POPUP_X                 33
+#define SUCCESS_POPUP_Y                 61
+#define SUCCESS_POPUP_TITLE_Y           76
+#define SUCCESS_POPUP_TITLE1_X          54
+#define SUCCESS_POPUP_TITLE2_X          50
+
 #define BORDER_SIZE                     2
 #define TILESET_SIZE                    2
 #define TILESET_COUNT                   2
@@ -128,6 +136,32 @@ static const char* const bombadeetleBackgroundOptions[]       = {"Still","Moving
 static const char* const bombadeetleWallOptions[]  = {"Walls", "Gates", "Borders"};
 static const int32_t bombadeetleBGSettings[]       = {0, 1};
 static const int32_t bombadeetleWallSettings[]       = {0, 1, 2};
+
+const trophyData_t bombadeetleTrophies[] ={
+    {
+        .title          = "Read Instructions",
+        .description    = "No one usually does that",
+        .image          = NO_IMAGE_SET,
+        .type           = TROPHY_TYPE_TRIGGER,
+        .difficulty     = TROPHY_DIFF_EASY,
+        .maxVal         = 1,
+    },{
+        .title          = "More with less",
+        .description    = "Complete a stage without all arrows",
+        .image          = NO_IMAGE_SET,
+        .type           = TROPHY_TYPE_TRIGGER,
+        .difficulty     = TROPHY_DIFF_MEDIUM,
+        .maxVal         = 1,
+    },
+    {
+        .title          = "Bombadeetle Complete",
+        .description    = "Completed all stages",
+        .image          = NO_IMAGE_SET,
+        .type           = TROPHY_TYPE_TRIGGER,
+        .difficulty     = TROPHY_DIFF_HARD,
+        .maxVal         = 1,
+    },
+};
 
 
 static const cnfsFileIdx_t bombadeetleTiles[] = {
@@ -266,10 +300,12 @@ static void bombadeetleDrawGame(void);
 static void bombadeetleDrawSelect(void);
 static void bombadeetleDrawMenu(void);
 static void bombadeetleDrawPause(void);
+static void bombadeetleDrawFinalWin();
 
 static void bombadeetleGameLoop(int64_t elapsedUs);
 static void bombadeetleMenuLoop(int64_t elapsedUs);
 static void bombadeetleStageSelectLoop(int64_t elapsedUs);
+static void bombadeetleFinalWinLoop(int64_t elapsedUs);
 static void bombadeetleInstructionsLoop(int64_t elapsedUs);
 static void bombadeetleBackgroundUpdate(int64_t elapsedUs);
 static void bombadeetlePauseMenu(int64_t elapsedUs);
@@ -292,6 +328,19 @@ static void bombadeetleAdditionalSettings(void);
 static uint16_t bombadeetleGetTitleWidth(const font_t* font, const char* text, int max);
 static void bombadeetleGetLevelData(uint8_t index);
 
+const trophySettings_t bombadeetleTrophySettings = {
+    .drawFromBottom = true,
+    .staticDurationUs = DRAW_STATIC_US * 6,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = bombadeetleModeName,
+};
+
+const trophyDataList_t bombadeetleTrophyData = {
+    .settings = &bombadeetleTrophySettings,
+    .list     = bombadeetleTrophies,
+    .length   = ARRAY_SIZE(bombadeetleTrophies),
+};
+
 swadgeMode_t bombadeetleMode = {
     .modeName = bombadeetleModeName,
     .wifiMode = NO_WIFI,
@@ -308,6 +357,9 @@ swadgeMode_t bombadeetleMode = {
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
+    .fnDacCb                  = NULL,
+    .fnAddToSwadgePassPacket  = NULL,
+    .trophyData               = &bombadeetleTrophyData,
 };
 
 bombadeetleData_t* bombadeetle;
@@ -390,11 +442,12 @@ void bombadeetleGameEnter(void)
 
     bombadeetle->levelIndex = 0;
     loadWsg(BOMB_POPUP_BACKGROUND_WSG, &bombadeetle->popupBackground, true);
-    loadWsg(BOMB_SUCCESS_WSG, &bombadeetle->successTitle, true);
+    loadWsg(BOMB_TITLE_SUCCESS_WSG, &bombadeetle->successTitle, true);
+    loadWsg(BOMB_TITLE_COMPLETE_WSG, &bombadeetle->completeTitle, true);
+    loadWsg(BOMB_TITLE_STAGE_SELECT_WSG, &bombadeetle->stageSelect, true);
     loadWsg(BOMB_TRYAGAIN_WSG, &bombadeetle->unsuccessful, true);
     loadWsg(BOMB_UI_POPUP_WSG, &bombadeetle->genericBackground, true);
     loadWsg(BOMB_MAIN_TITLE_WSG, &bombadeetle->mainTitle, true);
-    loadWsg(BOMB_STAGE_SELECT_TITLE_WSG, &bombadeetle->stageSelect, true);
     loadWsg(BOMB_STAGE_SELECT_INDEX_BUTTON_WSG, &bombadeetle->stageSelectButton, true);
     loadWsg(BOMB_STAGE_SELECT_INDEX_ACTIVE_BUTTON_WSG, &bombadeetle->stageActiveSelectButton, true);
     loadWsg(BOMB_MAIN_SELECT_WSG, &bombadeetle->mainSelect, true);
@@ -771,7 +824,6 @@ static void bombadeetleCheckBombadeetles(bool update)
             bombadeetle->goalFrame                   = 0;
             bombadeetle->goalTime                    = 0;
 
-            ESP_LOGI(TAG, "GOAL!");
         }
 
         if (bombadeetleMove(tile, bombadeetle->bombadeetles[idx].direction))
@@ -1194,6 +1246,9 @@ static void bombadeetleMainLoop(int64_t elapsedUs)
         case STATE_STAGESELECT:
             bombadeetleStageSelectLoop(elapsedUs);
             break;
+        case STATE_FINAL:
+            bombadeetleFinalWinLoop(elapsedUs);            
+            break;
         default:
             bombadeetleGameLoop(elapsedUs);
             break;
@@ -1461,6 +1516,27 @@ static void bombadeetleStageSelectLoop(int64_t elapsedUs)
     bombadeetleDrawSelect();
 }
 
+static void bombadeetleFinalWinLoop(int64_t elapsedUs)
+{
+        buttonEvt_t evt;
+    bombadeetleBackgroundUpdate(elapsedUs);
+
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down)
+        {
+            if (evt.button & PB_START || evt.button & PB_B || evt.button & PB_A)
+            {
+                bombadeetle->state = STATE_MENU;
+                globalMidiPlayerPlaySong(&bombadeetle->music[MUSIC_MENU], MIDI_BGM);
+                globalMidiPlayerGet(MIDI_BGM)->loop = true;
+            }
+        }
+    }
+
+    bombadeetleDrawFinalWin();
+}
+
 static void bombadeetlePauseMenu(int64_t elapsedUs)
 {
     buttonEvt_t evt;
@@ -1591,6 +1667,13 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
                         if (bombadeetle->levelIndex >= ARRAY_SIZE(bombadeetleLevels))
                         {
                             bombadeetle->levelIndex = ARRAY_SIZE(bombadeetleLevels) - 1;
+
+                            ESP_LOGI(TAG, "Clean up and go to new page");
+                            
+                            bombadeetle->state     = STATE_FINAL;
+                            bombadeetle->paused    = false;
+                            bombadeetle->gameSpeed = DEFAULT_MOVE_AMOUNT;
+                            return;
                         }
 
                         bombadeetle->stageSelectPageIndex = bombadeetle->levelIndex / 20;
@@ -2002,7 +2085,13 @@ static void bombadeetleGameLoop(int64_t elapsedUs)
             globalMidiPlayerPlaySong(&bombadeetle->music[STINGER_WIN], MIDI_BGM);
             globalMidiPlayerGet(MIDI_BGM)->loop = false;
 
-            ESP_LOGI(TAG,"SHOW ACHIEVEMENT!");
+            // if (&bombadeetle->levelIndex >= ARRAY_SIZE(bombadeetleLevels))
+            if (bombadeetle->levelIndex >= ARRAY_SIZE(bombadeetleLevels) - 1)
+            {
+                ESP_LOGI(TAG,"SHOW ACHIEVEMENT!");
+                trophyUpdate(&bombadeetleTrophies[BT_COMPLETE],  true, true);
+            }
+
         }
     }
 
@@ -2120,6 +2209,12 @@ static void bombadeetleDrawSelect()
     }
 
     // ESP_LOGI(TAG, "%d ", bombadeetle->mapFile.nameWidthOffset);
+}
+
+static void bombadeetleDrawFinalWin()
+{
+    bombadeetleDrawBackground();
+    
 }
 
 // This is sloppy Troy, you need to be ashamed of yourself! >:(
@@ -2405,10 +2500,20 @@ static void bombadeetleDrawGame()
         if (bombadeetle->successTime > TIMING_DELAY)
         {
             float successTime = 1 - ((float)(bombadeetle->successTime- TIMING_DELAY) / TIMING_SUCCESS);
-            drawWsgSimple(&bombadeetle->popupBackground, 33, 61 + (200 * successTime));
-            drawWsgSimple(&bombadeetle->successTitle, 54, 76 + (200 * successTime));
-            drawText(&bombadeetle->mainFont, c223, "A - NEXT", 100, 115 + (200 * successTime));
-            drawText(&bombadeetle->mainFont, c223, "B - STAGE SELECT", 70, 128 + (200 * successTime));
+            drawWsgSimple(&bombadeetle->popupBackground, SUCCESS_POPUP_X, SUCCESS_POPUP_Y + (SUCCESS_TIME_OFFSET * successTime));
+            drawText(&bombadeetle->mainFont, c223, "A - NEXT", 100, 115 + (SUCCESS_TIME_OFFSET * successTime));
+            
+            if (bombadeetle->levelIndex < ARRAY_SIZE(bombadeetleLevels) - 1)
+            {
+                
+                drawWsgSimple(&bombadeetle->successTitle, SUCCESS_POPUP_TITLE1_X, SUCCESS_POPUP_TITLE_Y + (SUCCESS_TIME_OFFSET * successTime));
+                drawText(&bombadeetle->mainFont, c223, "B - STAGE SELECT", 70, 128 + (SUCCESS_TIME_OFFSET * successTime));
+            }
+            else
+            {
+                drawWsgSimple(&bombadeetle->completeTitle, SUCCESS_POPUP_TITLE2_X, SUCCESS_POPUP_TITLE_Y + (SUCCESS_TIME_OFFSET * successTime));                
+            }
+            
         }   
         else
         {
@@ -2525,6 +2630,7 @@ static void bombadeetleExitMode()
         freeWsg(&bombadeetle->genericBackground);
         freeWsg(&bombadeetle->unsuccessful);
         freeWsg(&bombadeetle->successTitle);
+        freeWsg(&bombadeetle->completeTitle);
         freeWsg(&bombadeetle->popupBackground);
         freeWsg(&bombadeetle->levelNameBackground);
         freeWsg(&bombadeetle->tools);

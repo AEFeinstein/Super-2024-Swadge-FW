@@ -15,6 +15,7 @@ typedef enum
     STATE_RUNNING,
     STATE_COLLISION,
     STATE_WIN,
+    STATE_FINAL,
 
 } bombState_t;
 
@@ -74,6 +75,7 @@ typedef struct
     wsg_t backgroundTile;
     wsg_t popupBackground;
     wsg_t successTitle;
+    wsg_t completeTitle;
     wsg_t unsuccessful;
     wsg_t genericBackground;
     wsg_t mainTitle;
@@ -164,7 +166,15 @@ typedef struct
 
 } bombadeetleData_t;
 
+typedef enum
+{
+    BT_INSTRUCTIONS,
+    BT_MORE_OR_LESS,
+    BT_COMPLETE,
+} bombadeetleTrophyType;
 
+
+extern const trophyData_t bombadeetleTrophies[];
 
 
 extern swadgeMode_t bombadeetleMode;
